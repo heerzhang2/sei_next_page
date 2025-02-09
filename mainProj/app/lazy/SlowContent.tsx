@@ -9,7 +9,7 @@ export default function SlowContent(props: Props) {
   const data = useFragment(
     graphql`
       fragment SlowContent on Query {
-        lazyContent
+        auth
       }
     `,
     props.queryRef

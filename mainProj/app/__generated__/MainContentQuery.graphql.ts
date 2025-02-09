@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<8dfbe33d68e3f4423672fa27361245a8>>
+ * @generated SignedSource<<1f273186a85bf3a9f86ce55a2db83920>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -12,7 +12,37 @@ import { ConcreteRequest } from 'relay-runtime';
 import { FragmentRefs } from "relay-runtime";
 export type MainContentQuery$variables = Record<PropertyKey, never>;
 export type MainContentQuery$data = {
-  readonly mainContent: string;
+  readonly authUser: {
+    readonly dep: {
+      readonly id: string;
+      readonly name: string;
+    } | null | undefined;
+    readonly id: string;
+    readonly ispUnits: ReadonlyArray<{
+      readonly id: string;
+      readonly unit: {
+        readonly id: string;
+        readonly name: string | null | undefined;
+      } | null | undefined;
+    } | null | undefined> | null | undefined;
+    readonly office: {
+      readonly id: string;
+      readonly name: string;
+    } | null | undefined;
+    readonly person: {
+      readonly id: string;
+      readonly name: string;
+    } | null | undefined;
+    readonly unit: {
+      readonly dvs: ReadonlyArray<{
+        readonly id: string;
+        readonly name: string;
+      } | null | undefined> | null | undefined;
+      readonly id: string;
+      readonly name: string | null | undefined;
+    } | null | undefined;
+    readonly username: string;
+  } | null | undefined;
   readonly " $fragmentSpreads": FragmentRefs<"SlowContent">;
 };
 export type MainContentQuery = {
@@ -25,7 +55,112 @@ var v0 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "mainContent",
+  "name": "id",
+  "storageKey": null
+},
+v1 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "name",
+  "storageKey": null
+},
+v2 = [
+  (v0/*: any*/),
+  (v1/*: any*/)
+],
+v3 = {
+  "alias": null,
+  "args": null,
+  "concreteType": "User",
+  "kind": "LinkedField",
+  "name": "authUser",
+  "plural": false,
+  "selections": [
+    (v0/*: any*/),
+    {
+      "alias": null,
+      "args": null,
+      "kind": "ScalarField",
+      "name": "username",
+      "storageKey": null
+    },
+    {
+      "alias": null,
+      "args": null,
+      "concreteType": "Person",
+      "kind": "LinkedField",
+      "name": "person",
+      "plural": false,
+      "selections": (v2/*: any*/),
+      "storageKey": null
+    },
+    {
+      "alias": null,
+      "args": null,
+      "concreteType": "Division",
+      "kind": "LinkedField",
+      "name": "dep",
+      "plural": false,
+      "selections": (v2/*: any*/),
+      "storageKey": null
+    },
+    {
+      "alias": null,
+      "args": null,
+      "concreteType": "Office",
+      "kind": "LinkedField",
+      "name": "office",
+      "plural": false,
+      "selections": (v2/*: any*/),
+      "storageKey": null
+    },
+    {
+      "alias": null,
+      "args": null,
+      "concreteType": "Unit",
+      "kind": "LinkedField",
+      "name": "unit",
+      "plural": false,
+      "selections": [
+        (v0/*: any*/),
+        (v1/*: any*/),
+        {
+          "alias": null,
+          "args": null,
+          "concreteType": "Division",
+          "kind": "LinkedField",
+          "name": "dvs",
+          "plural": true,
+          "selections": (v2/*: any*/),
+          "storageKey": null
+        }
+      ],
+      "storageKey": null
+    },
+    {
+      "alias": null,
+      "args": null,
+      "concreteType": "IspAgency",
+      "kind": "LinkedField",
+      "name": "ispUnits",
+      "plural": true,
+      "selections": [
+        (v0/*: any*/),
+        {
+          "alias": null,
+          "args": null,
+          "concreteType": "Unit",
+          "kind": "LinkedField",
+          "name": "unit",
+          "plural": false,
+          "selections": (v2/*: any*/),
+          "storageKey": null
+        }
+      ],
+      "storageKey": null
+    }
+  ],
   "storageKey": null
 };
 return {
@@ -35,16 +170,11 @@ return {
     "metadata": null,
     "name": "MainContentQuery",
     "selections": [
-      (v0/*: any*/),
+      (v3/*: any*/),
       {
-        "kind": "Defer",
-        "selections": [
-          {
-            "args": null,
-            "kind": "FragmentSpread",
-            "name": "SlowContent"
-          }
-        ]
+        "args": null,
+        "kind": "FragmentSpread",
+        "name": "SlowContent"
       }
     ],
     "type": "Query",
@@ -56,34 +186,27 @@ return {
     "kind": "Operation",
     "name": "MainContentQuery",
     "selections": [
-      (v0/*: any*/),
+      (v3/*: any*/),
       {
-        "if": null,
-        "kind": "Defer",
-        "label": "MainContentQuery$defer$SlowContent",
-        "selections": [
-          {
-            "alias": null,
-            "args": null,
-            "kind": "ScalarField",
-            "name": "lazyContent",
-            "storageKey": null
-          }
-        ]
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "auth",
+        "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "c9a5d781e3f37b3b4090f86fad16286b",
+    "cacheID": "2512450c7566e559edb25d2817c4ed3f",
     "id": null,
     "metadata": {},
     "name": "MainContentQuery",
     "operationKind": "query",
-    "text": "query MainContentQuery {\n  mainContent\n  ...SlowContent @defer(label: \"MainContentQuery$defer$SlowContent\")\n}\n\nfragment SlowContent on Query {\n  lazyContent\n}\n"
+    "text": "query MainContentQuery {\n  authUser {\n    id\n    username\n    person {\n      id\n      name\n    }\n    dep {\n      id\n      name\n    }\n    office {\n      id\n      name\n    }\n    unit {\n      id\n      name\n      dvs {\n        id\n        name\n      }\n    }\n    ispUnits {\n      id\n      unit {\n        id\n        name\n      }\n    }\n  }\n  ...SlowContent\n}\n\nfragment SlowContent on Query {\n  auth\n}\n"
   }
 };
 })();
 
-(node as any).hash = "f4f5a8a9285bce76c42eef1c51cc5903";
+(node as any).hash = "022978b72eaf9a3a4045580dd5546a0a";
 
 export default node;

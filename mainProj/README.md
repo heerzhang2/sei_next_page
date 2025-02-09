@@ -20,3 +20,8 @@ All relevant pieces can be found in the [/relay](./relay) directory.
 
 1. `yarn`
 2. `yarn dev`
+
+type Query {
+mainContent: String!
+lazyContent: String!
+}

@@ -10,8 +10,13 @@ export function MainContent() {
   const data = useLazyLoadQuery<MainContentQuery>(
     graphql`
       query MainContentQuery {
-        mainContent
-        ...SlowContent @defer
+        authUser{
+                    id,username, person{id,name}
+                    dep{id name} office{id name} 
+                    unit{id name dvs{id name} }
+                    ispUnits{id,unit{id,name}}
+                 }
+        ...SlowContent 
       }
     `,
     {}

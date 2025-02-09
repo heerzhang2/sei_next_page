@@ -2,10 +2,6 @@ schema {
   query: Query
 }
 
-type Query {
-  mainContent: String!
-  lazyContent: String!
-}
 
 "The `@defer` directive may be provided for fragment spreads and inline fragments to inform the executor to delay the execution of the current fragment to indicate deprioritization of the current fragment. A query with `@defer` directive will cause the request to potentially return multiple responses, where non-deferred data is delivered in the initial response and data deferred is delivered in a subsequent response. `@include` and `@skip` take precedence over `@defer`."
 directive @defer(
@@ -14,3 +10,2259 @@ directive @defer(
   "Deferred when true."
   if: Boolean
 ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+
+directive @uppercase on FIELD_DEFINITION
+
+directive @range(min: Float!, max: Float!) on ARGUMENT_DEFINITION
+
+directive @authr(qx: [String] = ["USER"]) on FIELD_DEFINITION
+
+"""新版 @dbpage 已經淘汰不用！"""
+directive @dbpage on FIELD_DEFINITION
+
+"""
+似乎不需要定义 前端Relay编译Duplicate directive definition 'connection'.
+directive @connection(for: String) on FIELD_DEFINITION
+"""
+directive @date on FIELD_DEFINITION | ARGUMENT_DEFINITION
+
+"""Exposes a URL that specifies the behaviour of this scalar."""
+directive @specifiedBy(
+  """The URL that specifies the behaviour of this scalar."""
+  url: String!
+) on SCALAR
+
+"""Indicates an Input Object is a OneOf Input Object."""
+directive @oneOf on INPUT_OBJECT
+
+input AddressInput {
+  town: ID
+  county: ID
+  city: ID
+  province: ID
+  country: ID
+  name: String
+  lat: String
+  lon: String
+  vlg: ID
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  adId: ID
+}
+
+type Adminunit implements Node {
+  id: ID!
+  prefix: String
+  areacode: String
+  zipcode: String
+
+  """  adrs: [Address]  有20000条都可能"""
+  name: String!
+  country: Country
+  province: Province
+  city: City
+  county: County
+  town: Town
+  vlgs(partial: String): [Village]
+}
+
+type Agreement implements Node {
+  id: ID!
+  ptno: String
+  ispu: Unit
+  status: String
+  devs: [Equipment]
+  servu: Unit
+  crman: UserBase
+  promoter: UserBase
+  auditor: UserBase
+  dispatcher: UserBase
+  entrust: Boolean
+  bsType: BusinessCat_Enum
+  ad: Adminunit
+  transferor: String
+  complDate: String
+  charge: String
+  mdtime: String
+  aux: String
+  pttype: String
+  prId: String
+  tasks: [Task]
+}
+
+type AgreementConnection {
+  edges: [AgreementConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type AgreementConnectionEdge {
+  cursor: String
+  node: Agreement
+}
+
+type AgreementCudResp {
+  warn: String
+  me: Agreement
+}
+
+input AgreementInput {
+  ptno: String
+  ispu: ID
+  servu: ID
+  crman: ID
+  promoter: ID
+  auditor: ID
+  dispatcher: ID
+  entrust: Boolean
+  bsType: BusinessCat_Enum
+  ad: ID
+  transferor: String
+  pttype: String
+  complDate: Date
+  charge: String
+  mdtime: Date
+  aux: String
+  devs: [String]
+  reason: String
+  status: ProtocolSta_Enum
+  statusx: [ProtocolSta_Enum]
+  mecrman: Boolean
+  office: String
+  dep: String
+  date1: Date
+  date2: Date
+  qdate1: Date
+  qdate2: Date
+}
+
+type Amusement implements Equipment & Node & EqpCommon {
+  id: ID!
+  version: Int!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  svp: String
+  pa: String
+  isps: IspConnection
+  cpa: Int
+  vital: Boolean
+  level: String
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+
+  """ pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+
+  """以下专有"""
+  mbig: Boolean
+  leng: Float
+  high: Float
+  hlf: Float
+  pnum: Int
+  vl: Float
+  sdia: Float
+  grad: Float
+  angl: Float
+  crDate: String
+}
+
+type ApprovalStm {
+  id: ID!
+  sta: Procedure_Enum!
+
+  """流程开动第一人；当前主控人 特别权利人"""
+  master: User
+  authr: [User]
+  reviewer: User
+  approver: User
+  cur: Circulation
+
+  """  his: [Circulation]     会议投票人很多,历史记录可能很多"""
+  due: String
+}
+
+type ArtifactRepository {
+  id: ID!
+  name: String!
+  url: String!
+  snapshotsEnabled: Boolean
+}
+
+type Author {
+  id: ID!
+  firstName: String!
+  lastName: String!
+}
+
+type Authority {
+  id: ID!
+
+  """枚举GraphQLEnumType是输入输出都能做"""
+  name: String!
+}
+
+"""不支持中文的名字,似乎不需要定义 EnumValue不持中文。"""
+enum AuthorityName {
+  ROLE_Master
+  ROLE_JyUser
+}
+
+type Boiler implements Equipment & Node & EqpCommon {
+  id: ID!
+  version: Int!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  svp: String
+  pa: String
+  isps: IspConnection
+  cpa: Int
+  vital: Boolean
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+
+  """  pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+
+  """以下专有"""
+  wall: Boolean
+  power: Float
+  form: String
+  fuel: String
+  pres: Float
+  bmod: String
+  asemb: Boolean
+  crDate: String
+}
+
+enum BusinessCat_Enum {
+  MANUFACT
+  INSTA
+  REGUL
+  SAFETYINS
+  IDENTIFIC
+  TYPETST
+  ANNUAL
+  PRESSURE
+  DELIVERY
+  TEST
+  EXPERIMENT
+  OTHER
+  REFORM
+  REPAIR
+  FIRST
+  PRODUCT
+  ESTIMATE
+  THERMAL
+}
+
+type CalcFeeResp {
+  """id: ID! 仅用于变更单次应答"""
+  parms: [String!]
+  bus: Detail!
+}
+
+type Charging {
+  id: ID!
+  code: String
+  memo: String
+  amount: String
+  manual: Boolean
+  fm: Int
+  mnum: String
+
+  """有牵涉该项收费的管道单元"""
+  pipus: [PipingUnit!]
+  detail: Detail
+}
+
+type Circulation {
+  id: ID!
+  time: String!
+  user: User
+  opinion: Opinion_Enum!
+  memo: String
+
+  """会议投票人太多就不该放进moreUser来"""
+  moreUser: [User]
+  current: Procedure_Enum
+  next: Procedure_Enum
+}
+
+type City implements Node {
+  id: ID!
+  name: String!
+  collapse: Boolean
+  counties: [County]
+  adm: Adminunit
+}
+
+type Company {
+  id: ID!
+  name: String!
+  no: String
+  address: String
+  linkMen: String
+  phone: String
+}
+
+type CompanyEs {
+  id: ID!
+  name: String!
+  no: String
+  address: String
+  linkMen: String
+  phone: String
+  ad: Adminunit
+}
+
+"""
+复合众多参数Input types may be lists of another input type, or a non‐null variant of any other input type像JS对象样
+"""
+input ComplexInput {
+  username: String
+  mobile: String
+  dev: DeviceCommonInput
+}
+
+type Country implements Node {
+  id: ID!
+  name: String!
+  collapse: Boolean
+  continent: String
+  provinces: [Province]
+  adm: Adminunit
+}
+
+type County implements Node {
+  id: ID!
+  name: String!
+  collapse: Boolean
+  towns: [Town]
+  adm: Adminunit
+}
+
+type Crane implements Equipment & Node & EqpCommon {
+  id: ID!
+  version: Int!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  svp: String
+  pa: String
+  isps: IspConnection
+  cpa: Int
+  vital: Boolean
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+  level: String
+
+  """  pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+
+  """以下专有"""
+  nnor: Boolean
+  vls: String
+  flo: Int
+  tm: String
+  cpm: String
+  opm: String
+  rtlf: Float
+  cap: String
+  rvl: String
+  mvl: Float
+  cvl: String
+  scv: String
+  lmv: String
+  rtv: String
+  luff: String
+  ns: Int
+  pnum: Int
+  rang: String
+  span: Float
+  two: Boolean
+  twoc: Boolean
+  grab: Boolean
+  suck: Boolean
+  cotr: Boolean
+  walk: Boolean
+  mom: String
+  whole: Boolean
+  tno: String
+  cpi: String
+  pcs: String
+  pcw: String
+  miot: Float
+  luf: String
+  jobl: String
+  highs: String
+  part: String
+  occa: String
+  metl: Boolean
+  hlf: Float
+  hlfm: Float
+  auxh: Boolean
+  wjib: Boolean
+  crDate: String
+}
+
+"""单个收费项的更新"""
+type CudFeeItemResp {
+  warn: String
+  fee: Charging
+  bus: Detail
+}
+
+"""An RFC-3339 compliant Full Date Scalar"""
+scalar Date
+
+type Detail implements Node {
+  id: ID!
+  type: String
+  sort: String
+  vart: String
+  feeOk: Boolean
+  sprice: String
+  fees: [Charging]
+  cheap: Boolean
+  ccost: Float
+  task: Task
+  isp: Isp
+  recnt: Int
+  ident: String
+  fcode: String
+  zmoney: String
+  mreprc: Float
+  nsite: Boolean
+  test: Boolean
+  apprp: Boolean
+  online: Boolean
+  impor: Boolean
+  ntscop: Boolean
+  varea: Float
+  opprn: Float
+  totm: Float
+  diame: Float
+  rustc: Float
+  turbi: Int
+  hardd: Int
+  phval: Int
+  conduc: Int
+  palka: Int
+  totalk: Int
+  dsolid: Int
+  phosph: Int
+  oilw: Int
+  tiron: Int
+  sulfit: Int
+  rebasi: Int
+  chrion: Int
+  dioxy: Int
+  carbon: Int
+  captem: Int
+  num: Int
+  isum: Int
+  meter: String
+
+  """一份报告关联多个的管道单元队列"""
+  pipus: [PipingUnit!]
+}
+
+type DetailConnection {
+  edges: [DetailConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type DetailConnectionEdge {
+  cursor: String
+  node: Detail
+}
+
+input DetailInput {
+  ident: String
+  ccost: Float
+  mreprc: Float
+  nsite: Boolean
+  test: Boolean
+  cheap: Boolean
+  apprp: Boolean
+  online: Boolean
+  impor: Boolean
+  ntscop: Boolean
+  varea: Float
+  opprn: Float
+  totm: Float
+  diame: Float
+  rustc: Float
+  turbi: Int
+  hardd: Int
+  phval: Int
+  conduc: Int
+  palka: Int
+  totalk: Int
+  dsolid: Int
+  phosph: Int
+  oilw: Int
+  tiron: Int
+  sulfit: Int
+  rebasi: Int
+  chrion: Int
+  dioxy: Int
+  carbon: Int
+  captem: Int
+  num: Int
+  isum: Int
+  meter: String
+  fcode: String
+  zmoney: String
+}
+
+input DeviceCommonInput {
+  version: Int
+  type: String
+  sort: String
+  vart: String
+  subv: String
+  cod: String
+  address: String
+  oid: String
+  fno: String
+  lat: String
+  cert: String
+  rcod: String
+  addr: String
+  model: String
+  id: ID
+  svp: String
+  pa: String
+  titl: String
+  lpho: String
+  plat: String
+  used: Date
+  expire: Date
+  move: Boolean
+  money: Float
+  impt: Int
+  plno: String
+  mkd: Date
+  makeu: ID
+  sno: String
+  owner: ID
+  remu: ID
+  repu: ID
+  insu: ID
+  mtu: ID
+  ispu: ID
+  ispud: ID
+  useu: ID
+  useuName: String
+  usud: ID
+  flo: Int
+  spec: Boolean
+  nnor: Boolean
+  oldb: Boolean
+  vl: String
+  vls: String
+  hlf: Float
+  hlfm: Float
+  lesc: Float
+  wesc: String
+  cpm: String
+  tm: String
+  mtm: String
+  buff: String
+  rtl: String
+  aap: String
+  prot: String
+  doop: String
+  limm: String
+  opm: String
+  lbkd: Date
+  nbkd: Date
+  cpa: Int
+  vital: Boolean
+  level: String
+  wall: Boolean
+  power: Float
+  form: String
+  fuel: String
+  pres: String
+  bmod: String
+  asemb: Boolean
+  rtlf: Float
+  cap: String
+  rvl: String
+  mvl: String
+  cvl: String
+  scv: String
+  lmv: String
+  rtv: String
+  luff: String
+  ns: Int
+  pnum: Int
+  rang: String
+  span: Float
+  two: Boolean
+  twoc: Boolean
+  grab: Boolean
+  suck: Boolean
+  cotr: Boolean
+  walk: Boolean
+  mom: String
+  whole: Boolean
+  tno: String
+  cpi: String
+  pcs: String
+  pcw: String
+  miot: Float
+  luf: String
+  jobl: String
+  high: Float
+  highs: String
+  part: String
+  occa: String
+  metl: Boolean
+  auxh: Boolean
+  wjib: Boolean
+  vol: String
+  prs: String
+  weig: Float
+  fulw: Float
+  mdi: String
+  jakm: String
+  insul: String
+  mont: String
+  pow: String
+  mbig: Boolean
+  leng: Float
+  sdia: String
+  grad: String
+  angl: String
+  matr: String
+  temp: String
+  lon: String
+  vlg: ID
+  vlgName: String
+  ad: ID
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: Date
+  svu: String
+}
+
+type Division {
+  id: ID!
+  name: String!
+  unit: Unit!
+  offices: [Office]
+  linkMen: String
+  phone: String
+  address: String
+
+  """ pos: Address"""
+  branch: Boolean
+
+  """没有挂在科室底下的人员"""
+  staff: [User]
+}
+
+type Elevator implements Equipment & Node & EqpCommon {
+  id: ID!
+  version: Int!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  svp: String
+  pa: String
+  isps: IspConnection
+  cpa: Int
+  vital: Boolean
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+
+  """ pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+
+  """以下专有"""
+  flo: Int
+  spec: Boolean
+  nnor: Boolean
+  oldb: Boolean
+  vl: Float
+  hlf: Float
+  lesc: Float
+  wesc: Float
+  cpm: String
+  tm: String
+  mtm: String
+  buff: String
+  rtl: Int
+  aap: String
+  prot: String
+  doop: String
+  limm: String
+  opm: String
+  lbkd: String
+  nbkd: String
+  crDate: String
+}
+
+"""除8大类外的设备"""
+type Eqp implements Equipment & Node & EqpCommon {
+  id: ID!
+  version: Int!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  svp: String
+  pa: String
+  isps: IspConnection
+  cpa: Int
+  vital: Boolean
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+
+  """  pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+  crDate: String
+}
+
+interface EqpCommon {
+  id: ID!
+  cod: String
+  type: String!
+  sort: String!
+  vart: String!
+  oid: String
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  plno: String
+  address: String
+  useu: Unit
+}
+
+type EqpCommonConnection {
+  edges: [EqpCommonConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type EqpCommonConnectionEdge {
+  cursor: String
+  node: EqpCommon
+}
+
+type EqpEs implements Node & EqpCommon {
+  id: ID!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  plno: String
+  address: String
+  useu: Unit
+  fno: String
+}
+
+type EqpMge {
+  id: ID!
+  eqpcod: String!
+}
+
+interface Equipment {
+  id: ID!
+  version: Int!
+  cod: String
+  type: String!
+  sort: String!
+  vart: String!
+  oid: String
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  isps: IspConnection
+  svp: String
+  pa: String
+  cpa: Int
+  vital: Boolean
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+
+  """ pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+  crDate: String
+}
+
+type FactoryVehicle implements Equipment & Node & EqpCommon {
+  id: ID!
+  version: Int!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  svp: String
+  pa: String
+  isps: IspConnection
+  cpa: Int
+  vital: Boolean
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+
+  """ pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+
+  """以下专有"""
+  rtlf: Float
+  mtm: String
+  pow: String
+  crDate: String
+}
+
+input FeeItemInput {
+  code: String
+  fm: Int
+  amount: String
+  mnum: String
+  memo: String
+  id: ID
+}
+
+enum Ifop_Enu {
+  ADD
+  UPD
+  DEL
+}
+
+type Isp implements Node {
+  id: ID!
+  no: String
+  bsType: BusinessCat_Enum
+
+  """dev定义:Equipment会产生问题类型匹配多个Java定义冲突,除非getDev()强制转换"""
+  dev: Eqp
+  ispMen: [User]
+  checkMen: User
+  nextIspDate: String
+
+  """安全考虑用SimpleReport代替Report就无法内省流出保密字段,实际做不到前端可以查Report"""
+  reps: SimpleReportConnection
+  report: SimpleReport
+  entrust: Boolean
+  ispDate: String
+  conclusion: String
+  bus: Detail
+  servu: Unit
+  ispu: Unit
+  mdtype: ReportType_Enum!
+  mduri: String
+}
+
+type IspAgency implements Uunode & Node {
+  id: ID!
+  unit: Unit
+  apno: String
+  enable: Boolean
+  bjtel: String
+  bjurl: String
+}
+
+input IspCommonInput {
+  id: ID
+  no: String
+  name: String
+  addr: String
+  phone: String
+  cod: String
+  oid: String
+  servu: ID
+  ident: String
+}
+
+type IspConnection {
+  edges: [IspConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type IspConnectionEdge {
+  cursor: String
+  node: Isp
+}
+
+type IspEs {
+  id: ID!
+  no: String
+  bsType: BusinessCat_Enum
+  entrust: Boolean
+  ispDate: String
+  bus: Detail
+  dev: Eqp
+  servu: Unit
+  ispu: Unit
+}
+
+type IspEsConnection {
+  edges: [IspEsConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type IspEsConnectionEdge {
+  cursor: String
+  node: IspEs
+}
+
+type JcAuthor {
+  id: ID!
+  nickname: String!
+}
+
+type JsliceMang {
+  id: ID
+  desc: String
+  auid: String
+  offs: Int
+  totl: Int
+  fireor: UserBase
+}
+
+type Mutation {
+  newJcAuthor(nickname: String!): JcAuthor!
+  buildAmusementFake(oid: String): Amusement
+  buildBoilerFake(oid: String): Boiler
+  buildCraneFake(oid: String): Crane
+  buildElevator(cod: String!, type: String!, oid: String): Elevator @deprecated
+  newEQP(type: String!, inp: DeviceCommonInput!): Equipment
+  buildEQP(id: ID!, owner: ID!, in: DeviceCommonInput): Equipment
+
+  """
+  setEQPPosUnit(id:ID!, pos: ID!, owner: ID!, maint: ID) : Equipment!
+  buildEQP2(id:ID!, owner: ID!, info: DeviceCommonInput) : Equipment
+  """
+  testEQPModify(id: ID!, oid: String): Equipment
+  testEQPFindModify(cod: String!, oid: String): String
+  testEQPStreamModify(cod: String!, oid: String): String
+  testEQPCriteriaModify(cod: String!, oid: String, type: String): Equipment
+  testEQPcreateQueryModify(cod: String!, oid: String): String
+  invalidateEQP(whichEqp: ID!, reason: String!): Boolean!
+  removeEQP(id: ID!): Boolean!
+  buildFactoryVehicleFake(oid: String): FactoryVehicle
+  buildPipelineFake(oid: String): Pipeline
+  newPipingUnit(pipe: ID!, code: String!, inp: PipingUnitInput): PipingUnit
+  buildPipingUnit(id: ID!, inp: PipingUnitInput): PipingUnit
+  removePipingUnit(id: ID!): Boolean!
+  buildVesselFake(oid: String): Vessel
+  reckonIspFee(id: ID!): CalcFeeResp!
+  cudChargingFee(busTaskId: ID!, opt: Ifop_Enu!, inp: FeeItemInput!): CudFeeItemResp!
+  confirmIspFee(id: ID!): CalcFeeResp!
+  ossDeleteFile(file: String!, key: String, value: String): String!
+  cudAgreement(id: ID, opt: Ifop_Enu!, inp: AgreementInput!): AgreementCudResp!
+  cudEqpToAgreementTask(agreement: ID!, opt: Ifop_Enu!, devs: [ID!], task: ID): Agreement
+  applicationFlowTo(entId: ID!, userTaskId: String!, allow: Opinion_Enum = YES, memo: String, men: ID, days: Int, uri: String, calcfee: Boolean = false): String
+  agreementAddTask(agreId: ID!, date: Date!, bsType: BusinessCat_Enum!, entrust: Boolean, devs: [ID!]): Task
+  updateDetail(id: ID!, inp: DetailInput!): Detail
+  abandonDetail(detId: ID!, reason: String): Boolean!
+  fillReportTzFields(detId: ID!): Report
+  newISP(dev: ID!): Isp!
+  setISPispMen(id: ID!, users: [ID]): Isp!
+  setISPtask(id: ID!, task: ID!): Isp!
+
+  """setISPreport(id:ID!, reps:[ID]! ) : Isp!"""
+  buildISP(dev: ID!, task: ID!, username: String!): Isp!
+  newTask(devs: ID!): Task! @deprecated
+  buildTask(dep: String!, date: String!, devs: [ID!]): Task!
+
+  """
+  创立检验任务,不用input直接上多个字段的模式
+  addTask(date: String! @date,bsType: BusinessCat_Enum!,entrust:Boolean!,
+  servuId:ID!,depId:ID,officeId:ID,liablerId:ID, devs: [ID!]) : Task
+  """
+  addTask(date: Date!, bsType: BusinessCat_Enum!, entrust: Boolean!, servuId: ID!, depId: ID, officeId: ID, liablerId: ID, devs: [ID!], in: TaskDetailInput): Task
+  addDeviceToTask(task: ID!, dev: ID!, repNo: String): Task!
+  dispatchToOffice(task: ID!, office: String!): Task
+  dispatchToLiabler(task: ID!, liabler: ID!, nos: String): Task
+  dispatchTaskTo(id: ID!, taskDate: Date!, verify: ID!, ispmen: [ID!]!, reviewerId: ID!, approverId: ID!, modeltype: String, modelversion: Int): Task
+  cancellationTask(task: ID!, reason: String): String
+  summaryTaskFee(id: ID!): TaskComResp!
+  confirmTaskFee(id: ID!, inp: FeeItemInput!): TaskComResp!
+  finishTask(taskId: ID!): Task
+  cudTaskDetails(id: ID!, opt: Ifop_Enu!, dets: [ID!]!, newId: ID): TaskComResp!
+  syncEqpFromLegacy(type: String!, arg: String, pasw: String, offset: Int): JsliceMang
+
+  """末尾加权限@authr(qx:["USER","ADMIN"])，没权就用不了接口函数。"""
+  newReport(isp: ID!, master: ID, ispMens: [ID], reviewer: ID, approver: ID, modeltype: String!, modelversion: Int!): Report!
+
+  """buildReport(isp: ID!,no: String!,path: String!) : Report!"""
+  modifyOriginalRecordData(id: ID!, operationType: Int!, data: String, deduction: String, version: Int): Report
+
+  """modifyOriginalRecordFiles(id: ID!, fileIDs: [ID]!) : Report"""
+  deleteReport(repId: ID!, reason: String): Boolean!
+  flowReport(repId: ID!, uri: String!, allow: Opinion_Enum = YES, memo: String, days: Int): String
+  flowTo(entId: ID!, userTaskId: String!, allow: Opinion_Enum = YES, memo: String, mens: [ID!], days: Int, uri: String): String
+  cudRequest(id: ID, opt: Ifop_Enu!, inp: RequestInput!): RequestCudResp!
+  flowRequestTo(entId: ID!, userTaskId: String, allow: Opinion_Enum = YES, data: String, men: ID, level: Int, days: Int, uri: String, topic: String, bpmn: String): String
+  newUnit(name: String!, address: String): Unit! @deprecated
+  newUnitCompany(unit: UnitCommonInput!, id: ID): Unit!
+  newUnitPerson(unit: UnitCommonInput!, id: ID): Unit!
+  newUnitExternalSource(unit: UnitCommonInput!): Unit!
+  newUser(username: String!, password: String!, mobile: String!, external: String, eName: String, ePassword: String): Boolean!
+  authenticate(username: String!, password: String!): Boolean!
+  logout: Boolean!
+}
+
+type NewsEs implements Node {
+  id: ID!
+  url: String
+  title: String
+  pdate: String
+  chn: String
+  site: String
+  tags: [String]
+  crDate: String
+}
+
+type NewsEsConnection {
+  edges: [NewsEsConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type NewsEsConnectionEdge {
+  cursor: String
+  node: NewsEs
+}
+
+"""
+extend type Mutation {
+    buildPipingUnit(id:ID!, inp: PipingUnitInput) : PipingUnit
+}
+"""
+input NewsEsInput {
+  tags: [String]
+  chn: [String]
+  pdate: String
+  title: String
+  site: String
+}
+
+interface Node {
+  id: ID!
+}
+
+type Office {
+  id: ID!
+  name: String!
+
+  """有挂在科室底下的人员"""
+  staff: [User]
+}
+
+enum Opinion_Enum {
+  NO
+  YES
+  ABST
+  BACK
+}
+
+type PageInfo {
+  hasPreviousPage: Boolean!
+  hasNextPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Person {
+  id: ID!
+  name: String!
+  no: String
+  gender: String
+  address: String
+  phone: String
+  occupation: String
+}
+
+type PersonEs {
+  id: ID!
+  name: String!
+  no: String
+  gender: String
+  address: String
+  phone: String
+  occupation: String
+}
+
+type Pipeline implements Equipment & Node & EqpCommon {
+  id: ID!
+  version: Int!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  svp: String
+  pa: String
+  isps: IspConnection
+  cpa: Int
+  vital: Boolean
+  level: String
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+
+  """ pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+
+  """
+  以下专有
+  Set<PipingUnit> cells
+  """
+  matr: String
+  mdi: String
+  prs: String
+  temp: String
+  cell_list(orderBy: String, asc: Boolean, where: DeviceCommonInput, first: Int, after: String, last: Int, before: String): PipingUnitConnection
+  numCell: Int
+  crDate: String
+}
+
+type PipingUnit implements Node & PipingUnitCommon {
+  id: ID!
+  code: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  name: String
+  rno: String
+  proj: String
+  start: String
+  stop: String
+  regd: String
+  dia: Float
+  thik: String
+  leng: Float
+  level: String
+  lay: String
+  matr: String
+  mdi: String
+  nxtd1: String
+  nxtd2: String
+  svp: String
+  pa: String
+  desu: Unit
+  insu: Unit
+  used: String
+  insd: String
+
+  """  pos: Address"""
+  ad: Adminunit
+  pipe: Pipeline
+  safe: String
+  isp1: Isp
+  isp2: Isp
+  ispsv: Isp
+  ninsp: Boolean
+  crDate: String
+  dets: [Detail]
+}
+
+interface PipingUnitCommon {
+  id: ID!
+  code: String!
+  pipe: Pipeline
+  rno: String
+  start: String
+  stop: String
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  level: String
+  nxtd1: String
+  nxtd2: String
+  dets: [Detail]
+  crDate: String
+}
+
+type PipingUnitCommonConnection {
+  edges: [PipingUnitCommonConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type PipingUnitCommonConnectionEdge {
+  cursor: String
+  node: PipingUnitCommon
+}
+
+type PipingUnitConnection {
+  edges: [PipingUnitConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type PipingUnitConnectionEdge {
+  cursor: String
+  node: PipingUnit
+}
+
+type PipingUnitEs implements Node & PipingUnitCommon {
+  id: ID!
+  code: String!
+  pipe: Pipeline
+  rno: String
+  start: String
+  stop: String
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  level: String
+  nxtd1: String
+  nxtd2: String
+  dets: [Detail]
+  crDate: String
+}
+
+input PipingUnitInput {
+  code: String
+  name: String
+  proj: String
+  start: String
+  stop: String
+  ust: UseState_Enum
+  regd: String
+  dia: Float
+  thik: String
+  leng: Float
+  level: String
+  lay: String
+  matr: String
+  mdi: String
+  nxtd1: Date
+  nxtd2: Date
+  svp: String
+  pa: String
+  used: String
+  insd: String
+  desu: ID
+  insu: ID
+  safe: String
+  ad: ID
+  pipe: ID
+  useu: ID
+  useuName: String
+  rno: String
+  reg: RegState_Enum
+  nxtd11: Date
+  nxtd12: Date
+  nxtd21: Date
+  nxtd22: Date
+  bus: ID
+}
+
+enum Procedure_Enum {
+  BEGIN
+  MAKE
+  SIGN
+  CHECK
+  WAITREDO
+  APPR
+  OFFER
+  END
+  CANCEL
+}
+
+enum ProtocolSta_Enum {
+  INIT
+  SUBMIT
+  CHECK
+  SIGNING
+  SIGNED
+  END
+  CANCEL
+}
+
+type Province implements Node {
+  id: ID!
+  name: String!
+  collapse: Boolean
+  cities: [City]
+  adm: Adminunit
+}
+
+type Query {
+  node(id: ID): Node
+  modelNodes(ids: [ID]): [Node]
+  artifactRepositories: [ArtifactRepository]
+  artifactRepository(id: ID!): ArtifactRepository
+  greeting: String
+
+  """
+  findAllPositions: [Address]!
+  countPositionEQP(id: ID ):Int
+  """
+  getAllCountries(continent: String): [Country]
+  findAllJcAuthors: [JcAuthor]!
+  searchNewsEs(where: NewsEsInput, after: String, first: Int, orderBy: String, asc: Boolean): NewsEsConnection
+  findAllAuthority: [Authority]!
+  findAllEQPsFilter3(where: DeviceCommonInput, offset: Int, limit: Int, orderBy: String, asc: Boolean): [Equipment]!
+  findAllEQPsFilter(where: DeviceCommonInput, offset: Int, limit: Int, orderBy: String, asc: Boolean): [Equipment]!
+
+  """占坑Eqp对应实体的类型"""
+  getDevice(id: ID!): Eqp
+
+  """    getEqpEs(id:ID!): EqpEs"""
+  getDeviceSelf(id: ID!): Equipment
+  findEQPbyCod(cod: String!): Equipment
+  findEQPLike(filter: DeviceCommonInput): [Equipment]!
+  findAllEQPsFilterInput(filter: DeviceCommonInput!, offset: Int!, first: Int = 20, orderBy: String, asc: Boolean = true): [Equipment]!
+  getAllEQP: [Equipment]!
+  countAllEQP: Int!
+  countAllEQPsFilter(filter: DeviceCommonInput!): Int!
+
+  """
+  升级弃用countAllEQPsWhere(where: WhereTree): Int!
+  findAllEQPsFilter(where: DeviceCommonInput, offset:Int, first:Int, orderBy:String, asc:Boolean): [Eqp]!
+  findAllEQPsFilter2(where: DeviceCommonInput, offset:Int, first:Int, orderBy:String, asc:Boolean): [Equipment]!
+  """
+  getAllEqpEsFilter(where: DeviceCommonInput, after: String, first: Int, orderBy: String, asc: Boolean): EqpCommonConnection
+
+  """
+  cell_list(orderBy:String,asc:Boolean,where:DeviceCommonInput,first:Int,after:String,last:Int,before:String): PipingUnitConnection
+  """
+  findPipingUnit(pipe: ID!, where: PipingUnitInput, after: String, first: Int, orderBy: String, asc: Boolean): PipingUnitConnection
+  searchPipingUnitEs(where: PipingUnitInput, after: String, first: Int, orderBy: String, asc: Boolean): PipingUnitCommonConnection
+  findAgreementFilter(orderBy: String, asc: Boolean, where: AgreementInput, first: Int, after: String, last: Int, before: String): AgreementConnection
+
+  """
+  升级弃用findAllISPfilter(where: WhereTree, offset:Int!, first:Int=20, orderBy:String, asc:Boolean=true): [Isp]!
+  """
+  findMeDetails(orderBy: String, asc: Boolean, where: IspCommonInput, first: Int, after: String, last: Int, before: String): DetailConnection
+  findAllISPs: [Isp]!
+  countISP(ispMen: ID): Int
+  getISP(id: ID!): Isp @deprecated
+
+  """
+  getReportOfISP(id:ID!): [SimpleReport]!
+      isp(filter: ID!,offset: Int,first: Int=3,orderBy: String): [Isp!]
+  """
+  searchIsp(orderBy: String, asc: Boolean, where: IspCommonInput, first: Int, after: String, last: Int, before: String): IspEsConnection
+  getTodos(orderBy: String, asc: Boolean, where: IspCommonInput, first: Int, after: String, last: Int, before: String): UserTaskConnection
+
+  """被跳转的这里不能再加@dbpage指示，死循环,可不加Relay参数,兼容考虑上Relay参数。"""
+  findAllTasks: [Task]!
+
+  """
+      countTask(dep: String, status: String):Int
+  findAllTaskFilter(filter: DeviceCommonInput, offset:Int, limit:Int, orderBy:String, asc:Boolean): [Task]!
+  """
+  findAllTaskFilter(orderBy: String, asc: Boolean, where: TaskInput, first: Int, after: String, last: Int, before: String): TaskConnection
+
+  """旧平台实体表应当直接融合掉，这里只提供索引定位功能。"""
+  findEqpMge(id: ID!): EqpMge
+  findAllReports: [Report]!
+  findAllBaseReports: [SimpleReport]!
+  countReport(isp: ID): Int
+  getReport(id: ID!): Report
+
+  """getISPofDevTask(dev:ID!,task:ID!): Isp"""
+  findMeSubReports(orderBy: String, asc: Boolean, where: IspCommonInput, first: Int, after: String, last: Int, before: String): ReportConnection
+  findRequestFilter(orderBy: String, asc: Boolean, where: RequestInput, first: Int, after: String, last: Int, before: String): RequestConnection
+  getUnitEsFilter(where: UnitCommonInput, first: Int, after: String, last: Int, before: String, orderBy: String, asc: Boolean): UnitEsConnection
+  getUnitFilter(where: UnitCommonInput, first: Int, after: String, last: Int, before: String, orderBy: String, asc: Boolean): UnitConnection
+  getUnit(esid: ID, company: Boolean): Unit
+  units(uinput: UnitInputPorjection): [Unit]
+  findAllUsers: [UserBase]!
+
+  """获取当前用户的授权角色"""
+  auth: String! @deprecated
+
+  """当前用户的基本信息"""
+  authUser: User
+  findUserLike(username: String): [User]!
+  findUserLikeInterface(complex: ComplexInput): UserConnection
+  userBasic(id: ID!): UserBase
+
+  """
+  findAllUserFilter(filter: DeviceCommonInput, offset:Int, limit:Int, orderBy:String, asc:Boolean): [User]!
+  权限要求 countAuthors: Int! @authr(qx:["ANONYMOUS"])
+     limitedValue(value: Float! @range(min: 0.00, max: 1.00)): Float
+  """
+  zhuanyi: String
+
+  """  countAuthors: Int! @authr(qx:["ANONYMOUS"])"""
+  hello2(value: String!): String
+  limitedValue2(value: Float!): Float
+  limitedValue(value: Float!, format: String = "yyyy-MM-dd"): String
+}
+
+enum RegState_Enum {
+  TODOREG
+  REG
+  CANCEL
+}
+
+type Report implements Node & SimpleReport {
+  id: ID!
+  version: Int!
+  stm: ApprovalStm
+  isp: Isp
+  type: ReportType_Enum!
+  modeltype: String
+  modelversion: Int
+  snapshot: String
+  data: String
+  upLoadDate: String
+  path: String
+
+  """
+      filesCount(fromDate: String): Int
+  files: 可能被报告使用的后端台账业务字段 [File]
+  """
+  tzFields: [String!]
+}
+
+type ReportConnection {
+  edges: [ReportConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type ReportConnectionEdge {
+  cursor: String
+  node: Report
+}
+
+enum ReportType_Enum {
+  WEB
+  PDF
+  FILE
+  URI
+  MANUAL
+}
+
+type Request implements Node {
+  id: ID!
+  mod: String
+  dat: String
+  ispu: Unit
+  status: String
+  crman: UserBase
+  director: UserBase
+  manager: UserBase
+  auditor: UserBase
+  mdtime: String
+  prId: String
+  result: String
+  crDate: String
+  mdays: Int
+  audat: String
+  mndat: String
+  drdat: String
+}
+
+type RequestConnection {
+  edges: [RequestConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type RequestConnectionEdge {
+  cursor: String
+  node: Request
+}
+
+type RequestCudResp {
+  warn: String
+  me: Request
+}
+
+input RequestInput {
+  ispu: ID
+  crman: ID
+  auditor: ID
+  pttype: String
+  mdtime: Date
+  devs: [String]
+  reason: String
+  status: RequestSta_Enum
+  statusx: [RequestSta_Enum]
+  office: String
+  dep: String
+  date1: Date
+  date2: Date
+  qdate1: Date
+  qdate2: Date
+  dat: String
+  mod: String
+  task: String
+  manager: ID
+  director: ID
+}
+
+enum RequestSta_Enum {
+  INIT
+  SUBMIT
+  CHECK
+  FIN
+  END
+  CANCEL
+}
+
+"""安全非安全类型的使用原则，尽量把保密字段打包抽离，非安全类型用于普通功能比如关联对象"""
+interface SimpleReport {
+  id: ID!
+  version: Int!
+  stm: ApprovalStm
+  type: ReportType_Enum!
+  modeltype: String
+  modelversion: Int
+  isp: Isp
+
+  """
+  后面加权限认证@authr(qx : ["USER","ADMIN"])没这权限之一无法访问。
+  isp(id: ID): Isp
+  """
+  path: String
+  data: String
+}
+
+type SimpleReportConnection {
+  edges: [SimpleReportConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type SimpleReportConnectionEdge {
+  cursor: String
+  node: SimpleReport
+}
+
+type Subscription {
+  qqCommunicate: Int
+  hello: Int
+}
+
+type Task implements Node {
+  id: ID!
+  dep: Division
+  office: Office
+  date: String
+  status: String
+
+  """能直接这么屏蔽fee: String"""
+  bsType: BusinessCat_Enum
+  entrust: Boolean
+  liabler: UserBase
+
+  """
+  detail_list(orderBy:String,asc:Boolean,where:DeviceCommonInput,first:Int,after:String,last:Int,before:String): DetailConnection
+  缺少参数orderBy, asc, DeviceCommonInput where,
+  """
+  detail_list(first: Int, after: String, last: Int, before: String, orderBy: String, where: TaskDetailInput): DetailConnection
+
+  """
+  ryList(first:Int,after:String,last:Int,before:String): IspConnection @connection(for: "Isp")
+  """
+  origd: String
+  feeOk: Boolean
+  dreason: String
+  disfee: String
+  charge: String
+  servu: Unit
+  type: String
+  typicstm: ApprovalStm
+  crman: UserBase
+  eqpcnt: Int
+  agreement: Agreement
+}
+
+type TaskComResp {
+  warn: String
+  task: Task
+  newTask: Task
+}
+
+type TaskConnection {
+  edges: [TaskConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type TaskConnectionEdge {
+  cursor: String
+  node: Task
+}
+
+input TaskDetailInput {
+  oid: String
+  cod: String
+  type: String
+  sort: String
+  vart: String
+  subv: String
+  used: Date
+  plno: String
+  fno: String
+  plat: String
+  cert: String
+  lpho: String
+  ident: String
+  feeOk: Boolean
+  stmsta: Procedure_Enum
+}
+
+type TaskEs {
+  id: ID!
+  dep: String
+  date: String
+  status: String
+  endDate: String
+}
+
+input TaskInput {
+  liabler: ID
+  office: ID
+  dep: ID
+  servu: ID
+  date1: Date
+  date2: Date
+  statusx: [TaskState_Enum]
+  entrust: Boolean
+  bsTypex: [BusinessCat_Enum]
+}
+
+enum TaskState_Enum {
+  INIT
+  DEPART
+  OFFICE
+  PERSON
+  DISP
+  HANGUP
+  DONE
+  CANCEL
+}
+
+type Town implements Node {
+  id: ID!
+  name: String!
+  adm: Adminunit
+}
+
+type Unit implements Uunode & Node {
+  id: ID!
+  name: String
+  address: String
+  linkMen: String
+  phone: String
+
+  """
+    owns: [Eqp]    2000
+    maints: [Eqp]  7000  太多了最好别开放给前端
+  """
+  company: Company
+  person: Person
+  tasks: TaskConnection
+
+  """
+  mtp: Int
+  部门列表，不会太多就没分页
+  """
+  dvs: [Division]
+
+  """pos: Address"""
+  indCod: String
+  area: String
+  cancel: Boolean
+
+  """没有挂在部门底下的人员"""
+  staff: [User]
+  agency: IspAgency
+  crDate: String
+}
+
+input UnitCommonInput {
+  company: Boolean
+  name: String
+  no: String
+  address: String
+  linkMen: String
+  phone: String
+}
+
+type UnitConnection {
+  edges: [UnitConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type UnitConnectionEdge {
+  cursor: String
+  node: Unit
+}
+
+union UnitEs = CompanyEs | PersonEs
+
+type UnitEsConnection {
+  edges: [UnitEsConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type UnitEsConnectionEdge {
+  cursor: String
+  node: UnitEs
+}
+
+input UnitInputPorjection {
+  cancel: Boolean
+  indCod: String
+}
+
+type User implements Uunode & Node & UserBase {
+  id: ID!
+  username: String!
+  mobile: String
+  person: Person
+
+  """
+   checks: [Isp]  可能20万条
+  isp: IspConnection    #可能2万条
+  底下这个isps_list 淘汰！不要用。
+  isps_list(first:Int,after:String,last:Int,before:String): IspConnection @dbpage
+  权限表非超级用户只能看自己的了
+  """
+  authorities: [Authority]
+
+  """模型字段实际同函数一样的处理,属性竟然也可以有输入参数"""
+  enabled(isUsing: Boolean): Boolean!
+  photoURL: String
+  unit: Unit
+  dep: Division
+  office: Office
+  ispUnits: [IspAgency]
+}
+
+interface UserBase {
+  id: ID!
+  username: String!
+  mobile: String
+  person: Person
+  unit: Unit
+  dep: Division
+  office: Office
+}
+
+input UserCommonInput {
+  id: ID
+  no: String
+  name: String
+  addr: String
+  phone: String
+}
+
+type UserConnection {
+  edges: [UserConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type UserConnectionEdge {
+  cursor: String
+  node: User
+}
+
+type UserTask {
+  id: ID!
+  processName: String!
+  tdId: String!
+  ent: String
+  pren: String
+  name: String!
+  assignee: String
+  candidateGroups: [String!]
+  creationTime: String
+  uri: String
+  expirationDate: String
+  topic: String
+  prId: String
+  say: String
+}
+
+type UserTaskConnection {
+  edges: [UserTaskConnectionEdge]
+  pageInfo: PageInfo
+}
+
+type UserTaskConnectionEdge {
+  cursor: String
+  node: UserTask
+}
+
+"""对输入参数有用，输出Object{}可以不用Enum,直接String没区别"""
+enum UseState_Enum {
+  NOTINUSE
+  USE
+  STOP
+  DISCARD
+  DEMOLISH
+  MOVEOUT
+  DELETE
+  REMOVESUPV
+  USENOTREG
+}
+
+interface Uunode {
+  id: ID!
+}
+
+type Vessel implements Equipment & Node & EqpCommon {
+  id: ID!
+  version: Int!
+  cod: String
+  oid: String
+  type: String!
+  sort: String!
+  vart: String!
+  ust: UseState_Enum!
+  reg: RegState_Enum!
+  svp: String
+  pa: String
+  isps: IspConnection
+  cpa: Int
+  vital: Boolean
+  titl: String
+  lpho: String
+  plat: String
+  used: String
+  expire: String
+
+  """ pos: Address"""
+  move: Boolean
+  money: Float
+  impt: Int
+  model: String
+  fno: String
+  plno: String
+  mkd: String
+  makeu: Unit
+  cert: String
+  uscd: String
+  cerd: String
+  sno: String
+  rcod: String
+  rnam: String
+  regd: String
+  cand: String
+  regu: Unit
+  owner: Unit
+  remu: Unit
+  repu: Unit
+  insu: Unit
+  mtu: Unit
+  svu: Unit
+  ispu: Unit
+  ispud: Division
+  useu: Unit
+  usud: Division
+  subv: String
+  nxtd1: String
+  nxtd2: String
+  isp1: Isp
+  isp2: Isp
+  ad: Adminunit
+  address: String
+  vlg: Village
+  lon: String
+  lat: String
+  plcls: String
+  dense: Boolean
+  seimp: Boolean
+  insd: String
+  ocat: Boolean
+
+  """以下专有"""
+  vol: String
+  prs: String
+  pnum: Int
+  highs: String
+  weig: Float
+  rtlf: Float
+  fulw: Float
+  mdi: String
+  jakm: String
+  form: String
+  insul: String
+  mont: String
+  crDate: String
+}
+
+type Village {
+  id: ID!
+  name: String!
+  type: String
+}
+

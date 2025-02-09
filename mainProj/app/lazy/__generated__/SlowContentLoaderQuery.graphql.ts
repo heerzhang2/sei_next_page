@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<d0a06c65a82304b0309e3b1b3acc6a57>>
+ * @generated SignedSource<<e7808ab444acd61611731b24797d2929>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -45,18 +45,18 @@ const node: ConcreteRequest = {
         "alias": null,
         "args": null,
         "kind": "ScalarField",
-        "name": "lazyContent",
+        "name": "auth",
         "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "70469ef0eefca71291fccb355bda6247",
+    "cacheID": "db666144260cc373d0036f6f011765e0",
     "id": null,
     "metadata": {},
     "name": "SlowContentLoaderQuery",
     "operationKind": "query",
-    "text": "query SlowContentLoaderQuery {\n  ...SlowContent\n}\n\nfragment SlowContent on Query {\n  lazyContent\n}\n"
+    "text": "query SlowContentLoaderQuery {\n  ...SlowContent\n}\n\nfragment SlowContent on Query {\n  auth\n}\n"
   }
 };
 

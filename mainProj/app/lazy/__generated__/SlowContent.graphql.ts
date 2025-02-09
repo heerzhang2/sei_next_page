@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<d0b8663c477b44b548ddaa74e517e972>>
+ * @generated SignedSource<<c10eae1420daee4f5756f2278f50e420>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -11,7 +11,7 @@
 import { ReaderFragment } from 'relay-runtime';
 import { FragmentRefs } from "relay-runtime";
 export type SlowContent$data = {
-  readonly lazyContent: string;
+  readonly auth: string;
   readonly " $fragmentType": "SlowContent";
 };
 export type SlowContent$key = {
@@ -29,7 +29,7 @@ const node: ReaderFragment = {
       "alias": null,
       "args": null,
       "kind": "ScalarField",
-      "name": "lazyContent",
+      "name": "auth",
       "storageKey": null
     }
   ],
@@ -37,6 +37,6 @@ const node: ReaderFragment = {
   "abstractKey": null
 };
 
-(node as any).hash = "648919c121973187085d816c2a20edce";
+(node as any).hash = "cda19fc3466a253b2dc74d37f22649db";
 
 export default node;
