@@ -1,28 +1,41 @@
 {
   "name": "sei_next_page",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
+  "author": "何尔章",
+  "description": "特检院的前端--主要业务的部分",
+  "packageManager": "yarn@4.0.1",
   "scripts": {
     "yarn": "yarn",
+    "dev2": "next dev",
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "relay-compiler && next build",
+    "start": "next start -p 3002",
+    "lint": "next lint",
+    "relay2": "relay-compiler --watch",
+    "update-schema_本机服务端": "get-graphql-schema  http://localhost:8673/graphql > schema/schema.graphql",
+    "relay": "yarn run relay-compiler",
+    "relay3": "relay-compiler --validate"
   },
   "dependencies": {
+    "next": "15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.1.6"
+    "react-relay": "^18.2.0",
+    "relay-runtime": "^18.2.0"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "@types/react-relay": "18.2.0",
+    "@types/relay-runtime": "^18.2.5",
+    "autoprefixer": "^10.4.16",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
-    "@eslint/eslintrc": "^3"
+    "postcss": "^8",
+    "relay-compiler": "16.2.0",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
