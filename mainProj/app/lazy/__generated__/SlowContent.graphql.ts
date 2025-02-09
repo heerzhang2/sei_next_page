@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<dfc02de436cb9df456bf21989f506d43>>
+ * @generated SignedSource<<d0b8663c477b44b548ddaa74e517e972>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -8,7 +8,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { Fragment, ReaderFragment } from 'relay-runtime';
+import { ReaderFragment } from 'relay-runtime';
 import { FragmentRefs } from "relay-runtime";
 export type SlowContent$data = {
   readonly lazyContent: string;

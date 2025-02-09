@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<925f9c108623180846e887a327863d97>>
+ * @generated SignedSource<<d0a06c65a82304b0309e3b1b3acc6a57>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -8,7 +8,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { ConcreteRequest, Query } from 'relay-runtime';
+import { ConcreteRequest } from 'relay-runtime';
 import { FragmentRefs } from "relay-runtime";
 export type SlowContentLoaderQuery$variables = Record<PropertyKey, never>;
 export type SlowContentLoaderQuery$data = {
