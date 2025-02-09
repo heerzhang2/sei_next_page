@@ -14,7 +14,9 @@ export const fetchFn: FetchFunction = (operation, variables, _cacheConfig) => {
   return Observable.create<GraphQLResponse>((sink) => {
     (async () => {
       console.log("execute fetchRelay", operation.name);
-      await  fetchRelay(operation, variables, _cacheConfig);
+      const resp=await  fetchRelay(operation, variables, _cacheConfig);
+      sink.next(resp);
+      sink.complete();
       // await __simulateDeferredResponse(operation, variables, sink);
     })();
   });

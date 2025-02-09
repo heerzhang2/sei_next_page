@@ -15,5 +15,5 @@ export default function SlowContent(props: Props) {
     props.queryRef
   );
 
-  return <div className="text-yellow-500">Slow data: {data.lazyContent}</div>;
+  return <div className="text-yellow-500">Slow data: {data.auth}</div>;
 }

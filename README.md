@@ -34,3 +34,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. 安装 Node.js 和 PM2（可选，如果使用服务器渲染）
+   如果你使用的是 Next.js 的服务器渲染功能，你需要在服务器上安装 Node.js 和 PM2（一个进程管理工具）
+4. npm run build  # 如果你使用的是服务器渲染：
+   npm run export  # 如果你使用的是静态生成；
+5. 配置 Nginx；
+6. https://nextjs.org/docs/app/getting-started/installation
