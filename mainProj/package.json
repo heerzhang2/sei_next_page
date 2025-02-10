@@ -7,8 +7,8 @@
   "packageManager": "yarn@4.0.1",
   "scripts": {
     "yarn": "yarn",
-    "dev2": "next dev",
     "dev": "next dev --turbopack",
+    "dev2": "next dev",
     "build": "relay-compiler && next build",
     "start": "next start -p 3002",
     "lint": "next lint",
@@ -18,6 +18,10 @@
     "relay3": "relay-compiler --validate"
   },
   "dependencies": {
+    "framer-motion": "^12.4.1",
+    "next-themes": "^0.4.4",
+    "swr": "^2.3.2",
+    "react-icons": "^5.4.0",
     "next": "15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

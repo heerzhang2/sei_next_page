@@ -39,4 +39,10 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 4. npm run build  # 如果你使用的是服务器渲染：
    npm run export  # 如果你使用的是静态生成；
 5. 配置 Nginx；
-6. https://nextjs.org/docs/app/getting-started/installation
+6. next.js的文档 https://nextjs.org/docs/app/examples 例子https://github.com/ixartz/Next-js-Boilerplate
+7. yarn失败清除： yarn cache clean
+8. 开发工具yarn global add react-devtools 其它@clerk/nextjs登录验证,@percy/playwright测试快照，@sentry/nextjs错误监控,vite构建，vitest测试。
+   react-hook-form包=表单。  Drizzle ORM数据库; react-icons图标扩展。 use-debounce抖重;
+   nextjs+approuter   app目录的路由规则名 [[...sign-in]] ; 正则表达式字面量/relation "photos" does not exist/i.test(e.message)
+9. 例子 https://github.com/sambecker/exif-photo-blog Nodejs环境/next-auth是服务端的。
+
