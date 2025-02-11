@@ -1,4 +1,6 @@
-'use server';
+'use client';
+//'use server';
+
 
 // import {
 //   KEY_CALLBACK_URL,
@@ -16,6 +18,7 @@
 // import type { Session } from 'next-auth';
 import { redirect } from 'next/navigation';
 import {signIn} from "@/component";
+import useLoginMutation from "@/component/useLoginMutation";
 
 export const signInAction = async (
   _prevState: string | undefined,
@@ -35,6 +38,7 @@ export const signInAction = async (
   }
   redirect(formData.get(KEY_CALLBACK_URL) as string || PATH_ADMIN_PHOTOS);
 };
+
 
 export const signOutAndRedirectAction = async () =>
   signOut({ redirectTo: PATH_ROOT });

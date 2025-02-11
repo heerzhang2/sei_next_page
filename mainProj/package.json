@@ -18,6 +18,8 @@
     "relay3": "relay-compiler --validate"
   },
   "dependencies": {
+    "hash.js": "^1.1.7",
+    "customize-easy-ui-component": "5.5.0",
     "framer-motion": "^12.4.1",
     "next-themes": "^0.4.4",
     "swr": "^2.3.2",
@@ -29,6 +31,7 @@
     "relay-runtime": "^18.2.0"
   },
   "devDependencies": {
+    "babel-plugin-relay": "^18.2.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -42,5 +45,9 @@
     "tailwindcss": "^3.4.1",
     "get-graphql-schema": "^2.1.2",
     "typescript": "^5"
+  },
+  "resolutions": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
   }
 }

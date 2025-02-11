@@ -7,6 +7,8 @@ import {
 } from "relay-runtime";
 import { Sink } from "relay-runtime/lib/network/RelayObservable";
 import {UploadableMap} from "relay-runtime/lib/network/RelayNetworkTypes";
+import { connection } from 'next/server'
+
 
 /**服务器客户机都用这个：服务端认证客户角色cockie token。
  * */
@@ -98,6 +100,9 @@ async function fetchRelay(
     variables: Variables,
     _cacheConfig: CacheConfig
 ) {
+  await connection()
+  //must be prefixed with NEXT_PUBLIC_.
+  const epoint = process.env.NEXT_PUBLIC_BACK_END
   /*
   这个缓存\Relay\react-router-v6-with-relay-hooks-master机制和Modern Store 什么关系的？？
     const queryId = operation.text || '';
@@ -112,7 +117,8 @@ async function fetchRelay(
   // Fetch data from GitHub's GraphQL API:
   //很明显只能支持一个的服务端URL，不能允许多个 不同的 graphQL服务模型服务器。
   //若这里接入一个中间件进行分叉，查询变更等的 目的服务器根据什么规则分离？ 分配给不同的graphQL服务器。
-  const response = await fetch(`${process.env.REACT_APP_BACK_END}/graphql`, {
+  console.log("REACT_APP_BACK_END是{},process.env={}", epoint, process.env);
+  const response = await fetch(`${epoint}/graphql`, {
     method: "POST",
     credentials: "include",
     headers: {

@@ -44,5 +44,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 8. 开发工具yarn global add react-devtools 其它@clerk/nextjs登录验证,@percy/playwright测试快照，@sentry/nextjs错误监控,vite构建，vitest测试。
    react-hook-form包=表单。  Drizzle ORM数据库; react-icons图标扩展。 use-debounce抖重;
    nextjs+approuter   app目录的路由规则名 [[...sign-in]] ; 正则表达式字面量/relation "photos" does not exist/i.test(e.message)
-9. 例子 https://github.com/sambecker/exif-photo-blog Nodejs环境/next-auth是服务端的。
-
+9. 例子 https://github.com/sambecker/exif-photo-blog Nodejs环境/next-auth是服务端的。 ？根目录/middleware.ts；
+   publicRuntimeConfig 
