@@ -6,6 +6,9 @@ import SwrConfigClient from "@/action/SwrConfigClient";
 import AppStateProvider from "@/action/AppStateProvider";
 import { ThemeProvider } from 'next-themes';
 import {DEFAULT_THEME} from "@/site/config";
+import {Toaster} from "@/component/Toaster";
+// import ToasterWithThemes from "@/component/ToasterWithThemes";
+import { ToastContainer, toast } from 'react-toastify';
 
 export const metadata: Metadata = {
   title: "Relay Streaming SSR ✨",
@@ -26,8 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     </ThemeProvider>
                 </SwrConfigClient>
             </AppStateProvider>
-            {children}
-
+            <ToastContainer />
         </RelayProvider>
       </body>
     </html>

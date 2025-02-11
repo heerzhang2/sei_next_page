@@ -9,9 +9,15 @@ import {
 } from "relay-runtime";
 //import { AddTodoInput } from "./__generated__/useLoginMutation.graphql";
 // import { UserContext } from "../routing/UserContext";
-import {useToast} from "customize-easy-ui-component";
+
+
+// import {useToast} from "customize-easy-ui-component";
+import { ToastContainer, toast } from 'react-toastify';
+
+
 //迁移前的 const graphql = require("babel-plugin-relay/macro");
 import { graphql } from "relay-runtime";
+import {toastSuccess} from "@/utility";
 
 
 //这个特别！返回{TodoEdge, User} 而不是直接返回TodoNode: Todo就可以了。!多出两个麻烦。
@@ -27,7 +33,9 @@ export default function useLoginMutation() {
   const [called, setCalled] =useState<boolean>(false);
   // const [result, setResult] =useState<string>('');
   const [commit, doing] = useMutation(mutation);
-  const toast = useToast();
+
+  // const toast = useToast();
+
   // const {user, setUser} =useContext(UserContext);
 
   return {
@@ -49,7 +57,11 @@ export default function useLoginMutation() {
               // setResult( String(authenticate) );
               if(authenticate){         //死等服务端的回答中:
                 // setUser({authenticate: true} );
-                window.location.href = "/";       //强制刷新页面是不经过APP路由器的。后端应答cookie已保存Token,切换URL就复用该token来验证用户。
+                // window.location.href = "/";       //强制刷新页面是不经过APP路由器的。后端应答cookie已保存Token,切换URL就复用该token来验证用户。
+                toast(`后端应答${authenticate} OK`,{type: "success"});
+
+                // toast({title: "后端应答", subtitle: 'OK!', intent: "success"});
+                // toastSuccess(`后端应答${authenticate} OK`);
               }else {
                 toast({
                   title: "后端应答",

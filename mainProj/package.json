@@ -18,6 +18,8 @@
     "relay3": "relay-compiler --validate"
   },
   "dependencies": {
+    "react-toastify": "^11.0.0",
+    "sonner": "^1.7.4",
     "hash.js": "^1.1.7",
     "customize-easy-ui-component": "5.5.0",
     "framer-motion": "^12.4.1",

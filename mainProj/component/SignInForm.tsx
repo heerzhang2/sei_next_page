@@ -33,6 +33,7 @@ export default function SignInForm() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const {call:submitfunc, doing:isInFlight}= useLoginMutation();
 
 
@@ -57,11 +58,11 @@ export default function SignInForm() {
   async function signIn(tag,form)
   {
     // e.preventDefault();
-    let encodePass=sha256().update('').digest('hex');
+    let encodePass=sha256().update(form?.password).digest('hex');
     try {
       // setError("");
       // setLoading(true);
-      await  submitfunc('', encodePass);
+      await  submitfunc(form?.username, encodePass);
       //实际await不会在这里阻塞等待的！
       //setIsMeUser(false);  加上这个导致点登陆不管后端应答与否，都会被立刻跳转URL='/'
     } catch (err: any) {
@@ -77,9 +78,9 @@ export default function SignInForm() {
 
   const [response, action] = useActionState(signInAction, undefined);
 
-  const emailRef = useRef<HTMLInputElement>(null);
+  const usernameRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    const timeout = setTimeout(() => emailRef.current?.focus(), 100);
+    const timeout = setTimeout(() => usernameRef.current?.focus(), 100);
     return () => clearTimeout(timeout);
   }, []);
 
@@ -114,12 +115,11 @@ export default function SignInForm() {
             </ErrorNote>}
           <div  >
             <FieldSetWithStatus
-              id="email"
-              inputRef={emailRef}
-              label="Admin Email"
-              type="email"
-              value={email}
-              onChange={setEmail}
+              id="username"
+              inputRef={usernameRef}
+              label="用户名"
+              value={username}
+              onChange={setUsername}
             />
             <FieldSetWithStatus
               id="password"
@@ -127,6 +127,13 @@ export default function SignInForm() {
               type="password"
               value={password}
               onChange={setPassword}
+            />
+            <FieldSetWithStatus
+                id="email"
+                label="Admin Email"
+                type="email"
+                value={email}
+                onChange={setEmail}
             />
             <input
               type="hidden"
