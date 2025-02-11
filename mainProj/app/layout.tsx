@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: "Relay Streaming SSR ✨",
 };
 
+
+/*水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
+* */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -21,12 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <RelayProvider>
             <AppStateProvider>
                 <SwrConfigClient>
-                    <ThemeProvider
-                        attribute="class"
-                        defaultTheme={DEFAULT_THEME}
-                    >
                      {children}
-                    </ThemeProvider>
                 </SwrConfigClient>
             </AppStateProvider>
             <ToastContainer />
@@ -35,3 +33,4 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     </html>
   );
 }
+

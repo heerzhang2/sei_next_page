@@ -30,7 +30,7 @@ export function MainContent() {
     if(!authUser)
     {
         if(!isPublic){
-            router.push('/login');
+            // router.push('/login');
             // if (typeof window === "undefined") { } else { window.location.href = "/login"; }
             return null;
         }

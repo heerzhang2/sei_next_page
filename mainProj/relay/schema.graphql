@@ -1745,7 +1745,7 @@ type Query {
   findAllUsers: [UserBase]!
 
   """获取当前用户的授权角色"""
-  auth: String! @deprecated
+  auth: String @deprecated
 
   """当前用户的基本信息"""
   authUser: User
@@ -2094,9 +2094,9 @@ type User implements Uunode & Node & UserBase {
   isp: IspConnection    #可能2万条
   底下这个isps_list 淘汰！不要用。
   isps_list(first:Int,after:String,last:Int,before:String): IspConnection @dbpage
+  authorities: [Authority]
   权限表非超级用户只能看自己的了
   """
-  authorities: [Authority]
 
   """模型字段实际同函数一样的处理,属性竟然也可以有输入参数"""
   enabled(isUsing: Boolean): Boolean!

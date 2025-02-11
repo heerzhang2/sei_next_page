@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<c10eae1420daee4f5756f2278f50e420>>
+ * @generated SignedSource<<dd87ab681e1a7b7ab80205c33148fbd4>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -11,7 +11,7 @@
 import { ReaderFragment } from 'relay-runtime';
 import { FragmentRefs } from "relay-runtime";
 export type SlowContent$data = {
-  readonly auth: string;
+  readonly auth: string | null | undefined;
   readonly " $fragmentType": "SlowContent";
 };
 export type SlowContent$key = {

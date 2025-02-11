@@ -1,5 +1,6 @@
 // import { getTranslations, setRequestLocale } from 'next-intl/server';
 import SignInForm from "@/component/SignInForm";
+import Link from "next/link";
 
 type ISignInPageProps = {
   params: Promise<{ locale: string }>;
@@ -23,8 +24,14 @@ export default async function SignInPage(props: ISignInPageProps) {
   // setRequestLocale(locale);
 
   return (
-      <div >
-        <SignInForm />
+      <div>
+          <SignInForm/>
+          <div className="mt-10">
+              <Link href="/">⬅️ Go back home</Link>
+          </div>
+          <div className="mt-10">
+              <Link href="/user">⬅️ Go y用户</Link>
+          </div>
       </div>
   );
 };

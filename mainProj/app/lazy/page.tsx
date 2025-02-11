@@ -14,3 +14,7 @@ export default function LazyPage() {
     </div>
   );
 }
+
+/*【next.js才会的报错】
+className="light" 和 style={{color-scheme:"light"}} 这两个属性在服务器渲染的HTML中存在，但在客户端渲染时被省略或更改了。
+* */

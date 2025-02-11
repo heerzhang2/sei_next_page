@@ -6,12 +6,15 @@ export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
-    <div>
-      <MainContent />
+      <div>
+          <MainContent/>
 
-      <div className="mt-10">
-        <Link href="/lazy">Visit (potentially) cached page ➡️</Link>
+          <div className="mt-10">
+              <Link href="/lazy">Visit (potentially) cached page ➡️</Link>
+          </div>
+          <div className="mt-10">
+              <Link href="/login">⬅️ Go 的等让路 home</Link>
+          </div>
       </div>
-    </div>
   );
 }
