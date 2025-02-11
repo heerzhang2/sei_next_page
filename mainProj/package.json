@@ -18,6 +18,7 @@
     "relay3": "relay-compiler --validate"
   },
   "dependencies": {
+    "next-auth": "^4.24.11",
     "react-toastify": "^11.0.0",
     "sonner": "^1.7.4",
     "hash.js": "^1.1.7",
