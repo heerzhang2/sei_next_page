@@ -45,4 +45,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
    react-hook-form包=表单。  Drizzle ORM数据库; react-icons图标扩展。 use-debounce抖重;
    nextjs+approuter   app目录的路由规则名 [[...sign-in]] ; 正则表达式字面量/relation "photos" does not exist/i.test(e.message)
 9. 例子 https://github.com/sambecker/exif-photo-blog Nodejs环境/next-auth是服务端的。 ？根目录/middleware.ts；
-   publicRuntimeConfig 
+   publicRuntimeConfig ; server rendering: Static, Dynamic, and Streaming.默认是Static Rendering显然不行啊；
+   await connection()局部做动态的；
+10. 

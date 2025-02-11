@@ -8,6 +8,11 @@ import {MainContentQuery} from "../__generated__/MainContentQuery.graphql";
 // import {useRouter} from "next/navigation";
 import { graphql } from "relay-runtime";
 
+export const dynamic = 'force-dynamic'  // Alternative to default-no-store
+//export const revalidate = false   //1 // Disable caching
+export const fetchCache = 'default-no-store'
+
+
 type ISignInPageProps = {
   params: Promise<{ locale: string }>;
 };
