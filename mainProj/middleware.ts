@@ -1,3 +1,5 @@
+import NextAuth from 'next-auth';
+import { authConfig } from 'app/auth.config';
 // import { auth } from './auth';
 import { NextRequest, NextResponse } from 'next/server';
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -10,6 +12,10 @@ import {
   PREFIX_TAG,
 } from './site/paths';
 
+
+export default NextAuth(authConfig).auth;
+
+
 const PUBLIC_ROUTES = [
   '/',
   '/login',
@@ -17,7 +23,7 @@ const PUBLIC_ROUTES = [
   '/public'
 ]
 
-export default function middleware(req: NextRequest, res:NextResponse) {
+function middleware_OLD(req: NextRequest, res:NextResponse) {
   const pathname = req.nextUrl.pathname;
   const token = req.cookies.get('token')?.value;
   console.log('Client auth update token:{},token={}', req.cookies,token);
@@ -66,4 +72,7 @@ export const config = {
   // - / (root)
   // eslint-disable-next-line max-len
   matcher: ['/((?!api$|api/auth|_next/static|_next/image|favicon.ico$|favicons/|grid$|$).*)'],
+
+  // https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
+  // matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
 };

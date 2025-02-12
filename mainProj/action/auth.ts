@@ -1,7 +1,8 @@
-'use client';
-//'use server';
+// 'use client';
+'use server';
 
-
+import { getUser, createUser } from '@/app/db';
+import { redirect } from 'next/navigation';
 // import {
 //   KEY_CALLBACK_URL,
 //   KEY_CREDENTIALS_CALLBACK_ROUTE_ERROR_URL,
@@ -16,7 +17,6 @@
 
 // import { PATH_ADMIN_PHOTOS, PATH_ROOT } from '@/site/paths';
 // import type { Session } from 'next-auth';
-import { redirect } from 'next/navigation';
 import {signIn} from "@/component";
 import useLoginMutation from "@/component/useLoginMutation";
 
@@ -49,3 +49,16 @@ export const logClientAuthUpdate = async (data: Session | null | undefined) =>
   console.log('Client auth update', data);
 
 export const generateAuthSecretAction = async () => generateAuthSecret();
+
+
+export async function register(data: any) {
+  console.log("register用户1:", data);
+  let user = await getUser(data.email);
+  console.log("register用户2:", user);
+  if (user?.length > 0) {
+    return  { message: 'A user with this identifier already exists' }
+  } else {
+    await createUser(data.email, data.password);
+    redirect('/login');
+  }
+}

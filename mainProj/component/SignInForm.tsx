@@ -24,6 +24,7 @@ import useLoginMutation from "@/component/useLoginMutation";
 import {PATH_ADMIN_PHOTOS} from "@/site/paths";
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import {z} from "zod";
 
 //密码hash 防止在服务后台泄密
 var sha256 = require('hash.js/lib/hash/sha/256');
@@ -40,7 +41,23 @@ export default function SignInForm() {
   const [username, setUsername] = useState('');
   const {call:submitfunc, doing:isInFlight}= useLoginMutation();
 
-
+  async function onSubmit_Login(data: z.infer<typeof FormSchema>) {
+    const res = await signIn('credentials', {
+      redirect: false,
+      email: data.email,
+      password: data.password,
+    });
+    if (res?.error) {
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: (res as any).code,
+      });
+      form.setError('password', { type: 'manual', message: (res as any).code });
+    } else {
+      window.location.href = '/';
+    }
+  }
   const signInAction = async (
       _prevState: string | undefined,
       formData: FormData,
@@ -48,14 +65,15 @@ export default function SignInForm() {
 
     // e.preventDefault();
     const data = formData;  //{ email: '', password: '' }
-
+    console.log("signInAction data:{}", data);
     const response = await signIn('credentials', {
-      ...data,
+      email: data.email,
+      password: data.password,
       redirect: false
     });
     if (!response?.error) {
-      router.refresh();
-      router.push('/');
+      // router.refresh();
+      // router.push('/');
     } else {
       // setError(response.error);
       // resetForm();

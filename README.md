@@ -47,4 +47,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 9. 例子 https://github.com/sambecker/exif-photo-blog Nodejs环境/next-auth是服务端的。 ？根目录/middleware.ts；
    publicRuntimeConfig ; server rendering: Static, Dynamic, and Streaming.默认是Static Rendering显然不行啊；
    await connection()局部做动态的；
-10. 
+10. lucide-react图标库;
