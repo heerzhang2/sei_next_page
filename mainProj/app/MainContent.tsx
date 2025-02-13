@@ -23,7 +23,7 @@ export function MainContent() {
     {}
   );
     const router = useRouter();
-    console.log("authUser", data);
+    console.log("graphql->authUser", data);
     const {authUser} = data;
     //无需登录的URL
     const isPublic=false;//isPublicAccsess(history.location.pathname);

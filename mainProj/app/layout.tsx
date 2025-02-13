@@ -9,6 +9,7 @@ import {DEFAULT_THEME} from "@/site/config";
 import {Toaster} from "@/component/Toaster";
 // import ToasterWithThemes from "@/component/ToasterWithThemes";
 import { ToastContainer, toast } from 'react-toastify';
+import { SessionProvider } from 'next-auth/react';
 
 export const metadata: Metadata = {
   title: "Relay Streaming SSR ✨",
@@ -21,14 +22,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="p-10">
-        <RelayProvider>
-            <AppStateProvider>
-                <SwrConfigClient>
-                     {children}
-                </SwrConfigClient>
-            </AppStateProvider>
-            <ToastContainer />
-        </RelayProvider>
+        <SessionProvider>
+           <RelayProvider>
+                <AppStateProvider>
+                    <SwrConfigClient>
+
+                            {children}
+
+                    </SwrConfigClient>
+                </AppStateProvider>
+                <ToastContainer />
+           </RelayProvider>
+        </SessionProvider>
       </body>
     </html>
   );

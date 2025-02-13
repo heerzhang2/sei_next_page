@@ -14,6 +14,7 @@ export const authConfig = {
 	session: { strategy: "jwt" },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
+      console.log("太频繁的回调:", auth);
       const isLoggedIn = !!auth?.user;
       const isLoginPage = nextUrl.pathname.startsWith('/login');
       const isRegisterPage = nextUrl.pathname.startsWith('/register');
@@ -23,7 +24,8 @@ export const authConfig = {
 			}
       return true;
     },
-		async session({ session, token }) {
+	async session({ session, token }) {
+            console.log("提供者session的回调:", token);
 			session.user.image = token.picture
 			session.user.id = token.sub ?? ''
       return session

@@ -42,6 +42,7 @@ export default function SignInForm() {
   const {call:submitfunc, doing:isInFlight}= useLoginMutation();
 
   async function onSubmit_Login(data: z.infer<typeof FormSchema>) {
+    console.log("onSubmit_Login:", data);
     const res = await signIn('credentials', {
       redirect: false,
       email: data.email,
@@ -65,10 +66,10 @@ export default function SignInForm() {
 
     // e.preventDefault();
     const data = formData;  //{ email: '', password: '' }
-    console.log("signInAction data:{}", data);
+    console.log("signInAction formData:{}", formData);
     const response = await signIn('credentials', {
-      email: data.email,
-      password: data.password,
+      email: 'herzhang@163.com', //data.email,
+      password: 'ss2Add', //data.password,
       redirect: false
     });
     if (!response?.error) {
@@ -77,6 +78,7 @@ export default function SignInForm() {
     } else {
       // setError(response.error);
       // resetForm();
+      window.location.href = '/';
     }
 
     // try {

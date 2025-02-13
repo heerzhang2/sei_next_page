@@ -42,9 +42,13 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 6. next.js的文档 https://nextjs.org/docs/app/examples 例子https://github.com/ixartz/Next-js-Boilerplate
 7. yarn失败清除： yarn cache clean
 8. 开发工具yarn global add react-devtools 其它@clerk/nextjs登录验证,@percy/playwright测试快照，@sentry/nextjs错误监控,vite构建，vitest测试。
-   react-hook-form包=表单。  Drizzle ORM数据库; react-icons图标扩展。 use-debounce抖重;
+   react-hook-form包@hookform/resolvers=表单。  Drizzle ORM数据库; react-icons图标扩展。 use-debounce抖重;
    nextjs+approuter   app目录的路由规则名 [[...sign-in]] ; 正则表达式字面量/relation "photos" does not exist/i.test(e.message)
 9. 例子 https://github.com/sambecker/exif-photo-blog Nodejs环境/next-auth是服务端的。 ？根目录/middleware.ts；
    publicRuntimeConfig ; server rendering: Static, Dynamic, and Streaming.默认是Static Rendering显然不行啊；
    await connection()局部做动态的；
-10. lucide-react图标库;
+10. lucide-react图标库; Authentication四大流派：选择题：用OAuth提供程序来替代基于密码的身份验证，还是继续用传统的用户密码直接认证方式？。
+    全栈情况next-auth+@prisma/client+CRDB; 
+11. nextjs-w-app-router-starter-main的认证更接近！ next-auth-example-main扩2个session+JWT/keycloak; 
+
+import { Auth } from "@auth/ core" import Credentials from "@auth/ core/ providers/ credentials"  const request = new Request("https:// example. com") const response = await AuthHandler(request, {   providers: [     Credentials({       credentials: {         username: { label: "Username" },         password: {  label: "Password", type: "password" }       },       async authorize({ request }) {         const response = await fetch(request)         if(!response. ok) return null         return await response. json() ?? null       }     })   ],   secret: "...",   trustHost: true, })

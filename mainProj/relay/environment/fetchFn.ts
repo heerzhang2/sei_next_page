@@ -117,7 +117,7 @@ async function fetchRelay(
   // Fetch data from GitHub's GraphQL API:
   //很明显只能支持一个的服务端URL，不能允许多个 不同的 graphQL服务模型服务器。
   //若这里接入一个中间件进行分叉，查询变更等的 目的服务器根据什么规则分离？ 分配给不同的graphQL服务器。
-  console.log("REACT_APP_BACK_END是{},process.env={}", epoint, process.env);
+  // console.log("REACT_APP_BACK_END是{},process.env={}", epoint, process.env);
   const response = await fetch(`${epoint}/graphql`, {
     method: "POST",
     credentials: "include",

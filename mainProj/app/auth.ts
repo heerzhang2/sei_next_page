@@ -28,8 +28,9 @@ export const {
         password: {},
       },
 
-			async authorize({ email, password }: any) {
-                console.log("authorize用户user:{} > {}", email,password);
+	async authorize({ email, password }: any) {
+          //仅仅登录出现会的
+                console.log("仅仅登录出现会的authorize用户user:{} > {}", email,password);
         const user = await getUser(email);
                 console.log("用户authorizeuser:", user);
         if (user?.length === 0 || !user?.[0].password)   throw new InvalidLoginError();

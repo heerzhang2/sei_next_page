@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+// import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
 const FormSchema = z.object({
@@ -21,16 +21,16 @@ export default function LoginForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'herzhang@163.com',
+      password: 'ss2Add',
     },
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const res = await signIn('credentials', {
       redirect: false,
-      email: data.email,
-      password: data.password,
+      email: 'herzhang@163.com', //data.email,
+      password: 'ss2Add', //data.password,
     });
     if (res?.error) {
       toast({
@@ -45,13 +45,12 @@ export default function LoginForm() {
   }
 
   return (
-    <Card className="mx-auto max-w-sm">
-      <CardHeader>
-        <CardTitle className="text-2xl">Login</CardTitle>
-        <CardDescription>Enter your email below to login to your account</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
+    <div className="mx-auto max-w-sm">
+      <div>
+        <div>Enter your email below to login to your account</div>
+      </div>
+      <div>
+
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid gap-4">
               <FormField
@@ -87,7 +86,7 @@ export default function LoginForm() {
                 )}
               />
               <Button type="submit" className="w-full">
-                Login
+                Logindenglu上
               </Button>
 
               <Button
@@ -104,7 +103,7 @@ export default function LoginForm() {
               </Button>
             </div>
           </form>
-        </Form>
+
 
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{' '}
@@ -112,7 +111,7 @@ export default function LoginForm() {
             Sign up
           </Link>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

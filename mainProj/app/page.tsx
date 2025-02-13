@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MainContent } from "./MainContent";
+import Header from "@/component/header";
 
 //这个是规定的输出变量：静态化导出static site会报错！
 export const dynamic = "force-dynamic";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 export default function Home() {
   return (
       <div>
+          <Header />
           <MainContent/>
 
           <div className="mt-10">
