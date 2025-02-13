@@ -27,8 +27,8 @@ export const {
         email: {},
         password: {},
       },
-
-	async authorize({ email, password }: any) {
+    //认证中继形式的：
+	async authorize({ email, password }: any,request: Request) {
           //仅仅登录出现会的
                 console.log("仅仅登录出现会的authorize用户user:{} > {}", email,password);
         const user = await getUser(email);

@@ -5,18 +5,27 @@ import {
   Observable,
   GraphQLResponse, CacheConfig
 } from "relay-runtime";
-import { Sink } from "relay-runtime/lib/network/RelayObservable";
+import {ObservableFromValue, Sink} from "relay-runtime/lib/network/RelayObservable";
 import {UploadableMap} from "relay-runtime/lib/network/RelayNetworkTypes";
 import { connection } from 'next/server'
+import {auth} from "@/app/auth";
 
 
-/**客户机Browser用这个：服务端认证客户角色cockie token。
+export type SsrFetchFunction = (
+    session: any,   //附加的token
+    request: RequestParameters,
+    variables: Variables,
+    cacheConfig: CacheConfig,
+    uploadables?: UploadableMap | null,
+) => ObservableFromValue<GraphQLResponse>;
+/**服务器SSR用这个：服务端认证客户角色cockie token。
+ * 这个函数输入参数不一定必须配套FetchFunction，return必须是。
  * */
-export const fetchFn: FetchFunction = (operation, variables, _cacheConfig) => {
+export const ssrFetchFn: SsrFetchFunction = (session, operation, variables, _cacheConfig) => {
   return Observable.create<GraphQLResponse>((sink) => {
     (async () => {
-      console.log("execute fetchRelay", operation.name);
-      const resp=await  fetchRelay(operation, variables, _cacheConfig);
+      console.log("execute ssr FetchRelay", operation.name);
+      const resp=await  ssrFetchRelay(session, operation, variables, _cacheConfig);
       sink.next(resp);
       sink.complete();
       // await __simulateDeferredResponse(operation, variables, sink);
@@ -95,11 +104,14 @@ function sleep(ms: number) {
  Relay层次RelayModernStore 是上层的Relay；存储时间有效期很长久，Environment空间Store存储能力不限制。
  默认设置上不会使用Network层次Cache的；不要用QueryResponseCache()。
  */
-async function fetchRelay(
+async function ssrFetchRelay(
+    session3: any,
     params: RequestParameters,
     variables: Variables,
     _cacheConfig: CacheConfig
 ) {
+  const session = await auth();
+  console.log("create server-sideWW$ssrFetchRelay={}", session);
   await connection()
   //must be prefixed with NEXT_PUBLIC_.
   const epoint = process.env.NEXT_PUBLIC_BACK_END

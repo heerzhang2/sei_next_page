@@ -1,0 +1,83 @@
+ort { fetchQuery, commitMutation, graphql } from 'relay-runtime';
+import environment from './your-relay-environment'; // 导入你的Relay环境
+import yourQuery from './__generated__/yourQuery.graphql';
+import yourMutation from './__generated__/yourMutation.graphql';
+3. 使用fetchQuery执行查询
+fetchQuery函数允许你执行一个GraphQL查询并获取结果。你需要提供查询定义、变量、Relay环境和回调函数。
+
+javascript
+复制代码
+async function fetchData(variables) {
+  try {
+    const result = await fetchQuery(
+      environment,
+      yourQuery,
+      variables,
+    );
+    console.log('Query Result:', result);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+4. 使用commitMutation执行变更
+commitMutation函数允许你执行一个GraphQL变更操作。你需要提供变更定义、变量、Relay环境、一个配置对象（包括onCompleted、onError和updater回调），以及可选的optimisticUpdater。
+
+javascript
+复制代码
+async function performMutation(variables) {
+  try {
+    const payload = await commitMutation(
+      environment,
+      {
+        mutation: yourMutation,
+        variables,
+        onCompleted: (response, errors) => {
+          if (errors) {
+            console.error('Errors:', errors);
+          } else {
+            console.log('Mutation Success:', response);
+          }
+        },
+        onError: err => console.error('Mutation Error:', err),
+        updater: (store) => {
+          // 更新Relay Store的逻辑
+        },
+        // optional: optimisticUpdater for immediate UI feedback
+        optimisticUpdater: (store) => {
+          // Optimistic update logic
+        },
+      },
+    );
+  } catch (error) {
+    console.error('Error performing mutation:', error);
+  }
+}
+5. 调用函数
+现在你可以在非React组件或普通JavaScript函数中调用这些函数来执行查询和变更操作。
+
+javascript
+复制代码
+// 执行查询
+fetchData({ id: 'some-id' });
+
+// 执行变更
+performMutation({ input: { field: 'value' } });
+
+
+SSR模式下执行Relay操作
+在Next.js的SSR模式下，你通常会在页面组件或API路由中使用Relay来执行查询或变更。这里有几个关键步骤：
+
+配置Relay环境：
+创建一个Relay环境实例，这通常包括配置网络层、存储层等。
+在Next.js应用中，这个环境实例可以在全局范围内创建一次，并在需要时通过依赖注入或上下文（context）传递给组件或API路由。
+在服务器端组件中使用Relay：
+在Next.js的页面组件中，你可以使用Relay的Hooks（如useQueryLoader、usePreloadedQuery，注意useQuery和useMutation通常不在SSR期间直接使用，因为它们会引发额外的网络请求）或高阶组件来加载数据。
+但是，在SSR期间，你更可能会使用getServerSideProps或getStaticProps（对于静态站点生成）来预加载数据，并将数据作为props传递给页面组件。在这些函数中，你可以使用Relay的fetchQuery函数来执行查询。
+数据传递：
+查询结果可以通过props传递给组件，组件在渲染时使用这些数据。
+对于需要执行变更的情况，你通常会在客户端组件中使用Relay的useMutationHook。
+Relay环境是否每个客户连接单独建立
+不是每个客户连接都单独建立Relay环境：在高效的Next.js SSR应用中，Relay环境通常是在服务器启动时创建一次，并在整个服务器生命周期中共享。这样做可以减少资源消耗并提高性能。
+数据隔离：虽然Relay环境是共享的，但每个请求的数据是隔离的。这是通过Relay的存储层和查询缓存机制来实现的。每个请求都会有自己的数据视图，不会相互干扰。
+并发处理：Next.js的服务器能够处理并发请求，每个请求都会在其自己的上下文中执行。这意味着即使多个请求同时发生，它们也不会共享相同的查询结果或变更状态（除非这是通过某种形式的缓存或状态管理故意实现的）。
+

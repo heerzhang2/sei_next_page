@@ -51,4 +51,24 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
     全栈情况next-auth+@prisma/client+CRDB; 
 11. nextjs-w-app-router-starter-main的认证更接近！ next-auth-example-main扩2个session+JWT/keycloak; 
 
-import { Auth } from "@auth/ core" import Credentials from "@auth/ core/ providers/ credentials"  const request = new Request("https:// example. com") const response = await AuthHandler(request, {   providers: [     Credentials({       credentials: {         username: { label: "Username" },         password: {  label: "Password", type: "password" }       },       async authorize({ request }) {         const response = await fetch(request)         if(!response. ok) return null         return await response. json() ?? null       }     })   ],   secret: "...",   trustHost: true, })
+import { Auth } from "@auth/ core"
+import Credentials from "@auth/ core/ providers/ credentials"
+const request = new Request("https:// example. com")
+const response = await AuthHandler(request, { 
+providers: [     Credentials({   
+credentials: {         username: { label: "Username" },         password: {  label: "Password", type: "password" }   
+},   
+async authorize({ request }) {     
+const response = await fetch(request)      
+if(!response. ok) return null         return await response. json() ?? null       }     })   ],   secret: "...",   trustHost: true, })
+
+// 使用会话中的令牌向后端 API 发送请求
+const apiUrl = 'https://your-backend-api.com/data';
+const apiHeaders = {
+Authorization: `Bearer ${session.accessToken}`,
+};
+
+try {
+const response = await axios.get(apiUrl, { headers: apiHeaders });
+const data = response.data;
+ 

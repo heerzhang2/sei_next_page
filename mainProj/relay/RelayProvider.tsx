@@ -8,14 +8,20 @@ import { useStream } from "@/relay/useStream";
 import { useServerInsertedHTML } from "next/navigation";
 import { ReactNode, useRef, useMemo } from "react";
 import { RelayEnvironmentProvider } from "react-relay";
+import { useSession } from "next-auth/react"
+import {auth} from "@/app/auth";
+
 
 interface RelayProviderProps {
   children: ReactNode;
 }
-
-export function RelayProvider({ children }: RelayProviderProps) {
-  const { observer, buildHydrationScript } = useStream();
-
+//这个位置改成 async ：就不能算作React组件=里面不能用 #Hooks can only be called inside of the body of a function component.
+export  function RelayProvider({children}: RelayProviderProps) {
+  const {observer, buildHydrationScript} = useStream();
+  //SSR模式app-*不能用这个的！！ const { data: session } = useSession();
+  //ReferenceError: await is not defined  ,也不行的！const session = await auth();
+  // const session = await auth();
+  // console.log("RelayProvider 2auth=", session);
   const relayEnvironment = useMemo(() => {
     if (typeof window === "undefined") {
       return createServerSideRelayEnvironment(observer);
@@ -42,18 +48,18 @@ export function RelayProvider({ children }: RelayProviderProps) {
     }
 
     return (
-      <script
-        key={scriptIndex.current++}
-        dangerouslySetInnerHTML={{
-          __html: hydrationScript,
-        }}
-      />
+        <script
+            key={scriptIndex.current++}
+            dangerouslySetInnerHTML={{
+              __html: hydrationScript,
+            }}
+        />
     );
   });
 
   return (
-    <RelayEnvironmentProvider environment={relayEnvironment}>
-      {children}
-    </RelayEnvironmentProvider>
+      <RelayEnvironmentProvider environment={relayEnvironment}>
+        {children}
+      </RelayEnvironmentProvider>
   );
 }

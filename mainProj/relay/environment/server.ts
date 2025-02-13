@@ -1,4 +1,4 @@
-import { fetchFn } from "@/relay/environment/fetchFn";
+import { ssrFetchFn } from "@/relay/environment/ssrFetchFn";
 import { buildQueryId, isRelayObservable } from "@/relay/environment/helpers";
 import {
   GraphQLResponse,
@@ -9,6 +9,13 @@ import {
   Store,
   RecordSource,
 } from "relay-runtime";
+import { useSession } from "next-auth/react"
+import { GetServerSideProps } from 'next';
+import { getSession } from 'next-auth/react';
+
+// export const getServerSideProps: GetServerSideProps = async (context) => {
+//   const session = await getSession(context);
+
 
 export type QueryResponsePayload = {
   queryId: string;
@@ -25,10 +32,13 @@ export type QueryResponsePayload = {
 export function createServerSideRelayEnvironment(
   observer: Observer<QueryResponsePayload>
 ) {
-  console.log("create server-side environment");
-
+  //Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. You can only call Hooks at the top level of your React function. For more information, see https://react.dev/link/rules-of-hooks
+  //报错！！ const { data: session } = useSession();
+  const session=null;
+  console.log("create server-side environmentsession={}", session);
+  //函数参数类型固定的： 返回ObservableFromValue<GraphQLResponse>
   const curriedFetchFn: FetchFunction = (request, variables, ...rest) => {
-    const observable = fetchFn(request, variables, ...rest);
+    const observable = ssrFetchFn(session, request, variables, ...rest);
 
     if (isRelayObservable(observable)) {
       const queryId = buildQueryId(request, variables);

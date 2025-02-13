@@ -25,7 +25,7 @@ export const authConfig = {
       return true;
     },
 	async session({ session, token }) {
-            console.log("提供者session的回调:", token);
+            console.log("提供者session的回调:", session);
 			session.user.image = token.picture
 			session.user.id = token.sub ?? ''
       return session
