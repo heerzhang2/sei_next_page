@@ -4,7 +4,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { compare } from 'bcrypt-ts';
 import Google from "next-auth/providers/google"
 
-import { getUser } from 'app/db';
+import { userLoginPassed } from 'app/db';
 import { authConfig } from 'app/auth.config';
 
 class InvalidLoginError extends CredentialsSignin {
@@ -19,25 +19,28 @@ export const {
 } = NextAuth({
   ...authConfig,
   providers: [
-		Google({
+	Google({
       allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
-			credentials: {
+	  credentials: {
         email: {},
         password: {},
       },
     //认证中继形式的：
-	async authorize({ email, password }: any,request: Request) {
-          //仅仅登录出现会的
-                console.log("仅仅登录出现会的authorize用户user:{} > {}", email,password);
-        const user = await getUser(email);
-                console.log("用户authorizeuser:", user);
-        if (user?.length === 0 || !user?.[0].password)   throw new InvalidLoginError();
-                console.log("用passwordsMatch:{} {}", password, user[0].password);
-        const passwordsMatch = await compare(password, user[0].password!);
-        if (passwordsMatch) return user[0] as User;
-				throw new InvalidLoginError();
+	async authorize({username, email, password }: any,request: Request) {
+         //仅仅登录出现会的
+        console.log("仅仅登录出现会的authorize用户user password:{}  username> {}", password,username);
+        const passOk = await userLoginPassed(username,password);
+        console.log("用户认证中继形式的user:", passOk);
+        if(!passOk) {
+            throw new InvalidLoginError();
+        }
+        let user:User= {
+            name: username,
+            email: email
+        }
+        return user;
       },
     }),
   ],

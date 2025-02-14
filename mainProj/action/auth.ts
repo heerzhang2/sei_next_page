@@ -1,7 +1,7 @@
 // 'use client';
 'use server';
 
-import { getUser, createUser } from '@/app/db';
+import { userLoginPassed, createUser } from '@/app/db';
 import { redirect } from 'next/navigation';
 // import {
 //   KEY_CALLBACK_URL,
@@ -53,7 +53,7 @@ export const generateAuthSecretAction = async () => generateAuthSecret();
 
 export async function register(data: any) {
   console.log("register用户1:", data);
-  let user = await getUser(data.email);
+  let user = await userLoginPassed(data.email);
   console.log("register用户2:", user);
   if (user?.length > 0) {
     return  { message: 'A user with this identifier already exists' }

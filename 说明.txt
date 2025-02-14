@@ -81,3 +81,44 @@ Relay环境是否每个客户连接单独建立
 数据隔离：虽然Relay环境是共享的，但每个请求的数据是隔离的。这是通过Relay的存储层和查询缓存机制来实现的。每个请求都会有自己的数据视图，不会相互干扰。
 并发处理：Next.js的服务器能够处理并发请求，每个请求都会在其自己的上下文中执行。这意味着即使多个请求同时发生，它们也不会共享相同的查询结果或变更状态（除非这是通过某种形式的缓存或状态管理故意实现的）。
 
+NextAuth({
+  ...authConfig,
+  providers: [
+    Credentials({
+	  credentials: {
+        email: {},
+        password: {},
+      },
+	async authorize({ email, password }: any,request: Request) {
+        const user = await getUser(email);
+        if (user?.length === 0 || !user?.[0].password)   throw new InvalidLoginError();
+        const passwordsMatch = await compare(password, user[0].password!);
+        if (passwordsMatch) return user[0] as User;
+				throw new InvalidLoginError();
+      },
+    }),
+  ],
+
+import { fetchQuery, commitMutation, graphql } from "relay-runtime";
+import yourMutation from './__generated__/performLoginMutation.graphql';
+import {useRelayEnvironment} from "react-relay";
+import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";
+const mutation = graphql`
+    mutation performLoginMutation($username: String!, $password: String!) {
+        authenticate(username: $username, password: $password)
+    }
+`;
+export async function performLoginMutation(variables) {
+    const environment = createStaticRelayEnvironment();
+    let payload = await commitMutation(
+            environment,
+            {
+                mutation: yourMutation,
+                variables,
+                onCompleted: (response, errors) => {
+                        console.log('performLoginMutation Success:', response);
+                },
+            },
+        );
+    return payload;
+}

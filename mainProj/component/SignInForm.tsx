@@ -68,8 +68,9 @@ export default function SignInForm() {
     const data = formData;  //{ email: '', password: '' }
     console.log("signInAction formData:{}", formData);
     const response = await signIn('credentials', {
+      username: 'herzhang',
       email: 'herzhang@163.com', //data.email,
-      password: 'ss2Add', //data.password,
+      password: '768768', //data.password,
       redirect: false
     });
     if (!response?.error) {

@@ -21,7 +21,7 @@ type ISignInPageProps = {
 export default  function UserPage(props: ISignInPageProps) {
     const data = useLazyLoadQuery<MainContentQuery>(
         graphql`
-            query MainContentQuery {
+            query pageUserQuery {
                 authUser{
                     id,username, person{id,name}
                     dep{id name} office{id name}

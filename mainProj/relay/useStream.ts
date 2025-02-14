@@ -3,6 +3,7 @@ import { QueryResponsePayload } from "@/relay/environment/server";
 import { useCallback, useMemo, useRef } from "react";
 import { Observer } from "relay-runtime";
 
+//SSR模式的（给客户机页面）；  服务端的login登录也不是走这个途径的。
 export function useStream() {
   const responseStream = useRef<QueryResponsePayload[]>([]);
 

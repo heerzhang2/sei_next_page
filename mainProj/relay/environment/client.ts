@@ -17,6 +17,7 @@ import {
 import RelayModernEnvironment from "relay-runtime/lib/store/RelayModernEnvironment";
 
 // A singleton environment that is shared on the client.
+//只能用于浏览器的客户
 let clientSideRelayEnvironment: RelayModernEnvironment | null = null;
 
 /**
