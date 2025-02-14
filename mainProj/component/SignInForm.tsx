@@ -25,11 +25,15 @@ import {PATH_ADMIN_PHOTOS} from "@/site/paths";
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {z} from "zod";
+import { revalidatePath } from 'next/cache'
+
 
 //密码hash 防止在服务后台泄密
 var sha256 = require('hash.js/lib/hash/sha/256');
 
 export default function SignInForm() {
+  const {useRelayEnvironment} = require('react-relay');
+  const environment = useRelayEnvironment();
   const router = useRouter();
   const params = useSearchParams();
 
@@ -55,9 +59,20 @@ export default function SignInForm() {
       });
       form.setError('password', { type: 'manual', message: (res as any).code });
     } else {
+      window.location.reload()
+
+      // Option 2: Programmatic Navigation
+      router.refresh()
+
+      // Option 3: Specific Page Invalidation
+      router.push('/dashboard')
+      //因为GraphQL部分数据也提取的：导致session也同样无法更新了，原来可以的。
+      revalidatePath('/')
+      revalidatePath('/user')
       router.refresh();
-      router.push('/');
+      // router.push('/');
       // window.location.href = '/';
+      window.location.reload();
     }
   }
   const signInAction = async (
@@ -75,8 +90,17 @@ export default function SignInForm() {
       redirect: false
     });
     if (!response?.error) {
-        router.refresh();
-        router.push('/');
+        //因为GraphQL部分数据也提取的：导致session也同样无法更新了，原来可以的。
+        // revalidatePath('/')
+        // revalidatePath('/user')
+        // environment.resetCache();
+        window.location.reload()
+          // Option 2: Programmatic Navigation
+        // router.refresh()
+          // Option 3: Specific Page Invalidation
+        router.push('/')
+        // router.push('/');
+        window.location.href = '/';   // “/user”
     } else {
       // setError(response.error);
       // resetForm();

@@ -2,6 +2,7 @@
 import SignInForm from "@/component/SignInForm";
 import Link from "next/link";
 
+
 type ISignInPageProps = {
   params: Promise<{ locale: string }>;
 };

@@ -11,6 +11,8 @@ class InvalidLoginError extends CredentialsSignin {
 	code = 'Invalid identifier or password'
 }
 
+/*【文档】https://authjs.dev/getting-started/migrating-to-v5#authenticating-server-side
+* */
 export const {
   handlers: { GET, POST },
   auth,
