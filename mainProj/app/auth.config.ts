@@ -14,7 +14,6 @@ export const authConfig = {
   session: { strategy: "jwt" },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      console.log("太频繁的回调:", auth);
       const isLoggedIn = !!auth?.user;
       const isLoginPage = nextUrl.pathname.startsWith('/login');
       const isRegisterPage = nextUrl.pathname.startsWith('/register');
@@ -24,19 +23,28 @@ export const authConfig = {
 			}
       return true;
     },
-	async session({ session, token }) {
-            console.log("提供者session的回调:", session);
+	async session(params) {
+      const { session, token }=params;
+       console.log("提供者session的回调:", params);
 			session.user.image = token.picture
 			session.user.id = token.sub ?? ''
-      return session
+            // session.user.accessToken = token
+      if (token && token.accessToken) {
+        session.user.accessToken = token.accessToken; // 将 accessToken 添加到 session 的 user 对象中
+      }
+      // 返回修改后的 session 对象
+      return session;
     },
-    // jwt({ token, trigger, session, account }) {
-    //       if (trigger === "update") token.name = session.user.name
-    //       if (account?.provider === "keycloak") {
-    //           return { ...token, accessToken: account.access_token }
-    //       }
-    //       return token
-    // },
+    jwt(params) {
+      const { token, trigger, session, account, user } =params;
+        console.log("提供者jwt的回调:",params);
+        if(trigger === "update")  token.name = session.user.name
+        if(trigger=== 'signIn'){
+          // session.accessToken=  user?.accessToken;
+          return { ...token, accessToken: user?.accessToken }
+        }
+        return token;
+    },
   },
 } satisfies NextAuthConfig;
 
@@ -49,8 +57,8 @@ declare module "next-auth" {
   }
 }
 
-// declare module "next-auth/jwt" {
-//     interface JWT {
-//         accessToken?: string
-//     }
-// }
+declare module "next-auth/jwt" {
+    interface JWT {
+        accessToken?: string
+    }
+}

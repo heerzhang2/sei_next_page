@@ -8,6 +8,7 @@ import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";
 const mutation = graphql`
     mutation performLoginMutation($username: String!, $password: String!) {
         authenticate(username: $username, password: $password)
+        { accessToken, user{id username} }
     }
 `;
 

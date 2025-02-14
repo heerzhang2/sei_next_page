@@ -30,7 +30,7 @@ export default async function SignInPage(props: ISignInPageProps) {
               <Link href="/">⬅️ Go back home</Link>
           </div>
           <div className="mt-10">
-              <Link href="/user">⬅️ Go y用户</Link>
+              <Link href="/user">⬅️ Go 不能尼克酸y用户</Link>
           </div>
           <div className="mt-10">
               <Link href="/profile">⬅️ Profile y用户</Link>

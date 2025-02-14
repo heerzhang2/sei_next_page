@@ -31,7 +31,6 @@ var sha256 = require('hash.js/lib/hash/sha/256');
 
 export default function SignInForm() {
   const router = useRouter();
-
   const params = useSearchParams();
 
   const { setUserEmail } = useAppState();
@@ -41,7 +40,7 @@ export default function SignInForm() {
   const [username, setUsername] = useState('');
   const {call:submitfunc, doing:isInFlight}= useLoginMutation();
 
-  async function onSubmit_Login(data: z.infer<typeof FormSchema>) {
+  async function 旧的onSubmit_Login(data: z.infer<typeof FormSchema>) {
     console.log("onSubmit_Login:", data);
     const res = await signIn('credentials', {
       redirect: false,
@@ -56,7 +55,9 @@ export default function SignInForm() {
       });
       form.setError('password', { type: 'manual', message: (res as any).code });
     } else {
-      window.location.href = '/';
+      router.refresh();
+      router.push('/');
+      // window.location.href = '/';
     }
   }
   const signInAction = async (
@@ -74,8 +75,8 @@ export default function SignInForm() {
       redirect: false
     });
     if (!response?.error) {
-      // router.refresh();
-      // router.push('/');
+        router.refresh();
+        router.push('/');
     } else {
       // setError(response.error);
       // resetForm();

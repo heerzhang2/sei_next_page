@@ -111,10 +111,13 @@ async function ssrFetchRelay(
     _cacheConfig: CacheConfig
 ) {
   const session = await auth();
-  console.log("create server-sideWW$ssrFetchRelay={}", session);
+  console.log("ssrFetchRelay_BEFORE={}", session, session?.user?.accessToken);
   await connection()
   //must be prefixed with NEXT_PUBLIC_.
   const epoint = process.env.NEXT_PUBLIC_BACK_END
+  // if(!(session?.user?.accessToken))
+  //       throw new Error(`token空${JSON.stringify(session?.user)}`);
+
   /*
   这个缓存\Relay\react-router-v6-with-relay-hooks-master机制和Modern Store 什么关系的？？
     const queryId = operation.text || '';
@@ -134,7 +137,7 @@ async function ssrFetchRelay(
     method: "POST",
     credentials: "include",
     headers: {
-      //不需要Authorization: `Bearer ${REACT_APP_GITHUB_AUTH_TOKEN}`,
+      Authorization: session && `Bearer ${session?.user?.accessToken}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({

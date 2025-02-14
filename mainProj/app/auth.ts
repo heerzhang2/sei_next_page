@@ -31,16 +31,18 @@ export const {
 	async authorize({username, email, password }: any,request: Request) {
          //仅仅登录出现会的
         console.log("仅仅登录出现会的authorize用户user password:{}  username> {}", password,username);
-        const passOk = await userLoginPassed(username,password);
-        console.log("用户认证中继形式的user:", passOk);
-        if(!passOk) {
+        const loginResp = await userLoginPassed(username,password);
+        console.log("用户认证中继形式的user:", loginResp);
+        if(!loginResp) {
             throw new InvalidLoginError();
         }
-        let user:User= {
+        // 注意：这里返回的 user 对象应该包含至少一个唯一标识符（如 id）
+        return {
+            id: loginResp.user.id,
             name: username,
-            email: email
-        }
-        return user;
+            email: email,
+            accessToken: loginResp.accessToken
+        };
       },
     }),
   ],

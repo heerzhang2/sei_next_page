@@ -24,6 +24,7 @@ import {toastSuccess} from "@/utility";
 const mutation = graphql`
   mutation useLoginMutation($username: String!, $password: String!) {
     authenticate(username: $username, password: $password)
+    { accessToken, user{id username} }
   }
 `;
 

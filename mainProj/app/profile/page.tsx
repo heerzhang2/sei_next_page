@@ -7,7 +7,7 @@ export default async function ProfilePage() {
   if (!session?.user) {
       return <div>未登录啊</div>;
   }
-
+  // if(typeof window === "undefined")    console.log("ProfilePage用户:", session);
   return (
       <div className="flex min-h-screen w-full items-center justify-center px-4 py-12">
           <div className="text-2xl text-center">My Profile</div>

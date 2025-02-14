@@ -36,6 +36,11 @@ directive @specifiedBy(
 """Indicates an Input Object is a OneOf Input Object."""
 directive @oneOf on INPUT_OBJECT
 
+type LoginResp {
+  accessToken: String!
+  user: UserBase!
+}
+
 input AddressInput {
   town: ID
   county: ID
@@ -1339,7 +1344,8 @@ type Mutation {
   newUnitPerson(unit: UnitCommonInput!, id: ID): Unit!
   newUnitExternalSource(unit: UnitCommonInput!): Unit!
   newUser(username: String!, password: String!, mobile: String!, external: String, eName: String, ePassword: String): Boolean!
-  authenticate(username: String!, password: String!): Boolean!
+#  authenticate(username: String!, password: String!): Boolean!
+  authenticate(username: String!, password: String!) : LoginResp
   logout: Boolean!
 }
 
