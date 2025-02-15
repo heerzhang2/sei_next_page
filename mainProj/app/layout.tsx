@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
+// import "./globals.css";
 import { RelayProvider } from "@/relay/RelayProvider";
 import { ReactNode } from "react";
 import SwrConfigClient from "@/action/SwrConfigClient";
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 * */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body className="p-10">
+    <html>
+      <body>
         <SessionProvider>
            <RelayProvider>
                 <AppStateProvider>
