@@ -1,4 +1,4 @@
-import { SlowContent$key } from "@/app/lazy/__generated__/SlowContent.graphql";
+import { SlowContent$key } from "@/__generated__/SlowContent.graphql";
 import { graphql, useFragment } from "react-relay";
 
 interface Props {

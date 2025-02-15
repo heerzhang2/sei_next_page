@@ -6,7 +6,7 @@
 import {performLoginMutation} from "@/action/performLoginMutation";
 import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";
 import {commitMutation} from "relay-runtime";
-import yourMutation from "@/action/__generated__/performLoginMutation.graphql";
+// import yourMutation from "@/action/__generated__/performLoginMutation.graphql";
 
 //密码hash 防止在服务后台泄密
 var sha256 = require('hash.js/lib/hash/sha/256');
