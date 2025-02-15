@@ -3,11 +3,13 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/mainProj/.env" charset="GBK" />
     <file url="file://$PROJECT_DIR$/mainProj/.env.local" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/mainProj/action/GlobalState.tsx" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/mainProj/action/UserContext.tsx" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/mainProj/component/useLoginMutation.ts" charset="GBK" />
     <file url="file://$PROJECT_DIR$/mainProj/public/images/cutting-board-knife.jpg" charset="GBK" />
     <file url="file://$PROJECT_DIR$/mainProj/public/images/food.svg" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/mainProj/relay/clientSchema.graphql" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/mainProj/src/action/GlobalState.tsx" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/mainProj/src/action/UserContext.tsx" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/mainProj/src/component/useLoginMutation.ts" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/mainProj/src/component/useLoginMutation.ts" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/mainProj/src/relay/clientSchema.graphql" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/mainProj/src/relay/clientSchema.graphql" charset="GBK" />
   </component>
 </project>

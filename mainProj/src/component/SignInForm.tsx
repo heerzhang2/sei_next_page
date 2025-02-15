@@ -27,7 +27,7 @@ import {
 // import {UserContext} from "../routing/UserContext";
 // import useLoginMutation from "./useLoginMutation";
 // import useRegisterMutation from "./useRegisterMutation";
-import {AloneContainer} from "../comp/AloneContainer";
+import {AloneContainer} from "@/comp/AloneContainer";
 import Link from "next/link";
 
 // import { z } from "zod";

@@ -1,6 +1,6 @@
 "use client";
 
-import { MainContentQuery } from "@/__generated__/MainContentQuery.graphql";
+import { MainContentUserQuery } from "./__generated__/MainContentUserQuery.graphql";
 import { Suspense, lazy } from "react";
 import { graphql, useLazyLoadQuery } from "react-relay";
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
@@ -8,9 +8,9 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 const SlowContentLazy = lazy(() => import("@/app/lazy/SlowContent"));
 
 export function MainContent() {
-  const data = useLazyLoadQuery<MainContentQuery>(
+  const data = useLazyLoadQuery<MainContentUserQuery>(
     graphql`
-      query MainContentQuery {
+      query MainContentUserQuery {
         authUser{
                     id,username, person{id,name}
                     dep{id name} office{id name} 
@@ -37,21 +37,22 @@ export function MainContent() {
     }
 
   return (
-    <>
-      <main className="text-xl text-green-500">Main data: {data.authUser?.username}</main>
-
-      <Suspense fallback={<div className="text-yellow-500">Loading slow data...</div>}>
-        <SlowContentLazy queryRef={data} />
-      </Suspense>
-    </>
+      <>
+          <main className="text-xl text-green-500">Main--122data: {data.authUser?.username}</main>
+          <main className="text-xl text-green-500">authUser# Main-GRAPHQL data: {authUser?.username}</main>
+          <Suspense fallback={<div className="text-yellow-500">Loading slow data...</div>}>
+              <SlowContentLazy queryRef={data}/>
+          </Suspense>
+      </>
   );
 }
+
 //排除 不登录的人也允许访问
 /**
  * 所有可以不需要登录就允许访问的URI
  * */
-function  isPublicAccsess(path: string) {
-    if(path === '/' || path.slice(0, 6) === '/free/' || path === '/login')
+function isPublicAccsess(path: string) {
+    if (path === '/' || path.slice(0, 6) === '/free/' || path === '/login')
         return true;
     else
         return false;

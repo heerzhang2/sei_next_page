@@ -16,7 +16,7 @@
     "start-server": "next start -p 3002",
     "lint": "next lint",
     "relay2": "relay-compiler --watch",
-    "update-schema_本机服务端": "get-graphql-schema  http://localhost:8673/graphql > relay/schema.graphql",
+    "update-schema_本机服务端": "get-graphql-schema  http://localhost:8673/graphql > src/relay/schema.graphql",
     "relay3": "relay-compiler --validate"
   },
   "dependencies": {
@@ -53,12 +53,11 @@
     "react-dom": "19.0.0"
   },
   "relay": {
-    "src": "./",
-    "schema": "./relay/schema.graphql",
+    "src": "src/",
+    "schema": "src/relay/schema.graphql",
     "schemaExtensions": [
-      "./relay/clientSchema.graphql"
+      "src/relay/clientSchema.graphql"
     ],
-    "artifactDirectory": "./__generated__",
     "language": "typescript"
   },
   "eslintConfig": {

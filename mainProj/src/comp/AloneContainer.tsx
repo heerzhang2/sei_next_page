@@ -4,7 +4,7 @@ import * as React from "react";
 import {Container, Text, Toolbar, useMMenuBarOcup, useTheme} from "customize-easy-ui-component";
 // import {Link as RouterLink} from "../routing/Link";
 import Link from "next/link";
-import food from "@/public/images/food.svg";
+import food from "public/images/food.svg";
 // import {Layout} from "../Layout";
 
 

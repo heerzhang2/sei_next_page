@@ -25,22 +25,13 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./*"
+        "src/*"
       ],
-      "@/components/*": [
-        "components/*"
-      ],
-      "@/pages/*": [
-        "pages/*"
+      "@/component/*": [
+        "src/component/*"
       ],
       "@/app/*": [
-        "app/*"
-      ],
-      "@/lib/*": [
-        "lib/*"
-      ],
-      "@/styles/*": [
-        "styles/*"
+        "src/app/*"
       ]
     }
   },

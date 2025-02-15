@@ -1,6 +1,6 @@
 
 import { fetchQuery, commitMutation, graphql } from "relay-runtime";
-import yourMutation from '@/__generated__/performLoginMutation.graphql';
+import yourMutation from './__generated__/performLoginMutation.graphql';
 //不能使用这个import {useRelayEnvironment} from "react-relay";
 import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";
 // import youfrMutation from 'D:/home/sei_next_page/mainProj/./__generated__/performLoginMutation.graphql.ts'

@@ -16,12 +16,12 @@ import {
     useTheme, MainMenuBar, IconTruck, DdMenu, DdMenuItem,
 } from "customize-easy-ui-component";
 import {graphql, useLazyLoadQuery} from "react-relay";
-import {MainContentQuery} from "@/__generated__/MainContentQuery.graphql";
+import {footbarQuery} from "./__generated__/footbarQuery.graphql";
 // import {useRouter} from "next/navigation";
 import {Suspense, useContext, } from "react";
 import UserContext from "@/action/UserContext";
-import food from "@/public/images/food.svg";
-import cutting_board_knife from "@/public/images/cutting-board-knife.jpg";
+import food from "../../public/images/food.svg";
+import cutting_board_knife from "../../public/images/cutting-board-knife.jpg";
 import Link from "next/link";
 import {  signOut, useSession } from "next-auth/react"
 
@@ -37,9 +37,9 @@ export default function FootBar() {
         });
         //useRouter().push(data.url)
     }
-    const data = useLazyLoadQuery<MainContentQuery>(
+    const data = useLazyLoadQuery<footbarQuery>(
         graphql`
-      query MainContentQuery {
+      query footbarQuery {
         authUser{
                     id,username, person{id,name}
                     dep{id name} office{id name} 
@@ -156,7 +156,7 @@ export default function FootBar() {
                                 width: "25px",
                                 height: "25px"
                             }}
-                            src={food} alt={''}
+                            src="/images/food.svg" alt={''}
                             aria-hidden
                         />
                     }

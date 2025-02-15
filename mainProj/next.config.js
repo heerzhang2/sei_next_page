@@ -2,8 +2,8 @@
 const nextConfig = {
   compiler: {
     relay: {
-      src: './',
-      artifactDirectory: './__generated__',
+      src: 'src/',
+      // artifactDirectory: './__generated__',
       language: 'typescript',
       eagerEsModules: false,
     },

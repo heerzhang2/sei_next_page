@@ -4,7 +4,7 @@
 import SignInForm from "@/component/SignInForm";
 import Link from "next/link";
 import {useLazyLoadQuery} from "react-relay";
-import {MainContentQuery} from "@/__generated__/MainContentQuery.graphql";
+// import {MainContentQuery} from "./__generated__/MainContentQuery.graphql";
 
 // import {useRouter} from "next/navigation";
 import { graphql } from "relay-runtime";

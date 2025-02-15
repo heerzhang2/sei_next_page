@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 // import "./globals.css";
-import { RelayProvider } from "@/relay/RelayProvider";
+import { RelayProvider } from "../relay/RelayProvider";
 import { ReactNode } from "react";
 import SwrConfigClient from "@/action/SwrConfigClient";
 import AppStateProvider from "@/action/AppStateProvider";
