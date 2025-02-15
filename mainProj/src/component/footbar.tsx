@@ -26,7 +26,7 @@ import Link from "next/link";
 import {  signOut, useSession } from "next-auth/react"
 
 export const dynamic = 'force-dynamic'
-
+export const fetchCache = 'default-no-store'
 
 export default function FootBar() {
     const theme = useTheme();

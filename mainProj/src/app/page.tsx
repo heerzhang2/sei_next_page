@@ -19,7 +19,7 @@ export default function Home() {
               <Link href="/login">⬅️ Go 的等让路 home</Link>
           </div>
 
-          <FootBar />
+
       </div>
   );
 }
