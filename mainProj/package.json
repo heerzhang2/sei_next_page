@@ -9,7 +9,7 @@
     "yarn": "yarn",
     "dev": "next dev --turbopack",
     "dev2": "next dev",
-    "build生产版": "next build && echo 构建任务完毕！",
+    "build": "next build",
     "start生产版Node.js server": "next start",
     "relay": "yarn run relay-compiler",
     "build all": "relay-compiler && next build",

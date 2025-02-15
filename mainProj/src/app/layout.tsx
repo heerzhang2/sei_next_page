@@ -8,6 +8,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { SessionProvider } from 'next-auth/react';
 import GlobalState from "@/action/GlobalState";
 import {MainContent} from "@/app/MainContent";
+import {connection} from "next/server";
 // import FootBar from "@/component/footbar";
 
 export const metadata: Metadata = {
@@ -18,28 +19,29 @@ const FootBar = lazy(() => import("@/component/footbar"));
 
 /*水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
 * */
-export default function RootLayout({ children }: { children: ReactNode }) {
-  return (
-    <html>
-      <body>
+export default async function RootLayout({children}: { children: ReactNode }) {
+    await connection();
+    return (
+        <html>
+        <body>
         <SessionProvider>
-           <RelayProvider>
-               <GlobalState>
-                <AppStateProvider>
-                    <SwrConfigClient>
+            <RelayProvider>
+                <GlobalState>
+                    <AppStateProvider>
+                        <SwrConfigClient>
 
                             {children}
 
-                        <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>
-                            <MainContent/>
-                        </Suspense>
-                    </SwrConfigClient>
-                </AppStateProvider>
-               </GlobalState>
-                <ToastContainer />
-           </RelayProvider>
+                            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>
+                                <MainContent/>
+                            </Suspense>
+                        </SwrConfigClient>
+                    </AppStateProvider>
+                </GlobalState>
+                <ToastContainer/>
+            </RelayProvider>
         </SessionProvider>
-      </body>
-    </html>
-  );
+        </body>
+        </html>
+    );
 }

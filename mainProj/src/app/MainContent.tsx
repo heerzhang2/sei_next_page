@@ -11,8 +11,8 @@ export const fetchCache = 'default-no-store'
 
 const SlowContentLazy = lazy(() => import("@/app/lazy/SlowContent"));
 
-export async function MainContent() {
-    await connection();
+export  function MainContent() {
+
     const data = useLazyLoadQuery<MainContentQuery>(
         graphql`
       query MainContentQuery {
