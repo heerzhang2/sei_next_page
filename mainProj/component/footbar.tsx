@@ -112,7 +112,7 @@ export default function FootBar() {
                                             width: "25px",
                                             height: "25px"
                                         }}
-                                        src={food} alt={''}
+                                        src="/images/food.svg" alt={''}
                                         aria-hidden
                                     />
                                 }
