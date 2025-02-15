@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<3ab067d6f705282c9b1f74bb8196ea85>>
+ * @generated SignedSource<<34e4fd8683ced47e94cdd25012b9766b>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,8 +10,8 @@
 
 import { ConcreteRequest } from 'relay-runtime';
 import { FragmentRefs } from "relay-runtime";
-export type pageUserQuery$variables = Record<PropertyKey, never>;
-export type pageUserQuery$data = {
+export type MainContentUserQuery$variables = Record<PropertyKey, never>;
+export type MainContentUserQuery$data = {
   readonly authUser: {
     readonly dep: {
       readonly id: string;
@@ -45,9 +45,9 @@ export type pageUserQuery$data = {
   } | null | undefined;
   readonly " $fragmentSpreads": FragmentRefs<"SlowContent">;
 };
-export type pageUserQuery = {
-  response: pageUserQuery$data;
-  variables: pageUserQuery$variables;
+export type MainContentUserQuery = {
+  response: MainContentUserQuery$data;
+  variables: MainContentUserQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -168,7 +168,7 @@ return {
     "argumentDefinitions": [],
     "kind": "Fragment",
     "metadata": null,
-    "name": "pageUserQuery",
+    "name": "MainContentUserQuery",
     "selections": [
       (v3/*: any*/),
       {
@@ -184,7 +184,7 @@ return {
   "operation": {
     "argumentDefinitions": [],
     "kind": "Operation",
-    "name": "pageUserQuery",
+    "name": "MainContentUserQuery",
     "selections": [
       (v3/*: any*/),
       {
@@ -197,16 +197,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "f3294232a058f9b580e70709cb747a53",
+    "cacheID": "340424ffdfdf513c674dbbe3e6b964ec",
     "id": null,
     "metadata": {},
-    "name": "pageUserQuery",
+    "name": "MainContentUserQuery",
     "operationKind": "query",
-    "text": "query pageUserQuery {\n  authUser {\n    id\n    username\n    person {\n      id\n      name\n    }\n    dep {\n      id\n      name\n    }\n    office {\n      id\n      name\n    }\n    unit {\n      id\n      name\n      dvs {\n        id\n        name\n      }\n    }\n    ispUnits {\n      id\n      unit {\n        id\n        name\n      }\n    }\n  }\n  ...SlowContent\n}\n\nfragment SlowContent on Query {\n  auth\n}\n"
+    "text": "query MainContentUserQuery {\n  authUser {\n    id\n    username\n    person {\n      id\n      name\n    }\n    dep {\n      id\n      name\n    }\n    office {\n      id\n      name\n    }\n    unit {\n      id\n      name\n      dvs {\n        id\n        name\n      }\n    }\n    ispUnits {\n      id\n      unit {\n        id\n        name\n      }\n    }\n  }\n  ...SlowContent\n}\n\nfragment SlowContent on Query {\n  auth\n}\n"
   }
 };
 })();
 
-(node as any).hash = "c05f755df63514eb36df87ac2fc81cde";
+(node as any).hash = "a20a9c5efcbcd29dfabe3b058329d925";
 
 export default node;

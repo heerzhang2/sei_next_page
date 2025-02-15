@@ -1,5 +1,7 @@
+/** @jsxImportSource @emotion/react */
 'use client';
 
+import { jsx, css, Global, ClassNames } from '@emotion/react'
 import {useActionState, useEffect, useRef, useState,} from 'react';
 import SubmitButtonWithStatus from '@/component/SubmitButtonWithStatus';
 // import {KEY_CALLBACK_URL, KEY_CREDENTIALS_SIGN_IN_ERROR, } from '.';
@@ -9,6 +11,24 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { revalidatePath } from 'next/cache'
 import {useAppState} from "@/action/AppState";
+import * as React from "react";
+import {
+    useTheme,
+    Layer,
+    Text,
+    Button,
+    Link as StyledLink,
+    LayerLoading,
+    Alert, Spinner,
+    Container, Input, InputGroup, IconArrowRight
+} from "customize-easy-ui-component";
+// import queryString from "query-string";
+// import {useContext} from "react";
+// import {UserContext} from "../routing/UserContext";
+// import useLoginMutation from "./useLoginMutation";
+// import useRegisterMutation from "./useRegisterMutation";
+import {AloneContainer} from "../comp/AloneContainer";
+import Link from "next/link";
 
 // import { z } from "zod";
 // import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,7 +84,7 @@ export default function SignInForm() {
   };
 
   // @ts-ignore
-  const [response, action] = useActionState(signInAction, undefined);
+  const [response, action, isPending] = useActionState(signInAction, undefined);
 
   const usernameRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -79,46 +99,147 @@ export default function SignInForm() {
   //       setUserEmail?.(auth?.user?.email ?? undefined));
   //   };
   // }, [setUserEmail]);
-
-  const isFormValid =
-    email.length > 0 &&
-    password.length > 0;
+    const theme = useTheme();
+    const [error, setError] = React.useState("");
 
   return (
-    <div  >
-      <h1   >
-        <FiLock className="text-main translate-y-[0.5px]" />
-        <span className="text-main">
-          Sign in
-        </span>
-      </h1>
-      <form
-        action={action}
-        className="w-full"
-      >
-        <div >
-          <div  >
-            <input
-              id="username"
-              ref={usernameRef}
-              value={username}
-            />
-            <input
-              id="password"
-              type="password"
-              value={password}
-            />
-            <input
-                id="email"
-                type="email"
-                value={email}
-            />
-          </div>
-          <SubmitButtonWithStatus disabled={!isFormValid}>
-            Sign in
-          </SubmitButtonWithStatus>
-        </div>
-      </form>
-    </div>
+      <>
+      <AloneContainer>
+          <Layer
+              css={{
+                  boxShadow: "none",
+                  marginBottom: theme.spaces.md,
+                  background: "white",
+                  [theme.mediaQueries.md]: {
+                      marginTop: theme.spaces.xl,
+                      boxShadow: theme.shadows.xl
+                  }
+              }}
+          >
+              <div
+                  css={{
+                      borderBottom: "1px solid",
+                      borderColor: theme.colors.border.muted,
+                      textAlign: "center",
+                      padding: theme.spaces.lg,
+                      paddingBottom: theme.spaces.sm
+                  }}
+              >
+                  <Text variant="h4">
+                      "使用前先登陆账户"
+                  </Text>
+
+                  <div
+                      css={{
+                          textAlign: "center",
+                          paddingBottom: theme.spaces.sm
+                      }}
+                  >
+                      <Text css={{fontSize: theme.fontSizes[0]}}>
+                          若没有账户?{" "}先要
+                          <StyledLink href="#">
+                              <Button size="xs" noBind intent="primary" iconAfter={<IconArrowRight/>}
+                              >申请注册
+                              </Button>
+                          </StyledLink>
+                      </Text>
+                  </div>
+              </div>
+
+              <div
+                  css={{
+                      padding: theme.spaces.lg
+                  }}
+              >
+                  <form action={action}>
+                      <div css={{marginTop: theme.spaces.md}}>
+                          <Text muted css={{textAlign: "center"}} variant="subtitle">
+                              请使用您的用户名密码登录:
+                          </Text>
+                          <InputGroup label={"账户"}>
+                              <Input required
+                                     onChange={e => {
+                                         setUsername(e.currentTarget.value);
+                                     }}
+                                     value={username}
+                                     inputSize="md"
+                                     type="text"
+                                     placeholder="账户"
+                              />
+                          </InputGroup>
+                          <InputGroup label={"密码"}>
+                              <Input required
+                                     onChange={e => {
+                                         setPassword(e.currentTarget.value);
+                                     }}
+                                     value={password}
+                                     inputSize="md"
+                                     type="password"
+                                     placeholder="密码最少6位的复杂"
+                                     autoComplete="off"
+                              />
+                          </InputGroup>
+
+                          {error && (
+                              <Alert
+                                  css={{marginTop: theme.spaces.md}}
+                                  intent={"error"}
+                                  title={"报错"}
+                                  subtitle={error}
+                              />
+                          )}
+                          <div css={{display: "flex", justifyContent: "flex-end"}}>
+                              <Button
+                                  disabled={!username || !password}
+                                  block
+                                  component="button"
+                                  css={{
+                                      textAlign: "center",
+                                      width: "100%",
+                                      marginTop: theme.spaces.md
+                                  }}
+                                  type="submit"
+                                  size="md"
+                                  intent="primary"
+                                  //onPress={e =>{isRegistering ? doRegister(e) : doLogin(e) } }
+                              >
+                                  登录
+                              </Button>
+
+                          </div>
+                      </div>
+                  </form>
+              </div>
+              <div className="mt-10">
+                  <Link href="/">⬅️ Go back home</Link>
+              </div>
+              <div className="mt-10">
+                  <Link href="/user">⬅️ Go 不能尼克酸y用户</Link>
+              </div>
+              <div className="mt-10">
+                  <Link href="/profile">⬅️ Profile y用户</Link>
+              </div>
+          </Layer>
+      </AloneContainer>
+          <Spinner doing={isPending}/>
+      </>
   );
 }
+
+//          <div  >
+//             <input
+//               id="username"
+//               ref={usernameRef}
+//               value={username}
+//             />
+//             <input
+//               id="password"
+//               type="password"
+//               value={password}
+//             />
+//             <input
+//                 id="email"
+//                 type="email"
+//                 value={email}
+//             />
+//           </div>

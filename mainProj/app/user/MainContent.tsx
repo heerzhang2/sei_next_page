@@ -1,6 +1,6 @@
 "use client";
 
-import { MainContentQuery } from "@/__generated__/MainContentQuery.graphql";
+import { MainContentUserQuery } from "@/__generated__/MainContentUserQuery.graphql";
 import { Suspense, lazy } from "react";
 import { graphql, useLazyLoadQuery } from "react-relay";
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
@@ -8,9 +8,9 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 const SlowContentLazy = lazy(() => import("@/app/lazy/SlowContent"));
 
 export function MainContent() {
-  const data = useLazyLoadQuery<MainContentQuery>(
+  const data = useLazyLoadQuery<MainContentUserQuery>(
     graphql`
-      query MainContentQuery {
+      query MainContentUserQuery {
         authUser{
                     id,username, person{id,name}
                     dep{id name} office{id name} 

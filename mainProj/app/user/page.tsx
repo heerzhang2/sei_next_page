@@ -9,8 +9,11 @@ import {MainContentQuery} from "@/__generated__/MainContentQuery.graphql";
 // import {useRouter} from "next/navigation";
 import { graphql } from "relay-runtime";
 // import {useSession} from "next-auth/src/react";
-import { useSession, SessionProvider } from 'next-auth/react';
+// import { useSession, SessionProvider } from 'next-auth/react';
 import {MainContent} from "./MainContent";
+import { getSession } from 'next-auth/react';
+import {auth} from "@/app/auth";
+
 
 export const dynamic = 'force-dynamic'  // Alternative to default-no-store
 // export const fetchCache = 'default-no-store'
@@ -20,11 +23,11 @@ export const dynamic = 'force-dynamic'  // Alternative to default-no-store
 // };
 
 //针对客户端浏览器的：use client无法useSession同步最新数据，还必须手动做刷新页面！
-export default function ClientComponent() {
-    const { data: session } = useSession();
+export default async function ClientComponent() {
+    // const session = await getSession();
     // const headersList = await headers();
     //async/await is not yet supported in Client Components, only Server Components. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.
-    // const session =await auth();
+    const session =await auth();
     //useLazyLoadQuery必须配套use client的；
 
     // const data = useLazyLoadQuery<MainContentQuery>(

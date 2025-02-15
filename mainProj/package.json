@@ -9,7 +9,7 @@
     "yarn": "yarn",
     "dev": "next dev --turbopack",
     "dev2": "next dev",
-    "build": "next build && echo '构建任务完毕！' ",
+    "build": "next build && echo 构建任务完毕！",
     "start Node.js server": "next start",
     "relay": "yarn run relay-compiler",
     "build all": "relay-compiler && next build",
@@ -60,6 +60,7 @@
     "schemaExtensions": [
       "./relay/clientSchema.graphql"
     ],
+    "artifactDirectory": "./__generated__",
     "language": "typescript"
   },
   "eslintConfig": {
