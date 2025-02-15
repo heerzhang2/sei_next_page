@@ -12,7 +12,6 @@ import {auth} from "@/app/auth";
 
 
 export type SsrFetchFunction = (
-    session: any,   //附加的token
     request: RequestParameters,
     variables: Variables,
     cacheConfig: CacheConfig,
@@ -21,11 +20,11 @@ export type SsrFetchFunction = (
 /**服务器SSR用这个：服务端认证客户角色cockie token。
  * 这个函数输入参数不一定必须配套FetchFunction，return必须是。
  * */
-export const ssrFetchFn: SsrFetchFunction = (session, operation, variables, _cacheConfig) => {
+export const ssrFetchFn: SsrFetchFunction = (operation, variables, _cacheConfig) => {
   return Observable.create<GraphQLResponse>((sink) => {
     (async () => {
       console.log("execute ssr FetchRelay", operation.name);
-      const resp=await  ssrFetchRelay(session, operation, variables, _cacheConfig);
+      const resp=await  ssrFetchRelay(operation, variables, _cacheConfig);
       sink.next(resp);
       sink.complete();
       // await __simulateDeferredResponse(operation, variables, sink);
@@ -105,12 +104,11 @@ function sleep(ms: number) {
  默认设置上不会使用Network层次Cache的；不要用QueryResponseCache()。
  */
 async function ssrFetchRelay(
-    session3: any,
     params: RequestParameters,
     variables: Variables,
     _cacheConfig: CacheConfig
 ) {
-  const session = await auth();
+  const session = await auth() as any;
   console.log("ssrFetchRelay_BEFORE={}", session, session?.user?.accessToken);
   await connection()
   //must be prefixed with NEXT_PUBLIC_.

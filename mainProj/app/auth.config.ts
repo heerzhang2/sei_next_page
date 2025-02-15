@@ -1,6 +1,6 @@
 import { NextAuthConfig } from 'next-auth';
+import "next-auth/jwt"
 // import { DrizzleAdapter } from "@auth/drizzle-adapter"
-// import { db } from './db';
 
 export const authConfig = {
   pages: {
@@ -24,8 +24,8 @@ export const authConfig = {
       return true;
     },
 	async session(params) {
-      const { session, token }=params;
-       console.log("提供者session的回调:", params);
+      const { session, token }=params as any;
+       // console.log("提供者session的回调:", params);
 			session.user.image = token.picture
 			session.user.id = token.sub ?? ''
             // session.user.accessToken = token
@@ -36,8 +36,8 @@ export const authConfig = {
       return session;
     },
     jwt(params) {
-      const { token, trigger, session, account, user } =params;
-        console.log("提供者jwt的回调:",params);
+      const { token, trigger, session, account, user } =params as any;
+        // console.log("提供者jwt的回调:",params);
         if(trigger === "update")  token.name = session.user.name
         if(trigger=== 'signIn'){
           // session.accessToken=  user?.accessToken;
@@ -58,7 +58,7 @@ declare module "next-auth" {
 }
 
 declare module "next-auth/jwt" {
-    interface JWT {
-        accessToken?: string
-    }
+  interface JWT {
+    accessToken?: string
+  }
 }

@@ -3,7 +3,6 @@
 // import { eq } from 'drizzle-orm';
 // import { users } from "../db/schema";
 // import * as schema from "../db/schema";
-import { genSaltSync, hashSync } from "bcrypt-ts";
 import {performLoginMutation} from "@/action/performLoginMutation";
 import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";
 import {commitMutation} from "relay-runtime";
@@ -28,14 +27,6 @@ export async function userLoginPassed(username: string,password: string ) {
     }
     console.log("getUser后续继续:已死等的result=", result);
 	return  result;
-}
-/*Mock:
-* */
-export async function createUser(email: string, password: string) {
-  const salt = genSaltSync(10);
-  const hash = hashSync(password, salt);
-
-  return {email:'sd3f',};//await db.insert(users).values({ email: email, password: hash });
 }
 
 

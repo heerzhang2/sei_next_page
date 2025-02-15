@@ -47,10 +47,11 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 9. 例子 https://github.com/sambecker/exif-photo-blog Nodejs环境/next-auth是服务端的。 ？根目录/middleware.ts；
    publicRuntimeConfig ; server rendering: Static, Dynamic, and Streaming.默认是Static Rendering显然不行啊；
    await connection()局部做动态的；
-10. lucide-react图标库; Authentication四大流派：选择题：用OAuth提供程序来替代基于密码的身份验证，还是继续用传统的用户密码直接认证方式？。
-    全栈情况next-auth+@prisma/client+CRDB; 
-11. nextjs-w-app-router-starter-main的认证更接近！ next-auth-example-main扩2个session+JWT/keycloak; 
-
+10. lucide-react图标库 react-icons; Authentication四大流派：选择题：用OAuth提供程序来替代基于密码的身份验证，还是继续用传统的用户密码直接认证方式？OAuth协议的核心思想就是
+   避免用户直接将用户名和密码交给应用程序。 全栈情况next-auth+@prisma/client+CRDB; 
+11. nextjs-w-app-router-starter-main的认证更接近！ next-auth-example-main扩2个session+JWT/keycloak;
+    "autoprefixer": "^10.4.16",
+12. 
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")

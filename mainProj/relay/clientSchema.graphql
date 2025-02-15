@@ -1,0 +1,31 @@
+extend type Detail {
+    selected: Boolean,
+}
+
+extend interface  Equipment {
+    selected: Boolean,
+}
+extend type Amusement{
+    selected: Boolean,
+}
+extend type Boiler{
+    selected: Boolean,
+}
+extend type Crane{
+    selected: Boolean,
+}
+extend type Elevator{
+    selected: Boolean,
+}
+extend type Eqp{
+    selected: Boolean,
+}
+extend type FactoryVehicle{
+    selected: Boolean,
+}
+extend type Pipeline{
+    selected: Boolean,
+}
+extend type Vessel{
+    selected: Boolean,
+}

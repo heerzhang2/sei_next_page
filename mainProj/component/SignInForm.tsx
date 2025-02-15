@@ -1,15 +1,10 @@
 'use client';
 
 import {useActionState, useEffect, useRef, useState,} from 'react';
-import FieldSetWithStatus from '@/component/FieldSetWithStatus';
-import Container from '@/component/Container';
 import SubmitButtonWithStatus from '@/component/SubmitButtonWithStatus';
-import {KEY_CALLBACK_URL, KEY_CREDENTIALS_SIGN_IN_ERROR, } from '.';
+// import {KEY_CALLBACK_URL, KEY_CREDENTIALS_SIGN_IN_ERROR, } from '.';
 import {useSearchParams} from 'next/navigation';
 import { FiLock } from 'react-icons/fi';
-import {getAuthAction, } from "@/action/auth";
-import ErrorNote from "@/component/ErrorNote";
-import useLoginMutation from "@/component/useLoginMutation";
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { revalidatePath } from 'next/cache'
@@ -18,9 +13,14 @@ import {useAppState} from "@/action/AppState";
 // import { z } from "zod";
 // import { zodResolver } from '@hookform/resolvers/zod';
 // import { useForm } from 'react-hook-form';             =感觉是罗嗦了
-// const FormSchema = z.object({
-//   email: z.string().email(),
-//   password: z.string().min(6),
+// const formSchema = z.object({
+//   name: z.string().min(2, 'Name must be at least 2 characters'),
+//   email: z.string().email('Invalid email address'),
+//   password: z.string().min(6, 'Password must be at least 6 characters'),
+//   confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
+// }).refine((data) => data.password === data.confirmPassword, {
+//   message: "Passwords must match",
+//   path: ['confirmPassword'],
 // });
 // export default function LoginForm() {
 //   const form = useForm<z.infer<typeof FormSchema>>({       =感觉可以学习的点？
@@ -35,12 +35,12 @@ var sha256 = require('hash.js/lib/hash/sha/256');
 
 export default function SignInForm() {
   const router = useRouter();
-  const params = useSearchParams();
+  // const params = useSearchParams();
   const { setUserEmail } = useAppState();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const {call:submitfunc, doing:isInFlight}= useLoginMutation();
+  // const {call:submitfunc, doing:isInFlight}= useLoginMutation();
 
   const signInAction = async (_prevState: string | undefined, formData: FormData,
   ) => {
@@ -63,6 +63,7 @@ export default function SignInForm() {
     }
   };
 
+  // @ts-ignore
   const [response, action] = useActionState(signInAction, undefined);
 
   const usernameRef = useRef<HTMLInputElement>(null);
@@ -71,20 +72,20 @@ export default function SignInForm() {
     return () => clearTimeout(timeout);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      // Capture user email before unmounting
-      getAuthAction().then(auth =>
-        setUserEmail?.(auth?.user?.email ?? undefined));
-    };
-  }, [setUserEmail]);
+  // useEffect(() => {
+  //   return () => {
+  //     // Capture user email before unmounting
+  //     getAuthAction().then(auth =>
+  //       setUserEmail?.(auth?.user?.email ?? undefined));
+  //   };
+  // }, [setUserEmail]);
 
   const isFormValid =
     email.length > 0 &&
     password.length > 0;
 
   return (
-    <Container  >
+    <div  >
       <h1   >
         <FiLock className="text-main translate-y-[0.5px]" />
         <span className="text-main">
@@ -96,36 +97,21 @@ export default function SignInForm() {
         className="w-full"
       >
         <div >
-          {response === KEY_CREDENTIALS_SIGN_IN_ERROR &&
-            <ErrorNote>
-              Invalid email/password
-            </ErrorNote>}
           <div  >
-            <FieldSetWithStatus
+            <input
               id="username"
-              inputRef={usernameRef}
-              label="用户名"
+              ref={usernameRef}
               value={username}
-              onChange={setUsername}
-            />
-            <FieldSetWithStatus
-              id="password"
-              label="Admin Password"
-              type="password"
-              value={password}
-              onChange={setPassword}
-            />
-            <FieldSetWithStatus
-                id="email"
-                label="Admin Email"
-                type="email"
-                value={email}
-                onChange={setEmail}
             />
             <input
-              type="hidden"
-              name={KEY_CALLBACK_URL}
-              value={params.get(KEY_CALLBACK_URL) ?? ''}
+              id="password"
+              type="password"
+              value={password}
+            />
+            <input
+                id="email"
+                type="email"
+                value={email}
             />
           </div>
           <SubmitButtonWithStatus disabled={!isFormValid}>
@@ -133,6 +119,6 @@ export default function SignInForm() {
           </SubmitButtonWithStatus>
         </div>
       </form>
-    </Container>
+    </div>
   );
 }

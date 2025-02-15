@@ -2,17 +2,17 @@
 
 import { useState, useEffect, ReactNode, useCallback } from 'react';
 import { AppStateContext } from './AppState';
-import { AnimationConfig } from '@/components/AnimateItems';
+import { AnimationConfig } from '@/component/AnimateItems';
 import usePathnames from '@/utility/usePathnames';
 // import { getAuthAction } from '@/auth/actions';
 import useSWR from 'swr';
-import {
-  HIGH_DENSITY_GRID,
-  MATTE_PHOTOS,
-  SHOW_ZOOM_CONTROLS,
-} from '@/site/config';
+// import {
+//   HIGH_DENSITY_GRID,
+//   MATTE_PHOTOS,
+//   SHOW_ZOOM_CONTROLS,
+// } from '@/site/config';
 // import { getPhotosHiddenMetaCachedAction } from '@/photo/actions';
-import { ShareModalProps } from '@/share';
+// import { ShareModalProps } from '@/share';
 // import { storeTimezoneCookie } from '@/utility/timezone';
 
 export default function AppStateProvider({
@@ -34,8 +34,7 @@ export default function AppStateProvider({
   // MODAL
   const [isCommandKOpen, setIsCommandKOpen] =
     useState(false);
-  const [shareModalProps, setShareModalProps] =
-    useState<ShareModalProps>();
+
   // ADMIN
   const [userEmail, setUserEmail] =
     useState<string>();
@@ -48,12 +47,6 @@ export default function AppStateProvider({
   const [isPerformingSelectEdit, setIsPerformingSelectEdit] =
     useState(false);
   // DEBUG
-  const [isGridHighDensity, setIsGridHighDensity] =
-    useState(HIGH_DENSITY_GRID);
-  const [areZoomControlsShown, setAreZoomControlsShown] =
-    useState(SHOW_ZOOM_CONTROLS);
-  const [arePhotosMatted, setArePhotosMatted] =
-    useState(MATTE_PHOTOS);
   const [shouldDebugImageFallbacks, setShouldDebugImageFallbacks] =
     useState(false);
   const [shouldShowBaselineGrid, setShouldShowBaselineGrid] =
@@ -61,12 +54,13 @@ export default function AppStateProvider({
 
   const invalidateSwr = useCallback(() => setSwrTimestamp(Date.now()), []);
 
-  const { data, error } = {};//useSWR('getAuth', getAuthAction);
-  useEffect(() => {
-    if (!error) {
-      setUserEmail(data?.user?.email ?? undefined);
-    }
-  }, [data, error]);
+  // const { data, error } = {};//useSWR('getAuth', getAuthAction);
+  // useEffect(() => {
+  //   if (!error) {
+  //     setUserEmail(data?.user?.email ?? undefined);
+  //   }
+  // }, [data, error]);
+
   const isUserSignedIn = Boolean(userEmail);
 
   // useEffect(() => {
@@ -107,8 +101,6 @@ export default function AppStateProvider({
         // MODAL
         isCommandKOpen,
         setIsCommandKOpen,
-        shareModalProps,
-        setShareModalProps,
         // ADMIN
         userEmail,
         setUserEmail,
@@ -121,12 +113,7 @@ export default function AppStateProvider({
         isPerformingSelectEdit,
         setIsPerformingSelectEdit,
         // DEBUG
-        isGridHighDensity,
-        setIsGridHighDensity,
-        areZoomControlsShown,
-        setAreZoomControlsShown,
-        arePhotosMatted,
-        setArePhotosMatted,
+
         shouldDebugImageFallbacks,
         setShouldDebugImageFallbacks,
         shouldShowBaselineGrid,

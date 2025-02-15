@@ -17,7 +17,6 @@ import { ToastContainer, toast } from 'react-toastify';
 
 //迁移前的 const graphql = require("babel-plugin-relay/macro");
 import { graphql } from "relay-runtime";
-import {toastSuccess} from "@/utility";
 
 
 //这个特别！返回{TodoEdge, User} 而不是直接返回TodoNode: Todo就可以了。!多出两个麻烦。
@@ -29,6 +28,7 @@ const mutation = graphql`
 `;
 
 /**账户登录
+ * @deprecated
  * */
 export default function useLoginMutation() {
   const [called, setCalled] =useState<boolean>(false);
@@ -64,21 +64,21 @@ export default function useLoginMutation() {
                 // toast({title: "后端应答", subtitle: 'OK!', intent: "success"});
                 // toastSuccess(`后端应答${authenticate} OK`);
               }else {
-                toast({
-                  title: "后端应答",
-                  subtitle: '验证失败',
-                  intent: "error"
-                });
+                // toast({
+                //   title: "后端应答",
+                //   subtitle: '验证失败',
+                //   intent: "error"
+                // });
               }
             },
             onError: error => {
               //前端自己处理的报错也会跑到这里:
               // setResult( '报错');
-              toast({
-                title: "后端应答",
-                subtitle: ''+error,
-                intent: "error"
-              });
+              // toast({
+              //   title: "后端应答",
+              //   subtitle: ''+error,
+              //   intent: "error"
+              // });
             }
           });
           //必须放在commit函数之后的，才会doing逻辑=true生效,doing+called逻辑,保障同步化

@@ -1,22 +1,22 @@
 import { ComponentProps, ReactNode } from 'react';
-import Container from './Container';
 import AnimateItems from './AnimateItems';
 import { IoInformationCircleOutline } from 'react-icons/io5';
 // import { clsx } from 'clsx/lite';
+// export default function Note(props: {
+//   icon?: ReactNode
+// } & ComponentProps<typeof Container>) {
 
 export default function Note(props: {
   icon?: ReactNode
   animate?: boolean
   cta?: ReactNode
-  hideIcon?: boolean
-} & ComponentProps<typeof Container>) {
+  hideIcon?: boolean , children: ReactNode
+} ) {
   const {
     icon,
     animate,
     cta,
     hideIcon,
-    color = 'blue',
-    padding,
     children,
     ...rest
   } = props;
@@ -25,11 +25,9 @@ export default function Note(props: {
     <AnimateItems
       type={animate ? 'bottom' : 'none'}
       items={[
-        <Container
+        <div
           {...rest}
           key="Banner"
-          color={color}
-          padding={padding ?? (cta ? 'tight-cta-right' : 'tight')}
         >
           <div  >
             {!hideIcon &&
@@ -47,7 +45,7 @@ export default function Note(props: {
                 {cta}
               </span>}
           </div>
-        </Container>,
+        </div>,
       ]}
       animateOnFirstLoadOnly
     />

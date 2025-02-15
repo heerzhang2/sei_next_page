@@ -34,11 +34,10 @@ export function createServerSideRelayEnvironment(
 ) {
   //Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. You can only call Hooks at the top level of your React function. For more information, see https://react.dev/link/rules-of-hooks
   //报错！！ const { data: session } = useSession();
-  const session=null;
-  console.log("create server-side environmentsession={}", session);
+  console.log("create server-side environmentsession=S");
   //函数参数类型固定的： 返回ObservableFromValue<GraphQLResponse>
   const curriedFetchFn: FetchFunction = (request, variables, ...rest) => {
-    const observable = ssrFetchFn(session, request, variables, ...rest);
+    const observable = ssrFetchFn(request, variables, ...rest);
 
     if (isRelayObservable(observable)) {
       const queryId = buildQueryId(request, variables);

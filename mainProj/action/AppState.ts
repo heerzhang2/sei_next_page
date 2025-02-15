@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction, createContext, useContext } from 'react';
-import { AnimationConfig } from '@/components/AnimateItems';
-import { ShareModalProps } from '@/share';
+import { AnimationConfig } from '@/component/AnimateItems';
 
 export interface AppStateContext {
   // CORE
@@ -17,8 +16,6 @@ export interface AppStateContext {
   // MODAL
   isCommandKOpen?: boolean
   setIsCommandKOpen?: Dispatch<SetStateAction<boolean>>
-  shareModalProps?: ShareModalProps
-  setShareModalProps?: Dispatch<SetStateAction<ShareModalProps | undefined>>
   // ADMIN
   userEmail?: string
   setUserEmail?: Dispatch<SetStateAction<string | undefined>>

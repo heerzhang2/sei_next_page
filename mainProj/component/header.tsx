@@ -1,7 +1,5 @@
 
 // import { auth } from '@/app/auth';
-import { Search } from './search';
-import { SidebarTrigger } from './ui/sidebar';
 import { UserNav } from './user-nav';
 import { SessionProvider } from 'next-auth/react';
 

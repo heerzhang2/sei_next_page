@@ -3,7 +3,7 @@ import { fetchQuery, commitMutation, graphql } from "relay-runtime";
 import yourMutation from './__generated__/performLoginMutation.graphql';
 //不能使用这个import {useRelayEnvironment} from "react-relay";
 import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";
-
+// import youfrMutation from 'D:/home/sei_next_page/mainProj/./__generated__/performLoginMutation.graphql.ts'
 
 const mutation = graphql`
     mutation performLoginMutation($username: String!, $password: String!) {
@@ -21,14 +21,10 @@ export function performLoginMutation(variables: { username: string; password: st
             {
                 mutation: yourMutation,
                 variables,
-                onCompleted: (response, errors) => {
+                onCompleted: (response:any, errors) => {
                     if (errors) {
-                        console.error('performLoginMutation Errors:', errors);
                         reject(errors);
                     } else {
-                        console.log('performLoginMutation Success:', response);
-                        // 假设你需要从 response 中提取用户数据
-                        // 注意：你需要根据你的 GraphQL API 的实际响应来调整这里的代码
                         resolve(response.authenticate);
                     }
                 },

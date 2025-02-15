@@ -9,22 +9,22 @@
     "yarn": "yarn",
     "dev": "next dev --turbopack",
     "dev2": "next dev",
-    "build": "relay-compiler && next build",
+    "build": "next build",
+    "start Node.js server": "next start",
+    "relay": "yarn run relay-compiler",
+    "build all": "relay-compiler && next build",
     "start-server": "next start -p 3002",
     "lint": "next lint",
     "relay2": "relay-compiler --watch",
     "update-schema_本机服务端": "get-graphql-schema  http://localhost:8673/graphql > relay/schema.graphql",
-    "relay": "yarn run relay-compiler",
     "relay3": "relay-compiler --validate"
   },
   "dependencies": {
     "next-auth": "5.0.0-beta.25",
     "react-toastify": "^11.0.0",
-    "sonner": "^1.7.4",
     "hash.js": "^1.1.7",
     "customize-easy-ui-component": "5.5.0",
     "framer-motion": "^12.4.1",
-    "next-themes": "^0.4.4",
     "swr": "^2.3.2",
     "react-icons": "^5.4.0",
     "lucide-react": "^0.454.0",
@@ -36,14 +36,12 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "bcrypt-ts": "^5.0.3",
     "babel-plugin-relay": "^18.2.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-relay": "18.2.0",
     "@types/relay-runtime": "^18.2.5",
-    "autoprefixer": "^10.4.16",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "relay-compiler": "^18.2.0",
@@ -55,5 +53,19 @@
   "resolutions": {
     "react": "19.0.0",
     "react-dom": "19.0.0"
+  },
+  "relay": {
+    "src": "./",
+    "schema": "./relay/schema.graphql",
+    "schemaExtensions": [
+      "./relay/clientSchema.graphql"
+    ],
+    "language": "typescript"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   }
 }

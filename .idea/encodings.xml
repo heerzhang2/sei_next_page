@@ -4,5 +4,6 @@
     <file url="file://$PROJECT_DIR$/mainProj/.env" charset="GBK" />
     <file url="file://$PROJECT_DIR$/mainProj/.env.local" charset="GBK" />
     <file url="file://$PROJECT_DIR$/mainProj/component/useLoginMutation.ts" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/mainProj/relay/clientSchema.graphql" charset="GBK" />
   </component>
 </project>
