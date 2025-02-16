@@ -52,7 +52,8 @@ import Link from "next/link";
 
 //密码hash 防止在服务后台泄密
 var sha256 = require('hash.js/lib/hash/sha/256');
-
+/*登录表单；却在浏览器端运行的。
+* */
 export default function SignInForm() {
   const router = useRouter();
   // const params = useSearchParams();

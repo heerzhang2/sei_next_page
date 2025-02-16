@@ -28,5 +28,3 @@ export async function userLoginPassed(username: string,password: string ) {
     console.log("getUser后续继续:已死等的result=", result);
 	return  result;
 }
-
-

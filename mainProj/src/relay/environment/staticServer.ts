@@ -21,7 +21,7 @@ export function createStaticRelayEnvironment() {
   if (ssgRelayEnvironment) {
     return ssgRelayEnvironment;
   }
-  console.log("create SSG-relay environment");
+  console.log("create ServerOnly-relay environment");
   // Create a new environment or reuse the existing one, if one has already been created.
   ssgRelayEnvironment ||= new Environment({
     network: Network.create(fetchFn),

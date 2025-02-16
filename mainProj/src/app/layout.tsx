@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 // import "./globals.css";
-import { ServerRelayProvider } from "../relay/ServerRelayProvider";
+// import { ServerRelayProvider } from "../relay/ServerRelayProvider";
 import {lazy, ReactNode, Suspense} from "react";
 import SwrConfigClient from "@/action/SwrConfigClient";
 import AppStateProvider from "@/action/AppStateProvider";
@@ -17,15 +17,16 @@ export const metadata: Metadata = {
 
 const FootBar = lazy(() => import("@/component/footbar"));
 
-/*水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
+/*只提供静态化（保障SessionProvider不提供客户端user也能Build的情形），不考虑鉴别用户context认证才能使用的。
+水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
+next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmentProvider正常是只能用于客户端的(水和/SSR除外)。
 * */
 export default async function RootLayout({children}: { children: ReactNode }) {
-    await connection();
+    // await connection();
     return (
         <html>
         <body>
         <SessionProvider>
-            <ServerRelayProvider>
                            {children}
 
                 {/*<GlobalState>*/}
@@ -41,7 +42,6 @@ export default async function RootLayout({children}: { children: ReactNode }) {
                 {/*    </AppStateProvider>*/}
                 {/*</GlobalState>*/}
                 {/*<ToastContainer/>*/}
-            </ServerRelayProvider>
         </SessionProvider>
         </body>
         </html>

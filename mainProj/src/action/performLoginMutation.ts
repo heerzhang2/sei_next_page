@@ -3,6 +3,7 @@ import { fetchQuery, commitMutation, graphql } from "relay-runtime";
 import yourMutation from './__generated__/performLoginMutation.graphql';
 //不能使用这个import {useRelayEnvironment} from "react-relay";
 import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";
+import {staticRelayEnvironment} from "@/relay/ServerRelay";
 // import youfrMutation from 'D:/home/sei_next_page/mainProj/./__generated__/performLoginMutation.graphql.ts'
 
 const mutation = graphql`
@@ -12,9 +13,9 @@ const mutation = graphql`
     }
 `;
 
-//运行在服务器端的：
+//运行在服务器端的：登录实际用服务端做代理的。
 export function performLoginMutation(variables: { username: string; password: string }): Promise<any> {
-    const environment = createStaticRelayEnvironment();
+    const environment =staticRelayEnvironment;      //createStaticRelayEnvironment();
     return new Promise((resolve, reject) => {
         commitMutation(
             environment,
@@ -36,4 +37,3 @@ export function performLoginMutation(variables: { username: string; password: st
         );
     });
 }
-
