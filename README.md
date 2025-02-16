@@ -51,7 +51,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
    避免用户直接将用户名和密码交给应用程序。 全栈情况next-auth+@prisma/client+CRDB; 
 11. nextjs-w-app-router-starter-main的认证更接近！ next-auth-example-main扩2个session+JWT/keycloak;
     "autoprefixer": "^10.4.16",
-12. 
+12. useOptimistic useActionState useFormStatus is a React hook and therefore must be used in a Client Component.
+13. 
+
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")

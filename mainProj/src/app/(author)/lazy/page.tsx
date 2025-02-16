@@ -1,4 +1,4 @@
-import { SlowContentLoader } from "@/app/lazy/SlowContentLoader";
+import { SlowContentLoader } from "@/app/(author)/lazy/SlowContentLoader";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";

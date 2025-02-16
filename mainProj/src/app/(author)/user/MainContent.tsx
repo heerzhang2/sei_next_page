@@ -5,7 +5,7 @@ import { Suspense, lazy } from "react";
 import { graphql, useLazyLoadQuery } from "react-relay";
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 
-const SlowContentLazy = lazy(() => import("@/app/lazy/SlowContent"));
+const SlowContentLazy = lazy(() => import("@/app/(author)/lazy/SlowContent"));
 
 export function MainContent() {
   const data = useLazyLoadQuery<MainContentUserQuery>(

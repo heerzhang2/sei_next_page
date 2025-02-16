@@ -1,3 +1,4 @@
+'use server'
 
 import { fetchQuery, commitMutation, graphql } from "relay-runtime";
 import yourMutation from './__generated__/performLoginMutation.graphql';
@@ -13,8 +14,9 @@ const mutation = graphql`
     }
 `;
 
-//运行在服务器端的：登录实际用服务端做代理的。
-export function performLoginMutation(variables: { username: string; password: string }): Promise<any> {
+//运行在服务器端的：登录实际用服务端做代理的。 给服务端用的必须加async；  It is not allowed to define inline "use server" annotated Server Actions in Client Components.
+export async function performLoginMutation(variables: { username: string; password: string }): Promise<any> {
+
     const environment =staticRelayEnvironment;      //createStaticRelayEnvironment();
     return new Promise((resolve, reject) => {
         commitMutation(

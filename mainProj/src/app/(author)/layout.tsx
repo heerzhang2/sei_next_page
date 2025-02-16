@@ -8,6 +8,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import { SessionProvider } from 'next-auth/react';
 import GlobalState from "@/action/GlobalState";
 import {connection} from "next/server";
+import {RelayProvider} from "@/relay/RelayProvider";
+import {MainContent} from "@/app/(author)/user/MainContent";
 // import FootBar from "@/component/footbar";
 
 export const metadata: Metadata = {
@@ -20,29 +22,23 @@ const FootBar = lazy(() => import("@/component/footbar"));
 水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
 next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmentProvider正常是只能用于客户端的(水和/SSR除外)。
 * */
-export default async function RootLayout({children}: { children: ReactNode }) {
-    // await connection();
+export default async function SPALayout({children}: { children: ReactNode }) {
+    await connection();
     return (
-        <html>
-        <body>
-        <SessionProvider>
-                           {children}
+        <RelayProvider>
+            <GlobalState>
+                <AppStateProvider>
+                    <SwrConfigClient>
 
-                {/*<GlobalState>*/}
-                {/*    <AppStateProvider>*/}
-                {/*        <SwrConfigClient>*/}
+                        {children}
 
-                {/*            {children}*/}
-
-                {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
-                {/*                <MainContent/>*/}
-                {/*            </Suspense>*/}
-                {/*        </SwrConfigClient>*/}
-                {/*    </AppStateProvider>*/}
-                {/*</GlobalState>*/}
-                {/*<ToastContainer/>*/}
-        </SessionProvider>
-        </body>
-        </html>
+                        <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>
+                            <MainContent/>
+                        </Suspense>
+                    </SwrConfigClient>
+                </AppStateProvider>
+            </GlobalState>
+            <ToastContainer/>
+        </RelayProvider>
     );
 }

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MainContent } from "./MainContent";
 import Header from "@/component/header";
 import FootBar from "@/component/footbar";
 
@@ -11,7 +10,6 @@ export default function Home() {
   return (
       <div>
           <Header />
-          {/*<MainContent/>*/}
 
           <div className="mt-10">
               <Link href="/lazy">Visit (potentially) cached page ➡️</Link>

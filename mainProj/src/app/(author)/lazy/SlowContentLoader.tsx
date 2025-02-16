@@ -1,6 +1,6 @@
 "use client";
 
-import SlowContent from "@/app/lazy/SlowContent";
+import SlowContent from "@/app/(author)/lazy/SlowContent";
 import { SlowContentLoaderQuery } from "./__generated__/SlowContentLoaderQuery.graphql";
 import { useLazyLoadQuery } from "react-relay";
 import { graphql } from "relay-runtime";
