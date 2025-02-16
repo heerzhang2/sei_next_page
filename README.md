@@ -74,4 +74,6 @@ Authorization: `Bearer ${session.accessToken}`,
 try {
 const response = await axios.get(apiUrl, { headers: apiHeaders });
 const data = response.data;
- 
+
+https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#passing-additional-arguments
+https://react.dev/reference/rsc/use-server

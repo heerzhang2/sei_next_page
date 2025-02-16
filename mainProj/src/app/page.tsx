@@ -9,16 +9,15 @@ import FootBar from "@/component/footbar";
 export default function Home() {
   return (
       <div>
-          <Header />
-
+          <div className="mt-10">
+              <Link href="/main">认证后的主页home</Link>
+          </div>
           <div className="mt-10">
               <Link href="/lazy">Visit (potentially) cached page ➡️</Link>
           </div>
           <div className="mt-10">
               <Link href="/login">⬅️ Go 的等让路 home</Link>
           </div>
-
-
       </div>
   );
 }

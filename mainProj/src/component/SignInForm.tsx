@@ -66,17 +66,17 @@ export default function SignInForm() {
   const signInAction = async (_prevState: string | undefined, formData: FormData,
   ) => {
     const data = formData;  //{ email: '', password: '' }
-    console.log("signInAction formData:{}", formData);
+    console.log("signInAction录入formData:{}", formData);
     const response = await signIn('credentials', {
       username: 'herzhang',
       email: 'herzhang@163.com', //data.email,
       password: '768768', //data.password,
-      redirect: false
+      redirect: true
     });
     if (!response?.error) {
         window.location.reload()
-        router.push('/')
-        window.location.href = '/';
+        router.push('/user')
+        window.location.href = '/user';
     } else {
       // setError(response.error);
       // resetForm();
