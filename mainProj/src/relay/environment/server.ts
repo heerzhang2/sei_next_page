@@ -1,3 +1,5 @@
+// import 'server-only'
+
 import { ssrFetchFn } from "@/relay/environment/ssrFetchFn";
 import { buildQueryId, isRelayObservable } from "@/relay/environment/helpers";
 import {

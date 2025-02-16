@@ -10,7 +10,7 @@ export default function Home() {
   return (
       <div>
           <Header />
-          {/*<MainContent/>*/}
+          <MainContent/>
 
           <div className="mt-10">
               <Link href="/lazy">Visit (potentially) cached page ➡️</Link>

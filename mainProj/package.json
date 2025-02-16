@@ -19,6 +19,10 @@
     "update-schema_本机服务端": "get-graphql-schema  http://localhost:8673/graphql > src/relay/schema.graphql",
     "relay3": "relay-compiler --validate"
   },
+  "resolutions": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
   "dependencies": {
     "next-auth": "5.0.0-beta.25",
     "react-toastify": "^11.0.0",
@@ -47,10 +51,6 @@
     "relay-compiler": "^18.2.0",
     "get-graphql-schema": "^2.1.2",
     "typescript": "^5"
-  },
-  "resolutions": {
-    "react": "19.0.0",
-    "react-dom": "19.0.0"
   },
   "relay": {
     "src": "src/",

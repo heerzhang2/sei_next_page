@@ -1,3 +1,5 @@
+// "use client";
+
 import { fetchFn } from "@/relay/environment/fetchFn";
 import {
   RELAY_WINDOW_KEY,

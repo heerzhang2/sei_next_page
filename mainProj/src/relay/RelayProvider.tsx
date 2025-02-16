@@ -5,7 +5,7 @@ import {
   createClientSideRelayEnvironment,
 } from "@/relay/environment";
 import { useStream } from "@/relay/useStream";
-import { useServerInsertedHTML } from "next/navigation";
+import { useServerInsertedHTML } from "next/navigation";     //useServerInsertedHTML 依赖于客户端的 React 环境和 DOM，因此它不能在服务器端使用。
 import { ReactNode, useRef, useMemo } from "react";
 import { RelayEnvironmentProvider } from "react-relay";
 import { useSession } from "next-auth/react"

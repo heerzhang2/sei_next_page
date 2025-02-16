@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 // import "./globals.css";
-import { ServerRelayProvider } from "../relay/ServerRelayProvider";
+import { RelayProvider } from "../relay/RelayProvider";
 import {lazy, ReactNode, Suspense} from "react";
 import SwrConfigClient from "@/action/SwrConfigClient";
 import AppStateProvider from "@/action/AppStateProvider";
@@ -25,23 +25,21 @@ export default async function RootLayout({children}: { children: ReactNode }) {
         <html>
         <body>
         <SessionProvider>
-            <ServerRelayProvider>
-                           {children}
+            <RelayProvider>
+                <GlobalState>
+                    <AppStateProvider>
+                        <SwrConfigClient>
 
-                {/*<GlobalState>*/}
-                {/*    <AppStateProvider>*/}
-                {/*        <SwrConfigClient>*/}
+                            {children}
 
-                {/*            {children}*/}
-
-                {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
-                {/*                <MainContent/>*/}
-                {/*            </Suspense>*/}
-                {/*        </SwrConfigClient>*/}
-                {/*    </AppStateProvider>*/}
-                {/*</GlobalState>*/}
-                {/*<ToastContainer/>*/}
-            </ServerRelayProvider>
+                            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>
+                                <MainContent/>
+                            </Suspense>
+                        </SwrConfigClient>
+                    </AppStateProvider>
+                </GlobalState>
+                <ToastContainer/>
+            </RelayProvider>
         </SessionProvider>
         </body>
         </html>
