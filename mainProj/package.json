@@ -7,10 +7,10 @@
   "packageManager": "yarn@4.0.1",
   "scripts": {
     "yarn": "yarn",
+    "relay": "relay-compiler",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start生产版Node.js server": "next start",
-    "relay": "yarn run relay-compiler",
     "build all": "relay-compiler && next build",
     "start-server": "next start -p 3002",
     "dev2": "next dev",

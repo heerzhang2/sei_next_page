@@ -54,7 +54,7 @@ export default async function ClientComponent() {
             <MainContent/>
 
             <div className="mt-10">
-                <Link href="/mainProj/public">⬅️ Go home</Link>
+                <Link href="/">⬅️ Go home</Link>
             </div>
         </>
     )

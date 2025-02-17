@@ -32,7 +32,7 @@ export function MainContent() {
         if(!isPublic){
             // router.push('/login');
             // if (typeof window === "undefined") { } else { window.location.href = "/login"; }
-            return null;
+            return <>user未登sei的后端的Loading...</>;
         }
     }
 

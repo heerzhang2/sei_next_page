@@ -1,46 +1,59 @@
 "use client";
-import {graphql, useLazyLoadQuery} from "react-relay";
-import {MainContentUserQuery} from "@/app/(auth)/user/__generated__/MainContentUserQuery.graphql";
-import {useRouter} from "next/navigation";
+import { useLazyLoadQuery} from "react-relay";
+import { graphql } from 'relay-runtime';
+import {pagegetReportQuery} from "./__generated__/pagegetReportQuery.graphql";
+// import {useRouter} from "next/navigation";
 import {Suspense} from "react";
 
-function generateStaticParams() {}
+export const dynamic = "force-dynamic";
+// export const dynamic = 'force-static':
+// export const dynamicParams = false
+//export async function generateStaticParams()
 
-export default function Page() {
-    const data = useLazyLoadQuery<MainContentUserQuery>(
-        graphql`
-            query MainContentUserQuery {
-                authUser{
-                    id,username, person{id,name}
-                    dep{id name} office{id name}
-                    unit{id name dvs{id name} }
-                    ispUnits{id,unit{id,name}}
-                }
-                ...SlowContent
-            }
-        `,
-        {}
-    );
-    const router = useRouter();
-    // console.log("graphql->authUser", data);
-    const {authUser} = data;
-    //无需登录的URL
-    const isPublic=false;//isPublicAccsess(history.location.pathname);
-    if(!authUser)
-    {
-        if(!isPublic){
-            // router.push('/login');
-            // if (typeof window === "undefined") { } else { window.location.href = "/login"; }
-            return null;
+
+const NewsfeedQuery = graphql`
+    query pagegetReportQuery($id: ID! ) {
+        getReport(id: $id) {
+            id
+            data
+            snapshot
+            modeltype,modelversion
+            isp{id, no}
         }
     }
+`;
+
+// async function getPost(id: string) {
+//     const res = await fetch(`https://api.vercel.app/blog/${id}`, {
+//         cache: 'force-cache',
+//     })
+//     const post: Post = await res.json()
+//     if (!post) notFound()
+//     return post
+// }
+
+/*async/await is not yet supported in Client Components, only Server Components.
+* */
+export default  function Page({
+                                       params,
+                                   }: {
+    params: Promise<{ repId: string }>
+}) {
+    const { repId } = params as any;  // await params
+    // const post = await getPost(repId)
+    // const data ={};
+    const data = useLazyLoadQuery<pagegetReportQuery>(
+        NewsfeedQuery,
+        {id: repId}
+    );
+    // const router = useRouter();
+    // console.log("graphql->authUser", data);
+    const {getReport: items} = data;
 
     return (
-        <>
-            <h1>Hello, Blog baogao报告内容。。。Post Page!</h1>
-            <main className="text-xl text-green-500">baogao报告内容 {data.authUser?.username}</main>
-            <main className="text-xl text-green-500">authUser# Main-GRAPHQL data: {authUser?.username}</main>
-
-        </>
-    );
+        <article>
+            <h1>Hello, Blog baogao报告内容。。。Post Page!__ {items?.data} </h1>
+        </article>
+    )
 }
+

@@ -9,7 +9,7 @@ export default function LazyPage() {
       <SlowContentLoader />
 
       <div className="mt-10">
-        <Link href="/mainProj/public">⬅️ Go back home</Link>
+        <Link href="/">⬅️ Go back home</Link>
       </div>
     </div>
   );

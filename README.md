@@ -54,7 +54,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 12. useOptimistic useActionState useFormStatus is a React hook and therefore must be used in a Client Component.
 13. const rawFormData = Object.fromEntries(formData)。需要注意的是，formData 中会包含额外的 $ACTION_ 属性。
 14. <button formAction={save}>Save draft</button>  #授权访问 treat Server Actions like public HTTP endpoints.
-     
+15. 改用 usePreloadedQuery？ 建议不采用useLazyLoadQuery的。
+
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")
@@ -78,3 +79,23 @@ const data = response.data;
 
 https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#passing-additional-arguments
 https://react.dev/reference/rsc/use-server
+可能需要 relay清空
+function commitCommentCreateLocally( environment: Environment, feedbackID: string,
+) {
+         return commitLocalUpdate(environment, store => { store.invalidateStore(); }
+}); }
+import type {NewsfeedQuery as NewsfeedQueryType} from './__generated__/NewsfeedQuery.graphql';
+function Newsfeed({}) {
+const data = useLazyLoadQuery
+<NewsfeedQueryType>
+(NewsfeedQuery, {});
+...
+}
+import { graphql } from 'relay-runtime';
+const NewsfeedQuery = graphql`
+  query NewsfeedQuery {
+    topStory {
+      title
+    }
+  }
+`;

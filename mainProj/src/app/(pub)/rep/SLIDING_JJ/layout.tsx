@@ -9,6 +9,9 @@ import { SessionProvider } from 'next-auth/react';
 import GlobalState from "@/action/GlobalState";
 import {connection} from "next/server";
 // import FootBar from "@/component/footbar";
+import { graphql } from 'relay-runtime';
+
+
 
 export const metadata: Metadata = {
   title: "滑行车类大型游乐设施监督检验",
