@@ -33,12 +33,13 @@ export function useStream() {
       scriptContent.push(
         `window["${RELAY_WINDOW_KEY}"] = window["${RELAY_WINDOW_KEY}"] || {};`
       );
+  //报错点：queryId字符串： 可能内部已经包含""引号的。 ["${RELAY_WINDOW_KEY}"]["${queryId}"]  目前都改为['${queryId}']
       // Ensure there's an array on the window object for the given queryId.
       scriptContent.push(
-        `window["${RELAY_WINDOW_KEY}"]["${queryId}"] = window["${RELAY_WINDOW_KEY}"]["${queryId}"] || [];`
+        `window["${RELAY_WINDOW_KEY}"]['${queryId}'] = window["${RELAY_WINDOW_KEY}"]['${queryId}'] || [];`
       );
       scriptContent.push(
-        `window["${RELAY_WINDOW_KEY}"]["${queryId}"].push(${serializedResponse});`
+        `window["${RELAY_WINDOW_KEY}"]['${queryId}'].push(${serializedResponse});`
       );
     }
 

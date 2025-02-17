@@ -7,7 +7,8 @@ import {
 
 export function buildQueryId(request: RequestParameters, variables: Variables) {
   const queryId = request.id ?? request.name;
-
+  //报错来源：//   let newQueryId=
+  // console.log("buildQueryId= ", newQueryId, " 问？");
   return `${queryId}:${JSON.stringify(variables)}`;
 }
 

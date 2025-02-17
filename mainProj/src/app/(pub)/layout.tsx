@@ -23,31 +23,26 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 * */
 export default async function RootLayout({children}: { children: ReactNode }) {
     // await connection();
-    return (
-        <html>
-        <body>
-        <SessionProvider>
-            {children}
+    return (<>
+        {children}
 
-            {/*<GlobalState>*/}
-            {/*    <AppStateProvider>*/}
-            {/*        <SwrConfigClient>*/}
+        {/*<GlobalState>*/}
+        {/*    <AppStateProvider>*/}
+        {/*        <SwrConfigClient>*/}
 
-            {/*            {children}*/}
+        {/*            {children}*/}
 
-            {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
-            {/*                <MainContent/>*/}
-            {/*            </Suspense>*/}
-            {/*        </SwrConfigClient>*/}
-            {/*    </AppStateProvider>*/}
-            {/*</GlobalState>*/}
-            {/*<ToastContainer/>*/}
+        {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
+        {/*                <MainContent/>*/}
+        {/*            </Suspense>*/}
+        {/*        </SwrConfigClient>*/}
+        {/*    </AppStateProvider>*/}
+        {/*</GlobalState>*/}
+        {/*<ToastContainer/>*/}
 
-            <div className="mt-10">
-                <Link href="/login">公开状态情况的蒂条</Link>
-            </div>
-        </SessionProvider>
-        </body>
-        </html>
+        <div className="mt-10">
+            <Link href="/login">公开状态情况的蒂条</Link>
+        </div>
+    </>
     );
 }
