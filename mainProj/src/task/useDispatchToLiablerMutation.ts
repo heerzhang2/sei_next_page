@@ -1,0 +1,53 @@
+import { useMutation } from "react-relay";
+import {useCallback, useState} from "react";
+import { RecordSourceSelectorProxy, } from "relay-runtime";
+import {useToast} from "customize-easy-ui-component";
+const graphql = require("babel-plugin-relay/macro");
+
+const mutation = graphql`
+  mutation useDispatchToLiablerMutation($task: ID!,$liabler: ID!,$nos:String) {
+    dispatchToLiabler(task: $task, liabler:$liabler, nos:$nos){
+     id dep{id name} bsType date
+    }
+  }
+`;
+
+export default function useDispatchToLiablerMutation() {
+  //返回简单结果字段
+  const [result, setResult] =useState<string>('');
+  const [commit, doing] = useMutation(mutation);
+  const toast = useToast();
+  return {
+    call:useCallback(
+      (task: string, liabler?: string, nos? :string) => {
+        return commit({
+          variables: {
+            task, liabler, nos
+          },
+          updater: (store: RecordSourceSelectorProxy) => {
+            const payload = store.getRootField("dispatchToLiabler");
+            if (!payload) {
+              return;
+            }
+            //这里无法获取整个Mutation的应答结果，只能够获取字段，所以很多要再套一层结构{task,changeByUserId}好处理获取整个task。或是返回null表示失败？
+            const ret = payload.getValue("id");
+            console.log("刚 useDispatchToLiablerMutation retTask=",ret);
+            setResult(ret as string);
+            //提醒用户后端回答是成功或失败
+            toast({
+              title: "派工返回了",
+              subtitle: '新Task的ID＝'+ret,
+              intent: "info"
+            });
+          },
+          onError: error => {
+            toast({title: "后端回答",subtitle: ""+error, intent: "warning"});
+          }
+        });
+      },
+      [commit,toast]
+    ),
+    doing,
+    result
+  };
+}

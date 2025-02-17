@@ -5,6 +5,7 @@ import {pagegetReportQuery} from "./__generated__/pagegetReportQuery.graphql";
 // import {useRouter} from "next/navigation";
 import {Suspense} from "react";
 import React from "react";
+import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 
 // export const dynamic = "force-dynamic";
 
@@ -58,6 +59,7 @@ export default  function Page({
         <article>
             <h1>Hello, Blog baogao报告内容。。。Post Page!__ </h1>
             {items?.data}
+            <ReportView source={items?.data} verId={'1'}/>
         </article>
     )
 }

@@ -24,6 +24,14 @@
     "react-dom": "19.0.0"
   },
   "dependencies": {
+    "@uppy/core": "^4.4.1",
+    "@uppy/dashboard": "^4.3.1",
+    "@uppy/drag-drop": "^4.1.1",
+    "@uppy/file-input": "^4.1.1",
+    "@uppy/progress-bar": "^4.2.1",
+    "@uppy/react": "^4.2.1",
+    "@uppy/tus": "^4.2.2",
+    "@uppy/webcam": "^4.1.1",
     "next-auth": "5.0.0-beta.25",
     "react-toastify": "^11.0.0",
     "hash.js": "^1.1.7",
@@ -37,19 +45,24 @@
     "react-dom": "^19.0.0",
     "react-relay": "^18.2.0",
     "relay-runtime": "^18.2.0",
+    "react-use-clipboard": "^1.0.9",
+    "plotly.js": "^3.0.0",
+    "react-plotly.js": "^2.6.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "babel-plugin-relay": "^18.2.0",
-    "@types/node": "^20",
+    "@types/node": "^22.13.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-relay": "18.2.0",
+    "@types/react-plotly.js": "^2.6.3",
     "@types/relay-runtime": "^18.2.5",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "relay-compiler": "^18.2.0",
     "get-graphql-schema": "^2.1.2",
+    "page2pdf_server": "^1.0.2",
     "typescript": "^5"
   },
   "relay": {
