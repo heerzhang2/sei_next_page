@@ -2,7 +2,7 @@ import Link from "next/link";
 // import { MainContent } from "./MainContent";
 import Header from "@/component/header";
 import FootBar from "@/component/footbar";
-import {MainContent} from "@/app/(author)/user/MainContent";
+import {MainContent} from "@/app/(auth)/user/MainContent";
 
 //这个是规定的输出变量：静态化导出static site会报错！
 // export const dynamic = "force-dynamic";

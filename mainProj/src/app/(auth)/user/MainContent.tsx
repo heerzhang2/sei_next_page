@@ -5,7 +5,7 @@ import { Suspense, lazy } from "react";
 import { graphql, useLazyLoadQuery } from "react-relay";
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 
-const SlowContentLazy = lazy(() => import("@/app/(author)/lazy/SlowContent"));
+const SlowContentLazy = lazy(() => import("@/app/(auth)/lazy/SlowContent"));
 
 export function MainContent() {
   const data = useLazyLoadQuery<MainContentUserQuery>(
@@ -23,7 +23,7 @@ export function MainContent() {
     {}
   );
     const router = useRouter();
-    console.log("graphql->authUser", data);
+    // console.log("graphql->authUser", data);
     const {authUser} = data;
     //无需登录的URL
     const isPublic=false;//isPublicAccsess(history.location.pathname);

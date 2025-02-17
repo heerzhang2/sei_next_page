@@ -1,4 +1,4 @@
-import { SlowContentLoader } from "@/app/(author)/lazy/SlowContentLoader";
+import { SlowContentLoader } from "@/app/(auth)/lazy/SlowContentLoader";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export default function LazyPage() {
       <SlowContentLoader />
 
       <div className="mt-10">
-        <Link href="/">⬅️ Go back home</Link>
+        <Link href="/mainProj/public">⬅️ Go back home</Link>
       </div>
     </div>
   );

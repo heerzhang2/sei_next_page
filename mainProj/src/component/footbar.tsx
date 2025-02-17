@@ -51,7 +51,7 @@ export default function FootBar() {
     `,
         {}
     );
-    console.log("graphql->authUser", data);
+    // console.log("graphql->authUser", data);
     const {authUser} = data;
     // const router = useRouter();
     const {user, setUser} = useContext(UserContext);

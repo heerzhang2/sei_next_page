@@ -52,8 +52,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 11. nextjs-w-app-router-starter-main的认证更接近！ next-auth-example-main扩2个session+JWT/keycloak;
     "autoprefixer": "^10.4.16",
 12. useOptimistic useActionState useFormStatus is a React hook and therefore must be used in a Client Component.
-13. 
-
+13. const rawFormData = Object.fromEntries(formData)。需要注意的是，formData 中会包含额外的 $ACTION_ 属性。
+14. <button formAction={save}>Save draft</button>  #授权访问 treat Server Actions like public HTTP endpoints.
+     
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")

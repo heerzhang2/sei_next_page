@@ -9,7 +9,7 @@ import { SessionProvider } from 'next-auth/react';
 import GlobalState from "@/action/GlobalState";
 import {connection} from "next/server";
 import {RelayProvider} from "@/relay/RelayProvider";
-import {MainContent} from "@/app/(author)/user/MainContent";
+import {MainContent} from "@/app/(auth)/user/MainContent";
 // import FootBar from "@/component/footbar";
 
 export const metadata: Metadata = {
