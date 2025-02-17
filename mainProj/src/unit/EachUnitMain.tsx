@@ -21,7 +21,7 @@ import { EachUnitMainQuery } from "./__generated__/EachUnitMainQuery.graphql";
 import {useContext} from "react";
 import RoutingContext from "../routing/RoutingContext";
 // import {TwoHalfRightPanel} from "../../UiDebugSave/sample/TwoHalfRightPanel";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 interface EachUnitMainProps {

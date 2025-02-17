@@ -20,7 +20,10 @@ export default function Home() {
               <Link href="/lazy">Visit (potentially) cached page ➡️</Link>
           </div>
           <div className="mt-10">
-              <Link href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA">kankan当前一份报告试图的来</Link>
+              <Link href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA">kankan当前一1份报告试图的来</Link>
+          </div>
+          <div className="mt-10">
+              <Link href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA">kankan当前一2份报告试图的来</Link>
           </div>
           <div className="mt-10">
               <Link href="/login">⬅️ Go 的等让路 home</Link>

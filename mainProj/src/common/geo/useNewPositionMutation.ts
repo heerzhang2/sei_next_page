@@ -4,7 +4,7 @@ import {useCallback, useState} from "react";
 //import {useNewPositionMutationResponse} from "./__generated__/useNewPositionMutation.graphql";
 import {useToast} from "customize-easy-ui-component";
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 /*const mutation = graphql`
   mutation useNewPositionMutation($par:AddressInput!) {

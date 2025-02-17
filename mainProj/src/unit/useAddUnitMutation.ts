@@ -7,7 +7,7 @@ import { UnitCommonInput } from "./__generated__/useAddUnitMutation.graphql";
 import {useAddUnitMutation$data} from "./__generated__/useAddUnitMutation.graphql";
 import {useToast} from "customize-easy-ui-component";
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 //这个特别！返回{TodoEdge, User} 而不是直接返回TodoNode: Todo就可以了。!多出两个麻烦。
 const mutation = graphql`

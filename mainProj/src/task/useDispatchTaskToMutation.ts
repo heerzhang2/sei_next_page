@@ -2,7 +2,7 @@ import { useMutation } from "react-relay";
 import {useCallback, useState} from "react";
 import { RecordSourceSelectorProxy, } from "relay-runtime";
 import {useToast} from "customize-easy-ui-component";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 /**整个任务都是用同一个配置的；
  * 但还允许单独针对某个Eqp或某个分项报告另外继续修改特别设置的。

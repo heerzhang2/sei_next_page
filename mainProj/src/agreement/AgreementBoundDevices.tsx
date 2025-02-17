@@ -56,7 +56,7 @@ import RoutingContext from "../routing/RoutingContext";
 import cudAgreementTaskEqpMutation from "./hook/cudAgreementTaskEqpMutation"
 import useSessionStorageState from "use-session-storage-state";
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 interface BoundDevicesProps {

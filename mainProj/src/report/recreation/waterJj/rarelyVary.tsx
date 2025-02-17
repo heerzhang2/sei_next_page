@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {CCell, RCell, Table, TableBody, TableRow} from "customize-easy-ui-component";
-// import {DirectLink} from "../../../routing/Link";
+import {DirectLink} from "../../../routing/Link";
 import Img_Seal from "../../../images/seal.png";
 import {AttentionPoint} from "../../common/rarelyVary";
 import {eqpTypeAllMap} from "../../../dict/eqpComm";

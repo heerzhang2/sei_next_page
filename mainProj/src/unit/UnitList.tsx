@@ -20,7 +20,7 @@ import RoutingContext from "../routing/RoutingContext";
 import {css} from "@emotion/react";
 
 import queryString from "query-string";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 interface UnitListProps {

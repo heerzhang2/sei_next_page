@@ -2,7 +2,7 @@ import {useCallback, } from "react";
 import {commitLocalUpdate, } from "react-relay";
 import {ConnectionHandler, } from "relay-runtime";
 import {useRelayEnvironment} from "react-relay/hooks";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 /**列表的多个项目的 多选选择模式处理。 通常是extend Type xxx {selected :Boolean }

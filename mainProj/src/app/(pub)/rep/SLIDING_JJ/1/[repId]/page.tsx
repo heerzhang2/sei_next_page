@@ -13,6 +13,33 @@ import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 // export const dynamicParams = false
 //export async function generateStaticParams()
 
+const RepIspQuery=graphql`
+            fragment pageReportIsp on Report
+            {
+                id, modeltype, modelversion, tzFields,
+                isp {
+                    id, no, report{id},
+                    dev{id cod},bsType,
+                    reps {
+                        edges {
+                            node {
+                                id, modeltype, modelversion,data,
+                                stm{id,sta,
+                                    authr{ id, username, person {id, name} },
+                                    reviewer{ id, username, person {id, name} }
+                                }
+                            }
+                        }, 
+                    }, 
+                    ispMen { id, username, person {id, name} },
+                    checkMen { id, username, person {id, name} }
+                    ispu{id agency{id,apno,bjtel,bjurl},name},
+                    bus{id,
+                        pipus{id crDate code rno name start stop nxtd1 nxtd2 leng level lay safe svp pa}
+                    }
+                }
+            }
+        `;
 
 const NewsfeedQuery = graphql`
     query pagegetReportQuery($id: ID! ) {
@@ -22,6 +49,7 @@ const NewsfeedQuery = graphql`
             snapshot
             modeltype,modelversion
             isp{id, no}
+            ...pageReportIsp
         }
     }
 `;
@@ -59,7 +87,7 @@ export default  function Page({
         <article>
             <h1>Hello, Blog baogao报告内容。。。Post Page!__ </h1>
             {items?.data}
-            <ReportView source={items?.data} verId={'1'}/>
+            <ReportView source={items?.data} verId={'1'} rep={items}/>
         </article>
     )
 }

@@ -31,7 +31,7 @@ import {usePreloadedQuery, useQueryLoader} from "react-relay/hooks";
 import {DivisionChooseQuery$data} from "./__generated__/DivisionChooseQuery.graphql";
 import {Link as RouterLink} from "../../routing/Link";
 ///import { DivisionChooseQuery } from "./__generated__/DivisionChooseQuery.graphql";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 const DivisionChooseQuery = require('./__generated__/DivisionChooseQuery.graphql');
 
 

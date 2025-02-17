@@ -31,7 +31,7 @@ import {businessCatspMap} from "./TaskList";
 import RoutingContext from "../routing/RoutingContext";
 import {useZeebeRead} from "../inspect/report/localUpdateRelay";
 import {useToggleItemSelect} from "./detail/localUpdateRelay";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 //设备种类: EQP_TYPE 包括单独报告的类型
 const eqpTypespObj = {'3':'梯', '2':'容器', '1':'锅炉', '4':'起重','5':'厂车','6':'游乐',

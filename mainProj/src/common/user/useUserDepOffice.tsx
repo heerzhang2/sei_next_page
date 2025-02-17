@@ -16,7 +16,7 @@ import {css} from "@emotion/react";
 import {PreloadedQuery, usePreloadedQuery, useQueryLoader} from "react-relay/hooks";
 import {OfficeChooseQuery$data} from "./__generated__/OfficeChooseQuery.graphql";
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 const DepOfficeQuery = graphql`
     query useUserDepOfficeQuery($id: ID) {

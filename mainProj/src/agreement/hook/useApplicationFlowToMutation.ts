@@ -7,7 +7,7 @@ import {Opinion_Enum, useApplicationFlowToMutation$data} from "./__generated__/u
 import {useRelayEnvironment} from "react-relay/hooks";
 import {ReadOnlyRecordProxy, Record, RecordSourceProxy} from "relay-runtime/lib/store/RelayStoreTypes";
 import {DataID} from "relay-runtime/lib/util/RelayRuntimeTypes";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 /*
 这里graphql` mutation useFlowToMutation 名字重复报错！！

@@ -5,7 +5,7 @@ import {useCallback, useContext, useState} from "react";
 import {AlertContent,Button, useToast} from "customize-easy-ui-component";
 import * as React from "react";
 import RoutingContext from "../routing/RoutingContext";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 //原本.ts 加了toast组件丰富内容，改成tsx :报错
 

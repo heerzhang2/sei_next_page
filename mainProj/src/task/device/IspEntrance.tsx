@@ -31,7 +31,7 @@ import {taskStatusMap} from "../TaskList";
 import {useContext, useRef} from "react";
 import RoutingContext from "../../routing/RoutingContext";
 //[HOOK限制]按钮点击函数内部直接上toast()或toaster.notify()很可能无法正常显示。而放在函数组件顶层render代码前却能正常。
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 interface IspEntranceProps {

@@ -62,7 +62,7 @@ import {eqpTypeAllMap} from "../dict/eqpComm";
 import {taskStatusMap} from "../task/TaskList";
 import useSessionStorageState from "use-session-storage-state";
 // import {useMainConfigQuery} from "./hook/__generated__/useMainConfigQuery.graphql";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 interface AgreementConfigProps {

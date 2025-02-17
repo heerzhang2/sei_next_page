@@ -19,7 +19,7 @@ import {Vector2} from "@use-gesture/core/dist/declarations/src/types/utils";
 // import {Pager} from "../../UiDebugSave/sample/Pager";
 
 import queryString from "query-string";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 interface UnitMainProps {
     //[特别小心！！] 路由器参数位置不是在第一层；实际放在这个prepared嵌套底下！！

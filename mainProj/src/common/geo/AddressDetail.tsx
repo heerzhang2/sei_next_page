@@ -27,7 +27,7 @@ import cx from "classnames";
 //import {OnPressFunction} from "customize-easy-ui-component/esm/Hooks/touchable-hook";
 
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 const AddressDetailQuery = require('./__generated__/AddressDetailQuery.graphql');
 
 

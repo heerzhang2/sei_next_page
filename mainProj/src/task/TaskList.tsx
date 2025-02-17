@@ -54,7 +54,7 @@ import {OneUserChoose} from "../common/user/OneUserChoose";
 //import { PullDownContent, PullToRefresh, RefreshContent, ReleaseContent } from "react-js-pull-to-refresh";
 //import { BoundDevices } from "./BoundDevices";
 //import { useDeleteReport } from "../../inspect/report/db";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 //后端enum TaskState_Enum
 const taskStatusObj = {'INIT':'新的', 'DEPART':'部门内分配', 'OFFICE':'科室内分配', 'PERSON':'等责任人派工',
         'DISP':'已派工','HANGUP':'等待复检派工','DONE':'已完成','CANCEL':'作废'

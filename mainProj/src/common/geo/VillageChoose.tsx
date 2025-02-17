@@ -20,7 +20,7 @@ import {usePreloadedQuery, useQueryLoader} from "react-relay/hooks";
 import {VillageChooseQuery$data} from "./__generated__/VillageChooseQuery.graphql";
 import {Link as RouterLink} from "../../routing/Link";
 ///import { VillageChooseQuery } from "./__generated__/VillageChooseQuery.graphql";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 const VillageChooseQuery = require('./__generated__/VillageChooseQuery.graphql');
 
 

@@ -26,7 +26,7 @@ import { OneAgreementMainQuery } from "./__generated__/OneAgreementMainQuery.gra
 import {OneAgreementWraper} from "./OneAgreementWraper";
 import {OneAgreementMain$key} from "./__generated__/OneAgreementMain.graphql";
 // import {TwoHalfFrame} from "../../UiDebugSave/sample/TwoHalfFrame";
-const graphql = require("babel-plugin-relay/macro");    //编译器解析graphql文本代码。
+import { graphql } from "relay-runtime";    //编译器解析graphql文本代码。
 
 /**更为通用的HOOK Relay查询。
  * 依赖类型 OneAgreementMainQuery是和文件名字有关的。 OneAgreementMainProps是路由器Main页面组件通用的类型接口。

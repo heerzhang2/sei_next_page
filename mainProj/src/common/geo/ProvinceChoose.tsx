@@ -5,7 +5,7 @@ import { Text, InputLine, Select
 import {Dispatch, SetStateAction, } from "react";
 import {useLazyLoadQuery, } from "react-relay/hooks";
 import {css} from "@emotion/react";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 const ProvinceChooseQuery = require('./__generated__/ProvinceChooseQuery.graphql');
 
 

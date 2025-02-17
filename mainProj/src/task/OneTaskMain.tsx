@@ -25,7 +25,7 @@ import { OneTaskMainQuery } from "./__generated__/OneTaskMainQuery.graphql";
 //import { match, } from 'path-to-regexp';
 import {OneTaskWraper} from "./OneTaskWraper";
 // import {TwoHalfFrame} from "../../UiDebugSave/sample/TwoHalfFrame";
-const graphql = require("babel-plugin-relay/macro");    //编译器解析graphql文本代码。
+import { graphql } from "relay-runtime";    //编译器解析graphql文本代码。
 
 
 interface OneTaskMainProps {

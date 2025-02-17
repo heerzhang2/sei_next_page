@@ -55,7 +55,7 @@ import RoutingContext from "../routing/RoutingContext";
 import useCudChargingFeeMutation from "./fee/useCudChargingFeeMutation";
 import useCudTaskDetailMutation from "./detail/useCudTaskDetailMutation";
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 interface BoundDevicesProps {
     id: string;   //任务ID

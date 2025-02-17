@@ -19,6 +19,7 @@ import {ReportFirstPageHeadJd} from "../../park/rarelyVary";
 import {UnqualifiedIspTable} from "../../common/general";
 import {useItemsMapOmni} from "../../common/omni";
 import {检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj} from "../waterJj/rarelyVary";
+import Link from "next/link";
 
 export const ReportView: React.FunctionComponent<ReportViewProps> = ({
 repId,  source: orc,  verId,rep,
@@ -90,7 +91,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
                 rep,
                 comply: '依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验'
             })}
-           <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`}>
+           <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`}>
                <div css={{display: 'flex', flexDirection: 'column', justifyContent: 'center', "@media print": {pageBreakBefore: 'always',},}}>
                    <Text variant="h4" css={{textAlign: 'center'}}>大型游乐设施监督检验报告</Text>
                </div>
@@ -98,7 +99,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
                    <Text></Text>
                    <Text>报告编号：{rep.isp.no}</Text>
                </div>
-           </DirectLink>
+           </Link>
            {报告设备详情({theme, orc, rep})}
            {检验核准WaterJj({orc,rep})}
             <div css={{"@media print": {paddingBottom: '13.3rem', pageBreakInside: 'avoid'}}}>
@@ -110,7 +111,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
            <Table fixed={ ["3.4%","6.4%","8.3%","5.3%","5%","%","12.6%","6.2%","9.8%"] }
                   css={ {borderCollapse: 'collapse',"@media print": {marginTop: '-13.3rem'}} }   tight  miniw={800}>
                <TableHead>
-                   <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
+                   <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
                        <TableRow>
                            <CCell><Text css={{fontSize:'0.7rem'}}>序号</Text></CCell>
                            <CCell colSpan={5}>检验项目及内容</CCell>
@@ -118,7 +119,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
                            <CCell>结论</CCell>
                            <CCell>备注</CCell>
                        </TableRow>
-                   </DirectLink>
+                   </Link>
                </TableHead>
                <TableBody>
                    {renderIspContent}
@@ -129,15 +130,15 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
                                 label={<Text variant="h4">检验不符合项目内容及复检结果</Text>}/>
         </div>
         <div>
-            <RouterLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument?original=1#Instrument`}>
+            <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument?original=1#Instrument`}>
                 <Text variant="h4" css={{"@media print": {display: 'none'}}}>主要测量设备性能检查</Text>
-            </RouterLink>
-            <RouterLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Witness#Witness`}>
+            </Link>
+            <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Witness#Witness`}>
                 <Text variant="h4" css={{"@media print": {display: 'none'}}}>记事 、 备注</Text>
-            </RouterLink>
-            <RouterLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/SiteCondition#SiteCondition`}>
+            </Link>
+            <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/SiteCondition#SiteCondition`}>
             <Text id={'SiteCondition'} variant="h4" css={{"@media print": {display: 'none'}}}>附录：现场检验条件确认</Text>
-            </RouterLink>
+            </Link>
         </div>
       {末尾链接({template:rep?.modeltype,verId, repId: repId||''})}
     </React.Fragment>

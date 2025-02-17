@@ -70,7 +70,7 @@ import {协议类型s} from "./AddToAgreement";
 //import { PullDownContent, PullToRefresh, RefreshContent, ReleaseContent } from "react-js-pull-to-refresh";
 //import { BoundDevices } from "./BoundDevices";
 //import { useDeleteReport } from "../../inspect/report/db";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 //后端enum ProtocolSta_Enum
 const agreementStatusObj = {'INIT':'新的', 'SUBMIT':'已提交申请单', 'CHECK':'审核之中', 'SIGNING':'签名之中',
         'SIGNED':'协议生效','END':'已结束','CANCEL':'已作废'

@@ -21,7 +21,7 @@ import {getFeeTitleBe} from "../../dict/feeTitleBe";
 import {getFeeTitleFe} from "../../dict/feeTitleFe";
 import {css} from "@emotion/react";
 //import {useFirebaseImage} from "../comp/Image";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 interface FeesListItemProps {

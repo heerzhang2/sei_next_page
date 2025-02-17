@@ -20,7 +20,7 @@ import {css} from "@emotion/react";
 import UserContext from "../../routing/UserContext";
 import {MultUserChooseQuery$data} from "./__generated__/MultUserChooseQuery.graphql";
 import {idsSelectMapper, idsTreeSelectMapper} from "../tool";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 const MultUserChooseQuery = require('./__generated__/MultUserChooseQuery.graphql');
 
 

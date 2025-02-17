@@ -9,7 +9,7 @@ import {DetailInput, useUpdateDetailMutation$data} from "./__generated__/useUpda
 import {useToast} from "customize-easy-ui-component";
 
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 //【特别问题】 底下的应答解构 bus{fees{}} 如果用fees{id}导致新增加返回的实体字段不全面，而且当前页面正好需要这个数据的情况，就会报错！！

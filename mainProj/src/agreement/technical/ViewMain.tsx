@@ -51,7 +51,7 @@ import {accountingCateMap} from "../../dict/financeComm";
 // import {TwoHalfFrame} from "../../UiDebugSave/sample/TwoHalfFrame";
 
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 interface TodosMainProps {
     prepared: {

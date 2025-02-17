@@ -43,7 +43,7 @@ import {TaskList} from "./TaskList";
 //import {graphql} from 'relay-runtime';  //实际数据可以发起并获得到，可惜babel报错，纯粹不允许？
 import { match, } from 'path-to-regexp';
 import {UserTaskList} from "../inspect/UserTaskList";
-const graphql = require("babel-plugin-relay/macro");    //编译器解析graphql文本代码。
+import { graphql } from "relay-runtime";    //编译器解析graphql文本代码。
 
 
 interface TaskMainProps {

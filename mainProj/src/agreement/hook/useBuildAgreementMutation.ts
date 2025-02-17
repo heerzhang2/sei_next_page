@@ -3,7 +3,7 @@ import {useCallback, useState} from "react";
 import { RecordSourceSelectorProxy, } from "relay-runtime";
 import {useToast} from "customize-easy-ui-component";
 import {AgreementInput, Ifop_Enu} from "./__generated__/useBuildAgreementMutation.graphql";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 /**新建立task: 必须最少有个设备？(无关联设备号的单独报告的任务？)
   先生成task后面再来添加eqp;

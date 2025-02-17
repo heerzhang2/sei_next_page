@@ -20,7 +20,7 @@ import {usePreloadedQuery, useQueryLoader} from "react-relay/hooks";
 import {OneUserChooseQuery$data} from "./__generated__/OneUserChooseQuery.graphql";
 import {css} from "@emotion/react";
 import UserContext from "../../routing/UserContext";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 const OneUserChooseQuery = require('./__generated__/OneUserChooseQuery.graphql');
 
 

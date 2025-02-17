@@ -2,7 +2,7 @@ import {useCallback, useState} from "react";
 import { useMutation } from "react-relay";
 import {RecordSourceSelectorProxy,} from "relay-runtime";
 import {useToast} from "customize-easy-ui-component";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 //变更命令执行，后端真的返回应答Task对象内省部分字段{id,status},真的可以立刻更新页面的。Relay自动刷新页面显示。
 const mutation = graphql`

@@ -7,7 +7,7 @@ import {
 } from "relay-runtime";
 //import { AddTodoInput } from "./__generated__/useLoginMutation.graphql";
 import { UserContext } from "../routing/UserContext";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 //这个特别！返回{TodoEdge, User} 而不是直接返回TodoNode: Todo就可以了。!多出两个麻烦。
 const mutation = graphql`

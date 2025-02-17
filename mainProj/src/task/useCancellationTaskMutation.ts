@@ -2,7 +2,7 @@ import {useCallback, useState} from "react";
 import { useMutation } from "react-relay";
 import {RecordSourceSelectorProxy,} from "relay-runtime";
 import {useToast} from "customize-easy-ui-component";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 const mutation = graphql`
   mutation useCancellationTaskMutation(

@@ -58,7 +58,7 @@ import useBuildAgreementMutation from "./hook/useBuildAgreementMutation";
 //import { PullDownContent, PullToRefresh, RefreshContent, ReleaseContent } from "react-js-pull-to-refresh";
 //import { BoundDevices } from "./BoundDevices";
 //import { useDeleteReport } from "../../inspect/report/db";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 export interface OneAgreementWraperProps {
     //这个类型不能乱来，TS编译要用，底下的data要看这个: 返回graphql模型字段定义了吗;

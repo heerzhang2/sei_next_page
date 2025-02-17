@@ -19,7 +19,7 @@ import {useMainConfigQuery} from "./__generated__/useMainConfigQuery.graphql";
 import {InternalEditorResult} from "../../common/base";
 import {Link as RouterLink} from "../../routing/Link";
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 
 export interface AgreementConfigProps {

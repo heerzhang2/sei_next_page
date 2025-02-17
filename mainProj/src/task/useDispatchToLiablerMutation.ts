@@ -2,7 +2,7 @@ import { useMutation } from "react-relay";
 import {useCallback, useState} from "react";
 import { RecordSourceSelectorProxy, } from "relay-runtime";
 import {useToast} from "customize-easy-ui-component";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 const mutation = graphql`
   mutation useDispatchToLiablerMutation($task: ID!,$liabler: ID!,$nos:String) {

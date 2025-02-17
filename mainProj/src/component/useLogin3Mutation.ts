@@ -15,13 +15,13 @@ import {
 import { ToastContainer, toast } from 'react-toastify';
 
 
-//迁移前的 const graphql = require("babel-plugin-relay/macro");
+//迁移前的 import { graphql } from "relay-runtime";
 import { graphql } from "relay-runtime";
 
 
 //这个特别！返回{TodoEdge, User} 而不是直接返回TodoNode: Todo就可以了。!多出两个麻烦。
 const mutation = graphql`
-  mutation useLoginMutation($username: String!, $password: String!) {
+  mutation useLogin3Mutation($username: String!, $password: String!) {
     authenticate(username: $username, password: $password)
     { accessToken, user{id username} }
   }
@@ -30,7 +30,7 @@ const mutation = graphql`
 /**账户登录
  * @deprecated
  * */
-export default function useLoginMutation() {
+export default function useLogin3Mutation() {
   const [called, setCalled] =useState<boolean>(false);
   // const [result, setResult] =useState<string>('');
   const [commit, doing] = useMutation(mutation);

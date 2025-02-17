@@ -50,7 +50,7 @@ import { moneyUppercase22 } from "../../common/money-uppercase";
 // import {TwoHalfFrame} from "../../UiDebugSave/sample/TwoHalfFrame";
 
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 interface TodosMainProps {
     prepared: {

@@ -5,7 +5,7 @@ import {useRelayEnvironment, useMutation} from 'react-relay/hooks';
 import { UserContext } from "../routing/UserContext";
 import RoutingContext from "../routing/RoutingContext";
 
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 
 //注销
 //这个特别！返回{TodoEdge, User} 而不是直接返回TodoNode: Todo就可以了。!多出两个麻烦。

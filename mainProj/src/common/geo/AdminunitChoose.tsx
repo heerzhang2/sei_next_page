@@ -27,7 +27,7 @@ import {CountyChoose} from "./CountyChoose";
 import {TownChoose} from "./TownChoose";
 import {ProvinceChoose} from "./ProvinceChoose";
 ///import { DivisionChooseQuery } from "./__generated__/DivisionChooseQuery.graphql";
-const graphql = require("babel-plugin-relay/macro");
+import { graphql } from "relay-runtime";
 const AdminunitChooseQuery = require('./__generated__/AdminunitChooseQuery.graphql');
 //const PositionListQuery = require('./__generated__/PositionListQuery.graphql');
 
