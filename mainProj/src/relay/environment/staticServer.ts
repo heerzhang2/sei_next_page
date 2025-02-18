@@ -1,3 +1,4 @@
+"use client"
 import { fetchFn } from "@/relay/environment/fetchFn";
 import {
   Environment,

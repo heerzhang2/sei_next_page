@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<daeae0de29c820564eb64b5fcc549f81>>
+ * @generated SignedSource<<d0f231822dd643966561dfebf606cd94>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,10 +10,10 @@
 
 import { ConcreteRequest } from 'relay-runtime';
 import { FragmentRefs } from "relay-runtime";
-export type pagegetReportQuery$variables = {
+export type actionsgetReportQuery$variables = {
   id: string;
 };
-export type pagegetReportQuery$data = {
+export type actionsgetReportQuery$data = {
   readonly getReport: {
     readonly data: string | null | undefined;
     readonly id: string;
@@ -24,12 +24,12 @@ export type pagegetReportQuery$data = {
     readonly modeltype: string | null | undefined;
     readonly modelversion: number | null | undefined;
     readonly snapshot: string | null | undefined;
-    readonly " $fragmentSpreads": FragmentRefs<"pageReportIsp">;
+    readonly " $fragmentSpreads": FragmentRefs<"actionsReportIsp">;
   } | null | undefined;
 };
-export type pagegetReportQuery = {
-  response: pagegetReportQuery$data;
-  variables: pagegetReportQuery$variables;
+export type actionsgetReportQuery = {
+  response: actionsgetReportQuery$data;
+  variables: actionsgetReportQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -131,7 +131,7 @@ return {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "pagegetReportQuery",
+    "name": "actionsgetReportQuery",
     "selections": [
       {
         "alias": null,
@@ -162,7 +162,7 @@ return {
           {
             "args": null,
             "kind": "FragmentSpread",
-            "name": "pageReportIsp"
+            "name": "actionsReportIsp"
           }
         ],
         "storageKey": null
@@ -175,7 +175,7 @@ return {
   "operation": {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
-    "name": "pagegetReportQuery",
+    "name": "actionsgetReportQuery",
     "selections": [
       {
         "alias": null,
@@ -514,16 +514,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "943b124a318d42a0cdb25935e09c7a08",
+    "cacheID": "0042413a95c8fba00066f5a577cc1351",
     "id": null,
     "metadata": {},
-    "name": "pagegetReportQuery",
+    "name": "actionsgetReportQuery",
     "operationKind": "query",
-    "text": "query pagegetReportQuery(\n  $id: ID!\n) {\n  getReport(id: $id) {\n    id\n    data\n    snapshot\n    modeltype\n    modelversion\n    isp {\n      id\n      no\n    }\n    ...pageReportIsp\n  }\n}\n\nfragment pageReportIsp on Report {\n  id\n  modeltype\n  modelversion\n  tzFields\n  isp {\n    id\n    no\n    report {\n      __typename\n      id\n    }\n    dev {\n      id\n      cod\n    }\n    bsType\n    reps {\n      edges {\n        node {\n          __typename\n          id\n          modeltype\n          modelversion\n          data\n          stm {\n            id\n            sta\n            authr {\n              id\n              username\n              person {\n                id\n                name\n              }\n            }\n            reviewer {\n              id\n              username\n              person {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n    ispMen {\n      id\n      username\n      person {\n        id\n        name\n      }\n    }\n    checkMen {\n      id\n      username\n      person {\n        id\n        name\n      }\n    }\n    ispu {\n      id\n      agency {\n        id\n        apno\n        bjtel\n        bjurl\n      }\n      name\n    }\n    bus {\n      id\n      pipus {\n        id\n        crDate\n        code\n        rno\n        name\n        start\n        stop\n        nxtd1\n        nxtd2\n        leng\n        level\n        lay\n        safe\n        svp\n        pa\n      }\n    }\n  }\n}\n"
+    "text": "query actionsgetReportQuery(\n  $id: ID!\n) {\n  getReport(id: $id) {\n    id\n    data\n    snapshot\n    modeltype\n    modelversion\n    isp {\n      id\n      no\n    }\n    ...actionsReportIsp\n  }\n}\n\nfragment actionsReportIsp on Report {\n  id\n  modeltype\n  modelversion\n  tzFields\n  isp {\n    id\n    no\n    report {\n      __typename\n      id\n    }\n    dev {\n      id\n      cod\n    }\n    bsType\n    reps {\n      edges {\n        node {\n          __typename\n          id\n          modeltype\n          modelversion\n          data\n          stm {\n            id\n            sta\n            authr {\n              id\n              username\n              person {\n                id\n                name\n              }\n            }\n            reviewer {\n              id\n              username\n              person {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n    ispMen {\n      id\n      username\n      person {\n        id\n        name\n      }\n    }\n    checkMen {\n      id\n      username\n      person {\n        id\n        name\n      }\n    }\n    ispu {\n      id\n      agency {\n        id\n        apno\n        bjtel\n        bjurl\n      }\n      name\n    }\n    bus {\n      id\n      pipus {\n        id\n        crDate\n        code\n        rno\n        name\n        start\n        stop\n        nxtd1\n        nxtd2\n        leng\n        level\n        lay\n        safe\n        svp\n        pa\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "20961133d91c36e58a4a3420d5bf05de";
+(node as any).hash = "042dadd5ac909993982812301d28907a";
 
 export default node;

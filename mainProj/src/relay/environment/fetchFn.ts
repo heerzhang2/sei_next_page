@@ -1,3 +1,4 @@
+"use client"
 import {
   FetchFunction,
   RequestParameters,
@@ -15,7 +16,7 @@ import { connection } from 'next/server'
 export const fetchFn: FetchFunction = (operation, variables, _cacheConfig) => {
   return Observable.create<GraphQLResponse>((sink) => {
     (async () => {
-      console.log("execute fetchRelay", operation.name);
+      console.log("execute client/serverSSG?? fetchRelay", operation.name);
       const resp=await  fetchRelay(operation, variables, _cacheConfig);
       sink.next(resp);
       sink.complete();
@@ -100,7 +101,10 @@ async function fetchRelay(
     variables: Variables,
     _cacheConfig: CacheConfig
 ) {
+  //必须等待 浏览器？  // ////
   await connection()
+
+
   //must be prefixed with NEXT_PUBLIC_.
   const epoint = process.env.NEXT_PUBLIC_BACK_END
   /*

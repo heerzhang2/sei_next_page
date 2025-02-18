@@ -2,22 +2,12 @@ import type { Metadata } from "next";
 // import "./globals.css";
 // import { ServerRelayProvider } from "../relay/ServerRelayProvider";
 import {lazy, ReactNode, Suspense} from "react";
-import SwrConfigClient from "@/action/SwrConfigClient";
-import AppStateProvider from "@/action/AppStateProvider";
-import { ToastContainer, toast } from 'react-toastify';
-import { SessionProvider } from 'next-auth/react';
-import GlobalState from "@/action/GlobalState";
-import {connection} from "next/server";
-// import FootBar from "@/component/footbar";
-import { graphql } from 'relay-runtime';
-
-
 
 export const metadata: Metadata = {
   title: "滑行车类大型游乐设施监督检验",
 };
 
-const FootBar = lazy(() => import("@/component/footbar"));
+// const FootBar = lazy(() => import("@/component/footbar"));
 
 /*只提供静态化（保障SessionProvider不提供客户端user也能Build的情形），不考虑鉴别用户context认证才能使用的。
 水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。

@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<2a664a1321809b60c365b254536c4568>>
+ * @generated SignedSource<<e75c3db3cd203cf56d2f0d017b02ea58>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -12,7 +12,7 @@ import { ReaderFragment } from 'relay-runtime';
 export type BusinessCat_Enum = "ANNUAL" | "DELIVERY" | "ESTIMATE" | "EXPERIMENT" | "FIRST" | "IDENTIFIC" | "INSTA" | "MANUFACT" | "OTHER" | "PRESSURE" | "PRODUCT" | "REFORM" | "REGUL" | "REPAIR" | "SAFETYINS" | "TEST" | "THERMAL" | "TYPETST" | "%future added value";
 export type Procedure_Enum = "APPR" | "BEGIN" | "CANCEL" | "CHECK" | "END" | "MAKE" | "OFFER" | "SIGN" | "WAITREDO" | "%future added value";
 import { FragmentRefs } from "relay-runtime";
-export type pageReportIsp$data = {
+export type reportClientIsp$data = {
   readonly id: string;
   readonly isp: {
     readonly bsType: BusinessCat_Enum | null | undefined;
@@ -105,11 +105,11 @@ export type pageReportIsp$data = {
   readonly modeltype: string | null | undefined;
   readonly modelversion: number | null | undefined;
   readonly tzFields: ReadonlyArray<string> | null | undefined;
-  readonly " $fragmentType": "pageReportIsp";
+  readonly " $fragmentType": "reportClientIsp";
 };
-export type pageReportIsp$key = {
-  readonly " $data"?: pageReportIsp$data;
-  readonly " $fragmentSpreads": FragmentRefs<"pageReportIsp">;
+export type reportClientIsp$key = {
+  readonly " $data"?: reportClientIsp$data;
+  readonly " $fragmentSpreads": FragmentRefs<"reportClientIsp">;
 };
 
 const node: ReaderFragment = (function(){
@@ -168,7 +168,7 @@ return {
   "argumentDefinitions": [],
   "kind": "Fragment",
   "metadata": null,
-  "name": "pageReportIsp",
+  "name": "reportClientIsp",
   "selections": [
     (v0/*: any*/),
     (v1/*: any*/),
@@ -507,6 +507,6 @@ return {
 };
 })();
 
-(node as any).hash = "368bb0dd77aa4d299808c277690b2190";
+(node as any).hash = "7cf5f4fd32255efd1c541d0759f80e9e";
 
 export default node;

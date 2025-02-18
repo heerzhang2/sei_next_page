@@ -1,4 +1,5 @@
 /** @jsxImportSource @emotion/react */
+"use client"
 import RoutingContext from './RoutingContext';
 import React from 'react';
 import UserContext from "./UserContext";

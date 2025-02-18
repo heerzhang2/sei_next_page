@@ -1,68 +1,48 @@
 "use client";
-import {useFragment, useLazyLoadQuery} from "react-relay";
-import { graphql } from 'relay-runtime';
-import {pagegetReportQuery} from "./__generated__/pagegetReportQuery.graphql";
+
+// import {useFragment, useLazyLoadQuery} from "react-relay";
+// import { graphql } from 'relay-runtime';
+// import {pagegetReportQuery} from "./__generated__/pagegetReportQuery.graphql";
 // import {useRouter} from "next/navigation";
-import {Suspense} from "react";
-import React from "react";
-import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
-import {pageReportIsp$key} from "@/app/(pub)/rep/SLIDING_JJ/1/[repId]/__generated__/pageReportIsp.graphql";
+import React, {cache, lazy, Suspense} from "react";
+import {staticRelayEnvironment} from "@/relay/ServerRelay";
+import {NameDisplay} from "@/action/reportClient";
+import {AppQuery, } from "@/action/actions";
 
-// export const dynamic = "force-dynamic";
+// import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
+// import {pageReportIsp$key} from "@/app/(pub)/rep/SLIDING_JJ/1/[repId]/__generated__/pageReportIsp.graphql";
+// import {SlowContent$key} from "@/app/(auth)/lazy/__generated__/SlowContent.graphql";
+import {loadQuery, usePreloadedQuery, useRelayEnvironment} from "react-relay/hooks";
+// import { cache } from 'react'
 
-// export const dynamic = 'force-static':
-// export const dynamicParams = false
-//export async function generateStaticParams()
 
-const RepIspQuery=graphql`
-            fragment pageReportIsp on Report
-            {
-                id, modeltype, modelversion, tzFields,
-                isp {
-                    id, no, report{id},
-                    dev{id cod},bsType,
-                    reps {
-                        edges {
-                            node {
-                                id, modeltype, modelversion,data,
-                                stm{id,sta,
-                                    authr{ id, username, person {id, name} },
-                                    reviewer{ id, username, person {id, name} }
-                                }
-                            }
-                        }, 
-                    }, 
-                    ispMen { id, username, person {id, name} },
-                    checkMen { id, username, person {id, name} }
-                    ispu{id agency{id,apno,bjtel,bjurl},name},
-                    bus{id,
-                        pipus{id crDate code rno name start stop nxtd1 nxtd2 leng level lay safe svp pa}
-                    }
-                }
+const getCachedPosts = cache(async (environment,id: string) => {
+    // const queryReference =null;
+    const queryReference =loadQuery(
+        environment,
+        AppQuery,
+        {id: id},
+        {fetchPolicy: 'store-or-network'},
+    );
+    return queryReference;
+})
+
+//async/await is not yet supported in Client Components, only Server Components.
+// 用于显示帖子的服务器组件
+export  function PostList(repId) {
+    const environment = useRelayEnvironment();
+    const dataref =  getCachedPosts(environment, repId)
+    const data = React.use(dataref);
+    return (<div>
+            {dataref != null
+                ? <NameDisplay queryRef={data}/>
+                : null
             }
-        `;
+        </div>
+    )
+}
 
-const NewsfeedQuery = graphql`
-    query pagegetReportQuery($id: ID! ) {
-        getReport(id: $id) {
-            id
-            data
-            snapshot
-            modeltype,modelversion
-            isp{id, no}
-            ...pageReportIsp
-        }
-    }
-`;
-
-// async function getPost(id: string) {
-//     const res = await fetch(`https://api.vercel.app/blog/${id}`, {
-//         cache: 'force-cache',
-//     })
-//     const post: Post = await res.json()
-//     if (!post) notFound()
-//     return post
-// }
+// const SlowContentLazy = lazy(() => <PostList/>);
 
 /*async/await is not yet supported in Client Components, only Server Components.
 params: Promise<{ repId: string }>      ; await params;
@@ -72,33 +52,12 @@ export default  function Page({
                                    }: {
     params: Promise<{ repId: string }>
 }) {
-    // KQcbgDF9RO21DsI92H3tTVJlcG9ydA
     const { repId } = React.use(params);  // await params
-    // const post = await getPost(repId)
-    // const data ={};
-    const data = useLazyLoadQuery<pagegetReportQuery>(
-        NewsfeedQuery,
-        {id: repId}
-    );
-
     // @ts-ignore
-    const fragdata = useFragment(
-        RepIspQuery, data as any
-        // ,data as unknown as pageReportIsp$key
-    );
-
-    // const router = useRouter();
-    // console.log("graphql->authUser", data);
-    const {getReport: items} = data;
-
-
-
-    //【暂时】snapshot还未加入的
     return (
         <article>
-            <h1>Hello, Blog baogao报告内容。。。Post Page!__ </h1>
-            {items?.data}
-            <ReportView source={items?.data} verId={'1'} rep={items}/>
+                <PostList repId={repId}/>
         </article>
     )
 }
+

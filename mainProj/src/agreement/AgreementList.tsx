@@ -1,4 +1,6 @@
 /** @jsxImportSource @emotion/react */
+"use client"
+//You're importing a component that needs `useEffect`. This React hook only works in a client component. To fix, mark the file (or its parent) with the `"use client"` directive.
 import * as React from "react";
 import {css} from "@emotion/react";
 import {

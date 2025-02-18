@@ -54,7 +54,14 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 12. useOptimistic useActionState useFormStatus is a React hook and therefore must be used in a Client Component.
 13. const rawFormData = Object.fromEntries(formData)。需要注意的是，formData 中会包含额外的 $ACTION_ 属性。
 14. <button formAction={save}>Save draft</button>  #授权访问 treat Server Actions like public HTTP endpoints.
-15. 改用 usePreloadedQuery？ 建议不采用useLazyLoadQuery的。
+15. 改用 usePreloadedQuery？ 建议不采用useLazyLoadQuery的。 nextjs不能直接将服务器端(async)组件作为子组件嵌入到客户端组件中;
+   默认app/page.tsx is a Server Component.使用async await 提取/API-数据; export default [文件隔离];
+16. 路由包next/navigation: useRouter(), usePathname()  useSearchParams() 'use client'；  并非老版的next/router；
+17. 使用Relay进行服务器端渲染可能很复杂! 对Relay组件使用'use client'指令; Next.js官方用useLazyLoadQuery();
+    #挑战：Relay 的 loadQuery 和 usePreloadedQuery 通常是为了与 Relay 的环境紧密集成而设计的，它们期望数据是通过 Relay 的网络层获取的。Next.js-SSR不仅仅是获取数据的。
+   在 Next.js 的服务器端渲染上下文中直接使用它们可能会有些棘手，因为你需要模拟 Relay 的网络请求环境。
+18. @urql/next 替换Relay?  Urql graphql查询列表时 Cursor 模式分页的例子，详细说明 参数 https://github.com/urql-graphql/urql
+    当数据在应用程序中被广泛使用时，@urql建议不要将其作为服务器组件的一部分进行渲染，以便您能够利用客户端缓存的优势。https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-rendering/
 
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
@@ -99,4 +106,6 @@ const NewsfeedQuery = graphql`
     }
   }
 `;
-使用useLazyLoadQuery有局限的；
+使用 useLazyLoadQuery 有局限的；预加载数据=另一种防止瀑布流（指一系列依赖请求按顺序执行导致的延迟）的方法是使用预加载模式
+Next.js的路由Link点击并没有提供独立的数据加载的纯函数，只有整个路由组件函数的提前加载的功能。不一样概念。<Suspense> 包裹异步preload数据执行代码的异步服务端组件。
+<Link href={`/post/${post.id}`} prefetch={true} // 自动预取此链接

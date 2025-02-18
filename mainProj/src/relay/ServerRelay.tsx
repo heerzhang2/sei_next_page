@@ -1,4 +1,7 @@
-import 'server-only'
+"use client"
+// import 'server-only'
+//不一定 客户机独立场景load也用
+
 
 // import { useServerInsertedHTML } from "next/navigation";     //useServerInsertedHTML 依赖于客户端的 React 环境和 DOM，因此它不能在服务器端使用。
 import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";

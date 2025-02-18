@@ -2,14 +2,7 @@ import type { Metadata } from "next";
 // import "./globals.css";
 // import { ServerRelayProvider } from "../relay/ServerRelayProvider";
 import {lazy, ReactNode, Suspense} from "react";
-import SwrConfigClient from "@/action/SwrConfigClient";
-import AppStateProvider from "@/action/AppStateProvider";
-import { ToastContainer, toast } from 'react-toastify';
-import { SessionProvider } from 'next-auth/react';
-import GlobalState from "@/action/GlobalState";
-import {connection} from "next/server";
 import {RelayProvider} from "@/relay/RelayProvider";
-import {MainContent} from "@/app/(auth)/user/MainContent";
 // import FootBar from "@/component/footbar";
 
 export const metadata: Metadata = {
@@ -21,16 +14,23 @@ export const metadata: Metadata = {
 水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
 next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmentProvider正常是只能用于客户端的(水和/SSR除外)。
 * */
-export default async function RootLayout({children}: { children: ReactNode }) {
-    // await connection();
 
+// export default async function RootLayout({children}: { children: ReactNode }) {
+//     // await connection();
+//     return (
+//         <div>
+//                 {children}
+//                 福建特检验的 脚注通用的；尾巴》》
+//         </div>
+//     );
+// }
+
+
+export default async function RootLayout({children}: { children: ReactNode }) {
     return (
         <RelayProvider>
-
-
-                        {children}
-                        福建特检验的 脚注通用的；尾巴》》
-
+            {children}
+            福建特检验的 脚注通用的；尾巴》》
         </RelayProvider>
     );
 }
