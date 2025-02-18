@@ -1,6 +1,7 @@
 // import { getTranslations, setRequestLocale } from 'next-intl/server';
 import SignInForm from "@/component/SignInForm";
 import Link from "next/link";
+import LoginForm from "@/app/login/LoginForm";
 
 
 type ISignInPageProps = {
@@ -23,11 +24,16 @@ export async function generateMetadata(props: ISignInPageProps) {
 export default async function SignInPage(props: ISignInPageProps) {
   const { locale } = await props.params;
   // setRequestLocale(locale);
+  const onLoginSuccess = auth => {
+    // saveAuthData(auth);
+    // setIsLoggedIn(true);
+  };
 
+  //报错onLoginSuccess={onLoginSuccess：auth => {}} #跨越网络界限的# [ Server ] Error: Event handlers cannot be passed to Client Component props.
   return (
       <div>
-          <SignInForm/>
-
+          {/*<SignInForm/>*/}
+         <LoginForm />
       </div>
   );
 };

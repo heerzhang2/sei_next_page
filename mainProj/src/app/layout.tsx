@@ -9,6 +9,7 @@ import { SessionProvider } from 'next-auth/react';
 import GlobalState from "@/action/GlobalState";
 import {connection} from "next/server";
 // import FootBar from "@/component/footbar";
+//不可以用import { Provider } from 'urql';报错createContext only works in Client Components. Add the "use client" directive at the top of the file to use it.
 
 export const metadata: Metadata = {
   title: "Relay Streaming SSR ✨",
@@ -25,8 +26,8 @@ export default async function RootLayout({children}: { children: ReactNode }) {
     return (
         <html>
         <body>
-        <SessionProvider>
-                           {children}
+            <SessionProvider>
+                {children}
 
                 {/*<GlobalState>*/}
                 {/*    <AppStateProvider>*/}
@@ -41,7 +42,7 @@ export default async function RootLayout({children}: { children: ReactNode }) {
                 {/*    </AppStateProvider>*/}
                 {/*</GlobalState>*/}
                 {/*<ToastContainer/>*/}
-        </SessionProvider>
+            </SessionProvider>
         </body>
         </html>
     );

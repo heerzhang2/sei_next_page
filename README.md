@@ -62,6 +62,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
    在 Next.js 的服务器端渲染上下文中直接使用它们可能会有些棘手，因为你需要模拟 Relay 的网络请求环境。
 18. @urql/next 替换Relay?  Urql graphql查询列表时 Cursor 模式分页的例子，详细说明 参数 https://github.com/urql-graphql/urql
     当数据在应用程序中被广泛使用时，@urql建议不要将其作为服务器组件的一部分进行渲染，以便您能够利用客户端缓存的优势。https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-rendering/
+19. https://github.com/urql-graphql/urql/tree/main/examples 但urql的Provider也是只能用在client的。
 
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
@@ -109,3 +110,4 @@ const NewsfeedQuery = graphql`
 使用 useLazyLoadQuery 有局限的；预加载数据=另一种防止瀑布流（指一系列依赖请求按顺序执行导致的延迟）的方法是使用预加载模式
 Next.js的路由Link点击并没有提供独立的数据加载的纯函数，只有整个路由组件函数的提前加载的功能。不一样概念。<Suspense> 包裹异步preload数据执行代码的异步服务端组件。
 <Link href={`/post/${post.id}`} prefetch={true} // 自动预取此链接
+https://commerce.nearform.com/open-source/urql/docs/advanced/authentication/

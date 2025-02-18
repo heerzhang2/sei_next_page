@@ -28,9 +28,9 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 
 export default async function RootLayout({children}: { children: ReactNode }) {
     return (
-        <RelayProvider>
+        <div>
             {children}
             福建特检验的 脚注通用的；尾巴》》
-        </RelayProvider>
+        </div>
     );
 }
