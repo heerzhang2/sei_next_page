@@ -2,7 +2,10 @@
 import RoutingContext from './RoutingContext';
 import React from 'react';
 import UserContext from "./UserContext";
+import { useRouter } from 'next/navigation';
+
 const { useCallback, useContext } = React;
+
 
 /** SPA程序不要用 customize-easy-ui-component 简易的Link也就是<a></a>组件。要用这里的Link，避免强制刷新整个APP缓存。
  * An alternative to react-router's Link component that works with
@@ -25,7 +28,9 @@ interface LinkProps {
     state?: any;
 }
 
-//使用了自定义路由器的Link链接，点击这个组件的才会经过自定义路由器跳转。
+//使用了自定义路由器的Link链接，点击这个组件的才会经过自定义路由器跳转。旧的可携带user保存当前的用户数据 state;
+/*@deprecated
+* */
 export const Link: React.FunctionComponent<LinkProps> =({href,state,children,...other}: LinkProps)=>
 {
   const router = useContext(RoutingContext);
@@ -67,7 +72,7 @@ export const Link: React.FunctionComponent<LinkProps> =({href,state,children,...
   // that the user *may* navigate to the route.
   //鼠标飘过去的 才会去读取代码的，真正去前端服务器获取，和下载源程序代码
   const preloadRouteCode = useCallback(() => {
-    router.preloadCode(href, user);
+    // router.preloadCode(href, user);
   }, [href, router, user]);
 
   // Callback to preload the code and data for the route:
@@ -148,70 +153,32 @@ interface DirectLinkProps extends React.HTMLAttributes<HTMLElement>{
     state?: any;
 }
 /**对比上面Link 缺少user的注入;
+ * 直接用next.js Link 导致报错In HTML, <tr> cannot be a child of <a>.
+ * In HTML, <a> cannot be a child of <tbody>. This will cause a hydration error.
  * */
 export const DirectLink: React.FunctionComponent<DirectLinkProps> =(props: DirectLinkProps)=>
 {
-    const router = useContext(RoutingContext);
-    // const {user, setUser} = useContext(UserContext);
-    //有效的儿子组件:
-    // const valChilds =React.Children.toArray(props.children).filter(child =>{
-    //         if(!React.isValidElement(child))
-    //             throw new Error("literal text must be wrapped in <></> tag or Components");
-    //         return  child;
-    //     }
-    // );
+    const router = useRouter();
     const valChilds=validChildrenFragmentSpread(props.children);
-
     const changeRoute = useCallback(
         (event :any )=> {
             event.preventDefault();
             event.stopPropagation();        //不想向祖辈组件传递点击事件。
-            /* const location = {
-                pathname: '/somewhere',
-                //search?: Search string;
-                state: { fromDashboard: true }
-                <Link to={location}/>
-            }*/
-
-            if(props.state)
-                router.history.push(props.href, props.state);
-            else
-                router.history.push(props.href);
-            //router.history.push(props.href);     location.state旧值？怎么是全局共享量而且还刷新都还有在？
-            //单页面应用啊：当做同一个path" *.html"只用同一个的。
-            //不允许使用window.history.pushState(stateObj,),本身SPA路由器就是在它上面再做一层包装的；
-            // console.log(`onClick再执行一次preload`, window.history.state.state);
+            router.push(props.href)
         },
-        [props.href, router, props.state],
+        [props.href, router],
     );
 
-    // Callback to preload just the code for the route:
-    // we pass this to onMouseEnter, which is a weaker signal
-    // that the user *may* navigate to the route.
-    //鼠标飘过去的 才会去读取代码的，真正去前端服务器获取，和下载源程序代码
-/*    const preloadRouteCode = useCallback(() => {
-        router.preloadCode(props.href, user);
-    }, [props.href, router]);*/
-
-    // Callback to preload the code and data for the route:
-    // we pass this to onMouseDown, since this is a stronger
-    // signal that the user will likely complete the navigation
-    //加载数据，服务端请求发起了。
-/*    const preloadRoute = useCallback(() => {
-        // .preload(pathname :);
-        router.preload(props.href, user);
-        console.log(`onMouseDown:执行一次preload`, window.history.state?.state);
-    }, [props.href, router]);*/
-
-    //原先"wouter"搞出来Link:不需要加这一层<a>的；
-    //onMouseDown执行一次， 随后onClick再执行一次。 2次执行路由器的prepare: (params:any) => {}
-
+    const preloadRouteCode = useCallback(() => {
+        router.prefetch(props.href)
+    }, [props.href, router]);
     return (
         <React.Fragment>
         {
             valChilds.map((one,row) =>
                 React.cloneElement(one as React.ReactElement<any>, {
                     onClick: changeRoute,
+                    onMouseEnter: preloadRouteCode,
                 })
             )
         }

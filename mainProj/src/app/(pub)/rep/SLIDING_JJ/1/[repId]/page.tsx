@@ -1,11 +1,12 @@
 "use client";
-import { useLazyLoadQuery} from "react-relay";
+import {useFragment, useLazyLoadQuery} from "react-relay";
 import { graphql } from 'relay-runtime';
 import {pagegetReportQuery} from "./__generated__/pagegetReportQuery.graphql";
 // import {useRouter} from "next/navigation";
 import {Suspense} from "react";
 import React from "react";
 import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
+import {pageReportIsp$key} from "@/app/(pub)/rep/SLIDING_JJ/1/[repId]/__generated__/pageReportIsp.graphql";
 
 // export const dynamic = "force-dynamic";
 
@@ -79,10 +80,20 @@ export default  function Page({
         NewsfeedQuery,
         {id: repId}
     );
+
+    // @ts-ignore
+    const fragdata = useFragment(
+        RepIspQuery, data as any
+        // ,data as unknown as pageReportIsp$key
+    );
+
     // const router = useRouter();
     // console.log("graphql->authUser", data);
     const {getReport: items} = data;
 
+
+
+    //【暂时】snapshot还未加入的
     return (
         <article>
             <h1>Hello, Blog baogao报告内容。。。Post Page!__ </h1>
@@ -91,4 +102,3 @@ export default  function Page({
         </article>
     )
 }
-

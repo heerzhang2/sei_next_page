@@ -3,7 +3,7 @@ import * as React from "react";
 import {
   CCell, Cell, Table, TableBody, TableRow, Text,
 } from "customize-easy-ui-component";
-// import {DirectLink,} from "../../../routing/Link";
+import {DirectLink,} from "../../../routing/Link";
 import {RepLink,} from "../../common/base";
 import {usePrefixDataTable} from "../../hook/usePrefixData";
 import {useThreeColumnView} from "../../hook/useThreeColumnSubr";
@@ -53,21 +53,21 @@ export const 报告设备详情= ( {theme, orc, rep } : { orc: any,rep:any, them
           <CCell colSpan={2}>检验依据</CCell>
           <CCell colSpan={5}>《大型游乐设施安全技术规程》（TSG 71-2023）</CCell>
         </TableRow>
-        <Link href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Conclusion#Conclusion`}>
+        <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Conclusion#Conclusion`}>
           <TableRow>
             <CCell>检验结论</CCell><CCell colSpan={6}>
             <Text variant="h1" css={{fontSize:orc?.检验结论?.length>12? '1.4rem':'2.8rem',
                       margin: 'auto',padding:'0 1rem'}}>{orc?.检验结论}</Text></CCell>
           </TableRow>
-        </Link>
-        <Link href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Witness#Witness`}>
+        </DirectLink>
+        <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Witness#Witness`}>
           <TableRow>
             <CCell>备注</CCell>
             <Cell split={true} colSpan={6}><div css={{minHeight: '1rem', whiteSpace: 'pre-wrap'}}>
               {orc.大备注 ?? '／'}
             </div></Cell>
           </TableRow>
-        </Link>
+        </DirectLink>
         <TableRow>
           <CCell colSpan={2}>下次定期检验日期</CCell>
           <CCell colSpan={5}>{orc.新下检日 ?? '／'}</CCell>

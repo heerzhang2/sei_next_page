@@ -20,10 +20,12 @@ import {UnqualifiedIspTable} from "../../common/general";
 import {useItemsMapOmni} from "../../common/omni";
 import {检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj} from "../waterJj/rarelyVary";
 import Link from "next/link";
+import {DirectLink} from "@/routing/Link";
 
 export const ReportView: React.FunctionComponent<ReportViewProps> = ({
 repId,  source: orc,  verId,rep,
 }) => {
+    console.log("ReportView页面刷新orc:", orc ,"rep=",rep);
     const qs= queryString.parse(window.location.search);
     const formatOriginal =qs && !!qs.original;      //改成  格式化版原始记录
     // const { history } = useContext(RoutingContext);
@@ -91,7 +93,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
                 rep,
                 comply: '依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验'
             })}
-           <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`}>
+           <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`} css={{"@media print": {textDecoration: 'none'}}}>
                <div css={{display: 'flex', flexDirection: 'column', justifyContent: 'center', "@media print": {pageBreakBefore: 'always',},}}>
                    <Text variant="h4" css={{textAlign: 'center'}}>大型游乐设施监督检验报告</Text>
                </div>
@@ -111,7 +113,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
            <Table fixed={ ["3.4%","6.4%","8.3%","5.3%","5%","%","12.6%","6.2%","9.8%"] }
                   css={ {borderCollapse: 'collapse',"@media print": {marginTop: '-13.3rem'}} }   tight  miniw={800}>
                <TableHead>
-                   <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
+                   <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
                        <TableRow>
                            <CCell><Text css={{fontSize:'0.7rem'}}>序号</Text></CCell>
                            <CCell colSpan={5}>检验项目及内容</CCell>
@@ -119,7 +121,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
                            <CCell>结论</CCell>
                            <CCell>备注</CCell>
                        </TableRow>
-                   </Link>
+                   </DirectLink>
                </TableHead>
                <TableBody>
                    {renderIspContent}

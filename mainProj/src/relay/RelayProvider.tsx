@@ -32,14 +32,13 @@ export  function RelayProvider({children}: RelayProviderProps) {
 
   const scriptIndex = useRef(0);
 
-  // This hook comes from Next.js and will execute the callback everytime,
-  // something unsuspends, BUT before the piece that unsuspends is streamed to the client.
-  // Whatever the callback returns will be inserted as HTML into the response stream.
-  //
-  // Our approach here is to insert script tags into the HTML that will push the GraphQL responses
-  // we received on the server onto the global window object.
-  // When the client is re-executing a query during hydration, it can then read the responses
-  // belonging to a particular query form the window object and replay them into the Relay store.
+// 这个钩子来自 Next.js，每次有内容取消挂起时都会执行回调函数，
+// 但在取消挂起的内容流式传输到客户端之前执行。
+// 回调函数返回的内容将作为 HTML 插入到响应流中。
+// 我们的方法是在 HTML 中插入脚本标签，这些标签将把我们在服务器上接收到的 GraphQL 响应
+// 推送到全局 window 对象上。
+// 当客户端在 hydration（水合）过程中重新执行查询时，它可以从 window 对象读取
+// 属于特定查询的响应，并将它们重放到 Relay 存储中。
   useServerInsertedHTML(() => {
     const hydrationScript = buildHydrationScript();
 
