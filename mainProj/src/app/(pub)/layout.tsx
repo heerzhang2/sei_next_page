@@ -8,6 +8,11 @@ import {
     UrqlProvider,
 } from '@urql/next';
 import {getSsr, urqlClient} from "@/common/urql";
+import GlobalState from "@/action/GlobalState";
+import AppStateProvider from "@/action/AppStateProvider";
+import SwrConfigClient from "@/action/SwrConfigClient";
+import {MainContent} from "@/app/(auth)/user/MainContent";
+import {ToastContainer} from "react-toastify";
 
 
 
@@ -21,8 +26,17 @@ export default async function RootLayout({children}: { children: ReactNode }) {
     // await connection();
     return (
         <div>
-            滑行车类大型游乐设施监督检验的情况如下》》
-                           {children}
+            滑行车类大型游乐设施监督检验的情---况如下》》
+            <GlobalState>
+                <AppStateProvider>
+                    <SwrConfigClient>
+
+                        {children}
+
+                    </SwrConfigClient>
+                </AppStateProvider>
+            </GlobalState>
+            <ToastContainer/>
         </div>
     );
 }

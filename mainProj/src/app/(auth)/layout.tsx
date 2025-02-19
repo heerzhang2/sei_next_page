@@ -25,7 +25,7 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 export default async function SPALayout({children}: { children: ReactNode }) {
     await connection();
     return (
-        <RelayProvider>
+        <>
             <GlobalState>
                 <AppStateProvider>
                     <SwrConfigClient>
@@ -39,6 +39,6 @@ export default async function SPALayout({children}: { children: ReactNode }) {
                 </AppStateProvider>
             </GlobalState>
             <ToastContainer/>
-        </RelayProvider>
+        </>
     );
 }

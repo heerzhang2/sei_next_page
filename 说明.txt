@@ -1,3 +1,6 @@
+按 端口号 找 node程序 netstat -ano | findstr :3000
+
+
 ort { fetchQuery, commitMutation, graphql } from 'relay-runtime';
 import environment from './your-relay-environment'; // 导入你的Relay环境
 import yourQuery from './__generated__/yourQuery.graphql';

@@ -3,6 +3,10 @@ import type { Metadata } from "next";
 // import { ServerRelayProvider } from "../relay/ServerRelayProvider";
 import {lazy, ReactNode, Suspense} from "react";
 import {RelayProvider} from "@/relay/RelayProvider";
+import GlobalState from "@/action/GlobalState";
+import AppStateProvider from "@/action/AppStateProvider";
+import SwrConfigClient from "@/action/SwrConfigClient";
+import {ToastContainer} from "react-toastify";
 // import FootBar from "@/component/footbar";
 
 export const metadata: Metadata = {
@@ -29,8 +33,17 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 export default async function RootLayout({children}: { children: ReactNode }) {
     return (
         <div>
-            {children}
-            福建特检验的 脚注通用的；尾巴》》
+            滑行车类大型游乐设施监督检验的情--22-况如下》》
+            <GlobalState>
+                <AppStateProvider>
+                    <SwrConfigClient>
+
+                        {children}
+
+                    </SwrConfigClient>
+                </AppStateProvider>
+            </GlobalState>
+            <ToastContainer/>
         </div>
     );
 }

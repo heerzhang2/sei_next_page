@@ -22,8 +22,8 @@ const makeClient = () => {
   ssrStatic= ssr;
 
   return createClient({
-    // url: `${epoint}/graphql`,
-              url: 'https://graphql-pokeapi.graphcdn.app/',
+    url: `${epoint}/graphql`,
+          // url: 'https://graphql-pokeapi.graphcdn.app/',
     exchanges: [cacheExchange, ssr, fetchExchange],
 
     suspense: true,
@@ -53,3 +53,9 @@ export function urqlClient() {
   clientOfUrql ||= getClient();
   return clientOfUrql;
 }
+
+
+/*
+在urql中，通常需要将fragments和查询定义在一起，因为GraphQL服务器需要知道fragments的上下文
+（即它们应用于哪个类型）。因此，在上面的示例中，我们将userFields fragment与查询一起定义在了一个字符串模板中
+* */

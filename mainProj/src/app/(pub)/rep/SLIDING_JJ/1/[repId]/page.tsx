@@ -5,6 +5,8 @@ import React, { Suspense } from 'react';
 // import {  gql } from '@urql/next';
 import {useQuery, gql, UrqlProvider} from '@urql/next';
 import {getSsr, urqlClient} from "@/common/urql";
+// import CommonReportView from "@/app/(pub)/rep/SLIDING_JJ/1/[repId]/CommonReportView";
+import CommonReportView from "./CommonReportView";
 
 // export default function Page() {
 //   return (
@@ -57,7 +59,7 @@ const PokemonQuery = gql`
 
 function Pokemon(props: any) {
     // const result = await getClient().query(PokemonQuery, {name: props.name});
-    const [result] = useQuery({query: PokemonQuery, variables: { name: props.name },});
+    const [result] = useQuery({query: PokemonQuery, variables: { name: props.name }});
     return (
         <div>
             <h1>{result.data && result.data.pokemon.name}</h1>
@@ -79,7 +81,7 @@ export default function Page({
         <article>
             <UrqlProvider client={urqlClient()} ssr={getSsr()}>
                 <Suspense>
-                    <Pokemons />
+                    <CommonReportView repId={repId} />
                 </Suspense>
                 {/*<PostList repId={repId}/>*/}
             </UrqlProvider>
