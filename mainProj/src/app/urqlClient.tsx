@@ -1,13 +1,21 @@
 import Link from 'next/link';
 import { cacheExchange, createClient, fetchExchange, gql } from '@urql/core';
 import { registerUrql } from '@urql/next/rsc';
+import {ssrExchange} from "@urql/next";
 
 const makeClient = () => {
+  //must be prefixed with NEXT_PUBLIC_.
+  const epoint = process.env.NEXT_PUBLIC_BACK_END
+    // url: 'https://graphql-pokeapi.graphcdn.app/',
+    // exchanges: [cacheExchange, ssr, fetchExchange],
+
   return createClient({
-    url: 'https://graphql-pokeapi.graphcdn.app/',
+    url: `${epoint}/graphql`,
+    // url: 'https://graphql-pokeapi.graphcdn.app/',
     exchanges: [cacheExchange, fetchExchange],
   });
 };
+
 
 // const { getClient } = registerUrql(makeClient);
 const clientSetup = registerUrql(makeClient);

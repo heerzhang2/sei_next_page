@@ -32,8 +32,8 @@ export default async function SignInPage(props: ISignInPageProps) {
   //报错onLoginSuccess={onLoginSuccess：auth => {}} #跨越网络界限的# [ Server ] Error: Event handlers cannot be passed to Client Component props.
   return (
       <div>
-          {/*<SignInForm/>*/}
-         <LoginForm />
+          <SignInForm/>
+         {/*<LoginForm />*/}
       </div>
   );
 };
