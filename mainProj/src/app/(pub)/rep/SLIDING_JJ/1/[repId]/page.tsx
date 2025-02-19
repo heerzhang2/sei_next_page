@@ -38,7 +38,7 @@ function Pokemons() {
       <Suspense>
         <Pokemon name="bulbasaur" />
       </Suspense>
-      <Link href="/mainProj/public">RSC</Link>
+      <Link href="/">RSC</Link>
     </main>
   );
 }
