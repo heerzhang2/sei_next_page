@@ -1,3 +1,4 @@
+"use client"
 import type { Metadata } from "next";
 // import "./globals.css";
 // import { ServerRelayProvider } from "../relay/ServerRelayProvider";
@@ -9,11 +10,13 @@ import { SessionProvider } from 'next-auth/react';
 import GlobalState from "@/action/GlobalState";
 import {connection} from "next/server";
 import Link from "next/link";
+import {UrqlProvider} from "@urql/next";
+import {getClient, getSsr} from "@/app/urqlClient";
 // import FootBar from "@/component/footbar";
 
-export const metadata: Metadata = {
-  title: "Relay Streaming SSR ✨",
-};
+// export const metadata: Metadata = {
+//   title: "Relay Streaming SSR ✨",
+// };
 
 const FootBar = lazy(() => import("@/component/footbar"));
 
@@ -24,21 +27,9 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 export default async function RootLayout({children}: { children: ReactNode }) {
     // await connection();
     return (<>
-        {children}
-
-        {/*<GlobalState>*/}
-        {/*    <AppStateProvider>*/}
-        {/*        <SwrConfigClient>*/}
-
-        {/*            {children}*/}
-
-        {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
-        {/*                <MainContent/>*/}
-        {/*            </Suspense>*/}
-        {/*        </SwrConfigClient>*/}
-        {/*    </AppStateProvider>*/}
-        {/*</GlobalState>*/}
-        {/*<ToastContainer/>*/}
+            <UrqlProvider client={getClient()} ssr={getSsr()}>
+                {children}
+            </UrqlProvider>
 
         <div className="mt-10">
             <Link href="/login">公开状态情况的蒂条</Link>
