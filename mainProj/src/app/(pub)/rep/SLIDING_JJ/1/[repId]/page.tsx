@@ -1,9 +1,10 @@
-// 'use client';
+"use client"
 
 import Link from 'next/link';
 import React, { Suspense } from 'react';
-import {  gql } from '@urql/next';
-import {getClient} from "@/app/urqlClient";
+// import {  gql } from '@urql/next';
+import {useQuery, gql, UrqlProvider} from '@urql/next';
+import {getSsr, urqlClient} from "@/common/urql";
 
 // export default function Page() {
 //   return (
@@ -24,8 +25,9 @@ const PokemonsQuery = gql`
   }
 `;
 //本来'use client';再加了async会导致无限循环获取；React.use
-async function Pokemons() {
-    const result = await getClient().query(PokemonsQuery, {});
+function Pokemons() {
+    // const result = await getClient().query(PokemonsQuery, {});
+    const [result] = useQuery({ query: PokemonsQuery });
     return (
         <main>
             <h1>This is rendered as part of SSR</h1>
@@ -53,8 +55,9 @@ const PokemonQuery = gql`
   }
 `;
 
-async function Pokemon(props: any) {
-    const result = await getClient().query(PokemonQuery, {name: props.name});
+function Pokemon(props: any) {
+    // const result = await getClient().query(PokemonQuery, {name: props.name});
+    const [result] = useQuery({query: PokemonQuery, variables: { name: props.name },});
     return (
         <div>
             <h1>{result.data && result.data.pokemon.name}</h1>
@@ -74,10 +77,12 @@ export default function Page({
     // @ts-ignore
     return (
         <article>
-            <Suspense>
-                <Pokemons />
-            </Suspense>
-            {/*<PostList repId={repId}/>*/}
+            <UrqlProvider client={urqlClient()} ssr={getSsr()}>
+                <Suspense>
+                    <Pokemons />
+                </Suspense>
+                {/*<PostList repId={repId}/>*/}
+            </UrqlProvider>
         </article>
     )
 }

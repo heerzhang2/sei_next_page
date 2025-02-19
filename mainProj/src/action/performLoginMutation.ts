@@ -6,7 +6,7 @@ import yourMutation from './__generated__/performLoginMutation.graphql';
 import {createStaticRelayEnvironment} from "@/relay/environment/staticServer";
 import {staticRelayEnvironment} from "@/relay/ServerRelay";
 import {gql} from "@urql/core";
-import {getClient} from "@/app/urqlClient";
+import {getClient} from "@/common/urql";
 // import youfrMutation from 'D:/home/sei_next_page/mainProj/./__generated__/performLoginMutation.graphql.ts'
 
 

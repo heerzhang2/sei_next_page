@@ -63,7 +63,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 18. @urql/next 替换Relay?  Urql graphql查询列表时 Cursor 模式分页的例子，详细说明 参数 https://github.com/urql-graphql/urql
     当数据在应用程序中被广泛使用时，@urql建议不要将其作为服务器组件的一部分进行渲染，以便您能够利用客户端缓存的优势。https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-rendering/
 19. https://github.com/urql-graphql/urql/tree/main/examples 但urql的Provider也是只能用在client的。
-
+    await getClient().query()可行；
+    带'use client'的Layout.tsx可以配合异步的page.tsx; 带"use client"的tsx文件就不能再用ansyc函数组件的。
+20. 
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")

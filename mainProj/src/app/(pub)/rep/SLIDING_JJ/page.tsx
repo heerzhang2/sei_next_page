@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { cacheExchange, createClient, fetchExchange, gql } from '@urql/core';
 import { registerUrql } from '@urql/next/rsc';
 
-import { getClient } from '@/app/urqlClient';
+import { getClient } from '@/common/urql';
 
 
 // const makeClient = () => {

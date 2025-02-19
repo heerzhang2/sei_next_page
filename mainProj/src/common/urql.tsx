@@ -1,7 +1,6 @@
-// import { gql } from '@urql/core';
 import { registerUrql } from '@urql/next/rsc';
-// import {ssrExchange} from "@urql/next";
 import { ssrExchange, cacheExchange, fetchExchange, createClient } from '@urql/next';
+import { Client } from '@urql/core';
 
 
 let ssrStatic=null;
@@ -41,3 +40,16 @@ export function getSsr() {
 }
 
 export const getClient = clientSetup.getClient;
+
+
+//执行() 直接获取
+let clientOfUrql: Client | null = null;
+
+export function urqlClient() {
+  if (clientOfUrql) {
+    return clientOfUrql;
+  }
+  //因为用registerUrql的，所以必须再次运行clientSetup.getClient()获取最终的client;
+  clientOfUrql ||= getClient();
+  return clientOfUrql;
+}
