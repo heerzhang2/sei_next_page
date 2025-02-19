@@ -39,7 +39,7 @@ export function getSsr() {
   return ssrStatic;
 }
 
-export const getClient = clientSetup.getClient;
+const getClient = clientSetup.getClient;
 
 
 //执行() 直接获取

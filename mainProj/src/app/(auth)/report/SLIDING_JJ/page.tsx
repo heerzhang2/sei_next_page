@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { cacheExchange, createClient, fetchExchange, gql } from '@urql/core';
 import { registerUrql } from '@urql/next/rsc';
-import {urqlClient} from "@/common/urql";
 
-// import { getClient } from '@/common/urql';
+import { getClient } from '@/common/urql';
 
 
 // const makeClient = () => {
@@ -30,7 +29,7 @@ const PokemonsQuery = gql`
 `;
 
 export default async function Home() {
-  const result = await urqlClient().query(PokemonsQuery, {});
+  const result = await getClient().query(PokemonsQuery, {});
   return (
     <main>
       <h1>This is rendered as part of an RSC</h1>

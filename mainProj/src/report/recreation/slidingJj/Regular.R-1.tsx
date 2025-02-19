@@ -1,4 +1,5 @@
 /** @jsxImportSource @emotion/react */
+"use client"
 import * as React from "react";
 import {
     Table, TableBody, TableRow, CCell, TableHead, Text, useTheme, Button,

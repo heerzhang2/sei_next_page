@@ -1,17 +1,14 @@
-// "use client"
+"use client"
+
 import Link from 'next/link';
 import React, { Suspense } from 'react';
-// import {  gql } from '@urql/next';
-import {gql, } from '@urql/next';
-import {urqlClient} from "@/common/urql";
-// import CommonReportView from "@/app/(pub)/rep/SLIDING_JJ/1/[repId]/CommonReportView";
+import {useQuery, gql, UrqlProvider} from '@urql/next';
+import {getSsr, urqlClient} from "@/common/urql";
 import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 
 
 //片段不能像Relay那样的能做独立形式的定义了！必须每个请求都定义； "Validation error (UndefinedFragment@[getReport]) : Undefined fragment 'pageReportIsp'"
-/*纯粹走SSR的，还需要往ReportView加上use client；同时会自动的缓存数据包的计算用户刷新URL也无法立刻更新内容。但是走UrqlProvider从客户机获取数据包的模式刷新URL是会立刻更新的。
-需要注意：配置短暂生存时间，还是人工失效办法。
-* */
+// const RepIspQuery=gql` `;
 const NewsfeedQuery = gql`
     query pagegetReportQuery($id: ID! ) {
         getReport(id: $id) {
@@ -53,19 +50,23 @@ const NewsfeedQuery = gql`
 /*async/await is not yet supported in Client Components, only Server Components.
 params: Promise<{ repId: string }>      ; await params;
 * */
-async function CommonReportView({
-                                    repId
-                                }: { repId: string }
+function CommonReportView({
+                                              repId       }: {  repId:  string}
 ) {
-    const result = await urqlClient().query(NewsfeedQuery, {id: repId});
-    // const [result] = useQuery({ query: NewsfeedQuery, variables: { id: repId } });
+    // KQcbgDF9RO21DsI92H3tTVJlcG9ydA
+    // const { repId } = React.use(params);  // await params
+    // const post = await getPost(repId)
+    // const data ={};
+    const [result] = useQuery({ query: NewsfeedQuery, variables: { id: repId } });
+
+    // const router = useRouter();
+    // console.log("graphql->authUser", data);
     const {getReport: report} = result?.data;
+
     //【暂时】snapshot还未加入的
     return (
         <article>
-            <div className="mt-10">
-                <Link href="/">⬅️ 没登陆的 能看见件的报告内容。。。go Home </Link>
-            </div>
+            <h1>Hello, Blog baogao报告内容。。。Post Page!__ </h1>
             {report?.data}
             <ReportView source={report?.data} verId={'1'} rep={report}/>
         </article>
@@ -81,13 +82,15 @@ export default function Page({
     params: Promise<{ repId: string }>
 }) {
     const { repId } = React.use(params);  // await params
-
+    // @ts-ignore
     return (
         <article>
+            <UrqlProvider client={urqlClient()} ssr={getSsr()}>
                 <Suspense>
                     <CommonReportView repId={repId} />
                 </Suspense>
                 {/*<PostList repId={repId}/>*/}
+            </UrqlProvider>
         </article>
     )
 }
