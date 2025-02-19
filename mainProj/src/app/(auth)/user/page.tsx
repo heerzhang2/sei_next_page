@@ -1,7 +1,7 @@
 // "use client";
 
 // import { getTranslations, setRequestLocale } from 'next-intl/server';
-import SignInForm from "@/component/SignInForm";
+import SignInForm from "@/app/login/SignInForm";
 import Link from "next/link";
 import {useLazyLoadQuery} from "react-relay";
 // import {MainContentQuery} from "./__generated__/MainContentQuery.graphql";

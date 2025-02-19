@@ -7,11 +7,15 @@ import { gql, useMutation } from 'urql';
 const LOGIN_MUTATION = gql`
   mutation Login($input: LoginInput!) {
     signin(input: $input) {
-      refreshToken
-      token
+      accessToken, user{id username}
     }
   }
 `;
+
+// mutation performLoginMutation($username: String!, $password: String!) {
+//   authenticate(username: $username, password: $password)
+//   { accessToken, user{id username} }
+// }
 
 const REGISTER_MUTATION = gql`
   mutation Register($input: LoginInput!) {
@@ -21,6 +25,7 @@ const REGISTER_MUTATION = gql`
     }
   }
 `;
+
 
 const LoginForm = ( ) => {
   //只能用于有了Provider/context/+ "use client"情形： useMutation(LOGIN_MUTATION);
@@ -60,7 +65,7 @@ const LoginForm = ( ) => {
       <form onSubmit={onSubmitLogin}>
         {loginResult.fetching ? <p>Logging in...</p> : null}
         {loginResult.error ? <p>Oh no... {loginResult.error.message}</p> : null}
-
+        {loginResult.data && !loginResult.error && (loginResult.data?.signin===null? <p>密码不对啊</p> : null)}
         <fieldset disabled={disabled ? 'disabled' : null}>
           <h3>Login</h3>
           <label>

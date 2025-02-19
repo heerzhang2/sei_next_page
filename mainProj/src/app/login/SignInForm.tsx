@@ -212,7 +212,7 @@ export default function SignInForm() {
                   </form>
               </div>
               <div className="mt-10">
-                  <Link href="/">⬅️ Go back home</Link>
+                  <Link href="/mainProj/public">⬅️ Go back home</Link>
               </div>
               <div className="mt-10">
                   <Link href="/user">⬅️ Go 不能尼克酸y用户</Link>
