@@ -8,6 +8,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { SessionProvider } from 'next-auth/react';
 import GlobalState from "@/action/GlobalState";
 import {connection} from "next/server";
+import { Provider } from "jotai";
 // import FootBar from "@/component/footbar";
 //不可以用import { Provider } from 'urql';报错createContext only works in Client Components. Add the "use client" directive at the top of the file to use it.
 
@@ -27,7 +28,12 @@ export default async function RootLayout({children}: { children: ReactNode }) {
         <html>
         <body>
             <SessionProvider>
-                {children}
+                <Provider>
+
+                    {children}
+
+                </Provider>
+
 
                 {/*<GlobalState>*/}
                 {/*    <AppStateProvider>*/}

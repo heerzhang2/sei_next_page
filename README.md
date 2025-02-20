@@ -65,7 +65,14 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 19. https://github.com/urql-graphql/urql/tree/main/examples 但urql的Provider也是只能用在client的。
     await getClient().query()可行；
     带'use client'的Layout.tsx可以配合异步的page.tsx; 带"use client"的tsx文件就不能再用ansyc函数组件的。
-20. 
+20. Parallel Route路由app/@modal/(.)photos路由结构：只能传递segment，Soft Navigation刷新URL Hard Navigation内容不一致。
+21. 不能在客户端组件中import导入服务器组件;但是支持从上一级组件中child嵌套做法（多绕一层/提前在client组件的父辈组件中的导入嵌套）。将交互逻辑移到一个客户端组件中，保持layout为服务器组件。
+22. {children}</ThemeProvider> 'use client';所有客户端组件都能够使用这个上下文。树结构中更深层次使用“use client” ; #使用 Suspense
+23. 使用 URL 查询参数或全局状态管理可能是最简单和最直接的方法。router.push(`/first-component-url?result=${encodeURIComponent(data)}`);useEffect(() => { const queryResult = router.query.result
+    import { useHydrateAtoms } from 'jotai/utils' jotai;useAtom/useHydrateAtoms客户端用的；useHydrateAtoms()第二个参数是服务端初始化的(第一个参数不限制)；跨路由页面的状态管理
+24. page.tsx默认是服务端可改为客户端模式:其参数获取做法不一样！React.use(params) 对比的 async：(await params)；
+25. 并行+交错模态路由app/@modal/(.)photos/[id]/page.tsx；没太多好处。只有{id}slug是相等的，内容都不一样，导航前进后退可以恢复对话框。
+    app/@modal并行路由：用于组合dashboard页面。
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")
