@@ -58,7 +58,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
    默认app/page.tsx is a Server Component.使用async await 提取/API-数据; export default [文件隔离];
 16. 路由包next/navigation: useRouter(), usePathname()  useSearchParams() 'use client'；  并非老版的next/router；
 17. 使用Relay进行服务器端渲染可能很复杂! 对Relay组件使用'use client'指令; Next.js官方用useLazyLoadQuery();
-    #挑战：Relay 的 loadQuery 和 usePreloadedQuery 通常是为了与 Relay 的环境紧密集成而设计的，它们期望数据是通过 Relay 的网络层获取的。Next.js-SSR不仅仅是获取数据的。
+    #挑战：Relay 的 loadQuery 和 usePreloadedQuery 通常是为了与 Relay 的环境紧密集成而设计的，它们期望数据是通过 Relay 的网络层获取的。
    在 Next.js 的服务器端渲染上下文中直接使用它们可能会有些棘手，因为你需要模拟 Relay 的网络请求环境。
 18. @urql/next 替换Relay?  Urql graphql查询列表时 Cursor 模式分页的例子，详细说明 参数 https://github.com/urql-graphql/urql
     当数据在应用程序中被广泛使用时，@urql建议不要将其作为服务器组件的一部分进行渲染，以便您能够利用客户端缓存的优势。https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-rendering/
@@ -73,6 +73,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 24. page.tsx默认是服务端可改为客户端模式:其参数获取做法不一样！React.use(params) 对比的 async：(await params)；
 25. 并行+交错模态路由app/@modal/(.)photos/[id]/page.tsx；没太多好处。只有{id}slug是相等的，内容都不一样，导航前进后退可以恢复对话框。
     app/@modal并行路由：用于组合dashboard页面。
+26. 为何舍弃Relay的：Relay只能采用useLazyLoadQuery，只能use client端用; useFragment只能拆成上下两个组件来组装的接收数据。Relay遇见SSR出现水和报错。
+27. 
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")
