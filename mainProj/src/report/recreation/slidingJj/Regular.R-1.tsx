@@ -1,6 +1,8 @@
 /** @jsxImportSource @emotion/react */
 "use client"
+import { useSearchParams } from 'next/navigation'
 import * as React from "react";
+import { useState, useEffect } from 'react'
 import {
     Table, TableBody, TableRow, CCell, TableHead, Text, useTheme, Button,
 } from "customize-easy-ui-component";
@@ -26,9 +28,14 @@ import {DirectLink} from "@/routing/Link";
 export const ReportView: React.FunctionComponent<ReportViewProps> = ({
 repId,  source: orc,  verId,rep,
 }) => {
+    const searchParams = useSearchParams()
+    const [formatOriginal, setFormatOriginal] = useState(false)
+    useEffect(() => {
+        const original = searchParams.get('original')
+        setFormatOriginal(!!original)
+    }, [searchParams])
+    console.log("ReportView 页面刷新", {original: formatOriginal})
     console.log("ReportView页面刷新orc:", orc ,"rep=",rep);
-    const qs= queryString.parse(window.location.search);
-    const formatOriginal =qs && !!qs.original;      //改成  格式化版原始记录
     // const { history } = useContext(RoutingContext);
     const Component=formatOriginal? FormatOriginal : OfficialReport;
     return (<>
@@ -58,8 +65,12 @@ const JumpTags=[{name:'设备概况',ha:'Survey'},{name:'K1资料审查',ha:'1.1
 const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
     repId,   source: orc,  verId,rep,
 }) => {
-    const qs= queryString.parse(window.location.search);
-    const printing =qs && !!qs.print;
+    const searchParams = useSearchParams()
+    const [printing, setPrinting] = useState(false)
+    useEffect(() => {
+        const printing = searchParams.get('print')
+        setPrinting(!!printing)
+    }, [searchParams])
     const theme= useTheme();
     const [rootMenu]=useRepMenuDirItems(JumpTags, [],`/reportView/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}`);
     const impressionismAs =React.useMemo(() => {

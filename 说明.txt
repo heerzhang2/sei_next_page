@@ -98,3 +98,12 @@ Relay环境是否每个客户连接单独建立
     `,
         {}
     );
+import dynamic from 'next/dynamic'
+
+const ClientOnlyComponent = dynamic(() => import('./YourComponent'), {
+  ssr: false
+})
+
+export default function Page() {
+  return <ClientOnlyComponent />
+}

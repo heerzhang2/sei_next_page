@@ -3,14 +3,14 @@ import * as React from "react";
 import {useProjectListAs} from "../common/base";
 import {useAreaFoldable} from "../common/helper";
 import {Collapse, DdMenu, DdMenuItem, IconCpu, Text} from "customize-easy-ui-component";
-import {VsProjects默认} from "../vessel/orcBase";
+// import {VsProjects默认} from "../vessel/orcBase";
 import {LeftTopMenuBar} from "../../comp/LeftTopMenuBar";
-import {useContext} from "react";
+import {useContext, useEffect, useState} from "react";
 import RoutingContext from "../../routing/RoutingContext";
 import queryString from "query-string";
 import {Global} from "@emotion/react";
 import backgroundAll from "../../9sppt/pic/2518841076.webp";
-
+import {useSearchParams,useRouter} from "next/navigation";
 
 /**【代码复用】从独立流转的分项返回主报告链接,
  * */
@@ -129,9 +129,15 @@ export function useFoldFor(list: any[], blockMax:number, viewALL:boolean, hidden
 const MAX_MENU_ITEMS=8;       //小屏幕第一层次弹出来菜单允许最多有几行。
 export function useRepMenuDirItems(configProjs: any[], projects: any[]=[], url:string
 ) {
-    const {history } = useContext(RoutingContext);
-    const qs= queryString.parse(window.location.search);
-    const printing =qs && !!qs.print;
+    const router = useRouter();
+    // const {history } = useContext(RoutingContext);
+    const searchParams = useSearchParams()
+    const [printing, setPrinting] = useState(false)
+    useEffect(() => {
+        const printing = searchParams.get('print')
+        setPrinting(!!printing)
+    }, [searchParams])
+
     const menu=React.useMemo(() => {
         let result=[] as any;
         if(projects.length>0){
@@ -162,7 +168,7 @@ export function useRepMenuDirItems(configProjs: any[], projects: any[]=[], url:s
             const parts=all[i];
             const nestMn=parts.map((part: {name: string; ha: string; }, i:number) => {
                 return  (
-                    <DdMenuItem  key={i}  label={part?.name} onClick={() => { history.push(`${url}#${part?.ha}`, {time: Date()});
+                    <DdMenuItem  key={i}  label={part?.name} onClick={() => { router.push(`${url}#${part?.ha}`);
                     }}>{part?.name}</DdMenuItem>
                 );
             });
@@ -210,7 +216,7 @@ export function useRepMenuDirItems(configProjs: any[], projects: any[]=[], url:s
             />
             {doms}
         </React.Fragment>;
-    }, [projects,printing, url,history, configProjs]);
+    }, [projects,printing,router, url, configProjs]);
 
     return [ menu ];
 }
