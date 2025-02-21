@@ -82,12 +82,12 @@ export default function Page({
     params: Promise<{ repId: string }>
 }) {
     const { repId } = React.use(params);  // await params
-    // @ts-ignore
+
     return (
         <article>
             <UrqlProvider client={urqlClient()} ssr={getSsr()}>
                 <Suspense>
-                    <CommonReportView repId={repId} />
+                    <CommonReportView repId={repId as string} />
                 </Suspense>
                 {/*<PostList repId={repId}/>*/}
             </UrqlProvider>

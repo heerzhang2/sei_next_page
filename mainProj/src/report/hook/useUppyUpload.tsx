@@ -5,7 +5,7 @@ import {
 } from "customize-easy-ui-component";
 import Uppy, {State} from "@uppy/core";
 import Tus from "@uppy/tus";
-import Webcam from "@uppy/webcam";
+// import Webcam from "@uppy/webcam";
 import useOssDeleteFileMutation from "../../hooks/useOssDeleteFileMutation";
 import {Dashboard} from "@uppy/react";
 import '@uppy/core/dist/style.min.css';
@@ -32,8 +32,8 @@ const uppy =new Uppy({id:'Report', restrictions:{maxNumberOfFiles: 2,}})
                 uppy.setState({ ...steob});      //做关联映射TUS的id==>MinIO的下载链接。
             }
         }
-    }).use(Webcam);
-
+    });
+//.use(Webcam)
 
 export type FileStore = {
     name: string;
