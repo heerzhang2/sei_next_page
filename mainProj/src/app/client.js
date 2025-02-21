@@ -1,4 +1,5 @@
-import { Client, fetchExchange, cacheExchange, gql } from 'urql';
+// import { Client, fetchExchange, cacheExchange, gql } from 'urql';
+import { gql, cacheExchange, fetchExchange, Client } from '@urql/next';
 import { authExchange } from '@urql/exchange-auth';
 
 import {

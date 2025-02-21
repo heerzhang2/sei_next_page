@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cacheExchange, createClient, fetchExchange, gql } from '@urql/core';
+import { gql } from '@urql/core';
 import { registerUrql } from '@urql/next/rsc';
 
 import {urqlClient} from "@/common/urql";

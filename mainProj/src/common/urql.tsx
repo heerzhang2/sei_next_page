@@ -1,6 +1,6 @@
 import { registerUrql } from '@urql/next/rsc';
-import { ssrExchange, cacheExchange, fetchExchange, createClient } from '@urql/next';
-import { Client } from '@urql/core';
+import {Client, ssrExchange, cacheExchange, fetchExchange, createClient } from '@urql/next';
+// import { Client } from '@urql/core';
 
 
 let ssrStatic=null;

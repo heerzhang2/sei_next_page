@@ -3410,7 +3410,7 @@
     is-mobile "^4.0.0"
     preact "^10.5.13"
 
-"@urql/core@^5.0.0":
+"@urql/core@^5.0.0", "@urql/core@^5.1.0":
   version "5.1.0"
   resolved "https://registry.npmjs.org/@urql/core/-/core-5.1.0.tgz#7f4b81f1aba1ca34ae6354763abeb87ff9af84ff"
   integrity sha512-yC3sw8yqjbX45GbXxfiBY8GLYCiyW/hLBbQF9l3TJrv4ro00Y0ChkKaD9I2KntRxAVm9IYBqh0awX8fwWAe/Yw==
@@ -3425,6 +3425,20 @@
   dependencies:
     "@urql/core" "^5.0.0"
     wonka "^6.3.2"
+
+"@urql/exchange-graphcache@^7.2.2":
+  version "7.2.2"
+  resolved "https://registry.npmjs.org/@urql/exchange-graphcache/-/exchange-graphcache-7.2.2.tgz#7b35540b9b36aa80481e3af810b5d051acebd8f0"
+  integrity sha512-hSLbPkLTYKYb9zTB+fSZhFxe+zMOaXuIcSsBiaa+bxT8d5Cxt1ed/oAJfUV9vY27SJ+b0UYq6NXWHBhYOjUWNg==
+  dependencies:
+    "@0no-co/graphql.web" "^1.0.5"
+    "@urql/core" "^5.1.0"
+    wonka "^6.3.2"
+
+"@urql/introspection@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.npmjs.org/@urql/introspection/-/introspection-1.2.0.tgz#d52ed8a65937f43e8731b4db495d1b6564b945d0"
+  integrity sha512-Mrc7YM/G4yV7NkmmHBFkRKANj8fnZIVTth23/Poo1ASErwjG3j7LERbE/wqOmzTHIkbqOw4yhe8/kimtXFMU/Q==
 
 "@urql/next@^1.1.3":
   version "1.1.4"
@@ -5174,10 +5188,10 @@ custom-error-instance@2.1.1:
   resolved "https://registry.npmjs.org/custom-error-instance/-/custom-error-instance-2.1.1.tgz#3cf6391487a6629a6247eb0ca0ce00081b7e361a"
   integrity sha512-p6JFxJc3M4OTD2li2qaHkDCw9SfMw82Ldr6OC9Je1aXiGfhx2W8p3GaoeaGrPJTUN9NirTM/KTxHWMUdR1rsUg==
 
-customize-easy-ui-component@5.5.0:
-  version "5.5.0"
-  resolved "https://registry.npmjs.org/customize-easy-ui-component/-/customize-easy-ui-component-5.5.0.tgz#ce49305460e6a85f824d929d924b5a1da27ee3b7"
-  integrity sha512-rHLQnYV7Bknjp/fUPirg6nswQ2GPAAI5BTpCsljOFCj5okkIdBGLA1eSH00zLrcBByN+pI8Ya5p+uXv+NrVpBQ==
+customize-easy-ui-component@5.5.1:
+  version "5.5.1"
+  resolved "https://registry.npmjs.org/customize-easy-ui-component/-/customize-easy-ui-component-5.5.1.tgz#c3f61916654fab4df2e70b7c678a288c9e0b60cd"
+  integrity sha512-RNYyLvh3/CE8B0EJdtHjl4VAZ95BpvC3nhmiKIjtP5ALfAZT4DnBRFvnZOCJ/XRXgGZtDSIzHDL2LPVViaifhQ==
   dependencies:
     "@emotion/react" "^11.14.0"
     "@floating-ui/react" "^0.27.3"
