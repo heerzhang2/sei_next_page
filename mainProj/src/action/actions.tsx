@@ -1,12 +1,10 @@
 "use client"
 // 'use server';
 
-import {graphql} from "relay-runtime";
 import {cache} from "react";
-import {loadQuery,} from "react-relay/hooks";
+import { gql, useMutation } from 'urql';
 
-
-export const AppQuery = graphql`
+export const AppQuery = gql`
     query actionsgetReportQuery($id: ID! ) {
         getReport(id: $id) {
             id

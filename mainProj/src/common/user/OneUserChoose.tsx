@@ -16,12 +16,10 @@ import {
 } from "customize-easy-ui-component";
 // import {Popover, PopoverClose, PopoverContent, PopoverDescription, PopoverRefer, PopoverHeading} from "@/comp/Popover";
 import {Dispatch, SetStateAction, useContext} from "react";
-import {usePreloadedQuery, useQueryLoader} from "react-relay/hooks";
 import {OneUserChooseQuery$data} from "./__generated__/OneUserChooseQuery.graphql";
 import {css} from "@emotion/react";
 import UserContext from "../../routing/UserContext";
-import { graphql } from "relay-runtime";
-const OneUserChooseQuery = require('./__generated__/OneUserChooseQuery.graphql');
+import { gql, useMutation } from 'urql';
 
 
 interface OneUserChooseProps {
@@ -111,7 +109,7 @@ interface OneUserChooseInnerProps {
  * 对照的类似代码 ...PipingUnitListInner 似乎需要额外处理的：
  * 【结论】没办法独立定义fragment，必须用 useFragment(graphql` 这样定义。只能普遍都用的 props.xxx 传递reference 嵌套组件的形式。
  * */
-const fragment = graphql`
+const fragment = gql`
     fragment OneUserChoose_User on User {
         id,username,person{id,name}
     }
@@ -130,7 +128,7 @@ function OneUserChooseInner({ queryReference, onSelect, oobj }:OneUserChooseInne
 {
     //从对象关联进行延申：获取列表。首先需要一个初始出发点Node()?国家级别【1】=China;真正0号查询:findAllCountry():[Country];
     const data =usePreloadedQuery<typeof OneUserChooseQuery>(
-        graphql`
+        gql`
             query OneUserChooseQuery($id: ID) {
                 node(id: $id) {
                     ... on Unit {

@@ -17,7 +17,7 @@ const LOGIN_MUTATION = gql`
 * */
 export async function performLoginMutation(variables: { username: string; password: string }): Promise<any> {
     return new Promise(async (resolve, reject) => {
-        const result = await urqlClient.mutation(LOGIN_MUTATION, {...variables});
+        const result = await urqlClient().mutation(LOGIN_MUTATION, {...variables});
         console.log("LOGIN_MUTATION返回=", result, variables);
         if (!result) {
             reject(result);

@@ -16,13 +16,11 @@ import {
 } from "customize-easy-ui-component";
 // import {DialogClose, DialogContent, DialogDescription, DialogHeading} from "@/comp/Dialog";
 import {Dispatch, SetStateAction, useContext} from "react";
-import {usePreloadedQuery, useQueryLoader} from "react-relay/hooks";
 import {OfficeChooseQuery$data} from "./__generated__/OfficeChooseQuery.graphql";
 import {css} from "@emotion/react";
 import UserContext from "../../routing/UserContext";
-import { graphql } from "relay-runtime";
 const OfficeChooseQuery = require('./__generated__/OfficeChooseQuery.graphql');
-
+import { gql, useMutation } from 'urql';
 
 interface OfficeChooseProps {
     //页面显示啥：当前id所指向的挂接对象模型的给用户看的关键名:标题= User 展示的是中文称呼 姓名; 不是那个username关键字。
@@ -106,18 +104,6 @@ interface OfficeChooseInnerProps {
     oobj?: any;      //上一次选择 或 默认待选对象
 }
 
-/**报错，必须单独定义，不能放在一个graphql``;里面定义！
- * 虽然可以提取服务端数据，科室前端没法正常显示啊？ 底层接口数据提取看似正常，就是展示层Relay给页面这块却无法打印出,Object打印都是代理?:
- * __fragments: {OfficeChoose_User: {…}}  __id: "3hPum060QP6JWAlSxgD881VzZXI"
- * 对照的类似代码 ...PipingUnitListInner 似乎需要额外处理的：
- * 【结论】没办法独立定义fragment，必须用 useFragment(graphql` 这样定义。只能普遍都用的 props.xxx 传递reference 嵌套组件的形式。
- * */
-const fragment作废的 = graphql`
-    fragment OfficeChoose_User on User {
-        id,username,person{id,name}
-    }
-`;
-
 /**新申请地址：楼盘若想选择的话，必须选定街道乡镇级别行政区划才可以的。楼盘只能挑选，新添加楼盘数据维护后台独立做。
  * 需要做提前Preload()模式的话，只能再做一次嵌套的组件类似 XxxInner({ queryReference}) 这样子的多一层组件包裹下沉。这丫queryReference才会预备数据，避免render时为空的。
  * 片段fragment命名规则，只能on单一个类型；
@@ -131,7 +117,7 @@ function OfficeChooseInner({ queryReference, onSelect, oobj }:OfficeChooseInnerP
 {
     //从对象关联进行延申：获取列表。首先需要一个初始出发点Node()?国家级别【1】=China;真正0号查询:findAllCountry():[Country];
     const data =usePreloadedQuery<typeof OfficeChooseQuery>(
-        graphql`
+        gql`
             query OfficeChooseQuery($id: ID) {
                 node(id: $id) {
                     ... on Unit {

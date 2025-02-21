@@ -1,10 +1,8 @@
-import { useMutation } from "react-relay";
 import {useCallback, useState} from "react";
-import { RecordSourceSelectorProxy, } from "relay-runtime";
 import {useToast} from "customize-easy-ui-component";
-import { graphql } from "relay-runtime";
+import { gql, useMutation } from 'urql';
 
-const mutation = graphql`
+const mutation = gql`
   mutation useDispatchToOfficeMutation($task: ID!,$office: String!) {
     dispatchToOffice(task: $task, office:$office){
         id dep{id name} bsType date

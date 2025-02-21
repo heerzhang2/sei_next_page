@@ -13,12 +13,10 @@ import {
 } from "customize-easy-ui-component";
 import UserContext from "../../routing/UserContext";
 import {css} from "@emotion/react";
-import {PreloadedQuery, usePreloadedQuery, useQueryLoader} from "react-relay/hooks";
 import {OfficeChooseQuery$data} from "./__generated__/OfficeChooseQuery.graphql";
+import { gql, useMutation } from 'urql';
 
-import { graphql } from "relay-runtime";
-
-const DepOfficeQuery = graphql`
+const DepOfficeQuery = gql`
     query useUserDepOfficeQuery($id: ID) {
         node(id: $id) {
             ... on Unit {

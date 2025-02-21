@@ -1,18 +1,15 @@
 /** @jsxImportSource @emotion/react */
 "use client"
-import { useMutation } from "react-relay";
 import {useCallback, useContext, useState} from "react";
-// import { RecordSourceSelectorProxy, } from "relay-runtime";
 import {AlertContent,Button, useToast} from "customize-easy-ui-component";
 import * as React from "react";
 import RoutingContext from "../routing/RoutingContext";
-import { graphql } from "relay-runtime";
-
+import { gql, useMutation } from 'urql';
 //原本.ts 加了toast组件丰富内容，改成tsx :报错
 
 /**删除minIO文件： 真的删掉 ’成功‘ 若不存在该文件返回： '不存在'；
 * */
-const mutation = graphql`
+const mutation = gql`
   mutation useOssDeleteFileMutation($file: String!,$key: String,$value: String) {
     ossDeleteFile(file: $file,key: $key,value:$value)
   }

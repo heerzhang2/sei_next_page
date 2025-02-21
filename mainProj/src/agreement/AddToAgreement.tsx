@@ -24,7 +24,7 @@ import {
 
 //import { Link as RouterLink,  } from "wouter";
 import useBuildAgreementMutation from "./hook/useBuildAgreementMutation";
-import NewDevice from "../device/NewDevice";
+// import NewDevice from "../device/NewDevice";
 
 import {Link as RouterLink} from "../routing/Link";
 import {useContext} from "react";
@@ -33,10 +33,10 @@ import {ContainerDesignClsTil, getFeeTitleFe} from "../dict/feeTitleFe";
 
 import {ChooseUnit} from "../unit/ChooseUnit";
 import {getFormatDate} from "../common/tool";
-import {ChooseDevice} from "../device/ChooseDevice";
-import { 业务类型s, } from "../device/edit/CommnBase";
+// import {ChooseDevice} from "../device/ChooseDevice";
+// import { 业务类型s, } from "../device/edit/CommnBase";
 import RoutingContext from "../routing/RoutingContext";
-import {ChooseEqps} from "../comp/ChooseEqps";
+// import {ChooseEqps} from "../comp/ChooseEqps";
 //import {Spinner} from "../comp/Spinner";
 //import { awaitExpression } from "@babel/types";
 

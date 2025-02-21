@@ -24,7 +24,6 @@ import {
 
 //import { Link as RouterLink,  } from "wouter";
 import useBuildTaskMutation from "./hook/agreementAddTaskMutation";
-import NewDevice from "../device/NewDevice";
 
 import {Link as RouterLink} from "../routing/Link";
 import {useContext} from "react";

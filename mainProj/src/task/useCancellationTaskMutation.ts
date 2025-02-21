@@ -1,10 +1,8 @@
 import {useCallback, useState} from "react";
-import { useMutation } from "react-relay";
-import {RecordSourceSelectorProxy,} from "relay-runtime";
 import {useToast} from "customize-easy-ui-component";
-import { graphql } from "relay-runtime";
+import { gql, useMutation } from 'urql';
 
-const mutation = graphql`
+const mutation = gql`
   mutation useCancellationTaskMutation(
     $task: ID!
     $reason: String
@@ -30,11 +28,6 @@ export default function useCancellationTaskMutation() {
         let disposable= commit({
           variables: {
             task, reason
-          },
-          updater: (store: RecordSourceSelectorProxy) => {
-            //正常应答的第一步就到这里
-            //接口是简单类型的返回值，不可以调用getRootField，报错
-            //const payload = store.getRootField("cancellationTask");
           },
           onCompleted: (response) => {
             //注意doing在运行到这个位置时刻，就已经是false了，代表后端已经应答doing=false。异步执行，所以结论result不一定马上有的。

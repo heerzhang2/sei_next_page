@@ -84,3 +84,17 @@ Relay环境是否每个客户连接单独建立
 数据隔离：虽然Relay环境是共享的，但每个请求的数据是隔离的。这是通过Relay的存储层和查询缓存机制来实现的。每个请求都会有自己的数据视图，不会相互干扰。
 并发处理：Next.js的服务器能够处理并发请求，每个请求都会在其自己的上下文中执行。这意味着即使多个请求同时发生，它们也不会共享相同的查询结果或变更状态（除非这是通过某种形式的缓存或状态管理故意实现的）。
 
+    const data = useLazyLoadQuery<footbarQuery>(
+        graphql`
+      query footbarQuery {
+        authUser{
+                    id,username, person{id,name}
+                    dep{id name} office{id name}
+                    unit{id name dvs{id name} }
+                    ispUnits{id,unit{id,name}}
+                 }
+        ...SlowContent
+      }
+    `,
+        {}
+    );

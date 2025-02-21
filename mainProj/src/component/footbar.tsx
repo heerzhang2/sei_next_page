@@ -15,7 +15,6 @@ import {
     Toolbar,
     useTheme, MainMenuBar, IconTruck, DdMenu, DdMenuItem,
 } from "customize-easy-ui-component";
-import {graphql, useLazyLoadQuery} from "react-relay";
 import {footbarQuery} from "./__generated__/footbarQuery.graphql";
 // import {useRouter} from "next/navigation";
 import {Suspense, useContext, } from "react";
@@ -37,46 +36,11 @@ export default function FootBar() {
         });
         //useRouter().push(data.url)
     }
-    const data = useLazyLoadQuery<footbarQuery>(
-        graphql`
-      query footbarQuery {
-        authUser{
-                    id,username, person{id,name}
-                    dep{id name} office{id name} 
-                    unit{id name dvs{id name} }
-                    ispUnits{id,unit{id,name}}
-                 }
-        ...SlowContent 
-      }
-    `,
-        {}
-    );
+
     // console.log("graphql->authUser", data);
-    const {authUser} = data;
+    // const {authUser} = data;
     // const router = useRouter();
     const {user, setUser} = useContext(UserContext);
-    //必须 const 啊;  除非运行报错，否则后端非登录用户也会返回"{}"
-    //后端鉴权接口函数auth() 时刻检查权限。 auth()应答是json转string,而不是全部的User账户属性字段;
-    //const authjs=JSON.parse(auth);    //当前看到的用户
-
-    //console.log("AuthComp 目前render之后.mountedRef=", mountedRef.current,"user=",user);
-    //这个useEffect的执行时间时机太奇怪了！！
-
-    // useEffect(() => {
-    //     if(authUser) {
-    //         if(!user)
-    //             setUser(authUser);
-    //         else {
-    //             //简单判定
-    //             if(JSON.stringify(user) !== JSON.stringify(authUser))
-    //                 setUser(authUser);
-    //         }
-    //     }
-    //     else
-    //     {
-    //         setUser(null);
-    //     }
-    // });
 
     return (
         <>
