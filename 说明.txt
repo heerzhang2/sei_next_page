@@ -1,4 +1,5 @@
 按 端口号 找 node程序 netstat -ano | findstr :3000
+CMD \sei_next_page\mainProj>  yarn sei_code_tools --help
 
 
 ort { fetchQuery, commitMutation, graphql } from 'relay-runtime';

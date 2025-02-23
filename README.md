@@ -74,7 +74,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 25. 并行+交错模态路由app/@modal/(.)photos/[id]/page.tsx；没太多好处。只有{id}slug是相等的，内容都不一样，导航前进后退可以恢复对话框。
     app/@modal并行路由：用于组合dashboard页面。
 26. 为何舍弃Relay的：Relay只能采用useLazyLoadQuery，只能use client端用; useFragment只能拆成上下两个组件来组装的接收数据。Relay遇见SSR出现水和报错。
-27. 
+27. 优先用 Tailwind CSS 或 CSS Modules;若需要运行时样式，Emotion 是最推荐的 - 避免用styled-components。
+28. 
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")

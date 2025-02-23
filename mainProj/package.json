@@ -13,8 +13,10 @@
     "start生产版Node.js server": "next start",
     "start-server": "next start -p 3002",
     "dev2": "next dev",
+    "ddee": "esparse -ddd fff",
     "lint": "next lint",
-    "graphql-schema参考用_本机": "get-graphql-schema  http://localhost:8673/graphql > src/relay/schema--.graphql"
+    "schema供参考用_本机": "get-graphql-schema  http://localhost:8673/graphql > src/common/schema.graphql",
+    "getSchemaforUrql": "sei_code_tools urqlSchema -u http://localhost:8673/graphql src/common/urql-schema.json"
   },
   "resolutions": {
     "react": "19.0.0",
@@ -54,6 +56,9 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "commander": "^13.1.0",
+    "sei_code_tools": "^0.2.2",
+    "feather-icons": "^4.29.2",
     "@types/node": "^22.13.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
