@@ -19,22 +19,22 @@ export default async function Home() {
                   <Link href="/lazy">Visit (potentially) cached page ➡️</Link>
               </div>
               <div className="mt-10">
-                  <Link href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA">kankan当前一1份报告试图的来</Link>
+                  <Link href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA">查阅当前一1份报告试图的来</Link>
               </div>
               <div className="mt-10">
-                  <Link href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA">kankan当前一2份报告试图的来</Link>
+                  <Link href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA">查阅当前一2份报告试图的来</Link>
               </div>
               <div className="mt-10">
                   <Link href="/rep/SLIDING_JJ">⬅ u r q l home</Link>
               </div>
               <div className="mt-10">
-                  <Link href="/login">⬅️ Go 的等让路 home; 下面的是可编编制的报告入口</Link>
+                  <Link href="/test3">⬅️ Go 的等让路 test3入口</Link>
               </div>
               <div className="mt-10">
-                  <Link href="/report/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA">k当前一1份报告试图的来</Link>
+                  <Link href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA?make=1">编制态当前一1份报告试图的来</Link>
               </div>
               <div className="mt-10">
-                  <Link href="/report/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA">k当前一2份报告试图的来</Link>
+                  <Link href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA?make=1">编制态当前一2份报告试图的来</Link>
               </div>
           </main>
 

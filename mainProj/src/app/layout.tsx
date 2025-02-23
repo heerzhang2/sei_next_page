@@ -11,12 +11,13 @@ import {connection} from "next/server";
 import { Provider } from "jotai";
 import { CacheProvider } from '@emotion/react'
 import createCache from '@emotion/cache'
+
 // import FootBar from "@/component/footbar";
 //不可以用import { Provider } from 'urql';报错createContext only works in Client Components. Add the "use client" directive at the top of the file to use it.
 
-export const metadata: Metadata = {
-  title: "Relay Streaming SSR ✨",
-};
+// export const metadata: Metadata = {
+//   title: "Relay Streaming SSR ✨",
+// };
 
 const FootBar = lazy(() => import("@/component/footbar"));
 
@@ -25,10 +26,10 @@ const FootBar = lazy(() => import("@/component/footbar"));
 next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmentProvider正常是只能用于客户端的(水和/SSR除外)。
 * */
 export default async function RootLayout({children}: { children: ReactNode }) {
-    const cache = createCache({ key: 'css' })
+    // const cache = createCache({ key: 'css' })
     // await connection();
     return (
-        <CacheProvider value={cache}>
+        // <CacheProvider value={cache}>
             <html>
             <body>
             <SessionProvider>
@@ -54,6 +55,6 @@ export default async function RootLayout({children}: { children: ReactNode }) {
             </SessionProvider>
             </body>
             </html>
-        </CacheProvider>
+        // </CacheProvider>
     );
 }

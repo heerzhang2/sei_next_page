@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 // import "./globals.css";
 // import { ServerRelayProvider } from "../relay/ServerRelayProvider";
-import {lazy, ReactNode, Suspense} from "react";
+import {lazy, ReactNode, } from "react";
 import { useMemo } from 'react';
 //UrqlProvider报错createContext only works in Client Components.最后必须加'use client';
 import {
@@ -13,6 +13,9 @@ import AppStateProvider from "@/action/AppStateProvider";
 import SwrConfigClient from "@/action/SwrConfigClient";
 import {MainContent} from "@/app/(auth)/user/MainContent";
 import {ToastContainer} from "react-toastify";
+import {auth} from "@/app/auth";
+import {redirect, } from "next/navigation";
+import ReportMakeable from "@/common/ReportMakeable";
 
 
 
@@ -24,8 +27,13 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 * */
 export default async function RootLayout({children}: { children: ReactNode }) {
     // await connection();
+
+    // const session =await auth();
+    // if(!session?.user)   redirect('/login')
+
     return (
         <div>
+            <ReportMakeable />
             滑行车类大型游乐设施监督检验的情---况如下》》
             <GlobalState>
                 <AppStateProvider>
