@@ -6,10 +6,24 @@ import { offlineExchange } from '@urql/exchange-graphcache';
 import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
 import { authExchange } from '@urql/exchange-auth';
 import { auth } from '@/app/auth';
+// import { cookies } from 'next/headers'
+
 import schema from './urql-schema.json';
 
 
 let ssrStatic=null;
+
+// let session=null;
+// if (typeof window !== 'undefined') {
+//   (async () => {
+//     // const cookieStore = await cookies();
+//     // 异步操作，如等待一个 Promise 解析
+//     session = await auth();
+//   })();
+// } else {
+//   //服务端啊
+// }
+
 
 /*全局使用的：SSR服务端可用的。不需要"use client"客户端的use context就能使用的模式的=不需要在UrqlProvider组件包裹之下的就能使用。
 没有考虑到hydrating的。
@@ -18,14 +32,14 @@ In a server component we registerUrql  import from @urql/next/rsc
 const makeClient = () => {
   //must be prefixed with NEXT_PUBLIC_.
   const epoint = process.env.NEXT_PUBLIC_BACK_END
-          // url: 'https://graphql-pokeapi.graphcdn.app/',
-          // exchanges: [cacheExchange, ssr, fetchExchange],
+  // url: 'https://graphql-pokeapi.graphcdn.app/',
+  // exchanges: [cacheExchange, ssr, fetchExchange],
 
   //【非官方做法吗】
   const ssr = ssrExchange({
     isClient: typeof window !== 'undefined',
   });
-  ssrStatic= ssr;
+  ssrStatic = ssr;
 
   //离线保存支持的：只在客户端代码中使用 indexedDB。
   let storage;
@@ -37,9 +51,9 @@ const makeClient = () => {
   } else {
     //[避免报错] 在SSR服务器端， 用 空存储或内存存储
     storage = {
-      writeData:(data)=> Promise.resolve(),
+      writeData: (data) => Promise.resolve(),
       readData: () => Promise.resolve(null),
-      writeMetadata:(data)=> Promise.resolve(),
+      writeMetadata: (data) => Promise.resolve(),
       readMetadata: () => Promise.resolve(null),
     };
   }
@@ -48,68 +62,76 @@ const makeClient = () => {
   const cache = offlineExchange({
     schema,
     storage,
-    updates: {
-
-    },
-    optimistic: {
-
-    },
+    updates: {},
+    optimistic: {},
   });
 
-  const authExc=authExchange(async utils => {
-    const token = localStorage.getItem('token');
-    const refreshToken = localStorage.getItem('refreshToken');
-
-    return {
-      addAuthToOperation: function(operation) {
-        return auth().then(session => {
-          // 注意：这里假设 session 对象中有一个 token 属性，但你的原始代码使用了未定义的 token 变量
-          // 我假设你应该从 session 中获取 token
-          const token = session?.user?.token; // 假设 session 对象有一个 token 属性
-          return utils.appendHeaders(operation, {
-            Authorization: `Bearer ${token}`,
-          });
-        });
-      },
-      didAuthError(error, _operation) {
-        return error.graphQLErrors.some(e => e.extensions?.code === 'FORBIDDEN');
-      },
-      async refreshAuth() {
-        const result = await utils.mutate(REFRESH, { refreshToken });
-
-        if (result.data?.refreshLogin) {
-          // Update our local variables and write to our storage
-          token2 = result.data.refreshLogin.token;
-          refreshToken2 = result.data.refreshLogin.refreshToken;
-          localStorage.setItem('token', token2);
-          localStorage.setItem('refreshToken', refreshToken2);
-        } else {
-          // This is where auth has gone wrong and we need to clean up and redirect to a login page
-          localStorage.clear();
-          logout();
-        }
-      },
-    };
-  });
+  // const authExc=authExchange(async utils => {
+  //   const token = localStorage.getItem('token');
+  //   const refreshToken = localStorage.getItem('refreshToken');
+  //
+  //   return {
+  //     addAuthToOperation: function(operation) {
+  //       return auth().then(session => {
+  //         // 注意：这里假设 session 对象中有一个 token 属性，但你的原始代码使用了未定义的 token 变量
+  //         // 我假设你应该从 session 中获取 token
+  //         const token = session?.user?.token; // 假设 session 对象有一个 token 属性
+  //         return utils.appendHeaders(operation, {
+  //           Authorization: `Bearer ${token}`,
+  //         });
+  //       });
+  //     },
+  //     didAuthError(error, _operation) {
+  //       return error.graphQLErrors.some(e => e.extensions?.code === 'FORBIDDEN');
+  //     },
+  //     async refreshAuth() {
+  //       const result = await utils.mutate(REFRESH, { refreshToken });
+  //
+  //       if (result.data?.refreshLogin) {
+  //         // Update our local variables and write to our storage
+  //         token2 = result.data.refreshLogin.token;
+  //         refreshToken2 = result.data.refreshLogin.refreshToken;
+  //         localStorage.setItem('token', token2);
+  //         localStorage.setItem('refreshToken', refreshToken2);
+  //       } else {
+  //         // This is where auth has gone wrong and we need to clean up and redirect to a login page
+  //         localStorage.clear();
+  //         logout();
+  //       }
+  //     },
+  //   };
+  // });
 //authExc,
+
+
+
   return createClient({
     url: `${epoint}/graphql`,
-          // url: 'https://graphql-pokeapi.graphcdn.app/',
-    exchanges: [authExc,cache,  ssr,  fetchExchange],
+    // url: 'https://graphql-pokeapi.graphcdn.app/',
+    exchanges: [cache, ssr, fetchExchange],
     suspense: true,
+    fetchOptions: () => {
+      let accessToken='eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc0MDM4MzYxMSwiZXhwIjoxNzQwMzg5MDExfQ.-hDtd-fxbsAvPmxaJUG8n1X4cTJ1mfMYgD5dspROFeU5XDwti581OIPK5uC_38yXTjSI7wbwErYfikhbCw_9ZQ';
+
+          // let session=null;
+      // if (typeof window !== 'undefined') {
+      //   (async () => {
+      //     // const cookieStore = await cookies();
+      //     // 异步操作，如等待一个 Promise 解析
+      //     session = await auth();
+      //   })();
+      // } else {
+      //   //服务端啊 session?.user?.accessToken
+      // }
+
+      const token =(typeof window !== 'undefined')? accessToken : "gggreedfgd4444";
+      return {
+        headers: {authorization: token ? `Bearer ${token}` : ''},
+      };
+    },
   });
 };
 
-//const client = new Client({
-//   url: 'http://localhost:3000/graphql',
-//   exchanges: [cacheExchange, fetchExchange],
-//   fetchOptions: () => {
-//     const token = getToken();
-//     return {
-//       headers: { authorization: token ? `Bearer ${token}` : '' },
-//     };
-//   },
-// });
 
 
 // const { getClient } = registerUrql(makeClient);
