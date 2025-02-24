@@ -3,10 +3,10 @@
 import {redirect, } from "next/navigation";
 import {useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
-import { useSession, SessionProvider } from 'next-auth/react';
+import { useSession, } from 'next-auth/react';
 
 
-/*【服务端SSR】情形下的：
+/*上一级父组件依旧是服务端SSR的情形下：
 报告编制状态的，没登录的就必须要先登录，不能匿名浏览
 针对 URL?make=1 进入编辑前提的！
 * */

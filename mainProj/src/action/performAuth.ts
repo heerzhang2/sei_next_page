@@ -2,6 +2,9 @@
 
 import {gql} from "@urql/core";
 import {urqlClient} from "@/common/urql";
+//密码hash 防止在服务后台泄密
+import sha256 from 'hash.js/lib/hash/sha/256';
+// export var sha256 = require('hash.js/lib/hash/sha/256');
 
 
 const LOGIN_MUTATION = gql`
@@ -15,7 +18,7 @@ const LOGIN_MUTATION = gql`
 /*无需采用"@urql/exchange-auth"包的。utilities.appendHeaders(operation, { Authorization: `Bearer ${token}`, })
 运行在服务器端的：登录实际用服务端做代理的。 给服务端用的必须加async；  It is not allowed to define inline "use server" annotated Server Actions in Client Components.
 * */
-export async function performLoginMutation(variables: { username: string; password: string }): Promise<any> {
+export async function performAuth(variables: { username: string; password: string }): Promise<any> {
     return new Promise(async (resolve, reject) => {
         const result = await urqlClient().mutation(LOGIN_MUTATION, {...variables});
         console.log("LOGIN_MUTATION返回=", result, variables);
@@ -25,4 +28,20 @@ export async function performLoginMutation(variables: { username: string; passwo
             resolve(result.data?.authenticate);
         }
     });
+}
+
+
+/* Drizzle ORM 对接》CRDB;
+* */
+export async function userLoginPassed(username: string, password: string) {
+    let encodePass = sha256().update(password).digest('hex');
+    let result;
+    try {
+        //await db.select().from(users).where(eq(users.email, email));
+        result = await performAuth({username, password: encodePass});
+    } catch (error: any) {
+        console.log("getUser报错:", error);
+    }
+    console.log("getUser后续继续:已死等的result=", result);
+    return result;
 }

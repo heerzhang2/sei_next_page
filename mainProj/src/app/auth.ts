@@ -1,8 +1,8 @@
 import NextAuth, { CredentialsSignin } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Google from "next-auth/providers/google"
-import { userLoginPassed } from '@/app/db';
 import { authConfig } from '@/app/auth.config';
+import {userLoginPassed} from "@/action/performAuth";
 
 class InvalidLoginError extends CredentialsSignin {
 	code = 'Invalid identifier or password'
