@@ -4,6 +4,8 @@ import {Client, ssrExchange, cacheExchange, fetchExchange, createClient } from '
 //离线保存支持的：
 import { offlineExchange } from '@urql/exchange-graphcache';
 import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
+import { authExchange } from '@urql/exchange-auth';
+import { auth } from '@/app/auth';
 import schema from './urql-schema.json';
 
 
@@ -54,13 +56,60 @@ const makeClient = () => {
     },
   });
 
+  const authExc=authExchange(async utils => {
+    const token = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    return {
+      addAuthToOperation: function(operation) {
+        return auth().then(session => {
+          // 注意：这里假设 session 对象中有一个 token 属性，但你的原始代码使用了未定义的 token 变量
+          // 我假设你应该从 session 中获取 token
+          const token = session?.user?.token; // 假设 session 对象有一个 token 属性
+          return utils.appendHeaders(operation, {
+            Authorization: `Bearer ${token}`,
+          });
+        });
+      },
+      didAuthError(error, _operation) {
+        return error.graphQLErrors.some(e => e.extensions?.code === 'FORBIDDEN');
+      },
+      async refreshAuth() {
+        const result = await utils.mutate(REFRESH, { refreshToken });
+
+        if (result.data?.refreshLogin) {
+          // Update our local variables and write to our storage
+          token2 = result.data.refreshLogin.token;
+          refreshToken2 = result.data.refreshLogin.refreshToken;
+          localStorage.setItem('token', token2);
+          localStorage.setItem('refreshToken', refreshToken2);
+        } else {
+          // This is where auth has gone wrong and we need to clean up and redirect to a login page
+          localStorage.clear();
+          logout();
+        }
+      },
+    };
+  });
+//authExc,
   return createClient({
     url: `${epoint}/graphql`,
           // url: 'https://graphql-pokeapi.graphcdn.app/',
-    exchanges: [cache,  ssr, fetchExchange],
+    exchanges: [authExc,cache,  ssr,  fetchExchange],
     suspense: true,
   });
 };
+
+//const client = new Client({
+//   url: 'http://localhost:3000/graphql',
+//   exchanges: [cacheExchange, fetchExchange],
+//   fetchOptions: () => {
+//     const token = getToken();
+//     return {
+//       headers: { authorization: token ? `Bearer ${token}` : '' },
+//     };
+//   },
+// });
 
 
 // const { getClient } = registerUrql(makeClient);
