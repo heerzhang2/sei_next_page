@@ -1245,6 +1245,11 @@ type JsliceMang {
   fireor: UserBase
 }
 
+input LoginInput {
+  username: String!
+  password: String!
+}
+
 type LoginResp {
   accessToken: String!
   user: UserBase!
@@ -1331,6 +1336,7 @@ type Mutation {
   newUnitExternalSource(unit: UnitCommonInput!): Unit!
   newUser(username: String!, password: String!, mobile: String!, external: String, eName: String, ePassword: String): Boolean!
   authenticate(username: String!, password: String!): LoginResp
+  signin(input: LoginInput): LoginResp
   logout: Boolean!
 }
 

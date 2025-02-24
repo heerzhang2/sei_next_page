@@ -1,27 +1,28 @@
 /** @jsxImportSource @emotion/react */
-'use client';
-
+"use client"
+import {redirect, } from "next/navigation";
 import {useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
-// import {auth} from "@/app/auth";
-import { useSession } from 'next-auth/react';
-// import { getSession } from 'next-auth/react';
-import {redirect, } from "next/navigation";
+import { useSession, SessionProvider } from 'next-auth/react';
 
-/*报告编制状态的，没登录的就必须要先登录，不能匿名浏览
+
+/*【服务端SSR】情形下的：
+报告编制状态的，没登录的就必须要先登录，不能匿名浏览
 针对 URL?make=1 进入编辑前提的！
 * */
 const ReportMakeable = () => {
-    const {data: session}=useSession();
-    // const session = await auth();
+    const session = useSession();
     const searchParams = useSearchParams()
     const [make, setMake] = useState(false)
     useEffect(() => {
         const make = searchParams.get('make')
         setMake(!!make)
     }, [searchParams])
-    if(make && !session?.user)   redirect('/login')
+    //文档错了 SessionProvider必须在父辈组件内； #类型不同了session?.status  session?.data?.user
+    if(session?.status!=="loading") {
+        if(make && !session?.data?.user)   redirect('/login')
+    }
     return null;
-};
+}
 
 export default ReportMakeable;

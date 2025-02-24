@@ -1,11 +1,11 @@
 import { ReactNode } from "react";
-import UserLogined from "@/common/UserLogined";
+import UserAuthed from "@/common/UserAuthed";
 
 
 export default async function Layout({children}: { children: ReactNode }) {
     return (
         <>
-          <UserLogined />
+          <UserAuthed />
           {children}
         </>
     );

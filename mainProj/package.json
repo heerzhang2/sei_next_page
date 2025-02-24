@@ -56,9 +56,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "commander": "^13.1.0",
     "sei_code_tools": "^0.2.2",
-    "feather-icons": "^4.29.2",
     "@types/node": "^22.13.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",

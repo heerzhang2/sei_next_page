@@ -1,22 +1,14 @@
+
 import type { Metadata } from "next";
 // import "./globals.css";
 // import { ServerRelayProvider } from "../relay/ServerRelayProvider";
-import {lazy, ReactNode, } from "react";
-import { useMemo } from 'react';
+import {ReactNode, } from "react";
 //UrqlProvider报错createContext only works in Client Components.最后必须加'use client';
-import {
-    UrqlProvider,
-} from '@urql/next';
-import {getSsr, urqlClient} from "@/common/urql";
 import GlobalState from "@/action/GlobalState";
 import AppStateProvider from "@/action/AppStateProvider";
 import SwrConfigClient from "@/action/SwrConfigClient";
-import {MainContent} from "@/app/(auth)/user/MainContent";
 import {ToastContainer} from "react-toastify";
-import {auth} from "@/app/auth";
-import {redirect, } from "next/navigation";
 import ReportMakeable from "@/common/ReportMakeable";
-
 
 
 // const FootBar = lazy(() => import("@/component/footbar"));
@@ -35,15 +27,16 @@ export default async function RootLayout({children}: { children: ReactNode }) {
         <div>
             <ReportMakeable />
             滑行车类大型游乐设施监督检验的情---况如下》》
-            <GlobalState>
-                <AppStateProvider>
-                    <SwrConfigClient>
+            {/*<GlobalState>*/}
+            {/*    <AppStateProvider>*/}
+            {/*        <SwrConfigClient>*/}
 
                         {children}
 
-                    </SwrConfigClient>
-                </AppStateProvider>
-            </GlobalState>
+            {/*        </SwrConfigClient>*/}
+            {/*    </AppStateProvider>*/}
+            {/*</GlobalState>*/}
+
             <ToastContainer/>
         </div>
     );
