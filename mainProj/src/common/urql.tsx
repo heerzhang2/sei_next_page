@@ -1,6 +1,10 @@
 import { registerUrql } from '@urql/next/rsc';
 import {Client, ssrExchange, cacheExchange, fetchExchange, createClient } from '@urql/next';
 // import { Client } from '@urql/core';
+//离线保存支持的：
+import { offlineExchange } from '@urql/exchange-graphcache';
+import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
+import schema from './urql-schema.json';
 
 
 let ssrStatic=null;
@@ -21,11 +25,39 @@ const makeClient = () => {
   });
   ssrStatic= ssr;
 
+  //离线保存支持的：只在客户端代码中使用 indexedDB。
+  let storage;
+  if (typeof window !== 'undefined') {
+    storage = makeDefaultStorage({
+      idbName: 'graphcache-v3', // The name of the IndexedDB database
+      maxAge: 7, // The maximum age of the persisted data in days
+    });
+  } else {
+    //[避免报错] 在SSR服务器端， 用 空存储或内存存储
+    storage = {
+      writeData:(data)=> Promise.resolve(),
+      readData: () => Promise.resolve(null),
+      writeMetadata:(data)=> Promise.resolve(),
+      readMetadata: () => Promise.resolve(null),
+    };
+  }
+  //clear: () => Promise.resolve(),
+
+  const cache = offlineExchange({
+    schema,
+    storage,
+    updates: {
+
+    },
+    optimistic: {
+
+    },
+  });
+
   return createClient({
     url: `${epoint}/graphql`,
           // url: 'https://graphql-pokeapi.graphcdn.app/',
-    exchanges: [cacheExchange, ssr, fetchExchange],
-
+    exchanges: [cache,  ssr, fetchExchange],
     suspense: true,
   });
 };

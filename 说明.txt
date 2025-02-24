@@ -108,3 +108,4 @@ const ClientOnlyComponent = dynamic(() => import('./YourComponent'), {
 export default function Page() {
   return <ClientOnlyComponent />
 }
+
