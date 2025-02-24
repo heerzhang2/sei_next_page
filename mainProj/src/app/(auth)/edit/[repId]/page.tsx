@@ -138,11 +138,9 @@ export default function Page({
 
     return (
         <article>
-            <UrqlProvider client={urqlClient()} ssr={getSsr()}>
                 <Suspense>
                     <CommonReportEditor repId={repId as string} />
                 </Suspense>
-            </UrqlProvider>
         </article>
     )
 }

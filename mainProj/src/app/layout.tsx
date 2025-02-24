@@ -6,9 +6,12 @@ import {ReactNode, } from "react";
 // import AppStateProvider from "@/action/AppStateProvider";
 // import { ToastContainer, toast } from 'react-toastify';
 import { SessionProvider } from 'next-auth/react';
+import {auth} from "@/app/auth";
 // import GlobalState from "@/action/GlobalState";
 // import {connection} from "next/server";
 import { Provider } from "jotai";
+import {GraphQLProvider} from "@/auth/graphql-component";
+import PrintUsed from "@/common/PrintUsed";
 // import { CacheProvider } from '@emotion/react'
 // import createCache from '@emotion/cache'
 
@@ -28,17 +31,18 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 export default async function RootLayout({children}: { children: ReactNode }) {
     // const cache = createCache({ key: 'css' })
     // await connection();
+    const session = await auth();
     return (
         // <CacheProvider value={cache}>
             <html>
             <body>
-            <SessionProvider>
+            <PrintUsed/>
 
-
+            <SessionProvider  session={session}>
                 <Provider>
-
-                    {children}
-
+                    <GraphQLProvider>
+                        {children}
+                    </GraphQLProvider>
                 </Provider>
 
                 {/*<GlobalState>*/}
@@ -54,8 +58,6 @@ export default async function RootLayout({children}: { children: ReactNode }) {
                 {/*    </AppStateProvider>*/}
                 {/*</GlobalState>*/}
                 {/*<ToastContainer/>*/}
-
-
 
             </SessionProvider>
             </body>
