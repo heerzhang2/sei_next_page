@@ -39,7 +39,10 @@ export default async function Home() {
                       href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA?make=1">编制态当前一2份报告试图的来</Link>
               </div>
               <div className="mt-10">
-                  <Link href="/edit/KQcbgDF9RO21DsI92H3tTVJlcG9ydA?make=1">⬅️ 修改 验证离线 入口</Link>
+                  <Link href="/edit/KQcbgDF9RO21DsI92H3tTVJlcG9ydA?make=1">⬅️ 修改 验证离线1 入口</Link>
+              </div>
+              <div className="mt-10">
+                  <Link href="/edit/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA?make=1">⬅️ 修改 验证离线2 入口</Link>
               </div>
               <div className="mt-10">
                   <Link href="/print">打印试验的 入口</Link>
