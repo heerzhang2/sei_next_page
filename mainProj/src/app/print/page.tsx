@@ -11,9 +11,9 @@ import {Global} from "@emotion/react";
 * */
 export default function Home() {
   return (
-      <div>
+      <div className={"duuw UsualChapter unhhuld"}>
 
-          <div  css={{minHeight: '100vh'}}>
+          <div  css={{minHeight: '30vh'}}>
               df<br/>
              zhong jia正宗midd
           </div>

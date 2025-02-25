@@ -11,10 +11,6 @@ const PrintUsed = () => {
         <Global
             styles={{
                 html: {
-                    "@page": {
-                        // size: 'A4 portrait',
-                        // size: 'A4 landscape',
-                    },
                     "#root #floormenu": {
                         // display: 'none',
                         opacity: '0.3' //: 'unset',

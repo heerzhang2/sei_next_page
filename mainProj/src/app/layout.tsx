@@ -28,6 +28,7 @@ import PrintUsed from "@/common/PrintUsed";
 水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
 next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmentProvider正常是只能用于客户端的(水和/SSR除外)。
 因为XXProvider：createContext({})只能用use client独立封装组件的{context只能被客户端使用的}。然后这里再用{children}接收服务端组件树。
+为什么打印可能在最前面或尾巴多出空白页？强制刷新就没了。
 * */
 export default async function RootLayout({children}: { children: ReactNode }) {
     // const cache = createCache({ key: 'css' })
@@ -37,34 +38,37 @@ export default async function RootLayout({children}: { children: ReactNode }) {
         // <CacheProvider value={cache}>
         <html>
         <head>
-         <style>
-         {`
-        body {
-            padding: 0;
-            margin: 0;
-        }
-        @page portraitPg {
-            size: a4 portrait;
-            @top-middle {
-                content: "Table of ntentsff3";
+            <style>
+            {`
+            body {
+                padding: 0;
+                margin: 0;
             }
-        }
-        @page landscapePg {
-            size: a4 landscape;
-            @top-middle {
-                content: "Chapte r5sdfg";
+            @page portraitPg {
+                size: a4 portrait;
+                @top-middle {
+                    content: "Table of ntentsff3";
+                }
             }
-        }        
-        @media print {
-            .WideChapter {
-                page: landscapePg;
+            @page landscapePg {
+                size: a4 landscape;
+                @top-middle {
+                    content: "Chapte r5sdfg";
+                }
+            }        
+            @media print {
+                .WideChapter {
+                    page: landscapePg;
+                }
+                .UsualChapter {
+                    page: portraitPg;
+                }
+                nextjs-portal,next-route-announcer {
+                    display: none;
+                }
             }
-            .UsualChapter {
-                page: portraitPg;
-            }
-        }
-        `}
-         </style>
+            `}
+            </style>
         </head>
         <body>
         <PrintUsed/>

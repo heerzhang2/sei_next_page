@@ -12,11 +12,13 @@ export default function Home() {
   return (
       <div>
 
-          <div className={"WideChapter"} css={{minHeight: '100vh'}}>
+          <div className={"Wqww   WideChapter dRTffld"} css={{minHeight: '30vh'}}>
               3333中的<br/>
               横版本
           </div>
-          《<br/>》版33333内容！
+         <div className={"Wjj  WideChapter dRTlll"}>
+             《<br/>》版33333内容！
+         </div>
 
       </div>
   );

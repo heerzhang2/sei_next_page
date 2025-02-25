@@ -10,13 +10,12 @@ import {Global} from "@emotion/react";
 * */
 export default function Home() {
   return (
-      <div>
+      <div className={"dASqww UsualChapter  Alld"}>
 
-
-          <div  css={{minHeight: '100vh'}}>
+          <section className={"dASqww UsualChapter  Alld"} css={{minHeight: '40vh'}}>
               111<br/>
               正常A4   竖着的但因
-          </div>
+          </section>
           《<br/>》11版本内容！
 
       </div>
