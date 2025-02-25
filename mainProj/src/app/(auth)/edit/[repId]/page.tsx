@@ -92,12 +92,17 @@ function CommonReportEditor({
     // const router = useRouter();
     // console.log("graphql->authUser", data);
     const {getReport: report} = result?.data;
+
+    const  rep_dat =report&&JSON.parse(report?.data);
+
     const onSubmitLink = event => {
         event.preventDefault();
         const { target } = event;
+        const RepData={...rep_dat,'驱动形式':'nghgrfWd'};
+        // const { _version, ...RepData }= (storage || source);
         updateTodo({id:repId,operationType:1,
-            version: 1, //new FormData(target).get('link'),
-            data:report?.data }).then(() =>
+            version: 8, //new FormData(target).get('link'),
+            data:JSON.stringify(RepData) }).then(() =>
             target.reset()
         );
     };
