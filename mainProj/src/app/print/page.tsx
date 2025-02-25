@@ -11,13 +11,37 @@ import {Global} from "@emotion/react";
 * */
 export default function Home() {
   return (
-      <div className={"duuw UsualChapter unhhuld"}>
+      <>
+          <div className={"dASqww UsualChapter  Alld"}>
 
-          <div  css={{minHeight: '30vh'}}>
-              df<br/>
-             zhong jia正宗midd
+              <section className={"dASqww UsualChapter  Alld"} css={{minHeight: '40vh'}}>
+                  111<br/>
+                  正常A4 竖着的但因
+              </section>
+              《<br/>》11版本内容！
+
           </div>
 
-      </div>
+          <div className={"duuw UsualChapter unhhuld"}>
+
+              <div css={{minHeight: '30vh'}}>
+                  df<br/>
+                  zhong jia正宗midd
+              </div>
+
+          </div>
+
+          <div>
+
+              <div className={"Wqww   WideChapter dRTffld"} css={{minHeight: '30vh'}}>
+                  3333中的<br/>
+                  横版本
+              </div>
+              <div className={"Wjj  WideChapter dRTlll"}>
+                  《<br/>》版33333内容！
+              </div>
+
+          </div>
+      </>
   );
 }

@@ -1,18 +1,11 @@
 export default function Layout({
                                    children,
-                                   team,
-                                   analytics,
                                }: {
     children: React.ReactNode
-    analytics: React.ReactNode
-    team: React.ReactNode
 }) {
     return (
         <>
-            {team}
             {children}
-            {analytics}
-
             <section className={"ww UsualChapter lld"}>
                 尾巴为哪部分的
             </section>
