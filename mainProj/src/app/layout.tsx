@@ -27,6 +27,7 @@ import PrintUsed from "@/common/PrintUsed";
 /*只提供静态化（保障SessionProvider不提供客户端user也能Build的情形），不考虑鉴别用户context认证才能使用的。
 水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
 next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmentProvider正常是只能用于客户端的(水和/SSR除外)。
+因为XXProvider：createContext({})只能用use client独立封装组件的{context只能被客户端使用的}。然后这里再用{children}接收服务端组件树。
 * */
 export default async function RootLayout({children}: { children: ReactNode }) {
     // const cache = createCache({ key: 'css' })
