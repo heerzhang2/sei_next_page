@@ -15,3 +15,11 @@ export default function Layout({
         </>
     )
 }
+
+
+/*
+
+动态设置的 [data-print="paged"] > .chapter {
+                page: chapter;
+            }
+* */

@@ -35,34 +35,64 @@ export default async function RootLayout({children}: { children: ReactNode }) {
     const session = await auth();
     return (
         // <CacheProvider value={cache}>
-            <html>
-            <body>
-            <PrintUsed/>
+        <html>
+        <head>
+         <style>
+         {`
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        @page portraitPg {
+            size: a4 portrait;
+            @top-middle {
+                content: "Table of ntentsff3";
+            }
+        }
+        @page landscapePg {
+            size: a4 landscape;
+            @top-middle {
+                content: "Chapte r5sdfg";
+            }
+        }        
+        @media print {
+            .WideChapter {
+                page: landscapePg;
+            }
+            .UsualChapter {
+                page: portraitPg;
+            }
+        }
+        `}
+         </style>
+        </head>
+        <body>
+        <PrintUsed/>
 
-            <SessionProvider  session={session}>
-                <Provider>
-                    <GraphQLProvider>
-                        {children}
-                    </GraphQLProvider>
-                </Provider>
+        <SessionProvider session={session}>
+            <Provider>
+                <GraphQLProvider>
+                    {children}
+                </GraphQLProvider>
+            </Provider>
 
-                {/*<GlobalState>*/}
-                {/*    <AppStateProvider>*/}
-                {/*        <SwrConfigClient>*/}
+            {/*<GlobalState>*/}
+            {/*    <AppStateProvider>*/}
+            {/*        <SwrConfigClient>*/}
 
-                {/*            {children}*/}
+            {/*            {children}*/}
 
-                {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
-                {/*                <MainContent/>*/}
-                {/*            </Suspense>*/}
-                {/*        </SwrConfigClient>*/}
-                {/*    </AppStateProvider>*/}
-                {/*</GlobalState>*/}
-                {/*<ToastContainer/>*/}
+            {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
+            {/*                <MainContent/>*/}
+            {/*            </Suspense>*/}
+            {/*        </SwrConfigClient>*/}
+            {/*    </AppStateProvider>*/}
+            {/*</GlobalState>*/}
+            {/*<ToastContainer/>*/}
 
-            </SessionProvider>
-            </body>
-            </html>
+        </SessionProvider>
+        </body>
+        </html>
         // </CacheProvider>
     );
 }
