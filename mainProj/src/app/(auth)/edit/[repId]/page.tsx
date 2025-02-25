@@ -98,7 +98,7 @@ function CommonReportEditor({
     const onSubmitLink = event => {
         event.preventDefault();
         const { target } = event;
-        const RepData={...rep_dat,'驱动形式':'nghgrfWd'};
+        const RepData={...rep_dat,'风速球顶_D':'不妙用'};
         // const { _version, ...RepData }= (storage || source);
         updateTodo({id:repId,operationType:1,
             version: 8, //new FormData(target).get('link'),

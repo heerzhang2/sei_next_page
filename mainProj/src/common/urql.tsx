@@ -8,7 +8,7 @@ import { authExchange } from '@urql/exchange-auth';
 import { auth } from '@/app/auth';
 // import { cookies } from 'next/headers'
 
-import schema from './urql-schema.json';
+import schema from '../auth/urql-schema.json';
 
 
 let ssrStatic=null;

@@ -31,11 +31,8 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 为什么打印可能在最前面或尾巴多出空白页？强制刷新就没了。
 * */
 export default async function RootLayout({children}: { children: ReactNode }) {
-    // const cache = createCache({ key: 'css' })
-    // await connection();
     const session = await auth();
     return (
-        // <CacheProvider value={cache}>
         <html>
         <head>
             <style>
@@ -97,6 +94,5 @@ export default async function RootLayout({children}: { children: ReactNode }) {
         </SessionProvider>
         </body>
         </html>
-        // </CacheProvider>
     );
 }

@@ -77,7 +77,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 27. 优先用 Tailwind CSS 或 CSS Modules;若需要运行时样式，Emotion 是最推荐的 - 避免用styled-components。
 28. 何时不使用服务器组件：交互式 UI 元素/具有客户端交互性的组件/useState/useEffect状态管理/onClick/onChange事件监听处理/class Component在这种情况用客户端组件。
 29. React客户端(加了use client的组件)在两种环境中都会运行（在浏览器中管理 DOM，在Server环境中生成初始 HTML /build?）。
-30. cannot import a Server Component into a Client Component:;[嵌套模式多一层分解拼装]在一个父级服务器组件中，你可以同时导入<ClientComponent>和<ServerComponent>，
+30. Cannot import a Server Component into a Client Component:[嵌套多一层分解拼装]在一个父级服务器组件中，你可以同时导入<ClientComponent>和<ServerComponent>，
    并将<ServerComponent>作为<ClientComponent>的子元素传递客户端组件改造为{children=服务端组件}拼装。这情况子组件<ServerComponent>在服务器渲染，远早于<ClientComponent>在客户端渲染。
 31. break-after: page;两层CSS引用。[data-print="paged"] > .chapter { page: chapter; }动态切换分页打印横的竖的<article data-print="paged"><section className="chapter">
 import { Auth } from "@auth/ core"

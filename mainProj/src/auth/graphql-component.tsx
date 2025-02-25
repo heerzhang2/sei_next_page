@@ -1,27 +1,61 @@
 'use client'
 
-import {
-    ssrExchange,
-    cacheExchange,
-    fetchExchange,
-    createClient,
-} from '@urql/next';
+import { Client, ssrExchange, cacheExchange, fetchExchange, createClient,} from '@urql/next';
 import {UrqlProvider,} from '@urql/next';
 // import { useUrqlClient } from './urql-client'
 import { useAccessToken } from './use-access-token'
 import {authExchange} from "@urql/exchange-auth";
 import {useMemo} from "react";
+import { registerUrql } from '@urql/next/rsc';
+//离线保存支持的：
+import { offlineExchange } from '@urql/exchange-graphcache';
+import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
+import { auth } from '@/app/auth';
+// import { cookies } from 'next/headers'
+import schema from './urql-schema.json';
 
-/*
+
+/*这个Context.Provider模式的是客户端组件的；儿子确实可以是服务端组件的，前提是需要在直接父辈（必须也是服务端组件）内部进行{children}拼装。服务端组件render时间实际发生在更前的，网络序列化传递Props的。
 const ssr = ssrExchange();
 const client = createClient({   url: 'https:// trygql. formidable. dev/ graphql/ basic-pokedex',   exchanges: [cacheExchange, ssr, fetchExchange],   suspense: true, });
 * */
-
 export function GraphQLProvider({ children }) {
     // const client = useUrqlClient()
     const accessToken = useAccessToken();
     console.log("GraphQLProvider见到的token:{}", accessToken);         //【奇怪】强制刷新时在SSR服务器也会可能打印这个输出啊？我加了'use client'啊！！
+
     const [client, ssr] = useMemo(() => {
+        //离线保存支持的：只在客户端代码中使用 indexedDB。
+        let storage;
+        if (typeof window !== 'undefined') {
+            storage = makeDefaultStorage({
+                idbName: 'graphcache-v3', // The name of the IndexedDB database
+                maxAge: 7, // The maximum age of the persisted data in days
+            });
+        } else {      //[避免报错] 在SSR服务器端， 用 空存储或内存存储
+            storage = {
+                writeData: (data) => Promise.resolve(),
+                readData: () => Promise.resolve(null),
+                writeMetadata: (data) => Promise.resolve(),
+                readMetadata: () => Promise.resolve(null),
+            };
+        }
+        const cache = offlineExchange({
+            schema,
+            storage,
+            updates: {},
+            optimistic: {
+                modifyOriginalRecordData(args, cache, info) {
+                    return {
+                        __typename: 'Report',
+                        id: args.id,
+                        data: args.data,
+                    };
+                },
+            },
+        });
+
+
         const ssr = ssrExchange({
             isClient: typeof window !== 'undefined',
         });
@@ -50,12 +84,12 @@ export function GraphQLProvider({ children }) {
                         }
                     }
                 }),
-                cacheExchange, ssr, fetchExchange],
+                cache, ssr, fetchExchange],
             suspense: true,
         });
 
         return [client, ssr];
-    }, []);
+    }, [accessToken]);
 
     return (
             <UrqlProvider client={client} ssr={ssr}>
