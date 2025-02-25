@@ -79,6 +79,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 29. React客户端(加了use client的组件)在两种环境中都会运行（在浏览器中管理 DOM，在Server环境中生成初始 HTML /build?）。
 30. cannot import a Server Component into a Client Component:;[嵌套模式多一层分解拼装]在一个父级服务器组件中，你可以同时导入<ClientComponent>和<ServerComponent>，
    并将<ServerComponent>作为<ClientComponent>的子元素传递客户端组件改造为{children=服务端组件}拼装。这情况子组件<ServerComponent>在服务器渲染，远早于<ClientComponent>在客户端渲染。
+31. break-after: page;两层CSS引用。[data-print="paged"] > .chapter { page: chapter; }动态切换分页打印横的竖的<article data-print="paged"><section className="chapter">
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")

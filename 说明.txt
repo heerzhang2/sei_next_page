@@ -109,3 +109,62 @@ export default function Page() {
   return <ClientOnlyComponent />
 }
 
+Here's how you can add the specified code to your layout.tsx file:
+
+
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Your App Title',
+  description: 'Your app description'
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <head>
+        <style>
+          {`
+            @page toc {
+              size: a4 portrait;
+              @top-middle {
+                content: "Table of contents";
+              }
+            }
+          `}
+        </style>
+      </head>
+      <body>
+        {children}
+      </body>
+    </html>
+  )
+}
+A few important notes:
+
+I've used template literals (`) to properly embed the CSS within the React component.
+The CSS is placed directly in the <head> section of the layout.
+The @page rule is specifically for print styling and defines how a page should look when printed.
+This particular CSS sets up a page rule for a table of contents with A4 portrait orientation and adds a header that says "Table of contents".
+If you want to apply this specifically for print, you might want to wrap it in a media query:
+
+
+<style>
+  {`
+    @media print {
+      @page toc {
+        size: a4 portrait;
+        @top-middle {
+          content: "Table of contents";
+        }
+      }
+    }
+  `}
+</style>
+This ensures the styling only applies when the page is being printed.
+
+

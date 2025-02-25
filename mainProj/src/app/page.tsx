@@ -41,6 +41,9 @@ export default async function Home() {
               <div className="mt-10">
                   <Link href="/edit/KQcbgDF9RO21DsI92H3tTVJlcG9ydA?make=1">⬅️ 修改 验证离线 入口</Link>
               </div>
+              <div className="mt-10">
+                  <Link href="/print">打印试验的 入口</Link>
+              </div>
           </main>
 
       </div>
