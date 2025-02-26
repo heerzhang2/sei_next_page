@@ -12,6 +12,7 @@ import {auth} from "@/app/auth";
 import { Provider } from "jotai";
 import {GraphQLProvider} from "@/auth/graphql-component";
 import PrintUsed from "@/common/PrintUsed";
+import AuthStatus from "@/auth/auth-status";
 // import { CacheProvider } from '@emotion/react'
 // import createCache from '@emotion/cache'
 
@@ -71,6 +72,7 @@ export default async function RootLayout({children}: { children: ReactNode }) {
         <PrintUsed/>
 
         <SessionProvider session={session}>
+            <AuthStatus/>
             <Provider>
                 <GraphQLProvider>
                     {children}

@@ -15,7 +15,7 @@
     "dev2": "next dev",
     "ddee": "esparse -ddd fff",
     "lint": "next lint",
-    "schema供参考用_本机": "get-graphql-schema  http://localhost:8673/graphql > src/common/schema.graphql",
+    "schema供参考用_本机": "get-graphql-schema  http://localhost:8673/graphql > src/auth/schema.graphql",
     "getSchemaforUrql": "sei_code_tools urqlSchema -u http://localhost:8673/graphql src/auth/urql-schema.json"
   },
   "resolutions": {

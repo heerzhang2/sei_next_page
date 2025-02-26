@@ -111,7 +111,7 @@ const makeClient = () => {
     exchanges: [cache, ssr, fetchExchange],
     suspense: true,
     fetchOptions: () => {
-      let accessToken='eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc0MDM4MzYxMSwiZXhwIjoxNzQwMzg5MDExfQ.-hDtd-fxbsAvPmxaJUG8n1X4cTJ1mfMYgD5dspROFeU5XDwti581OIPK5uC_38yXTjSI7wbwErYfikhbCw_9ZQ';
+      let accessToken='eyJhbGcibCw_9ZQ';
 
           // let session=null;
       // if (typeof window !== 'undefined') {
@@ -123,10 +123,10 @@ const makeClient = () => {
       // } else {
       //   //服务端啊 session?.user?.accessToken
       // }
-
-      const token =(typeof window !== 'undefined')? accessToken : "gggreedfgd4444";
+    //SSR没有token
+      const token =(typeof window !== 'undefined')? accessToken : undefined;
       return {
-        headers: {authorization: token ? `Bearer ${token}` : ''},
+        headers: {authorization: token!==undefined ? `Bearer ${token}` : undefined},
       };
     },
   });
