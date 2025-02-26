@@ -19,10 +19,11 @@ import schema from './urql-schema.json';
 const ssr = ssrExchange();
 const client = createClient({   url: 'https:// trygql. formidable. dev/ graphql/ basic-pokedex',   exchanges: [cacheExchange, ssr, fetchExchange],   suspense: true, });
 【注意】exchanges: []的配置项的顺序 关系。  UrqlProvider也有关系一个UrqlProvider对应一个系统缓存的？。
-
+底下独立的配置项fetchOptions: () => {authorization: }加上后才能确保离线恢复再访问的API可授权。
 【还未增加SSR】a server component import { registerUrql } from '@urql/next/rsc';
 https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-rendering/
 @urql/next and urql
+【测试阶段】手动清理indexedDB删除：为何遗留旧的？
 * */
 export function GraphQLProvider({ children }) {
     // const client = useUrqlClient()
@@ -73,8 +74,10 @@ export function GraphQLProvider({ children }) {
                 authExchange(async (utils) => {
                     return {
                         addAuthToOperation(operation) {
-                            if (!accessToken) return operation
-
+                            if (!accessToken){
+                                console.warn("addAuthToOperation:accessToken空的", accessToken);
+                                return operation
+                            }
                             return utils.appendHeaders(operation, {
                                 Authorization: `Bearer ${accessToken}`
                             })
@@ -86,12 +89,20 @@ export function GraphQLProvider({ children }) {
                         },
                         async refreshAuth() {
                             // 如果需要，实现令牌刷新逻辑
+                            console.warn("addAuthToOperation:未实现？的", accessToken);
                             return null
                         }
                     }
                 }),
                 ssr, fetchExchange],
             suspense: true,
+            fetchOptions: () => {
+                return {
+                    headers: {
+                        authorization: accessToken ? `Bearer ${accessToken}` : undefined,
+                    },
+                };
+            },
         });
 
         return [client, ssr];

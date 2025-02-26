@@ -6,6 +6,7 @@ import {useQuery, gql, UrqlProvider, useMutation} from '@urql/next';
 //过时包吗 import { withUrqlClient } from 'next-urql';
 import {getSsr, urqlClient} from "@/common/urql";
 import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
+import UserLogined from "@/common/UserLogined";
 // import {useMutation} from "urql";
 
 
@@ -98,11 +99,11 @@ function CommonReportEditor({
     const onSubmitLink = event => {
         event.preventDefault();
         const { target } = event;
-        //能够遗留变更，新的变更内容没有发送，但是没有登录token?
-        const RepData={...rep_dat,'顶升形式':'gdfgfd111'};
+        //能够遗留变更，新的变更内容没有发送，但是没有登录token? 但是很早前失败的变更请求也会从重新发出的！不管URL强制刷新/累积/只要没成功的。
+        const RepData={...rep_dat,'顶升形式':'2'};
         // const { _version, ...RepData }= (storage || source);
         updateTodo({id:repId,operationType:1,
-            version: 9, //new FormData(target).get('link'),
+            version: 11, //new FormData(target).get('link'),
             data:JSON.stringify(RepData) }).then(() =>
             target.reset()
         );
@@ -111,7 +112,7 @@ function CommonReportEditor({
     // @ts-ignore
     return (
         <article>
-            <h1>bianjiqi编辑器的 离线？</h1>
+            <h1>bianjiqi编辑器的 离线2？</h1>
             {report?.data}
 
             <form onSubmit={onSubmitLink}>
@@ -144,6 +145,7 @@ export default function Page({
 
     return (
         <article>
+            <UserLogined />
                 <Suspense>
                     <CommonReportEditor repId={repId as string} />
                 </Suspense>
