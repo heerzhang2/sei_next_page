@@ -10,7 +10,7 @@ export default async function ProfilePage() {
   return (
       <div>
            <br/><br/>
-              <div> dddxcvbxcfgdfgdfgdfgeee4444fffff </div>
+              <div> dddxf服务端的fff </div>
           <br/>
       </div>
   );

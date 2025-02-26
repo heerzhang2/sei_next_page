@@ -18,6 +18,11 @@ import schema from './urql-schema.json';
 /*这个Context.Provider模式的是客户端组件的；儿子确实可以是服务端组件的，前提是需要在直接父辈（必须也是服务端组件）内部进行{children}拼装。服务端组件render时间实际发生在更前的，网络序列化传递Props的。
 const ssr = ssrExchange();
 const client = createClient({   url: 'https:// trygql. formidable. dev/ graphql/ basic-pokedex',   exchanges: [cacheExchange, ssr, fetchExchange],   suspense: true, });
+【注意】exchanges: []的配置项的顺序 关系。  UrqlProvider也有关系一个UrqlProvider对应一个系统缓存的？。
+
+【还未增加SSR】a server component import { registerUrql } from '@urql/next/rsc';
+https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-rendering/
+@urql/next and urql
 * */
 export function GraphQLProvider({ children }) {
     // const client = useUrqlClient()
@@ -64,6 +69,7 @@ export function GraphQLProvider({ children }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
+                cache,
                 authExchange(async (utils) => {
                     return {
                         addAuthToOperation(operation) {
@@ -84,7 +90,7 @@ export function GraphQLProvider({ children }) {
                         }
                     }
                 }),
-                cache, ssr, fetchExchange],
+                ssr, fetchExchange],
             suspense: true,
         });
 

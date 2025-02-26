@@ -28,7 +28,7 @@ export default async function Home() {
                   <Link href="/rep/SLIDING_JJ">⬅ u r q l home</Link>
               </div>
               <div className="mt-10">
-                  <Link href="/test3">⬅️ Go 的等让路 test3入口</Link>
+                  <Link href="/test3">⬅️ 验证登录入口</Link>
               </div>
               <div className="mt-10">
                   <Link

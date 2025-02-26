@@ -98,7 +98,8 @@ function CommonReportEditor({
     const onSubmitLink = event => {
         event.preventDefault();
         const { target } = event;
-        const RepData={...rep_dat,'顶升形式':'不妙用'};
+        //能够遗留变更，新的变更内容没有发送，但是没有登录token?
+        const RepData={...rep_dat,'顶升形式':'gdfgfd111'};
         // const { _version, ...RepData }= (storage || source);
         updateTodo({id:repId,operationType:1,
             version: 9, //new FormData(target).get('link'),
