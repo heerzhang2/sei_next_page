@@ -19,6 +19,7 @@ const LOGIN_MUTATION = gql`
 
 /*无需采用"@urql/exchange-auth"包的。utilities.appendHeaders(operation, { Authorization: `Bearer ${token}`, })
 运行在服务器端的：登录实际用服务端做代理的。 给服务端用的必须加async；  It is not allowed to define inline "use server" annotated Server Actions in Client Components.
+SSR服务端的代码 ansyc的：
 * */
 export async function performAuth(variables: { username: string; password: string }): Promise<any> {
     const { user } = await auth()
@@ -36,7 +37,7 @@ export async function performAuth(variables: { username: string; password: strin
 
 /* Drizzle ORM 对接》CRDB;
 * */
-export async function userLoginPassed(username: string, password: string) {
+export async function userLoginPassed(variables: { username: string; password: string }) {
     let encodePass = sha256().update(password).digest('hex');
     let result;
     try {
@@ -45,6 +46,6 @@ export async function userLoginPassed(username: string, password: string) {
     } catch (error: any) {
         console.log("getUser报错:", error);
     }
-    console.log("getUser后续继续:已死等的result=", result);
+    console.log("userLoginPassed后续的result=", result);
     return result;
 }
