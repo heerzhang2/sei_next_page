@@ -48,49 +48,50 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
    publicRuntimeConfig ; server rendering: Static, Dynamic, and Streaming.默认是Static Rendering显然不行啊；
    await connection()局部做动态的；
 10. lucide-react图标库 react-icons; Authentication四大流派：选择题：用OAuth提供程序来替代基于密码的身份验证，还是继续用传统的用户密码直接认证方式？OAuth协议的核心思想就是
-   避免用户直接将用户名和密码交给应用程序。 全栈情况next-auth+@prisma/client+CRDB; 
+    避免用户直接将用户名和密码交给应用程序。 全栈情况next-auth+@prisma/client+CRDB;
 11. nextjs-w-app-router-starter-main的认证更接近！ next-auth-example-main扩2个session+JWT/keycloak;
     "autoprefixer": "^10.4.16",
 12. useOptimistic useActionState useFormStatus is a React hook and therefore must be used in a Client Component.
 13. const rawFormData = Object.fromEntries(formData)。需要注意的是，formData 中会包含额外的 $ACTION_ 属性。
 14. <button formAction={save}>Save draft</button>  #授权访问 treat Server Actions like public HTTP endpoints.
 15. 改用 usePreloadedQuery？ 建议不采用useLazyLoadQuery的。 nextjs不能直接将服务器端(async)组件作为子组件嵌入到客户端组件中;
-   默认app/page.tsx is a Server Component.使用async await 提取/API-数据; export default [文件隔离];
+    默认app/page.tsx is a Server Component.使用async await 提取/API-数据; export default [文件隔离];
 16. 路由包next/navigation: useRouter(), usePathname()  useSearchParams() 'use client'；  并非老版的next/router；
 17. 使用Relay进行服务器端渲染可能很复杂! 对Relay组件使用'use client'指令; Next.js官方用useLazyLoadQuery();
     #挑战：Relay 的 loadQuery 和 usePreloadedQuery 通常是为了与 Relay 的环境紧密集成而设计的，它们期望数据是通过 Relay 的网络层获取的。
-   在 Next.js 的服务器端渲染上下文中直接使用它们可能会有些棘手，因为你需要模拟 Relay 的网络请求环境。
+    在 Next.js 的服务器端渲染上下文中直接使用它们可能会有些棘手，因为你需要模拟 Relay 的网络请求环境。
 18. @urql/next 替换Relay?  Urql graphql查询列表时 Cursor 模式分页的例子，详细说明 参数 https://github.com/urql-graphql/urql
     当数据在应用程序中被广泛使用时，@urql建议不要将其作为服务器组件的一部分进行渲染，以便您能够利用客户端缓存的优势。https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-rendering/
 19. https://github.com/urql-graphql/urql/tree/main/examples 但urql的Provider也是只能用在client的。
     await getClient().query()可行；
     带'use client'的Layout.tsx可以配合异步的page.tsx; 带"use client"的tsx文件就不能再用ansyc函数组件的。
-20. Parallel Route路由app/@modal/(.)photos路由结构：只能传递segment，Soft Navigation刷新URL Hard Navigation内容不一致。
+20. Parallel Route路由app/@modal/(.)photos路由结构：只能传递segment-[(await params).id]，Soft Navigation刷新URL Hard Navigation内容不一致。<Link passHref>
 21. 不能在客户端组件中import导入服务器组件;但是支持从上一级组件中child嵌套做法（多绕一层/提前在client组件的父辈组件中的导入嵌套）。将交互逻辑移到一个客户端组件中，保持layout为服务器组件。
 22. {children}</ThemeProvider> 'use client';所有客户端组件都能够使用这个上下文。树结构中更深层次使用“use client” ; #使用 Suspense
 23. 使用 URL 查询参数或全局状态管理可能是最简单和最直接的方法。router.push(`/first-component-url?result=${encodeURIComponent(data)}`);useEffect(() => { const queryResult = router.query.result
     import { useHydrateAtoms } from 'jotai/utils' jotai;useAtom/useHydrateAtoms客户端用的；useHydrateAtoms()第二个参数是服务端初始化的(第一个参数不限制)；跨路由页面的状态管理
 24. page.tsx默认是服务端可改为客户端模式:其参数获取做法不一样！React.use(params) 对比的 async：(await params)；
-25. 并行+交错模态路由app/@modal/(.)photos/[id]/page.tsx；没太多好处。只有{id}slug是相等的，内容都不一样，导航前进后退可以恢复对话框。
-    app/@modal并行路由：用于组合dashboard页面。
+25. 并行+拦截路由app/@modal/(.)photos/[id]/page.tsx；没太多好处。只有{id}:slug是相等的，内容都不一样，【特点】导航前进后退可以恢复对话框@特。
+    app/@modal并行路由：用于组合dashboard页面;【特点】(1) @标记并行路由：可以遗留上一级的page.tsx来装配；(2)可以Tabs模式局部更新替换URL；不是SPA状态变量方式的。
 26. 为何舍弃Relay的：Relay只能采用useLazyLoadQuery，只能use client端用; useFragment只能拆成上下两个组件来组装的接收数据。Relay遇见SSR出现水和报错。
 27. 优先用 Tailwind CSS 或 CSS Modules;若需要运行时样式，Emotion 是最推荐的 - 避免用styled-components。
 28. 何时不使用服务器组件：交互式 UI 元素/具有客户端交互性的组件/useState/useEffect状态管理/onClick/onChange事件监听处理/class Component在这种情况用客户端组件。
 29. React客户端(加了use client的组件)在两种环境中都会运行（在浏览器中管理 DOM，在Server环境中生成初始 HTML /build?）。
 30. Cannot import a Server Component into a Client Component:[嵌套多一层分解拼装]在一个父级服务器组件中，你可以同时导入<ClientComponent>和<ServerComponent>，
-   并将<ServerComponent>作为<ClientComponent>的子元素传递客户端组件改造为{children=服务端组件}拼装。这情况子组件<ServerComponent>在服务器渲染，远早于<ClientComponent>在客户端渲染。
+    并将<ServerComponent>作为<ClientComponent>的子元素传递客户端组件改造为{children=服务端组件}拼装。这情况子组件<ServerComponent>在服务器渲染，远早于<ClientComponent>在客户端渲染。
 31. break-after: page;两层CSS引用。[data-print="paged"] > .chapter { page: chapter; }动态切换分页打印横的竖的<article data-print="paged"><section className="chapter">
-32. Cookie太长了authjs.session-token:926字符。 
-import { Auth } from "@auth/ core"
-import Credentials from "@auth/ core/ providers/ credentials"
-const request = new Request("https:// example. com")
-const response = await AuthHandler(request, { 
-providers: [     Credentials({   
-credentials: {         username: { label: "Username" },         password: {  label: "Password", type: "password" }   
-},   
-async authorize({ request }) {     
-const response = await fetch(request)      
-if(!response. ok) return null         return await response. json() ?? null       }     })   ],   secret: "...",   trustHost: true, })
+32. Cookie太长了authjs.session-token:926字符。
+33. UI css库？  https://tailwindui.com/components
+    import { Auth } from "@auth/ core"
+    import Credentials from "@auth/ core/ providers/ credentials"
+    const request = new Request("https:// example. com")
+    const response = await AuthHandler(request, {
+    providers: [     Credentials({   
+    credentials: {         username: { label: "Username" },         password: {  label: "Password", type: "password" }   
+    },   
+    async authorize({ request }) {     
+    const response = await fetch(request)      
+    if(!response. ok) return null         return await response. json() ?? null       }     })   ],   secret: "...",   trustHost: true, })
 
 // 使用会话中的令牌向后端 API 发送请求
 const apiUrl = 'https://your-backend-api.com/data';
@@ -107,7 +108,7 @@ https://react.dev/reference/rsc/use-server
 可能需要 relay清空
 function commitCommentCreateLocally( environment: Environment, feedbackID: string,
 ) {
-         return commitLocalUpdate(environment, store => { store.invalidateStore(); }
+return commitLocalUpdate(environment, store => { store.invalidateStore(); }
 }); }
 import type {NewsfeedQuery as NewsfeedQueryType} from './__generated__/NewsfeedQuery.graphql';
 function Newsfeed({}) {
