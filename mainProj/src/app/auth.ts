@@ -1,6 +1,5 @@
 import NextAuth, { CredentialsSignin } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-// import type { NextAuthOptions } from "next-auth"
 import Google from "next-auth/providers/google"
 import { authConfig } from '@/app/auth.config';
 import {userLoginPassed} from "@/action/performAuth";
@@ -10,7 +9,6 @@ class InvalidLoginError extends CredentialsSignin {
 }
 
 /*【文档】https://authjs.dev/getting-started/migrating-to-v5#authenticating-server-side
-【handlers 配套本机服务接口的】 app/api/auth/[...nextauth]/route.ts;
 * */
 export const {
   handlers: { GET, POST },
@@ -40,8 +38,7 @@ export const {
             id: loginResp.user.id,
             name: username,
             email: email,
-            accessToken: loginResp.accessToken,
-            refreshToken: loginResp.refreshToken,
+            accessToken: loginResp.accessToken
         };
       },
     }),

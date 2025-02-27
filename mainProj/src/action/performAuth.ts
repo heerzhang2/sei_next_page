@@ -10,7 +10,7 @@ import sha256 from 'hash.js/lib/hash/sha/256';
 const LOGIN_MUTATION = gql`
     mutation performLoginMutation($username: String!, $password: String!) {
         authenticate(username: $username, password: $password)
-        { accessToken,refreshToken, user{id username} }
+        { accessToken, user{id username} }
     }
 `;
 
@@ -44,23 +44,4 @@ export async function userLoginPassed(username: string, password: string) {
     }
     console.log("getUser后续继续:已死等的result=", result);
     return result;
-}
-
-const refreshToken_MUTATION = gql`
-    mutation refreshToken_MUTATION($refreshToken: String!,$userId: ID) {
-        refreshToken(refreshToken: $refreshToken,userId: $userId)
-        { accessToken, user{id username} }
-    }
-`;
-
-export async function doRefreshToken(variables: { userId: string; refreshToken: string }): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-        const result = await urqlClient().mutation(refreshToken_MUTATION, {...variables});
-        console.log("refreshToken返回=", result, variables);
-        if (!result) {
-            reject(result);
-        } else {
-            resolve(result.data?.refreshToken);
-        }
-    });
 }

@@ -1,6 +1,7 @@
 // "use client";
 
 import { Suspense, lazy } from "react";
+import { graphql, useLazyLoadQuery } from "react-relay";
 // import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { auth } from '@/app/auth';
 import Link from "next/link";

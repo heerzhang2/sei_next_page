@@ -1252,7 +1252,6 @@ input LoginInput {
 
 type LoginResp {
   accessToken: String!
-  refreshToken: String!
   user: UserBase!
 }
 
@@ -1337,7 +1336,6 @@ type Mutation {
   newUnitExternalSource(unit: UnitCommonInput!): Unit!
   newUser(username: String!, password: String!, mobile: String!, external: String, eName: String, ePassword: String): Boolean!
   authenticate(username: String!, password: String!): LoginResp
-  refreshToken(refreshToken: String!, userId: ID): LoginResp
   signin(input: LoginInput): LoginResp
   logout: Boolean!
 }
