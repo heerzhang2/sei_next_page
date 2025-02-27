@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React, { Suspense } from 'react';
 import {useQuery, gql, UrqlProvider, useMutation} from '@urql/next';
 //过时包吗 import { withUrqlClient } from 'next-urql';
-import {getSsr, urqlClient} from "@/common/urql";
+import {getSsr, urqlClient} from "@/auth/urql";
 import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 import UserLogined from "@/common/UserLogined";
 // import {useMutation} from "urql";
@@ -95,7 +95,7 @@ function CommonReportEditor({
     const {getReport: report} = result?.data;
 
     const  rep_dat =report&&JSON.parse(report?.data);
-
+    //离线恢复需要强制刷新页面触发遗留的更新，更新api请求可能不只发出一次的。version不变；
     const onSubmitLink = event => {
         event.preventDefault();
         const { target } = event;

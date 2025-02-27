@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import React, { Suspense } from 'react';
 import {useQuery, gql, UrqlProvider} from '@urql/next';
-import {getSsr, urqlClient} from "@/common/urql";
+import {getSsr, urqlClient} from "@/auth/urql";
 import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 
 
@@ -85,12 +85,10 @@ export default function Page({
 
     return (
         <article>
-            <UrqlProvider client={urqlClient()} ssr={getSsr()}>
-                <Suspense>
-                    <CommonReportView repId={repId as string} />
-                </Suspense>
-                {/*<PostList repId={repId}/>*/}
-            </UrqlProvider>
+            <Suspense>
+                <CommonReportView repId={repId as string} />
+            </Suspense>
+            {/*<PostList repId={repId}/>*/}
         </article>
     )
 }

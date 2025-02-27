@@ -37,8 +37,8 @@ export const {
         return {
             id: loginResp.user.id,
             name: username,
-            email: email,
-            accessToken: loginResp.accessToken
+            accessToken: loginResp.accessToken,
+            refreshToken: loginResp.refreshToken,
         };
       },
     }),

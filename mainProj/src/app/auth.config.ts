@@ -38,10 +38,14 @@ export const authConfig = {
     jwt(params) {
       const { token, trigger, session, account, user } =params as any;
         // console.log("提供者jwt的回调:",params);
-        if(trigger === "update")  token.name = session.user.name
+        if(trigger === "update")
+          token.name = session.user.name
         if(trigger=== 'signIn'){
           // session.accessToken=  user?.accessToken;
-          return { ...token, accessToken: user?.accessToken }
+          return { ...token,
+            accessToken: user?.accessToken,
+            refreshToken: user?.refreshToken,
+          }
         }
         return token;
     },
