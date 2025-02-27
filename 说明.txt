@@ -1,4 +1,4 @@
-按 端口号 找 node程序 netstat -ano | findstr :3000
+dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :3000
 CMD \sei_next_page\mainProj>  yarn sei_code_tools --help
 
 
@@ -167,68 +167,18 @@ If you want to apply this specifically for print, you might want to wrap it in a
 </style>
 This ensures the styling only applies when the page is being printed.
 
-My NextAuth code includes the following three functions. Please help me simplify them into one function:
-import { auth } from '@/app/auth';
-async authorize({username, email, password }: any,request: Request) {
-        const loginResp = await userLoginPassed({username, password});
-        if(!loginResp) {
-            throw new InvalidLoginError();
+
+protected void continuedTokenLifeAuthentication(String token, HttpServletRequest request, HttpServletResponse response)
+    {
+        if(!StringUtils.hasText(token))      return;
+        String usernameIdc = null;
+        Claims claims =null;
+        try {
+            claims =Jwts.parser().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            log.info("无效token");
+            return ;
+        } catch (ExpiredJwtException | IllegalArgumentException | UnsupportedJwtException e) {
+            log.info("过期token");
+            return ;
         }
-        return {
-            id: loginResp.user.id,
-            name: username,
-            accessToken: loginResp.accessToken,
-            refreshToken: loginResp.refreshToken,
-        };
-      }
-export async function userLoginPassed(variables: { username: string; password: string }) {
-    let encodePass = sha256().update(password).digest('hex');
-    let result;
-    try {
-        result = await performAuth({username, password: encodePass});
-    } catch (error: any) {
-    }
-    return result;
-}
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
-  ...authConfig,
-  providers: [
-	Google({
-      allowDangerousEmailAccountLinking: true,
-    }),
-    Credentials({
-	  credentials: {
-        email: {},
-        password: {},
-      },
-	export async function performAuth(variables: { username: string; password: string }): Promise<any> {
-        const { user } = await auth()
-        return new Promise(async (resolve, reject) => {
-            const result = await urqlClient(user?.accessToken).mutation(LOGIN_MUTATION, {...variables});
-            if (!result) {
-                reject(result);
-            } else {
-                resolve(result.data?.authenticate);
-            }
-        });
-    }
-
-
-    export const {
-      auth,
-    } = NextAuth({
-      ...authConfig,
-      providers: [
-    	Google({
-        }),
-        Credentials({
-    	  credentials: {
-          },
-          async authorize({ username, email, password }: any,request: Request) {
-                try {
-                    const { user } = await auth();

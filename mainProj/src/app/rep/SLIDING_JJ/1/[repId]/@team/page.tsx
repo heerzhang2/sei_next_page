@@ -12,7 +12,7 @@ export default function Home() {
   return (
       <div>
           <div className="mt-10">
-              <Link href="/lazy">中间page.tsx ➡️</Link>
+              <Link href="/lazy"> TEAM上层的真并行页 </Link>
           </div>
       </div>
   );

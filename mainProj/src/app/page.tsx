@@ -32,7 +32,7 @@ export default async function Home() {
               </div>
               <div className="mt-10">
                   <Link
-                      href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA?make=1">编制态当前一1份报告试图的来</Link>
+                      href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/2.1?make=1#2.1">编制态当前一1份报告试图的来</Link>
               </div>
               <div className="mt-10">
                   <Link

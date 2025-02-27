@@ -35,7 +35,6 @@ export const {
         email: {},
         password: {},
       },
-    //认证中继形式的：
       async authorize({ username, email, password }: any,request: Request) {
             try {
                 // Hash the password

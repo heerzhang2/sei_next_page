@@ -80,6 +80,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 30. Cannot import a Server Component into a Client Component:[嵌套多一层分解拼装]在一个父级服务器组件中，你可以同时导入<ClientComponent>和<ServerComponent>，
    并将<ServerComponent>作为<ClientComponent>的子元素传递客户端组件改造为{children=服务端组件}拼装。这情况子组件<ServerComponent>在服务器渲染，远早于<ClientComponent>在客户端渲染。
 31. break-after: page;两层CSS引用。[data-print="paged"] > .chapter { page: chapter; }动态切换分页打印横的竖的<article data-print="paged"><section className="chapter">
+32. Cookie太长了authjs.session-token:926字符。 
 import { Auth } from "@auth/ core"
 import Credentials from "@auth/ core/ providers/ credentials"
 const request = new Request("https:// example. com")
