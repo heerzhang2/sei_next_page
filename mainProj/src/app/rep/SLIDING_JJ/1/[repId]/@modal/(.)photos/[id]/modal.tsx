@@ -9,7 +9,7 @@ export function Modal({ children }: { children: React.ReactNode }) {
   const dialogRef = useRef<ElementRef<'dialog'>>(null);
 
   useEffect(() => {
-    if (!dialogRef.current?.open) {
+    if (!dialogRef.current?.open && dialogRef.current) {
       dialogRef.current?.showModal();
     }
   }, []);
