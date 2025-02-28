@@ -1,19 +1,15 @@
-import Link from "next/link";
-// import { MainContent } from "./MainContent";
-import Header from "@/component/header";
-import FootBar from "@/component/footbar";
-import {MainContent} from "@/app/(auth)/user/MainContent";
+import Link from 'next/link';
 
-//这个是规定的输出变量：静态化导出static site会报错！
-// export const dynamic = "force-dynamic";
-/*不是必须登录的就能访问内容：
-* */
-export default function Home() {
+export default function Page() {
+  let photos = Array.from({ length: 6 }, (_, i) => i + 1);
+
   return (
-      <div>
-          <div className="mt-10">
-              <Link href="/lazy">中间page.tsx ➡️</Link>
-          </div>
-      </div>
+    <section className="cards-container">
+      {photos.map((id) => (
+        <Link className="card" key={id} href={`/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/photos/${id}`} passHref>
+          {id}
+        </Link>
+      ))}
+    </section>
   );
 }

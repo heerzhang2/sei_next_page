@@ -71,8 +71,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 23. 使用 URL 查询参数或全局状态管理可能是最简单和最直接的方法。router.push(`/first-component-url?result=${encodeURIComponent(data)}`);useEffect(() => { const queryResult = router.query.result
     import { useHydrateAtoms } from 'jotai/utils' jotai;useAtom/useHydrateAtoms客户端用的；useHydrateAtoms()第二个参数是服务端初始化的(第一个参数不限制)；跨路由页面的状态管理
 24. page.tsx默认是服务端可改为客户端模式:其参数获取做法不一样！React.use(params) 对比的 async：(await params)；
-25. 并行+拦截路由app/@modal/(.)photos/[id]/page.tsx；没太多好处。只有{id}:slug是相等的，内容都不一样，【特点】导航前进后退可以恢复对话框@特。
-    app/@modal并行路由：用于组合dashboard页面;【特点】(1) @标记并行路由：可以遗留上一级的page.tsx来装配；(2)可以Tabs模式局部更新替换URL；不是SPA状态变量方式的。
+25. 并行+拦截路由app/@modal/(.)photos/[id]/page.tsx；没太多好处。只有{id}:slug是相等的，内容都不一样，【特点】导航前进后退可以恢复对话框@(奇怪强刷新后退见到@team不正常)。强制刷新后是单独一个页面路由。
+    还必须依赖于@modal并发的引入才行：并发路由{@modal}组件装配用处包裹对话框(.)photos拦截路由。
+    app/@modal并行路由：用于组合dashboard页面;【特点】(1) @标记并行路由组合：可用上一级的page.tsx来装配；(2)可以Tabs模式局部更新替换URL；不是SPA状态变量方式的。
 26. 为何舍弃Relay的：Relay只能采用useLazyLoadQuery，只能use client端用; useFragment只能拆成上下两个组件来组装的接收数据。Relay遇见SSR出现水和报错。
 27. 优先用 Tailwind CSS 或 CSS Modules;若需要运行时样式，Emotion 是最推荐的 - 避免用styled-components。
 28. 何时不使用服务器组件：交互式 UI 元素/具有客户端交互性的组件/useState/useEffect状态管理/onClick/onChange事件监听处理/class Component在这种情况用客户端组件。
@@ -82,6 +83,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 31. break-after: page;两层CSS引用。[data-print="paged"] > .chapter { page: chapter; }动态切换分页打印横的竖的<article data-print="paged"><section className="chapter">
 32. Cookie太长了authjs.session-token:926字符。
 33. UI css库？  https://tailwindui.com/components
+34. 报告编辑形态重新组织。TwoFrame框架放弃，不用左右滑动切换的/改成手机模态重叠/编辑器默认大屏右边小屏幕弹出框。UI库转用不用css in js。 
     import { Auth } from "@auth/ core"
     import Credentials from "@auth/ core/ providers/ credentials"
     const request = new Request("https:// example. com")
