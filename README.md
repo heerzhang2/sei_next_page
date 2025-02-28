@@ -73,7 +73,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 24. page.tsx默认是服务端可改为客户端模式:其参数获取做法不一样！React.use(params) 对比的 async：(await params)；
 25. 并行+拦截路由app/@modal/(.)photos/[id]/page.tsx；没太多好处。只有{id}:slug是相等的，内容都不一样，【特点】导航前进后退可以恢复对话框@(奇怪强刷新后退见到@team不正常)。强制刷新后是单独一个页面路由。
     还必须依赖于@modal并发的引入才行：并发路由{@modal}组件装配用处包裹对话框(.)photos拦截路由。
-    app/@modal并行路由：用于组合dashboard页面;【特点】(1) @标记并行路由组合：可用上一级的page.tsx来装配；(2)可以Tabs模式局部更新替换URL；不是SPA状态变量方式的。
+    app/@modal并行路由：用于组合dashboard页面;【特点】(1) @标记并行路由组合：可用上一级的page.tsx来装配；(2)可以Tabs模式局部更新替换URL；不是SPA状态变量方式的。@analytics底下/visitors同类/的Tabs路由形式：
+    若强制刷新导致layout.tsx中children会被并行路由底下的子路由/visitors替换掉，前后页面不一致：没强刷新之前的页面是layout.tsx中children也同时显示的，同时URL也同步切换文字的。【不一致】的观感？
+    浏览器后退可能导致代码中没输出显示的team并行路由居然主动显示出来了，同时children却没有显示出，古怪啊！。
 26. 为何舍弃Relay的：Relay只能采用useLazyLoadQuery，只能use client端用; useFragment只能拆成上下两个组件来组装的接收数据。Relay遇见SSR出现水和报错。
 27. 优先用 Tailwind CSS 或 CSS Modules;若需要运行时样式，Emotion 是最推荐的 - 避免用styled-components。
 28. 何时不使用服务器组件：交互式 UI 元素/具有客户端交互性的组件/useState/useEffect状态管理/onClick/onChange事件监听处理/class Component在这种情况用客户端组件。

@@ -12,7 +12,7 @@ export default function Home() {
   return (
       <div>
           <div className="mt-10">
-              <Link href="/lazy"> T page-views页 </Link>
+              <Link href="/lazy"> --T page-views页 </Link>
           </div>
       </div>
   );

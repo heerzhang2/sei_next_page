@@ -18,7 +18,6 @@ export default function Layout({
             {/*{team}*/}
             {analytics}
 
-            {modal}
             <div id="modal-root" />
         </>
     )
