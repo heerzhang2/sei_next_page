@@ -7,7 +7,8 @@ import {ReactNode, } from "react";
 import GlobalState from "@/action/GlobalState";
 import AppStateProvider from "@/action/AppStateProvider";
 import SwrConfigClient from "@/action/SwrConfigClient";
-import {ToastContainer} from "react-toastify";
+//会导致水和报错
+// import {ToastContainer} from "react-toastify";
 import ReportMakeable from "@/common/ReportMakeable";
 
 
@@ -37,7 +38,7 @@ export default async function RootLayout({children}: { children: ReactNode }) {
             {/*    </AppStateProvider>*/}
             {/*</GlobalState>*/}
 
-            <ToastContainer/>
+            {/*<ToastContainer/>*/}
         </div>
     );
 }

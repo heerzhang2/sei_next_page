@@ -9,7 +9,7 @@ import {useSearchParams} from 'next/navigation';
 import { FiLock } from 'react-icons/fi';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { revalidatePath } from 'next/cache'
+// import { revalidatePath } from 'next/cache'
 import {useAppState} from "@/action/AppState";
 import * as React from "react";
 import {

@@ -2,6 +2,7 @@ import { NextAuthConfig } from 'next-auth';
 import "next-auth/jwt"
 import {urqlClient} from "@/auth/urql";
 import {gql} from "@urql/core";
+import {JWT} from "@auth/core/jwt";
 // import { DrizzleAdapter } from "@auth/drizzle-adapter"
 
 const Token_expiresInSec =Number(process.env.NEXT_PUBLIC_TOKEN_EXPIRESEC);
@@ -55,7 +56,7 @@ export const authConfig = {
             accessTokenExpires: expNumber,
           }
         }
-      if (Date.now() < (token.accessTokenExpires as number)) {
+      if(token.accessToken && Date.now() < (token.accessTokenExpires as number)) {
         return token
       }
       return await refreshAccessToken(token);

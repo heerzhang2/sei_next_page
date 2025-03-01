@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import './global.css';
+// import './global.css';
+import './globals.css'
 // import { ServerRelayProvider } from "../relay/ServerRelayProvider";
 import {ReactNode, } from "react";
 // import SwrConfigClient from "@/action/SwrConfigClient";
@@ -13,6 +14,7 @@ import { Provider } from "jotai";
 import {GraphQLProvider} from "@/auth/graphql-component";
 import PrintUsed from "@/common/PrintUsed";
 import AuthStatus from "@/auth/auth-status";
+import { ThemeProvider } from 'next-themes'
 // import { CacheProvider } from '@emotion/react'
 // import createCache from '@emotion/cache'
 
@@ -34,10 +36,10 @@ next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmen
 export default async function RootLayout({children}: { children: ReactNode }) {
     const session = await auth();
     return (
-        <html>
+        <html suppressHydrationWarning>
         <head>
             <style>
-            {`
+                {`
             body {
                 padding: 0;
                 margin: 0;
@@ -69,31 +71,32 @@ export default async function RootLayout({children}: { children: ReactNode }) {
             </style>
         </head>
         <body>
-        <PrintUsed/>
+        <ThemeProvider>
+            {/*<PrintUsed/>*/}
+            <SessionProvider session={session}>
+                <AuthStatus/>
+                <Provider>
+                    <GraphQLProvider>
+                        {children}
+                    </GraphQLProvider>
+                </Provider>
 
-        <SessionProvider session={session}>
-            <AuthStatus/>
-            <Provider>
-                <GraphQLProvider>
-                    {children}
-                </GraphQLProvider>
-            </Provider>
+                {/*<GlobalState>*/}
+                {/*    <AppStateProvider>*/}
+                {/*        <SwrConfigClient>*/}
 
-            {/*<GlobalState>*/}
-            {/*    <AppStateProvider>*/}
-            {/*        <SwrConfigClient>*/}
+                {/*            {children}*/}
 
-            {/*            {children}*/}
+                {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
+                {/*                <MainContent/>*/}
+                {/*            </Suspense>*/}
+                {/*        </SwrConfigClient>*/}
+                {/*    </AppStateProvider>*/}
+                {/*</GlobalState>*/}
+                {/*<ToastContainer/>*/}
 
-            {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
-            {/*                <MainContent/>*/}
-            {/*            </Suspense>*/}
-            {/*        </SwrConfigClient>*/}
-            {/*    </AppStateProvider>*/}
-            {/*</GlobalState>*/}
-            {/*<ToastContainer/>*/}
-
-        </SessionProvider>
+            </SessionProvider>
+        </ThemeProvider>
         </body>
         </html>
     );
