@@ -86,26 +86,25 @@
     "sonner": "^1.7.1",
     "tailwindcss-animate": "^1.0.7",
     "urql": "^4.2.1",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "next": "15.2.0",
+    "postcss": "^8.5.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4.0.9",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-plotly.js": "^2.6.3",
     "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint-config-next": "15.2.0",
+    "tailwindcss": "^4.0.9",
     "get-graphql-schema": "^2.1.2",
     "page2pdf_server": "^1.0.2",
     "sei_code_tools": "^0.2.2",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.17",
     "typescript": "^5"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   }
 }

@@ -1,27 +1,36 @@
-This Next.js 14 application showcases a proof-of-concept where React.js' streaming SSR infrastructure (Fizz) is being used in conjunction with GraphQL's `@defer` and the Relay.js GraphQL client to stream deferred GraphQL responses and the components rendering them to a client, all while hydrating Relay.js' store correctly.
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## How it works
+## Getting Started
 
-- All components using Relay are client components and the pages are using `export const dynamic = "force-dynamic";` to disable Next.js' caching. (If this example were to use an actual network layer, the fetch call inside of it would also have to have `{ cache: "no-store" }` to disable Next.js' `fetch` cache)
-- During SSR we record (incremental) GraphQL responses that are being consumed through the Relay environment.
-- We use Next.js' `useServerInsertedHTML` to insert script tags into the streamed HTML as Suspense boundaries unsuspend.
-- The JavaScript inside these script tags contains the serialized GraphQL responses we recorded and pushes them into an array on the `window` object (scoped per query).
-- During hydration Relay re-executes the queries that were already executed on the server.
-- For each query we (synchronously without suspending) check if there are responses meant for hydration stored on the `window` object.
-- If there aren't we execute the query as we normally would.
-- If there are we create a `ReplaySubject`, return that from the Relay `FetchFunction` and write all the responses on the `window` object to that ReplaySubject.
-- This will synchronously commit the responses into the Relay store, without suspending the initial queries.
-- We also patch the `push` method on the window's array and for each `push` publish the pushed response through the `ReplaySubject`.
-- If a GraphQL response has no `hasNext` property or it is false, we complete the `ReplaySubject` and cleanup the resources on the `window` object.
+First, run the development server:
 
-All relevant pieces can be found in the [/relay](./relay) directory.
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## How to run
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-1. `yarn`
-2. `yarn dev`
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-type Query {
-mainContent: String!
-lazyContent: String!
-}
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

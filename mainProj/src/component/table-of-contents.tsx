@@ -60,7 +60,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
                 href={item.url}
                 className={cn(
                   "block text-muted-foreground hover:text-foreground transition-colors",
-                  activeItem === item.url && "font-medium text-foreground",
+                  activeItem === item.url && "font-bold text-foreground",
                 )}
                 onClick={(e) => {
                   e.preventDefault()
