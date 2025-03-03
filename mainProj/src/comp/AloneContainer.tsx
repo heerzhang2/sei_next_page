@@ -4,7 +4,7 @@ import * as React from "react";
 import {Container, Text, Toolbar, useMMenuBarOcup, useTheme} from "customize-easy-ui-component";
 // import {Link as RouterLink} from "../routing/Link";
 import Link from "next/link";
-import food from "public/images/food.svg";
+import Image from "next/image";
 // import {Layout} from "../Layout";
 
 
@@ -53,26 +53,14 @@ export const AloneContainer: React.FunctionComponent<ContainerProps> = (
                            }}
                   >
                       <Link　href="/">
-                          <Text
-                              variant="h5"
-                              css={{
-                                  alignItems: "center",
-                                  display: "flex",
-                                  color: "#43596c"
-                              }}
-                              gutter={false}
-                          >
-                              <img
-                                  css={{
-                                      marginRight: theme.spaces.sm,
-                                      width: "30px",
-                                      height: "30px"
-                                  }}
-                                  src={food} alt={``}
-                                  aria-hidden
-                              />
-                              <span>检验平台</span>
-                          </Text>
+                          <Image
+                              className="dark:invert"
+                              src="/images/food.svg"
+                              alt="Vercel logomark"
+                              width={20}
+                              height={20}
+                          />
+                          检验平台
                       </Link>
                       <div css={{ marginLeft: "auto" }}>
                       </div>
