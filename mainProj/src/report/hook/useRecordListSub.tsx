@@ -56,7 +56,7 @@ export function useRecordListSub(ref: React.Ref<unknown>, repId: string, recordP
     //编辑器【自定义路由】这里action是 '2.1' ALL none printAll 这样的路由参数 ?readOnly=1&。
     const recordList= React.useMemo(() =>
         {
-            //【路由器分解】明面上最直观的路由部分，action==createItem(itemArea?)。
+            //【路由器分解】明面上最直观的路由部分，[action]==createItem(itemArea?)。
             const itemA=recordPrintList.find((one)=>one.itemArea===action);
             if(itemA){
                 return <React.Fragment>
@@ -128,7 +128,7 @@ export function useRecordListSub(ref: React.Ref<unknown>, repId: string, recordP
 
 /**【代码复用】分项报告的原始记录 右半边页面内容组织 :类似于useRecordListSub,参数变化修改名字
  * rep 替代repId;
- * 增加 refWidth 的支持；依靠useSubNestAcion分解出URL的模板+redId+action;用可重复分项框架模式的只能走动态加载某个路径的组件入口代码。
+ * 增加 refWidth 的支持；依靠useSubNestAcion分解出URL的模板+redId+[action];用可重复分项框架模式的只能走动态加载某个路径的组件入口代码。
  * 【实际上】只有正式报告的才会动态加载可重复分项框架模式的代码的；原始记录编辑器部分的就不会这样。【关键】依赖URL分解路由，跳转去不同的子报告单独编辑状态和相应的左边页面以及右边编辑器页面。是拆分掉的独立的模板代码。
  * 因此，可重复分项框架模式下的，也需要像普通报告模板一样必须能从路由器开启的。
  * */
@@ -172,7 +172,7 @@ export function useRecordListSubr(ref: React.Ref<unknown>, rep: any, recordPrint
     const [refMyLineC,widthMyLinec]= useReferenceWidth();
     const recordList= React.useMemo(() =>
         {
-            //【路由器分解】明面上最直观的路由部分，action==createItem(itemArea?)。
+            //【路由器分解】明面上最直观的路由部分，[action]==createItem(itemArea?)。
             const itemA=recordPrintList.find((one)=>one.itemArea===action);
             if(itemA){
                 return <React.Fragment>
@@ -289,7 +289,7 @@ export function useRecordListSubX(ref: React.Ref<unknown>,rep: any, repId: strin
     //编辑器【自定义路由】这里action是 '2.1' ALL none printAll 这样的路由参数 ?readOnly=1&。
     const recordList= React.useMemo(() =>
         {
-            //【路由器分解】明面上最直观的路由部分，action==createItem(itemArea?)。
+            //【路由器分解】明面上最直观的路由部分，[action]==createItem(itemArea?)。
             const itemA=recordPrintList.find((one)=>one.itemArea===action);
             if(itemA){
                 return <React.Fragment>

@@ -66,7 +66,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     //     confList.forEach((area, x) => {
     //         seq += 1;
     //         const rowHead =<ActionMapItems key={seq} ref={clRefs.current![recordPrintList.length+seq-1]}
-    //                                       alone={false} show={action==='printAll'}
+    //                                       alone={false} show={[action]==='printAll'}
     //                                       config={area}
     //         />;
     //         htmlTxts.push(rowHead);
@@ -74,7 +74,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     //     return ( <React.Fragment key={projList}>
     //         {htmlTxts}
     //     </React.Fragment> );
-    // }, [action,  clRefs, impressionism,recordPrintList.length]);
+    // }, [[action],  clRefs, impressionism,recordPrintList.length]);
 
     // //一个可独立路由的编辑器区域：可能有多个的正式报告项目，其中项目有可能是自己拆分的方式做的。路由和编辑器对应。
     // const renderActionArea =React.useCallback((projList: string,prjnos: string) => {
@@ -85,7 +85,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     //         .forEach((area, x) => {          //正常是唯一一个：prjnos标签定位唯一性area。
     //             seq += 1;
     //             const rowHead =<ActionMapItems key={seq} ref={clRefs.current![recordPrintList.length+seq-1]}
-    //                                           alone={false} show={action==='printAll'}
+    //                                           alone={false} show={[action]==='printAll'}
     //                                           config={area}
     //             />;
     //             htmlTxts.push(rowHead);
@@ -93,15 +93,15 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     //     return ( <React.Fragment key={prjnos}>
     //         {htmlTxts}
     //     </React.Fragment> );
-    // }, [action,  clRefs, impressionism,recordPrintList.length]);
+    // }, [[action],  clRefs, impressionism,recordPrintList.length]);
 
     //去掉了qs,依赖项；
     //编辑器【自定义路由】这里action是 '2.1' ALL none printAll 这样的路由参数 ?readOnly=1&。
     const recordList= React.useMemo(() =>
         {
-            //【路由器分解】明面上最直观的路由部分，action==createItem(itemArea?)。  比如 /__ItemArs-2.1.2 自己做路由的？
+            //【路由器分解】明面上最直观的路由部分，[action]==createItem(itemArea?)。  比如 /__ItemArs-2.1.2 自己做路由的？
             // let projetLists =Reflect.ownKeys(impressionism) as string[];
-            // const {impresTag,prjnos} =verifyAction(action,projetLists);
+            // const {impresTag,prjnos} =verifyAction([action],projetLists);
             // if(impresTag)       //配置文件=印象派模式 ；通常为规整一致的项目列表 可形式化配置的，x.y.z标签对应的路由。
             //     return renderActionArea(impresTag,prjnos!);
             const itemA=recordPrintList.find((one)=>one.itemArea===action);

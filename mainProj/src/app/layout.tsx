@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from 'next-auth/react';
 import {auth} from "@/app/auth";
-// import GlobalState from "@/action/GlobalState";
+// import GlobalState from "@/[action]/GlobalState";
 // import {connection} from "next/server";
 import { Provider } from "jotai";
 import {GraphQLProvider} from "@/auth/graphql-component";

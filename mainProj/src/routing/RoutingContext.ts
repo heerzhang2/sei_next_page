@@ -14,7 +14,7 @@ import React from 'react';
  * 【关键错误】不允许使用window.history.pushState(stateObj,),本身SPA路由器就是在它上面再做一层包装的；
  引用类型 history = {
         length: globalHistory.length,
-        action: 'POP',
+        [action]: 'POP',
         location: initialLocation,
         createHref: createHref,   //用createHref可代替import { createPath } from 'history'
         push: push,

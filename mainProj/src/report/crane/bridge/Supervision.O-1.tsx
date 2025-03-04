@@ -135,7 +135,7 @@ export const OriginalView=
       </Button>*/}
     </React.Fragment>;
       //只能用两层嵌套封装，来规避hook遇见条件render的需求。  impressionism &&<>;
-      // return  <OriginalViewInner  action={action} verId={verId} repId={repId} ref={ref} recordPrintList={recordPrintListNow}/>;
+      // return  <OriginalViewInner  [action]={[action]} verId={verId} repId={repId} ref={ref} recordPrintList={recordPrintListNow}/>;
   } );
 
 

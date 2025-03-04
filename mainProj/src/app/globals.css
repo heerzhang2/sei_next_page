@@ -1,4 +1,5 @@
-@import "../../node_modules/tailwindcss";
+@import "tailwindcss";
+@config "../../tailwind.config.js";
 
 @theme {
   --font-sans: var(--font-geist-sans);
