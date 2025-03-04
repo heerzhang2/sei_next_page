@@ -76,11 +76,11 @@ export default function Layout({
             window.removeEventListener("orientationchange", checkOrientation)
         }
     }, [])
-
+    // max-w-4xl
     return (
         <div className="flex min-h-screen">
             <div className="flex-1 overflow-auto">
-                <div className="mx-auto max-w-4xl px-6 py-8">
+                <div className="mx-auto px-6 py-8">
                     <div className="flex flex-col min-h-screen">
                         <SplitView
                             className="flex-1"

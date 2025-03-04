@@ -67,7 +67,7 @@ console.log(greeting());`)
 
           {/* Main content */}
           <div className="flex-1 overflow-auto">
-              <div className="mx-auto max-w-4xl px-6 py-8">
+              <div className="mx-auto px-6 py-8">
 
                   <div className="flex flex-col min-h-screen">
                       {/* Header */}

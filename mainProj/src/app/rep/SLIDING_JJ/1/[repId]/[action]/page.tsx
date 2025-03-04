@@ -33,7 +33,7 @@ console.log(greeting());`)
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
               />
-         <ReportOrRecord id={''} />
+
       </>
         )
 
