@@ -90,27 +90,18 @@ export default function Layout({
                             leftPanel={
                                 <div className="h-full flex flex-col">
                                     <div className="border-b px-4 py-2 font-medium">Preview</div>
-                                    <div className="p-4 font-mono text-sm flex-1 whitespace-pre overflow-auto">
-                                        {/* Right side - only visible on large screens */}
-                                        {!isSmallScreen && (
-                                            <div className="lg:block w-1/2 border-l p-4 overflow-auto">
-                                                <div className="space-y-4">
-                                                    <ReportOrRecord id={""} />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {!isSmallScreen && (
+                                        <ReportOrRecord id={""} />
+                                    )}
                                 </div>
                             }
                             rightPanel={
                                 <div className="h-full flex flex-col">
-                                    <div className="h-full flex flex-col">
                                         <div className="border-b px-4 py-2 font-medium flex items-center gap-2">
                                             <Code className="h-4 w-4" />
                                             Editor 编制
                                         </div>
                                         {children}
-                                    </div>
                                 </div>
                             }
                         />

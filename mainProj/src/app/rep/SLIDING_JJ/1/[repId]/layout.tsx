@@ -97,22 +97,6 @@ console.log(greeting());`)
               </div>
           </div>
       </div>
-
-      {/* Button toolbar */}
-      <div id="button-toolbar" className="bg-primary text-primary-foreground p-3 flex justify-around items-center">
-          <Button variant="ghost" size="sm">
-              Home
-          </Button>
-          <Button variant="ghost" size="sm">
-              Search
-          </Button>
-          <Button variant="ghost" size="sm">
-              Profile
-          </Button>
-          <Button variant="ghost" size="sm">
-              Settings
-          </Button>
-      </div>
         </>
   )
 }

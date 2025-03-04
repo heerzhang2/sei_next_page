@@ -44,6 +44,132 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
         <ContentSection id="api-reference" title="API Reference">
           <p>Reference documentation for layout and page related APIs...</p>
         </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+          <ContentSection id="nesting-layouts" title="Nesting layouts">
+              <p>
+                  By default, layouts in the folder hierarchy are also nested, which means they wrap child layouts via their
+                  children prop...
+              </p>
+          </ContentSection>
+
+          <ContentSection id="linking-between-pages" title="Linking between pages">
+              <p>The Link component enables client-side navigation between pages in the application...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
       </section>
   )
 }
