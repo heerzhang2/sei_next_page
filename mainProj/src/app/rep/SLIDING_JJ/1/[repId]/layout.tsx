@@ -38,10 +38,10 @@ export default function Layout({
     }, [])
 
     return (<>
-      <div className="flex min-h-screen">
+      <div   className="flex min-h-screen">
           <div className="flex-1 overflow-auto">
               <div className="mx-auto px-6 py-8">
-                  <div className="flex flex-col min-h-screen">
+                  <div suppressHydrationWarning  className="flex flex-col min-h-screen">
                       <header className="border-b">
                           <div className="container flex items-center justify-between h-14">
                               <h1 className="text-xl font-bold">Split View Demo</h1>

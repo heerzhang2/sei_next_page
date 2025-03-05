@@ -16,7 +16,8 @@ interface SplitViewProps extends React.HTMLAttributes<HTMLDivElement> {
   independentScrolling?: boolean // New prop to control independent scrolling
   sticky?: boolean    //右边部分是粘性定位的
 }
-
+/*支持右侧部分是粘性定位的；允许其中一个半边为空的。
+* */
 export function SplitViewSticky({
   defaultSplit = 50,
   minLeftWidth = 200,
@@ -30,7 +31,13 @@ export function SplitViewSticky({
   sticky=false,
   ...props
 }: SplitViewProps) {
-  const [splitPosition, setSplitPosition] = useState(defaultSplit)
+  let initialSplitPosition = defaultSplit;
+  if (leftPanel && !rightPanel) {
+    initialSplitPosition = 100;
+  } else if (!leftPanel && rightPanel) {
+    initialSplitPosition = 0;
+  }
+  const [splitPosition, setSplitPosition] = useState(initialSplitPosition)
   const containerRef = useRef<HTMLDivElement>(null)
   const dividerRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
@@ -148,6 +155,13 @@ export function SplitViewSticky({
     isDragging.current = true
     document.body.style.userSelect = "none"
   }
+  useEffect(() => {
+    if (leftPanel && !rightPanel) {
+      setSplitPosition(100)
+    } else if (!leftPanel && rightPanel) {
+      setSplitPosition(0)
+    }
+  }, [leftPanel,rightPanel])
 
   return (
     <div
@@ -160,16 +174,18 @@ export function SplitViewSticky({
       )}
       {...props}
     >
-      <div
-        className={cn(independentScrolling ? "overflow-auto h-full" : "overflow-auto",
-            sticky? "h-max":""
-          )}
-        style={{
-          [isVertical ? "width" : "height"]: `${splitPosition}%`,
-        }}
-      >
-        {leftPanel}
-      </div>
+      { leftPanel &&
+        <div
+          className={cn(independentScrolling ? "overflow-auto h-full" : "overflow-auto",
+              sticky? "h-max":""
+            )}
+          style={{
+            [isVertical ? "width" : "height"]: `${splitPosition}%`,
+          }}
+        >
+          {leftPanel}
+        </div>
+      }
 
       <div
         ref={dividerRef}
@@ -186,16 +202,18 @@ export function SplitViewSticky({
         <div className={cn("bg-border", isVertical ? "w-[1px] h-8" : "h-[1px] w-8")} />
       </div>
 
-      <div
-        className={cn(independentScrolling ? "overflow-auto h-full" : "overflow-auto",
-            sticky? "sticky top-0":""
-        )}
-        style={{
-          [isVertical ? "width" : "height"]: `${100 - splitPosition}%`,
-        }}
-      >
-        {rightPanel}
-      </div>
+      { rightPanel &&
+          <div
+              className={cn(independentScrolling ? "overflow-auto h-full" : "overflow-auto",
+                  sticky? "sticky top-0":""
+              )}
+              style={{
+                [isVertical ? "width" : "height"]: `${100 - splitPosition}%`,
+              }}
+          >
+            {rightPanel}
+          </div>
+      }
     </div>
   )
 }
