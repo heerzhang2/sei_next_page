@@ -87,6 +87,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 32. Cookie太长了authjs.session-token:926字符。
 33. UI css库？  https://tailwindui.com/components
 34. 报告编辑形态重新组织。TwoFrame框架放弃，不用左右滑动切换的/改成手机模态重叠/编辑器默认大屏右边小屏幕弹出框。UI库转用不用css in js。 
+35. 基础布局：sticky父元素overflow-y: scroll;父元素height:100vh小于儿子=实际启动滚动;另外兄弟元素高度须足够大，sticky自己高度相对比较小的。只能直接上下级关系的div才有效。
     import { Auth } from "@auth/ core"
     import Credentials from "@auth/ core/ providers/ credentials"
     const request = new Request("https:// example. com")

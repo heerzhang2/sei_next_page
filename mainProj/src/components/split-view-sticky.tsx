@@ -13,9 +13,11 @@ interface SplitViewProps extends React.HTMLAttributes<HTMLDivElement> {
   rightPanel: React.ReactNode
   className?: string
   dividerClassName?: string
+  independentScrolling?: boolean // New prop to control independent scrolling
+  sticky?: boolean    //右边部分是粘性定位的
 }
 
-export function SplitView({
+export function SplitViewSticky({
   defaultSplit = 50,
   minLeftWidth = 200,
   minRightWidth = 200,
@@ -24,6 +26,8 @@ export function SplitView({
   rightPanel,
   className,
   dividerClassName,
+  independentScrolling = false, // Default to false for backward compatibility
+  sticky=false,
   ...props
 }: SplitViewProps) {
   const [splitPosition, setSplitPosition] = useState(defaultSplit)
@@ -146,15 +150,27 @@ export function SplitView({
   }
 
   return (
-    <div ref={containerRef} className={cn("relative flex", isVertical ? "flex-row" : "flex-col", className)} {...props}>
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative flex",
+        isVertical ? "flex-row" : "flex-col",
+        independentScrolling ? "h-screen" : "",
+        className,
+      )}
+      {...props}
+    >
       <div
-        className="overflow-auto"
+        className={cn(independentScrolling ? "overflow-auto h-full" : "overflow-auto",
+            sticky? "h-max":""
+          )}
         style={{
           [isVertical ? "width" : "height"]: `${splitPosition}%`,
         }}
       >
         {leftPanel}
       </div>
+
       <div
         ref={dividerRef}
         className={cn(
@@ -169,8 +185,11 @@ export function SplitView({
       >
         <div className={cn("bg-border", isVertical ? "w-[1px] h-8" : "h-[1px] w-8")} />
       </div>
+
       <div
-        className="overflow-auto"
+        className={cn(independentScrolling ? "overflow-auto h-full" : "overflow-auto",
+            sticky? "sticky top-0":""
+        )}
         style={{
           [isVertical ? "width" : "height"]: `${100 - splitPosition}%`,
         }}
