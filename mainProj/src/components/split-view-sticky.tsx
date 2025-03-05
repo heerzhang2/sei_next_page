@@ -20,8 +20,8 @@ interface SplitViewProps extends React.HTMLAttributes<HTMLDivElement> {
 * */
 export function SplitViewSticky({
   defaultSplit = 50,
-  minLeftWidth = 200,
-  minRightWidth = 200,
+  minLeftWidth = 100,
+  minRightWidth = 100,
   orientation = "vertical",
   leftPanel,
   rightPanel,
@@ -161,6 +161,7 @@ export function SplitViewSticky({
     } else if (!leftPanel && rightPanel) {
       setSplitPosition(0)
     }
+    else setSplitPosition(defaultSplit)
   }, [leftPanel,rightPanel])
 
   return (

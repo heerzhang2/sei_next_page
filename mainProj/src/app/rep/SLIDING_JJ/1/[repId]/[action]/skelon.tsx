@@ -5,10 +5,10 @@ import {Button} from "@/components/ui/button";
 import {SplitViewSticky} from "@/components/split-view-sticky";
 import {X} from "lucide-react";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import {useEffect, useRef, useState} from "react";
 import ReportOrRecord from "@/component/reportOrRecord";
 import {Drawer} from 'vaul';
-
+import type React from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 
 export default function Skelon({
                                    children,
@@ -16,57 +16,93 @@ export default function Skelon({
     children: React.ReactNode
 }>) {
     const [isSmallScreen, setIsSmallScreen] = useState(() => {
-        return window.innerWidth < 1024
+        return typeof window !== "undefined" ? window.innerWidth < 1024 : false
     })
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("editor")
     const hasMounted = useRef(false)
-    const [isLandscape, setIsLandscape] = useState(false) //若宽高相等的=false
+    const [isLandscape, setIsLandscape] = useState(false)
+    const [toolbarHeight, setToolbarHeight] = useState(32)
+    const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+    // Set hasMounted to true after the initial render
     useEffect(() => {
-        const checkScreenSize = () => {
-            const smallScreen = window.innerWidth < 1024
-            setIsSmallScreen(smallScreen)
-            if (hasMounted.current && smallScreen) {
-                setIsDialogOpen(true)
-            }
-        }
-        setIsSmallScreen(window.innerWidth < 1024);
-        window.addEventListener("resize", checkScreenSize)
-        return () => window.removeEventListener("resize", checkScreenSize)
-    }, [])
-    useEffect(() => {
-        // Set hasMounted to true after the initial render
         hasMounted.current = true
     }, [])
 
-    const [toolbarHeight, setToolbarHeight] = useState(32) // Default toolbar height in pixels
+    // Function to reset the inactivity timer
+    const resetInactivityTimer = useCallback(() => {
+        // Clear any existing timer
+        if (inactivityTimerRef.current) {
+            clearTimeout(inactivityTimerRef.current)
+        }
+
+        // Only set a new timer if we're on a small screen
+        if (isSmallScreen) {
+            inactivityTimerRef.current = setTimeout(() => {
+                setIsDialogOpen(true)
+            }, 8000)
+        }
+    }, [isSmallScreen])
+
+    // Combined resize handler
     useEffect(() => {
-        const toolbar = document.getElementById("button-toolbar")
-        const updateToolbarHeight = () => {
+        const handleResize = () => {
+            // Check screen size
+            const smallScreen = window.innerWidth < 1024
+            const wasSmallScreen = isSmallScreen
+            setIsSmallScreen(smallScreen)
+
+            // If we just transitioned to small screen, start the inactivity timer
+            if (!wasSmallScreen && smallScreen && hasMounted.current) {
+                resetInactivityTimer()
+            }
+
+            // Update toolbar height
+            const toolbar = document.getElementById("button-toolbar")
             if (toolbar) {
                 setToolbarHeight(toolbar.offsetHeight)
             }
-        }
-        updateToolbarHeight()
-        window.addEventListener("resize", updateToolbarHeight)
-        return () => {
-            window.removeEventListener("resize", updateToolbarHeight)
-        }
-    }, [])
-    const checkOrientation = () => {
-        if (typeof window !== "undefined") {
+
+            // Check orientation
             setIsLandscape(window.innerWidth > window.innerHeight)
         }
-    }
-    useEffect(() => {
-        checkOrientation()
-        window.addEventListener("resize", checkOrientation)
-        window.addEventListener("orientationchange", checkOrientation)
-        return () => {
-            window.removeEventListener("resize", checkOrientation)
-            window.removeEventListener("orientationchange", checkOrientation)
+
+        // User activity handlers
+        const handleUserActivity = () => {
+            resetInactivityTimer()
         }
-    }, [])
+
+        // Initial calls
+        handleResize()
+
+        // Add event listeners
+        window.addEventListener("resize", handleResize)
+        window.addEventListener("orientationchange", handleResize)
+
+        // Add user activity listeners
+        window.addEventListener("mousemove", handleUserActivity)
+        window.addEventListener("mousedown", handleUserActivity)
+        window.addEventListener("keydown", handleUserActivity)
+        window.addEventListener("touchstart", handleUserActivity)
+        window.addEventListener("scroll", handleUserActivity)
+
+        // Cleanup
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            window.removeEventListener("orientationchange", handleResize)
+            window.removeEventListener("mousemove", handleUserActivity)
+            window.removeEventListener("mousedown", handleUserActivity)
+            window.removeEventListener("keydown", handleUserActivity)
+            window.removeEventListener("touchstart", handleUserActivity)
+            window.removeEventListener("scroll", handleUserActivity)
+
+            // Clear any pending timers
+            if (inactivityTimerRef.current) {
+                clearTimeout(inactivityTimerRef.current)
+            }
+        }
+    }, [isSmallScreen, resetInactivityTimer])
 
 
     return (
@@ -80,7 +116,7 @@ export default function Skelon({
                 leftPanel={
                     <div className="flex flex-col split-view-panel h-max">
                         <div className="overflow-auto flex-1">
-                            <ReportOrRecord id={""} />
+                            <ReportOrRecord id={""} children={children}/>
                         </div>
                     </div>
                 }
