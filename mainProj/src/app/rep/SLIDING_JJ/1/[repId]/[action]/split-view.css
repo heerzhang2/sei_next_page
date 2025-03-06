@@ -28,26 +28,94 @@
   overflow: auto;
 }
 
+
 /* Custom styles for vertical tabs in landscape mode */
 @media (orientation: landscape) {
-  /* Make the TabsList vertical */
-  .tabs-list-vertical {
-    flex-direction: column !important;
-    height: auto !important;
+  /* Make the TabsList vertical and compact */
+  .vertical-tabs-list {
     width: auto !important;
+    min-width: 40px !important;
     background-color: transparent !important;
+    border-right: 1px solid hsl(var(--border));
+    padding: 0 !important;
+    position: sticky;
+    top: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Style the vertical tab triggers */
-  .tabs-list-vertical [data-state="active"] {
+  .vertical-tab-trigger {
+    width: 40px !important;
+    height: auto !important;
+    padding: 16px 4px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  /* Vertical text orientation */
+  .vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Active state styling */
+  .vertical-tab-trigger[data-state="active"] {
     background-color: hsl(var(--primary)) !important;
     color: hsl(var(--primary-foreground)) !important;
   }
 
-  /* Remove the default grid layout for tabs */
-  .tabs-vertical .tabs-list {
-    display: flex !important;
-    flex-direction: column !important;
-    grid-template-columns: none !important;
+  /* Content area adjustments */
+  [role="tabpanel"] {
+    padding-left: 8px !important;
   }
 }
+
+/* Ensure the tabs container takes full height */
+@media (orientation: landscape) {
+  [role="tablist"] {
+    height: 100% !important;
+  }
+}
+
+/* Sticky tabs for portrait mode */
+@media (orientation: portrait) {
+  /* Make the tabs container sticky at the top */
+  .sticky-tabs-container {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: white;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+}
+
+/* Ensure content scrolls properly in both orientations */
+.tabs-content-container {
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Improve scrolling behavior for landscape mode */
+@media (orientation: landscape) {
+  /* Ensure the content container takes full height */
+  .content-scroll-container {
+    height: 100%;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+
+  /* Add some padding to ensure content is visible when scrolled */
+  .tab-content-wrapper {
+    scroll-margin-top: 16px;
+  }
+}
+

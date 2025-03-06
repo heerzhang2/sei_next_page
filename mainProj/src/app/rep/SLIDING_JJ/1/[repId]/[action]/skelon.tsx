@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ReportOrRecord from "@/component/reportOrRecord"
 import { Drawer } from "vaul"
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 export default function Skelon({
                                    children,
@@ -21,12 +21,23 @@ export default function Skelon({
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("editor")
     const [isLandscape, setIsLandscape] = useState(false)
+
+    // Refs for content scrolling
+    const previewContentRef = useRef<HTMLDivElement>(null)
+    const editorContentRef = useRef<HTMLDivElement>(null)
+    const contentContainerRef = useRef<HTMLDivElement>(null)
+
+    // Store scroll positions for each tab
+    const [scrollPositions, setScrollPositions] = useState({
+        preview: 0,
+        editor: 0,
+    })
+
     // Combined resize handler
     useEffect(() => {
         const handleResize = () => {
             // Check screen size
             const smallScreen = window.innerWidth < 1024
-            const wasSmallScreen = isSmallScreen
             setIsSmallScreen(smallScreen)
             // Check orientation
             setIsLandscape(window.innerWidth > window.innerHeight)
@@ -42,9 +53,54 @@ export default function Skelon({
             window.removeEventListener("orientationchange", handleResize)
         }
     }, [isSmallScreen])
+
     useEffect(() => {
         if (isSmallScreen) setIsDialogOpen(true)
     }, [isSmallScreen])
+
+    // Save scroll position when scrolling
+    useEffect(() => {
+        const handleScroll = () => {
+            if (contentContainerRef.current) {
+                setScrollPositions((prev) => ({
+                    ...prev,
+                    [activeTab]: contentContainerRef.current?.scrollTop || 0,
+                }))
+            }
+        }
+
+        const container = contentContainerRef.current
+        if (container) {
+            container.addEventListener("scroll", handleScroll)
+            return () => container.removeEventListener("scroll", handleScroll)
+        }
+    }, [activeTab, contentContainerRef])
+
+    // Restore scroll position when tab changes
+    useEffect(() => {
+        if (contentContainerRef.current) {
+            // Use requestAnimationFrame to ensure the DOM has updated
+            requestAnimationFrame(() => {
+                if (contentContainerRef.current) {
+                    contentContainerRef.current.scrollTop = scrollPositions[activeTab]
+                }
+            })
+        }
+    }, [activeTab, scrollPositions])
+
+    // Handle tab change
+    const handleTabChange = (value: string) => {
+        // Save current scroll position before changing tabs
+        if (contentContainerRef.current) {
+            setScrollPositions((prev) => ({
+                ...prev,
+                [activeTab]: contentContainerRef.current?.scrollTop || 0,
+            }))
+        }
+
+        // Change the active tab
+        setActiveTab(value)
+    }
 
     return (
         <div className="flex flex-col split-view-container">
@@ -99,7 +155,7 @@ export default function Skelon({
 
                             {/* Conditional rendering based on orientation */}
                             {isLandscape ? (
-                                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                <Tabs value={activeTab}>
                                 <div className="flex h-full mt-4">
                                     {/* Vertical tabs layout for landscape */}
                                     <div className="flex flex-col w-full h-full">
@@ -110,56 +166,85 @@ export default function Skelon({
                                             </Button>
                                         </div>
 
-                                        <div className="flex flex-row h-full">
-                                            {/* Vertical TabsList */}
-                                            <TabsList className="flex flex-col h-auto p-2 space-y-2 border-r bg-muted/30">
-                                                <TabsTrigger value="preview" className="justify-start px-4 py-2 w-full">
-                                                    Preview
-                                                </TabsTrigger>
-                                                <TabsTrigger value="editor" className="justify-start px-4 py-2 w-full">
-                                                    Editor
-                                                </TabsTrigger>
-                                            </TabsList>
+                                        <div className="flex flex-row h-full relative">
+                                            {/* Sticky Vertical TabsList with vertical text */}
+                                            <div className="sticky top-0 h-full flex items-center">
+                                                <TabsList className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
+                                                    <TabsTrigger
+                                                        value="preview"
+                                                        className="vertical-tab-trigger px-2 py-6"
+                                                        onClick={() => handleTabChange("preview")}
+                                                    >
+                                                        <span className="vertical-text">Preview</span>
+                                                    </TabsTrigger>
+                                                    <TabsTrigger
+                                                        value="editor"
+                                                        className="vertical-tab-trigger px-2 py-6"
+                                                        onClick={() => handleTabChange("editor")}
+                                                    >
+                                                        <span className="vertical-text">Editor</span>
+                                                    </TabsTrigger>
+                                                </TabsList>
+                                            </div>
 
-                                            {/* Content area */}
-                                            <div className="flex-1 overflow-auto">
-                                                <TabsContent value="preview" className="p-4 h-full m-0">
-                                                    <div className="p-4 border rounded-md bg-background h-full overflow-auto">
-                                                        <ReportOrRecord id={""} />
+                                            {/* Content area with ref for scrolling */}
+                                            <div ref={contentContainerRef} className="flex-1 overflow-auto">
+
+                                                    <div ref={previewContentRef}>
+                                                        <TabsContent value="preview" className="p-4 h-full m-0">
+                                                            <div className="p-4 border rounded-md bg-background h-full overflow-auto">
+                                                                <ReportOrRecord id={""} />
+                                                            </div>
+                                                        </TabsContent>
                                                     </div>
-                                                </TabsContent>
-                                                <TabsContent value="editor" className="p-4 h-full m-0">
-                                                    <div className="p-4 border rounded-md bg-muted/50 h-full overflow-auto">{children}</div>
-                                                </TabsContent>
+                                                    <div ref={editorContentRef}>
+                                                        <TabsContent value="editor" className="p-4 h-full m-0">
+                                                            <div className="p-4 border rounded-md bg-muted/50 h-full overflow-auto">{children}</div>
+                                                        </TabsContent>
+                                                    </div>
+
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 </Tabs>
                             ) : (
-                                /* Original horizontal tabs for portrait */
-                                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                                    <div className="flex items-center justify-between p-4 border-b">
-                                        <TabsList className="grid w-full grid-cols-2">
-                                            <TabsTrigger value="preview">Preview</TabsTrigger>
-                                            <TabsTrigger value="editor">Editor</TabsTrigger>
-                                        </TabsList>
+                                /* Portrait mode with sticky tabs */
+                                <div className="flex flex-col h-full">
+                                    <div className="sticky top-0 z-10 bg-white border-b">
+                                        <div className="flex items-center justify-between p-4">
+                                            <TabsList className="grid w-full grid-cols-2">
+                                                <TabsTrigger value="preview" onClick={() => handleTabChange("preview")}>
+                                                    Preview
+                                                </TabsTrigger>
+                                                <TabsTrigger value="editor" onClick={() => handleTabChange("editor")}>
+                                                    Editor
+                                                </TabsTrigger>
+                                            </TabsList>
 
-                                        <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
-                                            <X className="h-4 w-4" />
-                                        </Button>
+                                            <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 overflow-auto">
-                                        <TabsContent value="preview" className="p-4 h-full">
-                                            <div className="p-4 border rounded-md bg-background h-full overflow-auto">
-                                                <ReportOrRecord id={""} />
+
+                                    <div ref={contentContainerRef} className="flex-1 overflow-auto">
+                                        <Tabs value={activeTab}>
+                                            <div ref={previewContentRef}>
+                                                <TabsContent value="preview" className="p-4 h-full">
+                                                    <div className="p-4 border rounded-md bg-background h-full overflow-auto">
+                                                        <ReportOrRecord id={""} />
+                                                    </div>
+                                                </TabsContent>
                                             </div>
-                                        </TabsContent>
-                                        <TabsContent value="editor" className="p-4 h-full">
-                                            <div className="p-4 border rounded-md bg-muted/50 h-full overflow-auto">{children}</div>
-                                        </TabsContent>
+                                            <div ref={editorContentRef}>
+                                                <TabsContent value="editor" className="p-4 h-full">
+                                                    <div className="p-4 border rounded-md bg-muted/50 h-full overflow-auto">{children}</div>
+                                                </TabsContent>
+                                            </div>
+                                        </Tabs>
                                     </div>
-                                </Tabs>
+                                </div>
                             )}
                         </div>
                     </Drawer.Content>
