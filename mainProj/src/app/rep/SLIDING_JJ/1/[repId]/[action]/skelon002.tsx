@@ -120,45 +120,42 @@ export default function Skelon({
 
                             {/* Conditional rendering based on orientation */}
                             {isLandscape ? (
+                                <Tabs value={activeTab}>
+                                <div className="flex h-full mt-4">
+                                    {/* Vertical tabs layout for landscape */}
+                                    <div className="flex flex-col w-full h-full">
+                                        <div className="flex items-center justify-between p-4 border-b">
+                                            <h2 className="text-lg font-medium">Project Editor</h2>
+                                            <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </div>
 
-                                    <div className="flex h-full mt-4">
-                                        {/* Vertical tabs layout for landscape */}
-                                        <div className="flex flex-col w-full h-full">
-                                            <div className="flex items-center justify-between p-4 border-b">
-                                                <h2 className="text-lg font-medium">Project Editor</h2>
-                                                <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
-                                                    <X className="h-4 w-4" />
-                                                </Button>
+                                        <div className="flex flex-row h-full relative">
+                                            {/* Sticky Vertical TabsList with vertical text */}
+                                            <div className="sticky top-0 h-full flex items-center">
+                                                <TabsList className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
+                                                    <TabsTrigger
+                                                        value="preview"
+                                                        className="vertical-tab-trigger px-2 py-6"
+                                                        onClick={() => handleTabChange("preview")}
+                                                    >
+                                                        <span className="vertical-text">Preview</span>
+                                                    </TabsTrigger>
+                                                    <TabsTrigger
+                                                        value="editor"
+                                                        className="vertical-tab-trigger px-2 py-6"
+                                                        onClick={() => handleTabChange("editor")}
+                                                    >
+                                                        <span className="vertical-text">Editor</span>
+                                                    </TabsTrigger>
+                                                </TabsList>
                                             </div>
-
-                                            <div className="flex flex-row h-full relative">
-                                                {/* Sticky Vertical TabsList with vertical text */}
-                                                <Tabs value={activeTab}>
-                                                <div className="sticky top-0 h-full flex items-center">
-                                                    <TabsList className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
-                                                        <TabsTrigger
-                                                            value="preview"
-                                                            className="vertical-tab-trigger px-2 py-6"
-                                                            onClick={() => handleTabChange("preview")}
-                                                        >
-                                                            <span className="vertical-text">Preview</span>
-                                                        </TabsTrigger>
-                                                        <TabsTrigger
-                                                            value="editor"
-                                                            className="vertical-tab-trigger px-2 py-6"
-                                                            onClick={() => handleTabChange("editor")}
-                                                        >
-                                                            <span className="vertical-text">Editor</span>
-                                                        </TabsTrigger>
-                                                    </TabsList>
-                                                </div>
-                                                {tabcontents}
-                                                </Tabs>
-                                            </div>
-
+                                            {tabcontents}
                                         </div>
                                     </div>
-
+                                </div>
+                                </Tabs>
                             ) : (
                                 /* Portrait mode with sticky tabs */
                                 <div className="flex flex-col h-full">

@@ -8,8 +8,8 @@
   "scripts": {
     "yarn": "yarn",
     "yarnAdd": "yarn add tailwind-merge",
-    "dev正常的": "next dev --turbopack",
-    "dev需调试服务端": "next dev",
+    "dev正常的": "next dev --turbopack -p 3765",
+    "dev需调试服务端": "next dev -p 3765",
     "build": "next build",
     "start生产版Node.js server": "next start",
     "start-server": "next start -p 3002",
