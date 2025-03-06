@@ -1,14 +1,14 @@
 "use client"
-import '@/app/globals.css'
+import "@/app/globals.css"
 import "./split-view.css"
-import {Button} from "@/components/ui/button";
-import {SplitViewSticky} from "@/components/split-view-sticky";
-import {X} from "lucide-react";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import ReportOrRecord from "@/component/reportOrRecord";
-import {Drawer} from 'vaul';
+import { Button } from "@/components/ui/button"
+import { SplitViewSticky } from "@/components/split-view-sticky"
+import { X } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ReportOrRecord from "@/component/reportOrRecord"
+import { Drawer } from "vaul"
 import type React from "react"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect } from "react"
 
 export default function Skelon({
                                    children,
@@ -43,8 +43,8 @@ export default function Skelon({
         }
     }, [isSmallScreen])
     useEffect(() => {
-      if(isSmallScreen) setIsDialogOpen(true);
-    }, [isSmallScreen]);
+        if (isSmallScreen) setIsDialogOpen(true)
+    }, [isSmallScreen])
 
     return (
         <div className="flex flex-col split-view-container">
@@ -57,15 +57,16 @@ export default function Skelon({
                 leftPanel={
                     <div className="flex flex-col split-view-panel h-max">
                         <div className="overflow-auto flex-1">
-                            <ReportOrRecord id={""} children={children}/>
+                            <ReportOrRecord id={""} children={children} />
                         </div>
                     </div>
                 }
                 rightPanel={
-                    isSmallScreen ? null:
-                    <div className="h-full flex flex-col editor-panel">
-                        <div className="editor-content">{children}</div>
-                    </div>
+                    isSmallScreen ? null : (
+                        <div className="h-full flex flex-col editor-panel">
+                            <div className="editor-content">{children}</div>
+                        </div>
+                    )
                 }
                 sticky={true}
             />
@@ -95,28 +96,71 @@ export default function Skelon({
                             <Drawer.Description className="leading-6 mt-2 text-gray-600">
                                 Get started by filling in the information below to create your new project.
                             </Drawer.Description>
-                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                                <div className="flex items-center justify-between p-4 border-b">
-                                    <TabsList className="grid w-full grid-cols-2">
-                                        <TabsTrigger value="preview">Preview</TabsTrigger>
-                                        <TabsTrigger value="editor">editor</TabsTrigger>
-                                    </TabsList>
 
-                                    <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <div className="flex-1 overflow-auto">
-                                    <TabsContent value="preview" className="p-4 h-full">
-                                        <div className="p-4 border rounded-md bg-background h-full overflow-auto">
-                                            <ReportOrRecord id={""} />
+                            {/* Conditional rendering based on orientation */}
+                            {isLandscape ? (
+                                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                <div className="flex h-full mt-4">
+                                    {/* Vertical tabs layout for landscape */}
+                                    <div className="flex flex-col w-full h-full">
+                                        <div className="flex items-center justify-between p-4 border-b">
+                                            <h2 className="text-lg font-medium">Project Editor</h2>
+                                            <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+                                                <X className="h-4 w-4" />
+                                            </Button>
                                         </div>
-                                    </TabsContent>
-                                    <TabsContent value="editor" className="p-4 h-full">
-                                        <div className="p-4 border rounded-md bg-muted/50 h-full overflow-auto">{children}</div>
-                                    </TabsContent>
+
+                                        <div className="flex flex-row h-full">
+                                            {/* Vertical TabsList */}
+                                            <TabsList className="flex flex-col h-auto p-2 space-y-2 border-r bg-muted/30">
+                                                <TabsTrigger value="preview" className="justify-start px-4 py-2 w-full">
+                                                    Preview
+                                                </TabsTrigger>
+                                                <TabsTrigger value="editor" className="justify-start px-4 py-2 w-full">
+                                                    Editor
+                                                </TabsTrigger>
+                                            </TabsList>
+
+                                            {/* Content area */}
+                                            <div className="flex-1 overflow-auto">
+                                                <TabsContent value="preview" className="p-4 h-full m-0">
+                                                    <div className="p-4 border rounded-md bg-background h-full overflow-auto">
+                                                        <ReportOrRecord id={""} />
+                                                    </div>
+                                                </TabsContent>
+                                                <TabsContent value="editor" className="p-4 h-full m-0">
+                                                    <div className="p-4 border rounded-md bg-muted/50 h-full overflow-auto">{children}</div>
+                                                </TabsContent>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </Tabs>
+                                </Tabs>
+                            ) : (
+                                /* Original horizontal tabs for portrait */
+                                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                    <div className="flex items-center justify-between p-4 border-b">
+                                        <TabsList className="grid w-full grid-cols-2">
+                                            <TabsTrigger value="preview">Preview</TabsTrigger>
+                                            <TabsTrigger value="editor">Editor</TabsTrigger>
+                                        </TabsList>
+
+                                        <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <div className="flex-1 overflow-auto">
+                                        <TabsContent value="preview" className="p-4 h-full">
+                                            <div className="p-4 border rounded-md bg-background h-full overflow-auto">
+                                                <ReportOrRecord id={""} />
+                                            </div>
+                                        </TabsContent>
+                                        <TabsContent value="editor" className="p-4 h-full">
+                                            <div className="p-4 border rounded-md bg-muted/50 h-full overflow-auto">{children}</div>
+                                        </TabsContent>
+                                    </div>
+                                </Tabs>
+                            )}
                         </div>
                     </Drawer.Content>
                 </Drawer.Portal>
@@ -124,6 +168,8 @@ export default function Skelon({
         </div>
     )
 }
+
+
 
 /*
     <div className="split-view-sticky-container" ref={ref}>
