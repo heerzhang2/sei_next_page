@@ -20,31 +20,7 @@ export default function Skelon({
     })
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("editor")
-    const hasMounted = useRef(false)
     const [isLandscape, setIsLandscape] = useState(false)
-    const [toolbarHeight, setToolbarHeight] = useState(32)
-    const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-    // Set hasMounted to true after the initial render
-    useEffect(() => {
-        hasMounted.current = true
-    }, [])
-
-    // Function to reset the inactivity timer
-    const resetInactivityTimer = useCallback(() => {
-        // Clear any existing timer
-        if (inactivityTimerRef.current) {
-            clearTimeout(inactivityTimerRef.current)
-        }
-
-        // Only set a new timer if we're on a small screen
-        if (isSmallScreen) {
-            inactivityTimerRef.current = setTimeout(() => {
-                setIsDialogOpen(true)
-            }, 8000)
-        }
-    }, [isSmallScreen])
-
     // Combined resize handler
     useEffect(() => {
         const handleResize = () => {
@@ -52,58 +28,23 @@ export default function Skelon({
             const smallScreen = window.innerWidth < 1024
             const wasSmallScreen = isSmallScreen
             setIsSmallScreen(smallScreen)
-
-            // If we just transitioned to small screen, start the inactivity timer
-            if (!wasSmallScreen && smallScreen && hasMounted.current) {
-                resetInactivityTimer()
-            }
-
-            // Update toolbar height
-            const toolbar = document.getElementById("button-toolbar")
-            if (toolbar) {
-                setToolbarHeight(toolbar.offsetHeight)
-            }
-
             // Check orientation
             setIsLandscape(window.innerWidth > window.innerHeight)
         }
-
-        // User activity handlers
-        const handleUserActivity = () => {
-            resetInactivityTimer()
-        }
-
         // Initial calls
         handleResize()
-
         // Add event listeners
         window.addEventListener("resize", handleResize)
         window.addEventListener("orientationchange", handleResize)
-
-        // Add user activity listeners
-        window.addEventListener("mousemove", handleUserActivity)
-        window.addEventListener("mousedown", handleUserActivity)
-        window.addEventListener("keydown", handleUserActivity)
-        window.addEventListener("touchstart", handleUserActivity)
-        window.addEventListener("scroll", handleUserActivity)
-
         // Cleanup
         return () => {
             window.removeEventListener("resize", handleResize)
             window.removeEventListener("orientationchange", handleResize)
-            window.removeEventListener("mousemove", handleUserActivity)
-            window.removeEventListener("mousedown", handleUserActivity)
-            window.removeEventListener("keydown", handleUserActivity)
-            window.removeEventListener("touchstart", handleUserActivity)
-            window.removeEventListener("scroll", handleUserActivity)
-
-            // Clear any pending timers
-            if (inactivityTimerRef.current) {
-                clearTimeout(inactivityTimerRef.current)
-            }
         }
-    }, [isSmallScreen, resetInactivityTimer])
-
+    }, [isSmallScreen])
+    useEffect(() => {
+      if(isSmallScreen) setIsDialogOpen(true);
+    }, [isSmallScreen]);
 
     return (
         <div className="flex flex-col split-view-container">
