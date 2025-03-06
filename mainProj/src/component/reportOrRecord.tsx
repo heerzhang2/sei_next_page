@@ -21,7 +21,27 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
         <ContentSection id="creating-a-layout" title="Creating a layout">
           <p>Layouts are UI that is shared between multiple pages...</p>
         </ContentSection>
+          <ContentSection id="creating-a-page" title="Creating a page">
+              <p>Pages are UI that are unique to a route...</p>
+          </ContentSection>
 
+          <ContentSection id="creating-a-layout" title="Creating a layout">
+              <p>Layouts are UI that is shared between multiple pages...</p>
+          </ContentSection>
+          <ContentSection id="creating-a-page" title="Creating a page">
+              <p>Pages are UI that are unique to a route...</p>
+          </ContentSection>
+
+          <ContentSection id="creating-a-layout" title="Creating a layout">
+              <p>Layouts are UI that is shared between multiple pages...</p>
+          </ContentSection>
+          <ContentSection id="creating-a-page" title="Creating a page">
+              <p>Pages are UI that are unique to a route...</p>
+          </ContentSection>
+
+          <ContentSection id="creating-a-layout" title="Creating a layout">
+              <p>Layouts are UI that is shared between multiple pages...</p>
+          </ContentSection>
         <ContentSection id="creating-a-nested-route" title="Creating a nested route">
           <Link  href={`/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/photos/3`}
                  passHref>
