@@ -53,7 +53,7 @@ export default function Skelon({
         setActiveTab(value)
     }
     const detailcontents=<div className="flex-1">
-        <div className="h-full">
+        <div className="h-screen">
             <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-4`}>
                 <div  className="p-4 border rounded-md bg-background h-full overflow-auto scrollable-content"   >
                     <ReportOrRecord id={""} />
@@ -138,7 +138,7 @@ export default function Skelon({
             </>
              :
                <SplitViewSticky
-                    className="flex-1 overflow-auto"
+                    className="overflow-auto"
                     defaultSplit={50}
                     minLeftWidth={0}
                     minRightWidth={0}
@@ -151,11 +151,9 @@ export default function Skelon({
                         </div>
                     }
                     rightPanel={
-                        isSmallScreen ? null : (
-                            <div className="h-full flex flex-col editor-panel">
-                                <div className="editor-content">{children}</div>
-                            </div>
-                        )
+                        <div className="h-full flex flex-col editor-panel">
+                            <div className="editor-content">{children}</div>
+                        </div>
                     }
                     sticky={true}
                />

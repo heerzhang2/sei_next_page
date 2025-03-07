@@ -195,6 +195,7 @@ export function SplitViewSticky({
           isVertical
             ? "cursor-col-resize border-x w-2 hover:bg-muted/80 active:bg-muted"
             : "cursor-row-resize border-y h-2 hover:bg-muted/80 active:bg-muted",
+          sticky? "sticky top-0":"",
           dividerClassName,
         )}
         onMouseDown={handleDividerMouseDown}
