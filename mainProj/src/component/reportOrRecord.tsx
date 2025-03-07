@@ -35,10 +35,10 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
           <ContentSection id="creating-a-layout" title="Creating a layout">
               <p>Layouts are UI that is shared between multiple pages...</p>
           </ContentSection>
-          <ContentSection id="creating-a-page" title="Creating a page">
+          <ContentSection id="ar3311" title="Creating a page">
               <p>Pages are UI that are unique to a route...</p>
-              <Link
-                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/ar3311">编辑某一区域1</Link>
+              <Link scroll={false}  passHref legacyBehavior
+                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/ar3311#ar3311">编辑某一区域001</Link>
           </ContentSection>
 
           <ContentSection id="creating-a-layout" title="Creating a layout">
@@ -52,12 +52,12 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
           <p>You can create nested routes by nesting folders inside each other...</p>
         </ContentSection>
 
-          <ContentSection id="editfor-area-23" title="Linking between pages">
+          <ContentSection id="area23" title="Linking between pages">
               <p>The Link component enables client-side navigation between pages in the application...</p>
           </ContentSection>
           <div className="mt-10">
-              <Link
-                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/area23">bianjiqi编辑某一区域2</Link>
+              <Link scroll={false}  passHref legacyBehavior
+                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/area23#area23">iqi编辑某一区域002</Link>
           </div>
           <ContentSection id="api-reference" title="API Reference">
               <p>Reference documentation for layout and page related APIs...</p>

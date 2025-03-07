@@ -193,8 +193,8 @@ export function SplitViewSticky({
         className={cn(
           "flex items-center justify-center",
           isVertical
-            ? "cursor-col-resize border-x w-2 hover:bg-muted/80 active:bg-muted"
-            : "cursor-row-resize border-y h-2 hover:bg-muted/80 active:bg-muted",
+            ? "cursor-col-resize border-x w-1 hover:bg-muted/80 active:bg-muted"
+            : "cursor-row-resize border-y h-1 hover:bg-muted/80 active:bg-muted",
           sticky? "sticky top-0":"",
           dividerClassName,
         )}

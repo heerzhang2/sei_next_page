@@ -23,6 +23,6 @@ console.log(greeting());`)
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
               />
-        <p  className="h-2">编辑区的----滚动看效果</p>
+        <p  className="h-2">mouyige Action==编辑区的----滚动果</p>
       </>)
 }

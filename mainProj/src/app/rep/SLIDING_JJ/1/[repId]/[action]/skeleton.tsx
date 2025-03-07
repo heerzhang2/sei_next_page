@@ -1,6 +1,6 @@
 "use client"
 // import "@/app/globals.css"
-import "./split-view.css"
+import "./skeleton.css"
 import { Button } from "@/components/ui/button"
 import { SplitViewSticky } from "@/components/split-view-sticky"
 import { X } from "lucide-react"
@@ -9,8 +9,9 @@ import ReportOrRecord from "@/component/reportOrRecord"
 import { Drawer } from "vaul"
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
+import {ReportPanelType, useEditControlContext} from "@/app/rep/SLIDING_JJ/1/[repId]/editControl-provider";
 
-export default function Skelon({
+export default function Skeleton({
                                    children,
                                }: Readonly<{
     children: React.ReactNode
@@ -19,7 +20,8 @@ export default function Skelon({
         return typeof window !== "undefined" ? window.innerWidth < 1024 : false
     })
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [activeTab, setActiveTab] = useState("editor")
+    const { activeTab, setActiveTab } = useEditControlContext()
+
     const [isLandscape, setIsLandscape] = useState(false)
 
     // Combined resize handler
@@ -48,18 +50,18 @@ export default function Skelon({
     }, [isSmallScreen])
 
     // Handle tab change
-    const handleTabChange = (value: string) => {
+    const handleTabChange = (value: ReportPanelType) => {
         // Change the active tab
         setActiveTab(value)
     }
     const detailcontents=<div className="flex-1">
         <div className="h-screen">
-            <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-4`}>
+            <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
                 <div  className="p-4 border rounded-md bg-background h-full overflow-auto scrollable-content"   >
                     <ReportOrRecord id={""} />
                 </div>
             </div>
-            <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-4`}>
+            <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
                 <div   className="p-4 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content"   >
                     {children}
                 </div>
@@ -83,7 +85,6 @@ export default function Skelon({
                             <Tabs value={activeTab}>
                             <div className="flex flex-row h-screen relative">
                                 {/* Sticky Vertical TabsList with vertical text */}
-
                                     <div className="sticky top-0 h-full flex items-center">
                                         <TabsList className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
                                             <TabsTrigger
@@ -91,19 +92,21 @@ export default function Skelon({
                                                 className="vertical-tab-trigger px-2 py-6"
                                                 onClick={() => handleTabChange("preview")}
                                             >
-                                                <span className="vertical-text">Preview</span>
+                                                <span className="vertical-text">报告</span>
                                             </TabsTrigger>
                                             <TabsTrigger
                                                 value="editor"
                                                 className="vertical-tab-trigger px-2 py-6"
                                                 onClick={() => handleTabChange("editor")}
                                             >
-                                                <span className="vertical-text">Editor</span>
+                                                <span className="vertical-text">编制</span>
                                             </TabsTrigger>
+                                            <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
+                                                <X className="h-4 w-4" />
+                                            </Button>
                                         </TabsList>
                                     </div>
                                     {detailcontents}
-
                             </div>
                             </Tabs>
                         </div>
@@ -113,25 +116,22 @@ export default function Skelon({
                     /* Portrait mode with sticky tabs */
                     <Tabs value={activeTab}>
                     <div className="flex flex-col h-screen">
-
-                        <div className="sticky top-0 z-10 bg-white border-b">
-                            <div className="flex items-center justify-between p-4">
+                        <div className="sticky top-0  bg-white border-b">
+                            <div className="flex items-center justify-between p-0">
                                 <TabsList className="grid w-full grid-cols-2">
                                     <TabsTrigger value="preview" onClick={() => handleTabChange("preview")}>
-                                        Preview
+                                      报告
                                     </TabsTrigger>
                                     <TabsTrigger value="editor" onClick={() => handleTabChange("editor")}>
-                                        Editor
+                                      编制
                                     </TabsTrigger>
                                 </TabsList>
-
                                 <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
                                     <X className="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>
                         {detailcontents}
-
                     </div>
                     </Tabs>
                 )}
