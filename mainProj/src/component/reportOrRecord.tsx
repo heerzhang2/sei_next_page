@@ -37,6 +37,8 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
           </ContentSection>
           <ContentSection id="creating-a-page" title="Creating a page">
               <p>Pages are UI that are unique to a route...</p>
+              <Link
+                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/ar3311">编辑某一区域1</Link>
           </ContentSection>
 
           <ContentSection id="creating-a-layout" title="Creating a layout">
@@ -55,8 +57,26 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
           </ContentSection>
           <div className="mt-10">
               <Link
-                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/area23">bianjiqi编辑某一区域23</Link>
+                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/area23">bianjiqi编辑某一区域2</Link>
           </div>
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+              <Link
+                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA">返回</Link>
+          </ContentSection>
+
+          <ContentSection id="api-reference" title="API Reference">
+              <p>Reference documentation for layout and page related APIs...</p>
+          </ContentSection>
+
           <ContentSection id="api-reference" title="API Reference">
               <p>Reference documentation for layout and page related APIs...</p>
           </ContentSection>

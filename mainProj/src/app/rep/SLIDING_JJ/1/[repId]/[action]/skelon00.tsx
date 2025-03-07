@@ -1,5 +1,5 @@
 "use client"
-import "@/app/globals.css"
+// import "@/app/globals.css"
 import "./split-view.css"
 import { Button } from "@/components/ui/button"
 import { SplitViewSticky } from "@/components/split-view-sticky"

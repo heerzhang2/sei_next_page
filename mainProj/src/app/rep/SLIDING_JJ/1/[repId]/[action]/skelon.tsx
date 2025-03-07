@@ -1,5 +1,5 @@
 "use client"
-import "@/app/globals.css"
+// import "@/app/globals.css"
 import "./split-view.css"
 import { Button } from "@/components/ui/button"
 import { SplitViewSticky } from "@/components/split-view-sticky"
@@ -146,7 +146,7 @@ export default function Skelon({
                     leftPanel={
                         <div className="flex flex-col split-view-panel h-max">
                             <div className="overflow-auto flex-1">
-                                <ReportOrRecord id={""} children={children} />
+                                <ReportOrRecord id={''} />
                             </div>
                         </div>
                     }
@@ -165,13 +165,6 @@ export default function Skelon({
 
 
 /*
-                        <div className="w-full h-full overflow-auto p-4 rounded-t-[10px]">
-
-
-
-
-                        </div>
-
     <div className="split-view-sticky-container" ref={ref}>
       <div className={`split-view-sticky ${isSticky ? "sticky" : ""}`}>{children}</div>
       <style jsx>{`
@@ -186,8 +179,8 @@ export default function Skelon({
           top: 0;
           z-index: 10;
           background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-`}</style>
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    `}</style>
     </div>
 * */
