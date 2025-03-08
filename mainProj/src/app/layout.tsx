@@ -41,7 +41,6 @@ export default async function RootLayout({
       <ThemeProvider>
           {/*<PrintUsed/>*/}
           <SessionProvider session={session}>
-              <AuthStatus/>
               <Provider>
                   <GraphQLProvider>
                       {children}

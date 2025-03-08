@@ -22,7 +22,7 @@ export default function AuthStatus() {
     return (
         <div>
             @-#  Signed in as {session.user?.email}
-            Access Token: {session.accessToken?.slice(0, 20)}...全局的页眉未工具条
+            Access Token: {session.accessToken?.slice(0, 20)}..AuthStatus不能随便加，必须登录用户产能访问
         </div>
     )
 }
