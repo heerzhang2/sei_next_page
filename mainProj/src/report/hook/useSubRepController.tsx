@@ -3,7 +3,7 @@ import * as React from "react";
 import {
     Button, IconChevronDown, IconX, Input, InputLine, InputPure, Layer, MenuItem, MenuList, Popover, PopoverClose, PopoverContent, PopoverDescription, PopoverRefer,
 } from "customize-easy-ui-component";
-import {EditStorageContext} from "../StorageContext";
+import {EditStorageContext, useStorage} from "../StorageContext";
 
 
 /**【代码复用】分项报告
@@ -19,7 +19,7 @@ export function useSubRepController(nestMd: string, callback: (store: any) => Re
     //实际上可以直接对storage读写。没必要加setInp逻辑的；但是setStorage影响范围大，每一次临时变动都会反馈给其它如左边页面的。影响性能啊！
     const [inp, setInp] = React.useState<any>(null);
     // const {inp, setInp} = useItemInputControl({ ref,redId,nestMd });
-    const {storage, setStorage} =React.useContext(EditStorageContext) as any;
+    const {storage, setStorage} =useStorage();
     const maxIdNumo = Math.max(...(inp?.['_'+nestMd] || [-1]) ) ??0;
     const maxIdNum =maxIdNumo<0 ? 0 : maxIdNumo;
     function onInsertSeq(idx:number){

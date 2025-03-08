@@ -1,4 +1,5 @@
 /** @jsxImportSource @emotion/react */
+"use client"
 import * as React from "react";
 import {
     Button, useReferenceWidth,
@@ -9,7 +10,7 @@ import {noOp} from "customize-easy-ui-component/esm/misc/noop";
 import {useThrottle} from "../../hooks/useHelpers";
 import {useSubNestAcion} from "../common/helper";
 import queryString from "query-string";
-import {EditStorageContext} from "../StorageContext";
+import {EditStorageContext, useStorage} from "../StorageContext";
 import {EditorAreaConfig, } from "../common/eHelper";
 import {useSubRepController} from "./useSubRepController";
 
@@ -20,8 +21,8 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
                               modAction: string, verId: string, nestMdConfig?: string, titleRender?: (store: any) => React.ReactNode
 ) {
     const {redId,nestMd,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板
-    const qs= queryString.parse(window.location.search);   //确保点击?&from=X 参数变动也能够刷新。
-    const {storage, setStorage} =React.useContext(EditStorageContext) as any;
+    // const qs= queryString.parse(window.location.search);   //确保点击?&from=X 参数变动也能够刷新。
+    const {storage, setStorage} =useStorage();
     const iDskey= '_'+nestMdConfig;
     // const rskey= '_'+nestMdConfig+'_'+redId;  带分项报告的机制：
     const { [iDskey]: SubRepIds }=storage;

@@ -1,66 +1,51 @@
-/** @jsxImportSource @emotion/react */
-import * as React from "react";
-// import { Dispatch, SetStateAction } from "react";
+"use client"
 
+import React, { createContext, useContext, useState, type ReactNode } from "react"
 
-interface Options {
+// Define the shape of your context data
+type StorageContextType = {
+    storage: any
+    setStorage: (data: any) => void
+    modified: boolean | undefined
+    setModified: (data: boolean | undefined) => void
 }
 
-export function useEditStorageContext({
-         }: Options = {}) {
+// Create the context with a default value
+const StorageContext = createContext<StorageContextType | undefined>(undefined)
 
-  const [storage, setStorage] = React.useState<any>({});
-  const [modified, setModified] = React.useState<boolean | undefined>();
+// Create a provider component
+export function StorageProvider({ children }: { children: ReactNode }) {
+    const [storage, setStorage] = React.useState<any>({});
+    const [modified, setModified] = React.useState<boolean | undefined>();
+    // Add your state management logic here
 
-  return React.useMemo(
-      () => ({
+    const value = {
         storage,
         setStorage,
         modified,
         setModified,
-      }),
-      [storage, setStorage, modified ]
-  );
+        // Add other state and methods
+    }
+
+    return <StorageContext.Provider value={value}>{children}</StorageContext.Provider>
+}
+
+// Create a custom hook to use the context
+export function useStorage() {
+    const context = useContext(StorageContext)
+    if (context === undefined) {
+        throw new Error("useStorage must be used within a StorageProvider")
+    }
+    return context
 }
 
 
 
-//<typeof useEditStorageContext> & {    【同时接受的意思】类型可以拥有Person和Employee的所有特性
-
-// type EditStorageContextType =
-//     | (ReturnType<typeof useEditStorageContext>)
-//     | ({
-//         impressionism: any;
-//         setImpressionism: React.Dispatch<React.SetStateAction<any>>;
-//       })
-//     | null;
-
+//@deprecated
 type EditStorageContextType =
-    | (ReturnType<typeof useEditStorageContext>)
+    | (ReturnType<typeof useStorage>)
     | null;
+/*@deprecated
+* */
+export const EditStorageContext =null// React.createContext<EditStorageContextType>(null);
 
-
-export const EditStorageContext = React.createContext<EditStorageContextType>(null);
-
-
-
-//当作，模板在线文档的编辑数据的，临时存储。 子组件需要监听变化的数据。
-// interface EditStorageContextType {
-//   storage: any,
-//   setStorage: Dispatch<SetStateAction<any>>
-// }
-
-/**报告的编辑器修改数据用； EditStorageContext只在路由器直接下级引入的，实际在TwoHalfFrame框架组件的上面一级的；
- * 应该默认 null； 没有实际注入就可以报错
- * */
-//这是实例！   不要重复定义实例，确保访问的是同样一个的东东。
-// export const EditStorageContext = React.createContext<EditStorageContextType|null>(
-//     null
-// );
-
-// export const EditStorageContext = React.createContext<EditStorageContextType>(
-//     {
-//         storage:  undefined,
-//         setStorage: value => null,
-//     }
-// );

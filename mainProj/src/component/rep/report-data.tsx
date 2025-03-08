@@ -5,7 +5,7 @@ import React, { Suspense } from 'react';
 import {useQuery, gql, UrqlProvider} from '@urql/next';
 // import {getSsr, urqlClient} from "@/auth/urql";
 import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
-import {EditStorageContext} from "@/report/StorageContext";
+import {useStorage} from "@/report/StorageContext";
 
 
 //片段不能像Relay那样的能做独立形式的定义了！必须每个请求都定义； "Validation error (UndefinedFragment@[getReport]) : Undefined fragment 'pageReportIsp'"
@@ -65,11 +65,9 @@ function CommonReportData({ repId,children       }:
     // console.log("graphql->authUser", data);
     const {getReport: report} = result?.data;
     console.log("CommonReportData: report=",report);
-    const context=React.useContext(EditStorageContext);
-    if(context == null)    throw new Error("EditStorageContext没有提供");
-    const {storage, setStorage} =context;
+    const {storage, setStorage} =useStorage();
     //特别注意：RecordEditorMain.tsx 也有初始化代码，需要俩个代码setStorage确保一致性。
-    console.log("左边页面的OriginalRecordMainInner",storage,"routeData",routeData);
+    console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);
     React.useEffect(() => {
         const  dat =report&&report.data&&JSON.parse(report.data);
         const  snap =report&&report.snapshot&&JSON.parse(report.snapshot);

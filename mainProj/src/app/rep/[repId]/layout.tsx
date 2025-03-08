@@ -11,7 +11,7 @@ import SwrConfigClient from "@/action/SwrConfigClient";
 // import {ToastContainer} from "react-toastify";
 import ReportMakeable from "@/common/ReportMakeable";
 import ReportData from "@/component/rep/report-data";
-import {EditStorageContext, useEditStorageContext} from "@/report/StorageContext";
+import {StorageProvider } from "@/report/StorageContext";
 
 
 // const FootBar = lazy(() => import("@/component/footbar"));
@@ -33,17 +33,16 @@ export default async function ReportRootLayout({params, children} :
     console.log("ReportRootLayout: repId=",repId);
     // const session =await auth();
     // if(!session?.user)   redirect('/login')
-    const repContext = useEditStorageContext({});
     return (
         <>
-            <ReportMakeable />
-            <EditStorageContext.Provider value={repContext}>
-                <ReportData  repId={repId}>
+           <ReportMakeable />
+           <StorageProvider>
+               <ReportData  repId={repId}>
                     {/*<GlobalState>*/}
                     {/*    <AppStateProvider>*/}
                     {/*        <SwrConfigClient>*/}
 
-                                {children}
+                   {children}
 
 
                     {/*        </SwrConfigClient>*/}
@@ -51,8 +50,8 @@ export default async function ReportRootLayout({params, children} :
                     {/*</GlobalState>*/}
 
                     {/*<ToastContainer/>*/}
-                </ReportData>
-            </EditStorageContext.Provider>
+               </ReportData>
+           </StorageProvider>
         </>
     );
 }

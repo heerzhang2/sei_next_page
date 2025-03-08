@@ -5,7 +5,7 @@ import {EntranceSetup, config设备概况, config观测数据, tail观测, confi
 import {createItem, } from "../../common/eHelper";
 import {useRecordList} from "../../hook/useRecordList";
 import {setupItemAreaRoute} from "./orcIspConfig";
-import {EditStorageContext} from "../../StorageContext";
+import {EditStorageContext, useStorage} from "../../StorageContext";
 import {Text, useTheme} from "customize-easy-ui-component";
 import {ItemInstrumentTable} from "../../common/Instrument";
 import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
@@ -75,10 +75,9 @@ export const OriginalView=
     { action,  verId, repId='', rep,}
     :OriginalViewProps, ref
   ) => {
-    const context =React.useContext(EditStorageContext);
-    if(context == null)    throw new Error("EditStorageContext没有提供");
-    const {storage, } =context;
+    const {storage, setStorage} =useStorage();
     const theme = useTheme();
+    console.log("OriginalViewaction=", action);
     const recordPrintListNow =React.useMemo(() => {
       let routeAreas=[] as any[];
       const impressionismAs =setupItemAreaRoute({rep, orc:storage, theme});

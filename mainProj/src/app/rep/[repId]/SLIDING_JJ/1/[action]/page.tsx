@@ -7,6 +7,7 @@ import * as React from "react";
 
 export default function Page() {
     const params = useParams()
+    console.log("Page前params=", params);
     const [action, setAction] = useState<string | null>(null)
     useEffect(() => {
         if (params && params.action) {

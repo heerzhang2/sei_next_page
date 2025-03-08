@@ -19,7 +19,7 @@ import {
 // import PropTypes from "prop-types";
 import { Dispatch, SetStateAction } from "react";
 import { MutableRefObject } from "react";
-import { EditStorageContext } from "../StorageContext";
+import {EditStorageContext, useStorage} from "../StorageContext";
 import {DirectLink} from "../../routing/Link";
 import {tableSetInp} from "../../common/tool";
 // import {objNestArrSetInp} from "../../common/tool";
@@ -419,7 +419,7 @@ export const InspectRecordDialog: React.FunctionComponent<InspectRecordDialogPro
      column=0,
      ...other
  }) => {
-  const {storage, setStorage, modified,setModified,} =React.useContext(EditStorageContext) as any;
+  const {storage, setStorage, modified,setModified,} =useStorage();
     const rskey= (nestMd? ('_'+nestMd+'_'+redId) : undefined ) as string;
   //外部汇集层次storage修改后，也得同步修正我这里低层次分部的，不然，它处已经改动的数据对我这里来说全然不知晓。
   //上一个区块编辑器已经确认的会立刻从storage反馈更新给当前组件内了。

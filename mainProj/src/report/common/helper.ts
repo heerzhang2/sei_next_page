@@ -118,8 +118,11 @@ export const itemResultTransform =(orc: any, inspectionContent:any[],
  * 模板编码template不一定就是主报告的，嵌入式的分项报告也有。
  * 原始记录的预览打印 /originalView/:template/ver/
  * 正常的是  /report/:template/ver/
+ * 【子报告】 /0/Corrosive  可重复分项
+ * 【主报告】 /THICK_MS/0/Remark 可重复分项
  * */
 export function useSubNestAcion(modAction :string) {
+  return {  action: modAction };
   const { get:getRouteUrl } = useContext(RoutingContext);
   const routeLevels=getRouteUrl().entries.length;      //3层次/report/:template ；原始记录的预览打印场景的是 2层次的/originalView/:template
   const routePath =getRouteUrl().entries[routeLevels-1]?.routeData?.url;
