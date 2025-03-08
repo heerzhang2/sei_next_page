@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link';
 import {ContentSection} from "@/component/content-section";
-import ReportOrRecord from "@/component/reportOrRecord";
+import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord";
 // import { ContentSection } from "./content-section"
 import {TableOfContents} from "@/component/table-of-contents";
 import {Button} from "@/components/ui/button";
@@ -15,10 +15,11 @@ interface ReportProps {
     items: {
         title: string
         url: string
-    }[]
+    }[],
+    children: React.ReactNode
 }
 
-export default function Report({ items }: ReportProps) {
+export default function Report({ items,children }: ReportProps) {
   // let photos = Array.from({ length: 6 }, (_, i) => i + 1);
   return (
       <>
@@ -31,7 +32,7 @@ export default function Report({ items }: ReportProps) {
 
                           </div>
                       </header>
-                      <ReportOrRecord id={''} />
+                      {children}
                   </div>
               </div>
           </div>

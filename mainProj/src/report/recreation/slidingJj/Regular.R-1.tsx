@@ -1,23 +1,19 @@
 /** @jsxImportSource @emotion/react */
 "use client"
-import { useSearchParams } from 'next/navigation'
+import {useSearchParams} from 'next/navigation'
+// import RoutingContext from "../../../routing/RoutingContext";
 import * as React from "react";
-import { useState, useEffect } from 'react'
-import {
-    Table, TableBody, TableRow, CCell, TableHead, Text, useTheme, Button,
-} from "customize-easy-ui-component";
+import {useEffect, useState} from "react";
+import {Button, CCell, Table, TableBody, TableHead, TableRow, Text, useTheme,} from "customize-easy-ui-component";
 // import {DirectLink, Link as RouterLink,} from "../../../routing/Link";
 import {ReportViewProps,} from "../../common/base";
 import {末尾链接, 落款单位地址,} from "../../common/rarelyVary";
-import {报告设备详情, } from "./repView";
-import {useRepMenuDirItems, } from "../../hook/useMainRepUrlOr";
+import {报告设备详情,} from "./repView";
+import {useRepMenuDirItems,} from "../../hook/useMainRepUrlOr";
 import {setupItemAreaRoute} from "./orcIspConfig";
-import queryString from "query-string";
-import {FormatOriginal, } from "./FormatOriginal";
-// import RoutingContext from "../../../routing/RoutingContext";
-import {useContext} from "react";
+import {FormatOriginal,} from "./FormatOriginal";
 import {Column_Setting} from "../../common/useFormatOmni";
-import {useOfficialOmni, } from "../../common/useOfficialOmni";
+import {useOfficialOmni,} from "../../common/useOfficialOmni";
 import {ReportFirstPageHeadJd} from "../../park/rarelyVary";
 import {UnqualifiedIspTable} from "../../common/general";
 import {useItemsMapOmni} from "../../common/omni";
@@ -61,6 +57,7 @@ const 检验结果替换 =((orc: { [x: string]: any; }) => {
 const config报告 : Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'}, {n:'M',x:'备注',m:true}];
 const JumpTags=[{name:'设备概况',ha:'Survey'},{name:'K1资料审查',ha:'1.1'},{name:'电气及控制系统',ha:'4.1'},
             {name:'K7载荷试验',ha:'7.1'},{name:'系留式观光气球专项',ha:'13.6'},{name:'现场检验条件确认',ha:'SiteCondition'}];
+
 
 const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
     repId,   source: orc,  verId,rep,
@@ -158,3 +155,13 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
     </React.Fragment>
   );
 }
+
+export const contentItems = [
+    {title: "Creating a page", url: "#creating-a-page"},
+    {title: "Creating a layout", url: "#creating-a-layout"},
+    {title: "Creating a nested route", url: "#creating-a-nested-route"},
+    {title: "Nesting layouts", url: "#nesting-layouts"},
+    {title: "Linking between pages", url: "#linking-between-pages"},
+    {title: "API Reference", url: "#api-reference"},
+    {title: "editfor-area-23", url: "#editfor-area-23"},
+]

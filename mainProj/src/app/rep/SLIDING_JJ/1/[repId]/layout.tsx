@@ -1,22 +1,18 @@
 "use client"
 
-import {TableOfContents} from "@/component/table-of-contents";
-import {Button} from "@/components/ui/button";
-import {useEffect, useRef, useState} from "react";
-import {EditControlProvider} from "@/app/rep/SLIDING_JJ/1/[repId]/editControl-provider";
+import ReportLayout from "@/app/rep/SLIDING_JJ/1/[repId]/reportLayout";
+import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord";
+
+import {contentItems} from "@/report/recreation/slidingJj/Regular.R-1";
 
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-
-    return (<>
-      <div  className="flex min-h-screen">
-        <EditControlProvider>
+    return (
+        <ReportLayout repPanel={<ReportOrRecord id={""} />} items={contentItems}>
           {children}
-        </EditControlProvider>
-      </div>
-      </>
-  )
+        </ReportLayout>
+    )
 }

@@ -15,7 +15,7 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
         <h1 className="text-3xl font-bold mb-6">报告记录可打印Nesting layouts</h1>
 
         <ContentSection id="creating-a-page" title="Creating a page">
-          <p>Pages are UI that are unique to a route...</p>
+          <p>Pages are每个报告模板不一样的 UI that are unique to a route...</p>
         </ContentSection>
 
         <ContentSection id="creating-a-layout" title="Creating a layout">

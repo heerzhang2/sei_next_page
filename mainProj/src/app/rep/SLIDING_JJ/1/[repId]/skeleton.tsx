@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/button"
 import { SplitViewSticky } from "@/components/split-view-sticky"
 import { X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import ReportOrRecord from "@/component/reportOrRecord"
+import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord"
 import { Drawer } from "vaul"
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import {ReportPanelType, useEditControlContext} from "@/app/rep/SLIDING_JJ/1/[repId]/editControl-provider";
 
+//公用的组件： <ReportOrRecord id={""} />
 export default function Skeleton({
-                                   children,
+                                   children,repPanel
                                }: Readonly<{
-    children: React.ReactNode
+    children: React.ReactNode,
+    repPanel: React.ReactNode
 }>) {
     const [isSmallScreen, setIsSmallScreen] = useState(() => {
         return typeof window !== "undefined" ? window.innerWidth < 1024 : false
@@ -58,7 +60,7 @@ export default function Skeleton({
         <div className="h-screen">
             <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
                 <div  className="p-4 border rounded-md bg-background h-full overflow-auto scrollable-content"   >
-                    <ReportOrRecord id={""} />
+                    {repPanel}
                 </div>
             </div>
             <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
@@ -146,7 +148,7 @@ export default function Skeleton({
                     leftPanel={
                         <div className="flex flex-col split-view-panel h-max">
                             <div className="overflow-auto flex-1">
-                                <ReportOrRecord id={''} />
+                                {repPanel}
                             </div>
                         </div>
                     }

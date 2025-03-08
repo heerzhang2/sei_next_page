@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link';
 import {ContentSection} from "@/component/content-section";
-import ReportOrRecord from "@/component/reportOrRecord";
+import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord";
 // import { ContentSection } from "./content-section"
 import {TableOfContents} from "@/component/table-of-contents";
 import {Button} from "@/components/ui/button";
