@@ -2,7 +2,7 @@
 import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord";
 // import { ContentSection } from "./content-section"
 import React from "react";
-import Report from "@/app/rep/SLIDING_JJ/1/[repId]/report";
+import Report from "@/component/rep/report";
 import {contentItems} from "@/report/recreation/slidingJj/Regular.R-1";
 
 

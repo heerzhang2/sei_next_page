@@ -9,7 +9,7 @@ import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord"
 import { Drawer } from "vaul"
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import {ReportPanelType, useEditControlContext} from "@/app/rep/SLIDING_JJ/1/[repId]/editControl-provider";
+import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
 
 //公用的组件： <ReportOrRecord id={""} />
 export default function Skeleton({

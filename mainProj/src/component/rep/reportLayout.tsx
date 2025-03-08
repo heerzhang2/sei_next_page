@@ -3,10 +3,10 @@
 import {TableOfContents} from "@/component/table-of-contents";
 import {Button} from "@/components/ui/button";
 import React, {useEffect, useRef, useState} from "react";
-import {EditControlProvider} from "@/app/rep/SLIDING_JJ/1/[repId]/editControl-provider";
+import {EditControlProvider} from "@/component/rep/editControl-provider";
 import {useParams} from "next/navigation";
-import Skeleton from "@/app/rep/SLIDING_JJ/1/[repId]/skeleton";
-import Sidebar from "@/app/rep/SLIDING_JJ/1/[repId]/sidebar";
+import Skeleton from "@/component/rep/skeleton";
+import Sidebar from "@/component/rep/sidebar";
 
 //变身 公用组件：
 export default function ReportLayout({

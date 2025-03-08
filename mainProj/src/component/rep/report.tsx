@@ -9,7 +9,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {Drawer} from "vaul";
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {X} from "lucide-react";
-import Sidebar from "@/app/rep/SLIDING_JJ/1/[repId]/sidebar";
+import Sidebar from "@/component/rep/sidebar";
 
 interface ReportProps {
     items: {

@@ -1,9 +1,9 @@
 "use client"
 
-import ReportLayout from "@/app/rep/SLIDING_JJ/1/[repId]/reportLayout";
+import ReportLayout from "@/component/rep/reportLayout";
 import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord";
 
-import {contentItems} from "@/report/recreation/slidingJj/Regular.R-1";
+import {contentItems, ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 
 export default function Layout({
   children,
@@ -11,7 +11,7 @@ export default function Layout({
   children: React.ReactNode
 }>) {
     return (
-        <ReportLayout repPanel={<ReportOrRecord id={""} />} items={contentItems}>
+        <ReportLayout repPanel={<ReportView id={""} />} items={contentItems}>
           {children}
         </ReportLayout>
     )

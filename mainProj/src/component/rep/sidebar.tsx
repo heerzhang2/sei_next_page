@@ -9,7 +9,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {Drawer} from "vaul";
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {X} from "lucide-react";
-import {useEditControlContext} from "@/app/rep/SLIDING_JJ/1/[repId]/editControl-provider";
+import {useEditControlContext} from "@/component/rep/editControl-provider";
 
 interface SidebarProps {
     items: {
