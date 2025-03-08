@@ -4,28 +4,13 @@ import * as React from "react";
 
 
 interface Options {
-  //非受控方式的初始值
-  initialOpen?: boolean;
-  //注入控制器的方式：实时取值 外部注入的 来取代内部的【controlledOpen， setControlledOpen】控制器；【open, onOpenChange】
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
 export function useEditStorageContext({
-                            initialOpen = false,
-                            open: controlledOpen,
-                            onOpenChange: setControlledOpen
-                          }: Options = {}) {
+         }: Options = {}) {
 
   const [storage, setStorage] = React.useState<any>({});
-  //允许内部提供了的 替换掉外部注入的 【controlledOpen， setControlledOpen】控制器；
-  // const [uncontrolledOpen, setUncontrolledOpen] = React.useState(initialOpen);
-  // const open = controlledOpen ?? uncontrolledOpen;
-  // const setOpen = setControlledOpen ?? setUncontrolledOpen;
-  //当前报告的数据是否已经被修改了？
   const [modified, setModified] = React.useState<boolean | undefined>();
-    //印象化报告：已经不需要存储Context模式了！
-    // const [impressionism, setImpressionism] = React.useState<any>(undefined);
 
   return React.useMemo(
       () => ({

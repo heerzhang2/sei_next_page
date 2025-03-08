@@ -21,9 +21,9 @@ import {检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj} from "../
 import Link from "next/link";
 import {DirectLink} from "@/routing/Link";
 
-// @ts-ignore
+
 export const ReportView = ({
-repId='',  orc={},  verId=1,rep={},
+repId='',  orc={},  verId=1,rep,
 }:any) => {
     const searchParams = useSearchParams()
     const [formatOriginal, setFormatOriginal] = useState(false)

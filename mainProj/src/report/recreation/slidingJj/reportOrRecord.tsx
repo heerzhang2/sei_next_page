@@ -38,7 +38,7 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
           <ContentSection id="ar3311" title="Creating a page">
               <p>Pages are UI that are unique to a route...</p>
               <Link scroll={false}  passHref legacyBehavior
-                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/ar3311#ar3311">编辑某一区域001</Link>
+                  href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/ar3311#ar3311">编辑某一区域001</Link>
           </ContentSection>
 
           <ContentSection id="creating-a-layout" title="Creating a layout">
@@ -57,7 +57,7 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
           </ContentSection>
           <div className="mt-10">
               <Link scroll={false}  passHref legacyBehavior
-                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/area23#area23">iqi编辑某一区域002</Link>
+                  href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/area23#area23">iqi编辑某一区域002</Link>
           </div>
           <ContentSection id="api-reference" title="API Reference">
               <p>Reference documentation for layout and page related APIs...</p>
@@ -70,7 +70,7 @@ export default function ReportOrRecord({ id, title  }: ContentSectionProps) {
           <ContentSection id="api-reference" title="API Reference">
               <p>Reference documentation for layout and page related APIs...</p>
               <Link
-                  href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA">返回</Link>
+                  href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/">返回</Link>
           </ContentSection>
 
           <ContentSection id="api-reference" title="API Reference">

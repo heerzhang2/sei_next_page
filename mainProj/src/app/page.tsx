@@ -31,11 +31,11 @@ export default function Home() {
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA">查阅当前一1份报告试图的来</Link>
+                                    href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1">查阅当前一1份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA">查阅当前一2份报告试图的来</Link>
+                                    href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1">查阅当前一2份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
                                 <Link href="/rep/SLIDING_JJ">⬅ u r q l home</Link>
@@ -45,11 +45,11 @@ export default function Home() {
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/SLIDING_JJ/1/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/2.1?make=1#2.1">编制态当前一1份报告试图的来</Link>
+                                    href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/?make=1#2.1">编制态当前一1份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/SLIDING_JJ/1/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA?make=1">编制态当前一2份报告试图的来</Link>
+                                    href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/?make=1#2.1">编制态当前一2份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
                                 <Link href="/edit/KQcbgDF9RO21DsI92H3tTVJlcG9ydA?make=1">⬅️ 修改 验证离线1 入口</Link>
