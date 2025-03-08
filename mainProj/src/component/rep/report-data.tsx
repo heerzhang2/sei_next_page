@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import React, { Suspense } from 'react';
 import {useQuery, gql, UrqlProvider} from '@urql/next';
-import {getSsr, urqlClient} from "@/auth/urql";
+// import {getSsr, urqlClient} from "@/auth/urql";
 import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 
 
@@ -50,10 +50,11 @@ const NewsfeedQuery = gql`
 /*async/await is not yet supported in Client Components, only Server Components.
 params: Promise<{ repId: string }>      ; await params;
 * */
-function CommonReportView({
-                                              repId       }: {  repId:  string}
+function CommonReportData({ repId,children       }:
+         {  repId:  string, children: React.ReactNode}
 ) {
     // KQcbgDF9RO21DsI92H3tTVJlcG9ydA
+    console.log("CommonReportData: repId=",repId);
     // const { repId } = React.use(params);  // await params
     // const post = await getPost(repId)
     // const data ={};
@@ -63,20 +64,38 @@ function CommonReportView({
     // console.log("graphql->authUser", data);
     const {getReport: report} = result?.data;
 
-    //【暂时】snapshot还未加入的
+    //【暂时】snapshot还未加入的;
     return (
-        <article>
-            <h1>Hello, Blog baogao报告内容。。。Post Page!__ </h1>
-            {report?.data}
-            <ReportView source={report?.data} verId={'1'} rep={report}/>
-        </article>
+      <> <p>{report?.data}</p>
+
+        {children}
+        <ReportView source={report?.data} verId={'1'} rep={report}/>
+      </>
     )
 }
 
 /*async/await is not yet supported in Client Components, only Server Components.
 params: Promise<{ repId: string }>      ; await params;
+【服务端SSR】？这个部分，影响client缓存? RSC必要性哪。
 * */
-export default function Page({
+export default function ReportData({
+                                       repId,children
+                                   }: {
+    repId: string,
+    children: React.ReactNode
+}) {
+    // const { repId } = React.use(params);  // await params   // params: Promise<{ repId: string }>
+    console.log("ReportData: repId=",repId);
+    return (
+        <Suspense>
+          <CommonReportData repId={repId} >
+            {children}
+          </CommonReportData>
+        </Suspense>
+    )
+}
+
+export function ReportDataOld({
                                   params,
                               }: {
     params: Promise<{ repId: string }>
@@ -86,9 +105,15 @@ export default function Page({
     return (
         <article>
             <Suspense>
-                <CommonReportView repId={repId as string} />
+                <CommonReportData repId={repId as string} />
             </Suspense>
             {/*<PostList repId={repId}/>*/}
         </article>
     )
 }
+
+
+/*
+最有可能的未来是，人工智能成为 Next.js 生态系统中的一个强大工具，而非完全取代它。开发者将使用人工智能来加速开发，同时依赖 Next.js 提供结构、优化和生产就绪的功能。
+包 @ai-sdk/react ；
+* */
