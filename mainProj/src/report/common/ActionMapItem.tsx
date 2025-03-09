@@ -29,6 +29,8 @@ interface Props  extends React.HTMLAttributes<HTMLDivElement>{
     //是否需确认日期录入， 默认自拆分项目只有一个日期的。
     sureD?: boolean;
     editIts: Column_Setting[];
+    //报告ID
+    repId?: string;
 }
 //普通输入：    //text
 //支持 t类型：'',B,l,d,C,S;
@@ -69,7 +71,7 @@ const innerRender=(inp: any,setInp: React.Dispatch<React.SetStateAction<any>>,zd
 * */
 export const ActionMapItem=
 React.forwardRef((
-    { children, show=true, alone=true,editAreasConf,index,refWidth,sureList,editIts,sureD}:Props, ref
+    { children, show=true, alone=true,editAreasConf,index,refWidth,sureList,editIts,sureD,repId}:Props, ref
 ) => {
     const config=editAreasConf[index];
     //汇总结论那一列除外：【规矩】结论是生成的就没有存储。
@@ -201,7 +203,7 @@ React.forwardRef((
     }, [config,inp,setInp, editIts]);
 
     return <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
-                                 alone={alone} label={`${config.name??config.tag}`}>
+                                 alone={alone} label={`${config.name??config.tag}`} repId={repId}>
         {render}
     </InspectRecordLayout>;
 } );

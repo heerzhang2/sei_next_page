@@ -69,7 +69,7 @@ const recordPrintList =[
 ];
 if(process.env.REACT_APP_TEST==='true')  recordPrintList.splice(0,0,createItem('GenCode', <GenCode type='CmnTowerCrane' frameMod={defFrameM} defTitle={defaultTitle}/>));
 
-
+//repId传递无效： 实际最后还用rep动态克隆配置的。
 export const OriginalView=
   React.forwardRef((
     { action,  verId, repId='', rep,}
@@ -92,7 +92,7 @@ export const OriginalView=
             let moreItems = [] as any;
             itemConfigs.forEach((area, x) => {
               seq += 1;
-              const rowHead =<ActionMapItem key={seq} alone={false} editAreasConf={itemConfigs}
+              const rowHead =<ActionMapItem key={seq} repId={repId} alone={false} editAreasConf={itemConfigs}
                                                     index={x} sureD editIts={config记录} />;
               moreItems.push(createItem(area.tag, rowHead));
             });

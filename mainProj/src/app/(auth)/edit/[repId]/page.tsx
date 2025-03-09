@@ -96,7 +96,7 @@ function CommonReportEditor({
 
     const  rep_dat =report&&JSON.parse(report?.data);
     //离线恢复需要强制刷新页面触发遗留的更新，更新api请求可能不只发出一次的。version不变；
-    const onSubmitLink = event => {
+    const onSubmitLink = (event: any) => {
         event.preventDefault();
         const { target } = event;
         //能够遗留变更，新的变更内容没有发送，但是没有登录token? 但是很早前失败的变更请求也会从重新发出的！不管URL强制刷新/累积/只要没成功的。

@@ -123,48 +123,6 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
                         })
                     }
                 </React.Fragment>;
-            }else if(action==='ALL' || action==='printAll'){
-                if(redId || !nestMdConfig)
-                    return recordPrintList.map((each, i) => {
-                        // if(each.itemArea.startsWith("__")){         //印象派的项目列表区域:印象派模式的；
-                        //     let map = new Map(Object.entries(impressionism));
-                        //     for(let [key, value] of map){
-                        //         if(each.itemArea=== `__${key}-`)
-                        //             return  renderItemsContent(key);        //应该不止唯一个印象派key
-                        //     }
-                        //     throw new Error(`没做模板区`+each.itemArea);
-                        // }
-                        // else
-                            return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                            ref: clRefs.current![i],
-                            show: action==='printAll',
-                            alone: false,
-                            repId: rep?.id,
-                            key: i,
-                            redId,
-                            nestMd: nestMdConfig,
-                            verId,
-                            refWidth: widthMyLinec,
-                            rep,
-                        });
-                    });
-                else return  SubRepIds?.map((redId: string, k: number)=>{
-                    //可重复的分项报告 k个；  暂不考虑印象派模式的；
-                    return recordPrintList.map((each, i) => {
-                        return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                            ref: clRefs.current![i+ k*editorRefCount],
-                            show: action==='printAll',
-                            alone: false,
-                            repId: rep?.id,
-                            key: i,
-                            redId,
-                            nestMd: nestMdConfig,
-                            verId,       //内嵌模式的分项模式的版本号只能听从主报告配置的。
-                            refWidth: widthMyLinec,
-                            rep,
-                        });
-                    });
-                });
             }else if(action==='_Controller'){
                 return <> {view} </>;
             }

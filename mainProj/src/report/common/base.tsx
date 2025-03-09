@@ -22,6 +22,7 @@ import { MutableRefObject } from "react";
 import {EditStorageContext, useStorage} from "../StorageContext";
 import {DirectLink} from "../../routing/Link";
 import {tableSetInp} from "../../common/tool";
+import {useQuery, gql, UrqlProvider, useMutation} from '@urql/next';
 // import {objNestArrSetInp} from "../../common/tool";
 
 
@@ -392,6 +393,23 @@ export const InspectRecordCollapse: React.FunctionComponent<InspectRecordCollaps
   );
 };
 
+const OriginalDataMutation =gql`
+    mutation useOriginalDataMutation(
+        $id: ID!
+        $operationType:Int!
+        $data: String
+        $deduction: String, $version:Int
+    ) {
+        modifyOriginalRecordData(id: $id, operationType: $operationType, data: $data, deduction: $deduction,version: $version) {
+            id,version,type
+            data
+            snapshot
+            modeltype,modelversion
+            isp{id}
+        }
+    }
+`;
+
 export interface InspectRecordDialogProps {
   children: React.ReactNode;
   //局部化变量存储
@@ -408,6 +426,7 @@ export interface InspectRecordDialogProps {
     column?: number;
     /**自适应 适应内容宽度来拆分几个排的列 */
     breaks?: number[];
+    repId?: string;
 }
 //独立编辑形式的。单独一个区块独立确认的可以支持不用立刻保存。
 export const InspectRecordDialog: React.FunctionComponent<InspectRecordDialogProps> = ({
@@ -417,9 +436,11 @@ export const InspectRecordDialog: React.FunctionComponent<InspectRecordDialogPro
      children,redId,nestMd,
      breaks=[310,650],
      column=0,
+     repId,
      ...other
  }) => {
   const {storage, setStorage, modified,setModified,} =useStorage();
+    const [updateResult, updateOriginal] = useMutation(OriginalDataMutation);
     const rskey= (nestMd? ('_'+nestMd+'_'+redId) : undefined ) as string;
   //外部汇集层次storage修改后，也得同步修正我这里低层次分部的，不然，它处已经改动的数据对我这里来说全然不知晓。
   //上一个区块编辑器已经确认的会立刻从storage反馈更新给当前组件内了。
@@ -431,7 +452,19 @@ export const InspectRecordDialog: React.FunctionComponent<InspectRecordDialogPro
     const onConfirmation = React.useCallback(async() => {
         await  setStorage({ ...storage, ...(rskey? {[rskey]: {...storage[rskey], ...inp}} : inp) });
     }, [inp,storage,setStorage,rskey]);
-
+    const onSubmitOrginal = (event: any) => {
+        event.preventDefault();
+        const { target } = event;
+        //能够遗留变更，新的变更内容没有发送，但是没有登录token? 但是很早前失败的变更请求也会从重新发出的！不管URL强制刷新/累积/只要没成功的。
+        const {_version, ...RepData}= storage;
+        // const { _version, ...RepData }= (storage || source);
+        updateOriginal({id:repId,operationType:1,
+            version: _version,   //new FormData(target).get('link'),
+            data:JSON.stringify(RepData) }).then(() =>
+            { }  // target.reset()
+        );
+        // !modified && setModified(true);
+    };
   //点击最底下的按钮，可以触发编辑器的确认临时存储的功能。
   return (
     <Layer elevation={"sm"}  css={{ padding: '0.25rem',width: '-webkit-fill-available'}}>
@@ -442,6 +475,10 @@ export const InspectRecordDialog: React.FunctionComponent<InspectRecordDialogPro
             </LineColumn>
         }
         <div css={{textAlign: 'right',padding:'0.2rem'}}>
+            <Button size="lg" intent={'primary'} disabled={updateResult.fetching}
+                    onPress={ onSubmitOrginal }>
+                保存到服务器
+            </Button>
           <Button size="lg" intent={'primary'}
              onPress={ async () =>  {
                  await onConfirmation();
@@ -452,6 +489,10 @@ export const InspectRecordDialog: React.FunctionComponent<InspectRecordDialogPro
             修改确认
           </Button>
         </div>
+        {updateResult.fetching ? <p>提交给服务器...</p> : null}
+        {updateResult.error ? (
+            <p>Oh no... {updateResult.error.message}</p>
+        ) : null}
     </Layer>
   );
 };
@@ -780,6 +821,7 @@ export interface InspectRecordLayoutProps {
     column?: number;
     /**自适应 适应内容宽度来拆分几个排的列 */
     breaks?: number[];
+    repId?: string;
 }
 //继续复用，组合来节省冗余代码量。
 /**【原始记录编辑器】原理：
@@ -803,19 +845,62 @@ export const InspectRecordLayout: React.FunctionComponent<InspectRecordLayoutPro
     setInp,
     getInpFilter,
     children,redId,nestMd,
+   breaks=[310,650],
+   column=0,
+   repId,
     ...other
  }) => {
-  if(alone)  return (
-       <InspectRecordDialog inp={inp} setInp={setInp} getInpFilter={getInpFilter} redId={redId} nestMd={nestMd}
-                            {...other} >
-          {children}
-       </InspectRecordDialog>
-      );
-  else
-      return <InspectRecordCollapse inp={inp} setInp={setInp}  getInpFilter={getInpFilter}
-                              show={show}  label={label}  redId={redId} nestMd={nestMd}   {...other}>
-            {children}
-    </InspectRecordCollapse>;
+    const {storage, setStorage, modified,setModified,} =useStorage();
+    const [updateOriginalResult, updateOriginal] = useMutation(OriginalDataMutation);
+    const rskey= (nestMd? ('_'+nestMd+'_'+redId) : undefined ) as string;
+    //外部汇集层次storage修改后，也得同步修正我这里低层次分部的，不然，它处已经改动的数据对我这里来说全然不知晓。
+    //上一个区块编辑器已经确认的会立刻从storage反馈更新给当前组件内了。
+    React.useEffect(() => {
+        const {[rskey] : subStorage}= storage;
+        storage&& setInp(getInpFilter(rskey? (subStorage||{}) : storage));
+    }, [storage, setInp, getInpFilter,rskey] );
+
+    const onConfirmation = React.useCallback(async() => {
+        await  setStorage({ ...storage, ...(rskey? {[rskey]: {...storage[rskey], ...inp}} : inp) });
+    }, [inp,storage,setStorage,rskey]);
+    const onSubmitOrginal = (event: any) => {
+        event.preventDefault();
+        const { target } = event;
+        const {_version, ...RepData}= storage;
+        // const { _version, ...RepData }= (storage || source);
+        updateOriginal({id:repId,operationType:1,
+            version: _version,   //new FormData(target).get('link'),
+            data:JSON.stringify(RepData) }).then(() =>
+            { }  // target.reset()
+        );
+        // !modified && setModified(true);
+    };
+    //点击最底下的按钮，可以触发编辑器的确认临时存储的功能。
+    return (
+        <Layer elevation={"sm"}  css={{ padding: '0.25rem',width: '-webkit-fill-available'}}>
+            { 0===column?   children
+                :
+                <LineColumn breaks={breaks} column={column}>
+                    {children}
+                </LineColumn>
+            }
+            <div css={{textAlign: 'right',padding:'0.2rem'}}>
+                <Button size="lg" intent={'primary'}
+                        onPress={ onSubmitOrginal }>
+                    保存到服务器
+                </Button>
+                <Button size="lg" intent={'primary'}
+                        onPress={ async () =>  {
+                            await onConfirmation();
+                            //修改确认 点击后快速地点击后退，可能导致Button unmounted 报错。堆栈usePressable onScroll dispatchAction
+                            //看来还得加上terminateOnScroll={false}，光光await setxxx还是不够，依然有机会在组件卸载后触发某些回调函数。得全部堵死。
+                            !modified && setModified(true);
+                        }}>
+                    修改确认
+                </Button>
+            </div>
+        </Layer>
+    );
 };
 
 

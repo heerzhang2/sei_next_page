@@ -80,7 +80,7 @@ export const ReportFirstPageHeadJd= ({theme , rep, mbbm } :{theme: any, rep:any,
             src="/images/reportNoQR.png"
             width={140}
             height={140}
-            alt="Picture of the author"
+            alt="二维码"
         />
         {/*<Embed css={{width: "140px", margin: "auto", top: '-0.65rem'}} width={10} height={10}>*/}
         {/*  <FadeImage src={Img_ReportNoQR}/>*/}

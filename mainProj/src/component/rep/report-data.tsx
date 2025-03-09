@@ -13,7 +13,7 @@ import {useStorage} from "@/report/StorageContext";
 export const ReportQuery = gql`
     query pagegetReportQuery($id: ID! ) {
         getReport(id: $id) {
-            id
+            id,version,
             data
             snapshot
             modeltype,modelversion
