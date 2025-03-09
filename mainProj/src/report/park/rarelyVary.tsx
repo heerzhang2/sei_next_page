@@ -8,6 +8,7 @@ import {businessCatspMap} from "../../agreement/AgreementList";
 import {FadeImage} from "../../comp/FadeImage";
 import Img_Ma from "../../images/MA.png";
 import Img_Fbpi from "../../images/FBPI.png";
+import Image from 'next/image'
 import Img_ReportNoQR from "../../images/reportNoQR.png";
 
 
@@ -75,9 +76,15 @@ export const ReportFirstPageHeadJd= ({theme , rep, mbbm } :{theme: any, rep:any,
         <Text css={{position: 'relative', top: '-1.1rem', fontSize: '0.9rem'}}></Text>
       </div>
       <div>
-        <Embed css={{width: "140px", margin: "auto", top: '-0.65rem'}} width={10} height={10}>
-          <FadeImage src={Img_ReportNoQR}/>
-        </Embed>
+        <Image
+            src="/images/reportNoQR.png"
+            width={140}
+            height={140}
+            alt="Picture of the author"
+        />
+        {/*<Embed css={{width: "140px", margin: "auto", top: '-0.65rem'}} width={10} height={10}>*/}
+        {/*  <FadeImage src={Img_ReportNoQR}/>*/}
+        {/*</Embed>*/}
       </div>
       <div css={{overflow: 'hidden', display: 'flex', flexDirection: 'column',justifyContent:'space-evenly'}}>
         <Text variant="h6" css={{fontSize: '0.8rem'}}>{mbbm}</Text>
