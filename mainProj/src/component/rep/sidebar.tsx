@@ -36,7 +36,7 @@ export default function Sidebar({ items }: SidebarProps) {
                   <TableOfContents items={items} />
               </div>
           </div>
-          <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
+          <div className={"print:hidden"} style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
               <div style={{ pointerEvents: 'auto' }}>
                   <Drawer.Root open={isDialogOpen} onOpenChange={handleOpenChange} direction={"right"}>
                       <Drawer.Trigger className="flex xl:hidden fixed bottom-0 right-0 h-10 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-4 text-sm font-medium shadow-sm transition-all hover:bg-[#FAFAFA] dark:bg-[#161615] dark:hover:bg-[#1A1A19] dark:text-white">

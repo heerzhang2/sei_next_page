@@ -8,6 +8,7 @@ import {eqpTypeAllMap} from "../../../dict/eqpComm";
 import {businessCatspMap} from "../../../agreement/AgreementList";
 import {Table} from "@/components/ui/table";
 import {FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexible-table";
+import SurveyRow from "@/component/SurveyRow";
 
 export const 检验核准WaterJj = ({orc, rep,jyt}: { orc: any, rep: any,jyt?:string}
 ) => {
@@ -89,26 +90,17 @@ export const 首页概况WaterJj= ({theme, orc, original,rep} :{theme: any, orc:
   const 施工单位='重大修理'===orc.检验类别? orc.大修单 :
       '改造监检'===orc.检验类别? orc.改造单 :
           orc.安装单;
-  return  <FlexibleTable columnWidths={ ["20%","%"] }>
+  return  <FlexibleTable columnWidths={ ["20%","%"] } variant={'borderless'}>
     <TableBody>
-      <TableRow >
-        <TableCell className="border-0">施工单位：</TableCell>
-        <TableCell className="border-0 border-b border-dashed">
-          {施工单位 ?? '／'}
-        </TableCell>
-      </TableRow>
-      <TableRow className="border-x-0 border-y-0 border-b-0 border-t-0">
-        <TableCell css={{border:'none'}} >使用单位：</TableCell>
-        <TableCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.使用单位 || '／'}</TableCell>
+      <TableRow variant={"borderless"}>
+        <TableCell className="p-1 border-0 text-sm text-right">使用单位：</TableCell>
+        <TableCell className="border-0 border-b border-dashed text-center text-sm">{orc.使用单位 || '／'}</TableCell>
       </TableRow>
       <OldTableRow>
         <RCell css={{border:'none'}}>分支机构：</RCell>
         <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.分支机构 || '／'}</CCell>
       </OldTableRow>
-      <OldTableRow >
-        <RCell css={{border:'none'}}>施工单位：</RCell>
-        <CCell css={{border:'none',borderBottom:`1px dashed`}}>{施工单位 ?? '／'}</CCell>
-      </OldTableRow>
+      <SurveyRow label="施工单位" value={施工单位} />
       <OldTableRow >
         <RCell css={{border:'none'}}>施工类别：</RCell>
         <CCell css={{border:'none',borderBottom:`1px dashed`}}>{businessCatspMap.get(rep?.isp?.bsType!) ?? '／'}</CCell>
@@ -121,21 +113,14 @@ export const 首页概况WaterJj= ({theme, orc, original,rep} :{theme: any, orc:
         <RCell css={{border:'none'}}>设备品种：</RCell>
         <CCell css={{border:'none',borderBottom:`1px dashed`}}>{eqpTypeAllMap.get(orc.设备品种) || '／'}</CCell>
       </OldTableRow>
-      <OldTableRow>
-        <RCell css={{border:'none'}}>检验日期：</RCell>
-        {orc.检验日期1? <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.检验日期1} 至 {orc.检验日期}</CCell>
-            :
-            <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.检验日期}</CCell>
-        }
-      </OldTableRow>
+
+      <SurveyRow label="检验日期" value={orc.检验日期1? `${orc.检验日期1} 至 ${orc.检验日期}` : orc.检验日期} />
+
       <OldTableRow >
         <RCell css={{border:'none'}}>设备代码：</RCell>
         <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.设备代码 || '／'}</CCell>
       </OldTableRow>
-      <OldTableRow>
-        <RCell css={{border:'none'}}>设  备  号：</RCell>
-        <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.eqpcod}</CCell>
-      </OldTableRow>
+      <SurveyRow label="设  备  号" value={orc.eqpcod} />
       <OldTableRow>
         <RCell css={{border:'none'}}>监察识别码：</RCell>
         <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.监察识别码 || '／'}</CCell>

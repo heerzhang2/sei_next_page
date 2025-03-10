@@ -40,17 +40,26 @@ function processTableSection(section: React.ReactNode, columnWidths: string[]): 
   return cloneElement(section, section.props, rows)
 }
 
-export function FlexibleTable({ children, columnWidths, className }: FlexibleTableProps) {
+
+export function FlexibleTable({ children, columnWidths, className,
+                                variant = "default", }: FlexibleTableProps  & {
+  variant?: "default" | "borderless"
+} ) {
+  const variantStyles = {
+    default: "border rounded-md",
+    borderless: "",
+  }
   // Process all table sections
   const processedChildren = Children.map(children, (child) => {
     if (!isValidElement(child)) return child
     return processTableSection(child, columnWidths)
   })
 
+  // className="border rounded-md overflow-x-auto"    <div className={`${variantStyles[variant]} ${className || ""}`}>
   return (
-    <div className="border rounded-md overflow-x-auto">
-      <table className={`w-full ${className || ""}`}>{processedChildren}</table>
-    </div>
+      <div className="overflow-x-auto">
+        <table className={`w-full ${className || ""}`}>{processedChildren}</table>
+      </div>
   )
 }
 
@@ -94,8 +103,9 @@ export function TableCell({
   style,
   ...props
 }: React.TdHTMLAttributes<HTMLTableCellElement>) {
+  //className={` p-4  $
   return (
-    <td className={`p-4 ${className || ""}`} style={style} colSpan={colSpan} {...props}>
+    <td className={`${className || ""}`} style={style} colSpan={colSpan} {...props}>
       {children}
     </td>
   )
