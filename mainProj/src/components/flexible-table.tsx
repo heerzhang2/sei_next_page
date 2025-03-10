@@ -3,12 +3,12 @@ import { Children, isValidElement, cloneElement, type ReactElement } from "react
 
 interface FlexibleTableProps {
   children: React.ReactNode
-  fixed: string[]
+  columnWidths: string[]
   className?: string
 }
 
 // Helper function to process rows and apply widths to cells
-function processRows(rows: React.ReactNode, fixed: string[]): React.ReactNode {
+function processRows(rows: React.ReactNode, columnWidths: string[]): React.ReactNode {
   return Children.map(rows, (row) => {
     if (!isValidElement(row)) return row
 
@@ -17,7 +17,7 @@ function processRows(rows: React.ReactNode, fixed: string[]): React.ReactNode {
       if (!isValidElement(cell)) return cell
 
       // Apply width to the cell based on its index
-      const width = fixed[cellIndex] || "auto"
+      const width = columnWidths[cellIndex] || "auto"
       return cloneElement(cell as ReactElement, {
         ...cell.props,
         style: { ...cell.props.style, width },
@@ -40,15 +40,15 @@ function processTableSection(section: React.ReactNode, columnWidths: string[]): 
   return cloneElement(section, section.props, rows)
 }
 
-export function FlexibleTable({ children, fixed, className }: FlexibleTableProps) {
+export function FlexibleTable({ children, columnWidths, className }: FlexibleTableProps) {
   // Process all table sections
   const processedChildren = Children.map(children, (child) => {
     if (!isValidElement(child)) return child
-    return processTableSection(child, fixed)
+    return processTableSection(child, columnWidths)
   })
 
   return (
-    <div className="overflow-x-auto">
+    <div className="border rounded-md overflow-x-auto">
       <table className={`w-full ${className || ""}`}>{processedChildren}</table>
     </div>
   )
@@ -66,9 +66,22 @@ export function TableFoot({ children }: { children: React.ReactNode }) {
   return <tfoot className="bg-muted/20">{children}</tfoot>
 }
 
-export function TableRow({ children, className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
+export function TableRow({
+  children,
+  className,
+  variant = "default",
+  ...props
+}: React.HTMLAttributes<HTMLTableRowElement> & {
+  variant?: "default" | "borderless" | "dashed"
+}) {
+  const variantStyles = {
+    default: "border-b",
+    borderless: "",
+    dashed: "border-b border-dashed",
+  }
+
   return (
-    <tr className={`border-b ${className || ""}`} {...props}>
+    <tr className={`${variantStyles[variant]} ${className || ""}`} {...props}>
       {children}
     </tr>
   )
@@ -79,12 +92,10 @@ export function TableCell({
   className,
   colSpan,
   style,
-   css,
   ...props
-}: React.TdHTMLAttributes<HTMLTableCellElement> & { css?: React.CSSProperties }) {
-  const mergedStyle = css ? { ...style, ...css } : style;
+}: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <td className={`p-4 ${className || ""}`} style={mergedStyle} colSpan={colSpan} {...props}>
+    <td className={`p-4 ${className || ""}`} style={style} colSpan={colSpan} {...props}>
       {children}
     </td>
   )

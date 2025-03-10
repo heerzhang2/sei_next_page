@@ -207,3 +207,24 @@ console.log(greeting());</textarea><p class="h-40">编辑区的----滚动看效�
   TableRow,
   TableCell,
   TableCaption,
+  export function FlexibleTable({ children, columnWidths, className,
+                                  variant = "default", }: FlexibleTableProps  & {
+    variant?: "default" | "borderless"
+  } ) {
+    const variantStyles = {
+      default: "border rounded-md",
+      borderless: "",
+    }
+    // Process all table sections
+    const processedChildren = Children.map(children, (child) => {
+      if (!isValidElement(child)) return child
+      return processTableSection(child, columnWidths)
+    })
+
+  // className="border rounded-md overflow-x-auto"    <div className={`${variantStyles[variant]} ${className || ""}`}>
+    return (
+      <div className="border rounded-md overflow-x-auto">
+        <table className={`w-full ${className || ""}`}>{processedChildren}</table>
+      </div>
+    )
+  }

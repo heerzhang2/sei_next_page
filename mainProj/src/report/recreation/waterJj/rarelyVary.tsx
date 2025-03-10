@@ -89,9 +89,9 @@ export const 首页概况WaterJj= ({theme, orc, original,rep} :{theme: any, orc:
   const 施工单位='重大修理'===orc.检验类别? orc.大修单 :
       '改造监检'===orc.检验类别? orc.改造单 :
           orc.安装单;
-  return  <FlexibleTable fixed={ ["20%","%"] }>
+  return  <FlexibleTable columnWidths={ ["20%","%"] }>
     <TableBody>
-      <TableRow className="border-0">
+      <TableRow >
         <TableCell className="border-0">施工单位：</TableCell>
         <TableCell className="border-0 border-b border-dashed">
           {施工单位 ?? '／'}
