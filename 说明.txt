@@ -318,4 +318,4 @@ npx shadcn@latest add sidebar
 This implementation should fix the issue with the semi-transparent background while maintaining all the functionality of your current sidebar. The shadcn sidebar has built-in handling for proper overlays and z-index management .
 
 
-npx shadcn@latest add sidebar
+npx shadcn@latest add sidebar shadcn 2.4.0
