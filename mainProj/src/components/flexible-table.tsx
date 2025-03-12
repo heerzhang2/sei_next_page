@@ -5,6 +5,7 @@ interface FlexibleTableProps {
   children: React.ReactNode
   columnWidths: string[]
   className?: string
+  variant?: "default" | "borderless"
 }
 
 // Helper function to process rows and apply widths to cells
@@ -12,20 +13,27 @@ function processRows(rows: React.ReactNode, columnWidths: string[]): React.React
   return Children.map(rows, (row) => {
     if (!isValidElement(row)) return row
 
+    // Cast row to ReactElement after validation
+    const rowElement = row as ReactElement
+
     // Process cells within the row
-    const cells = Children.map(row.props.children, (cell, cellIndex) => {
+    // @ts-ignore
+    const cells = Children.map(rowElement.props.children, (cell, cellIndex) => {
       if (!isValidElement(cell)) return cell
 
       // Apply width to the cell based on its index
       const width = columnWidths[cellIndex] || "auto"
       return cloneElement(cell as ReactElement, {
+        // @ts-ignore
         ...cell.props,
+        // @ts-ignore
         style: { ...cell.props.style, width },
       })
     })
 
     // Return the row with processed cells
-    return cloneElement(row, row.props, cells)
+    // @ts-ignore
+    return cloneElement(rowElement, rowElement.props, cells)
   })
 }
 
@@ -33,33 +41,34 @@ function processRows(rows: React.ReactNode, columnWidths: string[]): React.React
 function processTableSection(section: React.ReactNode, columnWidths: string[]): React.ReactNode {
   if (!isValidElement(section)) return section
 
+  // Cast section to ReactElement after validation
+  const sectionElement = section as ReactElement
+
   // Process rows within the section
-  const rows = processRows(section.props.children, columnWidths)
+  // @ts-ignore
+  const rows = processRows(sectionElement.props.children, columnWidths)
 
   // Return the section with processed rows
-  return cloneElement(section, section.props, rows)
+  // @ts-ignore
+  return cloneElement(sectionElement, sectionElement.props, rows)
 }
 
-
-export function FlexibleTable({ children, columnWidths, className,
-                                variant = "default", }: FlexibleTableProps  & {
-  variant?: "default" | "borderless"
-} ) {
+export function FlexibleTable({ children, columnWidths, className, variant = "default" }: FlexibleTableProps) {
   const variantStyles = {
     default: "border rounded-md",
     borderless: "",
   }
+
   // Process all table sections
   const processedChildren = Children.map(children, (child) => {
     if (!isValidElement(child)) return child
     return processTableSection(child, columnWidths)
   })
 
-  // className="border rounded-md overflow-x-auto"    <div className={`${variantStyles[variant]} ${className || ""}`}>
   return (
-      <div className="overflow-x-auto">
-        <table className={`w-full ${className || ""}`}>{processedChildren}</table>
-      </div>
+    <div className="overflow-x-auto">
+      <table className={`w-full ${variantStyles[variant]} ${className || ""}`}>{processedChildren}</table>
+    </div>
   )
 }
 
@@ -103,7 +112,6 @@ export function TableCell({
   style,
   ...props
 }: React.TdHTMLAttributes<HTMLTableCellElement>) {
-  //className={` p-4  $
   return (
     <td className={`${className || ""}`} style={style} colSpan={colSpan} {...props}>
       {children}

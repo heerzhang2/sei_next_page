@@ -17,6 +17,13 @@ export default function DepTask() {
                     <li className="mb-2">采购招标综合网。
                         <ol className="p-4 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
                             <li className="mb-2">
+                                <Link href="https://vip.bidizhaobiao.com/admin#/informationQuery/bid">比地招标网</Link>
+                            </li>
+                            <li className="mb-2">
+                                <Link href="https://www.chinabidding.cc/search/index.html?page=1&keyword=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&h_lx=9&h_province=0&vague=0&date=90&search_field=1">
+                                    采购招标网</Link>
+                            </li>
+                            <li className="mb-2">
                                 <Link href="https://search.ccgp.gov.cn/bxsearch?searchtype=1&page_index=1&bidSort=0&buyerName=&projectId=&pinMu=0&bidType=0&dbselect=bidx&kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C%E7%AE%A1%E7%90%86&start_time=2025%3A02%3A07&end_time=2025%3A03%3A10&timeType=3&displayZone=&zoneId=&pppStatus=0&agentName=">
                                     中国政府采购</Link>
                             </li>
@@ -24,31 +31,28 @@ export default function DepTask() {
                                 <Link href="https://search.bidcenter.com.cn/search?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&tag=1&mod=0">采 招 网</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://www.zbytb.com/zb/search.php?kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">中国招标与采购网</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="https://zfcg.czt.fujian.gov.cn/freecms/site/fujian/qwjsy/index.html?searchContent=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">福建政府采购网</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="https://console.jrzb.cn/search?type=0&menuActive=2&searchType=1">今日招标</Link>
+                                <Link href="https://www.arrbid.com/bidquery/key_%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87?timetype=3&keywordtype=1&showtype=1">立达标讯</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://deal.ggzy.gov.cn/ds/deal/dealList.jsp?HEADER_DEAL_TYPE=02">全国公共资源交易平台</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://search.vip.qianlima.com/index.html#?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&timeType=3&filtermode=2&currentPage=7&keywordsFrom=0&isSearchWord=1&tab_index=0">
-                                    千里马 招标网</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="https://vip.bidizhaobiao.com/admin#/informationQuery/bid">比地招标网</Link>
-                            </li>
-                            <li className="mb-2">
                                 <Link href="https://zb.yfb.qianlima.com/yfbsemsite/mesinfo/zbpglist">乙 方 宝</Link>
+                            </li>
+                            <li className="mb-2">
+                                <Link href="https://www.zbytb.com/zb/search.php?kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">中国招标与采购网</Link>
+                            </li>
+                            <li className="mb-2">
+                                <Link href="https://search.vip.qianlima.com/index.html#?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&timeType=3&filtermode=2&sortType=1&keywordsFrom=0&isSearchWord=1&tab_index=0">
+                                    千里马 招标网</Link>
                             </li>
                         </ol>
                     </li>
                     <li className="mb-2">各省市的招标网。
                         <ol className="p-4 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
+                            <li className="mb-2">
+                                <Link href="https://zfcg.czt.fujian.gov.cn/freecms/site/fujian/qwjsy/index.html?searchContent=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">福建政府采购网</Link>
+                            </li>
                             <li className="mb-2">
                                 <Link href="https://hljcg.hlj.gov.cn/maincms-web/fullSearchingHlj?searchKey=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">黑龙江政府采购</Link>
                             </li>
@@ -56,10 +60,10 @@ export default function DepTask() {
                                 <Link href="http://ggzy.hebei.gov.cn/hbggfwpt/search/fullsearch.html?wd=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C">河北省公共资源交易平台</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://ggzy.guizhou.gov.cn/xxfw/search.html?searchWord=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">贵州省公共资源交易云</Link>
+                                <Link href="http://www.hebeieb.com/tender/xxgk/list.do?selectype=zbgg">河北省招标投标</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="http://www.hebeieb.com/tender/xxgk/list.do?selectype=zbgg">河北省数据和政务服务局</Link>
+                                <Link href="https://ggzy.guizhou.gov.cn/xxfw/search.html?searchWord=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">贵州省公共资源交易云</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="http://www.ccgp-liaoning.gov.cn/portalindex?currentKey=pubAnnounce&tabKey=0">辽宁政府采购网</Link>
@@ -71,14 +75,7 @@ export default function DepTask() {
                                 <Link href="http://www.ccgp-jiangsu.gov.cn/jiangsu/cggg_search.html?lmid=cggg&qh=notic_c2">江苏政府采购网</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="http://www.ccgp-jiangsu.gov.cn/jiangsu/cggg_search.html?lmid=cggg&qh=notic_c2">安徽省政府采购网</Link>
-                            </li>
-                            <li className="mb-2">
                                 <Link href="https://jxsggzy.cn/jyxx/002006/002006001/trade.html">江西省公共资源交易网</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="https://www.chinabidding.cc/search/index.html?page=1&keyword=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&h_lx=9&h_province=0&vague=0&date=90&search_field=1">
-                                    安徽采购招标网</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://ggzyjy.shandong.gov.cn/queryContent-jyxxgg.jspx">山东省公共资源交易网</Link>
@@ -93,13 +90,13 @@ export default function DepTask() {
                                 <Link href="https://www.ccgp-sichuan.gov.cn/maincms-web/noticeInformation?typeId=ggxx">四川政府采购网</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://ggzyjy.sc.gov.cn/jyxx/transactionInfo.html">全国公共资源交易平台（四川省）</Link>
+                                <Link href="https://ggzyjy.sc.gov.cn/jyxx/transactionInfo.html">四川省公共资源交易平台</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://www.ccgp-shaanxi.gov.cn/cms-sx/site/shanxi/xxgg/index.html?xxggType=123&noticeType=00101">陕西省政府采购网</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="http://ggzy.shaanxi.gov.cn/jydt/001001/001001004/001001004001/subPage_xq.html">全国公共资源交易平台（陕西省）</Link>
+                                <Link href="http://ggzy.shaanxi.gov.cn/jydt/001001/001001004/001001004001/subPage_xq.html">陕西省公共资源交易平台</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://sjfz.ggzyjy.gansu.gov.cn:19002/#/list-search?pop=true&params=H4sIAAAAAAAAA6tWKilKTEkNqSxIVbJSMlTSUcrJzMsGMgOC%252FL1cnUOAAgU5iSVp%252BUW5zvkpIDVKtQBF0blcNAAAAA%253D%253D">
@@ -115,10 +112,10 @@ export default function DepTask() {
                                 <Link href="https://zfcg.gxzf.gov.cn/site/category?parentId=66485&childrenCode=ZcyAnnouncement">广西政府采购网</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://ggzy.xizang.gov.cn/search/queryContents.jhtml">西藏自治区公共资源交易网</Link>
+                                <Link href="https://ggzy.xizang.gov.cn/search/queryContents.jhtml">西藏公共资源交易网</Link>
                             </li>
                             <li className="mb-2">
-                              <Link href="https://ggzyjy.fzggw.nx.gov.cn/dzjy/001001/trade_infomation.html">宁夏公共资源交易网</Link>
+                              <Link href="https://ggzyjy.fzggw.nx.gov.cn/dzjy/001001/001001002/trade_infomation.html">宁夏公共资源交易网</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="http://www.ccgp-xinjiang.gov.cn/site/category?isProvince=true&districtCode=659900&parentId=3661&childrenCode=ZcyAnnouncement2&utm=site.site-PC-42055.1069-pc-wsg-ArticlePurchaseNoticeList-front.1.59759300fe4911ef92753b56277d9df2">
@@ -130,21 +127,6 @@ export default function DepTask() {
                         </ol>
                     </li>
 
-                    <li className="mb-2">特种设备检验检测机构。
-                        <ol className="p-4 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-                            <li className="mb-2">
-                                <Link href="http://www.hljsei.org.cn/">黑龙江特种设备检验研究院的官方网站</Link>
-                            </li>
-                        </ol>
-                    </li>
-
-                    <li className="mb-2">无效或避免骚扰的站点：
-                        <ol className="p-4 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-                            <li className="mb-2">
-                                <Link href="https://zhengcai.wxniusis.cn/index/formguide/index.html?id=1&bd_vid=10385197680151130050">政 采</Link>
-                            </li>
-                        </ol>
-                    </li>
                 </ol>
             </main>
             <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
