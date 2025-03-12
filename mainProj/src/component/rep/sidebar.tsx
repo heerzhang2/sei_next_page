@@ -1,19 +1,11 @@
-'use client'
-
-import React from 'react'
-import Link from 'next/link'
-import { X } from 'lucide-react'
-
-import { TableOfContents } from '@/component/table-of-contents'
-import { useEditControlContext } from '@/component/rep/editControl-provider'
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarHeader,
-    SidebarProvider,
-    SidebarTrigger,
-} from '@/components/ui/sidebar'
-import { Button } from '@/components/ui/button'
+"use client"
+import Link from 'next/link';
+import {TableOfContents} from "@/component/table-of-contents";
+import {Button} from "@/components/ui/button";
+import React, {useEffect, useRef, useState} from "react";
+import {Drawer} from "vaul";
+import { X } from 'lucide-react';
+import {useEditControlContext} from "@/component/rep/editControl-provider";
 
 interface SidebarProps {
     items: {
@@ -22,18 +14,18 @@ interface SidebarProps {
     }[]
 }
 
-export default function ImprovedSidebar({ items }: SidebarProps) {
+export default function Sidebar({ items }: SidebarProps) {
     const { activeTab, setActiveTab } = useEditControlContext()
-
-    // Handle sidebar state changes
-    const handleOpenChange = (open: boolean) => {
-        if (open && setActiveTab !== null) {
-            setActiveTab('preview')
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const handleOpenChange = (newOpen: boolean) => {
+        if (newOpen && setActiveTab!==null) {
+            setActiveTab("preview");
         }
+        setIsDialogOpen(newOpen)
     }
 
     return (
-        <SidebarProvider onOpenChange={handleOpenChange}>
+        <>
             {/* Desktop sidebar - always visible */}
             <div className="hidden xl:block w-64 shrink-0 border-l p-4">
                 <div className="sticky top-16">
@@ -41,31 +33,40 @@ export default function ImprovedSidebar({ items }: SidebarProps) {
                 </div>
             </div>
 
-            {/* Mobile sidebar - uses shadcn Sidebar */}
-            <div className="xl:hidden print:hidden">
-                <Sidebar side="right" variant="floating" className="print:hidden">
-                    <SidebarHeader className="flex justify-between items-center">
-                        <h2 className="text-lg font-medium">Outline</h2>
-                        <SidebarTrigger>
-                            <X className="h-4 w-4" />
-                        </SidebarTrigger>
-                    </SidebarHeader>
-                    <SidebarContent>
-                        <div className="p-4">
-                            <TableOfContents items={items} />
-                        </div>
-                    </SidebarContent>
-                </Sidebar>
-
-                {/* Trigger button */}
-                <div className="fixed bottom-4 right-4 z-10 print:hidden">
-                    <SidebarTrigger asChild>
-                        <Button className="rounded-full shadow-lg">
+            {/* Mobile sidebar with Vaul drawer */}
+            <div className="print:hidden" style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
+                <div style={{ pointerEvents: 'auto' }}>
+                    <Drawer.Root open={isDialogOpen} onOpenChange={handleOpenChange} direction={"right"}>
+                        <Drawer.Trigger className="flex xl:hidden fixed bottom-4 right-4 h-10 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-4 text-sm font-medium shadow-sm transition-all hover:bg-[#FAFAFA] dark:bg-[#161615] dark:hover:bg-[#1A1A19] dark:text-white">
                             Outline
-                        </Button>
-                    </SidebarTrigger>
+                        </Drawer.Trigger>
+                        <Drawer.Portal>
+                            {/* Improved overlay with higher opacity and z-index */}
+                            <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
+                            <Drawer.Content
+                                className={`bg-white flex flex-col fixed top-0 right-0 
+                                    rounded-l-[10px] w-[50vw] min-w-[15rem] max-w-[30rem] h-[100vh]
+                                    z-[51] shadow-xl
+                                  `}>
+                                <div className="w-full h-full overflow-auto p-4 rounded-t-[10px]">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <Drawer.Title className="font-medium text-gray-900">Outline</Drawer.Title>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setIsDialogOpen(false)}
+                                            className="h-8 w-8"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <TableOfContents items={items} />
+                                </div>
+                            </Drawer.Content>
+                        </Drawer.Portal>
+                    </Drawer.Root>
                 </div>
             </div>
-        </SidebarProvider>
-    )
+        </>
+    );
 }
