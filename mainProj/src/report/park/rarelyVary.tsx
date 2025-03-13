@@ -1,15 +1,11 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-  TableRow, CCell, Table, TableBody, RCell, Embed, Text
+  TableRow, CCell, Table, TableBody, RCell,
 } from "customize-easy-ui-component";
 import {eqpTypeAllMap} from "../../dict/eqpComm";
 import {businessCatspMap} from "../../agreement/AgreementList";
-import {FadeImage} from "../../comp/FadeImage";
-import Img_Ma from "../../images/MA.png";
-import Img_Fbpi from "../../images/FBPI.png";
 import Image from 'next/image'
-import Img_ReportNoQR from "../../images/reportNoQR.png";
 
 
 export const 首页概况EscaJj= ({theme, orc, original,rep} :{theme: any, orc:any, original?:boolean,rep:any}
@@ -60,40 +56,29 @@ export const 首页概况EscaJj= ({theme, orc, original,rep} :{theme: any, orc:a
 
 /**没有MA  机电报告；  固定高度 8.5rem
  * */
-export const ReportFirstPageHeadJd= ({rep, mbbm } :{rep:any, mbbm:string}
-) => {
-  return <React.Fragment>
-    <div css={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      textAlign: 'center',
-      height: '8.5rem',
-    }}>
-      <div css={{overflow: 'hidden'}}>
-        <Embed css={{width: "155px", margin: "auto", top: '-0.65rem'}} width={78} height={35}>
-        </Embed>
-        <Text css={{position: 'relative', top: '-1.1rem', fontSize: '0.9rem'}}></Text>
-      </div>
-      <div>
-        <Image
-            src="/images/reportNoQR.png"
-            width={140}
-            height={140}
-            alt="二维码"
-        />
-      </div>
-      <div css={{overflow: 'hidden', display: 'flex', flexDirection: 'column',justifyContent:'space-evenly'}}>
-        <Text variant="h6" css={{fontSize: '0.8rem'}}>{mbbm}</Text>
-        <div css={{
-          display: 'flex',
-          "@media (min-width:690px),print and (min-width:538px)": {
-            marginRight: "1rem"
-          }
-        }}
-        ><Text variant="h6">报告编号：</Text>
-          <Text variant="h5" css={{textDecoration: 'underline'}}>{rep?.isp?.no}</Text>
+export const ReportFirstPageHeadJd = ({ rep, mbbm }: { rep: any; mbbm: string }) => {
+  return (
+      <div className="flex justify-between items-center text-center h-[8.5rem] print:-mt-1">
+        <div className="overflow-hidden">
+          {/*<Embed className="w-[155px] mx-auto -mt-[0.65rem]" width={78} height={35} />*/}
+          <span className="relative -mt-[1.1rem] text-[0.9rem]" />
+        </div>
+
+        <div>
+          <Image src="/images/reportNoQR.png" width={140} height={140} alt="二维码" />
+        </div>
+
+        <div className="overflow-hidden flex flex-col justify-evenly">
+          <h6  className="text-[0.8rem]">
+            {mbbm}
+          </h6>
+          <div className="flex md:mr-4 print:mr-4">
+            <h6 >报告编号：</h6>
+            <h5  className="underline">
+              {rep?.isp?.no}
+            </h5>
+          </div>
         </div>
       </div>
-    </div>
-  </React.Fragment>;
-};
+  )
+}
