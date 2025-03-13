@@ -132,3 +132,16 @@ export function TableCell({
   )
 }
 
+export function CCell({
+                            children,
+                            className,
+                            colSpan,
+                            style,
+                            ...props
+                          }: React.TdHTMLAttributes<HTMLTableCellElement>) {
+  return (
+      <td className={`p-2 text-center ${className || ""}`} style={style} colSpan={colSpan} {...props}>
+        {children}
+      </td>
+  )
+}

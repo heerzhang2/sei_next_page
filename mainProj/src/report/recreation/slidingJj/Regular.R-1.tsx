@@ -1,156 +1,173 @@
-/** @jsxImportSource @emotion/react */
 "use client"
-import {useSearchParams} from 'next/navigation'
-// import RoutingContext from "../../../routing/RoutingContext";
-import * as React from "react";
-import {useEffect, useState} from "react";
-import {Button, CCell, Table, TableBody, TableHead, TableRow, Text, useTheme,} from "customize-easy-ui-component";
-// import {DirectLink, Link as RouterLink,} from "../../../routing/Link";
-import {ReportViewProps,} from "../../common/base";
-import {末尾链接, 落款单位地址,} from "../../common/rarelyVary";
-import {报告设备详情,} from "./repView";
-import {useRepMenuDirItems,} from "../../hook/useMainRepUrlOr";
-import {setupItemAreaRoute} from "./orcIspConfig";
-import {FormatOriginal,} from "./FormatOriginal";
-import {Column_Setting} from "../../common/useFormatOmni";
-import {useOfficialOmni,} from "../../common/useOfficialOmni";
-import {ReportFirstPageHeadJd} from "../../park/rarelyVary";
-import {UnqualifiedIspTable} from "../../common/general";
-import {useItemsMapOmni} from "../../common/omni";
-import {检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj} from "../waterJj/rarelyVary";
-import Link from "next/link";
-import {DirectLink} from "@/routing/Link";
+import { useSearchParams } from "next/navigation"
+import * as React from "react"
+import { useEffect, useState } from "react"
+import { Button,  useTheme } from "customize-easy-ui-component"
+import type { ReportViewProps } from "../../common/base"
+import { 末尾链接, 落款单位地址 } from "../../common/rarelyVary"
+import { 报告设备详情 } from "./repView"
+import { setupItemAreaRoute } from "./orcIspConfig"
+import { FormatOriginal } from "./FormatOriginal"
+import type { Column_Setting } from "../../common/useFormatOmni"
+import { useOfficialOmni } from "../../common/useOfficialOmni"
+import { ReportFirstPageHeadJd } from "../../park/rarelyVary"
+import { UnqualifiedIspTable } from "../../common/general"
+import { useItemsMapOmni } from "../../common/omni"
+import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from "../waterJj/rarelyVary"
+import Link from "next/link"
+import { DirectLink } from "@/routing/Link"
+import {CCell, FlexibleTable, TableBody, TableHead, TableRow} from "@/components/flexible-table";
 
-
-export const ReportView = ({
-repId='',  orc={},  verId=1,rep,
-}:any) => {
+export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
     const searchParams = useSearchParams()
     const [formatOriginal, setFormatOriginal] = useState(false)
     useEffect(() => {
-        const original = searchParams.get('original')
+        const original = searchParams.get("original")
         setFormatOriginal(!!original)
     }, [searchParams])
-    console.log("ReportView 页面刷新", {original: formatOriginal})
-    console.log("ReportView页面刷新orc:", orc ,"rep=",rep);
-    // const { history } = useContext(RoutingContext);
-    const Component=formatOriginal? FormatOriginal : OfficialReport;
-    return (<>
-        <Component  source={orc} verId={verId} repId={repId} rep={rep}/>
-        <div css={{margin: '0.5rem', "@media print": {display: 'none'} }}>
-            <Button intent="danger" variant="outline"
-                  onPress={async () => {
-                      // qs.original =formatOriginal? '' : '1';
-                      // history.location.search = queryString.stringify(qs);
-                      // const toUrl= history.createHref(history.location);
-                      // history.push(toUrl);
-                  }}>{formatOriginal? '正式报告':'格式化版原始记录'}
-            </Button>
-        </div>
-    </>);
+    console.log("ReportView 页面刷新", { original: formatOriginal })
+    console.log("ReportView页面刷新orc:", orc, "rep=", rep)
+    const Component = formatOriginal ? FormatOriginal : OfficialReport
+    return (
+        <>
+            <Component source={orc} verId={verId} repId={repId} rep={rep} />
+            <div className="m-2 print:hidden">
+                <Button
+                    intent="danger"
+                    variant="outline"
+                    onPress={async () => {
+                        // Button action logic here
+                    }}
+                >
+                    {formatOriginal ? "正式报告" : "格式化版原始记录"}
+                </Button>
+            </div>
+        </>
+    )
 }
 
-const 检验结果替换 =((orc: { [x: string]: any; }) => {
-    let out={...orc};
+const 检验结果替换 = (orc: { [x: string]: any }) => {
+    const out = { ...orc }
     // if(undefined!==orc?.绝缘阻o)  out.绝缘阻检=<div>电阻值{floatInterception(orc?.绝缘阻o,1)}MΩ</div>;
-    return out;
-});
-const config报告 : Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'}, {n:'M',x:'备注',m:true}];
+    return out
+}
+const config报告: Column_Setting[] = [
+    { n: "", x: "检验结果" },
+    { n: null, x: "结论" },
+    { n: "M", x: "备注", m: true },
+]
 
-const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
-    repId,   source: orc,  verId,rep,
-}) => {
+const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, source: orc, verId, rep }) => {
     const searchParams = useSearchParams()
     const [printing, setPrinting] = useState(false)
     useEffect(() => {
-        const printing = searchParams.get('print')
+        const printing = searchParams.get("print")
         setPrinting(!!printing)
     }, [searchParams])
-    const theme= useTheme();
-    const impressionismAs =React.useMemo(() => {
-        return setupItemAreaRoute({rep,orc, theme});
-    }, [verId, repId,rep, orc?._Oitems, theme]);
-    const {renderIspContent} =useOfficialOmni({orc,ItemArs:impressionismAs?.Item, rep, config:config报告, itResCB:检验结果替换});
-    const [mapNoTag]=useItemsMapOmni({ ItemArs:impressionismAs?.Item, notCheckNo:false});
-  return (
-    <React.Fragment>
-       <div css={{"@media not print": {marginTop: '1rem', marginBottom: '1rem'}}}>
-            <div css={{"@media print": {height: '100vh'}}}>
-                {ReportFirstPageHeadJd({rep, mbbm: 'FJJ/YB-1009-1-2024'})}
-                <div css={{
-                    "@media print": {
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        height: 'calc(100vh - 8.5rem)',
-                    }
-                }}>
-                    <Text id={"Conclusion"} variant="h3" css={{textAlign: 'center', "@media print": {fontSize: theme.fontSizes[5], marginTop: '1.5rem',},}}>
-                      滑行车类游乐设施监督检验报告
-                    </Text>
-                    {首页概况WaterJj({theme, orc,rep })}
-                    <div css={{textAlign: 'center', "@media print": {pageBreakAfter: 'always', pageBreakInside: 'avoid'}}}>
-                        {落款单位地址}
+    const theme = useTheme()
+    const impressionismAs = React.useMemo(() => {
+        return setupItemAreaRoute({ rep, orc, theme })
+    }, [verId, repId, rep, orc?._Oitems, theme])
+    const { renderIspContent } = useOfficialOmni({
+        orc,
+        ItemArs: impressionismAs?.Item,
+        rep,
+        config: config报告,
+        itResCB: 检验结果替换,
+    })
+    const [mapNoTag] = useItemsMapOmni({ ItemArs: impressionismAs?.Item, notCheckNo: false })
+    return (
+        <React.Fragment>
+            <div className="not-print:my-4">
+                <div className="print:h-screen">
+                    {ReportFirstPageHeadJd({ rep, mbbm: "FJJ/YB-1009-1-2024" })}
+                    <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
+                        <h3 id={"Conclusion"}  className="text-center print:text-[var(--font-size-5)] print:mt-6">
+                            滑行车类游乐设施监督检验报告
+                        </h3>
+                        {首页概况WaterJj({ theme, orc, rep })}
+                        <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址}</div>
                     </div>
                 </div>
-            </div>
-            {注意事项WaterJj({
-                rep,
-                comply: '依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验'
-            })}
-           <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`} css={{"@media print": {textDecoration: 'none'}}}>
-               <div css={{display: 'flex', flexDirection: 'column', justifyContent: 'center', "@media print": {pageBreakBefore: 'always',},}}>
-                   <Text variant="h4" css={{textAlign: 'center'}}>大型游乐设施监督检验报告</Text>
-               </div>
-               <div css={{display: 'flex', justifyContent: 'space-between'}}>
-                   <Text></Text>
-                   <Text>报告编号：{rep.isp.no}</Text>
-               </div>
-           </Link>
-           {报告设备详情({theme, orc, rep})}
-           {检验核准WaterJj({orc,rep})}
-            <div css={{"@media print": {paddingBottom: '13.3rem', pageBreakInside: 'avoid'}}}>
-                <Text variant="h4" css={{textAlign: 'center',marginTop:'1rem'}}>大型游乐设施监督检验报告附页</Text>
-                <div css={{display: 'flex', justifyContent: 'space-between'}}>
-                    <Text></Text><Text>报告编号：{rep.isp.no}</Text>
+                {注意事项WaterJj({
+                    rep,
+                    comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
+                })}
+                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`} className="print:no-underline">
+                    <div className="flex flex-col justify-center print:break-before-page">
+                        <h4  className="text-center">
+                            大型游乐设施监督检验报告
+                        </h4>
+                    </div>
+                    <div className="flex justify-between">
+                        <span></span>
+                        <span>报告编号：{rep.isp.no}</span>
+                    </div>
+                </Link>
+                {报告设备详情({ theme, orc, rep })}
+                {检验核准WaterJj({ orc, rep })}
+                <div className="print:pb-[13.3rem] print:break-inside-avoid">
+                    <h4  className="text-center mt-4">
+                        大型游乐设施监督检验报告附页
+                    </h4>
+                    <div className="flex justify-between">
+                        <span></span>
+                        <span>报告编号：{rep.isp.no}</span>
+                    </div>
                 </div>
+                <FlexibleTable
+                    columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}
+                    className="border-collapse print:-mt-[13.3rem]"
+                >
+                    <TableHead>
+                        <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
+                            <TableRow>
+                                <CCell id={"T5-1"}>
+                                    <span className="text-[0.7rem]">序号</span>
+                                </CCell>
+                                <CCell colSpan={5}>检验项目及内容</CCell>
+                                <CCell>
+                                    <span className="text-[0.8rem]">检验结果</span>
+                                </CCell>
+                                <CCell>结论</CCell>
+                                <CCell>备注</CCell>
+                            </TableRow>
+                        </DirectLink>
+                    </TableHead>
+                    <TableBody>{renderIspContent}</TableBody>
+                </FlexibleTable>
+                <span className="print:text-[0.75rem]"></span>
+                <UnqualifiedIspTable
+                    rep={rep}
+                    orc={orc}
+                    mapNoTag={mapNoTag}
+                    printing={printing}
+                    titles={["序号", "项目编号", "检验不符合内容记录", "复检结果", "复检日期"]}
+                    label={<h4 >检验不符合项目内容及复检结果</h4>}
+                />
             </div>
-           <Table fixed={ ["3.4%","6.4%","8.3%","5.3%","5%","%","12.6%","6.2%","9.8%"] }
-                  css={ {borderCollapse: 'collapse',"@media print": {marginTop: '-13.3rem'}} }   tight  miniw={800}>
-               <TableHead>
-                   <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
-                       <TableRow>
-                           <CCell  id={"T5-1"}><Text css={{fontSize:'0.7rem'}}>序号</Text></CCell>
-                           <CCell colSpan={5}>检验项目及内容</CCell>
-                           <CCell><Text css={{fontSize:'0.8rem'}}>检验结果</Text></CCell>
-                           <CCell>结论</CCell>
-                           <CCell>备注</CCell>
-                       </TableRow>
-                   </DirectLink>
-               </TableHead>
-               <TableBody>
-                   {renderIspContent}
-               </TableBody>
-           </Table>
-           <Text css={{"@media print": {fontSize: '0.75rem'}}}></Text>
-           <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag} printing={printing} titles={['序号','项目编号','检验不符合内容记录','复检结果','复检日期']}
-                                label={<Text variant="h4">检验不符合项目内容及复检结果</Text>}/>
-        </div>
-        <div>
-            <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument?original=1#Instrument`}>
-                <Text variant="h4" css={{"@media print": {display: 'none'}}}>主要测量设备性能检查</Text>
-            </Link>
-            <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Witness#Witness`}>
-                <Text variant="h4" css={{"@media print": {display: 'none'}}}>记事 、 备注</Text>
-            </Link>
-            <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/SiteCondition#SiteCondition`}>
-            <Text id={'SiteCondition'} variant="h4" css={{"@media print": {display: 'none'}}}>附录：现场检验条件确认</Text>
-            </Link>
-        </div>
-      {末尾链接({template:rep?.modeltype,verId, repId: repId||''})}
-    </React.Fragment>
-  );
+            <div>
+                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument?original=1#Instrument`}>
+                    <h4  className="print:hidden">
+                        主要测量设备性能检查
+                    </h4>
+                </Link>
+                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Witness#Witness`}>
+                    <h4  className="print:hidden">
+                        记事 、 备注
+                    </h4>
+                </Link>
+                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/SiteCondition#SiteCondition`}>
+                    <h4 id={"SiteCondition"}  className="print:hidden">
+                        附录：现场检验条件确认
+                    </h4>
+                </Link>
+            </div>
+            {末尾链接({ template: rep?.modeltype, verId, repId: repId || "" })}
+        </React.Fragment>
+    )
 }
+
 
 export const contentItems = [
     {title: "设备概况", url: "#Survey"},
