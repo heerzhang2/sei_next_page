@@ -90,7 +90,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
                         height: 'calc(100vh - 8.5rem)',
                     }
                 }}>
-                    <Text variant="h3" css={{textAlign: 'center', "@media print": {fontSize: theme.fontSizes[5], marginTop: '1.5rem',},}}>
+                    <Text id={"Conclusion"} variant="h3" css={{textAlign: 'center', "@media print": {fontSize: theme.fontSizes[5], marginTop: '1.5rem',},}}>
                       滑行车类游乐设施监督检验报告
                     </Text>
                     {首页概况WaterJj({theme, orc,rep })}
@@ -125,7 +125,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
                <TableHead>
                    <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
                        <TableRow>
-                           <CCell><Text css={{fontSize:'0.7rem'}}>序号</Text></CCell>
+                           <CCell  id={"T5-1"}><Text css={{fontSize:'0.7rem'}}>序号</Text></CCell>
                            <CCell colSpan={5}>检验项目及内容</CCell>
                            <CCell><Text css={{fontSize:'0.8rem'}}>检验结果</Text></CCell>
                            <CCell>结论</CCell>
@@ -159,10 +159,13 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
 
 export const contentItems = [
     {title: "Creating a page", url: "#creating-a-page"},
-    {title: "Creating a layout", url: "#creating-a-layout"},
+    {title: "结论概要的页", url: "#Conclusion"},
     {title: "Creating a nested route", url: "#creating-a-nested-route"},
     {title: "Nesting layouts", url: "#nesting-layouts"},
+    {title: "K5乘载系统检验  K5.1", url: "#T5-1"},
     {title: "Linking between pages", url: "#linking-between-pages"},
     {title: "API Reference", url: "#api-reference"},
-    {title: "editfor-area-23", url: "#editfor-area-23"},
+    {title: "附录：现场检验条件确认", url: "#SiteCondition"},
 ]
+//5.1?make=1#5.1
+//#5.1 #51 #5-1都会报错的。 const friendlyId = originalId.replace(/\./g, '-');
