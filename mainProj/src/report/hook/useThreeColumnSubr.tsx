@@ -1,8 +1,9 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-     CCell, TableRow, Text,
+     Text,
 } from "customize-easy-ui-component";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
 import {DirectLink} from "../../routing/Link";
 import {multilines2Html} from "../tools";
 import {CCellUnit, InternalItemProps} from "../common/base";
@@ -191,7 +192,7 @@ export function useThreeColumnView({orc, config, split, slash,embedCol}: ThreeCo
                                 name3.t==='b'? (orc?.[name3.n]? '是':'否') :
                                     orc?.[name3.n];
                 return <React.Fragment key={i}>
-                    <TableRow>
+                    <TableRow className={"text-sm"}>
                         {0===i && embedCol && embedCol[p] }
                         {typeof desc!=='object'? <CCell>{desc}</CCell> : desc?.view(orc)}
                         { tailUnit1?

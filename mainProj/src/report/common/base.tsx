@@ -14,8 +14,8 @@ import {
     Check,
     Layer,
     LineColumn,
-    CCell,
 } from "customize-easy-ui-component";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
 // import PropTypes from "prop-types";
 import { Dispatch, SetStateAction } from "react";
 import { MutableRefObject } from "react";
@@ -917,16 +917,18 @@ export function twoForkSelectS(res: string) {
 export const CCellUnit= ( {unit, children, colSpan,rowSpan} : {unit:any, children:React.ReactNode, colSpan?:number,rowSpan?:number}
 ) => {
     const theme= useTheme();
-    return <CCell colSpan={colSpan} rowSpan={rowSpan}><div css={{ display: 'flex',justifyContent: 'space-around',alignItems: 'center',flexWrap: 'wrap'}}>
-        { typeof children==='string'?  <Text>{children}</Text>
+    return <CCell colSpan={colSpan} rowSpan={rowSpan}>
+        <div css={{ display: 'flex',justifyContent: 'space-around',alignItems: 'center',flexWrap: 'wrap'}}>
+        { typeof children==='string'?  <span>{children}</span>
                 :
             <>{children}</>
         }
-        { typeof unit==='string'?  <Text css={{ [theme.mediaQueries.lg+', print']: {wordBreak: 'keep-all'} }}>{unit}</Text>
+        { typeof unit==='string'?  <span css={{ [theme.mediaQueries.lg+', print']: {wordBreak: 'keep-all'} }}>{unit}</span>
             :
             <div css={{display: 'inline-flex'}}>{unit}</div>
         }
-    </div></CCell>;
+    </div>
+    </CCell>;
 };
 /**目的：避免代码重复性质的字符串的出现太多了：   通常报告表格的点击转编辑器
  * @param ori 是原始记录的

@@ -1,8 +1,9 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-    BlobInputList, CCell, CheckSwitch, Input, InputDatalist, InputLine, LineColumn, SuffixInput, TableRow, Text, TextArea,
+    BlobInputList,  CheckSwitch, Input, InputDatalist, InputLine, LineColumn, SuffixInput,  Text, TextArea,
 } from "customize-easy-ui-component";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
 import {CCellUnit, } from "../common/base";
 
 /**给usePrefixDataTable配套的， 2排编辑器。 【缺点】只能最多支持2排的布局的。支持配置方式的pr:""前缀列。不支持直接拆分的。 不支持分项报告；
@@ -196,7 +197,7 @@ export const usePrefixDataTable= ({orc, config, rep, parentOrc:orgParOrc, slash,
         else prefix2='';
 
         return <React.Fragment key={i}>
-            <TableRow>
+            <TableRow className={"text-sm"}>
                 { embed && embed[i] }
                 { (typeof desc==='object' && desc.span) && <CCell rowSpan={desc.span}>{desc?.prview? desc?.prview(orc,parentOrc) : desc?.pr}</CCell> }
                 <CCell colSpan={prefix1 ? 1 : 2}>{typeof desc==='string'? desc: desc?.view? desc?.view(orc,parentOrc,rep) : desc?.t}</CCell>

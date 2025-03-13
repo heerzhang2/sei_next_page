@@ -76,15 +76,16 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
         itResCB: 检验结果替换,
     })
     const [mapNoTag] = useItemsMapOmni({ ItemArs: impressionismAs?.Item, notCheckNo: false })
+    // print:text-[var(--font-size-5)]
     return (
         <React.Fragment>
             <div className="not-print:my-4">
                 <div className="print:h-screen">
                     {ReportFirstPageHeadJd({ rep, mbbm: "FJJ/YB-1009-1-2024" })}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
-                        <h3 id={"Conclusion"}  className="text-center print:text-[var(--font-size-5)] print:mt-6">
+                        <h1 id={"Conclusion"}  className="text-3xl text-center print:mt-6">
                             滑行车类游乐设施监督检验报告
-                        </h3>
+                        </h1>
                         {首页概况WaterJj({ theme, orc, rep })}
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址}</div>
                     </div>
@@ -93,9 +94,9 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                     rep,
                     comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
                 })}
-                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`} className="print:no-underline">
-                    <div className="flex flex-col justify-center print:break-before-page">
-                        <h4  className="text-center">
+                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`} className="print:no-underline break-before-page">
+                    <div className="flex flex-col justify-center">
+                        <h4  className="text-xl text-center print:break-before-page">
                             大型游乐设施监督检验报告
                         </h4>
                     </div>

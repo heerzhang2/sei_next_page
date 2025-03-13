@@ -149,7 +149,8 @@ export function CCell({
                             ...props
                           }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-      <td className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 text-center border border-gray-700 ${className || ""}`} style={style} colSpan={colSpan} {...props}>
+      <td className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
+          style={style} colSpan={colSpan} {...props}>
         {children}
       </td>
   )

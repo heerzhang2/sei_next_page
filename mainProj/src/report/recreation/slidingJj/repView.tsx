@@ -1,14 +1,15 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-  CCell, Cell, Table, TableBody, TableRow, Text,
-} from "customize-easy-ui-component";
-import {DirectLink,} from "../../../routing/Link";
+// import {
+//   CCell, Cell, Table, TableBody, TableRow, Text,
+// } from "customize-easy-ui-component";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
+import {DirectLink,} from "@/routing/Link";
 import {RepLink,} from "../../common/base";
 import {usePrefixDataTable} from "../../hook/usePrefixData";
 import {useThreeColumnView} from "../../hook/useThreeColumnSubr";
 import {render施工单位,} from "../../common/render";
 import Link from "next/link";
+import {cn} from "@/lib/utils";
 
 //仅正式报告用
 const config设备 = [
@@ -37,42 +38,46 @@ export const 报告设备详情= ( {theme, orc, rep } : { orc: any,rep:any, them
   const [firstPart,_s]=useThreeColumnView({orc, config:config设备下,slash:true,
                 embedCol: [ <CCell rowSpan={1}>设备技术参数</CCell> ] });
   return <React.Fragment>
-    <Table id={'Survey'} fixed={ ["6.1%","6%","38%","12.1%","4%","%"] }  css={ {borderCollapse: 'collapse' } }  tight  miniw={800}>
+    <FlexibleTable id={'Survey'} columnWidths={ ["6.1%","6%","38%","12.1%","4%","%"] } className="border-collapse">
       <TableBody>
         <RepLink rep={rep} tag={'Survey'}>
           {renderUpper}
         </RepLink>
       </TableBody>
-    </Table>
-    <Table fixed={ ["4.8%","12%","23%","15%","10%","18.6%","%"] }  css={ {borderCollapse: 'collapse' } }  tight  miniw={800}>
+    </FlexibleTable>
+    <FlexibleTable columnWidths={ ["4.8%","12%","23%","15%","10%","18.6%","%"] }  className="border-collapse">
       <TableBody>
         <RepLink rep={rep} tag={'Survey'}>
           {firstPart}
         </RepLink>
-        <TableRow>
+        <TableRow className={"text-sm"}>
           <CCell colSpan={2}>检验依据</CCell>
           <CCell colSpan={5}>《大型游乐设施安全技术规程》（TSG 71-2023）</CCell>
         </TableRow>
         <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Conclusion#Conclusion`}>
-          <TableRow>
-            <CCell>检验结论</CCell><CCell colSpan={6}>
-            <Text variant="h1" css={{fontSize:orc?.检验结论?.length>12? '1.4rem':'2.8rem',
-                      margin: 'auto',padding:'0 1rem'}}>{orc?.检验结论}</Text></CCell>
+          <TableRow className={"text-sm"}>
+            <CCell>检验结论</CCell>
+            <CCell colSpan={6}>
+            <h1 className={cn("px-0 py-4 m-auto", orc?.检验结论?.length>12? "text-2xl" : "text-5xl")}>
+              {orc?.检验结论}</h1>
+            </CCell>
           </TableRow>
         </DirectLink>
         <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Witness#Witness`}>
-          <TableRow>
+          <TableRow className={"text-sm"}>
             <CCell>备注</CCell>
-            <Cell split={true} colSpan={6}><div css={{minHeight: '1rem', whiteSpace: 'pre-wrap'}}>
+            <TableCell split={true} colSpan={6}><div css={{minHeight: '1rem', whiteSpace: 'pre-wrap'}}>
               {orc.大备注 ?? '／'}
-            </div></Cell>
+            </div></TableCell>
           </TableRow>
         </DirectLink>
-        <TableRow>
+        <TableRow className={"text-sm"}>
           <CCell colSpan={2}>下次定期检验日期</CCell>
           <CCell colSpan={5}>{orc.新下检日 ?? '／'}</CCell>
         </TableRow>
       </TableBody>
-    </Table>
+    </FlexibleTable>
   </React.Fragment>;
 };
+// <h1 css={{fontSize:orc?.检验结论?.length>12? '1.4rem':'2.8rem',
+//                       margin: 'auto',padding:'0 1rem'}}>{orc?.检验结论}</h1>
