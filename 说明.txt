@@ -319,3 +319,9 @@ This implementation should fix the issue with the semi-transparent background wh
 
 
 npx shadcn@latest add sidebar shadcn 2.4.0
+//colspan属性在处理需要合并列的表格时仍然是不可或缺的
+        <colgroup >
+          {columnWidths?.map((width, i) => {
+            return <col key={i} width={width} />;
+          })}
+        </colgroup>
