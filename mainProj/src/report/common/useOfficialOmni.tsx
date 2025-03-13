@@ -1,6 +1,6 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, TableRow,} from "customize-easy-ui-component";
+import {CCell,TableRow} from "@/components/flexible-table";
 import {DirectLink} from "../../routing/Link";
 import {useMedia} from "use-media";
 import {RecordOmniArea, ItemOmniConfig, resTranslOmni, itemResTransformRpo,} from "../common/omni";
@@ -128,7 +128,7 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                         const four_Spl=splitNewBlock? splitHeadEt!.rpo.four : et.rpo.four;
                         // console.log("行碎例",b,"n=",n,area.tag,"nosCc=",nosCc,"ET=",et,'caption:',caption,'mergLastEt',mergLastEt,"倒退n-1行",area.items[n-1],splitHeadEt);
                         //【特殊】正式报告的大标题这列不做显示了！ 结果栏目也不现实，改名内容等于是结论对应栏目的。
-                        itemRowRender[0] =<TableRow id={!tagSetted ? area.tag:undefined} key={n}>
+                        itemRowRender[0] =<TableRow className={"text-sm"} id={!tagSetted ? area.tag:undefined} key={n}>
                             <CCell key={1}>{seq}</CCell>
                             {bOmt!=='0' && ((et.rpo.bspan!)>0) && <CCell key={2} split={true} rowSpan={et.rpo.bspan} colSpan={bigColOcp}
                                  >{big_Spl}</CCell>
@@ -165,12 +165,11 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                             }
                         </TableRow>;
                         if(!tagSetted)   tagSetted=true;
-                        //【注意】 et.sub?? 假如 sub='' 逻辑成立，需改undefined;
-                        const rowsBigArea=<React.Fragment key={seq+'-'+n}>
-                            <DirectLink  href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${area.tag}#${area.tag}`}>
+                        //【注意】 et.sub?? 假如 sub='' 逻辑成立，需改undefined; React.Fragment key={seq+'-'+n}
+                        const rowsBigArea=
+                            <DirectLink key={seq+'-'+n} href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${area.tag}#${area.tag}`}>
                                 {itemRowRender}
-                            </DirectLink>
-                        </React.Fragment>;
+                            </DirectLink>;
 
                         htmlTxts.push(rowsBigArea);    //原先在htmlTxts.push(itemRowRender);bigItemRowCnt++;前面就处理的
 
@@ -306,15 +305,15 @@ export const useOfficialOmni2H= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} :
                             {/*其他可变的列 */}
                             {
                                 config.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
-                                    if(n==='') return  <CCell key={7}>{result ?? '／'}</CCell>;
+                                    if(n==='') return  <CCell className={"text-sm"} key={7}>{result ?? '／'}</CCell>;
                                     else if(n===null){
-                                        return et.oRSpan>0 && <CCell key={8} split={true} rowSpan={et.oRSpan??1}>{'／'===conseq? '无此项' : conseq}</CCell>;
+                                        return et.oRSpan>0 && <CCell className={"text-sm"} key={8} split={true} rowSpan={et.oRSpan??1}>{'／'===conseq? '无此项' : conseq}</CCell>;
                                     }
                                     //以上2个特殊，剩下是常规字段
                                     if(!m){
-                                        return <CCell key={10}>{itRes?.[et.name+'_'+n] ?? '／'}</CCell>;
+                                        return <CCell className={"text-sm"} key={10}>{itRes?.[et.name+'_'+n] ?? '／'}</CCell>;
                                     }else{
-                                        return et.oRSpan>0 && <CCell key={13} split={true} rowSpan={et.oRSpan??1}>{itRes?.[icname+'_'+n] ?? '／'}</CCell>;
+                                        return et.oRSpan>0 && <CCell className={"text-sm"} key={13} split={true} rowSpan={et.oRSpan??1}>{itRes?.[icname+'_'+n] ?? '／'}</CCell>;
                                     }
                                 })
                             }

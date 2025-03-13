@@ -115,13 +115,11 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                         <span>报告编号：{rep.isp.no}</span>
                     </div>
                 </div>
-                <FlexibleTable
-                    columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}
-                    className="border-collapse print:-mt-[13.3rem]"
-                >
+                <FlexibleTable  className="border-collapse" divClassName="print:-mt-[13.3rem]"
+                        columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
                     <TableHead>
-                        <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
-                            <TableRow>
+
+                            <TableRow className={"text-sm"}>
                                 <CCell id={"T5-1"}>
                                     <span className="text-[0.7rem]">序号</span>
                                 </CCell>
@@ -132,7 +130,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                                 <CCell>结论</CCell>
                                 <CCell>备注</CCell>
                             </TableRow>
-                        </DirectLink>
+
                     </TableHead>
                     <TableBody>{renderIspContent}</TableBody>
                 </FlexibleTable>
@@ -182,3 +180,4 @@ export const contentItems = [
 
 //5.1?make=1#5.1
 //#5.1 #51 #5-1都会报错的。 const friendlyId = originalId.replace(/\./g, '-');
+//表头不能加上<DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}> 传递各列宽度？

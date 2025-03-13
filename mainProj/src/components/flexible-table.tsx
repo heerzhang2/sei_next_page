@@ -6,6 +6,7 @@ interface FlexibleTableProps {
   columnWidths: string[]
   className?: string
   variant?: "default" | "borderless"
+  divClassName?: string
 }
 
 // Helper function to process rows and apply widths to cells
@@ -51,7 +52,8 @@ function processTableSection(section: ReactNode, columnWidths: string[]): ReactN
   return cloneElement(section, section.props, processedRows)
 }
 
-export function FlexibleTable({ children, columnWidths, className, variant = "default" }: FlexibleTableProps) {
+//增加divClassName参数：应对特别情况
+export function FlexibleTable({ children, columnWidths, className,divClassName, variant = "default" }: FlexibleTableProps) {
   const variantStyles = {
     default: "border rounded-md",
     borderless: "",
@@ -64,8 +66,15 @@ export function FlexibleTable({ children, columnWidths, className, variant = "de
   })
 
   return (
-    <div className="overflow-x-auto">
-      <table className={`w-full ${variantStyles[variant]} ${className || ""}`}>{processedChildren}</table>
+    <div className={`overflow-x-auto ${divClassName || ""}`}>
+      <table className={`w-full ${variantStyles[variant]} ${className || ""}`}>
+        <colgroup >
+          {columnWidths?.map((width, i) => {
+            return <col key={i} width={width} />;
+          })}
+        </colgroup>
+        {processedChildren}
+      </table>
     </div>
   )
 }
@@ -93,7 +102,7 @@ export function TableRow({
   columnWidths?: string[]
 }) {
   const variantStyles = {
-    default: "border-b",
+    default: "border-b border-gray-700",
     borderless: "",
     dashed: "border-b border-dashed",
   }
@@ -131,7 +140,7 @@ export function TableCell({
     </td>
   )
 }
-
+//考虑打印p-0.25rem md:px-0.75rem md:py-0.25rem lg:px-1.5rem lg:py-0.25rem print:px-0 print:py-0.75rem
 export function CCell({
                             children,
                             className,
@@ -140,7 +149,7 @@ export function CCell({
                             ...props
                           }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-      <td className={`p-2 text-center ${className || ""}`} style={style} colSpan={colSpan} {...props}>
+      <td className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 text-center border border-gray-700 ${className || ""}`} style={style} colSpan={colSpan} {...props}>
         {children}
       </td>
   )
