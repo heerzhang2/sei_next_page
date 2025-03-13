@@ -76,7 +76,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
     <React.Fragment>
        <div css={{"@media not print": {marginTop: '1rem', marginBottom: '1rem'}}}>
             <div css={{"@media print": {height: '100vh'}}}>
-                {ReportFirstPageHeadJd({theme, rep, mbbm: 'FJJ/YB-1009-1-2024'})}
+                {ReportFirstPageHeadJd({rep, mbbm: 'FJJ/YB-1009-1-2024'})}
                 <div css={{
                     "@media print": {
                         display: 'flex',

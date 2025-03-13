@@ -10,22 +10,33 @@ interface FlexibleTableProps {
 
 // Helper function to process rows and apply widths to cells
 function processRows(rows: ReactNode, columnWidths: string[]): ReactNode {
+  // Calculate the remaining width for any column marked with just "%"
+  const processedWidths = [...columnWidths]
+  const percentIndex = columnWidths.findIndex((width) => width === "%")
+
+  if (percentIndex !== -1) {
+    // Calculate total percentage used by other columns
+    const totalSpecified = columnWidths.reduce((sum, width, index) => {
+      if (index === percentIndex || width === "%") return sum
+
+      // Extract percentage value from strings like "20%"
+      const percentValue = Number.parseFloat(width)
+      return isNaN(percentValue) ? sum : sum + percentValue
+    }, 0)
+
+    // Calculate remaining percentage (ensure it's not negative)
+    const remainingPercentage = Math.max(0, 100 - totalSpecified)
+    processedWidths[percentIndex] = `${remainingPercentage}%`
+  }
+
   return Children.map(rows, (row) => {
     if (!isValidElement(row)) return row
 
-    // Process cells within the row
-    const cells = Children.map(row.props.children, (cell: ReactNode, cellIndex: number) => {
-      if (!isValidElement(cell)) return cell
-
-      // Apply width to the cell based on its index
-      const width = columnWidths[cellIndex] || "auto"
-      return cloneElement(cell, {
-        style: { ...(cell.props.style || {}), width },
-      })
+    // For custom row components, we need to pass the columnWidths as a prop
+    return cloneElement(row, {
+      ...row.props,
+      columnWidths: processedWidths,
     })
-
-    // Return the row with processed cells
-    return cloneElement(row, row.props, cells)
   })
 }
 
@@ -75,9 +86,11 @@ export function TableRow({
   children,
   className,
   variant = "default",
+  columnWidths,
   ...props
 }: React.HTMLAttributes<HTMLTableRowElement> & {
   variant?: "default" | "borderless" | "dashed"
+  columnWidths?: string[]
 }) {
   const variantStyles = {
     default: "border-b",
@@ -85,9 +98,22 @@ export function TableRow({
     dashed: "border-b border-dashed",
   }
 
+  // Apply column widths to direct children if columnWidths is provided
+  const processedChildren = columnWidths
+    ? Children.map(children, (cell, index) => {
+        if (!isValidElement(cell)) return cell
+
+        const width = columnWidths[index] || "auto"
+        return cloneElement(cell, {
+          ...cell.props,
+          style: { ...(cell.props.style || {}), width },
+        })
+      })
+    : children
+
   return (
     <tr className={`${variantStyles[variant]} ${className || ""}`} {...props}>
-      {children}
+      {processedChildren}
     </tr>
   )
 }

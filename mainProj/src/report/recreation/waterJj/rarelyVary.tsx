@@ -102,10 +102,6 @@ export const 首页概况WaterJj= ({theme, orc, original,rep} :{theme: any, orc:
       <SurveyRow label="设备代码" value={orc.设备代码}/>
       <SurveyRow label="设  备  号" value={orc.eqpcod} />
       <SurveyRow label="监察识别码" value={orc.监察识别码}/>
-      <OldTableRow>
-        <RCell css={{border:'none'}}>监察识别码：</RCell>
-        <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.监察识别码 || '／'}</CCell>
-      </OldTableRow>
     </TableBody>
   </FlexibleTable>;
 };

@@ -60,9 +60,8 @@ export const 首页概况EscaJj= ({theme, orc, original,rep} :{theme: any, orc:a
 
 /**没有MA  机电报告；  固定高度 8.5rem
  * */
-export const ReportFirstPageHeadJd= ({theme , rep, mbbm } :{theme: any, rep:any, mbbm:string}
+export const ReportFirstPageHeadJd= ({rep, mbbm } :{rep:any, mbbm:string}
 ) => {
-  // const atPrint = useMedia('print');
   return <React.Fragment>
     <div css={{
       display: 'flex',
@@ -82,9 +81,6 @@ export const ReportFirstPageHeadJd= ({theme , rep, mbbm } :{theme: any, rep:any,
             height={140}
             alt="二维码"
         />
-        {/*<Embed css={{width: "140px", margin: "auto", top: '-0.65rem'}} width={10} height={10}>*/}
-        {/*  <FadeImage src={Img_ReportNoQR}/>*/}
-        {/*</Embed>*/}
       </div>
       <div css={{overflow: 'hidden', display: 'flex', flexDirection: 'column',justifyContent:'space-evenly'}}>
         <Text variant="h6" css={{fontSize: '0.8rem'}}>{mbbm}</Text>
