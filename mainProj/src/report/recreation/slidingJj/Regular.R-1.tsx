@@ -56,9 +56,6 @@ const 检验结果替换 =((orc: { [x: string]: any; }) => {
     return out;
 });
 const config报告 : Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'}, {n:'M',x:'备注',m:true}];
-const JumpTags=[{name:'设备概况',ha:'Survey'},{name:'K1资料审查',ha:'1.1'},{name:'电气及控制系统',ha:'4.1'},
-            {name:'K7载荷试验',ha:'7.1'},{name:'系留式观光气球专项',ha:'13.6'},{name:'现场检验条件确认',ha:'SiteCondition'}];
-
 
 const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
     repId,   source: orc,  verId,rep,
@@ -70,7 +67,6 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
         setPrinting(!!printing)
     }, [searchParams])
     const theme= useTheme();
-    const [rootMenu]=useRepMenuDirItems(JumpTags, [],`/reportView/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}`);
     const impressionismAs =React.useMemo(() => {
         return setupItemAreaRoute({rep,orc, theme});
     }, [verId, repId,rep, orc?._Oitems, theme]);
@@ -78,7 +74,6 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
     const [mapNoTag]=useItemsMapOmni({ ItemArs:impressionismAs?.Item, notCheckNo:false});
   return (
     <React.Fragment>
-      {rootMenu}
        <div css={{"@media not print": {marginTop: '1rem', marginBottom: '1rem'}}}>
             <div css={{"@media print": {height: '100vh'}}}>
                 {ReportFirstPageHeadJd({theme, rep, mbbm: 'FJJ/YB-1009-1-2024'})}
@@ -158,14 +153,15 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
 }
 
 export const contentItems = [
-    {title: "Creating a page", url: "#creating-a-page"},
+    {title: "设备概况", url: "#Survey"},
     {title: "结论概要的页", url: "#Conclusion"},
-    {title: "Creating a nested route", url: "#creating-a-nested-route"},
-    {title: "Nesting layouts", url: "#nesting-layouts"},
+    {title: "K1资料审查", url: "#T1-1"},
+    {title: "电气及控制系统", url: "#T4-1"},
     {title: "K5乘载系统检验  K5.1", url: "#T5-1"},
-    {title: "Linking between pages", url: "#linking-between-pages"},
-    {title: "API Reference", url: "#api-reference"},
+    {title: "K7载荷试验", url: "#T7-1"},
+    {title: "系留式观光气球专项", url: "#T13-6"},
     {title: "附录：现场检验条件确认", url: "#SiteCondition"},
 ]
+
 //5.1?make=1#5.1
 //#5.1 #51 #5-1都会报错的。 const friendlyId = originalId.replace(/\./g, '-');

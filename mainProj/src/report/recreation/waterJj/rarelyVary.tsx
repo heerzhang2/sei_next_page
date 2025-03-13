@@ -92,35 +92,16 @@ export const 首页概况WaterJj= ({theme, orc, original,rep} :{theme: any, orc:
           orc.安装单;
   return  <FlexibleTable columnWidths={ ["20%","%"] } variant={'borderless'}>
     <TableBody>
-      <TableRow variant={"borderless"}>
-        <TableCell className="p-1 border-0 text-sm text-right">使用单位：</TableCell>
-        <TableCell className="border-0 border-b border-dashed text-center text-sm">{orc.使用单位 || '／'}</TableCell>
-      </TableRow>
-      <OldTableRow>
-        <RCell css={{border:'none'}}>分支机构：</RCell>
-        <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.分支机构 || '／'}</CCell>
-      </OldTableRow>
+      <SurveyRow label="使用单位" value={orc.使用单位}/>
+      <SurveyRow label="分支机构" value={orc.分支机构}/>
       <SurveyRow label="施工单位" value={施工单位} />
-      <OldTableRow >
-        <RCell css={{border:'none'}}>施工类别：</RCell>
-        <CCell css={{border:'none',borderBottom:`1px dashed`}}>{businessCatspMap.get(rep?.isp?.bsType!) ?? '／'}</CCell>
-      </OldTableRow>
-      <OldTableRow >
-        <RCell css={{border:'none'}}>设备类别：</RCell>
-        <CCell css={{border:'none',borderBottom:`1px dashed`}}>{eqpTypeAllMap.get(orc?.设备类别) || '／'}</CCell>
-      </OldTableRow>
-      <OldTableRow >
-        <RCell css={{border:'none'}}>设备品种：</RCell>
-        <CCell css={{border:'none',borderBottom:`1px dashed`}}>{eqpTypeAllMap.get(orc.设备品种) || '／'}</CCell>
-      </OldTableRow>
-
+      <SurveyRow label="施工类别" value={businessCatspMap.get(rep?.isp?.bsType!)} />
+      <SurveyRow label="设备类别" value={orc?.设备类别} />
+      <SurveyRow label="设备品种" value={eqpTypeAllMap.get(orc.设备品种)} />
       <SurveyRow label="检验日期" value={orc.检验日期1? `${orc.检验日期1} 至 ${orc.检验日期}` : orc.检验日期} />
-
-      <OldTableRow >
-        <RCell css={{border:'none'}}>设备代码：</RCell>
-        <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.设备代码 || '／'}</CCell>
-      </OldTableRow>
+      <SurveyRow label="设备代码" value={orc.设备代码}/>
       <SurveyRow label="设  备  号" value={orc.eqpcod} />
+      <SurveyRow label="监察识别码" value={orc.监察识别码}/>
       <OldTableRow>
         <RCell css={{border:'none'}}>监察识别码：</RCell>
         <CCell css={{border:'none',borderBottom:`1px dashed`}}>{orc.监察识别码 || '／'}</CCell>

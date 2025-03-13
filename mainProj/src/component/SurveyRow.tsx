@@ -10,8 +10,8 @@ const SurveyRow: React.FC<ConstructionUnitRowProps> = ({ label, value }) => {
     return (
         <TableRow variant={"borderless"}>
             <TableCell className="p-1 border-0 text-sm text-right">{label}：</TableCell>
-            <TableCell className="border-0 border-b border-dashed text-center text-sm">
-                {value ?? '／'}
+            <TableCell className="border-0 border-b border-dashed border-gray-400 text-center text-sm">
+                {value ?? "／"}
             </TableCell>
         </TableRow>
     );
