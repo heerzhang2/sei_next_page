@@ -327,3 +327,44 @@ npx shadcn@latest add sidebar shadcn 2.4.0
             padding-bottom: 0.75rem; /* 根据需要调整，或者使用 padding-y 的替代值 */
     }
 }
+
+我想打印场合下的也能够依照打印纸张的当前宽度来设置td元素的padding大小，该如何做？ 我的单元格td组件如下  export function CCell({
+                            children,
+                            className,
+                            colSpan,
+                            style,
+                            ...props
+                          }: React.TdHTMLAttributes<HTMLTableCellElement>) {
+  return (
+      <td className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
+          style={style} colSpan={colSpan} {...props}>
+        {children}
+      </td>
+  )
+}
+
+我是用table和tr以及td来布局的表格页面，但是在打印时会遇到td被强制拆分的情况，甚至有些td内容可能跨页不止两页的高度，目前情况是td在打印时遇到跨页的都只会在最开始的位置输出和打印文字的，这个td后续高度若跨越多页的，
+那么第二页设置第三页的这个td所属未知区域的打印都是一片空白的。最后，我想问的是：这种情形该如何为第二页和甚至第三页的这个td位置补上文字内容呢？都是空白不好，最好能够重复打印这个td本该有的内容。
+
+## 更高级的解决方案
+
+对于复杂表格，您可能需要考虑以下方法：
+
+1. **使用专门的打印库**：如 pdfmake 或 jsPDF，它们提供更精确的表格分页控制
+2. **服务器端渲染 PDF**：使用服务器端技术（如 Puppeteer）生成 PDF，可以更好地控制内容布局
+3. **表格分割**：检测大内容并将其分割成多个较小的单元格，每个单元格适合一页
+4. **打印前预处理**：
+
+```javascript
+// 在打印前动态处理表格
+window.addEventListener('beforeprint', () => {
+  // 查找所有大内容单元格并处理
+  document.querySelectorAll('.large-content-cell').forEach(cell => {
+    // 处理单元格以适应打印
+  });
+});
+```
+
+我是用table和tr以及td来布局的表格页面，但是在打印时会遇到td被强制拆分的情况，甚至有些td内容可能跨页不止两页的高度，我想控制这些高度异常高的td，
+希望能够测量出这个td在打印视口的相对的top位置，用(打印纸张)100vh作为单位系数的，这样子我在代码中预设比如当前这个td当前起点位置距离页尾巴还有超过15vh的可以按原本布局打印，
+但是如果发现这个td当前起点位置距离打印页尾巴的距离小于15vh的话，我就强制设置这个td的css属性break_page_inside:avoid。相当于为这个td设定一个最小分页拆分的高度。

@@ -256,3 +256,9 @@ export default function RootLayout({
         </html>
     );
 }
+
+/*
+打印：（1）已经实现的： 硬编码： 最大10张打印纸的；A4 边距 尺寸-竖版固定数值的；可以实现最少给某些标记td预留最小的孤立空间高度，避免在分页尾巴仅仅打印出很少高度的td内容。
+参考 D:\temp\newUI\print-table-control\advanced-print-control.tsx
+D:\temp\newUI\print-table-TR-contain
+* */
