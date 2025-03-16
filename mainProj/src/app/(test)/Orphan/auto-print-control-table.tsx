@@ -61,11 +61,11 @@ export default function AutoPrintControlTable({
         </tr>
         <tr className="">
           <td className="border p-2 ">Product B</td>
-          <td className="border">{"This is a very long description tha to be tall. ".repeat(41)}</td>
+          <td className="border">{"This is a very long description tha to be tall. ".repeat(38)}</td>
           <td className="border p-2 ">Pending</td>
         </tr>
         <tr className=" ">
-          <td className="border  print-container-min-5h" rowSpan={4}>ProductCio 说的很对n 换个给和</td>
+          <td id="ObjectTd" className="border print-container-min-5h" rowSpan={4}>Product很</td>
           <td className="border ">Another short description</td>
           <td className="border ">Inactive</td>
         </tr>
@@ -87,7 +87,7 @@ export default function AutoPrintControlTable({
   )
 }
 
-/*
+/*  <td className="border  print-container-min-5h" rowSpan={4}>ProductCio 说的很对n 换个给和</td>
           {data.map((row, rowIndex) => {
               const isTall =rowIndex===1 || rowIndex===3;   // isTallContent(cell)
               const rowClasses =isTall ? `print-container-min-${minOrphanHeight}vh` : ""

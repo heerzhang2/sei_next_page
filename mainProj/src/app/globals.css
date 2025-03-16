@@ -314,11 +314,24 @@ body {
   }
 }
 
-
 @media print {
     .print-cell-m18 {
       min-height: 18rem;
       break-inside: avoid;
       page-break-inside: avoid;
+  }
+}
+/*孤儿测试*/
+@media print {
+  .print-container-min-5h {
+    min-height: 5rem;
+    page-break-inside: auto;
+  }
+
+  /* This ensures that if the cell breaks across pages, there's at least 5rem of content on each page */
+  #ObjectTd {
+    break-inside: auto;
+    orphans: 3; /* Ensures at least 3 lines of text at the bottom of a page */
+    widows: 3;  /* Ensures at least 3 lines of text at the top of a page */
   }
 }
