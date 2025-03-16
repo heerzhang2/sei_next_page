@@ -10,6 +10,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*试验首页面*/
 .custom-grid-rows {
   grid-template-rows: 20px minmax(auto, 1fr) 20px;
 }
@@ -153,5 +154,171 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/*原始记录跨越2页3页的行打印*/
+body {
+  padding: 0;
+  margin: 0;
+}
+@page portraitPg {
+  size: a4 portrait;
+}
+@page landscapePg {
+  size: a4 landscape;
+}
+@media print {
+  .WideChapter {
+    page: landscapePg;
+  }
+  .UsualChapter {
+    page: portraitPg;
+  }
+}
+
+/* Print styles for containers and cells */
+.print-contain-2 {
+  @media print {
+    position: relative;
+    &::after {
+      content: "";
+      display: block;
+      min-height: 2rem;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+}
+.print-contain-3 {
+  @media print {
+    position: relative;
+    &::after {
+      content: "";
+      display: block;
+      min-height: 3rem;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+}
+.print-contain-5 {
+  @media print {
+    position: relative;
+    &::after {
+      content: "";
+      display: block;
+      min-height: 5rem;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+}
+.print-contain-7 {
+  @media print {
+    position: relative;
+    &::after {
+      content: "";
+      display: block;
+      min-height: 7rem;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+}
+.print-contain-10 {
+  @media print {
+    position: relative;
+    &::after {
+      content: "";
+      display: block;
+      min-height: 10rem;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+}
+.print-contain-15 {
+  @media print {
+    position: relative;
+    &::after {
+      content: "";
+      display: block;
+      min-height: 15rem;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+}
+.print-contain-22 {
+  @media print {
+    position: relative;
+    &::after {
+      content: "";
+      display: block;
+      min-height: 22rem;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+}
+
+/* print-TR-contain孤儿高 */
+.print-avoid-break {
+  @media print {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+.print-cell-m1-5 {
+  @media print {
+    min-height: 1.5rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+.print-cell-m2 {
+  @media print {
+    min-height: 2rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+.print-cell-m3 {
+  @media print {
+    min-height: 3rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+.print-cell-m4 {
+  @media print {
+    min-height: 4rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+.print-cell-m6 {
+  @media print {
+    min-height: 6rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+.print-cell-m10 {
+  @media print {
+    min-height: 10rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+
+@media print {
+    .print-cell-m18 {
+      min-height: 18rem;
+      break-inside: avoid;
+      page-break-inside: avoid;
   }
 }

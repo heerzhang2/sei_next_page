@@ -365,6 +365,48 @@ window.addEventListener('beforeprint', () => {
 });
 ```
 
-我是用table和tr以及td来布局的表格页面，但是在打印时会遇到td被强制拆分的情况，甚至有些td内容可能跨页不止两页的高度，我想控制这些高度异常高的td，
-希望能够测量出这个td在打印视口的相对的top位置，用(打印纸张)100vh作为单位系数的，这样子我在代码中预设比如当前这个td当前起点位置距离页尾巴还有超过15vh的可以按原本布局打印，
-但是如果发现这个td当前起点位置距离打印页尾巴的距离小于15vh的话，我就强制设置这个td的css属性break_page_inside:avoid。相当于为这个td设定一个最小分页拆分的高度。
+我用<table>和<tr>以及<td>来布局的表格页面,在打印页面时会遇到td被强制拆分的情况，因为同行tr底下邻居td内容太多而且table的列宽度比例限定死，导致邻居td内容可能跨页不止两页甚至三页的高度，
+关键是我关心的这个td的内容文字却很少的,这样问题来了：我的这个td在第二页和第三页的打印输出时，在续页中本该这个td位置会是空白的。有个候选办法是检测大内容并将其分割成多个较小的单元格，也就是拆分邻居td的内容来降低这个tr的高度的办法来解决我关心的空白问题，
+但是我不想用这个办法，请问还有更好的办法吗？确保不拆分邻居td的内容，这个tr打印可能会横跨3页的，我想在第二页和第三页的打印输出时，在我关心的这个td的空白位置上添加我这个td列的内容(比如复制做法)来避免空白，
+打印效果要求纸张的每一页都有内容，但是也要确保我关心的td列的打印结果在分页后不要产生文字叠加的效果。请问有什么解决方案吗？
+.sticky-cell {
+  position: sticky;
+  top: 0;
+  background-color: white; /* To ensure content below doesn't show through */
+}
+能否测量这个tr的实际高度，还需考虑表头表尾的高度扣减的影响，计算出这个tr实际打印效果会是几个页的，然后再测量我关心的td内容文本的实际文本高度，然后想办法填充我关心的td的内容，采用比如中间加空格后面加重复内容办法，
+最终目的是在原本tr高度范围内尽量确保每一页打印都会有内容（除非最后那个页在我关心的td列位置可打印的高度太小无法打印完整的我原本这个td的文本高度），但是确保增加后的内容实际打印后td内容高度不超过tr高度，
+最后效果能避免某一页在该td列会出现空白现象。
+CSS特性 element() 和 position: running() 主要是用于生成和展示页眉、页脚或连续内容（如页码、章节标题等）的高级排版功能，并不适用于解决你描述的问题。具体来说，
+element() 通常用于在生成的内容中引用某个元素的内容，而 position: running() 用于在分页时保持内容连续显示，比如页码。
+方案.important-cell::after { content: attr(data-content); position:也不行、适应性差，仅仅使用固定已确定高度和宽度的情形也只能多一个续页。
+
+纸张大小是A4。若布局为纵向，显示大小为210mm×297mm；Windows下的网页打印的默认DPI为96dpi/25.4mm。A4纸张像素宽度为794px×1123px，若页边距为19mm（默认边距），
+网页内最大元素分辨率约650px。默认左右边距10mm的就是打印718px宽度；  728 X 1055
+
+控制tr整行 ".print-container-min-5": {  // 应用于包含 <td> 的元素，可能是 <tr> 或 <table>
+                 "@media print": {
+                   position: "relative",
+                   "&::after": {
+                     content: '""',
+                     display: "block",
+                     "min-height": "20rem",
+                     "break-inside": "avoid",
+                     "page-break-inside": "avoid",
+                   }
+                 }
+               },
+
+.print-avoid-break ;        min-height+tr/td无效；
+        ".print-container-min-5h": {  // 应用于包含 <td> 的元素，可能是 <tr> 或 <table>
+          "@media print": {
+            position: "relative",
+            "&::after": {
+              content: '""',
+              display: "block",
+              "min-height": "4.8rem",
+              "break-inside": "avoid",
+              "page-break-inside": "avoid",
+            }
+          }
+        },

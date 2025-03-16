@@ -81,34 +81,46 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
         <React.Fragment>
             <div className="not-print:my-4">
                 <div className="print:h-screen">
-                    {ReportFirstPageHeadJd({ rep, mbbm: "FJJ/YB-1009-1-2024" })}
+                    {ReportFirstPageHeadJd({rep, mbbm: "FJJ/YB-1009-1-2024"})}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
-                        <h1 id={"Conclusion"}  className="text-3xl text-center print:mt-6">
+                        <h1 id={"Conclusion"} className="text-3xl text-center print:mt-6">
                             滑行车类游乐设施监督检验报告
                         </h1>
-                        {首页概况WaterJj({ theme, orc, rep })}
-                        <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址}</div>
+                        {首页概况WaterJj({theme, orc, rep})}
+                        <div
+                            className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址}</div>
                     </div>
                 </div>
                 {注意事项WaterJj({
                     rep,
                     comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
                 })}
-                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`} className="print:no-underline break-before-page">
-                    <div className="flex flex-col justify-center">
-                        <h4  className="text-xl text-center print:break-before-page">
+
+                <div className="flex flex-col justify-center">
+                    <h4 className="text-xl text-center print:break-before-page">
+                        <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`}
+                              className="print:no-underline break-before-page">
                             大型游乐设施监督检验报告
-                        </h4>
-                    </div>
-                    <div className="flex justify-between">
-                        <span></span>
-                        <span>报告编号：{rep.isp.no}</span>
-                    </div>
-                </Link>
-                {报告设备详情({ theme, orc, rep })}
-                {检验核准WaterJj({ orc, rep })}
+                        </Link>
+                    </h4>
+                </div>
+                <div className="flex justify-between">
+                    <span></span>
+                    <span>报告编号：{rep.isp.no}</span>
+                </div>
+
+
+                <div className="columns-2 ">
+                    <p>Well,1 let me tell you something, ...</p>
+                    <p className="print:break-before-page">Sure, 2go ahead, laugh...</p>
+                    <p>Maybe 3we can live without...</p>
+                    <p>Look. 4If you think this is...</p>
+                </div>
+
+                {报告设备详情({theme, orc, rep})}
+                {检验核准WaterJj({orc, rep})}
                 <div className="print:pb-[13.3rem] print:break-inside-avoid">
-                    <h4  className="text-center mt-4">
+                    <h4 className="text-center mt-4">
                         大型游乐设施监督检验报告附页
                     </h4>
                     <div className="flex justify-between">
@@ -116,21 +128,21 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                         <span>报告编号：{rep.isp.no}</span>
                     </div>
                 </div>
-                <FlexibleTable  className="border-collapse" divClassName="print:-mt-[13.3rem]"
-                        columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
+                <FlexibleTable className="border-collapse" divClassName="print:-mt-[13.3rem]"
+                               columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
                     <TableHead>
 
-                            <TableRow className={"text-sm"}>
-                                <CCell id={"T5-1"}>
-                                    <span className="text-[0.7rem]">序号</span>
-                                </CCell>
-                                <CCell colSpan={5}>检验项目及内容</CCell>
-                                <CCell>
-                                    <span className="text-[0.8rem]">检验结果</span>
-                                </CCell>
-                                <CCell>结论</CCell>
-                                <CCell>备注</CCell>
-                            </TableRow>
+                        <TableRow className={"text-sm"}>
+                            <CCell id={"T5-1"}>
+                                <span className="text-[0.7rem]">序号</span>
+                            </CCell>
+                            <CCell colSpan={5}>检验项目及内容</CCell>
+                            <CCell>
+                                <span className="text-[0.8rem]">检验结果</span>
+                            </CCell>
+                            <CCell>结论</CCell>
+                            <CCell>备注</CCell>
+                        </TableRow>
 
                     </TableHead>
                     <TableBody>{renderIspContent}</TableBody>
@@ -142,12 +154,12 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                     mapNoTag={mapNoTag}
                     printing={printing}
                     titles={["序号", "项目编号", "检验不符合内容记录", "复检结果", "复检日期"]}
-                    label={<h4 >检验不符合项目内容及复检结果</h4>}
+                    label={<h4>检验不符合项目内容及复检结果</h4>}
                 />
             </div>
             <div>
                 <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument?original=1#Instrument`}>
-                    <h4  className="print:hidden">
+                    <h4 className="print:hidden">
                         主要测量设备性能检查
                     </h4>
                 </Link>
