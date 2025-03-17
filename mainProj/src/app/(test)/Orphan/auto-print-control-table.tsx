@@ -61,7 +61,7 @@ export default function AutoPrintControlTable({
         </tr>
         <tr className="">
           <td className="border p-2 ">Product B</td>
-          <td className="border">{"This is a very long description tha to be tall. ".repeat(38)}</td>
+          <td className="border">{"This is a very long description tha to be tall. ".repeat(35)}</td>
           <td className="border p-2 ">Pending</td>
         </tr>
         <tr className=" ">

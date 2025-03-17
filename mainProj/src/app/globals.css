@@ -323,15 +323,15 @@ body {
 }
 /*孤儿测试*/
 @media print {
-  .print-container-min-5h {
-    min-height: 5rem;
-    page-break-inside: auto;
+  #ObjectTd {
+    break-inside: auto; /* 允许单元格内部分页 */
   }
 
-  /* This ensures that if the cell breaks across pages, there's at least 5rem of content on each page */
-  #ObjectTd {
-    break-inside: auto;
-    orphans: 3; /* Ensures at least 3 lines of text at the bottom of a page */
-    widows: 3;  /* Ensures at least 3 lines of text at the top of a page */
+  #ObjectTd::after {
+    content: '';
+    display: block;
+    min-height: 5rem;     /* 强制尾部最小高度 */
+    page-break-before: avoid; /* 尝试保持内容连贯 */
+    break-inside: avoid;
   }
 }
