@@ -2,7 +2,6 @@
 import { useEffect, useRef } from 'react';
 
 interface PrintOptimizationOptions {
-    specialRowClass?: string;
     importantCellClass?: string;
     continuationPrefix?: string;
     paperFormat?: 'a4' | 'letter' | 'legal' | 'a3';
@@ -15,12 +14,12 @@ interface PrintOptimizationOptions {
     };
 }
 
-/**
+/**支持用.important-cell来标注特殊处理的单元格: 【目的是】跨页打印，适当考虑重复打印的某些列因为，跨越行数太多的或者因为其它的td列大内容高度，导致的空空荡荡的情形。
  * A custom React Hook that optimizes table printing by ensuring important cells
  * have content on each page when a row spans multiple pages.
+ * 【注意】配套的打印时刻浏览器宽度=纸张宽度，否则会不正常。
  */
 export function usePrintOptimization({
-                                         specialRowClass = 'special-row',
                                          importantCellClass = 'important-cell',
                                          continuationPrefix = '(续) ',
                                          paperFormat = 'a4',
@@ -37,10 +36,6 @@ export function usePrintOptimization({
       @media print {
         .page-break {
           page-break-before: always;
-        }
-
-        .${specialRowClass} {
-          page-break-inside: auto;
         }
 
         .${importantCellClass} {
@@ -67,24 +62,12 @@ export function usePrintOptimization({
 
             // Process each table
             tables.forEach((table, tableIndex) => {
-                // Get all special rows in this table
-                const rows = table.querySelectorAll(`.${specialRowClass}`);
-
-                // Process each row
-                rows.forEach(row => {
                     // Get all important cells in this row
-                    const importantCells = row.querySelectorAll(`.${importantCellClass}`);
-
-                    // Measure the row height
-                    const rowHeight = row.offsetHeight;
-
-                    // Calculate how many pages this row will span
-                    const pagesSpanned = Math.ceil(rowHeight / printPageDimensions.contentHeight);
-
-                    // Only proceed if the row spans multiple pages
-                    if (pagesSpanned > 1) {
+                    const importantCells = table.querySelectorAll(`.${importantCellClass}`);
                         // Process each important cell in the row
                         importantCells.forEach(cell => {
+                            // Measure the td Cell height
+                            const cellHeight = cell.offsetHeight;
                             // Generate a truly unique key for this cell
                             const cellKey = generateUniqueCellKey(cell, tableIndex);
 
@@ -98,22 +81,38 @@ export function usePrintOptimization({
                             // Measure the height of the original content
                             const contentHeight = getTextHeight(cellContent, cell);
 
-                            // If content doesn't fill all pages
-                            if (contentHeight < rowHeight) {
-                                // Calculate how to distribute content across pages
-                                const contentPerPage = distributeContent(
-                                    cellContent,
-                                    pagesSpanned,
-                                    printPageDimensions.contentHeight,
-                                    continuationPrefix
-                                );
+                            //看下td起点位置：
+                            const tdContentStart=cell.offsetTop/ printPageDimensions.contentHeight;
+                            const tdContentEnd=(cell.offsetTop +contentHeight)/ printPageDimensions.contentHeight;
+                            const tdBottom=(cell.offsetTop +cellHeight)/ printPageDimensions.contentHeight;
 
-                                // Set the new content that will fill each page appropriately
-                                cell.innerHTML = contentPerPage.join('<div class="page-break"></div>');
+                            // Calculate how many pages this row will span
+                            // const pagesSpanned = Math.ceil(cellHeight / printPageDimensions.contentHeight);
+                            const startpage=Math.ceil(tdContentStart);
+                            const endpage=Math.ceil(tdContentEnd);
+                            //这里面测量太不精确了，而且浏览器宽度必须限定为打印规定纸张的宽度
+                            const bottompage=Math.ceil(tdBottom);
+                            const deta=tdBottom-tdContentStart;
+                            const myoccupy=tdContentEnd-tdContentStart;
+                            // Only proceed if the td Cell spans multiple pages, deta最少半张纸张高度的。
+                            //针对打印时小于一个纸张高度的单元格，还必须【假定前提必须满足】这个单元打印高度必须小于打印纸张高度方向的一半。
+                            if (deta>=1 || (myoccupy<=0.5 && startpage !==bottompage) ) {
+                                // If content doesn't fill all pages
+                                if (bottompage-startpage>0) {
+                                    // Calculate how to distribute content across pages
+                                    const contentPerPage = distributeContent(
+                                        cellContent,
+                                        bottompage-startpage,
+                                        printPageDimensions.contentHeight,
+                                        continuationPrefix
+                                    );
+
+                                    // Set the new content that will fill each page appropriately
+                                    cell.innerHTML = contentPerPage.join('<div class="page-break"></div>');
+                                }
                             }
                         });
-                    }
-                });
+
             });
         };
 
@@ -147,7 +146,7 @@ export function usePrintOptimization({
             window.removeEventListener('afterprint', restoreTableAfterPrinting);
             document.head.removeChild(style);
         };
-    }, [specialRowClass, importantCellClass, continuationPrefix, paperFormat, orientation, margins]);
+    }, [importantCellClass, continuationPrefix, paperFormat, orientation, margins]);
 
     // Helper function to get print page dimensions based on paper format and orientation
     function getPrintPageDimensions(
@@ -253,7 +252,7 @@ export function usePrintOptimization({
     // Helper function to distribute content across pages (same as before)
     function distributeContent(content: string, pages: number, pageHeight: number, prefix: string): string[] {
         const result: string[] = [];
-
+        //控制太不精确了，导致可能太多了，从而导致超出目标区域做打印呢。 不能 改成 i <= pages；还是：宁可最后一页可能是空白的！
         for (let i = 0; i < pages; i++) {
             if (i === 0) {
                 result.push(content);
@@ -265,22 +264,3 @@ export function usePrintOptimization({
         return result;
     }
 }
-
-/*
-        style.textContent = `
-      @media print {
-        .page-break {
-          page-break-before: always;
-        }
-
-        .${specialRowClass} {
-          page-break-inside: auto;
-        }
-
-        .${importantCellClass} {
-          page-break-inside: auto;
-        }
-      }
-    `;
-        document.head.appendChild(style);
-* */

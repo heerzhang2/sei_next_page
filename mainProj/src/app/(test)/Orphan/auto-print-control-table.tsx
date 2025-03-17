@@ -66,13 +66,13 @@ export default function AutoPrintControlTable({
           <td className="border">{"This is a very long description tha to be tall. ".repeat(37)}</td>
           <td className="border p-2 ">Pending</td>
         </tr>
-        <tr className="special-row ">
+        <tr className=" ">
           <td className="border " rowSpan={4}>Produc很 fdgf dgfdg 234 3242 34</td>
           <td className="border ">Another short description</td>
-          <td className="border important-cell" rowSpan={3}>Inactiv 给干</td>
+          <td className="border important-cell" rowSpan={3}>Inactiv 给干 66豆腐干豆 腐干 888反对</td>
         </tr>
         <tr className="">
-          <td className="border ">Custom content with explicit height</td>
+          <td className="border ">{"This is a very long description tha to be tall. ".repeat(37)}</td>
 
         </tr>
         <tr className="  ">
