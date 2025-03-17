@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useRef } from "react"
 import { Button } from "@/components/ui/button"
+import {usePrintOptimization} from "@/hooks/usePrintOptimization";
 
 // Props for the component
 interface AutoPrintControlTableProps {
@@ -19,6 +20,7 @@ export default function AutoPrintControlTable({
   minOrphanHeight = 10,
   cellRenderer,
 }: AutoPrintControlTableProps) {
+  usePrintOptimization({continuationPrefix: '(续) '});
   const tableRef = useRef<HTMLTableElement>(null)
 
   // Function to determine if a cell might be tall based on content
@@ -61,17 +63,17 @@ export default function AutoPrintControlTable({
         </tr>
         <tr className="">
           <td className="border p-2 ">Product B</td>
-          <td className="border">{"This is a very long description tha to be tall. ".repeat(35)}</td>
+          <td className="border">{"This is a very long description tha to be tall. ".repeat(38)}</td>
           <td className="border p-2 ">Pending</td>
         </tr>
-        <tr className=" ">
-          <td id="ObjectTd" className="border print-container-min-5h" rowSpan={4}>Product很</td>
+        <tr className="special-row ">
+          <td className="border " rowSpan={4}>Product很 fdgf dgfdg234 3242 34</td>
           <td className="border ">Another short description</td>
-          <td className="border ">Inactive</td>
+          <td className="border  important-cell" rowSpan={2}>Inactive</td>
         </tr>
         <tr className="">
           <td className="border ">Custom content with explicit height</td>
-          <td className="border ">Active</td>
+
         </tr>
         <tr className="  ">
           <td className="border ">Cusgjght-<br/>都会受到《》<br/>---- height</td>

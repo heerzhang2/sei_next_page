@@ -323,15 +323,17 @@ body {
 }
 /*孤儿测试*/
 @media print {
-  #ObjectTd {
-    break-inside: auto; /* 允许单元格内部分页 */
+  .print-container-min-5h {
+    position: relative; /* 为伪元素定位创建基准 */
   }
 
-  #ObjectTd::after {
+  .print-container-min-5h::before {
     content: '';
     display: block;
-    min-height: 5rem;     /* 强制尾部最小高度 */
-    page-break-before: avoid; /* 尝试保持内容连贯 */
+    height: 4rem;         /* 创建5rem高度的占位空间 */
+    margin-bottom: -4rem; /* 负边距抵消占位高度 */
+    pointer-events: none; /* 禁用鼠标交互 */
+    page-break-after: avoid; /* 强制伪元素留在第一页 */
     break-inside: avoid;
   }
 }
