@@ -36,12 +36,15 @@ export function usePrintOptimization({
         style.textContent = `
       @media print {
         .page-break {
+          page-break-before: always;
         }
-        
+
         .${specialRowClass} {
+          page-break-inside: auto;
         }
-        
+
         .${importantCellClass} {
+          page-break-inside: auto;
         }
       }
     `;
