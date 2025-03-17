@@ -20,7 +20,7 @@ export default function AutoPrintControlTable({
   minOrphanHeight = 10,
   cellRenderer,
 }: AutoPrintControlTableProps) {
-  usePrintOptimization({continuationPrefix: '(续) '});
+  // usePrintOptimization({continuationPrefix: '(续) '});
   const tableRef = useRef<HTMLTableElement>(null)
 
   // Function to determine if a cell might be tall based on content
@@ -66,10 +66,10 @@ export default function AutoPrintControlTable({
           <td className="border">{"This is a very long description tha to be tall. ".repeat(38)}</td>
           <td className="border p-2 ">Pending</td>
         </tr>
-        <tr className="special-row ">
-          <td className="border " rowSpan={4}>Product很 fdgf dgfdg234 3242 34</td>
+        <tr className=" ">
+          <td className="border " rowSpan={4}>Produc很 fdgf dgfdg 234 3242 34</td>
           <td className="border ">Another short description</td>
-          <td className="border  important-cell" rowSpan={2}>Inactive</td>
+          <td className="border " rowSpan={3}>Inactiv 给干</td>
         </tr>
         <tr className="">
           <td className="border ">Custom content with explicit height</td>
@@ -77,7 +77,7 @@ export default function AutoPrintControlTable({
         </tr>
         <tr className="  ">
           <td className="border ">Cusgjght-<br/>都会受到《》<br/>---- height</td>
-          <td className="border ">ive</td>
+
         </tr>
         <tr className="  ">
           <td className="border ">Cusg5666eight</td>
@@ -89,7 +89,8 @@ export default function AutoPrintControlTable({
   )
 }
 
-/*  <td className="border  print-container-min-5h" rowSpan={4}>ProductCio 说的很对n 换个给和</td>
+/* special-row  important-cell
+ <td className="border  print-container-min-5h" rowSpan={4}>ProductCio 说的很对n 换个给和</td>
           {data.map((row, rowIndex) => {
               const isTall =rowIndex===1 || rowIndex===3;   // isTallContent(cell)
               const rowClasses =isTall ? `print-container-min-${minOrphanHeight}vh` : ""

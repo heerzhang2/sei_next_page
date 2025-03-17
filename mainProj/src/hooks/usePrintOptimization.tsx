@@ -36,15 +36,12 @@ export function usePrintOptimization({
         style.textContent = `
       @media print {
         .page-break {
-          page-break-before: always;
         }
         
         .${specialRowClass} {
-          page-break-inside: auto;
         }
         
         .${importantCellClass} {
-          page-break-inside: auto;
         }
       }
     `;
@@ -265,3 +262,22 @@ export function usePrintOptimization({
         return result;
     }
 }
+
+/*
+        style.textContent = `
+      @media print {
+        .page-break {
+          page-break-before: always;
+        }
+
+        .${specialRowClass} {
+          page-break-inside: auto;
+        }
+
+        .${importantCellClass} {
+          page-break-inside: auto;
+        }
+      }
+    `;
+        document.head.appendChild(style);
+* */
