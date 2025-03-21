@@ -14,21 +14,15 @@ export default function DepTask() {
                         </ol>
                     </li>
 
-                    <li className="mb-2">采购招标综合网。
+                    <li className="mb-2">特种设备 采购招标综合网。
                         <ol className="p-4 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-                            <li className="mb-2">
-                                <Link href="https://vip.bidizhaobiao.com/admin#/informationQuery/bid">比地招标网</Link>
-                            </li>
                             <li className="mb-2">
                                 <Link href="https://www.chinabidding.cc/search/index.html?page=1&keyword=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&h_lx=9&h_province=0&vague=0&date=90&search_field=1">
                                     采购招标网</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://search.ccgp.gov.cn/bxsearch?searchtype=1&page_index=1&bidSort=0&buyerName=&projectId=&pinMu=0&bidType=0&dbselect=bidx&kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C%E7%AE%A1%E7%90%86&start_time=2025%3A02%3A07&end_time=2025%3A03%3A10&timeType=3&displayZone=&zoneId=&pppStatus=0&agentName=">
+                                <Link href="https://search.ccgp.gov.cn/bxsearch?searchtype=1&page_index=1&bidSort=0&buyerName=&projectId=&pinMu=0&bidType=0&dbselect=bidx&kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&start_time=2025%3A02%3A07&end_time=2025%3A03%3A10&timeType=3&displayZone=&zoneId=&pppStatus=0&agentName=">
                                     中国政府采购</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="https://search.bidcenter.com.cn/search?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&tag=1&mod=0">采 招 网</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://www.arrbid.com/bidquery/key_%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87?timetype=3&keywordtype=1&showtype=1">立达标讯</Link>
@@ -40,15 +34,21 @@ export default function DepTask() {
                                 <Link href="https://zb.yfb.qianlima.com/yfbsemsite/mesinfo/zbpglist">乙 方 宝</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://www.zbytb.com/zb/search.php?kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">中国招标与采购网</Link>
+                                <Link href="https://www.zbytb.com/zb/search.php?kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">标与采 招标与采购网</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://search.vip.qianlima.com/index.html#?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&timeType=3&filtermode=2&sortType=1&keywordsFrom=0&isSearchWord=1&tab_index=0">
-                                    千里马 招标网</Link>
+                                    千里马 招标网（多）</Link>
+                            </li>
+                            <li className="mb-2">
+                                <Link href="https://vip.bidizhaobiao.com/admin#/informationQuery/bid">比地招标网</Link>
+                            </li>
+                            <li className="mb-2">
+                                <Link href="https://search.bidcenter.com.cn/search?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&tag=1&mod=0">采 招 网</Link>
                             </li>
                         </ol>
                     </li>
-                    <li className="mb-2">各省市的招标网。
+                    <li className="mb-2">特种设备 各省市的招标网。
                         <ol className="p-4 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
                             <li className="mb-2">
                                 <Link href="https://zfcg.czt.fujian.gov.cn/freecms/site/fujian/qwjsy/index.html?searchContent=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">福建政府采购网</Link>
