@@ -1,0 +1,118 @@
+@media print {
+  /* 默认纸张设置 - 纵向 */
+  @page {
+    size: var(--paper-size, A4) portrait;
+    margin: var(--paper-margin, 1cm);
+  }
+
+  /* 重置body的默认边距 */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 横向纸张设置 */
+  @page landscape {
+    size: var(--paper-size, A4) landscape;
+    margin: var(--paper-margin, 1cm);
+  }
+
+  /* 自定义尺寸纸张 - 纵向 */
+  @page custom-portrait {
+    size: var(--custom-paper-width) var(--custom-paper-height);
+    margin: var(--paper-margin, 1cm);
+  }
+
+  /* 自定义尺寸纸张 - 横向 */
+  @page custom-landscape {
+    size: var(--custom-paper-height) var(--custom-paper-width);
+    margin: var(--paper-margin, 1cm);
+  }
+
+  /* 应用横向打印样式 */
+  .print-landscape {
+    page: landscape !important;
+  }
+
+  /* 应用自定义尺寸纵向打印样式 */
+  .print-custom-portrait {
+    page: custom-portrait !important;
+  }
+
+  /* 应用自定义尺寸横向打印样式 */
+  .print-custom-landscape {
+    page: custom-landscape !important;
+  }
+
+  /* 防止标题和表格之间分页 */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* 确保标题和表格在一起 */
+  h1 + *,
+  h2 + *,
+  h3 + *,
+  h4 + *,
+  h5 + *,
+  h6 + * {
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+  }
+
+  /* 特别处理 FlexibleTable */
+  h1 + div,
+  h2 + div,
+  h3 + div,
+  h4 + div,
+  h5 + div,
+  h6 + div {
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+  }
+
+  /* 确保 .keep-together 类的元素不被分页 */
+  .keep-together,
+  .no-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 修改：允许内容片段显示，但隐藏其他非片段内容 */
+  .important-cell > *:not(.original-content-container):not(.content-fragments-container) {
+    display: none !important;
+  }
+
+  /* 确保内容片段容器在打印时可见 */
+  .content-fragments-container {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    visibility: visible !important;
+    background: transparent !important;
+    position: relative !important;
+  }
+
+  /* 确保内容片段在打印时可见 */
+  .content-fragment {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    width: 100% !important;
+  }
+
+  /* 重要单元格样式 */
+  .important-cell {
+    overflow-y: hidden;
+    position: relative !important;
+    height: 100% !important;
+    overflow-wrap: anywhere;
+  }
+}
+

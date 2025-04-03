@@ -11,6 +11,7 @@ import AuthStatus from "@/auth/auth-status";
 import { ThemeProvider } from 'next-themes'
 
 import "./globals.css";
+import {PrintSettingsProvider} from "@/contexts/print-settings-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default async function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
       <ThemeProvider>
+        <PrintSettingsProvider>
           {/*<PrintUsed/>*/}
           <SessionProvider session={session}>
               <Provider>
@@ -63,6 +65,7 @@ export default async function RootLayout({
               {/*<ToastContainer/>*/}
 
           </SessionProvider>
+        </PrintSettingsProvider>
       </ThemeProvider>
       </body>
       </html>
