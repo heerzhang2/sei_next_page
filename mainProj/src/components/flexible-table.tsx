@@ -53,7 +53,13 @@ function processTableSection(section: ReactNode, columnWidths: string[]): ReactN
 }
 
 //增加divClassName参数：应对特别情况
-export function FlexibleTable({ children, columnWidths, className,divClassName, variant = "default" }: FlexibleTableProps) {
+export function FlexibleTable({
+  children,
+  columnWidths,
+  className,
+  divClassName,
+  variant = "default",
+}: FlexibleTableProps) {
   const variantStyles = {
     default: "border rounded-md",
     borderless: "",
@@ -68,9 +74,9 @@ export function FlexibleTable({ children, columnWidths, className,divClassName, 
   return (
     <div className={`overflow-x-auto ${divClassName || ""}`}>
       <table className={`w-full ${variantStyles[variant]} ${className || ""}`}>
-        <colgroup >
+        <colgroup>
           {columnWidths?.map((width, i) => {
-            return <col key={i} width={width} />;
+            return <col key={i} width={width} />
           })}
         </colgroup>
         {processedChildren}
@@ -85,10 +91,6 @@ export function TableHead({ children }: { children: ReactNode }) {
 
 export function TableBody({ children }: { children: ReactNode }) {
   return <tbody>{children}</tbody>
-}
-
-export function TableFoot({ children }: { children: ReactNode }) {
-  return <tfoot className="bg-muted/20">{children}</tfoot>
 }
 
 export function TableRow({
@@ -140,18 +142,4 @@ export function TableCell({
     </td>
   )
 }
-//考虑打印p-0.25rem md:px-0.75rem md:py-0.25rem lg:px-1.5rem lg:py-0.25rem print:px-0 print:py-0.75rem
-export function CCell({
-                            children,
-                            className,
-                            colSpan,
-                            style,
-                            ...props
-                          }: React.TdHTMLAttributes<HTMLTableCellElement>) {
-  return (
-      <td className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
-          style={style} colSpan={colSpan} {...props}>
-        {children}
-      </td>
-  )
-}
+
