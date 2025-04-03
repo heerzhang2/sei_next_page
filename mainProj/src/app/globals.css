@@ -163,7 +163,8 @@ body {
   margin: 0;
 }
 @page portraitPg {
-  size: a4 portrait;
+  size: 7in 5in;
+  margin: 15mm 5mm;
 }
 @page landscapePg {
   size: a4 landscape;
