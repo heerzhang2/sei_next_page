@@ -831,6 +831,7 @@ class PrintPreparation {
         const copies =
             totalHeight > paperNetHeight - headerHeight && contentHeight < 0.5 * paperNetHeight
                 ? orgCopies + 1
+                : (totalHeight/(contentHeight+32)>4.8 && orgCopies===1)? 2
                 : orgCopies
 
         const contentContainer = document.createElement("div")
@@ -854,8 +855,12 @@ class PrintPreparation {
           fragmentContainer.className = "content-fragment"
           fragmentContainer.style.position = "relative"
           fragmentContainer.style.width = "100%"
-          fragmentContainer.style.paddingBottom = `${fragmentMargin}px`
-          fragmentContainer.style.breakInside = "avoid"
+          if(j > 0){
+            fragmentContainer.style.paddingBottom = `${fragmentMargin}px`
+            fragmentContainer.style.breakInside = "avoid"
+          }
+          else
+            fragmentContainer.style.marginBottom = `${fragmentMargin}px`
 
           // 直接将内容添加到片段容器
           originalContent.forEach((node) => {

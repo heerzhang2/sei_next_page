@@ -21,13 +21,36 @@ export default function Home() {
       <PageSectionOrientation orientation="portrait">
         <div className={"dASqww   Alld"}>
 
-          <section className={"dASqww   Alld"} css={{minHeight: '47vh'}}>
+          <section className={"dASqww   Alld"} css={{minHeight: '40vh'}}>
             111<br/>
             正常A4 竖着的但因---------------------fdgdfgdf==============形成个性风格豆565 46564 5645腐干豆腐干
           </section>
           《<br/>》11版本内容！
 
         </div>
+
+        <PageSectionOrientation >
+          <div className={"Wqww    dRTffld"}  css={{minHeight: '55vh'}}>
+            cbvvccfgcfdfd<br/>
+            6787687
+          </div>
+
+            <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>标题</TableCell>
+                  <TableCell>描述</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="important-cell ">这是一个纯文本内容示例</TableCell>
+                  <TableCell>{"这是一段很长的文字内容。。。".repeat(118)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </FlexibleTable>
+
+        </PageSectionOrientation>
 
         <div>
           <PrintTogether reserve="3.7rem" title={<>df<br/>
@@ -48,11 +71,11 @@ export default function Home() {
                 </thead>
                 <tbody>
                 <tr>
-                  <td className="important-cell ">普通单777奉答固道筚路蓝缕77元格</td>
+                  <td className="important-cell ">普通单77777元格</td>
                   <td className="border p-2">
-                    {"这是一段很长的文字内容。".repeat(24)}
+                    {"这是一段很长的文字内容。".repeat(68)}
                   </td>
-                  <td className="border p-2">{"这是一段很长的文字内容。".repeat(1)}</td>
+                  <td className="border p-2">{"这是一段很长的文字内容。".repeat(5)}</td>
                 </tr>
                 </tbody>
               </table>
