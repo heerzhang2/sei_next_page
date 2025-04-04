@@ -32,8 +32,7 @@ export default function Home() {
             cbvvccfgcfdfd<br/>
             6787687
           </div>
-          <NoPageBreak titleHeight="3.2rem" title={<>df<br/>
-            zhong jia正宗midd</>} >
+
             <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
               <TableHead>
                 <TableRow>
@@ -48,7 +47,7 @@ export default function Home() {
                 </TableRow>
               </TableBody>
             </FlexibleTable>
-          </NoPageBreak>
+
         </PageSectionOrientation>
 
         <div>
@@ -69,27 +68,9 @@ export default function Home() {
               </thead>
               <tbody>
               <tr>
-                <td className="border p-2">普通单元格</td>
+                <td className="important-cell border p-2">普通单元g格</td>
                 <td className="border p-2">
-                  {/* 嵌套表格 - 添加列宽度 */}
-                  <table className="w-full border-collapse border" style={{tableLayout: "fixed"}}>
-                    <colgroup>
-                      <col style={{width: "40%"}}/>
-                      <col style={{width: "60%"}}/>
-                    </colgroup>
-                    <thead>
-                    <tr>
-                      <th className="border p-2">嵌套标题 1</th>
-                      <th className="border p-2">嵌套标题 2</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                      <td className="important-cell border p-2">嵌套重要单元格 - 直接内容</td>
-                      <td className="border p-2">{"这是一段很长的文字内容。".repeat(68)}</td>
-                    </tr>
-                    </tbody>
-                  </table>
+                  {"这是一段很长的文字内容。".repeat(68)}
                 </td>
                 <td className="border p-2">{"这是一段很长的文字内容。".repeat(5)}</td>
               </tr>
