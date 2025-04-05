@@ -107,6 +107,13 @@
     width: 100% !important;
   }
 
+  /* 确保间隔元素在打印时可见 */
+  .content-spacer {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+  }
+
   /* 重要单元格样式 */
   .important-cell {
     overflow-y: hidden;

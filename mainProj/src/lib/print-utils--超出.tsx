@@ -36,9 +36,9 @@ export function getCurrentPaperSettings(): { size: string; margin?: string } {
 
 // 修改 getPaperDimensions 函数，使其更准确地处理纸张尺寸
 export function getPaperDimensions(
-  paperSize = "A4",
-  paperMargin = "1cm",
-  orientation: "portrait" | "landscape" = "portrait",
+    paperSize = "A4",
+    paperMargin = "1cm",
+    orientation: "portrait" | "landscape" = "portrait",
 ) {
   // 解析纸张尺寸 - 始终以纵向（portrait）获取原始尺寸
   let portraitWidth: number, portraitHeight: number
@@ -197,7 +197,7 @@ export function measureElementInPrintMedia(element: HTMLElement): {
 
         // 在克隆的结构中找到对应的表格
         const cloneParent =
-          currentClone.querySelector(`[data-cell-id="${originalParent.dataset.cellId}"]`) || currentClone
+            currentClone.querySelector(`[data-cell-id="${originalParent.dataset.cellId}"]`) || currentClone
         const clonedTables = Array.from(cloneParent.querySelectorAll("table"))
 
         if (index >= 0 && index < clonedTables.length) {
@@ -262,7 +262,10 @@ function measureInnerContentHeight(element: HTMLElement): number {
     // 克隆所有子元素到临时容器
     Array.from(element.childNodes).forEach((node) => {
       // 排除嵌套表格和隐藏容器
-      if (!(node instanceof HTMLElement) || !node.classList.contains("original-content-container")) {
+      if (
+          !(node instanceof HTMLElement) ||
+          (!node.classList.contains("original-content-container"))
+      ) {
         tempContainer.appendChild(node.cloneNode(true))
       }
     })
@@ -414,7 +417,7 @@ export function batchMeasureImportantCells(): Record<string, { height: number; c
           if (shouldHeight !== null) {
             finalHeight = Math.max(height, shouldHeight)
             console.log(
-              `单元格 ${cellId} 高度: 测量值=${height}px, shouldHeight=${shouldHeight}px, 最终使用=${finalHeight}px`,
+                `单元格 ${cellId} 高度: 测量值=${height}px, shouldHeight=${shouldHeight}px, 最终使用=${finalHeight}px`,
             )
           }
 
@@ -535,7 +538,7 @@ export function measureCellHeightWithPrintMedia(cell: HTMLElement): { height: nu
       printPrep.cellHeights[cell.dataset.cellId] = finalHeight
       printPrep.contentHeights[cell.dataset.cellId] = contentHeight
       console.log(
-        `更新单元格 ${cell.dataset.cellId} 高度: ${finalHeight}px, 内容高度: ${contentHeight}px (使用准确测量方法)`,
+          `更新单元格 ${cell.dataset.cellId} 高度: ${finalHeight}px, 内容高度: ${contentHeight}px (使用准确测量方法)`,
       )
     }
 
@@ -656,6 +659,7 @@ export function findTableHierarchy(cell: HTMLElement): HTMLTableElement[] {
   return tables
 }
 
+
 class PrintPreparation {
   public cellHeights: { [key: string]: number } = {}
   public contentHeights: { [key: string]: number } = {} // 新增：存储内容高度
@@ -768,10 +772,10 @@ class PrintPreparation {
         console.log(`单元格 ${cellId} 的祖先表格 thead 高度总和: ${headerHeight}px`)
 
         // 获取 data-interval-height 属性，默认为纸张净高度减去祖先表格的 thead 高度总和  【预留机制】配置决定的片段间隔距离;shouldHeight?
-        const orgIntervalHeight = htmlCell.dataset.intervalHeight
-          ? Number.parseInt(htmlCell.dataset.intervalHeight, 10)
-          : 0
-        const intervalHeight = orgIntervalHeight > 0 ? orgIntervalHeight : Math.max(paperNetHeight - headerHeight, 0)
+        const orgIntervalHeight=htmlCell.dataset.intervalHeight
+            ? Number.parseInt(htmlCell.dataset.intervalHeight, 10) : 0;
+        const intervalHeight = orgIntervalHeight>0 ? orgIntervalHeight
+            : Math.max(paperNetHeight - headerHeight, 0)
 
         // 确保 intervalHeight 大于 contentHeight + 30px
         const minIntervalHeight = contentHeight + 30
@@ -780,7 +784,7 @@ class PrintPreparation {
         // 确保 intervalHeight 是一个有效的数字
         if (isNaN(finalIntervalHeight) || finalIntervalHeight <= 0) {
           console.warn(
-            `单元格 ${cellId} 的 data-interval-height 属性无效，使用默认值 ${paperNetHeight - headerHeight}px`,
+              `单元格 ${cellId} 的 data-interval-height 属性无效，使用默认值 ${paperNetHeight - headerHeight}px`,
           )
         }
 
@@ -792,8 +796,8 @@ class PrintPreparation {
         const originalContent: Node[] = []
         Array.from(htmlCell.childNodes).forEach((node) => {
           if (
-            !(node instanceof HTMLElement) ||
-            (!node.classList.contains("content-fragment") && !node.classList.contains("original-content-container"))
+              !(node instanceof HTMLElement) ||
+              (!node.classList.contains("content-fragment") && !node.classList.contains("original-content-container"))
           ) {
             originalContent.push(node.cloneNode(true))
           }
@@ -812,8 +816,8 @@ class PrintPreparation {
         // 将原始内容移动到隐藏容器
         Array.from(htmlCell.childNodes).forEach((node) => {
           if (
-            !(node instanceof HTMLElement) ||
-            (!node.classList.contains("content-fragment") && !node.classList.contains("original-content-container"))
+              !(node instanceof HTMLElement) ||
+              (!node.classList.contains("content-fragment") && !node.classList.contains("original-content-container"))
           ) {
             originalContainer.appendChild(node)
           }
@@ -826,51 +830,46 @@ class PrintPreparation {
         const totalHeight = this.cellHeights[cellId]
         const orgCopies = Math.ceil(totalHeight / finalIntervalHeight)
         const copies =
-          totalHeight > paperNetHeight - headerHeight && contentHeight < 0.5 * paperNetHeight
-            ? orgCopies + 1
-            : orgIntervalHeight > 0
-              ? totalHeight / orgIntervalHeight > 2 && orgCopies === 1
-                ? 2
-                : orgCopies
-              : totalHeight / (contentHeight + 32) > 4.8 && orgCopies === 1
-                ? 2
+            totalHeight > paperNetHeight - headerHeight && contentHeight < 0.5 * paperNetHeight
+                ? orgCopies + 1
+                : orgIntervalHeight>0? (totalHeight/orgIntervalHeight>2 && orgCopies===1? 2 : orgCopies)
+                : (totalHeight/(contentHeight+32)>4.8 && orgCopies===1)? 2
                 : orgCopies
 
         const contentContainer = document.createElement("div")
         contentContainer.className = "content-fragments-container"
         contentContainer.style.position = "relative"
         contentContainer.style.width = "100%"
-        contentContainer.style.height = "100%"
+        contentContainer.style.height = "100%"      // maxHeight
         contentContainer.style.maxHeight = `${cellHeight}px`
         contentContainer.dataset.copies = copies.toString()
 
         // 计算每个片段的高度和间距
         const totalAvailableHeight = cellHeight
         const fragmentBaseHeight = contentHeight
+        const orgMargin = Math.floor((totalAvailableHeight - fragmentBaseHeight * copies) / copies)
+        const fragmentMargin = orgMargin<32 ? 32 : orgMargin
 
-        // 计算间隔总高度和每个间隔的高度
-        const totalSpacerHeight = totalAvailableHeight - fragmentBaseHeight * copies
-        const spacerCount = copies - 1 // 间隔数量比内容片段少1
-
-        // 如果只有一个片段，不需要间隔
-        const spacerHeight = spacerCount > 0 ? Math.floor(totalSpacerHeight / (spacerCount + 2)) : 0
-
-        // 创建内容片段和间隔
+        // 创建内容片段
         for (let j = 0; j < copies; j++) {
           // 创建一个内容片段容器
           const fragmentContainer = document.createElement("div")
           fragmentContainer.className = "content-fragment"
           fragmentContainer.style.position = "relative"
           fragmentContainer.style.width = "100%"
+          // if(j > 0){
+          //   fragmentContainer.style.paddingBottom = `${fragmentMargin}px`
+          //   // fragmentContainer.style.breakInside = "avoid"
+          // }
+          // else
+          //   fragmentContainer.style.marginBottom = `${fragmentMargin}px`
+        //paddingBottom = `${fragmentMargin}px`
+        //   if(j >= copies-1)
+        //     fragmentContainer.style.paddingBottom = `${fragmentMargin}px`
+        //   else
+        //     fragmentContainer.style.marginBottom = `${fragmentMargin}px`
           fragmentContainer.style.paddingTop = "0.5rem"
-
-          // 在第一个片段前添加间隔
-          if (j === 0 && spacerHeight > 0) {
-            const topSpacer = document.createElement("div")
-            topSpacer.className = "content-spacer"
-            topSpacer.style.height = `${spacerHeight}px`
-            contentContainer.appendChild(topSpacer)
-          }
+          // fragmentContainer.style.breakInside = "avoid-page"
 
           // 直接将内容添加到片段容器
           originalContent.forEach((node) => {
@@ -882,35 +881,23 @@ class PrintPreparation {
           if (j > 0) {
             const continuationMark = document.createElement("span")
             continuationMark.textContent = "(续) "
-            continuationMark.className =
-              "continuation-mark text-gray-500 font-medium text-[0.6rem] absolute top-[-0.1rem]"
-
+            //absolute
+            continuationMark.className = "continuation-mark text-gray-500 font-medium text-[0.6rem] top-[-0.1rem]"
+            //间隔的空白区域：
+            const spaceDiv = document.createElement("div")
+            spaceDiv.style.height = `calc(${fragmentMargin}px - 0.5rem)`
             // 添加到内容的开头
             if (fragmentContainer.firstChild) {
               fragmentContainer.insertBefore(continuationMark, fragmentContainer.firstChild)
+              // fragmentContainer.insertBefore(spaceDiv, fragmentContainer.firstChild)
             } else {
+              // fragmentContainer.appendChild(spaceDiv)
               fragmentContainer.appendChild(continuationMark)
             }
           }
 
           // 将片段容器添加到内容容器
           contentContainer.appendChild(fragmentContainer)
-
-          // 在片段后添加间隔（除了最后一个片段）
-          if (j < copies - 1 && spacerHeight > 0) {
-            const spacer = document.createElement("div")
-            spacer.className = "content-spacer"
-            spacer.style.height = `${spacerHeight}px`
-            contentContainer.appendChild(spacer)
-          }
-
-          // 在最后一个片段后添加间隔
-          if (j === copies - 1 && spacerHeight > 0) {
-            const bottomSpacer = document.createElement("div")
-            bottomSpacer.className = "content-spacer"
-            bottomSpacer.style.height = `${spacerHeight}px`
-            contentContainer.appendChild(bottomSpacer)
-          }
         }
 
         // 将内容容器添加到单元格
@@ -1098,6 +1085,7 @@ table {
       }, 100)
     }
   }
+
 }
 
 // 全局单例
@@ -1126,6 +1114,7 @@ export function getPrintPreparation(): PrintPreparation {
 
   return printPreparation
 }
+
 
 // 计算表格的 thead 高度
 function calculateTableHeaderHeight(table: HTMLTableElement): number {
@@ -1277,4 +1266,3 @@ export function batchCalculateHeaderHeights(): Record<string, number> {
   }
 }
 //可选参数 data-interval-height="400" data-should-height="1900"
-

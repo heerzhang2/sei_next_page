@@ -30,7 +30,7 @@ export default function Home() {
         </div>
 
         <div>
-          <NoPageBreak reserve="3.7rem" title={<>df<br/>
+          <PrintTogether reserve="3.7rem" title={<>df<br/>
             zhong jia正宗midd</>}>
             <FlexibleTable className="w-full" columnWidths={["20%","%","20%","10%"]}>
               <TableHead>
@@ -42,7 +42,7 @@ export default function Home() {
               <TableBody>
                 <TableRow className="border">
                   <TableCell className="important-cell " rowSpan={3}>这是一托于同体容705示例</TableCell>
-                  <TableCell  className="border">段很长的文字内</TableCell>
+                  <TableCell  className="border">11段很长的文字内</TableCell>
                   <TableCell className="border"><div style={{ height: "300px"}}>坎坎坷坷示例</div></TableCell>
                   <TableCell  className="border   important-cell" rowSpan={3}>这是twer3/werew内容示例UIUC</TableCell>
                 </TableRow>
@@ -55,7 +55,7 @@ export default function Home() {
                 </TableRow>
               </TableBody>
             </FlexibleTable>
-          </NoPageBreak>
+          </PrintTogether>
           <div className={"Wqww    dRTffld"}>
             3333中的<br/>
             横版本
@@ -63,7 +63,7 @@ export default function Home() {
 
           <h2 className="text-xl font-bold mb-2">嵌套表格---2示例</h2>
 
-          <NoPageBreak reserve="18.1rem" title={<>风格大范甘迪换个地方df<br/>问了问<br/>热无<br/><br/>
+          <PrintTogether reserve="18.1rem" title={<>风格大范甘迪换个地方df<br/>问了问<br/>热无<br/><br/>
             俗<br/><br/>话说得好是<br/>
             zhong <br/><br/>jia正<br/><br/>宗midd</>}>
           <FlexibleTable className="w-full" columnWidths={["20%","%","20%","10%"]}>
@@ -76,7 +76,7 @@ export default function Home() {
               <TableBody>
                 <TableRow className="border">
                   <TableCell className="important-cell " rowSpan={3}>这是一托于同体容705示例</TableCell>
-                  <TableCell  className="border">段很长的文字内</TableCell>
+                  <TableCell  className="border">22段很长的文字内</TableCell>
                   <TableCell className="border"><div style={{ height: "300px"}}>坎坎坷坷示例</div></TableCell>
                   <TableCell  className="border   important-cell" rowSpan={3}>这是twer3/werew内容示例UIUC</TableCell>
                 </TableRow>
@@ -89,7 +89,7 @@ export default function Home() {
                 </TableRow>
               </TableBody>
             </FlexibleTable>
-          </NoPageBreak>
+          </PrintTogether>
         </div>
       </PageSectionOrientation>
   );
