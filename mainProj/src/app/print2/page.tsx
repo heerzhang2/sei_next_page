@@ -30,7 +30,7 @@ export default function Home() {
         </div>
 
         <div>
-          <PrintTogether reserve="3.7rem" title={<>df<br/>
+          <NoPageBreak reserve="3.7rem" title={<>df<br/>
             zhong jia正宗midd</>}>
             <FlexibleTable className="w-full" columnWidths={["20%","%","20%","10%"]}>
               <TableHead>
@@ -55,7 +55,7 @@ export default function Home() {
                 </TableRow>
               </TableBody>
             </FlexibleTable>
-          </PrintTogether>
+          </NoPageBreak>
           <div className={"Wqww    dRTffld"}>
             3333中的<br/>
             横版本
@@ -63,10 +63,10 @@ export default function Home() {
 
           <h2 className="text-xl font-bold mb-2">嵌套表格---2示例</h2>
 
-          <PrintTogether reserve="18.1rem" title={<>风格大范甘迪换个地方df<br/>问了问<br/>热无<br/><br/>
+          <NoPageBreak reserve="18.1rem" title={<>风格大范甘迪换个地方df<br/>问了问<br/>热无<br/><br/>
             俗<br/><br/>话说得好是<br/>
             zhong <br/><br/>jia正<br/><br/>宗midd</>}>
-          <FlexibleTable className="w-full" columnWidths={["20%","%","20%","10%"]}>
+            <FlexibleTable className="w-full" columnWidths={["20%","%","20%","10%"]}>
               <TableHead>
                 <TableRow>
                   <TableCell>编号</TableCell><TableCell>描述</TableCell>
@@ -89,7 +89,7 @@ export default function Home() {
                 </TableRow>
               </TableBody>
             </FlexibleTable>
-          </PrintTogether>
+          </NoPageBreak>
         </div>
       </PageSectionOrientation>
   );

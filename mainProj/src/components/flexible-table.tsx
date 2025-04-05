@@ -144,3 +144,19 @@ export function TableCell({
   )
 }
 
+//考虑打印p-0.25rem md:px-0.75rem md:py-0.25rem lg:px-1.5rem lg:py-0.25rem print:px-0 print:py-0.75rem
+export function CCell({
+                        children,
+                        className,
+                        colSpan,
+                        style,
+                        ...props
+                      }: React.TdHTMLAttributes<HTMLTableCellElement>) {
+  return (
+      <td className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
+          style={style} colSpan={colSpan} {...props}>
+        {children}
+      </td>
+  )
+}
+

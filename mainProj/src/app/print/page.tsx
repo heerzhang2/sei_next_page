@@ -86,7 +86,7 @@ export default function Home() {
                     <tbody>
                     <tr>
                       <td className="important-cell border p-2">嵌套重要单元格 - 直接内容</td>
-                      <td className="border p-2">{"这是一段很长的文字内容。".repeat(68)}</td>
+                      <td className="border p-2">{"这是一段很长的文字内容。".repeat(31)}</td>
                     </tr>
                     </tbody>
                   </table>
