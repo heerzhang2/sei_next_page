@@ -32,7 +32,7 @@ export default function Home() {
             cbvvccfgcfdfd<br/>
             6787687
           </div>
-          <NoPageBreak titleHeight="3.2rem" title={<>df<br/>
+          <NoPageBreak reserve="3.2rem" title={<>df<br/>
             zhong jia正宗midd</>} >
             <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
               <TableHead>
@@ -52,7 +52,7 @@ export default function Home() {
         </PageSectionOrientation>
 
         <div>
-          <NoPageBreak titleHeight="3.2rem" title={<>df<br/>
+          <NoPageBreak reserve="3.2rem" title={<>df<br/>
             zhong jia正宗midd</>}>
             <table className="w-full border-collapse border" style={{tableLayout: "fixed"}}>
               <colgroup>

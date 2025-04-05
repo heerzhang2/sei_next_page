@@ -857,12 +857,19 @@ class PrintPreparation {
           fragmentContainer.className = "content-fragment"
           fragmentContainer.style.position = "relative"
           fragmentContainer.style.width = "100%"
-          if(j > 0){
+          // if(j > 0){
+          //   fragmentContainer.style.paddingBottom = `${fragmentMargin}px`
+          //   // fragmentContainer.style.breakInside = "avoid"
+          // }
+          // else
+          //   fragmentContainer.style.marginBottom = `${fragmentMargin}px`
+        //paddingBottom = `${fragmentMargin}px`
+          if(j >= copies-1)
             fragmentContainer.style.paddingBottom = `${fragmentMargin}px`
-            fragmentContainer.style.breakInside = "avoid"
-          }
           else
             fragmentContainer.style.marginBottom = `${fragmentMargin}px`
+          fragmentContainer.style.paddingTop = "0.5rem"
+          // fragmentContainer.style.breakInside = "avoid-page"
 
           // 直接将内容添加到片段容器
           originalContent.forEach((node) => {
@@ -874,7 +881,7 @@ class PrintPreparation {
           if (j > 0) {
             const continuationMark = document.createElement("span")
             continuationMark.textContent = "(续) "
-            continuationMark.className = "continuation-mark text-gray-500 font-medium text-[0.6rem]"
+            continuationMark.className = "continuation-mark text-gray-500 font-medium text-[0.6rem] absolute top-[-0.1rem]"
 
             // 添加到内容的开头
             if (fragmentContainer.firstChild) {

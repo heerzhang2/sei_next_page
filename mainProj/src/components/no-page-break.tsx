@@ -1,39 +1,34 @@
 import type React from "react"
-
+//反过来了 替代  PrintTogether
 export default function NoPageBreak({
-            title,
-            children,
-            titleHeight = "2.5rem",
-        }: {
+                                        title,
+                                        children,
+                                        reserve = "2.5rem",
+                                    }: {
     title: React.ReactNode
     children: React.ReactNode
-    titleHeight?: string
+    reserve?: string
 }) {
     return (
-        <>
-            <div className="print:hidden">
-                <div >{title}</div>
-                <div>{children}</div>
+        <div className="relative">
+            {/* 标题区域 */}
+            <div
+                className="print:absolute print:top-0 print:left-0 print:right-0"
+                style={{
+                    pageBreakAfter: "avoid",
+                    breakAfter: "avoid",
+                    height: "auto",
+                    printHeight: reserve,
+                }}
+            >
+                {title}
             </div>
-            <div className="hidden print:block">
-                <div style={{ position: "relative" }}>
-                    <div
-                        style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: titleHeight,
-                            margin: 0,
-                            pageBreakAfter: "avoid",
-                            breakAfter: "avoid",
-                        }}
-                    >
-                        {title}
-                    </div>
-                    <div style={{ paddingTop: titleHeight }}>{children}</div>
-                </div>
+
+            {/* 内容区域 */}
+            <div className="print:pt-[length:var(--reserve)]" style={{ "--reserve": reserve } as React.CSSProperties}>
+                {children}
             </div>
-        </>
+        </div>
     )
 }
+
