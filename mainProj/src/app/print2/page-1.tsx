@@ -35,17 +35,25 @@ export default function Home() {
             6787687
           </div>
 
-            <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
+            <FlexibleTable className="w-full" columnWidths={["20%","50%","20%","10%"]}>
               <TableHead>
                 <TableRow>
-                  <TableCell>标题</TableCell>
-                  <TableCell>描述</TableCell>
+                  <TableCell>编号</TableCell>
+                  <TableCell>描述</TableCell><TableCell>结果</TableCell><TableCell>结论</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 <TableRow>
-                  <TableCell className="important-cell ">这是一个纯文本内容示例</TableCell>
-                  <TableCell>{"这是一段很长的文字内容。。。".repeat(118)}</TableCell>
+                  <TableCell className="important-cell " rowSpan={3}>这是一个纯文本内容示例</TableCell>
+                  <TableCell>段很长的文字内</TableCell>
+                  <TableCell>这是内容示例</TableCell><TableCell rowSpan={3}>这是twerwer<br/>ew内容<br/>示例</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell rowSpan={2}>{"这是一段很长的文字内容。。。".repeat(118)}</TableCell>
+                  <TableCell  rowSpan={2}>这是内容示例</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>这是内容示例</TableCell>
                 </TableRow>
               </TableBody>
             </FlexibleTable>

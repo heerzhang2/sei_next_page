@@ -772,8 +772,9 @@ class PrintPreparation {
         console.log(`单元格 ${cellId} 的祖先表格 thead 高度总和: ${headerHeight}px`)
 
         // 获取 data-interval-height 属性，默认为纸张净高度减去祖先表格的 thead 高度总和  【预留机制】配置决定的片段间隔距离;shouldHeight?
-        const intervalHeight = htmlCell.dataset.intervalHeight
-            ? Number.parseInt(htmlCell.dataset.intervalHeight, 10)
+        const orgIntervalHeight=htmlCell.dataset.intervalHeight
+            ? Number.parseInt(htmlCell.dataset.intervalHeight, 10) : 0;
+        const intervalHeight = orgIntervalHeight>0 ? orgIntervalHeight
             : Math.max(paperNetHeight - headerHeight, 0)
 
         // 确保 intervalHeight 大于 contentHeight + 30px
@@ -831,6 +832,7 @@ class PrintPreparation {
         const copies =
             totalHeight > paperNetHeight - headerHeight && contentHeight < 0.5 * paperNetHeight
                 ? orgCopies + 1
+                : orgIntervalHeight>0? (totalHeight/orgIntervalHeight>2 && orgCopies===1? 2 : orgCopies)
                 : (totalHeight/(contentHeight+32)>4.8 && orgCopies===1)? 2
                 : orgCopies
 
@@ -872,7 +874,7 @@ class PrintPreparation {
           if (j > 0) {
             const continuationMark = document.createElement("span")
             continuationMark.textContent = "(续) "
-            continuationMark.className = "continuation-mark text-gray-500 font-medium"
+            continuationMark.className = "continuation-mark text-gray-500 font-medium text-[0.6rem]"
 
             // 添加到内容的开头
             if (fragmentContainer.firstChild) {

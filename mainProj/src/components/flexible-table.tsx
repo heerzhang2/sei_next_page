@@ -73,7 +73,7 @@ export function FlexibleTable({
   //不用<colgroup> 和 <col> 标签 ，如何设置各个列的宽度width，还能准确拼凑各个列宽度正好100%的；colspan属性在处理需要合并列的表格时仍然是不可或缺的；
   return (
     <div className={`overflow-x-auto ${divClassName || ""}`}>
-      <table className={`w-full ${variantStyles[variant]} ${className || ""}`}>
+      <table className={`w-full table-fixed ${variantStyles[variant]} ${className || ""}`}>
         <colgroup>
           {columnWidths?.map((width, i) => {
             return <col key={i} width={width} />

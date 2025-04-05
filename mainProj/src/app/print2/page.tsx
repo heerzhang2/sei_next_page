@@ -13,7 +13,7 @@ import type React from "react";
 
 
 /*
-打印测试
+打印测试  <table className="w-full border-collapse border" style={{ tableLayout: "fixed" }}>
 * */
 export default function Home() {
   useMediaPrint(true,true,"A4","10mm")
@@ -21,7 +21,7 @@ export default function Home() {
       <PageSectionOrientation orientation="portrait">
         <div className={"dASqww   Alld"}>
 
-          <section className={"dASqww   Alld"} css={{minHeight: '47vh'}}>
+          <section className={"dASqww   Alld"} css={{minHeight: '63vh'}}>
             111<br/>
             正常A4 竖着的但因---------------------fdgdfgdf==============形成个性风格豆565 46564 5645腐干豆腐干
           </section>
@@ -32,31 +32,29 @@ export default function Home() {
         <div>
           <PrintTogether reserve="3.7rem" title={<>df<br/>
             zhong jia正宗midd</>}>
-            <div  >
-              <table className="w-full border-collapse border" >
-                <colgroup>
-                  <col width="20%"/>
-                  <col width="50%"/>
-                  <col width="30%"/>
-                </colgroup>
-                <thead>
-                <tr>
-                  <th className="border p-2">标题 1</th>
-                  <th className="border p-2">标题 2</th>
-                  <th className="border p-2">标题 3</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                  <td className="important-cell ">普通单777奉答固道筚路蓝缕77元格</td>
-                  <td className="border p-2">
-                    {"这是一段很长的文字内容。".repeat(24)}
-                  </td>
-                  <td className="border p-2">{"这是一段很长的文字内容。".repeat(1)}</td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
+            <FlexibleTable className="w-full" columnWidths={["20%","%","20%","10%"]}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>编号</TableCell><TableCell>描述</TableCell>
+                  <TableCell>结果</TableCell><TableCell>结论</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow className="border">
+                  <TableCell className="important-cell " rowSpan={3}>这是一托于同体容示例</TableCell>
+                  <TableCell  className="border">段很长的文字内</TableCell>
+                  <TableCell className="border"><div style={{ height: "300px"}}>坎坎坷坷示例</div></TableCell>
+                  <TableCell  className="border   important-cell" rowSpan={3}>这是twer3/werew内容示例</TableCell>
+                </TableRow>
+                <TableRow className="border">
+                  <TableCell  className="border" rowSpan={2}>{"这是一段很长的文字内容。。。".repeat(118)}</TableCell>
+                  <TableCell  className="border important-cell" >这是mmn存储卡简单化示例</TableCell>
+                </TableRow>
+                <TableRow className="border">
+                  <TableCell  className="important-cell  border">聊聊天越来越讨论内容示例</TableCell>
+                </TableRow>
+              </TableBody>
+            </FlexibleTable>
           </PrintTogether>
           <div className={"Wqww    dRTffld"}>
             3333中的<br/>

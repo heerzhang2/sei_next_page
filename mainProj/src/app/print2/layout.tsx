@@ -6,7 +6,7 @@ export default function Layout({
     return (
         <>
             {children}
-            <section className={"ww  lld"}>
+            <section >
                 尾巴为哪部分的
             </section>
         </>
