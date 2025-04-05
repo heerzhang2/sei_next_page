@@ -6,13 +6,14 @@ interface FlexibleTableProps {
   columnWidths: string[]
   className?: string
   variant?: "default" | "borderless"
-  divClassName?: string
 }
 
-// Helper function to process rows and apply widths to cells
-function processRows(rows: ReactNode, columnWidths: string[]): ReactNode {
-  // Calculate the remaining width for any column marked with just "%"
+// Helper function to process column widths and calculate remaining percentage
+function processColumnWidths(columnWidths: string[]): string[] {
+  // Create a copy of the original array
   const processedWidths = [...columnWidths]
+
+  // Find if there's any column marked with just "%"
   const percentIndex = columnWidths.findIndex((width) => width === "%")
 
   if (percentIndex !== -1) {
@@ -21,7 +22,8 @@ function processRows(rows: ReactNode, columnWidths: string[]): ReactNode {
       if (index === percentIndex || width === "%") return sum
 
       // Extract percentage value from strings like "20%"
-      const percentValue = Number.parseFloat(width)
+      const match = width.match(/^(\d+(\.\d+)?)%$/)
+      const percentValue = match ? Number.parseFloat(match[1]) : 0
       return isNaN(percentValue) ? sum : sum + percentValue
     }, 0)
 
@@ -29,6 +31,14 @@ function processRows(rows: ReactNode, columnWidths: string[]): ReactNode {
     const remainingPercentage = Math.max(0, 100 - totalSpecified)
     processedWidths[percentIndex] = `${remainingPercentage}%`
   }
+
+  return processedWidths
+}
+
+// Helper function to process rows and apply widths to cells
+function processRows(rows: ReactNode, columnWidths: string[]): ReactNode {
+  // Calculate the processed widths
+  const processedWidths = processColumnWidths(columnWidths)
 
   return Children.map(rows, (row) => {
     if (!isValidElement(row)) return row
@@ -53,36 +63,30 @@ function processTableSection(section: ReactNode, columnWidths: string[]): ReactN
 }
 
 //增加divClassName参数：应对特别情况
-export function FlexibleTable({
-  children,
-  columnWidths,
-  className,
-  divClassName,
-  variant = "default",
-}: FlexibleTableProps) {
+export function FlexibleTable({ children, columnWidths, className, variant = "default" }: FlexibleTableProps) {
   const variantStyles = {
     default: "border rounded-md",
     borderless: "",
   }
 
+  // Process column widths for colgroup
+  const processedWidths = processColumnWidths(columnWidths)
+
   // Process all table sections
   const processedChildren = Children.map(children, (child) => {
     if (!isValidElement(child)) return child
-    return processTableSection(child, columnWidths)
+    return processTableSection(child, processedWidths)
   })
-  //不用<colgroup> 和 <col> 标签 ，如何设置各个列的宽度width，还能准确拼凑各个列宽度正好100%的；colspan属性在处理需要合并列的表格时仍然是不可或缺的；
-  //包裹div 不加overflow-x-auto ；
+
   return (
-    <div className={` ${divClassName || ""}`}>
       <table className={`w-full table-fixed ${variantStyles[variant]} ${className || ""}`}>
         <colgroup>
-          {columnWidths?.map((width, i) => {
-            return <col key={i} width={width} />
+          {processedWidths.map((width, i) => {
+            return <col key={i} style={{ width }} />
           })}
         </colgroup>
         {processedChildren}
       </table>
-    </div>
   )
 }
 
@@ -95,12 +99,12 @@ export function TableBody({ children }: { children: ReactNode }) {
 }
 
 export function TableRow({
-  children,
-  className,
-  variant = "default",
-  columnWidths,
-  ...props
-}: React.HTMLAttributes<HTMLTableRowElement> & {
+                           children,
+                           className,
+                           variant = "default",
+                           columnWidths,
+                           ...props
+                         }: React.HTMLAttributes<HTMLTableRowElement> & {
   variant?: "default" | "borderless" | "dashed"
   columnWidths?: string[]
 }) {
@@ -112,7 +116,7 @@ export function TableRow({
 
   // Apply column widths to direct children if columnWidths is provided
   const processedChildren = columnWidths
-    ? Children.map(children, (cell, index) => {
+      ? Children.map(children, (cell, index) => {
         if (!isValidElement(cell)) return cell
 
         const width = columnWidths[index] || "auto"
@@ -121,40 +125,38 @@ export function TableRow({
           style: { ...(cell.props.style || {}), width },
         })
       })
-    : children
+      : children
 
   return (
-    <tr className={`${variantStyles[variant]} ${className || ""}`} {...props}>
-      {processedChildren}
-    </tr>
+      <tr className={`${variantStyles[variant]} ${className || ""}`} {...props}>
+        {processedChildren}
+      </tr>
   )
 }
 
 export function TableCell({
-  children,
-  className,
-  colSpan,
-  style,
-  ...props
-}: React.TdHTMLAttributes<HTMLTableCellElement>) {
+                            children,
+                            className,
+                            colSpan,
+                            style,
+                            ...props
+                          }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <td className={`p-2 ${className || ""}`} style={style} colSpan={colSpan} {...props}>
-      {children}
-    </td>
+      <td className={`p-2 ${className || ""}`} style={style} colSpan={colSpan} {...props}>
+        {children}
+      </td>
   )
 }
 
 //考虑打印p-0.25rem md:px-0.75rem md:py-0.25rem lg:px-1.5rem lg:py-0.25rem print:px-0 print:py-0.75rem
-export function CCell({
-                        children,
-                        className,
-                        colSpan,
-                        style,
-                        ...props
-                      }: React.TdHTMLAttributes<HTMLTableCellElement>) {
+export function CCell({ children, className, colSpan, style, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-      <td className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
-          style={style} colSpan={colSpan} {...props}>
+      <td
+          className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
+          style={style}
+          colSpan={colSpan}
+          {...props}
+      >
         {children}
       </td>
   )
