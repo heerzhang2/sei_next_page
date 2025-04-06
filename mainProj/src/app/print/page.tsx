@@ -15,6 +15,7 @@ import PageSectionOrientation from "@/components/page-section-orientation";
 * */
 export default function Home() {
   useMediaPrint(true,true,"A4","10mm")
+
   return (
       <PageSectionOrientation orientation="portrait">
         <div className={"dASqww   Alld"}>
@@ -27,13 +28,12 @@ export default function Home() {
 
         </div>
 
-        <PageSectionOrientation >
-          <div className={"Wqww    dRTffld"}  css={{minHeight: '55vh'}}>
+        <PageSectionOrientation>
+          <div className={"Wqww    dRTffld"} css={{minHeight: '55vh'}}>
             cbvvccfgcfdfd<br/>
             6787687
           </div>
-          <NoPageBreak reserve="3.2rem" title={<>df<br/>
-            zhong jia正宗midd</>} >
+          <div className={"columns-2"} >
             <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
               <TableHead>
                 <TableRow>
@@ -44,17 +44,21 @@ export default function Home() {
               <TableBody>
                 <TableRow>
                   <TableCell className="important-cell ">这是一个纯文本内容示例</TableCell>
-                  <TableCell>{"这是一段很长的文字内容。。。".repeat(118)}</TableCell>
+                  <TableCell>
+                    {Array.from({ length: 115 }, (_, i) =>
+                      `这是一段很长的文字内容。。。${i + 1}`
+                  ).join('')}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </FlexibleTable>
-          </NoPageBreak>
+          </div>
         </PageSectionOrientation>
 
         <div>
           <NoPageBreak reserve="3.2rem" title={<>df<br/>
-            zhong jia正宗midd</>}>
-            <table className="w-full border-collapse border" style={{tableLayout: "fixed"}}>
+            zhong jia正宗columns-2 midd</>}>
+            <table className="columns-2 w-full border-collapse border" style={{tableLayout: "fixed"}}>
               <colgroup>
                 <col style={{width: "20%"}}/>
                 <col style={{width: "50%"}}/>
