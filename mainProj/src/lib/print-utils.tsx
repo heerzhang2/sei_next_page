@@ -904,13 +904,13 @@ class PrintPreparation {
             contentContainer.appendChild(spacer)
           }
 
-          // 在最后一个片段后添加间隔
-          if (j === copies - 1 && spacerHeight > 0) {
-            const bottomSpacer = document.createElement("div")
-            bottomSpacer.className = "content-spacer"
-            bottomSpacer.style.height = `${spacerHeight}px`
-            contentContainer.appendChild(bottomSpacer)
-          }
+          // 不用在最后一个片段后添加间隔，避免撑大大元哥导致空白区域
+          // if (j === copies - 1 && spacerHeight > 0) {
+          //   const bottomSpacer = document.createElement("div")
+          //   bottomSpacer.className = "content-spacer"
+          //   bottomSpacer.style.height = `${spacerHeight}px`
+          //   contentContainer.appendChild(bottomSpacer)
+          // }
         }
 
         // 将内容容器添加到单元格

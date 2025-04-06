@@ -1,4 +1,4 @@
-import type React from "react"
+import React, {ReactNode} from "react"
 
 interface PrintTogetherProps {
   title: React.ReactNode

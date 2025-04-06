@@ -60,57 +60,11 @@ export default function Home() {
         </PageSectionOrientation>
 
         <div>
-          <NoPageBreak reserve="3.2rem" title={<>df<br/>
-            zhong jia正宗columns-2 midd</>}>
-            <table className="columns-2 w-full border-collapse border" style={{tableLayout: "fixed"}}>
-              <colgroup>
-                <col style={{width: "20%"}}/>
-                <col style={{width: "50%"}}/>
-                <col style={{width: "30%"}}/>
-              </colgroup>
-              <thead>
-              <tr>
-                <th className="border p-2">标题 1</th>
-                <th className="border p-2">标题 2</th>
-                <th className="border p-2">标题 3</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr>
-                <td className="border p-2">普通单元格</td>
-                <td className="border p-2">
-                  {/* 嵌套表格 - 添加列宽度 */}
-                  <table className="w-full border-collapse border" style={{tableLayout: "fixed"}}>
-                    <colgroup>
-                      <col style={{width: "40%"}}/>
-                      <col style={{width: "60%"}}/>
-                    </colgroup>
-                    <thead>
-                    <tr>
-                      <th className="border p-2">嵌套标题 1</th>
-                      <th className="border p-2">嵌套标题 2</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                      <td className="important-cell border p-2">嵌套重要单元格 - 直接内容</td>
-                      <td className="border p-2">{"这是一段很长的文字内容。".repeat(31)}</td>
-                    </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td className="border p-2">{"这是一段很长的文字内容。".repeat(5)}</td>
-              </tr>
-              </tbody>
-            </table>
-          </NoPageBreak>
           <div className={"Wqww    dRTffld"}>
             3333中的<br/>
             横版本
           </div>
           <h2 className="text-xl font-bold mb-2">嵌套表格示例</h2>
-
-
         </div>
       </PageSectionOrientation>
   );

@@ -17,6 +17,7 @@ import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from ".
 import Link from "next/link"
 import { DirectLink } from "@/routing/Link"
 import {CCell, FlexibleTable, TableBody, TableHead, TableRow} from "@/components/flexible-table";
+import {PrintReserveLeast} from "@/components/print-reserve-least";
 
 export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
     const searchParams = useSearchParams()
@@ -108,45 +109,37 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                     <span></span>
                     <span>报告编号：{rep.isp.no}</span>
                 </div>
-
-
-                <div className="columns-2 ">
-                    <p>Well,1 let me tell you something, ...</p>
-                    <p className="print:break-before-page">Sure, 2go ahead, laugh...</p>
-                    <p>Maybe 3we can live without...</p>
-                    <p>Look. 4If you think this is...</p>
-                </div>
-
                 {报告设备详情({theme, orc, rep})}
                 {检验核准WaterJj({orc, rep})}
-                <div className="print:pb-[13.3rem] print:break-inside-avoid">
-                    <h4 className="text-center mt-4">
-                        大型游乐设施监督检验报告附页
-                    </h4>
-                    <div className="flex justify-between">
-                        <span></span>
-                        <span>报告编号：{rep.isp.no}</span>
-                    </div>
-                </div>
-                <FlexibleTable className="border-collapse" divClassName="print:-mt-[13.3rem]"
-                               columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
-                    <TableHead>
+                <PrintReserveLeast reserveHeight="13.3rem"
+                      title={<><h4 className="text-center mt-4 print:mt-24">
+                              大型游乐设施监督检验报告附页
+                          </h4>
+                              <div className="flex justify-between">
+                                  <span></span>
+                                  <span>报告编号：{rep.isp.no}</span>
+                              </div>
+                          </>}
+                >
+                    <FlexibleTable className="border-collapse"
+                                   columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
+                        <TableHead>
+                            <TableRow className={"text-sm"}>
+                                <CCell id={"T5-1"}>
+                                    <span className="text-[0.7rem]">序号</span>
+                                </CCell>
+                                <CCell colSpan={5}>检验项目及内容</CCell>
+                                <CCell>
+                                    <span className="text-[0.8rem]">检验结果</span>
+                                </CCell>
+                                <CCell>结论</CCell>
+                                <CCell>备注</CCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>{renderIspContent}</TableBody>
+                    </FlexibleTable>
+                </PrintReserveLeast>
 
-                        <TableRow className={"text-sm"}>
-                            <CCell id={"T5-1"}>
-                                <span className="text-[0.7rem]">序号</span>
-                            </CCell>
-                            <CCell colSpan={5}>检验项目及内容</CCell>
-                            <CCell>
-                                <span className="text-[0.8rem]">检验结果</span>
-                            </CCell>
-                            <CCell>结论</CCell>
-                            <CCell>备注</CCell>
-                        </TableRow>
-
-                    </TableHead>
-                    <TableBody>{renderIspContent}</TableBody>
-                </FlexibleTable>
                 <span className="print:text-[0.75rem]"></span>
                 <UnqualifiedIspTable
                     rep={rep}
