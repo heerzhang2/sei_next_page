@@ -4,10 +4,11 @@ import Link from "next/link";
 import Header from "@/component/header";
 import FootBar from "@/component/footbar";
 import {Global} from "@emotion/react";
-import NoPageBreak from "@/components/no-page-break";
 import {FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
 import {useMediaPrint} from "@/hooks/use-media-print";
 import PageSectionOrientation from "@/components/page-section-orientation";
+import type React from "react";
+import NoPageBreak, {PrintTogether} from "@/components/print-together";
 
 
 /*
@@ -29,30 +30,33 @@ export default function Home() {
         </div>
 
         <PageSectionOrientation>
-          <div className={"Wqww    dRTffld"} css={{minHeight: '55vh'}}>
+          <div className={"Wqww    dRTffld"} css={{minHeight: '45vh'}}>
             cbvvccfgcfdfd<br/>
             6787687
           </div>
-          <div className={"columns-2"} >
-            <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>标题</TableCell>
-                  <TableCell>描述</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="important-cell ">这是一个纯文本内容示例</TableCell>
-                  <TableCell>
-                    {Array.from({ length: 115 }, (_, i) =>
-                      `这是一段很长的文字内容。。。${i + 1}`
-                  ).join('')}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </FlexibleTable>
-          </div>
+          <NoPageBreak reserve="3.7rem" title={<>df<br/>
+            zhong jia正宗midd</>}>
+            <div >
+              <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>标题</TableCell>
+                    <TableCell>描述</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="important-cell">这是一个纯文本内容示例</TableCell>
+                    <TableCell>
+                      {Array.from({ length: 115 }, (_, i) =>
+                        `这是一段很长的文字内容。。。${i + 1}`
+                    ).join('')}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </FlexibleTable>
+            </div>
+          </NoPageBreak>
         </PageSectionOrientation>
 
         <div>

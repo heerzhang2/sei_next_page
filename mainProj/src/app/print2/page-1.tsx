@@ -4,11 +4,10 @@ import Link from "next/link";
 import Header from "@/component/header";
 import FootBar from "@/component/footbar";
 import {Global} from "@emotion/react";
-import NoPageBreak from "@/components/no-page-break";
 import {FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
 import {useMediaPrint} from "@/hooks/use-media-print";
 import PageSectionOrientation from "@/components/page-section-orientation";
-import {PrintTogether} from "@/components/print-together";
+import NoPageBreak, {PrintTogether} from "@/components/print-together";
 import type React from "react";
 
 
