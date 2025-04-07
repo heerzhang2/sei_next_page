@@ -111,7 +111,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                 </div>
                 {报告设备详情({theme, orc, rep})}
                 {检验核准WaterJj({orc, rep})}
-                <PrintReserveLeast reserveHeight="13.3rem"
+                <PrintReserveLeast reserve="13.3rem"
                       title={<><h4 className="text-center mt-4 print:mt-24">
                               大型游乐设施监督检验报告附页
                           </h4>

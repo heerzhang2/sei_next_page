@@ -149,7 +149,9 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                                 config.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
                                     if(n==='') return  <CCell key={7}>{result ?? '／'}</CCell>;
                                     else if(n===null){
-                                        return et.oRSpan>0 && <CCell key={8} split={true} rowSpan={et.oRSpan??1}>{'／'===conseq? '无此项' : conseq}</CCell>;
+                                        return et.oRSpan>0 && <CCell key={8} split={true} rowSpan={et.oRSpan??1}
+                                                                className={et.oRSpan>5? 'important-cell':''} data-interval-height="197"
+                                        >{'／'===conseq? '无此项' : conseq}</CCell>;
                                     }
                                     //以上2个特殊，剩下是常规字段
                                     if(!m){

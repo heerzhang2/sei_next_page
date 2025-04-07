@@ -1,11 +1,12 @@
-import type React from "react"
-import { Children, isValidElement, cloneElement, type ReactNode } from "react"
+import type React, {ReactNode} from "react"
+import {Children, isValidElement, cloneElement, type ReactNode} from "react"
 
 interface FlexibleTableProps {
-    children: ReactNode
-    columnWidths: string[]
-    className?: string
-    variant?: "default" | "borderless"
+    children: ReactNode,
+    columnWidths: string[],
+    className?: string,
+    variant?: "default" | "borderless",
+    id?: string
 }
 
 // Helper function to process column widths and calculate remaining percentage
@@ -63,7 +64,7 @@ function processTableSection(section: ReactNode, columnWidths: string[]): ReactN
 }
 
 //增加divClassName参数：应对特别情况
-export function FlexibleTable({ children, columnWidths, className, variant = "default" }: FlexibleTableProps) {
+export function FlexibleTable({children, columnWidths, className, variant = "default", id}: FlexibleTableProps) {
     const variantStyles = {
         default: "border rounded-md",
         borderless: "",
@@ -79,10 +80,10 @@ export function FlexibleTable({ children, columnWidths, className, variant = "de
     })
 
     return (
-        <table className={`w-full table-fixed ${variantStyles[variant]} ${className || ""}`}>
+        <table id={id} className={`w-full table-fixed ${variantStyles[variant]} ${className || ""}`}>
             <colgroup>
                 {processedWidths.map((width, i) => {
-                    return <col key={i} style={{ width }} />
+                    return <col key={i} style={{width}}/>
                 })}
             </colgroup>
             {processedChildren}
@@ -90,11 +91,11 @@ export function FlexibleTable({ children, columnWidths, className, variant = "de
     )
 }
 
-export function TableHead({ children }: { children: ReactNode }) {
+export function TableHead({children}: { children: ReactNode }) {
     return <thead className="bg-muted/50">{children}</thead>
 }
 
-export function TableBody({ children }: { children: ReactNode }) {
+export function TableBody({children}: { children: ReactNode }) {
     return <tbody>{children}</tbody>
 }
 
@@ -122,7 +123,7 @@ export function TableRow({
             const width = columnWidths[index] || "auto"
             return cloneElement(cell, {
                 ...cell.props,
-                style: { ...(cell.props.style || {}), width },
+                style: {...(cell.props.style || {}), width},
             })
         })
         : children
@@ -144,10 +145,10 @@ export function TableCell({
                               ...props
                           }: React.TdHTMLAttributes<HTMLTableCellElement> & { split?: boolean }) {
     // 根据split参数设置pageBreakInside样式
-    const splitStyle = !split ? { pageBreakInside: "avoid", breakInside: "avoid" } : {}
+    const splitStyle = !split ? {pageBreakInside: "avoid", breakInside: "avoid"} : {}
 
     return (
-        <td className={`p-2 ${className || ""}`} style={{ ...style, ...splitStyle }} colSpan={colSpan} {...props}>
+        <td className={`p-2 ${className || ""}`} style={{...style, ...splitStyle}} colSpan={colSpan} {...props}>
             {children}
         </td>
     )
@@ -163,12 +164,12 @@ export function CCell({
                           ...props
                       }: React.TdHTMLAttributes<HTMLTableCellElement> & { split?: boolean }) {
     // 根据split参数设置pageBreakInside样式
-    const splitStyle = !split ? { pageBreakInside: "avoid", breakInside: "avoid" } : {}
+    const splitStyle = !split ? {pageBreakInside: "avoid", breakInside: "avoid"} : {}
 
     return (
         <td
             className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
-            style={{ ...style, ...splitStyle }}
+            style={{...style, ...splitStyle}}
             colSpan={colSpan}
             {...props}
         >

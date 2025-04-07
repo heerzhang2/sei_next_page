@@ -12,6 +12,7 @@ import SwrConfigClient from "@/action/SwrConfigClient";
 import ReportMakeable from "@/common/ReportMakeable";
 import ReportData from "@/component/rep/report-data";
 import {StorageProvider } from "@/report/StorageContext";
+import {useMediaPrint} from "@/hooks/use-media-print";
 
 
 // const FootBar = lazy(() => import("@/component/footbar"));

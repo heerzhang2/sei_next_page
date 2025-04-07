@@ -7,6 +7,7 @@ import {contentItems, ReportView} from "@/report/recreation/slidingJj/Regular.R-
 import React from "react";
 import {useQuery} from "@urql/next";
 import {ReportQuery} from "@/component/rep/report-data";
+import PageSectionOrientation from "@/components/page-section-orientation";
 
 export default function Layout({
   children,params
@@ -18,8 +19,10 @@ export default function Layout({
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
     const {getReport: report} = result?.data;
     return (
-        <ReportLayout repPanel={<ReportView rep={report} />} items={contentItems}>
-          {children}
-        </ReportLayout>
+        <PageSectionOrientation>
+            <ReportLayout repPanel={<ReportView rep={report} />} items={contentItems}>
+              {children}
+            </ReportLayout>
+        </PageSectionOrientation>
     )
 }

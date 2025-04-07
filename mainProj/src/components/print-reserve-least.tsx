@@ -6,7 +6,7 @@ interface PrintReserveLeastProps {
   /**
    * 需要预留的空间高度，例如 "13.3rem"
    */
-  reserveHeight: string
+  reserve: string
 
   /**
    * 标题内容
@@ -35,12 +35,11 @@ interface PrintReserveLeastProps {
 }
 
 /**一页尾巴最少多少空间才打印，否则新一页打印的。
- * 打印分页容器组件 - 最终版本
- *
  * 使用动态生成的类名和内联样式的组合方式
- */
+ * 防止命名冲突 "--reserve-height":。仅作用于 .relative div 及其子元素。:root {--reserve-height:;全局默认值}; 内联样式优先级最高.
+ * */
 export function PrintReserveLeast({
-                                    reserveHeight,
+                                    reserve,
                                     title,
                                     children,
                                     className = "",
@@ -75,8 +74,9 @@ export function PrintReserveLeast({
     }
   }, [])
 
+//同一个URL网页允许同时有多个不同的reserve配置的组件共存的：
   return (
-      <div className={`relative ${className}`} style={{"--reserve-height": reserveHeight} as React.CSSProperties}>
+      <div className={`relative ${className}`} style={{"--reserve-height": reserve} as React.CSSProperties}>
         {/* 标题部分 */}
         <div className={`print-title-reserve ${titleClassName}`}>{title}</div>
 
