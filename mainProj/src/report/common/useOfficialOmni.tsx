@@ -169,7 +169,7 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                         if(!tagSetted)   tagSetted=true;
                         //【注意】 et.sub?? 假如 sub='' 逻辑成立，需改undefined; React.Fragment key={seq+'-'+n}
                         const rowsBigArea=
-                            <DirectLink key={seq+'-'+n} href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${area.tag}#${area.tag}`}>
+                            <DirectLink key={seq+'-'+n} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}#${area.tag}`}>
                                 {itemRowRender}
                             </DirectLink>;
 
@@ -324,7 +324,7 @@ export const useOfficialOmni2H= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} :
                         if(!tagSetted)   tagSetted=true;
                         //【注意】 et.sub?? 假如 sub='' 逻辑成立，需改undefined;
                         const rowsBigArea=<React.Fragment key={seq+'-'+n}>
-                            <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${area.tag}#${area.tag}`}>
+                            <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}#${area.tag}`}>
                                 {itemRowRender}
                             </DirectLink>
                         </React.Fragment>;

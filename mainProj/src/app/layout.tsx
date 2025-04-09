@@ -9,6 +9,7 @@ import {GraphQLProvider} from "@/auth/graphql-component";
 import PrintUsed from "@/common/PrintUsed";
 import AuthStatus from "@/auth/auth-status";
 import { ThemeProvider } from 'next-themes'
+import { Toaster } from "sonner"
 import "@/styles/print-styles.css" // 导入打印样式
 import "./globals.css";
 import {PrintSettingsProvider} from "@/contexts/print-settings-context";
@@ -47,6 +48,7 @@ export default async function RootLayout({
               <Provider>
                   <GraphQLProvider>
                       {children}
+                      <Toaster richColors position="top-right" />
                   </GraphQLProvider>
               </Provider>
 

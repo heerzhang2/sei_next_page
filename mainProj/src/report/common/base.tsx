@@ -24,7 +24,7 @@ import {DirectLink} from "../../routing/Link";
 import {tableSetInp} from "../../common/tool";
 import {useQuery, gql, UrqlProvider, useMutation} from '@urql/next';
 // import {objNestArrSetInp} from "../../common/tool";
-
+import { toast } from "sonner" // 导入 sonner 的 toast 函数
 
 //公共的复用性好的组件。
 //各个检验单项子组件暴露给父组件的接口数据。
@@ -837,7 +837,7 @@ export interface InspectRecordLayoutProps {
  * 不想套上<LineColumn 可设置column={0}可自己控制了。
  * 若参数不提供inp={null} setInp={()=>0}  getInpFilter={()=>0}行不通的，没有提取旧的数据。
  * */
-export const InspectRecordLayout: React.FunctionComponent<InspectRecordLayoutProps> = ({
+const InspectRecordLayout0: React.FunctionComponent<InspectRecordLayoutProps> = ({
     alone,
     label,
     show=true,
@@ -870,8 +870,11 @@ export const InspectRecordLayout: React.FunctionComponent<InspectRecordLayoutPro
         // const { _version, ...RepData }= (storage || source);
         updateOriginal({id:repId,operationType:1,
             version: _version,   //new FormData(target).get('link'),
-            data:JSON.stringify(RepData) }).then(() =>
-            { }  // target.reset()
+            data:JSON.stringify(RepData) }).then((result ) =>
+            {
+                console.log("updateOriginalResult8=应答=", result );
+                if(result.error)  console.log('Oh no!', result.error);
+            }  // target.reset()
         );
         // !modified && setModified(true);
     };
@@ -885,6 +888,7 @@ export const InspectRecordLayout: React.FunctionComponent<InspectRecordLayoutPro
                 </LineColumn>
             }
             <div css={{textAlign: 'right',padding:'0.2rem'}}>
+                {updateOriginalResult?.error?.toString()}
                 <Button size="lg" intent={'primary'}
                         onPress={ onSubmitOrginal }>
                     保存到服务器
@@ -902,6 +906,104 @@ export const InspectRecordLayout: React.FunctionComponent<InspectRecordLayoutPro
         </Layer>
     );
 };
+
+
+export const InspectRecordLayout: React.FunctionComponent<InspectRecordLayoutProps> = ({
+                                                                                           alone,
+                                                                                           label,
+                                                                                           show = true,
+                                                                                           inp,
+                                                                                           setInp,
+                                                                                           getInpFilter,
+                                                                                           children,
+                                                                                           redId,
+                                                                                           nestMd,
+                                                                                           breaks = [310, 650],
+                                                                                           column = 0,
+                                                                                           repId,
+                                                                                           ...other
+                                                                                       }) => {
+    const { storage, setStorage, modified, setModified } = useStorage()
+    const [updateOriginalResult, updateOriginal] = useMutation(OriginalDataMutation)
+
+    const rskey = (nestMd ? "_" + nestMd + "_" + redId : undefined) as string
+
+    React.useEffect(() => {
+        const { [rskey]: subStorage } = storage
+        storage && setInp(getInpFilter(rskey ? subStorage || {} : storage))
+    }, [storage, setInp, getInpFilter, rskey])
+
+    const onConfirmation = React.useCallback(async () => {
+        await setStorage({ ...storage, ...(rskey ? { [rskey]: { ...storage[rskey], ...inp } } : inp) })
+    }, [inp, storage, setStorage, rskey])
+
+    const onSubmitOrginal = (event: any) => {
+        event.preventDefault()
+        const { _version, ...RepData } = storage
+
+        updateOriginal({
+            id: repId,
+            operationType: 1,
+            version: _version,
+            data: JSON.stringify(RepData),
+        }).then((result) => {
+            console.log("updateOriginalResult8=应答=", result)
+
+            if (result.error) {
+                // 使用 sonner 的 toast.error 显示错误
+                toast.error("保存失败", {
+                    description: result.error.toString(),
+                })
+                console.log("Oh no!", result.error)
+            } else {
+                // 使用 sonner 的 toast.success 显示成功消息
+                toast.success("保存成功", {
+                    description: "数据已成功保存到服务器",
+                })
+            }
+        })
+    }
+
+    return (
+        <Layer elevation={"sm"} css={{ padding: "0.25rem", width: "-webkit-fill-available" }}>
+            {0 === column ? (
+                children
+            ) : (
+                <LineColumn breaks={breaks} column={column}>
+                    {children}
+                </LineColumn>
+            )}
+            <div css={{ textAlign: "right", padding: "0.2rem" }}>
+                <Button size="lg" intent={"primary"} onPress={onSubmitOrginal}>
+                    保存到服务器
+                </Button>
+                <Button
+                    size="lg"
+                    intent={"primary"}
+                    onPress={async () => {
+                        try {
+                            await onConfirmation()
+                            !modified && setModified(true)
+
+                            // 使用 sonner 的 toast.success 显示成功消息
+                            toast.success("修改确认", {
+                                description: "修改已成功确认",
+                            })
+                        } catch (error) {
+                            // 使用 sonner 的 toast.error 显示错误
+                            toast.error("确认失败", {
+                                description: error instanceof Error ? error.message : "未知错误",
+                            })
+                        }
+                    }}
+                >
+                    修改确认
+                </Button>
+            </div>
+        </Layer>
+    )
+}
+
 
 
 export const 现场结果选=["符合要求","不符合要求"];

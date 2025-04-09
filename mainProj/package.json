@@ -82,7 +82,7 @@
     "react-plotly.js": "^2.6.0",
     "react-toastify": "^11.0.0",
     "react-use-clipboard": "^1.0.9",
-    "sonner": "^1.7.1",
+    "sonner": "^2.0.3",
     "swr": "^2.3.2",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",

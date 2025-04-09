@@ -19,7 +19,7 @@ console.log(session);
       <div>
           <button onClick={() => signOut()}>DO=Sign@##out</button>
           <button onClick={handleSignOut}>
-              Log out 登 出
+              Log out 登 出 =注销吧
               <div>⇧⌘Q</div>
           </button>
       </div>

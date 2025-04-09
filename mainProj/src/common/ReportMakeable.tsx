@@ -20,9 +20,11 @@ const ReportMakeable = () => {
     }, [searchParams])
     //文档错了 SessionProvider必须在父辈组件内； #类型不同了session?.status  session?.data?.user
     if(session?.status!=="loading") {
-        if(make && !session?.data?.user)   redirect('/login')
+        //若在服务端调用useSession：就报错！
+        if(make && (!session?.data?.user?.accessToken || !session?.data?.user))   redirect('/login')
     }
     return null;
 }
+
 
 export default ReportMakeable;
