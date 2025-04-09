@@ -1,9 +1,10 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, Table, TableBody, TableRow, Text,} from "customize-easy-ui-component";
+import {  Text,} from "customize-easy-ui-component";
+import {CCell, FlexibleTable, TableBody, TableHead, TableRow} from "@/components/flexible-table";
 import {crtOmni, omniCalculateDefault, pushOmni} from "../../common/omni";
 import {JumpMeasure, } from "../../common/general";
-
+//id标签需要规范原来5.1的改为T5-1的才能路由。
 export const setupItemAreaRoute= ({rep, orc, theme, noDefault} :{rep:any,orc?:any, theme:any,noDefault?:boolean}
 ) => {
     let ari: any[] =[];
@@ -136,13 +137,13 @@ export const setupItemAreaRoute= ({rep, orc, theme, noDefault} :{rep:any,orc?:an
                 g)绳股被挤出，这种状况通常伴随笼形畸变产生； h)局部直径严重增大或减小时；
                 i)局部弯折、扭结或被压扁时； j)受特殊热力的作用，外表出现可识别的颜色时；
                 k)超过设计及有关技术规程规定的使用寿命时。
-                <Table fixed={ ["%","43%"] } css={{borderCollapse: 'collapse'}} tight miniw={800}><TableBody rheight={16}>
+                <FlexibleTable columnWidths={ ["%","43%"] } css={{borderCollapse: 'collapse'}} ><TableBody>
                     <TableRow><CCell>磨损状态</CCell><CCell>允许值</CCell></TableRow>
                     <TableRow><CCell>钢丝破断呈均匀分布状态</CCell><CCell>每股在一个捻距内破断数为3根</CCell></TableRow>
                     <TableRow><CCell>钢丝破断虽呈均匀分布状态，钢丝磨损后的剩余断面积为原断面积的80%以下或严重腐蚀</CCell><CCell>每股在一个捻距内破断数为2根</CCell></TableRow>
                     <TableRow><CCell>钢丝在一处破断或特别集中在一股时</CCell><CCell>钢丝破断总数在一个捻距内，6股为10根，8股为12根</CCell></TableRow>
                     <TableRow><CCell>磨损后的钢丝绳直径</CCell><CCell>为原钢丝绳直径的90%以上</CCell></TableRow>
-                </TableBody></Table>
+                </TableBody></FlexibleTable>
                 <JumpMeasure tag={'Measure'} rep={rep}>八、观测数据及测量结果</JumpMeasure>
             </Text>, {nos:'3.5.5',},false,'钢丝绳断丝、磨损缺陷'),
     ],'3.1液压（气动）系统-3.5.5钢丝绳断丝磨损');
