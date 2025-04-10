@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
@@ -187,6 +189,79 @@ export function MemoDatesInput({
                 onChange={handleDateChange}
                 aria-label="选择日期"
             />
+        </div>
+    )
+}
+
+
+interface CollapsibleFormSectionProps {
+    title: string
+    defaultOpen?: boolean
+    className?: string
+    titleClassName?: string
+    contentClassName?: string
+    children: React.ReactNode
+}
+//第二个idv不能加overflow-hidden;  max-h-[2000px]
+export function CollapsibleFormSection({
+                                           title,
+                                           defaultOpen = false,
+                                           className,
+                                           titleClassName,
+                                           contentClassName,
+                                           children,
+                                       }: CollapsibleFormSectionProps) {
+    const [isOpen, setIsOpen] = useState(defaultOpen)
+
+    const toggleOpen = () => setIsOpen(!isOpen)
+
+    return (
+        <div className={cn("border rounded-md overflow-hidden", className)}>
+            <button
+                type="button"
+                onClick={toggleOpen}
+                className={cn(
+                    "flex w-full items-center justify-between px-4 py-3 text-left font-medium bg-muted/50 hover:bg-muted transition-colors",
+                    titleClassName,
+                )}
+                aria-expanded={isOpen}
+                aria-controls={`content-${title.replace(/\s+/g, "-").toLowerCase()}`}
+            >
+                <span>{title}</span>
+                {isOpen ? (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                ) : (
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                )}
+            </button>
+            <div
+                id={`content-${title.replace(/\s+/g, "-").toLowerCase()}`}
+                className={cn(
+                    "transition-all duration-300 ease-in-out",
+                    isOpen ? "opacity-100" : "max-h-0 opacity-0",
+                    contentClassName,
+                )}
+            >
+                <div className="p-4">
+                    {children}
+
+                    {/* 底部折叠按钮 - 仅在展开状态显示 */}
+                    {isOpen && (
+                        <div className="flex justify-end mt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={toggleOpen}
+                                className="flex items-center gap-1"
+                            >
+                                <ChevronUp className="h-4 w-4" />
+                                <span>收起</span>
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     )
 }

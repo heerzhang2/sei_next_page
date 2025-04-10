@@ -7,7 +7,8 @@ import {
 import {RecordOmniArea} from "../common/omni";
 import {Column_Setting} from "./useFormatOmni";
 import {MemoDateInput, MemoDatesInput} from "../../comp/base";
-import {LineColumn} from "@/components/chub";
+import {CollapsibleFormSection, LineColumn} from "@/components/chub";
+import {FormField} from "@/components/shub";
 
 //检验项目的标准化展示组件, 多了2列”工作见证，确认方式“
 interface Props  extends React.HTMLAttributes<HTMLDivElement>{
@@ -33,6 +34,7 @@ interface Props  extends React.HTMLAttributes<HTMLDivElement>{
     //报告ID
     repId?: string;
 }
+//假如分项报告情况：原来inp:,setInp：是针对局部的存储做修改的。
 //普通输入：    //text
 //支持 t类型：'',B,l,d,C,S;
 const innerRender=(inp: any,setInp: React.Dispatch<React.SetStateAction<any>>,zdCfg:Column_Setting,idx:number,
@@ -201,8 +203,13 @@ React.forwardRef((
         return  htmlTxts;
     }, [config,inp,setInp, editIts]);
 
-    return <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
-                                 alone={alone} label={`${config.name??config.tag}`} repId={repId}>
+    return  <CollapsibleFormSection title={`${config.name??config.tag}`} defaultOpen={show}>
         {render}
-    </InspectRecordLayout>;
+    </CollapsibleFormSection>;
+
+    // <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
+    //                              alone={alone} label={`${config.name??config.tag}`} repId={repId}>
+    //     {render}
+    // </InspectRecordLayout>;
 } );
+

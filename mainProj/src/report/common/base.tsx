@@ -907,7 +907,7 @@ const InspectRecordLayout0: React.FunctionComponent<InspectRecordLayoutProps> = 
     );
 };
 
-
+//原来两阶段保存的：需要确认ref->inp:，准备改为直接操作setStorage，避免需要确认按钮。
 export const InspectRecordLayout: React.FunctionComponent<InspectRecordLayoutProps> = ({
                                                                                            alone,
                                                                                            label,

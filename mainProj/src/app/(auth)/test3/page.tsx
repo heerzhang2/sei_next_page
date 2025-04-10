@@ -1,63 +1,58 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-
 import type React from "react"
+
 import { useState } from "react"
-import {LineColumn, MemoDatesInput} from "@/components/chub"
+import { LineColumn } from "@/components/chub"
 import { FormField } from "@/components/shub"
+import { MemoDatesInput } from "@/components/chub"
+import { CollapsibleFormSection } from "@/components/chub"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-// 定义表单数据类型
 interface FormData {
-    [key: string]: any
+    // 个人信息
+    name: string
+    email: string
+    phone: string
+
+    // 工作信息
+    department: string
+    position: string
+    startDate: string
+
+    // 项目信息
+    projectName: string
+    projectDeadlines: string
+    projectNotes: string
 }
 
-// 定义验证错误类型
-interface FormErrors {
-    [key: string]: string
-}
-
-export default function FormExample() {
-    // 初始表单数据
+export default function CollapsibleFormExample() {
     const [formData, setFormData] = useState<FormData>({
-        fullName: "",
+        name: "",
         email: "",
         phone: "",
         department: "",
         position: "",
         startDate: "",
-        salary: "",
-        employmentType: "",
-        address: "",
-        急联人: "",
-        importantDates: "项目A截止 2023-06-15\n项目B开始 2023-07-01",
-        skills: "",
-        agreeToTerms: false,
+        projectName: "",
+        projectDeadlines: "",
+        projectNotes: "",
     })
 
-    // 表单错误状态
-    const [errors, setErrors] = useState<FormErrors>({})
-
-    // 表单提交状态
-    const [isSubmitting, setIsSubmitting] = useState(false)
-
-    // 显示JSON结果
+    const [errors, setErrors] = useState<Record<string, string>>({})
     const [jsonResult, setJsonResult] = useState<string>("")
 
-    // 处理输入变化
-    const handleChange = (field: keyof FormData, value: string | boolean) => {
+    const handleChange = (field: keyof FormData, value: string) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
         }))
 
-        // 当字段被修改时清除该字段的错误
+        // Clear error when field is changed
         if (errors[field]) {
             setErrors((prev) => {
                 const newErrors = { ...prev }
@@ -67,13 +62,12 @@ export default function FormExample() {
         }
     }
 
-    // 验证表单
     const validateForm = (): boolean => {
-        const newErrors: FormErrors = {}
+        const newErrors: Record<string, string> = {}
 
-        // 必填字段验证
-        if (!formData.fullName.trim()) {
-            newErrors.fullName = "姓名是必填项"
+        // 验证必填字段
+        if (!formData.name.trim()) {
+            newErrors.name = "姓名是必填项"
         }
 
         if (!formData.email.trim()) {
@@ -82,222 +76,121 @@ export default function FormExample() {
             newErrors.email = "请输入有效的邮箱地址"
         }
 
-        if (!formData.phone.trim()) {
-            newErrors.phone = "电话是必填项"
-        } else if (!/^\d{11}$/.test(formData.phone)) {
-            newErrors.phone = "请输入有效的11位手机号码"
-        }
-
         if (!formData.department) {
             newErrors.department = "请选择部门"
-        }
-
-        if (!formData.position.trim()) {
-            newErrors.position = "职位是必填项"
-        }
-
-        if (!formData.startDate) {
-            newErrors.startDate = "请选择入职日期"
-        }
-
-        if (!formData.agreeToTerms) {
-            newErrors.agreeToTerms = "您必须同意条款才能提交"
         }
 
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
-    // 处理表单提交
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
         if (validateForm()) {
-            setIsSubmitting(true)
-
-            // 模拟API调用
-            setTimeout(() => {
-                // 这里是您需要的JSON数据
-                const jsonData = JSON.stringify(formData, null, 2)
-                setJsonResult(jsonData)
-                setIsSubmitting(false)
-
-                // 在实际应用中，您可以在这里调用您的API
-                console.log("提交的数据:", jsonData)
-            }, 1000)
-        } else {
-            // 滚动到第一个错误
-            const firstErrorField = document.querySelector('[aria-invalid="true"]')
-            if (firstErrorField) {
-                firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" })
-            }
+            // 格式化数据为JSON
+            const jsonData = JSON.stringify(formData, null, 2)
+            setJsonResult(jsonData)
+            console.log("提交的数据:", jsonData)
         }
     }
 
     return (
         <div className="container mx-auto py-8 px-4">
-            <Card className="w-full max-w-5xl mx-auto">
+            <Card className="w-full max-w-4xl mx-auto">
                 <CardHeader>
-                    <CardTitle className="text-2xl">员工信息表单</CardTitle>
+                    <CardTitle className="text-2xl">可折叠表单示例</CardTitle>
                 </CardHeader>
 
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-6">
-                        <h3 className="text-lg font-medium">基本信息</h3>
-                        <LineColumn width={300}>
-                            <FormField id="fullName" label="姓名" required error={errors.fullName}>
+                        {/* 个人信息部分 - 默认展开 */}
+                        <CollapsibleFormSection title="个人信息" defaultOpen={true}>
+                            <LineColumn width={300}>
+                                <FormField id="name" label="姓名" required error={errors.name}>
+                                    <Input id="name" value={formData.name} onChange={(e) => handleChange("name", e.target.value)} />
+                                </FormField>
+
+                                <FormField id="email" label="邮箱" required error={errors.email}>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => handleChange("email", e.target.value)}
+                                    />
+                                </FormField>
+
+                                <FormField id="phone" label="电话" error={errors.phone}>
+                                    <Input id="phone" value={formData.phone} onChange={(e) => handleChange("phone", e.target.value)} />
+                                </FormField>
+                            </LineColumn>
+                        </CollapsibleFormSection>
+
+                        {/* 工作信息部分 */}
+                        <CollapsibleFormSection title="工作信息">
+                            <LineColumn width={300}>
+                                <FormField id="department" label="部门" required error={errors.department}>
+                                    <Select value={formData.department} onValueChange={(value) => handleChange("department", value)}>
+                                        <SelectTrigger id="department">
+                                            <SelectValue placeholder="选择部门" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="engineering">工程部</SelectItem>
+                                            <SelectItem value="marketing">市场部</SelectItem>
+                                            <SelectItem value="finance">财务部</SelectItem>
+                                            <SelectItem value="hr">人力资源部</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormField>
+
+                                <FormField id="position" label="职位" error={errors.position}>
+                                    <Input
+                                        id="position"
+                                        value={formData.position}
+                                        onChange={(e) => handleChange("position", e.target.value)}
+                                    />
+                                </FormField>
+
+                                <FormField id="startDate" label="入职日期" error={errors.startDate}>
+                                    <Input
+                                        id="startDate"
+                                        type="date"
+                                        value={formData.startDate}
+                                        onChange={(e) => handleChange("startDate", e.target.value)}
+                                    />
+                                </FormField>
+                            </LineColumn>
+                        </CollapsibleFormSection>
+
+                        {/* 项目信息部分 */}
+                        <CollapsibleFormSection title="项目信息">
+                            <FormField id="projectName" label="项目名称" error={errors.projectName}>
                                 <Input
-                                    id="fullName"
-                                    value={formData.fullName}
-                                    onChange={(e) => handleChange("fullName", e.target.value)}
-                                    aria-invalid={!!errors.fullName}
+                                    id="projectName"
+                                    value={formData.projectName}
+                                    onChange={(e) => handleChange("projectName", e.target.value)}
                                 />
                             </FormField>
 
-                            <FormField id="email" label="邮箱" required error={errors.email}>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={(e) => handleChange("email", e.target.value)}
-                                    aria-invalid={!!errors.email}
-                                />
-                            </FormField>
-
-                            <FormField id="phone" label="电话" required error={errors.phone}>
-                                <Input
-                                    id="phone"
-                                    value={formData.phone}
-                                    onChange={(e) => handleChange("phone", e.target.value)}
-                                    aria-invalid={!!errors.phone}
-                                />
-                            </FormField>
-                        </LineColumn>
-
-                        <h3 className="text-lg font-medium pt-4">职位信息</h3>
-                        <LineColumn width={300}>
-                            <FormField id="department" label="部门" required error={errors.department}>
-                                <Select value={formData.department} onValueChange={(value) => handleChange("department", value)}>
-                                    <SelectTrigger id="department" aria-invalid={!!errors.department}>
-                                        <SelectValue placeholder="选择部门" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="engineering">工程部</SelectItem>
-                                        <SelectItem value="marketing">市场部</SelectItem>
-                                        <SelectItem value="finance">财务部</SelectItem>
-                                        <SelectItem value="hr">人力资源部</SelectItem>
-                                        <SelectItem value="operations">运营部</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
-
-                            <FormField id="position" label="职位" required error={errors.position}>
-                                <Input
-                                    id="position"
-                                    value={formData.position}
-                                    onChange={(e) => handleChange("position", e.target.value)}
-                                    aria-invalid={!!errors.position}
-                                />
-                            </FormField>
-
-                            <FormField id="startDate" label="入职日期" required error={errors.startDate}>
-                                <Input
-                                    id="startDate"
-                                    type="date"
-                                    value={formData.startDate}
-                                    onChange={(e) => handleChange("startDate", e.target.value)}
-                                    aria-invalid={!!errors.startDate}
-                                />
-                            </FormField>
-                        </LineColumn>
-
-                        <LineColumn width={300}>
-                            <FormField id="salary" label="薪资" error={errors.salary}>
-                                <Input
-                                    id="salary"
-                                    type="number"
-                                    value={formData.salary}
-                                    onChange={(e) => handleChange("salary", e.target.value)}
-                                    aria-invalid={!!errors.salary}
-                                />
-                            </FormField>
-
-                            <FormField id="employmentType" label="雇佣类型" error={errors.employmentType}>
-                                <Select
-                                    value={formData.employmentType}
-                                    onValueChange={(value) => handleChange("employmentType", value)}
-                                >
-                                    <SelectTrigger id="employmentType">
-                                        <SelectValue placeholder="选择雇佣类型" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="fullTime">全职</SelectItem>
-                                        <SelectItem value="partTime">兼职</SelectItem>
-                                        <SelectItem value="contract">合同工</SelectItem>
-                                        <SelectItem value="intern">实习生</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
-
-                        </LineColumn>
-                            <FormField id="importantDates" label="重要日期" error={errors.importantDates}>
+                            <FormField id="projectDeadlines" label="项目截止日期" error={errors.projectDeadlines}>
                                 <MemoDatesInput
-                                    id="importantDates"
-                                    value={formData.importantDates}
-                                    onChange={(value) => handleChange("importantDates", value)}
+                                    id="projectDeadlines"
+                                    value={formData.projectDeadlines}
+                                    onChange={(value) => handleChange("projectDeadlines", value || "")}
                                     rows={2}
-                                    width="100%"
-                                    placeholder="输入重要日期"
+                                    placeholder="输入项目截止日期"
                                 />
                             </FormField>
 
-                        <h3 className="text-lg font-medium pt-4">其他信息</h3>
-                        <LineColumn width={300}>
-                            <FormField id="address" label="地址" error={errors.address}>
+                            <FormField id="projectNotes" label="项目备注" error={errors.projectNotes}>
                                 <Textarea
-                                    id="address"
-                                    value={formData.address}
-                                    onChange={(e) => handleChange("address", e.target.value)}
-                                    aria-invalid={!!errors.address}
+                                    id="projectNotes"
+                                    value={formData.projectNotes}
+                                    onChange={(e) => handleChange("projectNotes", e.target.value)}
+                                    rows={3}
                                 />
                             </FormField>
-
-                            <FormField id="急联人" label="紧急联系人" error={errors.急联人}>
-                                <Input
-                                    id="急联人"
-                                    value={formData.急联人}
-                                    onChange={(e) => handleChange("急联人", e.target.value)}
-                                    aria-invalid={!!errors.急联人}
-                                />
-                            </FormField>
-                        </LineColumn>
-
-                        <FormField id="skills" label="技能和资质" error={errors.skills}>
-                            <Textarea
-                                id="skills"
-                                value={formData.skills}
-                                onChange={(e) => handleChange("skills", e.target.value)}
-                                aria-invalid={!!errors.skills}
-                            />
-                        </FormField>
-
-                        <div className="flex items-center space-x-2 pt-4">
-                            <Checkbox
-                                id="agreeToTerms"
-                                checked={formData.agreeToTerms}
-                                onCheckedChange={(checked) => handleChange("agreeToTerms", checked === true)}
-                            />
-                            <label
-                                htmlFor="agreeToTerms"
-                                className={cn(
-                                    "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-                                    errors.agreeToTerms && "text-red-500",
-                                )}
-                            >
-                                我同意所有条款和条件
-                            </label>
-                        </div>
-                        {errors.agreeToTerms && <p className="text-red-500 text-xs">{errors.agreeToTerms}</p>}
+                        </CollapsibleFormSection>
 
                         {jsonResult && (
                             <div className="mt-6 p-4 bg-gray-50 rounded-md">
@@ -311,9 +204,7 @@ export default function FormExample() {
                         <Button type="button" variant="outline" onClick={() => window.location.reload()}>
                             重置
                         </Button>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? "提交中..." : "提交表单"}
-                        </Button>
+                        <Button type="submit">提交表单</Button>
                     </CardFooter>
                 </form>
             </Card>
