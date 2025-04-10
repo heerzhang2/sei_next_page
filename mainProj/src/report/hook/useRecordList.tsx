@@ -29,7 +29,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     //印象派的项目列表需对应Ref=[...recordPrintList.length, 后面的]  ？分项报告有redoId重复的倍数。
     let editorRefCount=recordPrintList.length;      //+maxItemsSeq 伸展开的电梯item1.1列表编辑区域数量;
     //【奇怪】有时重启才会报错：违反hook规则？useProjectListAs因为是hook函数不能放在三元表达式中，但是参数就不管了。
-    const refCount=(action==='ALL' || action==='printAll')? editorRefCount*(nestMdConfig? (SubRepIds?.length||1) : 1)  : 0;
+    const refCount=(action==='ALL')? editorRefCount*(nestMdConfig? (SubRepIds?.length||1) : 1)  : 0;
     const clRefs =useProjectListAs({count: refCount } );
     //同名字的字段：清除／覆盖，编辑器未定义的字段数据可保留。[分项_2]{}如何正常合并？只有ALL printAll才会用到这的。
     const outCome=(action==='ALL' || action==='printAll')? (
@@ -123,6 +123,48 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
                         })
                     }
                 </React.Fragment>;
+            }else if(action==='ALL'){
+                if(redId || !nestMdConfig)
+                    return recordPrintList.map((each, i) => {
+                        // if(each.itemArea.startsWith("__")){         //印象派的项目列表区域:印象派模式的；
+                        //     let map = new Map(Object.entries(impressionism));
+                        //     for(let [key, value] of map){
+                        //         if(each.itemArea=== `__${key}-`)
+                        //             return  renderItemsContent(key);        //应该不止唯一个印象派key
+                        //     }
+                        //     throw new Error(`没做模板区`+each.itemArea);
+                        // }
+                        // else
+                        return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
+                            ref: clRefs.current![i],
+                            show: false,
+                            alone: false,
+                            repId: rep?.id,
+                            key: i,
+                            redId,
+                            nestMd: nestMdConfig,
+                            verId,
+                            refWidth: widthMyLinec,
+                            rep,
+                        });
+                    });
+                else return  SubRepIds?.map((redId: string, k: number)=>{
+                    //可重复的分项报告 k个；  暂不考虑印象派模式的；
+                    return recordPrintList.map((each, i) => {
+                        return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
+                            ref: clRefs.current![i+ k*editorRefCount],
+                            show: false,
+                            alone: false,
+                            repId: rep?.id,
+                            key: i,
+                            redId,
+                            nestMd: nestMdConfig,
+                            verId,       //内嵌模式的分项模式的版本号只能听从主报告配置的。
+                            refWidth: widthMyLinec,
+                            rep,
+                        });
+                    });
+                });
             }else if(action==='_Controller'){
                 return <> {view} </>;
             }

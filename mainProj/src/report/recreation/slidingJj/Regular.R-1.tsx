@@ -167,7 +167,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                     </h4>
                 </Link>
             </div>
-            {末尾链接({ template: rep?.modeltype, verId, repId: repId || "" })}
+            {末尾链接({rep, template: rep?.modeltype, verId, repId: repId || "" })}
         </React.Fragment>
     )
 }

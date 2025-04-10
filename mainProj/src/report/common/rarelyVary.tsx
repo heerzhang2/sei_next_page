@@ -3,7 +3,8 @@ import * as React from "react";
 import {
   Text, Divider, Embed, useTheme, IconButton, IconMinimize2, IconMaximize2, TableBody, TableRow, RCell,Table, Cell,
 } from "customize-easy-ui-component";
-import {Link as RouterLink,} from "../../routing/Link";
+import {DirectLink, Link as RouterLink,} from "../../routing/Link";
+import Link from "next/link"
 import Img_Ma  from '../../images/MA.png';
 import Img_ReportNoQR from '../../images/reportNoQR.png';
 import {FadeImage} from "../../comp/FadeImage";
@@ -184,7 +185,7 @@ export const reportFirstPageHeadAllNmbbm= ({theme , No } :{theme: any, No:string
 };
 
 //重复性代码抽象抽取参数化后可复用。
-export const 末尾链接= ( {template, verId, repId }:{template: string, verId:string, repId:string}
+export const 末尾链接= ( {template, verId, repId,rep }:{template: string, verId:string, repId:string,rep:any}
 ) => {
   const theme = useTheme();
   return(
@@ -211,19 +212,19 @@ export const 末尾链接= ( {template, verId, repId }:{template: string, verId:
           }
         }}>
             <div>
-              <RouterLink href={`/report/${template}/ver/${verId}/${repId}/printAll`}>
+              <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/printAll`}>
                 看完整原始记录
-              </RouterLink>
+              </Link>
             </div>
             <div>
-              <RouterLink href={`/report/${template}/ver/${verId}/${repId}/flowSelect`}>
+              <Link href={`/report/${template}/ver/${verId}/${repId}/flowSelect`}>
                 流转(流程)
-              </RouterLink>
+              </Link>
             </div>
             <div>
-              <RouterLink href={`/report/${template}/ver/${verId}/${repId}/ALL`}>
-                编辑原始记录
-              </RouterLink>
+              <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
+               编辑原始记录
+              </Link>
             </div>
         </div>
     </div>

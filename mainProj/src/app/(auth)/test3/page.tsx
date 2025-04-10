@@ -15,18 +15,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 
 // 定义表单数据类型
 interface FormData {
-    fullName: string
-    email: string
-    phone: string
-    department: string
-    position: string
-    startDate: string
-    salary: string
-    employmentType: string
-    address: string
-    emergencyContact: string
-    skills: string
-    agreeToTerms: boolean
+    [key: string]: any
 }
 
 // 定义验证错误类型
@@ -46,7 +35,7 @@ export default function FormExample() {
         salary: "",
         employmentType: "",
         address: "",
-        emergencyContact: "",
+        急联人: "",
         skills: "",
         agreeToTerms: false,
     })
@@ -261,12 +250,12 @@ export default function FormExample() {
                                 />
                             </FormField>
 
-                            <FormField id="emergencyContact" label="紧急联系人" error={errors.emergencyContact}>
+                            <FormField id="急联人" label="紧急联系人" error={errors.急联人}>
                                 <Input
-                                    id="emergencyContact"
-                                    value={formData.emergencyContact}
-                                    onChange={(e) => handleChange("emergencyContact", e.target.value)}
-                                    aria-invalid={!!errors.emergencyContact}
+                                    id="急联人"
+                                    value={formData.急联人}
+                                    onChange={(e) => handleChange("急联人", e.target.value)}
+                                    aria-invalid={!!errors.急联人}
                                 />
                             </FormField>
                         </LineColumn>
