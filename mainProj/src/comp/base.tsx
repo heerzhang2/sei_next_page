@@ -219,6 +219,7 @@ interface MemoDatesInputProps extends MemoDateInputProps {
 }
 /**复合型日期 通用组件: 消除文本日期的报错！。
  * 支持追加模式，字符串尾部添加日期。 但弹出选择框就不显示旧的输入！
+ * refWidth：不在传递了？
  */
 export const MemoDatesInput: React.FunctionComponent<MemoDatesInputProps> =
     ({id,  style,  onChange, value,width='10rem',rows=1,refWidth, ...other}) =>

@@ -30,18 +30,18 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     let editorRefCount=recordPrintList.length;      //+maxItemsSeq 伸展开的电梯item1.1列表编辑区域数量;
     //【奇怪】有时重启才会报错：违反hook规则？useProjectListAs因为是hook函数不能放在三元表达式中，但是参数就不管了。
     const refCount=(action==='ALL')? editorRefCount*(nestMdConfig? (SubRepIds?.length||1) : 1)  : 0;
-    const clRefs =useProjectListAs({count: refCount } );
+    // const clRefs =useProjectListAs({count: refCount } );
     //同名字的字段：清除／覆盖，编辑器未定义的字段数据可保留。[分项_2]{}如何正常合并？只有ALL printAll才会用到这的。
-    const outCome=(action==='ALL' || action==='printAll')? (
-            nestMdConfig? mergeEditorItemSubRefs(clRefs.current!, SubRepIds, nestMdConfig!, editorRefCount,storage, redId)
-                : mergeEditorItemRefs( ...clRefs.current! )
+    const outCome=(action==='ALL')? (
+            nestMdConfig? mergeEditorItemSubRefs([], SubRepIds, nestMdConfig!, editorRefCount,storage, redId)
+                : storage
         )
         : null;
     //旧模式两次暴露传递，返回给爷辈组件。
     const [doConfirmModify, setDoConfirmModify] = React.useState(false);
     //这个用在：框架右边页面菜单上"全部项目一起确认" 点击收集数据setDoConfirmModify=。然后底下的副作用React.useEffect(自动收集存储。”确认“后再保存。当一个区块不允许点击因ref空的!
     React.useImperativeHandle( ref,() => ({
-        doConfirm: (action==='ALL' || action==='printAll')? setDoConfirmModify: noOp
+        doConfirm: (action==='ALL')? setDoConfirmModify: noOp
     }), [setDoConfirmModify, action] );
     const {doFunc:throttledSetDoConfirmModify, ready} = useThrottle(setDoConfirmModify,1500);
     //点按钮后outCome先要render一次获得最新值；必须从false到true的变化才能触发执行。 true->true不能执行的。 useLayoutEffect
@@ -53,7 +53,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     }, [doConfirmModify, outCome, storage, setStorage] );
 
     const {view} =useSubRepController(nestMdConfig!, titleRender!); //callback: (store: any) => React.ReactNode
-    const [refMyLineC,widthMyLinec]= useReferenceWidth();
+    // const [refMyLineC,widthMyLinec]= useReferenceWidth();
 
     // const {impressionism, setImpressionism} =React.useContext(EditStorageContext) as any;
     // console.log('装配印象impressionismrecordPrintList=',recordPrintList);
@@ -118,7 +118,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
                             nestMd: nestMdConfig,
                             verId,
                             alone: true,
-                            refWidth: widthMyLinec,
+                            // refWidth: widthMyLinec,
                             rep,
                         })
                     }
@@ -136,7 +136,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
                         // }
                         // else
                         return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                            ref: clRefs.current![i],
+                            // ref: clRefs.current![i],
                             show: false,
                             alone: false,
                             repId: rep?.id,
@@ -144,7 +144,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
                             redId,
                             nestMd: nestMdConfig,
                             verId,
-                            refWidth: widthMyLinec,
+                            // refWidth: widthMyLinec,
                             rep,
                         });
                     });
@@ -152,7 +152,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
                     //可重复的分项报告 k个；  暂不考虑印象派模式的；
                     return recordPrintList.map((each, i) => {
                         return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                            ref: clRefs.current![i+ k*editorRefCount],
+                            // ref: clRefs.current![i+ k*editorRefCount],
                             show: false,
                             alone: false,
                             repId: rep?.id,
@@ -160,7 +160,7 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
                             redId,
                             nestMd: nestMdConfig,
                             verId,       //内嵌模式的分项模式的版本号只能听从主报告配置的。
-                            refWidth: widthMyLinec,
+                            // refWidth: widthMyLinec,
                             rep,
                         });
                     });
@@ -170,10 +170,10 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
             }
             return  null;
         }
-        ,[action,widthMyLinec, clRefs,rep, SubRepIds,nestMdConfig,redId, verId,recordPrintList,editorRefCount, view]);
+        ,[action, rep, SubRepIds,nestMdConfig,redId, verId,recordPrintList,editorRefCount, view]);
 
     const list=(
-     <div ref={refMyLineC}>
+     <div id="allOrgEdt">
          {recordList}
          { (action==='ALL' || action==='printAll') &&
              <Button size="lg" intent={'primary'}  disabled ={!ready}

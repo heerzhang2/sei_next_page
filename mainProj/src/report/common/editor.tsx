@@ -5,7 +5,7 @@ import {
 } from "customize-easy-ui-component";
 import {InspectRecordLayout, InternalItemProps, SelectHookfork, useItemInputControl} from "./base";
 import {Each_ZdSetting, useTableEditor} from "../hook/useRepTableEditor";
-import {EditStorageContext} from "../StorageContext";
+import {EditStorageContext, useStorage} from "../StorageContext";
 import {itemResultUnqualifiedSsm, RecordInputConfig} from "./config";
 import {useMeasureInpFilter} from "./hooks";
 import {measurementRender} from "./measure";
@@ -315,7 +315,7 @@ export const RecheckEditor=
         { children, show ,alone=true,label,setup,rep,config=config复检表}:RecheckEditorProps,  ref
     ) => {
         const theme= useTheme();
-        const {storage, setStorage} =React.useContext(EditStorageContext) as any;
+        const {storage, setStorage} =useStorage();
         const impressionismAs =React.useMemo(() => {
             return setup({rep,orc:storage, theme});
         }, [rep, storage?._Oitems, setup, theme]);

@@ -69,6 +69,7 @@ const innerRender=(inp: any,setInp: React.Dispatch<React.SetStateAction<any>>,zd
     }, [storage.见证表]);
     *  _M`];      //备注; _Z`];      //工作见证; _S`];      //确认日期
 * 若想orc?._Oitems用户输入的文本有格式化换行效果等，只能在记录编辑的2个解析器这里特殊对待来做。？特殊标记，特定标签的tag '_其它'+i。<br/>替换\n;
+ * refWidth：抛弃不用了？
 * */
 export const ActionMapItem=
 React.forwardRef((

@@ -6,7 +6,7 @@ import {JSX} from "@emotion/react/jsx-runtime";
 import {MeasurementCline} from "../common/measure";
 import {convertMeasureType, floatInterception} from "../../common/tool";
 import {useMeasureInpFilter} from "../common/hooks";
-import {EditStorageContext} from "../StorageContext";
+import {EditStorageContext, useStorage} from "../StorageContext";
 
 /**游乐报告多了一个备忘列。
  * 来源 EachMeasureCritConfig
@@ -274,7 +274,7 @@ export const ObserveEdit =
             config, iAname, allowableV = false, defaultSave = false, mem,
         }: ObserveEditProps, ref
     ) => {
-        const {storage,} =React.useContext(EditStorageContext) as any;
+        const {storage, setStorage} =useStorage();
         const {inp, setInp} = useItemInputControl({ref});
         //【Hook死循环】不能使用const newconfig=typeof config ==='function'? config(inp) : config;
         const newconfig = React.useMemo(() => {

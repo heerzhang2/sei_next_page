@@ -9,7 +9,7 @@ import {
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {Each_ZdSetting, useTableEditor} from "../../hook/useRepTableEditor";
-import {EditStorageContext} from "../../StorageContext";
+import {EditStorageContext, useStorage} from "../../StorageContext";
 import {useUppyUpload} from "../../hook/useUppyUpload";
 
 export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
@@ -42,7 +42,7 @@ export const StrainStress =
         </Text>;
         const [render测点表]=useTableEditor({breaks, inp, setInp,  headview,
             config: config测点表, table:'测点表', column:3, });
-        const {modified,setModified,} =React.useContext(EditStorageContext) as any;
+        const {modified,setModified,} =useStorage();
         const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
             onSure({...inp, '_FILE_测点': upfile});
             !modified && setModified(true);

@@ -7,7 +7,7 @@ import {InspectRecordLayout, InternalItemProps, useItemInputControl} from "../..
 import {setupItemAreaRoute} from "./orcIspConfig";
 import {useMedia} from "use-media";
 import {assertNamesUnique} from "../../common/eHelper";
-import {EditStorageContext} from "../../StorageContext";
+import {useStorage} from "../../StorageContext";
 import {itemA技术见证} from "../../elevator/stest/editor";
 import {itemA结论} from "../waterJj/Conclusion";
 import {EachObserveConfig} from "../../hook/useObserve";
@@ -163,7 +163,7 @@ export const EntranceSetup =
             {value:['unq','仪器表','检验条件','观备注', '主技备注' ]} ]);
         toast({title: "完成！", subtitle: result ? "没发现冲突" : "测试开关没开", intent: "success"});
     }, [rep,toast,theme]);
-    const {storage, setStorage} =React.useContext(EditStorageContext) as any;
+    const {storage, setStorage} =useStorage();
     const getInpFilter = React.useCallback((par: any) => {
         const {_tblFixed, } =par||{};
         return {_tblFixed, };

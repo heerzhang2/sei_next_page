@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 
 import type React from "react"
 import { useState } from "react"
-import { LineColumn } from "@/components/chub"
+import {LineColumn, MemoDatesInput} from "@/components/chub"
 import { FormField } from "@/components/shub"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -36,6 +36,7 @@ export default function FormExample() {
         employmentType: "",
         address: "",
         急联人: "",
+        importantDates: "项目A截止 2023-06-15\n项目B开始 2023-07-01",
         skills: "",
         agreeToTerms: false,
     })
@@ -237,7 +238,18 @@ export default function FormExample() {
                                     </SelectContent>
                                 </Select>
                             </FormField>
+
                         </LineColumn>
+                            <FormField id="importantDates" label="重要日期" error={errors.importantDates}>
+                                <MemoDatesInput
+                                    id="importantDates"
+                                    value={formData.importantDates}
+                                    onChange={(value) => handleChange("importantDates", value)}
+                                    rows={2}
+                                    width="100%"
+                                    placeholder="输入重要日期"
+                                />
+                            </FormField>
 
                         <h3 className="text-lg font-medium pt-4">其他信息</h3>
                         <LineColumn width={300}>
