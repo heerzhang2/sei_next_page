@@ -36,11 +36,11 @@ export default function ReportLayout({
         <EditControlProvider>
           {params?.action ? <>
                 <div className="flex-1 overflow-auto">
-                  <div className="mx-auto px-0 pt-8 pb-0">
+                  <div className="mx-auto px-0 pt-0 pb-0">
                     <div className="flex flex-col min-h-screen">
                       <header className="border-b">
                         <div className="container flex items-center justify-between h-14">
-                          <h1 className="text-xl font-bold">报告头部说明</h1>
+                          <h1 className="text-xl font-bold">报告头部说明--导致滚动条古怪</h1>
 
                         </div>
                       </header>

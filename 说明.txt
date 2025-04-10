@@ -413,3 +413,6 @@ element() 通常用于在生成的内容中引用某个元素的内容，而 pos
 next.js自带的UI包需要独立导入代码：PS D:\home\sei_next_page\mainProj>子工程目录 npx shadcn@latest add toast
 http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/5.1?make=1#5.1
 http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/1.1#1.1
+/** @jsxImportSource @emotion/react */
+把原本@emotion/react css代码 <div css={{ display: 'flex', justifyContent: 'space-around' }}>
+                                           </div>  改造成tailwindCSS的做法

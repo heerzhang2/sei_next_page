@@ -1,12 +1,13 @@
-/** @jsxImportSource @emotion/react */
+
 import * as React from "react";
 import {InspectRecordLayout, SelectHookfork, SelectInput, useItemInputControl,} from "../common/base";
 import {
-    BlobInputList, Input, InputDatalist, InputLine, LineColumn, Text
+    BlobInputList, Input, InputDatalist, InputLine,
 } from "customize-easy-ui-component";
 import {RecordOmniArea} from "../common/omni";
 import {Column_Setting} from "./useFormatOmni";
 import {MemoDateInput, MemoDatesInput} from "../../comp/base";
+import {LineColumn} from "@/components/chub";
 
 //检验项目的标准化展示组件, 多了2列”工作见证，确认方式“
 interface Props  extends React.HTMLAttributes<HTMLDivElement>{
@@ -142,25 +143,22 @@ React.forwardRef((
                 // const mergLabel=mergLastEt.mergLabel??mergLastEt.mergNos??tago.tips??(typeof tago.recap==='string'? tago.recap:null)??tago.nos;
                 //前半部分的 必须使用这个方式添加nodes;否则<LineColumn >无法穿透。
                 const headNoLabel=tago.nos? `${tago.pre||''}${tago.iclas||''}${tago.nos}` : `${mergLastEt.pre||''}${mergLastEt.iclas||''}${mergLastEt.mergNos??mergLastEt.nos}`;
-                const rowHead =<div key={wf} css={{marginTop: '1rem'}}>
+                const rowHead =<div key={wf} className="mt-4">
                     { (tago===mergLastEt && mergLastEt.name===undefined)? null
                         :
-                        <div css={{ display: 'flex', justifyContent: 'space-around' }}>
-                            <Text variant="h6">{headNoLabel}</Text>
-                            <Text variant="h6" css={{marginLeft: '0.5rem'}}>{tago.rec?.big}&nbsp;&nbsp;{tago.rec?.seco}</Text>
-                            <Text variant="h6" css={{marginLeft: '0.5rem'}}>{tago.rec?.third}&nbsp;&nbsp;{tago.rec?.four}</Text>
+                        <div className="flex justify-around">
+                            <h6>{headNoLabel}</h6>
+                            <h6>{tago.rec?.big}&nbsp;&nbsp;{tago.rec?.seco}</h6>
+                            <h6>{tago.rec?.third}&nbsp;&nbsp;{tago.rec?.four}</h6>
                         </div>
                     }
-                    <div css={{ display: 'flex', justifyContent: 'space-around' }}>
+                    <div className="flex justify-around">
                                 { typeof tago.desc === "string"?
-                                    <Text  variant="h5">
-                                        {tago.desc}
-                                    </Text>
+                                    <h5>{tago.desc}</h5>
                                     :
                                     tago.desc
                                 }
-                    </div>
-                    <hr/>
+                    </div><hr/>
                     <LineColumn>
                         {
                             tago.name && editIts.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
