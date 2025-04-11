@@ -25,7 +25,9 @@ interface LineColumnProps {
     className?: string
     children: React.ReactNode
 }
-
+/*可以用className="@container"嵌套className="columns-1 @lg:columns-2能直接替换掉LineColumn：但是顺序是分裂垂直阅读的，就不会有扩张稀疏问题较为紧凑的。
+而LineColumn这个用grid的导致：某些输入框占据较大的高度空间的就会引起一整个行的空间稀疏同一扩展开的，项目顺序是常规阅读顺序。
+* */
 export function LineColumn({ width=300, className, children }: LineColumnProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     const [isSingleRow, setIsSingleRow] = useState(false)
@@ -89,106 +91,6 @@ export function LineColumn({ width=300, className, children }: LineColumnProps) 
                     {child}
                 </div>
             ))}
-        </div>
-    )
-}
-
-
-interface MemoDatesInputProps {
-    id?: string
-    value?: string
-    onChange: (value?: string) => void
-    width?: string | number
-    rows?: number
-    className?: string
-    required?: boolean
-    placeholder?: string
-}
-
-export function MemoDatesInput({
-                                   id,
-                                   value = "",
-                                   onChange,
-                                   width = "10rem",
-                                   rows = 1,
-                                   className,
-                                   required,
-                                   placeholder,
-                                   ...other
-                               }: MemoDatesInputProps) {
-    const containerRef = useRef<HTMLDivElement>(null)
-    const [isWrapEnabled, setIsWrapEnabled] = useState<boolean | null>(null)
-
-    // Use ResizeObserver to check container width
-    useEffect(() => {
-        if (!containerRef.current) return
-
-        const checkWidth = () => {
-            if (containerRef.current) {
-                const containerWidth = containerRef.current.clientWidth
-                setIsWrapEnabled(containerWidth <= 500)
-            }
-        }
-
-        // Initial check
-        checkWidth()
-
-        // Set up ResizeObserver
-        const resizeObserver = new ResizeObserver(checkWidth)
-        resizeObserver.observe(containerRef.current)
-
-        return () => {
-            if (containerRef.current) {
-                resizeObserver.disconnect()
-            }
-        }
-    }, [])
-
-    // Handle text input change
-    const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        onChange(e.target.value || undefined)
-    }
-
-    // Handle date input change - append the date to existing text
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.value) {
-            const newValue = (value || "") + " " + e.target.value
-            onChange(newValue)
-            // Reset the date input
-            e.target.value = ""
-        }
-    }
-
-    // Don't render the component until we know the layout
-    if (isWrapEnabled === null) {
-        return <div ref={containerRef} className={cn("w-full h-12 bg-gray-100 animate-pulse rounded-md", className)} />
-    }
-
-    return (
-        <div
-            ref={containerRef}
-            className={cn("flex items-start gap-2 w-full", isWrapEnabled ? "flex-col" : "flex-row", className)}
-            {...other}
-        >
-            <Textarea
-                value={value}
-                onChange={handleTextChange}
-                rows={rows}
-                placeholder={placeholder}
-                required={required}
-                className={cn(isWrapEnabled ? "w-full" : "flex-1")}
-                style={{
-                    resize: "vertical",
-                    // When in row layout, ensure the textarea doesn't grow too much
-                    maxWidth: isWrapEnabled ? undefined : "calc(100% - 10rem - 0.5rem)",
-                }}
-            />
-            <Input
-                type="date"
-                className={cn(isWrapEnabled ? "w-full" : "w-[10rem] flex-shrink-0")}
-                onChange={handleDateChange}
-                aria-label="选择日期"
-            />
         </div>
     )
 }
@@ -261,6 +163,82 @@ export function CollapsibleFormSection({
                         </div>
                     )}
                 </div>
+            </div>
+        </div>
+    )
+}
+
+
+interface MemoDatesInputProps {
+    id?: string
+    value?: string
+    onChange: (value?: string) => void
+    rows?: number
+    className?: string
+    required?: boolean
+    placeholder?: string
+    dateInputWidth?: string | number
+}
+//包含 `onChange` 事件处理器，这些是客户端交互功能。只有当组件完全是静态的或只执行服务器端逻辑时，才可不用use client;
+export function MemoDatesInput({
+                                   id,
+                                   value = "",
+                                   onChange,
+                                   rows = 1,
+                                   className,
+                                   required,
+                                   placeholder,
+                                   dateInputWidth = "10rem",
+                                   ...other
+                               }: MemoDatesInputProps) {
+    // Handle text input change
+    const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        onChange(e.target.value || undefined)
+    }
+
+    // Handle date input change - append the date to existing text
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.value) {
+            const newValue = (value || "") + " " + e.target.value
+            onChange(newValue)
+            // Reset the date input
+            e.target.value = ""
+        }
+    }
+
+    // Convert dateInputWidth to string with px if it's a number
+    const dateWidth = typeof dateInputWidth === "number" ? `${dateInputWidth}px` : dateInputWidth
+
+    return (
+        <div
+            className={cn(
+                "@container w-full", // 设置容器查询上下文
+                className,
+            )}
+            {...other}
+        >
+            <div className="flex flex-col @[500px]:flex-row gap-2 w-full">
+                <Textarea
+                    value={value}
+                    onChange={handleTextChange}
+                    rows={rows}
+                    placeholder={placeholder}
+                    required={required}
+                    className={cn("min-w-0 w-full @[500px]:flex-1", "@[500px]:max-w-[calc(100%-var(--date-input-width)-0.5rem)]")}
+                    style={
+                        {
+                            resize: "vertical",
+                            "--date-input-width": dateWidth,
+                        } as React.CSSProperties
+                    }
+                />
+                <Input
+                    type="date"
+                    className="w-full @[500px]:w-auto @[500px]:flex-shrink-0"
+                    style={{ width: dateWidth }}
+                    onChange={handleDateChange}
+                    aria-label="选择日期"
+                />
             </div>
         </div>
     )

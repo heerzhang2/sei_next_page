@@ -71,7 +71,7 @@ const innerRender=(inp: any,setInp: React.Dispatch<React.SetStateAction<any>>,zd
     }, [storage.见证表]);
     *  _M`];      //备注; _Z`];      //工作见证; _S`];      //确认日期
 * 若想orc?._Oitems用户输入的文本有格式化换行效果等，只能在记录编辑的2个解析器这里特殊对待来做。？特殊标记，特定标签的tag '_其它'+i。<br/>替换\n;
- * refWidth：抛弃不用了？
+ * refWidth：抛弃不用了？ 没必要用LineColumn布局，直接多列的做。
 * */
 export const ActionMapItem=
 React.forwardRef((
@@ -146,7 +146,7 @@ React.forwardRef((
                 // const mergLabel=mergLastEt.mergLabel??mergLastEt.mergNos??tago.tips??(typeof tago.recap==='string'? tago.recap:null)??tago.nos;
                 //前半部分的 必须使用这个方式添加nodes;否则<LineColumn >无法穿透。
                 const headNoLabel=tago.nos? `${tago.pre||''}${tago.iclas||''}${tago.nos}` : `${mergLastEt.pre||''}${mergLastEt.iclas||''}${mergLastEt.mergNos??mergLastEt.nos}`;
-                const rowHead =<div key={wf} className="mt-4">
+                const rowHead =<div key={wf} className="mt-4 @container">
                     { (tago===mergLastEt && mergLastEt.name===undefined)? null
                         :
                         <div className="flex justify-around">
@@ -162,7 +162,7 @@ React.forwardRef((
                                     tago.desc
                                 }
                     </div><hr/>
-                    <LineColumn>
+                    <div  className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
                         {
                             tago.name && editIts.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
                                 if(n===null) return null;
@@ -192,7 +192,7 @@ React.forwardRef((
                                 return null;
                             })
                         }
-                    </LineColumn>
+                    </div>
                 </div>;
 
                 htmlTxts.push(rowHead);
