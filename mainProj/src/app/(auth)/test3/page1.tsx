@@ -97,29 +97,34 @@ export default function CollapsibleFormExample() {
 
     return (
         <div className="container mx-auto py-8 px-4">
-            <Card className="w-full max-w-[1500] mx-auto">
+            <Card className="w-full max-w-4xl mx-auto">
                 <CardHeader>
                     <CardTitle className="text-2xl">可折叠表单示例</CardTitle>
                 </CardHeader>
 
-                <form onSubmit={handleSubmit} className="@container">
+                <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-6">
                         {/* 个人信息部分 - 默认展开 */}
                         <CollapsibleFormSection title="个人信息" defaultOpen={true}>
-                            <div  className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4" >
+                            <LineColumn width={300}>
 
                                 <FormField id="name" label="姓名1" required error={errors.name}>
                                     <Input id="name" value={formData.name} onChange={(e) => handleChange("name", e.target.value)} />
                                 </FormField>
-
-                                <FormField id="email" label="邮箱2" required error={errors.email}>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => handleChange("email", e.target.value)}
-                                    />
+                                <FormField id="department" label="部门2" required error={errors.department}>
+                                    <Select value={formData.department} onValueChange={(value) => handleChange("department", value)}>
+                                        <SelectTrigger id="department">
+                                            <SelectValue placeholder="选择部门" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="engineering">工程部</SelectItem>
+                                            <SelectItem value="marketing">市场部</SelectItem>
+                                            <SelectItem value="finance">财务部</SelectItem>
+                                            <SelectItem value="hr">人力资源部</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </FormField>
+
 
                                 <FormField id="phone" label="电话3" error={errors.phone}>
                                     <Input id="phone" value={formData.phone} onChange={(e) => handleChange("phone", e.target.value)} />
@@ -134,18 +139,13 @@ export default function CollapsibleFormExample() {
                                     />
                                 </FormField>
 
-                                <FormField id="department" label="部门5" required error={errors.department}>
-                                    <Select value={formData.department} onValueChange={(value) => handleChange("department", value)}>
-                                        <SelectTrigger id="department">
-                                            <SelectValue placeholder="选择部门" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="engineering">工程部</SelectItem>
-                                            <SelectItem value="marketing">市场部</SelectItem>
-                                            <SelectItem value="finance">财务部</SelectItem>
-                                            <SelectItem value="hr">人力资源部</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <FormField id="email" label="邮箱5" required error={errors.email}>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => handleChange("email", e.target.value)}
+                                    />
                                 </FormField>
                                 <FormField id="projectNotes" label="项目备注6" error={errors.projectNotes}>
                                     <Textarea
@@ -155,7 +155,6 @@ export default function CollapsibleFormExample() {
                                         rows={5}
                                     />
                                 </FormField>
-
 
                                 <FormField id="startDate" label="入职日期7" error={errors.startDate}>
                                     <Input
@@ -172,6 +171,8 @@ export default function CollapsibleFormExample() {
                                         onChange={(e) => handleChange("projectName", e.target.value)}
                                     />
                                 </FormField>
+
+
                                 <FormField id="position" label="职位9" error={errors.position}>
                                     <Input
                                         id="position"
@@ -179,9 +180,7 @@ export default function CollapsibleFormExample() {
                                         onChange={(e) => handleChange("position", e.target.value)}
                                     />
                                 </FormField>
-
-
-                            </div>
+                            </LineColumn>
                         </CollapsibleFormSection>
 
                         {jsonResult && (

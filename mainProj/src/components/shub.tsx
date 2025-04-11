@@ -17,7 +17,7 @@ interface FormFieldProps {
 
 export function FormField({ id, label, required = false, error, className, children }: FormFieldProps) {
     return (
-        <div className={cn("flex flex-col space-y-2 w-full", className)}>
+        <div className={cn("flex flex-col space-y-2 w-full break-inside-avoid", className)}>
             <Label htmlFor={id} className="flex items-center text-sm font-medium">
                 {label}
                 {required && <span className="text-red-500 ml-1">*</span>}
