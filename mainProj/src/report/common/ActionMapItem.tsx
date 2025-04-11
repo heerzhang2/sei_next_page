@@ -1,13 +1,8 @@
-
 import * as React from "react";
-import {InspectRecordLayout, SelectHookfork, SelectInput, useItemInputControl,} from "../common/base";
-import {
-    BlobInputList,  InputDatalist, InputLine,
-} from "customize-easy-ui-component";
+import {useItemInputControl,} from "../common/base";
 import {RecordOmniArea} from "../common/omni";
 import {Column_Setting} from "./useFormatOmni";
-import {MemoDateInput, MemoDatesInput} from "../../comp/base";
-import {CollapsibleFormSection, LineColumn} from "@/components/chub";
+import {BlobInputList, CollapsibleFormSection, InputDatalist, MemoDateInput, MemoDatesInput} from "@/components/chub";
 import {FormField} from "@/components/shub";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {useState} from "react";
@@ -172,8 +167,8 @@ React.forwardRef((
                 type="date"
                 value={formData[`${namepr}_`+n]}
                 onChange={(e) => handleChange(`${namepr}_`+n, e.target.value)}
-                aria-invalid={!!errors.startDate}
-            />;
+                aria-invalid={!!errors[`${namepr}_`+n]}
+            />
         else if(t==='B')
             input= <BlobInputList
                 id={`${namepr}_`+n}
@@ -181,20 +176,40 @@ React.forwardRef((
                 onListChange={(value) => handleChange(`${namepr}_`+n, value)}
                 datalist={l}
                 rows={z??2}
+                aria-invalid={!!errors[`${namepr}_`+n]}
             />
         else if(t==='l' && l)
-            input=<InputDatalist value={(inp?.[`${namepr}_`+n]) ?? ''}  datalist={l}
-                                 onListChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />
+            input= <InputDatalist
+                id={`${namepr}_`+n}
+                value={formData[`${namepr}_`+n]}
+                onListChange={(value) => handleChange(`${namepr}_`+n, value)}
+                datalist={l}
+                aria-invalid={!!errors[`${namepr}_`+n]}
+            />
         else if(t==='C')
-            input=<MemoDateInput value={(inp?.[`${namepr}_`+n]) ?? ''}  rows={z??2}
-                                 onChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />;
+            input= <MemoDateInput
+                id={`${namepr}_`+n}
+                value={formData[`${namepr}_`+n]}
+                onChange={(value) => handleChange(`${namepr}_`+n, value)}
+                width="14rem"  rows={z??2}
+                aria-invalid={!!errors[`${namepr}_`+n]}
+            />
         else if(t==='S')
-            input=<MemoDatesInput value={(inp?.[`${namepr}_`+n]) ?? ''}  rows={z??2}
-                                  onChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />;
+            input= <MemoDatesInput
+                id={`${namepr}_`+n}
+                value={formData[`${namepr}_`+n]}
+                onChange={(value) => handleChange(`${namepr}_`+n, value)}
+                rows={z??2}
+                aria-invalid={!!errors[`${namepr}_`+n]}
+            />
         else
-            input=<Input value={(inp?.[`${namepr}_`+n]) ?? ''}  size={z}
-                         onChange={e => setInp({ ...inp, [`${namepr}_`+n]: e.currentTarget.value || undefined})} />;
-
+            input= <Input
+                id={`${namepr}_`+n}
+                value={formData[`${namepr}_`+n]}
+                onChange={(e) => handleChange(`${namepr}_`+n, e.target.value)}
+                size={z}
+                aria-invalid={!!errors[`${namepr}_`+n]}
+            />;
         return <FormField id={`${namepr}_`+n} key={idx} label={label??x} error={errors[`${namepr}_`+n]}>
             {input}
         </FormField>;
@@ -313,8 +328,8 @@ React.forwardRef((
         }
 
         return  htmlTxts;
-    }, [config,inp,setInp, editIts]);
-//errors,
+    }, [config,inp,setInp, errors, editIts]);
+
 
     return  <CollapsibleFormSection title={`${config.name??config.tag}`} defaultOpen={show}>
         <form onSubmit={handleSubmit}>

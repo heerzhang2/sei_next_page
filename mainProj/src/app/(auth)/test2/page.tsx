@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { FormField } from "@/components/shub"
-import {BlobInputList, MemoDatesInput} from "@/components/chub"
+import {BlobInputList, InputDatalist, MemoDateInput, MemoDatesInput} from "@/components/chub"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -93,13 +93,12 @@ export default function MemoDatesExample() {
           <CardContent className="space-y-6">
             <div className="columns-1 @lg:columns-2">
               <FormField id="meetingNotes" label="会议记录" required error={errors.meetingNotes}>
-                <MemoDatesInput
-                  id="meetingNotes"
-                  value={formData.meetingNotes}
-                  onChange={(value) => handleChange("meetingNotes", value)}
-                  rows={3}
-                  placeholder="输入会议记录，可以添加日期"
-                  required
+                <InputDatalist
+                    id="demo-input"
+                    value={formData.meetingNotes}
+                    onListChange={(value) => handleChange("meetingNotes", value)}
+                    datalist={sampleData}
+                    placeholder="Type to search fruits..."
                 />
               </FormField>
 
@@ -125,6 +124,13 @@ export default function MemoDatesExample() {
                 dateInputWidth="12rem"
               />
             </FormField>
+
+            <FormField id="importantDates" label="重要日期2" error={errors.importantDates}>
+              <MemoDateInput value={formData.importantDates}
+                             onChange={(value) => handleChange("importantDates", value)}
+                             width="14rem" rows={3} />
+            </FormField>
+
 
             {jsonResult && (
               <div className="mt-6 p-4 bg-gray-50 rounded-md">

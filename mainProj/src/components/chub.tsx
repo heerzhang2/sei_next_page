@@ -4,7 +4,7 @@ import React, { useId, useState, useRef, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp,Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     autoUpdate,
@@ -17,6 +17,7 @@ import {
     FloatingFocusManager,
     FloatingPortal,
 } from "@floating-ui/react"
+
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
 * */
@@ -443,4 +444,159 @@ export function BlobInputList({
     )
 }
 
+
+export interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    /** The size of the input element */
+    inputSize?: "sm" | "md" | "lg"
+    /** Whether the input should take full width */
+    fullWidth?: boolean
+    /** List of suggestions to display */
+    datalist?: string[]
+    /** Callback when the value changes */
+    onListChange?: (value: string) => void
+}
+
+export function InputDatalist({
+                                  inputSize = "md",
+                                  fullWidth = true,
+                                  datalist = [],
+                                  className,
+                                  style,
+                                  onListChange,
+                                  value,
+                                  onChange,
+                                  ...other
+                              }: InputDatalistProps) {
+    const [inputValue, setInputValue] = useState(value || "")
+    const uid = useId()
+    const listId = `list-${uid}`
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value
+        setInputValue(newValue)
+
+        if (onChange) {
+            onChange(e)
+        }
+
+        if (onListChange) {
+            onListChange(newValue)
+        }
+    }
+
+    const sizeClasses = {
+        sm: "h-8 text-sm px-2",
+        md: "h-10 text-base px-3",
+        lg: "h-12 text-lg px-4",
+    }
+
+    return (
+        <div className={cn("text-left", fullWidth ? "w-full" : "w-auto")} style={style}>
+            <datalist id={listId}>
+                {datalist.map((option, i) => (
+                    <option key={i} value={option} />
+                ))}
+            </datalist>
+
+            <input
+                className={cn(
+                    "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                    sizeClasses[inputSize],
+                    fullWidth ? "w-full" : "w-auto",
+                    className,
+                )}
+                value={inputValue}
+                onChange={handleChange}
+                list={listId}
+                {...other}
+            />
+        </div>
+    )
+}
+
+interface MemoDateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> {
+    /** Current date value */
+    value?: string
+    /** Callback when date changes */
+    onChange: (value: string | undefined) => void
+    /** Width of the text input */
+    width?: string
+    /** Number of rows for the text input */
+    rows?: number
+}
+
+/**
+ * A component that allows both text input and date picker for dates
+ */
+export function MemoDateInput({
+                                  id,
+                                  className,
+                                  style,
+                                  onChange,
+                                  value = "",
+                                  width = "10.7rem",
+                                  rows = 1,
+                                  ...other
+                              }: MemoDateInputProps) {
+    const [textValue, setTextValue] = useState(value)
+    const dateInputRef = React.useRef<HTMLInputElement>(null)
+
+    // Keep text input in sync with external value changes
+    useEffect(() => {
+        setTextValue(value)
+    }, [value])
+
+    // Handle text input changes
+    const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newValue = e.target.value
+        setTextValue(newValue)
+        onChange(newValue || undefined)
+    }
+
+    // Handle date picker changes
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value
+        onChange(newValue || undefined)
+    }
+
+    // Handle calendar button click
+    const handleCalendarClick = () => {
+        if (dateInputRef.current) {
+            dateInputRef.current.showPicker()
+        }
+    }
+
+    return (
+        <div className={cn("flex flex-wrap items-start", className)} style={style}>
+      <textarea
+          value={textValue}
+          onChange={handleTextChange}
+          rows={rows}
+          className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
+          style={{ width }}
+          placeholder="Enter date..."
+      />
+
+            {/* Hidden date input */}
+            <input
+                ref={dateInputRef}
+                type="date"
+                value={value}
+                onChange={handleDateChange}
+                className="sr-only"
+                aria-label="Date picker"
+                {...other}
+            />
+
+            {/* Calendar button */}
+            <button
+                type="button"
+                onClick={handleCalendarClick}
+                className="flex items-center justify-center rounded-r-md border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+            >
+                <Calendar size={16} />
+            </button>
+        </div>
+    )
+}
 
