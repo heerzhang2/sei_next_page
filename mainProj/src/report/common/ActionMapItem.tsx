@@ -2,7 +2,7 @@
 import * as React from "react";
 import {InspectRecordLayout, SelectHookfork, SelectInput, useItemInputControl,} from "../common/base";
 import {
-    BlobInputList, Input, InputDatalist, InputLine,
+    BlobInputList,  InputDatalist, InputLine,
 } from "customize-easy-ui-component";
 import {RecordOmniArea} from "../common/omni";
 import {Column_Setting} from "./useFormatOmni";
@@ -13,6 +13,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/c
 import {useState} from "react";
 import {CardFooter} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
 
 //检验项目的标准化展示组件, 多了2列”工作见证，确认方式“
 interface Props  extends React.HTMLAttributes<HTMLDivElement>{
@@ -41,33 +42,38 @@ interface Props  extends React.HTMLAttributes<HTMLDivElement>{
 //假如分项报告情况：原来inp:,setInp：是针对局部的存储做修改的。
 //普通输入：    //text
 //支持 t类型：'',B,l,d,C,S;
-const innerRender=(inp: any,setInp: React.Dispatch<React.SetStateAction<any>>,zdCfg:Column_Setting,idx:number,
-                   namepr:string,label?:string,refWidth?:number)=>{
-    const {n, x, m, t, l, z}=zdCfg;
-    let input=null;
-    if(t==='d')
-        input=<Input value={(inp?.[`${namepr}_`+n]) ?? ''} type='date'
-                 onChange={e => setInp({ ...inp, [`${namepr}_`+n]: e.currentTarget.value || undefined})}/>;
-    else if(t==='B')
-        input=<BlobInputList value={(inp?.[`${namepr}_`+n]) ?? ''} rows={z??2}  datalist={l}
-                    onListChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />
-    else if(t==='l' && l)
-        input=<InputDatalist value={(inp?.[`${namepr}_`+n]) ?? ''}  datalist={l}
-                    onListChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />
-    else if(t==='C')
-        input=<MemoDateInput value={(inp?.[`${namepr}_`+n]) ?? ''}  rows={z??2}
-                             onChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />;
-    else if(t==='S')
-        input=<MemoDatesInput value={(inp?.[`${namepr}_`+n]) ?? ''}  rows={z??2}  refWidth={refWidth}
-                             onChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />;
-    else
-        input=<Input value={(inp?.[`${namepr}_`+n]) ?? ''}  size={z}
-                    onChange={e => setInp({ ...inp, [`${namepr}_`+n]: e.currentTarget.value || undefined})} />;
-
-    return <InputLine key={idx} label={label??x}>
-        {input}
-    </InputLine>;
-}
+// const innerRender=(inp: any,setInp: React.Dispatch<React.SetStateAction<any>>,zdCfg:Column_Setting,idx:number,
+//                    namepr:string,label?:string,refWidth?:number)=>{
+//     const {n, x, m, t, l, z}=zdCfg;
+//     let input=null;
+//     if(t==='d')
+//         input= <Input
+//             id="startDate"
+//             type="date"
+//             value={formData.[`${namepr}_`+n]}
+//             onChange={(e) => handleChange(`${namepr}_`+n, e.target.value)}
+//             aria-invalid={!!errors.startDate}
+//         />;
+//     else if(t==='B')
+//         input=<BlobInputList value={(inp?.[`${namepr}_`+n]) ?? ''} rows={z??2}  datalist={l}
+//                     onListChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />
+//     else if(t==='l' && l)
+//         input=<InputDatalist value={(inp?.[`${namepr}_`+n]) ?? ''}  datalist={l}
+//                     onListChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />
+//     else if(t==='C')
+//         input=<MemoDateInput value={(inp?.[`${namepr}_`+n]) ?? ''}  rows={z??2}
+//                              onChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />;
+//     else if(t==='S')
+//         input=<MemoDatesInput value={(inp?.[`${namepr}_`+n]) ?? ''}  rows={z??2}  refWidth={refWidth}
+//                              onChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />;
+//     else
+//         input=<Input value={(inp?.[`${namepr}_`+n]) ?? ''}  size={z}
+//                     onChange={e => setInp({ ...inp, [`${namepr}_`+n]: e.currentTarget.value || undefined})} />;
+//
+//     return <InputLine key={idx} label={label??x}>
+//         {input}
+//     </InputLine>;
+// }
 
 // 定义表单数据类型： 报告存储字段名字不限定的，类型也不确定。
 export interface FormData {
@@ -104,7 +110,7 @@ React.forwardRef((
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [errors, setErrors] = useState<FormErrors>({})
     // 处理输入变化
-    const handleChange = (field: keyof FormData, value: string | boolean) => {
+    const handleChange = (field: keyof FormData, value: any) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
@@ -153,6 +159,45 @@ React.forwardRef((
                 firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" })
             }
         }
+    }
+    //假如分项报告情况：原来inp:,setInp：是针对局部的存储做修改的。
+    //普通输入：    //text
+    //支持 t类型：'',B,l,d,C,S;
+    const innerRender=(idx:number, namepr:string,label?:string)=>{
+        const {n, x, m, t, l, z}=editIts[idx];
+        let input=null;
+        if(t==='d')
+            input= <Input
+                id={`${namepr}_`+n}
+                type="date"
+                value={formData[`${namepr}_`+n]}
+                onChange={(e) => handleChange(`${namepr}_`+n, e.target.value)}
+                aria-invalid={!!errors.startDate}
+            />;
+        else if(t==='B')
+            input= <BlobInputList
+                id={`${namepr}_`+n}
+                value={formData[`${namepr}_`+n]}
+                onListChange={(value) => handleChange(`${namepr}_`+n, value)}
+                datalist={l}
+                rows={z??2}
+            />
+        else if(t==='l' && l)
+            input=<InputDatalist value={(inp?.[`${namepr}_`+n]) ?? ''}  datalist={l}
+                                 onListChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />
+        else if(t==='C')
+            input=<MemoDateInput value={(inp?.[`${namepr}_`+n]) ?? ''}  rows={z??2}
+                                 onChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />;
+        else if(t==='S')
+            input=<MemoDatesInput value={(inp?.[`${namepr}_`+n]) ?? ''}  rows={z??2}
+                                  onChange={v => setInp({...inp, [`${namepr}_`+n]: v || undefined}) } />;
+        else
+            input=<Input value={(inp?.[`${namepr}_`+n]) ?? ''}  size={z}
+                         onChange={e => setInp({ ...inp, [`${namepr}_`+n]: e.currentTarget.value || undefined})} />;
+
+        return <FormField id={`${namepr}_`+n} key={idx} label={label??x} error={errors[`${namepr}_`+n]}>
+            {input}
+        </FormField>;
     }
 
     //【注意】React.useMemo必须将 <LineColumnFlex> 所依赖的变量refWidth作为依赖项之一，否则否则丢失跟踪的目标，否则无法立刻自适应宽度变化。
@@ -244,7 +289,7 @@ React.forwardRef((
                                     </FormField>;
                                 }
                                 else if(!m){
-                                    return innerRender(inp,setInp,editIts[i],i, tago.name!,undefined,refWidth);
+                                    return innerRender(i, tago.name!,undefined);
                                 }
                                 return null;
                             })
@@ -254,7 +299,7 @@ React.forwardRef((
                                 if(n===null) return null;
                                 else if(m){
                                     const label=`${tago.mergNos??tago.nos??''}`+x;
-                                    return innerRender(inp,setInp,editIts[i],i, icname!,label,refWidth);
+                                    return innerRender(i, icname!,label);
                                 }
                                 return null;
                             })

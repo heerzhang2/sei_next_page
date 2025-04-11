@@ -1,12 +1,22 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useId, useState, useRef, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
+import {
+    autoUpdate,
+    size,
+    useDismiss,
+    useFloating,
+    useInteractions,
+    useListNavigation,
+    useRole,
+    FloatingFocusManager,
+    FloatingPortal,
+} from "@floating-ui/react"
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
 * */
@@ -243,4 +253,194 @@ export function MemoDatesInput({
         </div>
     )
 }
+
+//扩展列表大的输入框
+interface ItemProps {
+    children: React.ReactNode
+    active: boolean
+    index: number
+}
+//不能声明为 : ItemProps & Omit<React.HTMLProps<HTMLDivElement>, "onClick"> & { ref?: React.Ref<HTMLDivElement> })
+function Item({
+                  children,
+                  active,
+                  index,
+                  ref,
+                  ...rest
+              }: ItemProps & React.HTMLProps<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> }) {
+    const id = useId()
+    return (
+        <div
+            ref={ref}
+            role="option"
+            id={id}
+            aria-selected={active}
+            {...rest}
+            className={cn("cursor-default p-2", active ? "bg-blue-200" : index % 2 === 0 ? "" : "bg-slate-100")}
+        >
+            {children}
+        </div>
+    )
+}
+
+export interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+    /** The size of the textarea element */
+    inputSize?: "sm" | "md" | "lg"
+    value?: string
+    /** List of suggestions to display */
+    datalist?: string[]
+    /** Callback when the value changes */
+    onListChange: (value: string | undefined) => void
+    /** Additional className for the list container */
+    listClassName?: string
+}
+
+/**
+ * A textarea with autocomplete dropdown functionality
+ */
+export function BlobInputList({
+                                  inputSize = "md",
+                                  value,
+                                  className,
+                                  datalist = [],
+                                  placeholder,
+                                  onListChange,
+                                  listClassName,
+                                  ...other
+                              }: BlobInputListProps) {
+    const [open, setOpen] = useState(false)
+    const [inputValue, setInputValue] = useState(value)
+    const [activeIndex, setActiveIndex] = useState<number | null>(null)
+
+    useEffect(() => {
+        setInputValue(value)
+    }, [value])
+
+    const listRef = useRef<Array<HTMLElement | null>>([])
+
+    const { x, y, refs, strategy, context } = useFloating<HTMLTextAreaElement>({
+        whileElementsMounted: autoUpdate,
+        open,
+        onOpenChange: setOpen,
+        middleware: [
+            size({
+                apply({ rects, availableHeight, elements }) {
+                    Object.assign(elements.floating.style, {
+                        width: `${rects.reference.width}px`,
+                        maxHeight: `${availableHeight}px`,
+                    })
+                },
+                padding: 10,
+            }),
+        ],
+    })
+
+    const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
+        useRole(context, { role: "listbox" }),
+        useDismiss(context),
+        useListNavigation(context, {
+            listRef,
+            activeIndex,
+            onNavigate: setActiveIndex,
+            virtual: true,
+            loop: true,
+        }),
+    ])
+
+    function onChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+        const value = event.target.value
+        setInputValue(value)
+
+        if (value) {
+            setOpen(true)
+            setActiveIndex(0)
+        } else {
+            setOpen(false)
+        }
+
+        onListChange(value)
+    }
+
+    const items = inputValue ? datalist.filter((item) => item.toLowerCase().includes(inputValue.toLowerCase())) : datalist
+
+    const sizeClasses = {
+        sm: "text-sm p-1.5",
+        md: "text-base p-2",
+        lg: "text-lg p-3",
+    }
+
+    return (
+        <>
+      <textarea
+          className={cn(
+              "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+              sizeClasses[inputSize],
+              className,
+          )}
+          {...other}
+          {...getReferenceProps({
+              ref: refs.setReference,
+              onChange,
+              value: inputValue,
+              placeholder: placeholder,
+              "aria-autocomplete": "list",
+              onKeyDown(event) {
+                  if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
+                      event.preventDefault()
+                      setInputValue(items[activeIndex])
+                      onListChange(items[activeIndex])
+                      setActiveIndex(null)
+                      setOpen(false)
+                  }
+              },
+              onPointerDown() {
+                  setOpen(true)
+              },
+          })}
+      />
+
+            <FloatingPortal>
+                {open && items.length > 0 && (
+                    <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
+                        <div
+                            {...getFloatingProps({
+                                ref: refs.setFloating,
+                                className: cn(
+                                    "z-50 bg-white border border-slate-200 shadow-md rounded-md overflow-y-auto",
+                                    listClassName,
+                                ),
+                                style: {
+                                    position: strategy,
+                                    left: x ?? 0,
+                                    top: y ?? 0,
+                                },
+                            })}
+                        >
+                            {items.map((item, index) => (
+                                <Item
+                                    key={item}
+                                    index={index}
+                                    {...getItemProps({
+                                        ref(node) {
+                                            listRef.current[index] = node
+                                        },
+                                        onClick() {
+                                            setInputValue(item)
+                                            onListChange(item)
+                                            setOpen(false)
+                                        },
+                                    })}
+                                    active={activeIndex === index}
+                                >
+                                    {item}
+                                </Item>
+                            ))}
+                        </div>
+                    </FloatingFocusManager>
+                )}
+            </FloatingPortal>
+        </>
+    )
+}
+
 

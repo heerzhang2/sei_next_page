@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { FormField } from "@/components/shub"
-import { MemoDatesInput } from "@/components/chub"
+import {BlobInputList, MemoDatesInput} from "@/components/chub"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -47,6 +47,9 @@ export default function MemoDatesExample() {
     if (!formData.meetingNotes.trim()) {
       newErrors.meetingNotes = "会议记录是必填项"
     }
+    if (!formData.projectDeadlines.trim()) {
+      newErrors.projectDeadlines = "会议projectDeadlines必填项"
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -62,7 +65,23 @@ export default function MemoDatesExample() {
       console.log("提交的数据:", jsonData)
     }
   }
-
+  const sampleData = [
+    "Apple",
+    "Banana",
+    "Cherry",
+    "Durian",
+    "Elderberry",
+    "Fig",
+    "Grape",
+    "Honeydew",
+    "Kiwi",
+    "Lemon",
+    "Mango",
+    "Orange",
+    "Papaya",
+    "Raspberry",
+    "Strawberry",
+  ]
   return (
     <div className="container mx-auto py-8 px-4">
       <Card className="w-full max-w-4xl mx-auto">
@@ -84,14 +103,14 @@ export default function MemoDatesExample() {
                 />
               </FormField>
 
-              <FormField id="projectDeadlines" label="项目截止日期" error={errors.projectDeadlines}>
-                <MemoDatesInput
-                  id="projectDeadlines"
-                  value={formData.projectDeadlines}
-                  onChange={(value) => handleChange("projectDeadlines", value)}
-                  rows={4}
-                  placeholder="输入项目截止日期"
-                  dateInputWidth="8rem"
+              <FormField id="projectDeadlines" label="项目截止日期" required  error={errors.projectDeadlines}>
+                <BlobInputList
+                    id="projectDeadlines"
+                    value={formData.projectDeadlines}
+                    onListChange={(value) => handleChange("projectDeadlines", value)}
+                    datalist={sampleData}
+                    placeholder="Type to search fruits..."
+                    rows={4}
                 />
               </FormField>
             </div>
