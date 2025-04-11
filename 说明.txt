@@ -423,3 +423,25 @@ http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/1.1#1.
                                 </FormField>
                          </div>
               </form>
+<InputLine key={i} label={labelStr}>
+<SelectInput value={(inp?.[tago.name!]) ?? ''}  list={l}
+         onChange={e => setInp({ ...inp, [tago.name!]: e.currentTarget.value||undefined }) }/>
+</InputLine>;
+
+<FormField id="department" key={i} label={labelStr} required error={errors.[tago.name!]}>
+                                                <Select value={formData.[tago.name!]} onValueChange={(value) => handleChange(tago.name!, value)}>
+                                                    <SelectTrigger id="department" aria-invalid={!!errors.[tago.name!]}>
+                                                        <SelectValue placeholder="选择vv部门" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        { l.map((item, i:number)=> {
+                                                            return <SelectItem  key={i} value={item}>{item}</SelectItem>
+                                                        })}
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormField>
+
+                                    return <InputLine key={i} label={labelStr}>
+                                            <SelectHookfork value={(inp?.[tago.name!]) ?? ''} onChange={e => {
+                                                setInp({ ...inp, [tago.name!]: e.currentTarget.value || undefined}); }} />
+                                        </InputLine>;

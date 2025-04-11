@@ -9,6 +9,10 @@ import {Column_Setting} from "./useFormatOmni";
 import {MemoDateInput, MemoDatesInput} from "../../comp/base";
 import {CollapsibleFormSection, LineColumn} from "@/components/chub";
 import {FormField} from "@/components/shub";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {useState} from "react";
+import {CardFooter} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
 
 //检验项目的标准化展示组件, 多了2列”工作见证，确认方式“
 interface Props  extends React.HTMLAttributes<HTMLDivElement>{
@@ -64,6 +68,16 @@ const innerRender=(inp: any,setInp: React.Dispatch<React.SetStateAction<any>>,zd
         {input}
     </InputLine>;
 }
+
+// 定义表单数据类型： 报告存储字段名字不限定的，类型也不确定。
+export interface FormData {
+    [key: string]: any
+}
+
+// 定义验证错误类型
+export interface FormErrors {
+    [key: string]: string
+}
 /**编辑区：【单一个index=？编辑区域的】 全部项目。  当前editAreasConf[index]是可以动态的。
  * @param editIts   支持是可变的情况: 可能外部需要注入动态的输入列表情况：
     const witnessNos =React.useMemo(() => {
@@ -78,36 +92,69 @@ React.forwardRef((
     { children, show=true, alone=true,editAreasConf,index,refWidth,sureList,editIts,sureD,repId}:Props, ref
 ) => {
     const config=editAreasConf[index];
-    //汇总结论那一列除外：【规矩】结论是生成的就没有存储。
-    const getInpFilter = React.useCallback((par: any) => {
-        let fields={} as any;
-        //配置动态命名的字段获取旧的值，还想保存修改数据，还要界面同步显示变化数值的场景，就按这里做法。
-        config.items?.forEach((tago, i) => {
-            editIts?.forEach(({n, x, m, t, l, z}: Column_Setting, en: number) => {
-                //2个特殊，剩下是常规字段
-                if(n===null) return;
-                else if(!m){
-                    if(tago.name){          //全部都会有的编辑项目；除了纯文本的行；
-                        if(n==='')
-                            fields[tago.name] =par[tago.name];
-                        else
-                            fields[`${tago.name}_`+n]= par[`${tago.name}_`+n];
-                    }
-                }else{
-                    if(!tago.nconcl){       //归并的那一行位置。：普通项目，自拆分最后合并项。
-                        const mergeName=tago.mergName??tago.name;           //itemMergReverseSearch(config, i);
-                        if(mergeName){
-                            fields[`${mergeName}_`+n]= par[`${mergeName}_`+n];
-                        }
-                    }
-                }
-            });
-        });
-        // if(custST) fields=custST(config, par, fields);  特殊： 附加的存储字段
-        // const {见证资料表 }= par;
-        return fields;
-    }, [config,editIts]);
     const {inp, setInp} = useItemInputControl({ ref });
+    const [formData, setFormData] = useState<FormData>({
+        fullName: "",
+        玻璃: "ff",
+        安全带: "",
+        department: "",
+        email: "",
+        agreeToTerms: false,
+    })
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [errors, setErrors] = useState<FormErrors>({})
+    // 处理输入变化
+    const handleChange = (field: keyof FormData, value: string | boolean) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: value,
+        }))
+
+        // 当字段被修改时清除该字段的错误
+        if (errors[field]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev }
+                delete newErrors[field]
+                return newErrors
+            })
+        }
+    }
+    // 验证表单
+    const validateForm = (): boolean => {
+        const newErrors: FormErrors = {}
+        // 必填字段验证
+        if (!formData.安全带.trim()) {
+            newErrors.安全带 = "姓名是必填项"
+        }
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
+    // 处理表单提交
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (validateForm()) {
+            setIsSubmitting(true)
+
+            // 模拟API调用
+            setTimeout(() => {
+                // 这里是您需要的JSON数据
+                const jsonData = JSON.stringify(formData, null, 2)
+                // setJsonResult(jsonData)
+                setIsSubmitting(false)
+
+                // 在实际应用中，您可以在这里调用您的API
+                console.log("提交的数据-调用您的API:", jsonData)
+            }, 1000)
+        } else {
+            // 滚动到第一个错误
+            const firstErrorField = document.querySelector('[aria-invalid="true"]')
+            if (firstErrorField) {
+                firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" })
+            }
+        }
+    }
+
     //【注意】React.useMemo必须将 <LineColumnFlex> 所依赖的变量refWidth作为依赖项之一，否则否则丢失跟踪的目标，否则无法立刻自适应宽度变化。
     const render =React.useMemo(() => {
         let htmlTxts =[] as any[];
@@ -167,14 +214,34 @@ React.forwardRef((
                             tago.name && editIts.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
                                 if(n===null) return null;
                                 else if(n===''){
-                                    if(l) return <InputLine key={i} label={labelStr}>
-                                                <SelectInput value={(inp?.[tago.name!]) ?? ''}  list={l}
-                                                             onChange={e => setInp({ ...inp, [tago.name!]: e.currentTarget.value||undefined }) }/>
-                                            </InputLine>;
-                                    return <InputLine key={i} label={labelStr}>
-                                            <SelectHookfork value={(inp?.[tago.name!]) ?? ''} onChange={e => {
-                                                setInp({ ...inp, [tago.name!]: e.currentTarget.value || undefined}); }} />
-                                        </InputLine>;
+                                    if(l) {
+                                        return <FormField id={tago.name!} key={i} label={labelStr} required error={errors[tago.name!]}>
+                                            <Select value={formData[tago.name!]} onValueChange={(value) => handleChange(tago.name!, value)}>
+                                                <SelectTrigger id={tago.name!} aria-invalid={!!errors[tago.name!]}>
+                                                    <SelectValue placeholder="选择其中一项" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    { l.map((item, i:number)=> {
+                                                        return <SelectItem  key={i} value={item}>{item}</SelectItem>
+                                                    })}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormField>;
+                                    }
+                                    return <FormField id={tago.name!} key={i} label={labelStr} required error={errors[tago.name!]}>
+                                        <Select value={formData[tago.name!]} onValueChange={(value) => handleChange(tago.name!, value)}>
+                                            <SelectTrigger id={tago.name!} aria-invalid={!!errors[tago.name!]}>
+                                                <SelectValue placeholder="选单项的结论" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value={'√'}>合格</SelectItem>
+                                                <SelectItem value={'▽'}>见证确认</SelectItem>
+                                                <SelectItem value={'／'}>无此项</SelectItem>
+                                                <SelectItem value={'×'}>不合格</SelectItem>
+                                                <SelectItem value={'△'}>无法检测</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormField>;
                                 }
                                 else if(!m){
                                     return innerRender(inp,setInp,editIts[i],i, tago.name!,undefined,refWidth);
@@ -202,9 +269,20 @@ React.forwardRef((
 
         return  htmlTxts;
     }, [config,inp,setInp, editIts]);
+//errors,
 
     return  <CollapsibleFormSection title={`${config.name??config.tag}`} defaultOpen={show}>
-        {render}
+        <form onSubmit={handleSubmit}>
+            {render}
+            <CardFooter className="flex justify-end space-x-4 border-t p-6">
+                <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+                    重置
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "提交中..." : "提交表单"}
+                </Button>
+            </CardFooter>
+        </form>
     </CollapsibleFormSection>;
 
     // <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
