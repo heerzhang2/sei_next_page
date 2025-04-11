@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
+CSS的container-type: inline-size;是容器查询（Container Queries）的核心特性之一：避免副作用的多一次刷新页面，不需要辅助的js代码。@container (width >= 32rem) {columns: 2;}
 * */
 
 interface FormFieldProps {
