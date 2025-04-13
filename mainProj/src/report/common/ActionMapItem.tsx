@@ -125,7 +125,7 @@ React.forwardRef((
         const newErrors: FormErrors = {}
         // 必填字段验证
         if (!formData.安全带.trim()) {
-            newErrors.安全带 = "姓名是必填项"
+            newErrors.安全带 = "安全带结果-是必填项"
         }
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
@@ -289,7 +289,9 @@ React.forwardRef((
                                         </FormField>;
                                     }
                                     return <FormField id={tago.name!} key={i} label={labelStr} required error={errors[tago.name!]}>
-                                        <Select value={formData[tago.name!]} onValueChange={(value) => handleChange(tago.name!, value)}>
+                                        <Select value={formData[tago.name!]} onValueChange={(value) => handleChange(tago.name!, value)}
+                                                aria-invalid={!!errors[tago.name!]}
+                                        >
                                             <SelectTrigger id={tago.name!} aria-invalid={!!errors[tago.name!]}>
                                                 <SelectValue placeholder="选单项的结论" />
                                             </SelectTrigger>
