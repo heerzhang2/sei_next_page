@@ -114,8 +114,6 @@ export default function AdvancedForm() {
         setIsSubmitting(false)
     }
 
-    const fieldName="cheshi试1"
-
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -283,7 +281,7 @@ export default function AdvancedForm() {
                         </div>
                     </div>
 
-
+                    {dynamicFields.map((fieldName) => (
                         <FormField
                             key={fieldName}
                             control={form.control}
@@ -298,7 +296,7 @@ export default function AdvancedForm() {
                                 </FormItem>
                             )}
                         />
-
+                    ))}
                 </div>
 
                 <Button type="submit" disabled={isSubmitting}>
