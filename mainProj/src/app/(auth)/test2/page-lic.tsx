@@ -16,7 +16,7 @@ import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@
 
 export default function FormExample() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  // 动态合并基础schema和动态字段fullSchema:不能假如表单中不存在但是验证报错的字段，否则提交不会出错全都没提示的。
+  // 动态合并基础schema和动态字段
   const fullSchema = z.object({
     fullName: z.string().min(2, { message: "姓名至少需要2个字符" }),
     email: z.string().email({ message: "请输入有效的电子邮件地址" }),
@@ -96,16 +96,15 @@ export default function FormExample() {
           </CardHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-              <CardContent className="space-y-6 @container">
-               <h3 className="text-lg font-medium">基本信息</h3>
-
-                <div  className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4" >
+              <CardContent className="space-y-6">
+                <h3 className="text-lg font-medium">基本信息</h3>
+                <LineColumn width={300}>
                    <FormField
                         key={'fullName'}
                         control={form.control}
                         name={'fullName' as any}
                         render={({ field }) => (
-                            <FormItem className="w-full break-inside-avoid">
+                            <FormItem className="w-full">
                               <FormLabel>fullName</FormLabel>
                               <FormControl    className="w-full">
                                 <Input type='text' placeholder={ `Enter fullName`} {...field}
@@ -120,7 +119,7 @@ export default function FormExample() {
                         control={form.control}
                         name={"address" as any}
                         render={({ field }) => (
-                            <FormItem className="w-full break-inside-avoid">
+                            <FormItem className="w-full">
                                 <FormLabel>地---址</FormLabel>
                                 <FormControl>
                                     <Textarea
@@ -138,7 +137,7 @@ export default function FormExample() {
                       control={form.control}
                       name={"department" as any}
                       render={({ field }) => (
-                          <FormItem className="w-full break-inside-avoid">
+                          <FormItem className="w-full">
                             <FormLabel>"部门"</FormLabel>
                             <FormControl>
                               <Select onValueChange={field.onChange} defaultValue={field.value} >
@@ -158,12 +157,13 @@ export default function FormExample() {
                           </FormItem>
                       )}
                   />
+
                     <FormField
                         key={"email"}
                         control={form.control}
                         name={"email" as any}
                         render={({ field }) => (
-                            <FormItem className="w-full break-inside-avoid">
+                            <FormItem className="w-full">
                                 <FormLabel>邮箱</FormLabel>
                                 <FormControl>
                                     <Input type="email" placeholder={`Enter 邮箱`} {...field} />
@@ -177,7 +177,7 @@ export default function FormExample() {
                       control={form.control}
                       name={"importantDates" as any}
                       render={({ field }) => (
-                          <FormItem className="w-full break-inside-avoid">
+                          <FormItem className="w-full">
                             <FormLabel>重要日期www</FormLabel>
                             <FormControl>
                               <MemoDatesInput   {...field}
@@ -190,23 +190,28 @@ export default function FormExample() {
                           </FormItem>
                       )}
                   />
-                    <FormField
-                        key={"急联人"}
-                        control={form.control}
-                        name={"急联人" as any}
-                        render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                    <FormLabel>紧急联系人 我同意所有条款和条件</FormLabel>
-                                    <FormMessage />
-                                </div>
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                </LineColumn>
+
+                <h3 className="text-lg font-medium pt-4">其他信息</h3>
+                <LineColumn width={300}>
+                  <FormField
+                      key={"急联人"}
+                      control={form.control}
+                      name={"急联人" as any}
+                      render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>紧急联系人 我同意所有条款和条件</FormLabel>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                      )}
+                  />
+
+                </LineColumn>
 
                 {jsonResult && (
                     <div className="mt-6 p-4 bg-gray-50 rounded-md">
