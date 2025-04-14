@@ -447,3 +447,233 @@ http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/1.1#1.
                                         </InputLine>;
 AI模型可以理解PDF结构并生成修改指令，但这需要：- 文件上传和下载的接口- 文件处理的后端系统- PDF文件修改的执行环境;=代理服务能力，并非模型的原生能力？
 考虑到检验项目较多、需要保持一致性，我认为*您当前的配置模型方法是更合适的*，尽管它对AI工具不够友好。
+<BlobInputList onListChange={function (value: string | undefined): void {
+                                throw new Error("Function not implemented 1.");
+                            }} id={`${namepr}_` + n} datalist={["项目1","项目2"]} rows={z ?? 2}  {...field}  />
+<FormField
+            key={`${namepr}_`+n}
+            control={form.control}
+            name={`${namepr}_`+n  as any}
+            render={({ field }) => (
+                <FormItem className="w-full break-inside-avoid">
+                    <FormLabel>{label??x}</FormLabel>
+                    <FormControl className="w-full">
+                        <InputDatalist onListChange={} id={`${namepr}_` + n} datalist={["项目1","项目2"]}  {...field}  />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+<FormField
+        key={`${namepr}_`+n}
+        control={form.control}
+        name={`${namepr}_`+n  as any}
+        render={({ field }) => (
+            <FormItem className="w-full break-inside-avoid">
+                <FormLabel>{label??x}</FormLabel>
+                <FormControl className="w-full">
+                    <BlobInputList onListChange={} id={`${namepr}_` + n} datalist={["项目1","项目2"]} rows={z ?? 2}  {...field}  />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+        )}
+    />
+
+
+"use client"
+
+import { useState, useEffect, forwardRef } from "react"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+
+// 方案二：修改自定义组件以兼容 react-hook-form
+
+// InputDatalist 组件
+export interface InputDatalistProps {
+  id?: string
+  name?: string
+  value?: string
+  placeholder?: string
+  datalist?: string[]
+  onChange?: (value: string) => void
+  onBlur?: () => void
+  onListChange?: (value: string) => void // 保留原有接口以兼容旧代码
+}
+
+export const InputDatalist = forwardRef<HTMLInputElement, InputDatalistProps>(
+  ({ id, name, value = "", placeholder, datalist = [], onChange, onBlur, onListChange, ...props }, ref) => {
+    const [showList, setShowList] = useState(false)
+    const [inputValue, setInputValue] = useState(value)
+
+    // 同步外部 value 变化
+    useEffect(() => {
+      setInputValue(value)
+    }, [value])
+
+    // 处理输入变化
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value
+      setInputValue(newValue)
+
+      // 同时调用两个回调函数
+      if (onChange) onChange(newValue)
+      if (onListChange) onListChange(newValue)
+    }
+
+    // 处理选择列表项
+    const handleSelectItem = (item: string) => {
+      setInputValue(item)
+      setShowList(false)
+
+      // 同时调用两个回调函数
+      if (onChange) onChange(item)
+      if (onListChange) onListChange(item)
+    }
+
+    return (
+      <div className="relative w-full">
+        <Input
+          ref={ref}
+          id={id}
+          name={name}
+          value={inputValue}
+          placeholder={placeholder}
+          onChange={handleInputChange}
+          onBlur={() => {
+            setTimeout(() => setShowList(false), 200)
+            if (onBlur) onBlur()
+          }}
+          onFocus={() => setShowList(true)}
+          {...props}
+        />
+
+        {showList && datalist.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+            {datalist.map((item, index) => (
+              <div
+                key={index}
+                className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                onMouseDown={(e) => {
+                  e.preventDefault() // 防止触发 onBlur
+                  handleSelectItem(item)
+                }}
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+)
+
+InputDatalist.displayName = "InputDatalist"
+
+// BlobInputList 组件
+export interface BlobInputListProps {
+  id?: string
+  name?: string
+  value?: string
+  placeholder?: string
+  datalist?: string[]
+  rows?: number
+  onChange?: (value: string) => void
+  onBlur?: () => void
+  onListChange?: (value: string) => void // 保留原有接口以兼容旧代码
+}
+
+export const BlobInputList = forwardRef<HTMLTextAreaElement, BlobInputListProps>(
+  ({ id, name, value = "", placeholder, datalist = [], rows = 2, onChange, onBlur, onListChange, ...props }, ref) => {
+    const [showList, setShowList] = useState(false)
+    const [inputValue, setInputValue] = useState(value)
+
+    // 同步外部 value 变化
+    useEffect(() => {
+      setInputValue(value)
+    }, [value])
+
+    // 处理输入变化
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newValue = e.target.value
+      setInputValue(newValue)
+
+      // 同时调用两个回调函数
+      if (onChange) onChange(newValue)
+      if (onListChange) onListChange(newValue)
+    }
+
+    // 处理选择列表项
+    const handleSelectItem = (item: string) => {
+      setInputValue(item)
+      setShowList(false)
+
+      // 同时调用两个回调函数
+      if (onChange) onChange(item)
+      if (onListChange) onListChange(item)
+    }
+
+    return (
+      <div className="relative w-full">
+        <Textarea
+          ref={ref}
+          id={id}
+          name={name}
+          value={inputValue}
+          placeholder={placeholder}
+          rows={rows}
+          onChange={handleInputChange}
+          onBlur={() => {
+            setTimeout(() => setShowList(false), 200)
+            if (onBlur) onBlur()
+          }}
+          onFocus={() => setShowList(true)}
+          {...props}
+        />
+
+        {showList && datalist.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+            {datalist.map((item, index) => (
+              <div
+                key={index}
+                className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                onMouseDown={(e) => {
+                  e.preventDefault() // 防止触发 onBlur
+                  handleSelectItem(item)
+                }}
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+)
+
+BlobInputList.displayName = "BlobInputList"
+
+// 导出其他组件
+export const MemoDateInput = forwardRef<HTMLInputElement, any>((props, ref) => {
+  // 实现 MemoDateInput 组件
+  return <Input type="date" ref={ref} {...props} />
+})
+
+MemoDateInput.displayName = "MemoDateInput"
+        else if(t==='B')
+            return <FormField
+                key={`${namepr}_`+n}
+                control={form.control}
+                name={`${namepr}_`+n  as any}
+                render={({ field }) => (
+                    <FormItem className="w-full break-inside-avoid">
+                        <FormLabel>{label??x}</FormLabel>
+                        <FormControl className="w-full">
+                            <BlobInputList id={`${namepr}_` + n} datalist={["项目1", "项目2"]} rows={z ?? 2} {...field}  />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        else if(t==='l' && l)

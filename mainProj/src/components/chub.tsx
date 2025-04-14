@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useId, useState, useRef, useEffect } from "react"
+import React, { useId, useState, useRef, useEffect, ChangeEventHandler } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
@@ -291,9 +291,10 @@ export interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTex
     /** List of suggestions to display */
     datalist?: string[]
     /** Callback when the value changes */
-    onListChange: (value: string | undefined) => void
+    onListChange?: (value: string | undefined) => void
     /** Additional className for the list container */
     listClassName?: string
+    onChange?: ChangeEventHandler<HTMLTextAreaElement>;      // (value: string) => void
 }
 
 /**
@@ -306,6 +307,7 @@ export function BlobInputList({
                                   datalist = [],
                                   placeholder,
                                   onListChange,
+                                  onChange,
                                   listClassName,
                                   ...other
                               }: BlobInputListProps) {
@@ -348,18 +350,25 @@ export function BlobInputList({
         }),
     ])
 
-    function onChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
-        const value = event.target.value
-        setInputValue(value)
-
-        if (value) {
-            setOpen(true)
-            setActiveIndex(0)
-        } else {
-            setOpen(false)
+    // 处理输入变化
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newValue = e.target.value
+        setInputValue(newValue)
+        // 同时调用两个回调函数
+        if (onChange) { // @ts-ignore
+            onChange(newValue)
         }
+        if (onListChange) onListChange(newValue)
+    }
 
-        onListChange(value)
+    // 处理选择列表项
+    const handleSelectItem = (item: string) => {
+        setInputValue(item)
+        // 同时调用两个回调函数
+        if (onChange) { // @ts-ignore
+            onChange(item)
+        }
+        if (onListChange) onListChange(item)
     }
 
     const items = inputValue ? datalist.filter((item) => item.toLowerCase().includes(inputValue.toLowerCase())) : datalist
@@ -381,7 +390,7 @@ export function BlobInputList({
           {...other}
           {...getReferenceProps({
               ref: refs.setReference,
-              onChange,
+              onChange: handleInputChange,
               value: inputValue,
               placeholder: placeholder,
               "aria-autocomplete": "list",
@@ -389,7 +398,9 @@ export function BlobInputList({
                   if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
                       event.preventDefault()
                       setInputValue(items[activeIndex])
-                      onListChange(items[activeIndex])
+                      if (onListChange) {
+                          onListChange(items[activeIndex])
+                      }
                       setActiveIndex(null)
                       setOpen(false)
                   }
@@ -426,8 +437,7 @@ export function BlobInputList({
                                             listRef.current[index] = node
                                         },
                                         onClick() {
-                                            setInputValue(item)
-                                            onListChange(item)
+                                            handleSelectItem(item)
                                             setOpen(false)
                                         },
                                     })}
@@ -465,10 +475,11 @@ export function InputDatalist({
                                   onListChange,
                                   value,
                                   onChange,
+                                  id,
                                   ...other
                               }: InputDatalistProps) {
     const [inputValue, setInputValue] = useState(value || "")
-    const uid = useId()
+    const uid =id;      //useId()避免不会记住用户输入文字
     const listId = `list-${uid}`
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -478,7 +489,6 @@ export function InputDatalist({
         if (onChange) {
             onChange(e)
         }
-
         if (onListChange) {
             onListChange(newValue)
         }

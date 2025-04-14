@@ -3,13 +3,20 @@ import {useItemInputControl,} from "../common/base";
 import {RecordOmniArea} from "../common/omni";
 import {Column_Setting} from "./useFormatOmni";
 import {BlobInputList, CollapsibleFormSection, InputDatalist, MemoDateInput, MemoDatesInput} from "@/components/chub";
-import {FormField} from "@/components/shub";
+// import {FormField} from "@/components/shub";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {useState} from "react";
-import {CardFooter} from "@/components/ui/card";
+import {CardContent, CardFooter} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
+import {z} from "zod";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import {Textarea} from "@/components/ui/textarea";
+import {Checkbox} from "@/components/ui/checkbox";
 
+//推荐 name={`${namepr}.${n}` as any}
 //检验项目的标准化展示组件, 多了2列”工作见证，确认方式“
 interface Props  extends React.HTMLAttributes<HTMLDivElement>{
     editAreasConf: RecordOmniArea[];
@@ -102,117 +109,151 @@ React.forwardRef((
         email: "",
         agreeToTerms: false,
     })
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [errors, setErrors] = useState<FormErrors>({})
+    // 动态合并基础schema和动态字段fullSchema:不能假如表单中不存在但是验证报错的字段，否则提交不会出错全都没提示的。
+    const fullSchema = z.object({
+        // fullName: z.string().min(2, { message: "姓名至少需要2个字符" }),
+        // email: z.string().email({ message: "请输入有效的电子邮件地址" }),
+        // department: z.string().min(1, { message: "请选择一个部门的" }),
+        // bio: z.string().optional(),
+        // 急联人: z.boolean().refine((val) => val === true, {
+        //     message: "您必须同意条款和条件",
+        // }),
+        // price: z.string().optional(),
+        // // 中文字段名示例
+        // 测试字段1: z.string().optional(),
+        乘人结构: z.string().optional(),
+        乘人结构_D: z.string().optional(),
+    })
+    const defaultValues={
+        fullName: "",
+        email: "",
+        phone: "",
+        department: "",
+        position: "",
+        startDate: "",
+        salary: "",
+        employmentType: "",
+        address: "",
+        急联人: "",
+        importantDates: "项目A截止 2023-06-15\n项目B开始 2023-07-01",
+        skills: "",
+    }
     // 处理输入变化
     const handleChange = (field: keyof FormData, value: any) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
         }))
-
-        // 当字段被修改时清除该字段的错误
-        if (errors[field]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev }
-                delete newErrors[field]
-                return newErrors
-            })
-        }
     }
-    // 验证表单
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors = {}
-        // 必填字段验证
-        if (!formData.安全带.trim()) {
-            newErrors.安全带 = "安全带结果-是必填项"
-        }
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
-    }
+    const form = useForm<z.infer<typeof fullSchema>>({
+        resolver: zodResolver(fullSchema),
+        defaultValues: defaultValues as any,
+    })
     // 处理表单提交
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-
-        if (validateForm()) {
-            setIsSubmitting(true)
-
-            // 模拟API调用
-            setTimeout(() => {
-                // 这里是您需要的JSON数据
-                const jsonData = JSON.stringify(formData, null, 2)
-                // setJsonResult(jsonData)
-                setIsSubmitting(false)
-
-                // 在实际应用中，您可以在这里调用您的API
-                console.log("提交的数据-调用您的API:", jsonData)
-            }, 1000)
-        } else {
-            // 滚动到第一个错误
-            const firstErrorField = document.querySelector('[aria-invalid="true"]')
-            if (firstErrorField) {
-                firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" })
-            }
-        }
+    async function onSubmit(values: any) {
+        // 这里是您需要的JSON数据
+        const jsonData = JSON.stringify(values, null, 2)
+        console.log("表单值:", jsonData)
+        // 模拟API调用 - form.formState.isSubmitting 会在这个Promise完成后变为false
+        await new Promise((resolve) => setTimeout(resolve, 1000))
     }
     //假如分项报告情况：原来inp:,setInp：是针对局部的存储做修改的。
     //普通输入：    //text
     //支持 t类型：'',B,l,d,C,S;
     const innerRender=(idx:number, namepr:string,label?:string)=>{
         const {n, x, m, t, l, z}=editIts[idx];
-        let input=null;
         if(t==='d')
-            input= <Input
-                id={`${namepr}_`+n}
-                type="date"
-                value={formData[`${namepr}_`+n]}
-                onChange={(e) => handleChange(`${namepr}_`+n, e.target.value)}
-                aria-invalid={!!errors[`${namepr}_`+n]}
+            return  <FormField
+                key={`${namepr}_`+n}
+                control={form.control}
+                name={`${namepr}_`+n  as any}
+                render={({ field }) => (
+                    <FormItem className="w-full break-inside-avoid">
+                        <FormLabel>{label??x}</FormLabel>
+                        <FormControl  className="w-full">
+                            <Input type='date'   {...field}  />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
             />
         else if(t==='B')
-            input= <BlobInputList
-                id={`${namepr}_`+n}
-                value={formData[`${namepr}_`+n]}
-                onListChange={(value) => handleChange(`${namepr}_`+n, value)}
-                datalist={l}
-                rows={z??2}
-                aria-invalid={!!errors[`${namepr}_`+n]}
+            return <FormField
+                key={`${namepr}_`+n}
+                control={form.control}
+                name={`${namepr}_`+n  as any}
+                render={({ field }) => (
+                    <FormItem className="w-full break-inside-avoid">
+                        <FormLabel>{label??x}</FormLabel>
+                        <FormControl className="w-full">
+                            <BlobInputList id={`${namepr}_` + n} datalist={l} rows={z ?? 2}  {...field}  />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
             />
         else if(t==='l' && l)
-            input= <InputDatalist
-                id={`${namepr}_`+n}
-                value={formData[`${namepr}_`+n]}
-                onListChange={(value) => handleChange(`${namepr}_`+n, value)}
-                datalist={l}
-                aria-invalid={!!errors[`${namepr}_`+n]}
+            return <FormField
+                key={`${namepr}_`+n}
+                control={form.control}
+                name={`${namepr}_`+n  as any}
+                render={({ field }) => (
+                    <FormItem className="w-full break-inside-avoid">
+                        <FormLabel>{label??x}</FormLabel>
+                        <FormControl className="w-full">
+                            <InputDatalist id={`${namepr}_` + n}  datalist={l}  {...field}  />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
             />
         else if(t==='C')
-            input= <MemoDateInput
-                id={`${namepr}_`+n}
-                value={formData[`${namepr}_`+n]}
-                onChange={(value) => handleChange(`${namepr}_`+n, value)}
-                width="14rem"  rows={z??2}
-                aria-invalid={!!errors[`${namepr}_`+n]}
+            return  <FormField
+                key={`${namepr}_`+n}
+                control={form.control}
+                name={`${namepr}_`+n  as any}
+                render={({ field }) => (
+                    <FormItem className="w-full break-inside-avoid">
+                        <FormLabel>{label??x}</FormLabel>
+                        <FormControl>
+                            <MemoDateInput  id={`${namepr}_`+n}  {...field}  width="14rem" rows={z??2}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
             />
         else if(t==='S')
-            input= <MemoDatesInput
-                id={`${namepr}_`+n}
-                value={formData[`${namepr}_`+n]}
-                onChange={(value) => handleChange(`${namepr}_`+n, value)}
-                rows={z??2}
-                aria-invalid={!!errors[`${namepr}_`+n]}
+            return  <FormField
+                key={`${namepr}_`+n}
+                control={form.control}
+                name={`${namepr}_`+n  as any}
+                render={({ field }) => (
+                    <FormItem className="w-full break-inside-avoid">
+                        <FormLabel>{label??x}</FormLabel>
+                        <FormControl>
+                            <MemoDatesInput  id={`${namepr}_`+n}  {...field}  rows={z??2}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
             />
         else
-            input= <Input
-                id={`${namepr}_`+n}
-                value={formData[`${namepr}_`+n]}
-                onChange={(e) => handleChange(`${namepr}_`+n, e.target.value)}
-                size={z}
-                aria-invalid={!!errors[`${namepr}_`+n]}
+            return  <FormField
+                key={`${namepr}_`+n}
+                control={form.control}
+                name={`${namepr}_`+n  as any}
+                render={({ field }) => (
+                    <FormItem className="w-full break-inside-avoid">
+                        <FormLabel>{label??x}</FormLabel>
+                        <FormControl  className="w-full">
+                            <Input type='text'   {...field}  />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
             />;
-        return <FormField id={`${namepr}_`+n} key={idx} label={label??x} error={errors[`${namepr}_`+n]}>
-            {input}
-        </FormField>;
     }
 
     //【注意】React.useMemo必须将 <LineColumnFlex> 所依赖的变量refWidth作为依赖项之一，否则否则丢失跟踪的目标，否则无法立刻自适应宽度变化。
@@ -275,35 +316,55 @@ React.forwardRef((
                                 if(n===null) return null;
                                 else if(n===''){
                                     if(l) {
-                                        return <FormField id={tago.name!} key={i} label={labelStr} required error={errors[tago.name!]}>
-                                            <Select value={formData[tago.name!]} onValueChange={(value) => handleChange(tago.name!, value)}>
-                                                <SelectTrigger id={tago.name!} aria-invalid={!!errors[tago.name!]}>
-                                                    <SelectValue placeholder="选择其中一项" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    { l.map((item, i:number)=> {
-                                                        return <SelectItem  key={i} value={item}>{item}</SelectItem>
-                                                    })}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormField>;
+                                        return <FormField
+                                            key={tago.name!}
+                                            control={form.control}
+                                            name={tago.name! as any}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid">
+                                                    <FormLabel>{labelStr}</FormLabel>
+                                                    <FormControl>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value} >
+                                                            <SelectTrigger  className="w-full">
+                                                                <SelectValue placeholder="选择其中一项" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                { l.map((item, i:number)=> {
+                                                                    return <SelectItem  key={i} value={item}>{item}</SelectItem>
+                                                                })}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />;
                                     }
-                                    return <FormField id={tago.name!} key={i} label={labelStr} required error={errors[tago.name!]}>
-                                        <Select value={formData[tago.name!]} onValueChange={(value) => handleChange(tago.name!, value)}
-                                                aria-invalid={!!errors[tago.name!]}
-                                        >
-                                            <SelectTrigger id={tago.name!} aria-invalid={!!errors[tago.name!]}>
-                                                <SelectValue placeholder="选单项的结论" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value={'√'}>合格</SelectItem>
-                                                <SelectItem value={'▽'}>见证确认</SelectItem>
-                                                <SelectItem value={'／'}>无此项</SelectItem>
-                                                <SelectItem value={'×'}>不合格</SelectItem>
-                                                <SelectItem value={'△'}>无法检测</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormField>;
+                                    return <FormField
+                                        key={tago.name!}
+                                        control={form.control}
+                                        name={tago.name! as any}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                                <FormLabel>{labelStr}</FormLabel>
+                                                <FormControl>
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value} >
+                                                        <SelectTrigger  className="w-full">
+                                                            <SelectValue placeholder="选单项的结论" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value={'√'}>合格</SelectItem>
+                                                            <SelectItem value={'▽'}>见证确认</SelectItem>
+                                                            <SelectItem value={'／'}>无此项</SelectItem>
+                                                            <SelectItem value={'×'}>不合格</SelectItem>
+                                                            <SelectItem value={'△'}>无法检测</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />;
                                 }
                                 else if(!m){
                                     return innerRender(i, tago.name!,undefined);
@@ -330,21 +391,23 @@ React.forwardRef((
         }
 
         return  htmlTxts;
-    }, [config,inp,setInp, errors, editIts]);
+    }, [config,inp,setInp, editIts]);
 
 
     return  <CollapsibleFormSection title={`${config.name??config.tag}`} defaultOpen={show}>
-        <form onSubmit={handleSubmit}>
-            {render}
-            <CardFooter className="flex justify-end space-x-4 border-t p-6">
-                <Button type="button" variant="outline" onClick={() => window.location.reload()}>
-                    重置
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "提交中..." : "提交表单"}
-                </Button>
-            </CardFooter>
-        </form>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                {render}
+                <CardFooter className="flex justify-end space-x-4 border-t p-6">
+                    <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+                        重置
+                    </Button>
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                        {form.formState.isSubmitting ? "提交中..." : "提交表单"}
+                    </Button>
+                </CardFooter>
+            </form>
+        </Form>
     </CollapsibleFormSection>;
 
     // <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
