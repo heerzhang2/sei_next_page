@@ -1,8 +1,7 @@
 "use client"
 
 import React, {useEffect} from "react"
-import { useState } from "react"
-import {LineColumn, MemoDatesInput} from "@/components/chub"
+import { MemoDatesInput} from "@/components/chub"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -15,7 +14,6 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 
 export default function FormExample() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
   // 动态合并基础schema和动态字段fullSchema:不能假如表单中不存在但是验证报错的字段，否则提交不会出错全都没提示的。
   const fullSchema = z.object({
     fullName: z.string().min(2, { message: "姓名至少需要2个字符" }),
@@ -48,45 +46,12 @@ export default function FormExample() {
     resolver: zodResolver(fullSchema),
     defaultValues: defaultValues as any,
   })
-  // 显示JSON结果
-  const [jsonResult, setJsonResult] = useState<string>("")
-  const onSubmit = (values: any) => {
-    console.log("表单值:", values)
-    // 模拟API调用
-    setTimeout(() => {
-      // 这里是您需要的JSON数据
-      const jsonData = JSON.stringify(values, null, 2)
-      setJsonResult(jsonData)
-      setIsSubmitting(false)
-
-      // 在实际应用中，您可以在这里调用您的API
-      console.log("提交的数据:", jsonData)
-    }, 1000)
-    // 这里可以处理表单提交逻辑
-  }
-  //不能加async values）=> { await onSubmit }
-  const handleSubmit =async (values: z.infer<typeof fullSchema>) => {
-    setIsSubmitting(true)
-    try {
-        await onSubmit(values)
-    } finally {
-      setIsSubmitting(false)
+   // 处理表单提交
+    async function onSubmit(values: any) {
+        console.log("表单值:", values)
+        // 模拟API调用 - form.formState.isSubmitting 会在这个Promise完成后变为false
+        await new Promise((resolve) => setTimeout(resolve, 1000))
     }
-  }
-  // 滚动到错误字段
-  useEffect(() => {
-    if (isSubmitting && Object.keys(form.formState.errors).length > 0) {
-      const firstErrorField = document.querySelector('[aria-invalid="true"]')
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" })
-        if (firstErrorField instanceof HTMLElement) {
-          firstErrorField.focus()
-        }
-      }
-      setIsSubmitting(false)
-    }
-  }, [form.formState.errors, isSubmitting])
-
 
   return (
       <div className="container mx-auto py-8 px-4">
@@ -95,7 +60,7 @@ export default function FormExample() {
             <CardTitle className="text-2xl">员工信息表单</CardTitle>
           </CardHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <CardContent className="space-y-6 @container">
                <h3 className="text-lg font-medium">基本信息</h3>
 
@@ -208,19 +173,13 @@ export default function FormExample() {
                     />
                 </div>
 
-                {jsonResult && (
-                    <div className="mt-6 p-4 bg-gray-50 rounded-md">
-                      <h3 className="text-lg font-medium mb-2">提交的JSON数据:</h3>
-                      <pre className="bg-gray-100 p-3 rounded text-sm overflow-auto max-h-60">{jsonResult}</pre>
-                    </div>
-                )}
               </CardContent>
               <CardFooter className="flex justify-end space-x-4 border-t p-6">
                 <Button type="button" variant="outline" onClick={() => window.location.reload()}>
                   重置
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "提交中..." : "提交表单"}
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "提交中..." : "提交表单"}
                 </Button>
               </CardFooter>
             </form>
