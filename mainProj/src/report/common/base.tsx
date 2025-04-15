@@ -393,7 +393,7 @@ export const InspectRecordCollapse: React.FunctionComponent<InspectRecordCollaps
   );
 };
 
-const OriginalDataMutation =gql`
+export const OriginalDataMutation =gql`
     mutation useOriginalDataMutation(
         $id: ID!
         $operationType:Int!

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner" // 导入 sonner 的 toast 函数
+// import { toast } from "@/components/ui/use-toast"
 
 // GraphQL 变更操作
 const SUBMIT_FORM_MUTATION = `
@@ -62,7 +63,7 @@ export default function DynamicForm({ formFields, initialData = {} }) {
   // URQL mutation
   const [mutationResult, executeMutation] = useMutation(SUBMIT_FORM_MUTATION)
   const { fetching, error, data } = mutationResult
-
+  //FormValues直接映射到FormInput字段模型？
   // 表单提交处理
   const onSubmit = async (values: FormValues) => {
     try {
@@ -202,5 +203,65 @@ export default function DynamicForm({ formFields, initialData = {} }) {
         </div>
       )}
     </div>
+  )
+}
+
+
+//
+"use client"
+
+import { Provider, createClient } from "urql"
+import DynamicForm from "./optimized-urql-form"
+
+// 创建 URQL 客户端
+const client = createClient({
+  url: "/api/graphql", // 您的 GraphQL 端点
+})
+
+// 表单字段定义
+const formFields = [
+  {
+    name: "name",
+    label: "姓名",
+    type: "text",
+    required: true,
+  },
+  {
+    name: "email",
+    label: "电子邮件",
+    type: "text",
+    required: true,
+  },
+  {
+    name: "status",
+    label: "状态",
+    type: "select",
+    required: true,
+    options: [
+      { label: "合格", value: "√" },
+      { label: "见证确认", value: "▽" },
+      { label: "无此项", value: "／" },
+      { label: "不合格", value: "×" },
+      { label: "无法检测", value: "△" },
+    ],
+  },
+  // 可以添加更多字段
+]
+
+// 初始数据（可选）
+const initialData = {
+  name: "",
+  email: "",
+  status: "",
+}
+
+export default function FormPage() {
+  return (
+      <Provider value={client}>
+        <div className="container mx-auto py-10">
+          <h1 className="text-2xl font-bold mb-6">动态表单示例</h1>
+          <DynamicForm formFields={formFields} initialData={initialData} />
+        </div>
+      </Provider>
   )
 }
