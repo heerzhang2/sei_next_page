@@ -46,7 +46,8 @@ interface Props  extends React.HTMLAttributes<HTMLDivElement>{
     //报告ID
     repId?: string;
 }
-/**编辑区：【单一个index=？编辑区域的】 全部项目。  当前editAreasConf[index]是可以动态的。
+/**机电impressionismAs项目列表形式的 编辑器：
+ * 编辑区：【单一个index=？编辑区域的】 全部项目。  当前editAreasConf[index]是可以动态的。
  * @param editIts   支持是可变的情况: 可能外部需要注入动态的输入列表情况：
     const witnessNos =React.useMemo(() => {
         return storage.见证表?.map((a:any, i:number) => a && a.no);

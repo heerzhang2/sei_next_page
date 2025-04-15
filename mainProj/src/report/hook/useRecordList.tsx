@@ -1,19 +1,13 @@
-/** @jsxImportSource @emotion/react */
 "use client"
 import * as React from "react";
-import {
-    Button, useReferenceWidth,
-} from "customize-easy-ui-component";
-import {useProjectListAs} from "../common/base";
-import {mergeEditorItemRefs, mergeEditorItemSubRefs} from "../tools";
+import { mergeEditorItemSubRefs} from "../tools";
 import {noOp} from "customize-easy-ui-component/esm/misc/noop";
 import {useThrottle} from "../../hooks/useHelpers";
 import {useSubNestAcion} from "../common/helper";
-import queryString from "query-string";
-import {EditStorageContext, useStorage} from "../StorageContext";
+import { useStorage} from "../StorageContext";
 import {EditorAreaConfig, } from "../common/eHelper";
 import {useSubRepController} from "./useSubRepController";
-
+import {Button} from "@/components/ui";
 
 /**起重监督检验的 范本； 支持分项报告的原始记录
  * */
@@ -176,8 +170,8 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
      <div id="allOrgEdt">
          {recordList}
          { (action==='ALL' || action==='printAll') &&
-             <Button size="lg" intent={'primary'}  disabled ={!ready}
-                     onPress={() =>{
+             <Button size="lg" disabled ={!ready}
+                     onClick={() =>{
                          //按钮“全部已编辑项目一起确认”必须使用ref切配对好才有效的。
                          throttledSetDoConfirmModify!(true);
                      }
@@ -190,4 +184,3 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
 
   return { list };
 }
-

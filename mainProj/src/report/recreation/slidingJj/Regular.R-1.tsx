@@ -1,5 +1,5 @@
 "use client"
-import { useSearchParams } from "next/navigation"
+import { usePathname,useSearchParams,useRouter } from "next/navigation"
 import * as React from "react"
 import { useEffect, useState } from "react"
 import { Button,  useTheme } from "customize-easy-ui-component"
@@ -22,6 +22,8 @@ import {PrintReserveLeast} from "@/components/print-reserve-least";
 export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
     const searchParams = useSearchParams()
     const [formatOriginal, setFormatOriginal] = useState(false)
+    const router = useRouter()
+    const pathname = usePathname()
     useEffect(() => {
         const original = searchParams.get("original")
         setFormatOriginal(!!original)
@@ -36,9 +38,11 @@ export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
                 <Button
                     intent="danger"
                     variant="outline"
-                    onPress={async () => {
-                        // Button action logic here
-                    }}
+                    onClick={() =>{
+                        const url = `${pathname}?${searchParams}`
+                        const toUrl=formatOriginal ? url : url+"original=1";
+                        router.push(toUrl)
+                    } }
                 >
                     {formatOriginal ? "正式报告" : "格式化版原始记录"}
                 </Button>

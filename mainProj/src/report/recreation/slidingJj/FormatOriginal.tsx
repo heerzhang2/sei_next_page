@@ -3,7 +3,6 @@ import * as React from "react";
 import {
     Text, Table, TableBody, TableRow, Cell, CCell, TableHead, useTheme,
 } from "customize-easy-ui-component";
-// import {DirectLink, } from "../../../routing/Link";
 import {RepLink, ReportViewProps,} from "../../common/base";
 import {末尾链接,} from "../../common/rarelyVary";
 import {setupItemAreaRoute} from "./orcIspConfig";
@@ -21,6 +20,7 @@ import {config主技术, tail主技} from "./MainTechnical";
 import {填写须知} from "../../escalator/rarelyVary";
 import {StrainStressVw} from "../waterJj/StrainStress";
 import {AccelerationVw} from "../waterJj/Acceleration";
+import {DirectLink} from "@/routing/Link";
 
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'M',x:'备注',t:'B',m:true},{n:'D',x:'不合格内容',t:'B'}];

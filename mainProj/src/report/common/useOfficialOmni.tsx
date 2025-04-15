@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {CCell,TableRow} from "@/components/flexible-table";
-import {DirectLink} from "../../routing/Link";
+import {DirectLink} from "@/routing/Link";
 import {useMedia} from "use-media";
 import {RecordOmniArea, ItemOmniConfig, resTranslOmni, itemResTransformRpo,} from "../common/omni";
 import {resTranslCm} from "../common/helper";

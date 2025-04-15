@@ -85,7 +85,8 @@ export const OriginalView=
       const oldItCount=recordPrintList.length;
       let prevpos=0;
       for(let p=0; p<oldItCount; p++){
-        if(extendTags.indexOf(recordPrintList[p].itemArea)>=0){     //需要展开 扩充的标签
+          //机电常用的会遇到：规定好的标签记号： 关键的标签匹配 extendTags：[ 'Item', ]
+        if(extendTags.indexOf(recordPrintList[p].itemArea)>=0){
             routeAreas=routeAreas.concat(recordPrintList.slice(prevpos,p));
             const itemConfigs= impressionismAs?.[recordPrintList[p].itemArea];
             let seq = 0;
@@ -96,6 +97,7 @@ export const OriginalView=
                                                     index={x} sureD editIts={config记录} />;
               moreItems.push(createItem(area.tag, rowHead));
             });
+            //机电impressionismAs项目列表形式的，需要展开 扩充的标签 createItem('Item', null),
             routeAreas=routeAreas.concat(moreItems);
             prevpos=p+1;
         }
