@@ -1,6 +1,8 @@
 //人工加上的： 避免太罗嗦了import;
 // 重新导出所有 UI 组件
 // Select 组件
+import {Switch} from "@/components/ui/switch";
+
 export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
 
 // Card 组件
@@ -46,3 +48,5 @@ export { Label } from "./label"
 // } from "./dropdown-menu"
 
 // 添加您使用的其他组件...
+export { Switch } from "./switch"
+

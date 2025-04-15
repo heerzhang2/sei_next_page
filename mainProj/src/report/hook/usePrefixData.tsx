@@ -1,21 +1,32 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-    BlobInputList,  CheckSwitch, Input, InputDatalist, InputLine, LineColumn, SuffixInput,  Text, TextArea,
+      InputLine,
 } from "customize-easy-ui-component";
-import {CCell, FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
+import {
+    BlobInputList,
+    InputDatalist,
+} from "@/components/chub";
+import {
+    Input, Switch
+} from "@/components/ui";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui"
+import {CCell, TableRow} from "@/components/flexible-table";
 import {CCellUnit, } from "../common/base";
+import type { UseFormReturn } from "react-hook-form"
 
 /**给usePrefixDataTable配套的， 2排编辑器。 【缺点】只能最多支持2排的布局的。支持配置方式的pr:""前缀列。不支持直接拆分的。 不支持分项报告；
  * 对比（useThreeColumnView、）它是支持直接拆分支持3排的布局；
  * 类似设备概况的：支持'_$'开头的字段：无需编辑输入的配置情形。
  * @param config  范式模型配置; 基础配置统一为[desc, name, cb] 3元组合的。
- * @param itemA  外部需要的在inp体现字段。
+ * @param itemA  外部需要的在inp体现字段。  inp:any,setInp:React.Dispatch<React.SetStateAction<any>>,
+ *预定义编辑器的render回调 cb.edit(inp, setInp) 也必需要修改了： cb.edit(form: UseFormReturn<any, any, any>)
  * */
-export const usePrefixDataEdit= ({ config,inp,setInp,itemA }  :{ config:any[][][], inp:any,setInp:React.Dispatch<React.SetStateAction<any>>,itemA?:string[]}
+export const usePrefixDataEdit= ({ config,itemA, form }  :
+                             {  config:any[][][], itemA?:string[], form: UseFormReturn<any, any, any> }
 ) => {
     //surveyItems: 2大列布局映射成： 统一1个列表的。 编辑器没有考虑左边还是右边的那一列位置关系。
-    const [surveyItems, itemAnew] = React.useMemo(() => {
+    const [surveyItems,] = React.useMemo(() => {
         const surveyItems = [] as any;          //原本布局2排或1排的，需首先转为正常的1排列表，若desc有前缀的首先预处理！
         let oldPref1='';
         let oldPref2='';
@@ -38,15 +49,8 @@ export const usePrefixDataEdit= ({ config,inp,setInp,itemA }  :{ config:any[][][
             if (typeof name2 === 'string' && name2 && !name2.startsWith('_$')) surveyItems.push({name: name2, desc: desc2, cb: cb2});
             else if (typeof name2 === 'object' && name2.n && !name2.r && !name2.n.startsWith('_$')) surveyItems.push({name: name2.n, desc: desc2, cb: cb2, type: name2.t, unit: name2.u, list: name2.l});
         });
-        const itemA设备概况: string[] =itemA? [ ...itemA] : [];
-        //初始化 存储字段
-        surveyItems.forEach(({name,cb}: any, i: number) => {
-            if(cb?.names)   itemA设备概况.push(...cb?.names);
-            else  itemA设备概况.push(name);
-        });
-        return [surveyItems, itemA设备概况];
+        return [surveyItems,];
     }, [config,itemA]);
-
     //正常的每一行都独立 布局； 若一个序号多个小项目的：可能遭遇太过拥挤情况。
     const render= React.useMemo(() =>
         {
@@ -54,8 +58,9 @@ export const usePrefixDataEdit= ({ config,inp,setInp,itemA }  :{ config:any[][][
             const lastAiObj=surveyItems[surveyItems.length-1];
             const isMemoLast= lastAiObj?.type==='m';
             const toTailNodes: React.ReactNode[]=[];         //支持有些DOM溢出移动到了<LineColumn外部做布局的。 cb?.{toTail, edit};
+            //这里假定上层表单<form >有设置 @container 样式。
          return <>
-             <LineColumn column={4}>
+             <div className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
                  {
                      surveyItems.map(({name, desc:orgDesc, cb, type, unit, list}: any, i: number) => {
                          if(isMemoLast && (surveyItems.length-1)===i)  return null;
@@ -66,74 +71,133 @@ export const usePrefixDataEdit= ({ config,inp,setInp,itemA }  :{ config:any[][][
                          else desc=orgDesc;
                          if (cb?.edit) {
                              if(!cb?.toTail)
-                                 return <React.Fragment key={i}>{ cb.edit(inp, setInp) }</React.Fragment>;
+                                 return <React.Fragment key={i}>{ cb.edit(form) }</React.Fragment>;
                              else{
                                  const aNode=<React.Fragment key={i}>
-                                     <Text>{cb?.toTail}：</Text>
-                                     { cb.edit(inp, setInp) }
+                                     <h6>{cb?.toTail}：</h6>
+                                     { cb.edit(form) }
                                  </React.Fragment>;
                                  toTailNodes.push(aNode);
                                  return null;
                              }
-                         } else if (type === 'l') return <InputLine key={i} label={desc}>
-                             {unit ? <div css={{display: 'inline-flex', alignItems: 'center'}}>
-                                     <InputDatalist value={(inp?.[name]) || ''} datalist={list}
-                                            onListChange={v => setInp({...inp, [name]: v || undefined})}/>{unit}
-                                 </div>
-                                 :
-                                 <InputDatalist value={(inp?.[name]) || ''} datalist={list}
-                                        onListChange={v => setInp({...inp, [name]: v || undefined})}/>
-                             }
-                         </InputLine>;
-                         else if (type === 'd') return <InputLine key={i} label={desc}>
-                             <Input value={inp?.[name] || ''} type='date'
-                                    onChange={e => setInp({...inp, [name]: e.currentTarget.value})}/>
-                         </InputLine>;
-                         else if (type === 'b') return <InputLine key={i} label={desc}>
-                             <CheckSwitch checked={inp?.[name] || false}
-                                          onChange={e => setInp({...inp, [name]: inp?.[name] ? undefined : true})}/>
-                         </InputLine>;
-                         else if (type === 'B') return <InputLine key={i} label={desc}>
-                             {unit ? <div css={{display: 'inline-flex', alignItems: 'center'}}>
-                                     <BlobInputList value={inp?.[name] || ''} datalist={list}
-                                                    onListChange={v => setInp({...inp, [name]: v || undefined})}/>{unit}
-                                     </div>
-                                     :
-                                 <BlobInputList value={inp?.[name] || ''} datalist={list}
-                                                onListChange={v => setInp({...inp, [name]: v || undefined})}/>
-                             }
-                         </InputLine>;
-                         else if (type === 'm') return <div key={i}>{desc}:
-                             <TextArea value={inp?.[name] || ''} rows={4}
-                                       onChange={e => setInp({...inp, [name]: e.currentTarget.value || undefined})}/>
-                         </div>;
+                         } else if (type === 'l') return <FormField
+                                         key={name}
+                                         control={form.control}
+                                         name={name  as any}
+                                         render={({ field }) => (
+                                             <FormItem className="pt-2 w-full break-inside-avoid">
+                                                 <FormLabel>{desc}</FormLabel>
+                                                 <FormControl className="w-full">
+                                                     <InputDatalist id={name}  datalist={list} unit={unit}  {...field}  />
+                                                 </FormControl>
+                                                 <FormMessage />
+                                             </FormItem>
+                                         )}
+                                     />;
+                         else if (type === 'd') return <FormField
+                                             key={name}
+                                             control={form.control}
+                                             name={name  as any}
+                                             render={({ field }) => (
+                                                 <FormItem className="pt-2 w-full break-inside-avoid">
+                                                     <FormLabel>{desc}</FormLabel>
+                                                     <FormControl  className="w-full">
+                                                         <Input type='date'   {...field}  />
+                                                     </FormControl>
+                                                     <FormMessage />
+                                                 </FormItem>
+                                             )}
+                                         />;
+                         else if (type === 'b') return <FormField
+                                         key={name}
+                                         control={form.control}
+                                         name={name  as any}
+                                         render={({ field }) => (
+                                             <FormItem className="pt-2 w-full break-inside-avoid">
+                                                 <FormLabel>{desc}</FormLabel>
+                                                 <FormControl  className="w-full">
+                                                     <Switch   {...field}  />
+                                                 </FormControl>
+                                                 <FormMessage />
+                                             </FormItem>
+                                         )}
+                                     />;
+                         else if (type === 'B') return <FormField
+                                         key={name}
+                                         control={form.control}
+                                         name={name  as any}
+                                         render={({ field }) => (
+                                             <FormItem className="pt-2 w-full break-inside-avoid">
+                                                 <FormLabel>{desc}</FormLabel>
+                                                 <FormControl className="w-full">
+                                                     <BlobInputList id={name} datalist={list} unit={unit}  {...field}  />
+                                                 </FormControl>
+                                                 <FormMessage />
+                                             </FormItem>
+                                         )}
+                                     />;
+                         else if (type === 'm') return <FormField
+                                             key={name}
+                                             control={form.control}
+                                             name={name  as any}
+                                             render={({ field }) => (
+                                                 <FormItem className="pt-2 w-full break-inside-avoid">
+                                                     <FormLabel>{desc}:</FormLabel>
+                                                     <FormControl  className="w-full">
+                                                         <Textarea rows={4}  {...field} />
+                                                     </FormControl>
+                                                     <FormMessage />
+                                                 </FormItem>
+                                             )}
+                                         />;
                          else if (unit) return <InputLine key={i} label={desc}>
-                             <SuffixInput value={inp?.[name] || ''}
-                                          onSave={txt => setInp({...inp, [name]: txt || undefined})}
-                                          type={type === 'n' ? "number" : undefined}>{unit}</SuffixInput>
+                             <h6>{desc}：</h6>
+                             {/*<SuffixInput value={inp?.[name] || ''}*/}
+                             {/*             onSave={txt => setInp({...inp, [name]: txt || undefined})}*/}
+                             {/*             type={type === 'n' ? "number" : undefined}>{unit}</SuffixInput>*/}
                          </InputLine>;
-                         else return <InputLine label={desc + `:`} key={i}>
-                                 <Input value={inp?.[name] || ''} type={type === 'n' ? "number" : undefined}
-                                        onChange={e => {
-                                            setInp({...inp, [name]: e.currentTarget.value || undefined});
-                                        }}/>
-                             </InputLine>;
+                         else return <FormField
+                                 key={name}
+                                 control={form.control}
+                                 name={name  as any}
+                                 render={({ field }) => (
+                                     <FormItem className="pt-2 w-full break-inside-avoid">
+                                         <FormLabel>{desc + `:`}</FormLabel>
+                                         <FormControl  className="w-full">
+                                             <Input type={type === 'n' ? "number" : undefined}   {...field}  />
+                                         </FormControl>
+                                         <FormMessage />
+                                     </FormItem>
+                                 )}
+                             />;
                      })
                  }
-             </LineColumn>
+             </div>
              {toTailNodes}
              { isMemoLast && <>
                  {lastAiObj.desc}:
-                 <TextArea value={inp?.[lastAiObj.name] || ''} rows={5}
-                           onChange={e => setInp({...inp, [lastAiObj.name]: e.currentTarget.value || undefined})}/>
+                 <FormField
+                     key={lastAiObj.name}
+                     control={form.control}
+                     name={lastAiObj.name  as any}
+                     render={({ field }) => (
+                         <FormItem className="pt-2 w-full break-inside-avoid">
+                             <FormLabel></FormLabel>
+                             <FormControl  className="w-full">
+                                 <Textarea rows={5}  {...field} />
+                             </FormControl>
+                             <FormMessage />
+                         </FormItem>
+                     )}
+                 />
              </>
              }
         </>;
         }
-        ,[surveyItems,inp,setInp]);
+        ,[surveyItems]);
 
     //状态控制部分useItemInputControl({ref})等需要上一级组件一起公用的，所以拆分穿插掉。需要返回itemObservation给上级组件
-  return [render, itemAnew] as any;     //注意类型匹配！
+  return [render] as any;     //注意类型匹配！
 }
 
 // export type AdditionalCc = {

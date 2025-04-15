@@ -300,6 +300,7 @@ export interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTex
     /** Additional className for the list container */
     listClassName?: string
     onChange?: ChangeEventHandler<HTMLTextAreaElement>;      // (value: string) => void
+    unit?: any;
 }
 
 /**
@@ -314,6 +315,7 @@ export function BlobInputList({
                                   onListChange,
                                   onChange,
                                   listClassName,
+                                  unit,
                                   ...other
                               }: BlobInputListProps) {
     const [open, setOpen] = useState(false)
@@ -385,37 +387,37 @@ export function BlobInputList({
     }
 
     return (
-        <>
-      <textarea
-          className={cn(
-              "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-              sizeClasses[inputSize],
-              className,
-          )}
-          {...other}
-          {...getReferenceProps({
-              ref: refs.setReference,
-              onChange: handleInputChange,
-              value: inputValue,
-              placeholder: placeholder,
-              "aria-autocomplete": "list",
-              onKeyDown(event) {
-                  if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
-                      event.preventDefault()
-                      setInputValue(items[activeIndex])
-                      if (onListChange) {
-                          onListChange(items[activeIndex])
+        <div className="inline-flex items-center">
+          <textarea
+              className={cn(
+                  "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                  sizeClasses[inputSize],
+                  className,
+              )}
+              {...other}
+              {...getReferenceProps({
+                  ref: refs.setReference,
+                  onChange: handleInputChange,
+                  value: inputValue,
+                  placeholder: placeholder,
+                  "aria-autocomplete": "list",
+                  onKeyDown(event) {
+                      if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
+                          event.preventDefault()
+                          setInputValue(items[activeIndex])
+                          if (onListChange) {
+                              onListChange(items[activeIndex])
+                          }
+                          setActiveIndex(null)
+                          setOpen(false)
                       }
-                      setActiveIndex(null)
-                      setOpen(false)
-                  }
-              },
-              onPointerDown() {
-                  setOpen(true)
-              },
-          })}
-      />
-
+                  },
+                  onPointerDown() {
+                      setOpen(true)
+                  },
+              })}
+          />
+          {unit}
             <FloatingPortal>
                 {open && items.length > 0 && (
                     <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
@@ -455,7 +457,7 @@ export function BlobInputList({
                     </FloatingFocusManager>
                 )}
             </FloatingPortal>
-        </>
+        </div>
     )
 }
 
@@ -469,6 +471,7 @@ export interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputE
     datalist?: string[]
     /** Callback when the value changes */
     onListChange?: (value: string) => void
+    unit?: any;
 }
 
 export function InputDatalist({
@@ -481,6 +484,7 @@ export function InputDatalist({
                                   value,
                                   onChange,
                                   id,
+                                  unit,
                                   ...other
                               }: InputDatalistProps) {
     const [inputValue, setInputValue] = useState(value || "")
@@ -506,7 +510,7 @@ export function InputDatalist({
     }
 
     return (
-        <div className={cn("text-left", fullWidth ? "w-full" : "w-auto")} style={style}>
+        <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
             <datalist id={listId}>
                 {datalist.map((option, i) => (
                     <option key={i} value={option} />
@@ -525,6 +529,7 @@ export function InputDatalist({
                 list={listId}
                 {...other}
             />
+            {unit}
         </div>
     )
 }

@@ -11,7 +11,7 @@ import {useStorage} from "../../StorageContext";
 import {itemA技术见证} from "../../elevator/stest/editor";
 import {itemA结论} from "../waterJj/Conclusion";
 import {EachObserveConfig} from "../../hook/useObserve";
-import {施工许可证子项选} from "../../tower/craneJj/orcBase";
+import {daL改造内容, 操纵方式选, 施工许可证子项选} from "../../tower/craneJj/orcBase";
 import {config主技术} from "./MainTechnical";
 import {itemA应变应力} from "../waterJj/StrainStress";
 import {itemA加速} from "../waterJj/Acceleration";
@@ -47,6 +47,7 @@ export const config设备概况 = [
     [['现场检验条件',{r:'见附录D'}]],
     [['下次定期检验日期', '_$新下检日'], ],
     [['检验依据',{r:'《大型游乐设施安全技术规程》（TSG 71-2023）'}]],
+    [['承载人uu数', '额定乘2t','人'], ['施工-大uu名称',{n:'大修4单',t:'l',u:'人',l: 操纵方式选}] ],
 ];
 
 export const config观测数据 : ((orc: any) => EachObserveConfig[][])=(orc: any)=>{
