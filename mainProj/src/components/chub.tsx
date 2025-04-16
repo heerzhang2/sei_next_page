@@ -290,8 +290,6 @@ function Item({
 }
 
 export interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-    /** The size of the textarea element */
-    inputSize?: "sm" | "md" | "lg"
     value?: string
     /** List of suggestions to display */
     datalist?: string[]
@@ -307,7 +305,6 @@ export interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTex
  * A textarea with autocomplete dropdown functionality
  */
 export function BlobInputList({
-                                  inputSize = "md",
                                   value,
                                   className,
                                   datalist = [],
@@ -380,18 +377,11 @@ export function BlobInputList({
 
     const items = inputValue ? datalist.filter((item) => item.toLowerCase().includes(inputValue.toLowerCase())) : datalist
 
-    const sizeClasses = {
-        sm: "text-sm p-1.5",
-        md: "text-base p-2",
-        lg: "text-lg p-3",
-    }
-
     return (
         <div className="inline-flex items-center">
           <textarea
               className={cn(
                   "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-                  sizeClasses[inputSize],
                   className,
               )}
               {...other}
@@ -461,72 +451,31 @@ export function BlobInputList({
     )
 }
 
-
-export interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement> {
-    /** The size of the input element */
-    inputSize?: "sm" | "md" | "lg"
+interface SuffixInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     /** Whether the input should take full width */
     fullWidth?: boolean
-    /** List of suggestions to display */
-    datalist?: string[]
-    /** Callback when the value changes */
-    onListChange?: (value: string) => void
-    unit?: any;
+    unit: any;
 }
 
-export function InputDatalist({
-                                  inputSize = "md",
+export function SuffixInput({
                                   fullWidth = true,
-                                  datalist = [],
                                   className,
                                   style,
-                                  onListChange,
                                   value,
                                   onChange,
-                                  id,
                                   unit,
                                   ...other
-                              }: InputDatalistProps) {
-    const [inputValue, setInputValue] = useState(value || "")
-    const uid =id;      //useId()避免不会记住用户输入文字
-    const listId = `list-${uid}`
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value
-        setInputValue(newValue)
-
-        if (onChange) {
-            onChange(e)
-        }
-        if (onListChange) {
-            onListChange(newValue)
-        }
-    }
-
-    const sizeClasses = {
-        sm: "h-8 text-sm px-2",
-        md: "h-10 text-base px-3",
-        lg: "h-12 text-lg px-4",
-    }
-
+                              }: SuffixInputProps) {
     return (
         <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
-            <datalist id={listId}>
-                {datalist.map((option, i) => (
-                    <option key={i} value={option} />
-                ))}
-            </datalist>
-
             <input
                 className={cn(
                     "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-                    sizeClasses[inputSize],
                     fullWidth ? "w-full" : "w-auto",
                     className,
                 )}
-                value={inputValue}
-                onChange={handleChange}
-                list={listId}
+                value={value}
+                onChange={onChange}
                 {...other}
             />
             {unit}
@@ -667,3 +616,66 @@ export function ClearableSelect({
         </div>
     )
 }
+
+interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    /** Whether the input should take full width */
+    fullWidth?: boolean
+    /** List of suggestions to display */
+    datalist?: string[]
+    /** Callback when the value changes */
+    onListChange?: (value: string) => void
+    unit?: any;
+}
+
+export function InputDatalist({
+                                  fullWidth = true,
+                                  datalist = [],
+                                  className,
+                                  style,
+                                  onListChange,
+                                  value,
+                                  onChange,
+                                  id,
+                                  unit,
+                                  ...other
+                              }: InputDatalistProps) {
+    const [inputValue, setInputValue] = useState(value || "")
+    const uid =id;      //useId()避免不会记住用户输入文字
+    const listId = `list-${uid}`
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value
+        setInputValue(newValue)
+
+        if (onChange) {
+            onChange(e)
+        }
+        if (onListChange) {
+            onListChange(newValue)
+        }
+    }
+
+    return (
+        <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
+            <datalist id={listId}>
+                {datalist.map((option, i) => (
+                    <option key={i} value={option} />
+                ))}
+            </datalist>
+
+            <input
+                className={cn(
+                    "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                    fullWidth ? "w-full" : "w-auto",
+                    className,
+                )}
+                value={inputValue}
+                onChange={handleChange}
+                list={listId}
+                {...other}
+            />
+            {unit}
+        </div>
+    )
+}
+

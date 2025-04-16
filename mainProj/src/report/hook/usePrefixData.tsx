@@ -1,26 +1,21 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-      InputLine,
-} from "customize-easy-ui-component";
-import {
-    BlobInputList,
-    InputDatalist,
-} from "@/components/chub";
-import {
-    Input, Switch
-} from "@/components/ui";
+import { BlobInputList,InputDatalist,SuffixInput,} from "@/components/chub";
+import {Input, Switch} from "@/components/ui";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui"
 import {CCell, TableRow} from "@/components/flexible-table";
+
 import {CCellUnit, } from "../common/base";
 import type { UseFormReturn } from "react-hook-form"
 
+
 /**给usePrefixDataTable配套的， 2排编辑器。 【缺点】只能最多支持2排的布局的。支持配置方式的pr:""前缀列。不支持直接拆分的。 不支持分项报告；
  * 对比（useThreeColumnView、）它是支持直接拆分支持3排的布局；
- * 类似设备概况的：支持'_$'开头的字段：无需编辑输入的配置情形。
- * @param config  范式模型配置; 基础配置统一为[desc, name, cb] 3元组合的。
+ * 类似设备概况的：支持'_$'开头的字段：无需编辑输入的配置情形。`
+ * @param config  范式模型配置; 基础配置统一为[desc, name, cb] 3元组合的。`
  * @param itemA  外部需要的在inp体现字段。  inp:any,setInp:React.Dispatch<React.SetStateAction<any>>,
  *预定义编辑器的render回调 cb.edit(inp, setInp) 也必需要修改了： cb.edit(form: UseFormReturn<any, any, any>)
+ * 【注意】上级定义样式 @container ；
  * */
 export const usePrefixDataEdit= ({ config,itemA, form }  :
                              {  config:any[][][], itemA?:string[], form: UseFormReturn<any, any, any> }
@@ -54,7 +49,6 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
     //正常的每一行都独立 布局； 若一个序号多个小项目的：可能遭遇太过拥挤情况。
     const render= React.useMemo(() =>
         {
-            //若有 备注 必须配置在最后一个的。
             const lastAiObj=surveyItems[surveyItems.length-1];
             const isMemoLast= lastAiObj?.type==='m';
             const toTailNodes: React.ReactNode[]=[];         //支持有些DOM溢出移动到了<LineColumn外部做布局的。 cb?.{toTail, edit};
@@ -99,7 +93,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                              control={form.control}
                                              name={name  as any}
                                              render={({ field }) => (
-                                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:row-span-3 h-60">
+                                                 <FormItem className="pt-2 w-full break-inside-avoid">
                                                      <FormLabel>{desc}</FormLabel>
                                                      <FormControl  className="w-full">
                                                          <Input type='date'   {...field}  />
@@ -141,7 +135,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                              control={form.control}
                                              name={name  as any}
                                              render={({ field }) => (
-                                                 <FormItem className="pt-2 w-full break-inside-avoid">
+                                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
                                                      <FormLabel>{desc}:</FormLabel>
                                                      <FormControl  className="w-full">
                                                          <Textarea rows={4}  {...field} />
@@ -150,12 +144,20 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                                  </FormItem>
                                              )}
                                          />;
-                         else if (unit) return <InputLine key={i} label={desc}>
-                             <h6>{desc}：</h6>
-                             {/*<SuffixInput value={inp?.[name] || ''}*/}
-                             {/*             onSave={txt => setInp({...inp, [name]: txt || undefined})}*/}
-                             {/*             type={type === 'n' ? "number" : undefined}>{unit}</SuffixInput>*/}
-                         </InputLine>;
+                         else if (unit) return <FormField
+                                         key={name}
+                                         control={form.control}
+                                         name={name  as any}
+                                         render={({ field }) => (
+                                             <FormItem className="pt-2 w-full break-inside-avoid">
+                                                 <FormLabel>{desc}：</FormLabel>
+                                                 <FormControl className="w-full">
+                                                     <SuffixInput id={name}  unit={unit}  {...field}  />
+                                                 </FormControl>
+                                                 <FormMessage />
+                                             </FormItem>
+                                         )}
+                                     />;
                          else return <FormField
                                  key={name}
                                  control={form.control}
@@ -195,9 +197,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
         </>;
         }
         ,[surveyItems]);
-
-    //状态控制部分useItemInputControl({ref})等需要上一级组件一起公用的，所以拆分穿插掉。需要返回itemObservation给上级组件
-  return [render] as any;     //注意类型匹配！
+  return [render];
 }
 
 // export type AdditionalCc = {

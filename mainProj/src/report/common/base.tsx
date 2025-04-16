@@ -1038,11 +1038,11 @@ export const CCellUnit= ( {unit, children, colSpan,rowSpan} : {unit:any, childre
 export const RepLink= ( {rep, children, tag, ori} : {rep:any, children:React.ReactNode, tag:string,ori?:boolean}
 ) => {
     if(ori)
-        return <DirectLink  href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${tag}?original=1#${tag}`}>
+        return <DirectLink  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1#${tag}`}>
             {children}
         </DirectLink>;
     else
-        return <DirectLink  href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${tag}#${tag}`}>
+        return <DirectLink  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}#${tag}`}>
             {children}
         </DirectLink>;
 };

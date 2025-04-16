@@ -1,36 +1,26 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {Text,} from "customize-easy-ui-component";
-import {InspectRecordLayout, InternalItemProps, OriginalDataMutation, useItemInputControl,} from "../common/base";
-import {useMeasureInpFilter} from "../common/hooks";
+import {InternalItemProps, OriginalDataMutation, } from "../common/base";
 import {usePrefixDataEdit} from "../hook/usePrefixData";
 import {CollapsibleFormSection} from "@/components/chub";
 import {Button, CardFooter, Form} from "@/components/ui";
 import {useForm} from "react-hook-form";
 import {z as zod, z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {Column_Setting} from "@/report/common/useFormatOmni";
 import {useStorage} from "@/report/StorageContext";
 import {useMutation} from "@urql/next";
 import {toast} from "sonner";
 
 interface Props  extends InternalItemProps{
     label: string;
-    nos?: string;
-    titles?: any[];    //可能是Node[]，不一定纯粹string;  可变的多个标题编码的。
-    zjuse?: number;     //最末尾的注释的文本使用那一段话？可选择办法的。
-    memolist?: string[];        //备注 输入的列表
-    witnlist?: string[];        //见证 输入的列表
     config?: any[];
     itemA?:string[];
 }
 /**资料审查主体  config={config资料审查}
+ * ？？ 分项报告情况还未考虑：！》  nestMd={nestMd} redId={redId}
  * */
 export const DeviceSurveyD = ({
                                   children, show, alone = true, redId, nestMd, label, config,itemA,rep
                               }: Props) => {
-        // const {inp, setInp} = useItemInputControl({ref});
-        // const [getInpFilter] = useMeasureInpFilter(null, itemA,);
     // 创建动态 schema
     const fullSchema = React.useMemo(() => {
         const schemaFields = {} as any;
@@ -76,9 +66,7 @@ export const DeviceSurveyD = ({
         resolver: zodResolver(fullSchema),
         defaultValues: defaultValues as any,
     })
-    const [renderEditor] = usePrefixDataEdit({
-        config: config!,  form
-    });
+    const [renderEditor] = usePrefixDataEdit({config: config!,  form });
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
     // 处理表单提交
     async function onSubmit(values: any) {
@@ -110,7 +98,6 @@ export const DeviceSurveyD = ({
     return <CollapsibleFormSection title={label ?? '一、设备概况'} defaultOpen={show}>
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 @container">
-                <Text variant="h5">{label}：</Text>
                 资料审查设备概况除在台账业务信息中可修改外还需修改的部分:
                 {renderEditor}
                 {children}
@@ -125,11 +112,8 @@ export const DeviceSurveyD = ({
             </form>
         </Form>
     </CollapsibleFormSection>;
-    // <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show} redId={redId}
-    //                                 nestMd={nestMd} alone={alone} label={label ?? '一、设备概况'}>
-    //         <Text variant="h5">{label}：</Text>
-    //         资料审查设备概况除在台账业务信息中可修改外还需修改的部分:
-    //         {renderEditor}
-    //         {children}
-    //     </InspectRecordLayout>;
 };
+
+// <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show} redId={redId}
+//                                 nestMd={nestMd} alone={alone} label={label ?? '一、设备概况'}>
+//     </InspectRecordLayout>;

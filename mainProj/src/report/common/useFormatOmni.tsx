@@ -172,7 +172,7 @@ export const useFormatOmni= ({itRes, ItemArs, rep,config,rcc,dfsz,ltsz,qtsz }
                         }
                     </TableRow>;
                     const rowsBigArea=<React.Fragment key={seq+'_'+n}>
-                        <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${area.tag}?original=1#${area.tag}`}>
+                        <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}?original=1#${area.tag}`}>
                             {itemRowRender}
                         </DirectLink>
                     </React.Fragment>;
