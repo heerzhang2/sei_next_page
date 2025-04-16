@@ -1,7 +1,7 @@
 "use client"
-//人辅助电脑去写代码的
+
 import type * as React from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useFieldArray } from "react-hook-form"
 import type { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button, CardFooter, Form } from "@/components/ui"
@@ -16,8 +16,14 @@ interface UseFormFrameworkProps {
   defaultValues: Record<string, any>
 
   // 接收外部传入的内容渲染函数工厂
-  // 现在接收form作为参数，这样可以使用真实的form对象
-  contentRendererFactory: (form: any) => React.ReactNode
+  // 现在接收form和arrays作为参数，这样可以使用真实的form对象和数组字段控制
+  contentRendererFactory: (form: any, arrays?: Record<string, any>) => React.ReactNode
+
+  // 数组字段配置
+  arrayFields?: {
+    name: string
+    itemTemplate: any
+  }[]
 
   // 其他参数
   rep?: any
@@ -28,6 +34,7 @@ export function useFormFramework({
                                    schema,
                                    defaultValues,
                                    contentRendererFactory,
+                                   arrayFields = [],
                                    rep,
                                    onSubmit: customOnSubmit,
                                  }: UseFormFrameworkProps) {
@@ -37,6 +44,24 @@ export function useFormFramework({
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as any,
+  })
+
+  // 创建数组字段控制器
+  const arrayControls: Record<string, any> = {}
+
+  arrayFields.forEach(({ name }) => {
+    // 为每个数组字段创建 useFieldArray 控制器
+    const { fields, append, remove, move } = useFieldArray({
+      control: form.control,
+      name,
+    })
+
+    arrayControls[name] = {
+      fields,
+      append,
+      remove,
+      move,
+    }
   })
 
   // 设置mutation
@@ -53,12 +78,16 @@ export function useFormFramework({
     console.log("表单值:", JSON.stringify(values, null, 2))
     const { _version, ...RepData } = { ...storage, ...values }
 
-    updateOriginal({
-      id: rep?.id,
-      operationType: 1,
-      version: _version,
-      data: JSON.stringify(RepData),
-    }).then((result) => {
+    const update = async () => {
+      return await updateOriginal({
+        id: rep?.id,
+        operationType: 1,
+        version: _version,
+        data: JSON.stringify(RepData),
+      })
+    }
+
+    update().then((result) => {
       console.log("updateOriginalResult=应答=", result)
       if (result.error) {
         toast.error("保存失败", {
@@ -74,7 +103,7 @@ export function useFormFramework({
   }
 
   // 使用contentRendererFactory创建内容渲染器
-  const contentRenderer = contentRendererFactory(form)
+  const contentRenderer = contentRendererFactory(form, arrayControls)
 
   // 创建渲染函数
   const render = () => (
@@ -82,7 +111,7 @@ export function useFormFramework({
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 @container">
           {contentRenderer}
           <CardFooter className="flex justify-end space-x-4 border-t p-6">
-            <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+            <Button type="button" variant="outline" onClick={() => form.reset()}>
               重置
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
@@ -97,5 +126,6 @@ export function useFormFramework({
     form,
     render,
     handleSubmit,
+    arrayControls,
   }
 }

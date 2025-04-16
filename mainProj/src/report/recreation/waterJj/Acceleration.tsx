@@ -12,7 +12,7 @@ import {z} from "zod";
 import {usePrefixDataEdit} from "@/report/hook/usePrefixData";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
-import {FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
+import {Button, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
 import { BlobInputList,InputDatalist,SuffixInput,} from "@/components/chub";
 import {Input, Switch} from "@/components/ui";
 import {clcOptions} from "@/report/common/ActionMapItem";
@@ -44,6 +44,15 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
         itemA加速.forEach((namecfg) => {
             schemaFields[namecfg] = z.string().optional()
         })
+        config加速度.forEach(([name, title]) => {
+            const schemaTab = {} as any
+            AxyzCfg.forEach(([tag,title]) => {
+                schemaTab[tag] = z.string().optional()
+            })
+            schemaFields[name] = z.array(
+                z.object(schemaTab),
+            )
+        })
         return z.object(schemaFields)
     }, [])
     // 计算默认值
@@ -54,10 +63,19 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
         })
         return fields
     }, [storage])
+    // 3. 定义数组字段配置
+    const arrayFields = [
+        {
+            name: "加速备注",
+            itemTemplate: { 'a': "" },
+        },
+    ]
+
     const regions = Array.from({ length: 5 }, (_, i) => (`区域${i + 1}` ));
-    // 内容渲染器 工厂
     const contentRendererFactory = React.useCallback(
-        (form: any) => {
+        (form: any, arrays: Record<string, any>) => {
+            // 获取设备列表的数组控制器
+            const deviceListArray = arrays["加速备注"]
             return (
                 <>
                     <h5>{label}</h5>
@@ -106,6 +124,36 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                         />
                     </div>
                     <h5>按测量工况分4个项目: 加速度A，单位（g）{'>>'}</h5>
+                    {/* 数组对象字段 */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <FormLabel>设备列表</FormLabel>
+                            <Button type="button" variant="outline" size="sm" onClick={() => deviceListArray.append({ tag: "" })}>
+                                添加设备
+                            </Button>
+                        </div>
+
+                        {deviceListArray.fields.map((item: any, index: number) => (
+                            <div key={item.id} className="flex items-end gap-2">
+                                <FormField
+                                    control={form.control}
+                                    name={`设备列表.${index}.tag`}
+                                    render={({ field }) => (
+                                        <FormItem className="flex-1">
+                                            <FormLabel className="sr-only">设备 {index + 1}</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} placeholder={`设备 ${index + 1} 标签`} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="button" variant="destructive" size="sm" onClick={() => deviceListArray.remove(index)}>
+                                    删除
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
                     <div css={{display: 'flex', margin: 'auto'}}>
                         <div css={{display: 'inline-block', margin: 'auto'}}>
                             {config加速度.map(([name, title], t: number) => {
@@ -221,7 +269,14 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
         },
         [children, ],
     )
-    const { render } = useFormFramework({schema: fullSchema,defaultValues,contentRendererFactory,rep})
+    // const { render } = useFormFramework({schema: fullSchema,defaultValues,contentRendererFactory,rep})
+    const { render } = useFormFramework({
+        schema: fullSchema,
+        defaultValues,
+        contentRendererFactory,
+        arrayFields,
+        rep,
+    })
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
             {render()}
