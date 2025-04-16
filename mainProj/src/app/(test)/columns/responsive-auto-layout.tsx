@@ -11,7 +11,7 @@ export default function ResponsiveAutoLayout() {
     { id: "email", label: "邮箱2", type: "email", size: "small" },
     { id: "phone", label: "电话3", type: "input", size: "small" },
     { id: "address", label: "地址4", type: "input", size: "medium" },
-    { id: "postcode", label: "邮编5", type: "input", size: "small" },
+    { id: "postcode", label: "邮编5", type: "input", size: "smallp" },
     { id: "description", label: "详细描述6", type: "textarea", size: "large" },
     { id: "notifications", label: "接收通知7", type: "switch", size: "small" },
     { id: "newsletter", label: "订阅邮件8", type: "switch", size: "small" },
@@ -29,6 +29,7 @@ export default function ResponsiveAutoLayout() {
             space-y-2 
             ${item.size === "small" ? "w-full" : ""} 
             ${item.size === "smallx" ? "@5xl:col-span-1 @5xl:row-span-3" : ""} 
+            ${item.size === "smallp" ? "@5xl:row-span-3" : ""} 
             ${item.size === "medium" ? "@5xl:col-span-2 @5xl:row-span-1" : ""}
             ${item.size === "large" ? "@5xl:col-span-3 @5xl:row-span-3" : ""}
           `}

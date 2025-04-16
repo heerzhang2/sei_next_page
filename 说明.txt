@@ -1,7 +1,7 @@
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :3000
 CMD \sei_next_page\mainProj>  yarn sei_code_tools --help
 CSS不能直接添加/删除类名，
-
+grid布局对于配置要求很高，一点毛病导致不达到预期。默认1X1行列；@5xl:row-span-3元素其位置前已布局的水平对齐空白区还是会保留的，其后面空间才会紧凑地利用。
 ort { fetchQuery, commitMutation, graphql } from 'relay-runtime';
 import environment from './your-relay-environment'; // 导入你的Relay环境
 import yourQuery from './__generated__/yourQuery.graphql';

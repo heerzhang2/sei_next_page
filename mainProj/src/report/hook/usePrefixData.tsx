@@ -60,7 +60,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
             const toTailNodes: React.ReactNode[]=[];         //支持有些DOM溢出移动到了<LineColumn外部做布局的。 cb?.{toTail, edit};
             //这里假定上层表单<form >有设置 @container 样式。
          return <>
-             <div className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
+             <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
                  {
                      surveyItems.map(({name, desc:orgDesc, cb, type, unit, list}: any, i: number) => {
                          if(isMemoLast && (surveyItems.length-1)===i)  return null;
@@ -99,7 +99,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                              control={form.control}
                                              name={name  as any}
                                              render={({ field }) => (
-                                                 <FormItem className="pt-2 w-full break-inside-avoid">
+                                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:row-span-3 h-60">
                                                      <FormLabel>{desc}</FormLabel>
                                                      <FormControl  className="w-full">
                                                          <Input type='date'   {...field}  />
@@ -127,7 +127,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                          control={form.control}
                                          name={name  as any}
                                          render={({ field }) => (
-                                             <FormItem className="pt-2 w-full break-inside-avoid">
+                                             <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2">
                                                  <FormLabel>{desc}</FormLabel>
                                                  <FormControl className="w-full">
                                                      <BlobInputList id={name} datalist={list} unit={unit}  {...field}  />
