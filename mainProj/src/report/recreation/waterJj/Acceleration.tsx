@@ -1,12 +1,22 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-    Text, TextArea, Input, CCell, Table, TableBody, TableRow, TableHead, Cell, InputLine, BlobInputList, LineColumn, SuffixInput,
+    Text, CCell, Table, TableBody, TableRow, TableHead, Cell,  LineColumn,
 } from "customize-easy-ui-component";
 import {CCellUnit, InspectRecordLayout, InternalItemProps, SelectHookfork, useItemInputControl,} from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {calcAverageArrObj, objNestSet, tableSetInp} from "../../../common/tool";
 import {RepLink} from "../../common/base";
+import {useStorage} from "@/report/StorageContext";
+import {z} from "zod";
+import {usePrefixDataEdit} from "@/report/hook/usePrefixData";
+import {useFormFramework} from "@/report/hook/useFormFramework";
+import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
+import { BlobInputList,InputDatalist,SuffixInput,} from "@/components/chub";
+import {Input, Switch} from "@/components/ui";
+import {clcOptions} from "@/report/common/ActionMapItem";
+
 
 export const config加速度=[ ['加空载','空载'],['加满载','满载'],['加偏载','偏载'],['加他况','其他载荷工况'] ];
 export const tail加速度= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
@@ -25,98 +35,201 @@ config加速度.forEach(([name,title], i:number)=>{
 });
 const AxyzNm = ['a', 'b', 'c', 'd', 'e', 'f'];
 const AxyzCfg=[ ['a','Ax.max'],['b','Ax.min'],['c','Ay.max'],['d','Ay.min'],['e','Az.max'],['f','Az.min'] ];
-export const Acceleration =
-React.forwardRef((
-    {children, show, alone = true, refWidth,label,sseq,stnum=3}: Props, ref
-) => {
-    const [getInpFilter] = useMeasureInpFilter(null, itemA加速,);
-    const {inp, setInp} = useItemInputControl({ ref });
-    return (
-        <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show}
-                             alone={alone} label={label!}>
-            <Text variant="h5">{label}</Text>
-            <LineColumn>
-                <InputLine label='测试位置'>
-                    <BlobInputList value={inp?.加测位 || ''} rows={2}
-                                   onListChange={v => setInp({...inp, 加测位: v || undefined})}/>
-                </InputLine>
-                <InputLine label='风速'>
-                    <SuffixInput value={inp?.加风速 || ''}
-                                 onSave={txt => setInp({...inp, 加风速: txt || undefined})}>m/s</SuffixInput>
-                </InputLine>
-                <InputLine label='采样频率'>
-                    <SuffixInput value={inp?.加采频 || ''}
-                                 onSave={txt => setInp({...inp, 加采频: txt || undefined})}>Hz</SuffixInput>
-                </InputLine>
-            </LineColumn>
-            <Text variant="h5">按测量工况分4个项目: 加速度A，单位（g）{'>>'}</Text>
-            <div css={{display: 'flex', margin: 'auto'}}>
-                <div css={{display: 'inline-block', margin: 'auto'}}>
-                    {config加速度.map(([name, title], t: number) => {
-                        const avv = AxyzNm.map((tag, t: number) => calcAverageArrObj(inp?.[name], (row) => row?.[tag], 1, stnum));
-                        return <React.Fragment key={t}>
-                            <Text variant="h5">{t + 1},&nbsp; {title} :</Text>
-                            {(new Array(stnum)).fill(null).map((_, i: number) => {
-                                let o = inp?.[name]?.[i];
-                                return <div key={i}>
-                                    <Text>&nbsp; {i + 1} 次: </Text>
-                                    {AxyzCfg.map(([tag,title], h: number) => {
-                                        return <React.Fragment key={h}>
-                                            {title}
-                                            <Input value={o?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
-                                                   onChange={e => tableSetInp(name, i, inp, setInp, tag, e.currentTarget.value || undefined)}/>
-                                        </React.Fragment>;
+
+export const Acceleration = ({ children, show, alone = true, redId, nestMd, label, rep,stnum=3 }: Props) => {
+    const { storage } = useStorage()
+    // 创建动态 schema
+    const fullSchema = React.useMemo(() => {
+        const schemaFields = {} as any
+        itemA加速.forEach((namecfg) => {
+            schemaFields[namecfg] = z.string().optional()
+        })
+        return z.object(schemaFields)
+    }, [])
+    // 计算默认值
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        itemA加速.forEach((name) => {
+            fields[name] = storage[name] ?? ""
+        })
+        return fields
+    }, [storage])
+    const regions = Array.from({ length: 5 }, (_, i) => (`区域${i + 1}` ));
+    // 内容渲染器 工厂
+    const contentRendererFactory = React.useCallback(
+        (form: any) => {
+            return (
+                <>
+                    <h5>{label}</h5>
+                    <div className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
+                        <FormField
+                            key={"加测位"}
+                            control={form.control}
+                            name={"加测位"}
+                            render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel>测试位置</FormLabel>
+                                    <FormControl className="w-full">
+                                        <BlobInputList rows={2}  {...field}  />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            key={"加风速"}
+                            control={form.control}
+                            name={"加风速"}
+                            render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel>风速</FormLabel>
+                                    <FormControl className="w-full">
+                                        <SuffixInput  unit={"m/s"}  {...field}  />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            key={"加采频"}
+                            control={form.control}
+                            name={"加采频"}
+                            render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel>采样频率</FormLabel>
+                                    <FormControl className="w-full">
+                                        <SuffixInput  unit={"Hz"}  {...field}  />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    <h5>按测量工况分4个项目: 加速度A，单位（g）{'>>'}</h5>
+                    <div css={{display: 'flex', margin: 'auto'}}>
+                        <div css={{display: 'inline-block', margin: 'auto'}}>
+                            {config加速度.map(([name, title], t: number) => {
+                                const avv = AxyzNm.map((tag, t: number) => calcAverageArrObj(inp?.[name], (row) => row?.[tag], 1, stnum));
+                                return <React.Fragment key={t}>
+                                    <Text variant="h5">{t + 1},&nbsp; {title} :</Text>
+                                    {(new Array(stnum)).fill(null).map((_, i: number) => {
+                                        let o = inp?.[name]?.[i];
+                                        return <div key={i}>
+                                            <Text>&nbsp; {i + 1} 次: </Text>
+                                            {AxyzCfg.map(([tag,title], h: number) => {
+                                                return <React.Fragment key={h}>
+
+                                                    {title}
+                                                    <Input value={o?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
+                                                           onChange={e => tableSetInp(name, i, inp, setInp, tag, e.currentTarget.value || undefined)}/>
+
+                                                </React.Fragment>;
+                                            })}
+                                        </div>;
                                     })}
-                                </div>;
+                                    <Text variant="h6">{title}-平均值：Ax.max= {avv[0]} ,Ax.min= {avv[1]} ,Ay.max= {avv[2]} ,Ay.min= {avv[3]} ,Az.max= {avv[4]} ,Az.min= {avv[5]} ;</Text>
+                                </React.Fragment>;
                             })}
-                            <Text variant="h6">{title}-平均值：Ax.max= {avv[0]} ,Ax.min= {avv[1]} ,Ay.max= {avv[2]} ,Ay.min= {avv[3]} ,Az.max= {avv[4]} ,Az.min= {avv[5]} ;</Text>
-                        </React.Fragment>;
-                    })}
-                </div>
-            </div>
-            <Text variant="h5">判定部分: {'>>'}</Text>
-            <div css={{display: 'flex', margin: 'auto'}}>
-                <div css={{display: 'inline-block', margin: 'auto'}}>
-                    <Text variant="h5">测试结果:</Text>
-                    {AxyzCfg.map(([tag,title], i: number) => {
-                        return <React.Fragment key={i}>
-                            <Text>{title}</Text>
-                            <Input value={inp?.加速试果?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
-                                     onChange={e => objNestSet('加速试果', tag, e.currentTarget.value || undefined, inp, setInp)}/>
-                        </React.Fragment>;
-                    })}
-                    <Text variant="h5">设计值:</Text>
-                    {AxyzCfg.map(([tag,title], i: number) => {
-                        return <React.Fragment key={i}>
-                            <Text>{title}</Text>
-                            <Input value={inp?.加速设值?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
-                                   onChange={e => objNestSet('加速设值', tag, e.currentTarget.value || undefined, inp, setInp)}/>
-                        </React.Fragment>;
-                    })}
-                </div>
-            </div>
-            <LineColumn>
-                <InputLine label='加速度区域' >
-                    <BlobInputList  value={inp?.加速区域 ||''} datalist={[]} rows={2}
-                                    onListChange={v => setInp({ ...inp, 加速区域: v || undefined}) } />
-                </InputLine>
-                <InputLine label='设计加速度区域' >
-                    <BlobInputList  value={inp?.设计加速 ||''} datalist={[]} rows={2}
-                                    onListChange={v => setInp({ ...inp, 设计加速: v || undefined}) } />
-                </InputLine>
-                <InputLine label='结果判定：'>
-                    <SelectHookfork value={inp?.加速结论 ?? ''} onChange={e => {
-                        setInp({...inp, 加速结论: e.currentTarget.value || undefined});
-                    }}/>
-                </InputLine>
-            </LineColumn>
-            备注：
-            <TextArea value={inp?.加速备注 || ''} rows={3}
-                      onChange={e => setInp({...inp, 加速备注: e.currentTarget.value || undefined})}/>
-            {children ?? tail加速度}
-    </InspectRecordLayout>
-    );
-});
+                        </div>
+                    </div>
+                    <h5>判定部分: {'>>'}</h5>
+                    <div css={{display: 'flex', margin: 'auto'}}>
+                        <div css={{display: 'inline-block', margin: 'auto'}}>
+                            <Text variant="h5">测试结果:</Text>
+                            {AxyzCfg.map(([tag,title], i: number) => {
+                                return <React.Fragment key={i}>
+                                    <Text>{title}</Text>
+                                    <Input value={inp?.加速试果?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
+                                           onChange={e => objNestSet('加速试果', tag, e.currentTarget.value || undefined, inp, setInp)}/>
+                                </React.Fragment>;
+                            })}
+                            <Text variant="h5">设计值:</Text>
+                            {AxyzCfg.map(([tag,title], i: number) => {
+                                return <React.Fragment key={i}>
+                                    <Text>{title}</Text>
+                                    <Input value={inp?.加速设值?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
+                                           onChange={e => objNestSet('加速设值', tag, e.currentTarget.value || undefined, inp, setInp)}/>
+                                </React.Fragment>;
+                            })}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
+                        <FormField
+                            key={"加速区域"}
+                            control={form.control}
+                            name={"加速区域"}
+                            render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel>加速度区域</FormLabel>
+                                    <FormControl className="w-full">
+                                        <BlobInputList rows={2} datalist={regions} {...field}  />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            key={"设计加速"}
+                            control={form.control}
+                            name={"设计加速"}
+                            render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel>设计加速度区域</FormLabel>
+                                    <FormControl className="w-full">
+                                        <BlobInputList rows={2}  {...field}  />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            key={"加速结论"}
+                            control={form.control}
+                            name={"加速结论"}
+                            render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel>结果判定</FormLabel>
+                                    <FormControl>
+                                        <ClearableSelect
+                                            field={field}
+                                            options={clcOptions}
+                                            onClear={() => {form.setValue("加速结论", "")}}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            key={"加速备注"}
+                            control={form.control}
+                            name={"加速备注"}
+                            render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                    <FormLabel>备注：</FormLabel>
+                                    <FormControl  className="w-full">
+                                        <Textarea rows={4}  {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    {children ?? tail加速度}
+                </>
+            )
+        },
+        [children, ],
+    )
+    const { render } = useFormFramework({schema: fullSchema,defaultValues,contentRendererFactory,rep})
+    return (
+        <CollapsibleFormSection title={label!} defaultOpen={show}>
+            {render()}
+        </CollapsibleFormSection>
+    )
+}
+
+
 
 export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                                { orc: any, rep: any, label: any, children?: any, stnum?: number }

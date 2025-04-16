@@ -21,6 +21,14 @@ import { Column_Setting } from "./useFormatOmni";
 import {useForm} from "react-hook-form";
 
 
+export const clcOptions = [
+    { label: "合格", value: "√" },
+    { label: "见证确认", value: "▽" },
+    { label: "无此项", value: "／" },
+    { label: "不合格", value: "×" },
+    { label: "无法检测", value: "△" },
+]
+
 //推荐 name={`${namepr}.${n}` as any}
 //检验项目的标准化展示组件, 多了2列”工作见证，确认方式“
 interface Props  extends React.HTMLAttributes<HTMLDivElement>{
@@ -204,7 +212,7 @@ export const ActionMapItem = ({
                     <FormItem className="pt-2 w-full break-inside-avoid">
                         <FormLabel>{label??x}</FormLabel>
                         <FormControl className="w-full">
-                            <BlobInputList id={`${namepr}_` + n} datalist={l} rows={z ?? 2}  {...field}  />
+                            <BlobInputList  datalist={l} rows={z ?? 2}  {...field}  />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -219,7 +227,7 @@ export const ActionMapItem = ({
                     <FormItem className="pt-2 w-full break-inside-avoid">
                         <FormLabel>{label??x}</FormLabel>
                         <FormControl className="w-full">
-                            <InputDatalist id={`${namepr}_` + n}  datalist={l}  {...field}  />
+                            <InputDatalist  datalist={l}  {...field}  />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -234,7 +242,7 @@ export const ActionMapItem = ({
                     <FormItem className="pt-2 w-full break-inside-avoid">
                         <FormLabel>{label??x}</FormLabel>
                         <FormControl>
-                            <MemoDateInput  id={`${namepr}_`+n}  {...field}  width="14rem" rows={z??2}
+                            <MemoDateInput   {...field}  width="14rem" rows={z??2}
                             />
                         </FormControl>
                         <FormMessage />
@@ -250,7 +258,7 @@ export const ActionMapItem = ({
                     <FormItem className="pt-2 w-full break-inside-avoid">
                         <FormLabel>{label??x}</FormLabel>
                         <FormControl>
-                            <MemoDatesInput  id={`${namepr}_`+n}  {...field}  rows={z??2}
+                            <MemoDatesInput   {...field}  rows={z??2}
                             />
                         </FormControl>
                         <FormMessage />
@@ -273,13 +281,6 @@ export const ActionMapItem = ({
                 )}
             />;
     }
-    const clcOptions = [
-        { label: "合格", value: "√" },
-        { label: "见证确认", value: "▽" },
-        { label: "无此项", value: "／" },
-        { label: "不合格", value: "×" },
-        { label: "无法检测", value: "△" },
-    ]
     //【注意】React.useMemo必须将 <LineColumnFlex> 所依赖的变量refWidth作为依赖项之一，否则否则丢失跟踪的目标，否则无法立刻自适应宽度变化。
     const render =React.useMemo(() => {
         let htmlTxts =[] as any[];

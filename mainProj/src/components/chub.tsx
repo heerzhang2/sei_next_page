@@ -303,6 +303,7 @@ export interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTex
 
 /**
  * A textarea with autocomplete dropdown functionality
+ * 若是放入FormItem底下的情况：不要自行去设置id的，不一致；<FormItem会转换的。
  */
 export function BlobInputList({
                                   value,
@@ -573,12 +574,12 @@ export function MemoDateInput({
 export function ClearableSelect({
                              field,
                              options,
-                             placeholder,
+                             placeholder="",
                              onClear,
                          }: {
     field: any
     options: { label: string; value: string }[]
-    placeholder: string
+    placeholder?: string
     onClear: () => void
 }) {
     // 检查是否有选定的值
@@ -626,7 +627,7 @@ interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement>
     onListChange?: (value: string) => void
     unit?: any;
 }
-
+//不要自行去设置id的，<FormItem会转换的。
 export function InputDatalist({
                                   fullWidth = true,
                                   datalist = [],
@@ -672,6 +673,7 @@ export function InputDatalist({
                 value={inputValue}
                 onChange={handleChange}
                 list={listId}
+                id={id}
                 {...other}
             />
             {unit}

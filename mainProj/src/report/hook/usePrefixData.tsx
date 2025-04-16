@@ -82,7 +82,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                              <FormItem className="pt-2 w-full break-inside-avoid">
                                                  <FormLabel>{desc}</FormLabel>
                                                  <FormControl className="w-full">
-                                                     <InputDatalist id={name}  datalist={list} unit={unit}  {...field}  />
+                                                     <InputDatalist  datalist={list} unit={unit}  {...field}  />
                                                  </FormControl>
                                                  <FormMessage />
                                              </FormItem>
@@ -124,7 +124,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                              <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2">
                                                  <FormLabel>{desc}</FormLabel>
                                                  <FormControl className="w-full">
-                                                     <BlobInputList id={name} datalist={list} unit={unit}  {...field}  />
+                                                     <BlobInputList datalist={list} unit={unit}  {...field}  />
                                                  </FormControl>
                                                  <FormMessage />
                                              </FormItem>
@@ -152,7 +152,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                              <FormItem className="pt-2 w-full break-inside-avoid">
                                                  <FormLabel>{desc}：</FormLabel>
                                                  <FormControl className="w-full">
-                                                     <SuffixInput id={name}  unit={unit}  {...field}  />
+                                                     <SuffixInput  unit={unit}  {...field}  />
                                                  </FormControl>
                                                  <FormMessage />
                                              </FormItem>

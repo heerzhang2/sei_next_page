@@ -15,7 +15,7 @@ import {设备概况页} from "../../park/views";
 import {常用现场条件} from "../../park/viewX";
 import {首页设备概况Cr} from "../../crane/bridgeDJ/repView";
 import {UnqualifiedIspTable} from "../../common/general";
-import {InstrumentVw, 测量允许检测, 测量备注三半, 测量备注两半, 测量结果单位} from "../waterJj/repView";
+import {InstrumentVw, 测量允许检测, 测量备注两半, } from "../waterJj/repView";
 import {config主技术, tail主技} from "./MainTechnical";
 import {填写须知} from "../../escalator/rarelyVary";
 import {StrainStressVw} from "../waterJj/StrainStress";
@@ -181,7 +181,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             <AccelerationVw orc={orc} rep={rep}  stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>
             {常用现场条件({orc, rep, config: tItems现场,dcln:5,label:'附录D：现场检验条件确认'})}
         </div>
-        {末尾链接({template:rep?.modeltype,verId, repId: repId||''})}
+        {末尾链接({rep, template:rep?.modeltype,verId, repId: repId||''})}
     </React.Fragment>
   );
 }
