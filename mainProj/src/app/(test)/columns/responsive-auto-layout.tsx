@@ -55,8 +55,9 @@ export default function ResponsiveAutoLayout() {
         return null
     }
   }
-    //【毛病】grid布局对于配置要求很高，不能混淆 一点毛病。否则可能不达到预期。
+    //【毛病】grid布局对于配置要求很高，不能混淆 一点毛病。否则可能不达到预期。【默认】1X1行列的。
     //同一个容器选择因子@xl: 假如预期分配2列的 @xl:grid-cols-2 那么内部元素绝对不能写上分配3列的 @xl:col-span-3的，否则有毛病的！
+    //grid最后一个元素情况： 按钮+ flex ?:也不保证一定占据3列！ 如果按钮父div改成display: contents;居然还会主动拆分为2个列左右上下还会错开的，稀奇了。
   return (
     <div className="p-6 bg-white rounded-lg shadow @container">
       <h2 className="text-xl font-bold mb-4">自动布局表单</h2>
@@ -64,7 +65,7 @@ export default function ResponsiveAutoLayout() {
       <form className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
         {formItems.map(renderFormItem)}
 
-        <div className="@5xl:col-span-3 flex justify-end space-x-2 mt-4">
+        <div className="@xl:grid-cols-2 @5xl:col-span-3 @7xl:grid-cols-4 flex justify-end space-x-2 mt-4">
           <Button variant="outline">取消</Button>
           <Button>提交</Button>
         </div>
@@ -72,4 +73,3 @@ export default function ResponsiveAutoLayout() {
     </div>
   )
 }
-
