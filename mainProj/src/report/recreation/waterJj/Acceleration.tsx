@@ -1,21 +1,20 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-    Text, CCell, Table, TableBody, TableRow, TableHead, Cell,  LineColumn,
+    Text, CCell, Table, TableBody, TableRow, TableHead, Cell,
 } from "customize-easy-ui-component";
-import {CCellUnit, InspectRecordLayout, InternalItemProps, SelectHookfork, useItemInputControl,} from "../../common/base";
-import {useMeasureInpFilter} from "../../common/hooks";
-import {calcAverageArrObj, objNestSet, tableSetInp} from "../../../common/tool";
+import {CCellUnit, InternalItemProps, } from "../../common/base";
+import {calcAverageArrObj, } from "../../../common/tool";
 import {RepLink} from "../../common/base";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
-import {usePrefixDataEdit} from "@/report/hook/usePrefixData";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
-import {Button, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
-import { BlobInputList,InputDatalist,SuffixInput,} from "@/components/chub";
-import {Input, Switch} from "@/components/ui";
+import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
+import { BlobInputList,SuffixInput,} from "@/components/chub";
+import {Input,} from "@/components/ui";
 import {clcOptions} from "@/report/common/ActionMapItem";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 
 
 export const config加速度=[ ['加空载','空载'],['加满载','满载'],['加偏载','偏载'],['加他况','其他载荷工况'] ];
@@ -38,49 +37,102 @@ const AxyzCfg=[ ['a','Ax.max'],['b','Ax.min'],['c','Ay.max'],['d','Ay.min'],['e'
 
 export const Acceleration = ({ children, show, alone = true, redId, nestMd, label, rep,stnum=3 }: Props) => {
     const { storage } = useStorage()
-    // 创建动态 schema
-    const fullSchema = React.useMemo(() => {
+    // 1. 创建动态 schema
+    const schema = React.useMemo(() => {
         const schemaFields = {} as any
+        // 添加普通字段
         itemA加速.forEach((namecfg) => {
             schemaFields[namecfg] = z.string().optional()
         })
-        config加速度.forEach(([name, title]) => {
-            const schemaTab = {} as any
-            AxyzCfg.forEach(([tag,title]) => {
-                schemaTab[tag] = z.string().optional()
-            })
-            schemaFields[name] = z.array(
-                z.object(schemaTab),
-            )
+        const schemaTab = {} as any
+        AxyzNm.forEach((field) => {
+            schemaTab[field] = z.string().optional()
         })
+        // 添加表格字段
+        config加速度.forEach(([name]) => {
+            schemaFields[name] = z.array(z.object(schemaTab))
+        })
+        schemaFields["加速试果"]= z.object(schemaTab)
+        schemaFields["加速设值"]= z.object(schemaTab)
         return z.object(schemaFields)
     }, [])
-    // 计算默认值
+    // 2. 计算默认值
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
+        // 初始化普通字段
         itemA加速.forEach((name) => {
             fields[name] = storage[name] ?? ""
         })
-
-
+        // 初始化表格字段
+        config加速度.forEach(([name]) => {
+            // 从storage中获取数据，如果没有则创建3行空数据
+            const tableData = storage[name] || []
+            // 确保每个表格都有3行数据
+            const rows = []
+            for (let i = 0; i < stnum; i++) {
+                const row = tableData[i] || {}
+                const newRow = {} as any
+                // 确保每行都有所有字段
+                AxyzNm.forEach((field) => {
+                    newRow[field] = row[field] || ""
+                })
+                rows.push(newRow)
+            }
+            fields[name] = rows
+        })
+        // 初始化嵌套对象字段
+        fields["加速试果"] = storage["加速试果"] || {}
+        fields["加速设值"] = storage["加速设值"] || {}
+        // 确保嵌套对象有所有必要的字段
+        AxyzNm.forEach((field) => {
+            if (!fields["加速试果"][field]) fields["加速试果"][field] = ""
+            if (!fields["加速设值"][field]) fields["加速设值"][field] = ""
+        })
         return fields
     }, [storage])
     // 3. 定义数组字段配置
-    const arrayFields = [
-        {
-            name: "加速备注",
-            itemTemplate: { 'a': "" },
-        },
-    ]
+    const arrayFields = React.useMemo(() => {
+        return config加速度.map(([name]) => {
+            // 创建每个字段的空模板
+            const itemTemplate = {} as any
+            AxyzNm.forEach((field) => {
+                itemTemplate[field] = ""
+            })
+            return {
+                name,
+                itemTemplate,
+            }
+        })
+    }, [])
 
     const regions = Array.from({ length: 5 }, (_, i) => (`区域${i + 1}` ));
     const contentRendererFactory = React.useCallback(
-        (form: any, arrays: Record<string, any>) => {
-            // 获取设备列表的数组控制器
-            const deviceListArray = arrays["加速备注"]
+        (form: any, arrays?: Record<string, any>) => {
+            // 确保每个表格都有3行
+            config加速度.forEach(([name]) => {
+                const tableArray = arrays![name]
+                if (tableArray) {
+                    const currentLength = tableArray.fields.length
+                    if (currentLength < stnum) {
+                        // 如果少于3行，添加到3行
+                        const template = {} as any
+                        AxyzNm.forEach((field) => {
+                            template[field] = ""
+                        })
+
+                        for (let i = currentLength; i < stnum; i++) {
+                            tableArray.append(template)
+                        }
+                    } else if (currentLength > stnum) {
+                        // 如果多于3行，删除多余的
+                        for (let i = currentLength - 1; i >= stnum; i--) {
+                            tableArray.remove(i)
+                        }
+                    }
+                }
+            })
             return (
                 <>
-                    <h5>{label}</h5>
                     <div className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
                         <FormField
                             key={"加测位"}
@@ -125,47 +177,121 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             )}
                         />
                     </div>
-                    <h5>按测量工况分4个项目: 加速度A，单位（g）{'>>'}</h5>
-                    {/* 数组对象字段 */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <FormLabel>设备列表</FormLabel>
-                            <Button type="button" variant="outline" size="sm" onClick={() => deviceListArray.append({ tag: "" })}>
-                                添加设备
-                            </Button>
-                        </div>
+                    <span>按测量工况分4个项目: 加速度A，单位（g）{'>>'}</span>
+                    <Tabs defaultValue={config加速度[0][0]} className="w-full ">
+                        <TabsList className="grid" style={{ gridTemplateColumns: `repeat(${config加速度.length}, 1fr)` }}>
+                            {config加速度.map(([name, title]) => (
+                                <TabsTrigger key={name} value={name}>
+                                    {title}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
 
-                        {deviceListArray.fields.map((item: any, index: number) => (
-                            <div key={item.id} className="flex items-end gap-2">
-                                <FormField
-                                    control={form.control}
-                                    name={`设备列表.${index}.tag`}
-                                    render={({ field }) => (
-                                        <FormItem className="flex-1">
-                                            <FormLabel className="sr-only">设备 {index + 1}</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} placeholder={`设备 ${index + 1} 标签`} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <Button type="button" variant="destructive" size="sm" onClick={() => deviceListArray.remove(index)}>
-                                    删除
-                                </Button>
+                        {config加速度.map(([name, title]) => {
+                            const tableArray = arrays![name]
+                            const currentTableData = form.watch(name)
+                            console.log(`当前 ${title} 表格数据:`, currentTableData)
+                            const avv = AxyzNm.map((tag, t: number) => calcAverageArrObj(currentTableData, (row) => row?.[tag], 1, stnum));
+                            return (
+                                <TabsContent key={name} value={name} >
+                                    <Card className="py-1">
+                                        <CardHeader>
+                                            <CardTitle>{title} 加速度测量</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {tableArray?.fields.map((item: any, index: number) => (
+                                                <Card key={item.id} className="p-4 mb-4">
+                                                    <CardContent className="p-0 space-y-4">
+                                                        <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
+                                                            {AxyzCfg.map(([field, fieldTitle]) => (
+                                                                <FormField
+                                                                    key={field}
+                                                                    control={form.control}
+                                                                    name={`${name}.${index}.${field}`}
+                                                                    render={({ field: formField }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel>{`次数 ${index + 1} ${fieldTitle}`}</FormLabel>
+                                                                            <FormControl>
+                                                                                <Input {...formField} placeholder={`请输入${fieldTitle}`} />
+                                                                            </FormControl>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+                                            <Text variant="h6">{title}-平均值：Ax.max= {avv[0]} ,Ax.min= {avv[1]} ,Ay.max= {avv[2]} ,Ay.min= {avv[3]} ,Az.max= {avv[4]} ,Az.min= {avv[5]} ;</Text>
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            )
+                        })}
+                    </Tabs>
+
+                    <Card className="py-1">
+                        <CardHeader>
+                            <CardTitle>判定部分</CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-1">
+                            <div className="flex flex-row gap-1">
+                                <div>
+                                    <h3 className="text-lg font-medium mb-4">测试结果:</h3>
+                                    <div className="flex flex-wrap justify-center gap-1">
+                                        {AxyzCfg.map(([field, fieldTitle]) => (
+                                            <div key={field} className="flex items-center gap-2">
+                                                <span>{fieldTitle}</span>
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`加速试果.${field}`}
+                                                    render={({ field: formField }) => (
+                                                        <FormItem className="mb-0">
+                                                            <FormControl>
+                                                                <Input
+                                                                    {...formField}
+                                                                    className="w-28"
+                                                                    size={5}
+                                                                    style={{ display: "inline-flex", width: "unset" }}
+                                                                />
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-medium mb-4">设计值:</h3>
+                                    <div className="flex flex-wrap justify-center gap-1">
+                                        {AxyzCfg.map(([field, fieldTitle]) => (
+                                            <div key={field} className="flex items-center gap-2">
+                                                <span>{fieldTitle}</span>
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`加速设值.${field}`}
+                                                    render={({ field: formField }) => (
+                                                        <FormItem className="mb-0">
+                                                            <FormControl>
+                                                                <Input
+                                                                    {...formField}
+                                                                    className="w-28"
+                                                                    size={5}
+                                                                    style={{ display: "inline-flex", width: "unset" }}
+                                                                />
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        ))}
-                    </div>
-
-
-
-
-
-
-
-
-
-
+                        </CardContent>
+                    </Card>
 
                     <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
                         <FormField
@@ -215,14 +341,13 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             )}
                         />
                         <FormField
-                            key={"加速备注"}
                             control={form.control}
-                            name={"加速备注"}
+                            name="加速备注"
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
                                     <FormLabel>备注：</FormLabel>
-                                    <FormControl  className="w-full">
-                                        <Textarea rows={4}  {...field} />
+                                    <FormControl className="w-full h-24">
+                                        <Textarea rows={4} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -235,21 +360,13 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
         },
         [children, ],
     )
-    // const { render } = useFormFramework({schema: fullSchema,defaultValues,contentRendererFactory,rep})
-    const { render } = useFormFramework({
-        schema: fullSchema,
-        defaultValues,
-        contentRendererFactory,
-        arrayFields,
-        rep,
-    })
+    const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory, arrayFields, rep})
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
             {render()}
         </CollapsibleFormSection>
     )
 }
-
 
 
 export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:

@@ -160,7 +160,7 @@ export function CollapsibleFormSection({
                     contentClassName,
                 )}
             >
-                <div className="p-4">
+                <div className="px-0 py-2 md:px-2 md:py-4">
                     {children}
 
                     {/* 底部折叠按钮 - 仅在展开状态显示 */}
