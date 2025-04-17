@@ -7,7 +7,7 @@
   "packageManager": "yarn@4.0.1",
   "scripts": {
     "yarn": "yarn",
-    "v0dev/Vercel自带组件添加": "npx shadcn@latest add switch  --overwrite",
+    "v0dev/Vercel自带组件添加": "npx shadcn@latest add table  --overwrite",
     "yarnAdd": "yarn add @types/hash.js --dev",
     "dev正常的": "next dev --turbopack -p 3765",
     "dev需调试服务端": "next dev -p 3765",

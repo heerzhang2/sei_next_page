@@ -4,7 +4,7 @@ import Link from "next/link";
 import Header from "@/component/header";
 import FootBar from "@/component/footbar";
 import {Global} from "@emotion/react";
-import {FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
+import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {useMediaPrint} from "@/hooks/use-media-print";
 import PageSectionOrientation from "@/components/page-section-orientation";
 import NoPageBreak, {PrintTogether} from "@/components/print-together";
@@ -35,12 +35,12 @@ export default function Home() {
           </div>
 
             <FlexibleTable className="w-full" columnWidths={["20%","50%","20%","10%"]}>
-              <TableHead>
+              <TableHeader>
                 <TableRow>
                   <TableCell>编号</TableCell>
                   <TableCell>描述</TableCell><TableCell>结果</TableCell><TableCell>结论</TableCell>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
                 <TableRow>
                   <TableCell className="important-cell " rowSpan={3}>这是一个纯文本内容示例</TableCell>

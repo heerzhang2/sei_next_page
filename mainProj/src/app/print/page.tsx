@@ -4,7 +4,7 @@ import Link from "next/link";
 import Header from "@/component/header";
 import FootBar from "@/component/footbar";
 import {Global} from "@emotion/react";
-import {FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
+import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {useMediaPrint} from "@/hooks/use-media-print";
 import PageSectionOrientation from "@/components/page-section-orientation";
 import type React from "react";
@@ -38,12 +38,12 @@ export default function Home() {
             zhong jia正宗midd</>}>
             <div >
               <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
-                <TableHead>
+                <TableHeader>
                   <TableRow>
                     <TableCell>标题</TableCell>
                     <TableCell>描述</TableCell>
                   </TableRow>
-                </TableHead>
+                </TableHeader>
                 <TableBody>
                   <TableRow>
                     <TableCell className="important-cell">这是一个纯文本内容示例</TableCell>

@@ -91,7 +91,8 @@ export function FlexibleTable({children, columnWidths, className, variant = "def
     )
 }
 
-export function TableHead({children}: { children: ReactNode }) {
+//改成和shadcn.ui的一样名字和含义，更容易替换，避免混淆。
+export function TableHeader({children}: { children: ReactNode }) {
     return <thead className="bg-muted/50">{children}</thead>
 }
 

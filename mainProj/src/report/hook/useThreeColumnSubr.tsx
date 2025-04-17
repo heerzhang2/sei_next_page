@@ -3,7 +3,7 @@ import * as React from "react";
 import {
      Text,
 } from "customize-easy-ui-component";
-import {CCell, FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {DirectLink} from "../../routing/Link";
 import {multilines2Html} from "../tools";
 import {CCellUnit, InternalItemProps} from "../common/base";

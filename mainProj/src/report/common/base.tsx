@@ -15,7 +15,7 @@ import {
     Layer,
     LineColumn,
 } from "customize-easy-ui-component";
-import {CCell, FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 // import PropTypes from "prop-types";
 import { Dispatch, SetStateAction } from "react";
 import { MutableRefObject } from "react";

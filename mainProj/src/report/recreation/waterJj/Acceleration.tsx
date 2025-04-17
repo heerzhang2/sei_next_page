@@ -61,6 +61,8 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
         itemA加速.forEach((name) => {
             fields[name] = storage[name] ?? ""
         })
+
+
         return fields
     }, [storage])
     // 3. 定义数组字段配置
@@ -154,53 +156,17 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             </div>
                         ))}
                     </div>
-                    <div css={{display: 'flex', margin: 'auto'}}>
-                        <div css={{display: 'inline-block', margin: 'auto'}}>
-                            {config加速度.map(([name, title], t: number) => {
-                                const avv = AxyzNm.map((tag, t: number) => calcAverageArrObj(inp?.[name], (row) => row?.[tag], 1, stnum));
-                                return <React.Fragment key={t}>
-                                    <Text variant="h5">{t + 1},&nbsp; {title} :</Text>
-                                    {(new Array(stnum)).fill(null).map((_, i: number) => {
-                                        let o = inp?.[name]?.[i];
-                                        return <div key={i}>
-                                            <Text>&nbsp; {i + 1} 次: </Text>
-                                            {AxyzCfg.map(([tag,title], h: number) => {
-                                                return <React.Fragment key={h}>
 
-                                                    {title}
-                                                    <Input value={o?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
-                                                           onChange={e => tableSetInp(name, i, inp, setInp, tag, e.currentTarget.value || undefined)}/>
 
-                                                </React.Fragment>;
-                                            })}
-                                        </div>;
-                                    })}
-                                    <Text variant="h6">{title}-平均值：Ax.max= {avv[0]} ,Ax.min= {avv[1]} ,Ay.max= {avv[2]} ,Ay.min= {avv[3]} ,Az.max= {avv[4]} ,Az.min= {avv[5]} ;</Text>
-                                </React.Fragment>;
-                            })}
-                        </div>
-                    </div>
-                    <h5>判定部分: {'>>'}</h5>
-                    <div css={{display: 'flex', margin: 'auto'}}>
-                        <div css={{display: 'inline-block', margin: 'auto'}}>
-                            <Text variant="h5">测试结果:</Text>
-                            {AxyzCfg.map(([tag,title], i: number) => {
-                                return <React.Fragment key={i}>
-                                    <Text>{title}</Text>
-                                    <Input value={inp?.加速试果?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
-                                           onChange={e => objNestSet('加速试果', tag, e.currentTarget.value || undefined, inp, setInp)}/>
-                                </React.Fragment>;
-                            })}
-                            <Text variant="h5">设计值:</Text>
-                            {AxyzCfg.map(([tag,title], i: number) => {
-                                return <React.Fragment key={i}>
-                                    <Text>{title}</Text>
-                                    <Input value={inp?.加速设值?.[tag] || ''} size={4} style={{display: 'inline-flex', width: 'unset'}}
-                                           onChange={e => objNestSet('加速设值', tag, e.currentTarget.value || undefined, inp, setInp)}/>
-                                </React.Fragment>;
-                            })}
-                        </div>
-                    </div>
+
+
+
+
+
+
+
+
+
                     <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
                         <FormField
                             key={"加速区域"}

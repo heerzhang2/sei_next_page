@@ -4,7 +4,7 @@ import Link from "next/link";
 import Header from "@/component/header";
 import FootBar from "@/component/footbar";
 import {Global} from "@emotion/react";
-import {FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
+import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {useMediaPrint} from "@/hooks/use-media-print";
 import PageSectionOrientation from "@/components/page-section-orientation";
 import NoPageBreak, {PrintTogether} from "@/components/print-together";
@@ -32,12 +32,12 @@ export default function Home() {
           <NoPageBreak reserve="3.7rem" title={<>df<br/>
             zhong jia正宗midd</>}>
             <FlexibleTable className="w-full" columnWidths={["20%","%","20%","10%"]}>
-              <TableHead>
+              <TableHeader>
                 <TableRow>
                   <TableCell>编号</TableCell><TableCell>描述</TableCell>
                   <TableCell>结果</TableCell><TableCell>结论</TableCell>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
                 <TableRow className="border">
                   <TableCell className="important-cell " rowSpan={3}>这是一托于同体容705示例</TableCell>
@@ -66,12 +66,12 @@ export default function Home() {
             俗<br/><br/>话说得好是<br/>
             zhong <br/><br/>jia正<br/><br/>宗midd</>}>
             <FlexibleTable className="w-full" columnWidths={["20%","%","20%","10%"]}>
-              <TableHead>
+              <TableHeader>
                 <TableRow>
                   <TableCell>编号</TableCell><TableCell>描述</TableCell>
                   <TableCell>结果</TableCell><TableCell>结论</TableCell>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
                 <TableRow className="border">
                   <TableCell className="important-cell " rowSpan={3}>这是一托于同体容705示例</TableCell>

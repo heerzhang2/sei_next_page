@@ -16,7 +16,7 @@ import { useItemsMapOmni } from "../../common/omni"
 import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from "../waterJj/rarelyVary"
 import Link from "next/link"
 import { DirectLink } from "@/routing/Link"
-import {CCell, FlexibleTable, TableBody, TableHead, TableRow} from "@/components/flexible-table";
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 
 export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
@@ -127,7 +127,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                 >
                     <FlexibleTable className="border-collapse"
                                    columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
-                        <TableHead>
+                        <TableHeader>
                             <TableRow className={"text-sm"}>
                                 <CCell id={"T5-1"}>
                                     <span className="text-[0.7rem]">序号</span>
@@ -139,7 +139,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                                 <CCell>结论</CCell>
                                 <CCell>备注</CCell>
                             </TableRow>
-                        </TableHead>
+                        </TableHeader>
                         <TableBody>{renderIspContent}</TableBody>
                     </FlexibleTable>
                 </PrintReserveLeast>

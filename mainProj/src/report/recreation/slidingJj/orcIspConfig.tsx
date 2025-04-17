@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {  Text,} from "customize-easy-ui-component";
-import {CCell, FlexibleTable, TableBody, TableHead, TableRow} from "@/components/flexible-table";
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {crtOmni, omniCalculateDefault, pushOmni} from "../../common/omni";
 import {JumpMeasure, } from "../../common/general";
 //id标签需要规范原来5.1的改为T5-1的才能路由。

@@ -2,7 +2,7 @@ import * as React from "react";
 // import {
 //   CCell, Cell, Table, TableBody, TableRow, Text,
 // } from "customize-easy-ui-component";
-import {CCell, FlexibleTable, TableBody, TableCell, TableHead, TableRow} from "@/components/flexible-table";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {DirectLink,} from "@/routing/Link";
 import {RepLink,} from "../../common/base";
 import {usePrefixDataTable} from "../../hook/usePrefixData";
