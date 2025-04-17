@@ -2,16 +2,27 @@
 import * as React from "react";
 import {CCell, Input, InputLine, SuffixInput, Text,} from "customize-easy-ui-component";
 import {arraySetInp, calcAverageArrObj} from "../../../common/tool";
+import type {UseFormReturn} from "react-hook-form";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 
 /*较通用的，同一个规范共享的
 * */
 export const cbK2_4 = {
-  edit: (inp: any, setInp: (a: any) => void) => {
+  edit: (form: UseFormReturn<any, any, any>) => {
     return [false, <div><Text>K2.4抽查的结构件为：</Text>
-      <InputLine label='抽查'>
-        <Input value={inp?.抽查构件 || ''}
-               onChange={e => setInp({...inp, 抽查构件: e.currentTarget.value || undefined})}/>
-      </InputLine>
+      <FormField key={"抽查构件"}
+          control={form.control}
+          name={"抽查构件"}
+          render={({ field }) => (
+              <FormItem>
+                <FormLabel>抽查</FormLabel>
+                <FormControl>
+                  <Input  {...field}/>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+          )}
+      />
     </div>]
   },
   names: ['抽查构件'],

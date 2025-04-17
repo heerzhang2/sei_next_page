@@ -1,8 +1,10 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {Text, InputLine, SuffixInput, LineColumn,} from "customize-easy-ui-component";
+import {Text, InputLine, LineColumn,} from "customize-easy-ui-component";
 import {JSX} from "@emotion/react/jsx-runtime";
-
+import type {UseFormReturn} from "react-hook-form";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
+import { BlobInputList,SuffixInput,} from "@/components/chub";
 
 /**针对性优化：measurementRender新版本：不拍外面用<LineColumn column={3}>嵌套后的效果也不错。
  * @param only : 只有一个测量字段的情形，否则是俩个字段。 【注意】only=false的情况在上面不要嵌套<LineColumn；嵌套两层的LineColumn布局不好。
@@ -174,16 +176,15 @@ export const measurementCrender=(labels: any[],nameH:string,unit:string | React.
  * @return {lcNode,outNode}   预备DOM的两个组件的组合。 差别：lcNode是嵌套在<LineColumn底下的。outNode是在外部的和<LineColumn是并行的关系。
  * */
 type MeasurementCProps = {
-  children?: React.ReactNode
+  form: UseFormReturn<any, any, any>
   item: string
   labels: any[]
   nameH: string
   unit: string | React.ReactNode;
-  inp: any
-  setInp: React.Dispatch<React.SetStateAction<any>>;
   allowableV: boolean
-  resEdit: boolean
+  resEdit: boolean    //结果字段+v允许修改的
   only?: boolean;
+  //上一级计算的取值：
   resDeft?: any;
   seqLineName?: string,
   labelOmit?: string,
@@ -195,8 +196,8 @@ type MeasurementCProps = {
  *                                  allowableV:boolean,resEdit:boolean,only?:boolean, resDeft?:any,seqLineName?:string,labelOmit?:string,columns?:number
  * ):{ outNode: JSX.Element|undefined; lcNode: JSX.Element; } => {  return{lcNode: <div >
  * */
-export const MeasurementCline = ({ children, item,labels,nameH,unit,inp,setInp,
-        allowableV,resEdit,only, resDeft,seqLineName,labelOmit,columns }: MeasurementCProps
+export const MeasurementCline = ({form, item,labels,nameH,unit,
+                    allowableV,resEdit,only, resDeft,seqLineName,labelOmit,columns }: MeasurementCProps
 ) =>{
   const oName=nameH+'o';
   const vName=(seqLineName??nameH)+'v';      //若resDeft提供的，和可能没有该存储的；
@@ -208,68 +209,119 @@ export const MeasurementCline = ({ children, item,labels,nameH,unit,inp,setInp,
   if(!!item){
     descNodes.push(<Text key={0} css={{marginLeft: '1rem',fontWeight:800}}>{item}</Text>);
   }
+  const wvvalue = form.watch(vName)
   React.useEffect(() => {
+    const vName=(seqLineName??nameH)+'v';       //小行的项目名字优先
     if(!only && resEdit){             //没必要保存给后端情形？
-      const vName=(seqLineName??nameH)+'v';       //小行的项目名字优先
-      setInp({...inp,[vName]: resDeft});
+      form.setValue(vName, resDeft);
     }
-  }, [resDeft, seqLineName,nameH, only,setInp]);    //不加上inp
+    else{
+      if(wvvalue==="")  form.setValue(vName, resDeft);
+    }
+  }, [resDeft, seqLineName,nameH, only]);
 
   if(only) {
-    //较为少见到的：
+    //单独一项测量，没有结果输入框的：较为少见
     return <div  css={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap'}}>
             <div css={{marginLeft: '1rem'}}>{descNodes}{'>>'}</div>
-            <InputLine label='观测数据'>
-              <SuffixInput value={inp?.[oName] || ''}
-                           onSave={txt => setInp({...inp, [oName]: txt || undefined})}>{unit}</SuffixInput>
-            </InputLine>
+            <FormField control={form.control} name={oName}
+                render={({ field }) => (
+                    <FormItem className="pt-2 w-full break-inside-avoid">
+                      <FormLabel>观测数据</FormLabel>
+                      <FormControl className="w-full">
+                        <SuffixInput  unit={unit}  {...field}  />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                )}
+            />
           </div>
   }
   else if(labelOmit){
-    //合并了多个行的情况： 一个标题实际对应连续几个项目小行的。文本申明对应的层次隶属关系提升到上层一级别 =》outNode。
-    return <LineColumn column={columns??6}  >
-      <InputLine  label='观测数据' >
-        <SuffixInput  value={inp?.[oName] ||''} onSave={txt=> setInp({...inp,[oName]: txt || undefined })}>{unit}</SuffixInput>
-      </InputLine>
-      { resEdit? <InputLine  label={(labelOmit??'')+'测量结果'}>
-            <SuffixInput  value={inp?.[vName] || resDeft || ''} onSave={txt=> setInp({...inp,[vName]: txt || undefined })}>{unit}</SuffixInput>
-          </InputLine>
-          :
-          <Text>{labelOmit}测量结果= { inp?.[vName]??resDeft } </Text>
-      }
-      { allowableV && <InputLine  label={(labelOmit??'')+'允许值'} >
-        <SuffixInput  value={inp?.[aName] ||''} onSave={txt=> setInp({...inp,[aName]: txt || undefined })}>{unit}</SuffixInput>
-      </InputLine>
-      }
-    </LineColumn>
+      //合并了多个行的情况： 一个标题实际对应连续几个项目小行的。文本申明对应的层次隶属关系提升到上层一级别 =》outNode。
+      return <LineColumn column={columns??6}  >
+        <FormField control={form.control} name={oName}
+                   render={({ field }) => (
+                       <FormItem className="pt-2 w-full break-inside-avoid">
+                         <FormLabel>观测数据</FormLabel>
+                         <FormControl className="w-full">
+                           <SuffixInput  unit={unit}  {...field}  />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                   )}
+        />
+        { resEdit? <FormField control={form.control} name={vName}
+                              render={({ field }) => (
+                                  <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel>{(labelOmit??'')+'测量结果'}</FormLabel>
+                                    <FormControl className="w-full">
+                                      <SuffixInput  unit={unit}  {...field}  />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                              )}
+            />
+            :
+            <Text>{labelOmit}测量结果= { wvvalue ?? resDeft } </Text>
+        }
+        { allowableV && <FormField control={form.control} name={aName}
+                                   render={({ field }) => (
+                                       <FormItem className="pt-2 w-full break-inside-avoid">
+                                         <FormLabel>{(labelOmit??'')+'允许值'}</FormLabel>
+                                         <FormControl className="w-full">
+                                           <SuffixInput  unit={unit}  {...field}  />
+                                         </FormControl>
+                                         <FormMessage />
+                                       </FormItem>
+                                   )}
+            />
+        }
+      </LineColumn>
   }
   else{
-    //最多情况是：  带有结果取值的栏目，是跑到这里：#是嵌套了俩层次的<LineColumn组件的。
+    //最多情况是：  带有结果取值的栏目，是跑到这里：#是嵌套了俩层次的<LineColumn column={columns ?? 7}。
     return <div >
       <div css={{marginLeft: '1rem'}}>{descNodes}{'>>'}</div>
-      <LineColumn column={columns ?? 7}
-                  css={{         //底层是display: grid布局的
-                    alignItems: 'center',
-                    justifyItems: 'center',
-                  }}>
-        <InputLine label='观测数据'>
-          <SuffixInput value={inp?.[oName] || ''}
-                       onSave={txt => setInp({...inp, [oName]: txt || undefined})}>{unit}</SuffixInput>
-        </InputLine>
-        {resEdit ? <InputLine label={'测量结果'}>
-              <SuffixInput value={inp?.[vName] || resDeft || ''}
-                           onSave={txt => setInp({...inp, [vName]: txt || undefined})}>{unit}</SuffixInput>
-            </InputLine>
+      <LineColumn column={columns ?? 7}>
+        <FormField control={form.control} name={oName}
+                   render={({ field }) => (
+                       <FormItem className="pt-2 w-full break-inside-avoid">
+                         <FormLabel>观测数据</FormLabel>
+                         <FormControl className="w-full">
+                           <SuffixInput  unit={unit}  {...field}  />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                   )}
+        />
+        {resEdit ? <FormField control={form.control} name={vName}
+                              render={({ field }) => (
+                                  <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel>测量结果</FormLabel>
+                                    <FormControl className="w-full">
+                                      <SuffixInput  unit={unit}  {...field}  />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                              )}
+            />
             :
-            <Text>测量结果= {inp?.[vName] ?? resDeft} </Text>
+            <Text>测量结果= { wvvalue ?? resDeft } </Text>
         }
-        {allowableV && <InputLine label={'允许值'}>
-          <SuffixInput value={inp?.[aName] || ''}
-                       onSave={txt => setInp({...inp, [aName]: txt || undefined})}>{unit}</SuffixInput>
-        </InputLine>
+        {allowableV && <FormField control={form.control} name={aName}
+                                  render={({ field }) => (
+                                      <FormItem className="pt-2 w-full break-inside-avoid">
+                                        <FormLabel>允许值</FormLabel>
+                                        <FormControl className="w-full">
+                                          <SuffixInput  unit={unit}  {...field}  />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                  )}
+          />
         }
       </LineColumn>
     </div>
   }
 };
-

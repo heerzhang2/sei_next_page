@@ -263,7 +263,7 @@ export  function calcAverageArrObj(arr: any[], callback:(curObj:any)=>number, re
     : string|undefined
 {
     let countavspeed=0;
-    let  consumeAr=maxSize? arr?.slice(0,maxSize) : arr;
+    let  consumeAr=arr===""? [] : maxSize? arr?.slice(0,maxSize) : arr;
     const avspeed1 =consumeAr?.reduce((prev : number, row:any, i:number) => {
         let  one=callback(row);
         if(one!==null && !isNaN(one)){

@@ -1,4 +1,4 @@
-import type React, {ReactNode} from "react"
+import type React from "react"
 import {Children, isValidElement, cloneElement, type ReactNode} from "react"
 
 interface FlexibleTableProps {
@@ -167,6 +167,7 @@ export function CCell({
     // 根据split参数设置pageBreakInside样式
     const splitStyle = !split ? {pageBreakInside: "avoid", breakInside: "avoid"} : {}
 
+    // @ts-ignore
     return (
         <td
             className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}

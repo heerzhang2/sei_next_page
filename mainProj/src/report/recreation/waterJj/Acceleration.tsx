@@ -190,7 +190,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                         {config加速度.map(([name, title]) => {
                             const tableArray = arrays![name]
                             const currentTableData = form.watch(name)
-                            console.log(`当前 ${title} 表格数据:`, currentTableData)
+                            // console.log(`当前 ${title} 表格数据:`, currentTableData)
                             const avv = AxyzNm.map((tag, t: number) => calcAverageArrObj(currentTableData, (row) => row?.[tag], 1, stnum));
                             return (
                                 <TabsContent key={name} value={name} >
