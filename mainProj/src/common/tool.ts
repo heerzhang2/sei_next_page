@@ -255,6 +255,7 @@ export function dateToChinese(org: string) {
     let date=new Date(org);
     return date.getFullYear() + "年"+ (date.getMonth() + 1) +"月"+ date.getDate() +"日";
 }
+
 /**对象数组的平均值计算：平均速度 需两个字段相除。
  *@param callback 注入逻辑=到底如何处理除数的。callback：处理嵌套的对象结构。
  * @param maxSize 计算数组的几个。
@@ -262,20 +263,14 @@ export function dateToChinese(org: string) {
 export  function calcAverageArrObj(arr: any[], callback:(curObj:any)=>number, reservDigit:number, maxSize?:number)
     : string|undefined
 {
-    let countavspeed=0;
-    let  consumeAr=arr===""? [] : maxSize? arr?.slice(0,maxSize) : arr;
-    const avspeed1 =consumeAr?.reduce((prev : number, row:any, i:number) => {
-        let  one=callback(row);
-        if(one!==null && !isNaN(one)){
-            prev= prev+ Number(one);      //可能是string++的，就会执行拼接字符串而非加法的;
-            //console.log("calcAverageArrObj",one,"prev=",prev,"countavspeed",countavspeed);
-            countavspeed++;
-        }
-        return prev;
-    }, 0 );
-    if(countavspeed<1)  return undefined;
-    else return  floatInterception(avspeed1/countavspeed, reservDigit);
+    const validValues = (arr||[]).slice(0,maxSize)
+        .filter((item) => item !== "" && item !== null && item !== undefined)
+        .map((item) => Number(callback(item)))
+    if (validValues.length < 1)   return undefined;
+    const sum = validValues.reduce((acc, val) => acc + val, 0)
+    return (sum / validValues.length).toFixed(reservDigit)
 }
+
 /**对象数组的平均值计算：和最大值。
  *@param callback 注入逻辑=到底如何处理除数的。callback：处理嵌套的对象结构。
  * @param maxSize 计算数组的几个。
@@ -435,5 +430,26 @@ export const expandDimension=(config:any[], gsize:number=2
         return acc;
     }, []);
     return newcfgs;
+}
+/**表单初始化
+ * @param arr
+ * @param maxSize 计算数组的几个。
+ */
+export  function initialFormArr(arr: any[], maxSize?:number)
+    : any[]
+{
+    const array=arr || [];
+    if(!maxSize)   return array
+    const currentLength = array.length
+    if (currentLength < maxSize) {
+        for (let i = currentLength; i < maxSize; i++) {
+            array.push("")
+        }
+    } else if (currentLength > maxSize) {
+        for (let i = currentLength - 1; i >= maxSize; i--) {
+            array.pop()
+        }
+    }
+    return array
 }
 

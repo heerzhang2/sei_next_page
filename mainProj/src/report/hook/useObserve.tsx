@@ -25,13 +25,18 @@ import {useFormFramework} from "@/report/hook/useFormFramework";
 import type {UseFormReturn} from "react-hook-form";
 
 export interface MeasureCallbackReturn {
-    /** 正常是字符串名字。
-     * 允许names: [{n:'磨损径',t:'a',l:4}], 不仅是字符串名字了： 对象复杂的表达：存储的类型变种： /数组/个数。
+    /** 正常是字符串名字。  @特殊的存储形式的字段需要通过 schemas + defaults来自己定义的。
      */
     names?: any[];
+    /*表单模型语法除了通常配置外， 自己定义扩展字段的*/
+    schemas?: any;
+    /*表单初始化的值， 扩展字段的；
+    * */
+    defaults?: any;
     /** parentOrc 嵌套的分项报告数据源
+     * 返回[boolean, 表示是否<tr>整体替代的。
      * */
-    view?: (orc: any, parentOrc: any) =>React.ReactNode;
+    view?: () =>[boolean, React.ReactNode];
     /* 返回[boolean, 表示是否布局拆分的。
     * */
     edit?: (form: UseFormReturn<any, any, any>) =>[boolean, React.ReactNode];
@@ -109,30 +114,9 @@ export function useObserveItem(config: EachObserveConfig[][], allowableV: boolea
                     if(allowableV)   itemAObserv.push(n+'a');        //扩充字段：允许取值；
                     if(cbo){
                         const cbcfg=cbo(storage, );
-                        if(cbcfg?.names){
-                            cbcfg?.names.forEach((adn, p: number) => {
-                                if (typeof adn === 'string')  itemAObserv.push(adn);
-                                else if (typeof adn === 'object' && adn.n && adn.t){
-                                    //特殊存储类型的字段： 编辑器表单，需要特别方式做初始化的；
-                                    if(adn.t==='a' && adn.l>0){      //数组类型的
-                                        defaultValues[adn.n] = storage[adn.n] || [];
-                                        const currentLength = defaultValues[adn.n].length
-                                        if (currentLength < adn.l) {                                    //少于3行，添加到3行
-                                            for (let i = currentLength; i < adn.l; i++) {
-                                                defaultValues[adn.n].push("")
-                                            }
-                                        } else if (currentLength > adn.l) {                             //多于3行，删除多余的
-                                            for (let i = currentLength - 1; i >= adn.l; i--) {
-                                                defaultValues[adn.n].pop()
-                                            }
-                                        }
-                                        //模型schema字段定义用的
-                                        if(adn.c==="n")  schemaFields[adn.n] = z.array(z.coerce.number().optional()).length(adn.l)
-                                        else schemaFields[adn.n] = z.array(z.string().optional()).length(adn.l)
-                                    }
-                                }
-                            })
-                        }
+                        if(cbcfg?.names)  itemAObserv.push(...cbcfg?.names);
+                        if(cbcfg?.schemas)  schemaFields={...schemaFields,  ...cbcfg?.schemas};
+                        if(cbcfg?.defaults)  defaultValues={...defaultValues,  ...cbcfg?.defaults};
                     }
                 });
                 itemAObserv.push(itrsName);
@@ -170,6 +154,7 @@ export function useObserveItem(config: EachObserveConfig[][], allowableV: boolea
 export function useObserveEdLine(config: EachObserveConfig[][],
                            allowableV: boolean, defaultSave: boolean,memoF: boolean,mem?:string
 ) {
+    const { storage } = useStorage()
     // contentRendererFactory: (form: any, arrays?: Record<string, any>) => React.ReactNode;
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
@@ -264,7 +249,8 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                             resEdit= (undefined===save)?  defaultSave : save;
                         }
                         //编辑器的回调：可自定义录入字段；
-                        const [editRp,editN]=cbo?.edit&&cbo?.edit(form) || [];
+                        // const [editRp,editN]=cbo && cbo(storage).edit && cbo(storage).edit!(form) || [];
+                        const [editRp, editN] = cbo?.(storage)?.edit?.(form) ?? [];
                         let prepareN : { outNode: JSX.Element|undefined; lcNode: JSX.Element; };
                         let lcNode=<MeasurementCline form={form} item={x!} labels={tCopy} nameH={n} unit={unit} allowableV={allowableV}
                                                      resEdit={resEdit} only={false} resDeft={calculate} />
@@ -372,18 +358,15 @@ export const ObserveEdit = ({children, show, alone = true, refWidth, label, memo
         return (typeof config === 'function' ? config(storage) : config);
     }, [storage]);
     //合成测量存储字段名
-    const {itemObservation,itemObservationA,itemDefaultVal} = useObserveItem(newconfig, allowableV,memoF);
-    //  // 现在接收form和arrays作为参数，这样可以使用真实的form对象和数组字段控制
-    //   contentRendererFactory: (form: any, arrays?: Record<string, any>) => React.ReactNode
-
+    const {itemObservation,itemObservationA,itemSchemaField,itemDefaultVal} = useObserveItem(newconfig, allowableV,memoF);
     const {contentRendererFactory} = useObserveEdLine(newconfig, allowableV, defaultSave,memoF,mem);
     const itemA备注: string[] = mem ? [`${mem}`] : [];
     const itemA = React.useMemo(() => {
         return [...itemObservationA, ...itemA备注, ...iAname ?? []];
-    }, [itemObservationA, iAname]);
+    }, [itemObservationA, iAname, mem]);
     // 1. 创建动态 schema:【检查严格】若类型没有匹配也会无法提交发送的！
     const schema = React.useMemo(() => {
-        const schemaFields = {} as any
+        const schemaFields = { ...itemSchemaField } as any
         itemA.forEach((namecfg) => {
             schemaFields[namecfg] = z.string().optional()
         })
@@ -394,7 +377,7 @@ export const ObserveEdit = ({children, show, alone = true, refWidth, label, memo
             schemaFields[nameV] = z.string().optional()
         })
         return z.object(schemaFields)
-    }, [])
+    }, [itemSchemaField,itemA,itemObservation])
     // 2. 初始化字段值
     const defaultValues = React.useMemo(() => {
         const fields = {...itemDefaultVal } as any
@@ -409,8 +392,7 @@ export const ObserveEdit = ({children, show, alone = true, refWidth, label, memo
             fields[nameV] = storage[nameV] ?? ""
         })
         return fields
-    }, [storage])
-
+    }, [storage,itemDefaultVal,itemA,itemObservation])
 
     const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
     return (
@@ -565,6 +547,7 @@ interface ObserveTableProps {
  * */
 export const useObserveTable= ({orc, config,allowableV,defaultSave,rep,seqOfs=0,nseq,inPreN,tag,memoF} : ObserveTableProps
 ) => {
+    const { storage } = useStorage()
     const caseCrit=config[0][0]?.cit!==undefined;     //表示有这个栏目：判定标准的1列；
     //对配置的跨行span:初始化处置，默认计算的字段。
     const [configExtend] = useJudgObserveConfigExtend2({ config });
@@ -603,7 +586,8 @@ export const useObserveTable= ({orc, config,allowableV,defaultSave,rep,seqOfs=0,
                         // resEdit= (undefined===save)?  defaultSave! : save;
                     }
                     //假如是替换模式：【自定义回调viewN功能】替换掉3个栏目：观测数据 测量结果 允许值栏目的。
-                    const [viewPrr,viewN]=cbo?.view&&cbo?.view(orc, ) || [];
+                    const [viewPrr,viewN] = cbo?.(storage)?.view?.() ?? [];
+                    // const [viewPrr,viewN]=cbo?.view&&cbo?.view(orc, ) || [];
                     //【问题】替换模式情况：前面的那些行若有<td>的span跨越本行的，将会很有可能导致布局问题，表格栏目列都需缝合的。
                     if(viewPrr && viewN)    return viewN;
                     // console.log("检验设TableRow备情况$seq=", seq,'t=',t,bspan, "SPAN",span,secoLabel,t[1]);

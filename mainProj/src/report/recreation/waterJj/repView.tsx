@@ -365,54 +365,58 @@ export const genCBoAve = (nmar: string[], resvDg: number, unit: string, title?: 
     },
   };
 };
+
 export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?: any) => {
-  return {
-    edit: (inp: any, setInp: (a: any) => void) => {
-      let valuAr = nmar.map((name: any, c: number) => inp?.[name + 'o']);
-      const avHs = calcAverageArrObj(valuAr, (row) => row, resvDg);
-      return [true, <div css={{textAlign: 'center'}}><Text css={{fontWeight: 800}}>{title}：</Text>
-        <LineColumn column={4}>
-          <InputLine label='观测数据'>
-            <SuffixInput value={inp?.[nmar[0] + 'o'] || ''}
-                         onSave={txt => setInp({...inp, [nmar[0] + 'o']: txt || undefined})}>{unit}</SuffixInput>
-          </InputLine>
-          <InputLine label='设计值'>
-            <Input value={inp?.[nmar[0] + 'a'] || ''}
-                   onChange={e => setInp({...inp, [nmar[0] + 'a']: e.currentTarget.value || undefined})}/>
-          </InputLine>
-        </LineColumn>
-        <Text css={{display: 'ruby'}}>计算的测量结果： {avHs} {unit}</Text>
-      </div>]
-    },
-    view: (orc: any) => {
-      let valuAr = nmar.map((name: any, c: number) => orc?.[name + 'o']);
-      const avHs = calcAverageArrObj(valuAr, (row) => row, resvDg);
-      return [false, <>
-        <CCell>{orc?.[nmar[0] + 'o']}</CCell>
-        <CCell split rowSpan={nmar.length}>{avHs}</CCell>
-        <CCell split rowSpan={nmar.length}>{orc?.[nmar[0] + 'a']}</CCell>
-      </>]
-    },
-  };
-};
-export const genCBoOmitAl = (name: string, unit: string, title?: any) => {
-  return {
-    edit: (inp: any, setInp: (a: any) => void) => {
-      // const avsDiam=calcAverageArrObj(inp?.磨损径,(row)=>row,1,4);
-      return [true, <div css={{textAlign: 'center'}}><Text css={{fontWeight: 800}}>{title}：</Text>
-        <LineColumn column={5}>
-          <InputLine label='观测数据'>
-            <SuffixInput value={inp?.[name + 'o'] || ''}
-                         onSave={txt => setInp({...inp, [name + 'o']: txt || undefined})}>{unit}</SuffixInput>
-          </InputLine>
-        </LineColumn>
-      </div>]
-    },
-    view: (orc: any) => {
-      return [false, <>
-        <CCell>{orc?.[name + 'o']}</CCell>
-      </>]
-    },
-  };
+  return  (orc:any,parOrc:any)=> {
+    return {
+      edit: (inp: any, setInp: (a: any) => void) => {
+        let valuAr = nmar.map((name: any, c: number) => inp?.[name + 'o']);
+        const avHs = calcAverageArrObj(valuAr, (row) => row, resvDg);
+        return [true, <div css={{textAlign: 'center'}}><Text css={{fontWeight: 800}}>{title}：</Text>
+          <LineColumn column={4}>
+            <InputLine label='观测数据'>
+              <SuffixInput value={inp?.[nmar[0] + 'o'] || ''}
+                           onSave={txt => setInp({...inp, [nmar[0] + 'o']: txt || undefined})}>{unit}</SuffixInput>
+            </InputLine>
+            <InputLine label='设计值'>
+              <Input value={inp?.[nmar[0] + 'a'] || ''}
+                     onChange={e => setInp({...inp, [nmar[0] + 'a']: e.currentTarget.value || undefined})}/>
+            </InputLine>
+          </LineColumn>
+          <Text css={{display: 'ruby'}}>计算的测量结果： {avHs} {unit}</Text>
+        </div>]
+      },
+      view: (orc: any) => {
+        let valuAr = nmar.map((name: any, c: number) => orc?.[name + 'o']);
+        const avHs = calcAverageArrObj(valuAr, (row) => row, resvDg);
+        return [false, <>
+          <CCell>{orc?.[nmar[0] + 'o']}</CCell>
+          <CCell split rowSpan={nmar.length}>{avHs}</CCell>
+          <CCell split rowSpan={nmar.length}>{orc?.[nmar[0] + 'a']}</CCell>
+        </>]
+      },
+    };
+  }
 };
 
+export const genCBoOmitAl = (name: string, unit: string, title?: any) => {
+  return  (orc:any,parOrc:any)=> {
+    return {
+      edit: (inp: any, setInp: (a: any) => void) => {
+        return [true, <div css={{textAlign: 'center'}}><Text css={{fontWeight: 800}}>{title}：</Text>
+          <LineColumn column={5}>
+            <InputLine label='观测数据'>
+              <SuffixInput value={inp?.[name + 'o'] || ''}
+                           onSave={txt => setInp({...inp, [name + 'o']: txt || undefined})}>{unit}</SuffixInput>
+            </InputLine>
+          </LineColumn>
+        </div>]
+      },
+      view: (orc: any) => {
+        return [false, <>
+          <CCell>{orc?.[name + 'o']}</CCell>
+        </>]
+      },
+    }
+  }
+};
