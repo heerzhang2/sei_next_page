@@ -91,21 +91,33 @@ export const cbK3_55 =(orc:any,parOrc:any)=> {
 
 export const cbK2_6 =(orc:any,parOrc:any)=> {
     return  {
-  edit: (inp: any, setInp: (a: any) => void) => {
-    return [false, <div><Text>磨损最大的重要轴（销轴）为：</Text>
-      <InputLine label='轴'>
-        <Input value={inp?.销轴损最 || ''}
-               onChange={e => setInp({...inp, 销轴损最: e.currentTarget.value || undefined})}/>
-      </InputLine>
-      <Text>锈蚀最大的重要轴（销轴）为：</Text>
-      <InputLine label='轴'>
-        <Input value={inp?.销轴锈最 || ''}
-               onChange={e => setInp({...inp, 销轴锈最: e.currentTarget.value || undefined})}/>
-      </InputLine>
-    </div>]
-  },
-  names: ['销轴损最', '销轴锈最'],
-}
+      edit: (form: UseFormReturn<any, any, any>) => {
+        return [false, <div><Text>磨损最大的重要轴（销轴）为：</Text>
+            <FormField control={form.control} name={`销轴损最`}
+                render={({ field }) => (
+                    <FormItem className="flex-1">
+                        <FormControl>
+                            <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+          <Text>锈蚀最大的重要轴（销轴）为：</Text>
+            <FormField control={form.control} name={`销轴锈最`}
+                render={({ field }) => (
+                    <FormItem className="flex-1">
+                        <FormControl>
+                            <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>]
+      },
+      names: ['销轴损最', '销轴锈最'],
+    }
 };
 
 export const cbK4_6 =(orc:any,parOrc:any)=> {

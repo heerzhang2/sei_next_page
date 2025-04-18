@@ -570,26 +570,28 @@ export function MemoDateInput({
     )
 }
 
-// 创建一个可清除的 Select 组件
+// 创建一个可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。
 export function ClearableSelect({
                              field,
                              options,
                              placeholder="",
                              onClear,
+                               id,
                          }: {
     field: any
     options: { label: string; value: string }[]
     placeholder?: string
     onClear: () => void
+    id?: string
 }) {
     // 检查是否有选定的值
     const hasValue = !!field.value
 
     return (
         <div className="relative w-full">
-            <Select onValueChange={field.onChange} value={field.value || ""}>
-                <SelectTrigger className="w-full pr-8">
-                    <SelectValue placeholder={placeholder} />
+            <Select name={field.name}  onValueChange={field.onChange} value={field.value || ""}>
+                <SelectTrigger id={field.name}  className="w-full pr-8">
+                    <SelectValue  placeholder={placeholder} />
                 </SelectTrigger>
                 <SelectContent>
                     {options.map((option) => (

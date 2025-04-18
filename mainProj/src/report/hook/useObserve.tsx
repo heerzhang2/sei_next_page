@@ -185,9 +185,9 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         let lcNode=<FormField key={i} control={form.control} name={resulTag}
                                 render={({ field }) => (
                                     <FormItem className="pt-2 w-full break-inside-avoid">
-                                        <FormLabel>{labelCheck+`-结果判定:`}</FormLabel>
+                                        <FormLabel htmlFor={field.name}>{labelCheck+`-结果判定:`}</FormLabel>
                                         <FormControl>
-                                            <ClearableSelect field={field} options={clcOptions}
+                                            <ClearableSelect field={field}  options={clcOptions}
                                                 onClear={() => {form.setValue(resulTag, "")}}
                                             />
                                         </FormControl>
