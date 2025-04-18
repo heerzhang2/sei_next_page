@@ -24,7 +24,7 @@ import {clcOptions} from "@/report/common/ActionMapItem";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import type {UseFormReturn} from "react-hook-form";
 
-export interface MeasureCallback {
+export interface MeasureCallbackReturn {
     /** 正常是字符串名字。
      * 允许names: [{n:'磨损径',t:'a',l:4}], 不仅是字符串名字了： 对象复杂的表达：存储的类型变种： /数组/个数。
      */
@@ -82,7 +82,7 @@ export interface EachObserveConfig {
     //同步检验项目大列表的检验结果字段，配合check才有的，sync=共享存储字段名。
     sync?: string;
     //回调配置对象：没有类型定义硬约束，看实际的用法。 回调扩展支持， names: [{n:'磨损径',t:'a',l:4}], 不再仅仅是字符串名字了。
-    cbo?: MeasureCallback;
+    cbo?: (orc:any,parOrc?:any)=>MeasureCallbackReturn;
 }
 
 
@@ -96,36 +96,43 @@ export interface EachObserveConfig {
 export function useObserveItem(config: EachObserveConfig[][], allowableV: boolean,memoF: boolean
 ) {
     const { storage } = useStorage()
-    const [itemObservation,itemObservationA,itemDefaultVal] = React.useMemo(() => {
+    const [itemObservation,itemObservationA,itemSchemaField,itemDefaultVal] = React.useMemo(() => {
         const itemObserv: string[] = [];
         const itemAObserv: string[] = [];
         let  defaultValues={} as any;
+        let  schemaFields={} as any;
         config.forEach((line: EachObserveConfig[], i: number) => {
             if (line[0]?.n) {
                 const itrsName = line[0]?.n + 'r';
                 line.forEach(({n,cbo}: EachObserveConfig, k: number) => {
                     itemObserv.push(n);
                     if(allowableV)   itemAObserv.push(n+'a');        //扩充字段：允许取值；
-                    if(cbo?.names){
-                        cbo?.names.forEach((adn, p: number) => {
-                            if (typeof adn === 'string')  itemAObserv.push(adn);
-                            else if (typeof adn === 'object' && adn.n && adn.t){
-                                //特殊存储类型的字段： 编辑器表单，需要特别方式做初始化的；
-                               if(adn.t==='a' && adn.l>0){      //数组类型的
-                                   defaultValues[adn.n] = storage[adn.n] || [];
-                                   const currentLength = defaultValues[adn.n].length
-                                   if (currentLength < adn.l) {                                    //少于3行，添加到3行
-                                       for (let i = currentLength; i < adn.l; i++) {
-                                           defaultValues[adn.n].push("")
-                                       }
-                                   } else if (currentLength > adn.l) {                             //多于3行，删除多余的
-                                       for (let i = currentLength - 1; i >= adn.l; i--) {
-                                           defaultValues[adn.n].pop()
-                                       }
-                                   }
-                               }
-                            }
-                        })
+                    if(cbo){
+                        const cbcfg=cbo(storage, );
+                        if(cbcfg?.names){
+                            cbcfg?.names.forEach((adn, p: number) => {
+                                if (typeof adn === 'string')  itemAObserv.push(adn);
+                                else if (typeof adn === 'object' && adn.n && adn.t){
+                                    //特殊存储类型的字段： 编辑器表单，需要特别方式做初始化的；
+                                    if(adn.t==='a' && adn.l>0){      //数组类型的
+                                        defaultValues[adn.n] = storage[adn.n] || [];
+                                        const currentLength = defaultValues[adn.n].length
+                                        if (currentLength < adn.l) {                                    //少于3行，添加到3行
+                                            for (let i = currentLength; i < adn.l; i++) {
+                                                defaultValues[adn.n].push("")
+                                            }
+                                        } else if (currentLength > adn.l) {                             //多于3行，删除多余的
+                                            for (let i = currentLength - 1; i >= adn.l; i--) {
+                                                defaultValues[adn.n].pop()
+                                            }
+                                        }
+                                        //模型schema字段定义用的
+                                        if(adn.c==="n")  schemaFields[adn.n] = z.array(z.coerce.number().optional()).length(adn.l)
+                                        else schemaFields[adn.n] = z.array(z.string().optional()).length(adn.l)
+                                    }
+                                }
+                            })
+                        }
                     }
                 });
                 itemAObserv.push(itrsName);
@@ -136,12 +143,14 @@ export function useObserveItem(config: EachObserveConfig[][], allowableV: boolea
                 itemAObserv.push(line[0]?.sync);
             }
         });
-        return [itemObserv, itemAObserv,defaultValues];
+        return [itemObserv, itemAObserv,schemaFields, defaultValues];
     }, [config,allowableV]);
 
-    return { itemObservation,
+    return {
+        itemObservation,
         itemObservationA,
         itemDefaultVal,
+        itemSchemaField
     };
 }
 
@@ -372,7 +381,7 @@ export const ObserveEdit = ({children, show, alone = true, refWidth, label, memo
     const itemA = React.useMemo(() => {
         return [...itemObservationA, ...itemA备注, ...iAname ?? []];
     }, [itemObservationA, iAname]);
-    // 1. 创建动态 schema
+    // 1. 创建动态 schema:【检查严格】若类型没有匹配也会无法提交发送的！
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
         itemA.forEach((namecfg) => {
