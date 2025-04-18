@@ -1,9 +1,10 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, Input, InputLine, SuffixInput, Text,} from "customize-easy-ui-component";
+import {CCell, Input, InputLine, Text,} from "customize-easy-ui-component";
 import {arraySetInp, calcAverageArrObj} from "../../../common/tool";
 import type {UseFormReturn} from "react-hook-form";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
+import {SuffixInput,} from "@/components/chub";
 
 /*较通用的，同一个规范共享的
 * */
@@ -27,15 +28,42 @@ export const cbK2_4 = {
   },
   names: ['抽查构件'],
 };
+//父辈已经有约定了：className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4"
+//子元素className ${item.size === "large" ? "@5xl:col-span-3 @5xl:row-span-3" : ""}
 export const cbK3_55 = {
-  edit: (inp: any, setInp: (a: any) => void) => {
-    const avsDiam = calcAverageArrObj(inp?.磨损径, (row) => row, 1, 4);
-    return [true, <div css={{textAlign: 'center'}}><Text>磨损钢丝绳直径测量4个：</Text>
-      {['一', '二', '三', '四'].map((cap: any, c: number) => <Text key={c} css={{display: 'ruby'}}>{cap}处测=
-            <Input value={inp?.磨损径?.[c] || ''} style={{display: 'inline-flex', width: '5rem'}}
-                   onChange={e => arraySetInp('磨损径', c, e.currentTarget.value, inp, setInp)}/>mm；
-          </Text>
-      )}
+  edit: (form: UseFormReturn<any, any, any>) => {
+    const watchedValues = form.watch('磨损径') as number[]
+    const avsDiam = calcAverageArrObj(watchedValues, (row) => row, 1, 4);
+    return [true, <div className="@7xl:col-span-2 @7xl:row-span-2">
+      <div>
+        <h3 className="text-lg font-medium mb-4">磨损钢丝绳直径测量4个： (mm)</h3>
+        <div className="flex flex-wrap items-center gap-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <span>{['一', '二', '三', '四'][index] || `测量点${index + 1}`}:</span>
+                <FormField
+                    control={form.control}
+                    name={`磨损径.${index}`}
+                    render={({ field }) => (
+                        <FormItem className="mb-0">
+                          <FormControl>
+                            <SuffixInput type="number" step="0.01" min="0" placeholder="0.00" className="w-20"
+                                unit={"mm"}
+                                {...field}
+                                onChange={(e) => {
+                                  const value = e.target.value === "" ? undefined : Number(e.target.value)
+                                  field.onChange(value)
+                                }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                    )}
+                />
+              </div>
+          ))}
+        </div>
+      </div>
       <Text css={{display: 'ruby'}}>测量结果：{avsDiam}mm</Text>
     </div>]
   },
@@ -51,6 +79,7 @@ export const cbK3_55 = {
     </>]
   },
 };
+
 export const cbK2_6 = {
   edit: (inp: any, setInp: (a: any) => void) => {
     return [false, <div><Text>磨损最大的重要轴（销轴）为：</Text>
@@ -67,29 +96,54 @@ export const cbK2_6 = {
   },
   names: ['销轴损最', '销轴锈最'],
 };
+
 export const cbK4_6 = {
-  edit: (inp: any, setInp: (a: any) => void) => {
+  edit: (form: UseFormReturn<any, any, any>) => {
     return [false, <div><Text>连续工作的异步电机工作电流应当不大于电机的额定电流。</Text>
-      <InputLine label='电机'>
-        <Input value={inp?.工电机 || ''}
-               onChange={e => setInp({...inp, 工电机: e.currentTarget.value || undefined})}/>
-      </InputLine>
+        <FormField
+            control={form.control}
+            name={`工电机`}
+            render={({ field }) => (
+                <FormItem className="flex-1">
+                    <FormLabel>电机</FormLabel>
+                    <FormControl>
+                        <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
       <Text>电机额定电流为：</Text>
-      <InputLine label='电流'>
-        <SuffixInput value={inp?.机额电流 || ''}
-                     onSave={txt => setInp({...inp, 机额电流: txt || undefined})}>A</SuffixInput>
-      </InputLine>
+      <FormField control={form.control} name={"机额电流"}
+                 render={({ field }) => (
+                     <FormItem className="pt-2 w-full break-inside-avoid">
+                       <FormLabel>电流</FormLabel>
+                       <FormControl className="w-full">
+                         <SuffixInput  unit={'A'}  {...field}  />
+                       </FormControl>
+                       <FormMessage />
+                     </FormItem>
+                 )}
+      />
     </div>]
   },
   names: ['工电机', '机额电流'],
 };
+
 export const cbK5_21 = {
-  edit: (inp: any, setInp: (a: any) => void) => {
+  edit: (form: UseFormReturn<any, any, any>) => {
     return [false, <div><Text>座席距地面最大高度：</Text>
-      <InputLine label='高度'>
-        <SuffixInput value={inp?.座席高 || ''}
-                     onSave={txt => setInp({...inp, 座席高: txt || undefined})}>m</SuffixInput>
-      </InputLine>
+      <FormField control={form.control} name={"座席高"}
+                 render={({ field }) => (
+                     <FormItem className="pt-2 w-full break-inside-avoid">
+                       <FormLabel>高度</FormLabel>
+                       <FormControl className="w-full">
+                         <SuffixInput  unit={'m'}  {...field}  />
+                       </FormControl>
+                       <FormMessage />
+                     </FormItem>
+                 )}
+      />
     </div>]
   },
   names: ['座席高'],
