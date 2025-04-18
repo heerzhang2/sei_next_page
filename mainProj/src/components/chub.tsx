@@ -23,6 +23,9 @@ import { z } from "zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
+import { useFormContext } from "react-hook-form"
+import {clcOptions} from "@/report/common/ActionMapItem";
+import type { ControllerRenderProps } from "react-hook-form"
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
 * */
@@ -576,21 +579,23 @@ export function ClearableSelect({
                              options,
                              placeholder="",
                              onClear,
-                               id,
+                             id,
+                             className
                          }: {
     field: any
-    options: { label: string; value: string }[]
+    options: { label: any; value: string }[]
     placeholder?: string
     onClear: () => void
     id?: string
+    className?: string
 }) {
     // 检查是否有选定的值
     const hasValue = !!field.value
 
     return (
-        <div className="relative w-full">
-            <Select name={field.name}  onValueChange={field.onChange} value={field.value || ""}>
-                <SelectTrigger id={field.name}  className="w-full pr-8">
+        <div className={`relative w-full ${className || ""}`}>
+            <Select  {...field}  onValueChange={field.onChange} value={field.value || ""}>
+                <SelectTrigger id={id} className="w-full pr-8">
                     <SelectValue  placeholder={placeholder} />
                 </SelectTrigger>
                 <SelectContent>
@@ -619,6 +624,30 @@ export function ClearableSelect({
         </div>
     )
 }
+
+interface FormSelectFieldProps {
+    field: ControllerRenderProps<any, any> // 直接接收 field 对象
+    label: any      // 标签文本
+    options: { value: string; label: any }[] // 选项
+    className?: string // 可选的样式类
+    selectClass?: string
+}
+
+export function FormSelectField({ field, label, options, className,selectClass }: FormSelectFieldProps) {
+    const id = useId() + "-" + field.name // 使用 field.name 生成唯一ID
+    return (
+        <FormItem className={`pt-2 w-full break-inside-avoid ${className || ""}`}>
+            <FormLabel htmlFor={id}>{label}</FormLabel>
+            <FormControl>
+                <ClearableSelect id={id} field={field} options={options} onClear={() => field.onChange("")}
+                                 className={`${selectClass || ""}`}
+                />
+            </FormControl>
+            <FormMessage />
+        </FormItem>
+    )
+}
+
 
 interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement> {
     /** Whether the input should take full width */

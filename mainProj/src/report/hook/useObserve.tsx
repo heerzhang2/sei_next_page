@@ -19,7 +19,7 @@ import {
     FormLabel,
     FormMessage, Input, Textarea
 } from "@/components/ui";
-import {ClearableSelect, CollapsibleFormSection,BlobInputList,SuffixInput, } from "@/components/chub";
+import {ClearableSelect, CollapsibleFormSection, BlobInputList, SuffixInput, FormSelectField,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import type {UseFormReturn} from "react-hook-form";
@@ -184,15 +184,9 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         let resulTag=sync??(resultName + 'r');
                         let lcNode=<FormField key={i} control={form.control} name={resulTag}
                                 render={({ field }) => (
-                                    <FormItem className="pt-2 w-full break-inside-avoid">
-                                        <FormLabel htmlFor={field.name}>{labelCheck+`-结果判定:`}</FormLabel>
-                                        <FormControl>
-                                            <ClearableSelect field={field}  options={clcOptions}
-                                                onClear={() => {form.setValue(resulTag, "")}}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
+                                    <FormSelectField label={labelCheck+`-结果判定:`}
+                                         options={clcOptions} field={field}
+                                    />
                                 )}
                             />;
                         preNodeObj.push({ lcNode, outNode:undefined });
