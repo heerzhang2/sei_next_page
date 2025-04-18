@@ -34,21 +34,17 @@ export const cbK3_55 = {
   edit: (form: UseFormReturn<any, any, any>) => {
     const watchedValues = form.watch('磨损径') as number[]
     const avsDiam = calcAverageArrObj(watchedValues, (row) => row, 1, 4);
-    return [true, <div className="@7xl:col-span-2 @7xl:row-span-2">
-      <div>
-        <h3 className="text-lg font-medium mb-4">磨损钢丝绳直径测量4个： (mm)</h3>
-        <div className="flex flex-wrap items-center gap-4">
+    return [true, <div className="@7xl:col-span-2 @7xl:row-span-2 text-center">
+        <h3 className="text-lg font-medium mb-0">磨损钢丝绳直径测量4个：</h3>
+        <div className="flex flex-wrap items-center gap-4 justify-center">
           {Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="flex items-center gap-2">
-                <span>{['一', '二', '三', '四'][index] || `测量点${index + 1}`}:</span>
-                <FormField
-                    control={form.control}
-                    name={`磨损径.${index}`}
+                <span>{ ['一', '二', '三', '四'][index] }处测:</span>
+                <FormField control={form.control} name={`磨损径.${index}`}
                     render={({ field }) => (
                         <FormItem className="mb-0">
                           <FormControl>
-                            <SuffixInput type="number" step="0.01" min="0" placeholder="0.00" className="w-20"
-                                unit={"mm"}
+                            <SuffixInput unit={"mm"} type="number" step="0.01" min="0" placeholder="0.00" className="w-20"
                                 {...field}
                                 onChange={(e) => {
                                   const value = e.target.value === "" ? undefined : Number(e.target.value)
@@ -63,11 +59,10 @@ export const cbK3_55 = {
               </div>
           ))}
         </div>
-      </div>
-      <Text css={{display: 'ruby'}}>测量结果：{avsDiam}mm</Text>
+      <span>测量结果：{avsDiam}mm</span>
     </div>]
   },
-  names: ['磨损径'],
+  names: [{n:'磨损径',t:'a',l:4}],
   view: (orc: any,) => {
     const avsDiam = calcAverageArrObj(orc?.磨损径, (row) => row, 1, 4);
     let node = ['一', '二', '三', '四'].map((cap: any, c: number) => <div key={c}

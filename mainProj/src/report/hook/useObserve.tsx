@@ -22,8 +22,20 @@ import {
 import {ClearableSelect, CollapsibleFormSection,BlobInputList,SuffixInput, } from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {useFormFramework} from "@/report/hook/useFormFramework";
+import type {UseFormReturn} from "react-hook-form";
 
-
+export interface MeasureCallback {
+    /** 正常是字符串名字。
+     * 允许names: [{n:'磨损径',t:'a',l:4}], 不仅是字符串名字了： 对象复杂的表达：存储的类型变种： /数组/个数。
+     */
+    names?: any[];
+    /** parentOrc 嵌套的分项报告数据源
+     * */
+    view?: (orc: any, parentOrc: any) =>React.ReactNode;
+    /* 返回[boolean, 表示是否布局拆分的。
+    * */
+    edit?: (form: UseFormReturn<any, any, any>) =>[boolean, React.ReactNode];
+}
 /**观测数据及测量结果记录：游乐报告多了一个备忘列。
  * 来源 EachMeasureCritConfig
  *  param t: string,小小项也即每一个行的输入的标题叙述。
@@ -69,8 +81,8 @@ export interface EachObserveConfig {
     check?: string;
     //同步检验项目大列表的检验结果字段，配合check才有的，sync=共享存储字段名。
     sync?: string;
-    //回调配置对象：没有类型定义硬约束，看实际的用法。
-    cbo?: any;
+    //回调配置对象：没有类型定义硬约束，看实际的用法。 回调扩展支持， names: [{n:'磨损径',t:'a',l:4}], 不再仅仅是字符串名字了。
+    cbo?: MeasureCallback;
 }
 
 
@@ -79,19 +91,42 @@ export interface EachObserveConfig {
  * @param config  必须不可变的。
  * @param allowableV  顺带加上 允许值 栏目吗，类似结果栏目的设置, 默认没该栏目：整个组件范围一样配置。
  * @return 项目name部分
+ * 表单假设遇到可以动态增加修改的数组或表的 arrayFields模板配置 还需要另外做用 useFieldArray 来处理数组的；目前只考虑固定的大小数组存储情形的。
  * */
 export function useObserveItem(config: EachObserveConfig[][], allowableV: boolean,memoF: boolean
 ) {
-    const [itemObservation, itemObservationA] = React.useMemo(() => {
+    const { storage } = useStorage()
+    const [itemObservation,itemObservationA,itemDefaultVal] = React.useMemo(() => {
         const itemObserv: string[] = [];
         const itemAObserv: string[] = [];
+        let  defaultValues={} as any;
         config.forEach((line: EachObserveConfig[], i: number) => {
             if (line[0]?.n) {
                 const itrsName = line[0]?.n + 'r';
                 line.forEach(({n,cbo}: EachObserveConfig, k: number) => {
                     itemObserv.push(n);
                     if(allowableV)   itemAObserv.push(n+'a');        //扩充字段：允许取值；
-                    if(cbo?.names)  itemAObserv.push(...cbo?.names);
+                    if(cbo?.names){
+                        cbo?.names.forEach((adn, p: number) => {
+                            if (typeof adn === 'string')  itemAObserv.push(adn);
+                            else if (typeof adn === 'object' && adn.n && adn.t){
+                                //特殊存储类型的字段： 编辑器表单，需要特别方式做初始化的；
+                               if(adn.t==='a' && adn.l>0){      //数组类型的
+                                   defaultValues[adn.n] = storage[adn.n] || [];
+                                   const currentLength = defaultValues[adn.n].length
+                                   if (currentLength < adn.l) {                                    //少于3行，添加到3行
+                                       for (let i = currentLength; i < adn.l; i++) {
+                                           defaultValues[adn.n].push("")
+                                       }
+                                   } else if (currentLength > adn.l) {                             //多于3行，删除多余的
+                                       for (let i = currentLength - 1; i >= adn.l; i--) {
+                                           defaultValues[adn.n].pop()
+                                       }
+                                   }
+                               }
+                            }
+                        })
+                    }
                 });
                 itemAObserv.push(itrsName);
                 if(memoF)
@@ -101,9 +136,13 @@ export function useObserveItem(config: EachObserveConfig[][], allowableV: boolea
                 itemAObserv.push(line[0]?.sync);
             }
         });
-        return [itemObserv, itemAObserv];
+        return [itemObserv, itemAObserv,defaultValues];
     }, [config,allowableV]);
-    return { itemObservation, itemObservationA};
+
+    return { itemObservation,
+        itemObservationA,
+        itemDefaultVal,
+    };
 }
 
 
@@ -117,6 +156,7 @@ export function useObserveItem(config: EachObserveConfig[][], allowableV: boolea
  * 对应的正式报告用useMeasureCTableX；
  * 返回值render改成数组， 不要再套一层加<></>了；
  * @param mem 整体备注的存储名
+ * cbo:回调扩展支持， names: [{n:'磨损径',t:'a',l:4}],
  * */
 export function useObserveEdLine(config: EachObserveConfig[][],
                            allowableV: boolean, defaultSave: boolean,memoF: boolean,mem?:string
@@ -323,7 +363,7 @@ export const ObserveEdit = ({children, show, alone = true, refWidth, label, memo
         return (typeof config === 'function' ? config(storage) : config);
     }, [storage]);
     //合成测量存储字段名
-    const {itemObservation, itemObservationA,} = useObserveItem(newconfig, allowableV,memoF);
+    const {itemObservation,itemObservationA,itemDefaultVal} = useObserveItem(newconfig, allowableV,memoF);
     //  // 现在接收form和arrays作为参数，这样可以使用真实的form对象和数组字段控制
     //   contentRendererFactory: (form: any, arrays?: Record<string, any>) => React.ReactNode
 
@@ -348,7 +388,7 @@ export const ObserveEdit = ({children, show, alone = true, refWidth, label, memo
     }, [])
     // 2. 初始化字段值
     const defaultValues = React.useMemo(() => {
-        const fields = {} as any
+        const fields = {...itemDefaultVal } as any
         // 初始化普通字段
         itemA.forEach((name) => {
             fields[name] = storage[name] ?? ""
