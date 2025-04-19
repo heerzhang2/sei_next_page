@@ -56,39 +56,26 @@ export default function Skeleton({
         // Change the active tab
         setActiveTab(value)
     }
-    const detailcontents=<div className="flex-1">
-        <div className="h-screen">
-            <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
-                <div  className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto scrollable-content"   >
-                    {repPanel}
-                </div>
-            </div>
-            <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
-                <div   className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content"   >
-                    {children}
-                </div>
-            </div>
-        </div>
-    </div>;
 
     return (
        <div className="flex flex-col">
             {isSmallScreen? <>
                 {isLandscape ? (
-                    <div className="flex h-full mt-4">
+                    <div className="flex h-full">
                         {/* Vertical tabs layout for landscape */}
                         <div className="flex flex-col w-full h-full">
-                            <div className="flex items-center justify-between p-4 border-b">
+                            <div className="hidden flex items-center justify-between p-4 border-b">
                                 <h2 className="text-lg font-medium">Project Editor</h2>
                                 <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
                                     <X className="h-4 w-4" />
                                 </Button>
                             </div>
                             <Tabs value={activeTab}>
-                            <div className="flex flex-row h-screen relative">
-                                {/* Sticky Vertical TabsList with vertical text */}
+                                <div className="flex flex-row h-screen relative">
+                                    {/* Sticky Vertical TabsList with vertical text */}
                                     <div className="sticky top-0 h-full flex items-center">
-                                        <TabsList className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
+                                        <TabsList
+                                            className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
                                             <TabsTrigger
                                                 value="preview"
                                                 className="vertical-tab-trigger px-2 py-6"
@@ -103,13 +90,31 @@ export default function Skeleton({
                                             >
                                                 <span className="vertical-text">编制</span>
                                             </TabsTrigger>
-                                            <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
-                                                <X className="h-4 w-4" />
+                                            <Button variant="ghost" size="icon" className="ml-2"
+                                                    onClick={() => setIsDialogOpen(false)}>
+                                                <X className="h-4 w-4"/>
                                             </Button>
                                         </TabsList>
                                     </div>
-                                    {detailcontents}
-                            </div>
+                                    <div className="flex-1">
+                                        <div className="h-screen">
+                                            <div
+                                                className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
+                                                <div
+                                                    className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto scrollable-content">
+                                                    {repPanel}
+                                                </div>
+                                            </div>
+                                            <div
+                                                className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
+                                                <div
+                                                    className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content">
+                                                    {children}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </Tabs>
                         </div>
                     </div>
@@ -117,36 +122,54 @@ export default function Skeleton({
                 ) : (
                     /* Portrait mode with sticky tabs */
                     <Tabs value={activeTab}>
-                    <div className="flex flex-col h-screen">
-                        <div className="sticky top-0  bg-white border-b">
-                            <div className="flex items-center justify-between p-0">
-                                <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="preview" onClick={() => handleTabChange("preview")}>
-                                      报告
-                                    </TabsTrigger>
-                                    <TabsTrigger value="editor" onClick={() => handleTabChange("editor")}>
-                                      编制
-                                    </TabsTrigger>
-                                </TabsList>
-                                <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
-                                    <X className="h-4 w-4" />
-                                </Button>
+                        <div className="flex flex-col h-screen">
+                            <div className="sticky top-0  bg-white border-b">
+                                <div className="flex items-center justify-between p-0">
+                                    <TabsList className="grid w-full grid-cols-2 h-6 pt-0">
+                                        <TabsTrigger value="preview" className="h-6"
+                                                     onClick={() => handleTabChange("preview")}>
+                                            报告
+                                        </TabsTrigger>
+                                        <TabsTrigger value="editor" className="h-6"
+                                                     onClick={() => handleTabChange("editor")}>
+                                            编制
+                                        </TabsTrigger>
+                                    </TabsList>
+                                    <Button variant="ghost" size="sm" className="ml-2"
+                                            onClick={() => setIsDialogOpen(false)}>
+                                        <X className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="flex-1">
+                                <div className="h-[calc(100vh-33px)]">
+                                    <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
+                                        <div
+                                            className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto scrollable-content">
+                                            {repPanel}
+                                        </div>
+                                    </div>
+                                    <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
+                                        <div
+                                            className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content">
+                                            {children}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        {detailcontents}
-                    </div>
                     </Tabs>
                 )}
-            </>
-             :
-               <SplitViewSticky
+                </>
+                :
+                <SplitViewSticky
                     className="overflow-auto"
                     defaultSplit={50}
                     minLeftWidth={0}
                     minRightWidth={0}
                     independentScrolling={true}
                     leftPanel={
-                        <div className="flex flex-col split-view-panel h-max">
+                        <div className="flex flex-col h-screen">
                             <div className="overflow-auto flex-1">
                                 {repPanel}
                             </div>

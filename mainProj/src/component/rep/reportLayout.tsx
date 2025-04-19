@@ -32,10 +32,10 @@ export default function ReportLayout({
 
     //children有两类情形：1，正式报告或记录  2，单独的编制编辑器。
     return (<>
-      <div  className="flex min-h-screen">
+      <div  className="flex h-screen print:h-auto">
         <EditControlProvider>
           {params?.action ? <>
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-hidden">
                   <div className="mx-auto px-0 pt-0 pb-0">
                     <div className="flex flex-col min-h-screen">
                       <header className="border-b">
