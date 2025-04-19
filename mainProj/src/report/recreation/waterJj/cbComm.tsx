@@ -119,16 +119,17 @@ export const cbK2_6 =(orc:any,parOrc:any)=> {
       names: ['销轴损最', '销轴锈最'],
     }
 };
-
+// min-w-48
 export const cbK4_6 =(orc:any,parOrc:any)=> {
     return  {
   edit: (form: UseFormReturn<any, any, any>) => {
-    return [false, <div><Text>连续工作的异步电机工作电流应当不大于电机的额定电流。</Text>
+    return [false, <div className="flex flex-wrap items-center gap-1 justify-center">
+        <span>连续工作的异步电机工作电流应当不大于电机的额定电流。</span>
         <FormField
             control={form.control}
             name={`工电机`}
             render={({ field }) => (
-                <FormItem className="flex-1">
+                <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
                     <FormLabel>电机</FormLabel>
                     <FormControl>
                         <Input {...field} />
@@ -137,12 +138,12 @@ export const cbK4_6 =(orc:any,parOrc:any)=> {
                 </FormItem>
             )}
         />
-      <Text>电机额定电流为：</Text>
+      <span>电机额定电流为：</span>
       <FormField control={form.control} name={"机额电流"}
                  render={({ field }) => (
-                     <FormItem className="pt-2 w-full break-inside-avoid">
+                     <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
                        <FormLabel>电流</FormLabel>
-                       <FormControl className="w-full">
+                       <FormControl className=" ">
                          <SuffixInput  unit={'A'}  {...field}  />
                        </FormControl>
                        <FormMessage />
@@ -158,10 +159,11 @@ export const cbK4_6 =(orc:any,parOrc:any)=> {
 export const cbK5_21 =(orc:any,parOrc:any)=> {
     return  {
   edit: (form: UseFormReturn<any, any, any>) => {
-    return [false, <div><Text>座席距地面最大高度：</Text>
+    return [false, <div className="flex flex-wrap items-center gap-1 justify-center content-center">
+        <span>座席距地面最大高度：</span>
       <FormField control={form.control} name={"座席高"}
                  render={({ field }) => (
-                     <FormItem className="pt-2 w-full break-inside-avoid">
+                     <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
                        <FormLabel>高度</FormLabel>
                        <FormControl className="w-full">
                          <SuffixInput  unit={'m'}  {...field}  />

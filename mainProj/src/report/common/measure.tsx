@@ -283,12 +283,12 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
     //最多情况是：  带有结果取值的栏目，是跑到这里：#是嵌套了俩层次的<LineColumn column={columns ?? 7}。
     return <div >
       <div >{descNodes}{'>>'}</div>
-      <div >
+      <div  className="flex flex-wrap items-center gap-1 justify-center">
         <FormField control={form.control} name={oName}
                    render={({ field }) => (
-                       <FormItem className="pt-2 w-full break-inside-avoid">
-                         <FormLabel>观测数据</FormLabel>
-                         <FormControl className="w-full">
+                       <FormItem className="flex items-center gap-1 pt-1  break-inside-avoid">
+                         <FormLabel className="text-balance">观测数据</FormLabel>
+                         <FormControl className="">
                            <SuffixInput  unit={unit}  {...field}  />
                          </FormControl>
                          <FormMessage />

@@ -278,9 +278,11 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                 if(checkLine) return <div key={i} className="grid grid-cols-1 @5xl:grid-cols-2 gap-4 text-center">
                     {htmlNodes}
                 </div>;
-                return <div key={i} >
-                    {htmlNodes}
-                </div>;
+                return <Card key={i} className="py-1">
+                    <CardContent className="px-0 @xl:px-1">
+                        {htmlNodes}
+                    </CardContent>
+                </Card>;
             });
             //itemsRender类似这样的[ 序号1 , 隐藏判定结论区 ,  序号2区域的, ..]
             return (

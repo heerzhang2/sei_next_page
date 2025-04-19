@@ -59,12 +59,12 @@ export default function Skeleton({
     const detailcontents=<div className="flex-1">
         <div className="h-screen">
             <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
-                <div  className="md:p-4 border rounded-md bg-background h-full overflow-auto scrollable-content"   >
+                <div  className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto scrollable-content"   >
                     {repPanel}
                 </div>
             </div>
             <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
-                <div   className="md:p-4 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content"   >
+                <div   className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content"   >
                     {children}
                 </div>
             </div>
