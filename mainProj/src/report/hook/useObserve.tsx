@@ -99,19 +99,26 @@ export interface EachObserveConfig {
  * @return 项目name部分
  * 表单假设遇到可以动态增加修改的数组或表的 arrayFields模板配置 还需要另外做用 useFieldArray 来处理数组的；目前只考虑固定的大小数组存储情形的。
  * */
-export function useObserveItem(config: EachObserveConfig[][], allowableV: boolean,memoF: boolean
+export function useObserveItem(config: EachObserveConfig[][], allowableV: boolean,memoF: boolean,defaultSave: boolean
 ) {
     const { storage } = useStorage()
     const [itemObservation,itemObservationA,itemSchemaField,itemDefaultVal] = React.useMemo(() => {
         const itemObserv: string[] = [];
-        const itemAObserv: string[] = [];
+        const itemAObserv: string[] = [];       //不需要#v字段的
         let  defaultValues={} as any;
         let  schemaFields={} as any;
         config.forEach((line: EachObserveConfig[], i: number) => {
             if (line[0]?.n) {
                 const itrsName = line[0]?.n + 'r';
-                line.forEach(({n,cbo}: EachObserveConfig, k: number) => {
-                    itemObserv.push(n);
+                //每一个大项目序号：
+                line.forEach(({n,cbo,c,save}: EachObserveConfig, k: number) => {
+                    let resEdit: boolean =true;
+                    //不想save必须配置c: 默认自动转换计算的 还是人工修改后的，在显示上差别处理
+                    if(undefined!==c){
+                        resEdit= (undefined===save)?  defaultSave : save;
+                    }
+                    if(resEdit)   itemObserv.push(n);
+                    else   itemAObserv.push(n+'o');
                     if(allowableV)   itemAObserv.push(n+'a');        //扩充字段：允许取值；
                     if(cbo){
                         const cbcfg=cbo(storage, );
@@ -176,6 +183,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                 }
 
                 let preNodeObj: { lcNode: JSX.Element; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
+                //save:要不要保存#v结果数值的。
                 line.forEach(({n,t,u,check,save,c,d,x,sync,cbo}: EachObserveConfig, k:number)=> {
                     if(checkLine){              //隐藏的判定结论行: 这个时候line.forEach只会是唯一一次的。
                         const labelCheck=check??bigLabel;
@@ -229,15 +237,17 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         const oname=n+'o';
                         const ovalue = form.watch(oname)         //const ovalue=inp?.[oname];
                         //【未考虑】omit合并结果的同时还要转换结果同时生效的情形？
-                        if('四'===c){
-                            let digits =0===d? 0 : d? Number(d) : 1;
-                            calculate=floatInterception(ovalue,digits,);
+                        if(ovalue!==""){            //form初始化编辑器都是""默认的。
+                            if('四'===c){
+                                let digits =0===d? 0 : d? Number(d) : 1;
+                                calculate=floatInterception(ovalue,digits,);
+                            }
+                            else if('弃'===c){
+                                let digits =0===d? 0 : d? Number(d) : 1;
+                                calculate=floatInterception(ovalue,digits, 'floor');
+                            }
                         }
-                        else if('弃'===c){
-                            let digits =0===d? 0 : d? Number(d) : 1;
-                            calculate=floatInterception(ovalue,digits, 'floor');
-                        }
-                        //默认自动转换计算的 还是人工修改后的，在显示上差别处理
+                        //不想save必须配置c: 默认自动转换计算的 还是人工修改后的，在显示上差别处理
                         if(undefined!==c){
                             resEdit= (undefined===save)?  defaultSave : save;
                         }
@@ -332,7 +342,7 @@ export const ObserveEdit = ({children, show, alone = true, refWidth, label, memo
         return (typeof config === 'function' ? config(storage) : config);
     }, [storage]);
     //合成测量存储字段名
-    const {itemObservation,itemObservationA,itemSchemaField,itemDefaultVal} = useObserveItem(newconfig, allowableV,memoF);
+    const {itemObservation,itemObservationA,itemSchemaField,itemDefaultVal} = useObserveItem(newconfig, allowableV,memoF,defaultSave);
     const {contentRendererFactory} = useObserveEdLine(newconfig, allowableV, defaultSave,memoF,mem);
     const itemA备注: string[] = mem ? [`${mem}`] : [];
     const itemA = React.useMemo(() => {

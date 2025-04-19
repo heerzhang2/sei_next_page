@@ -171,9 +171,8 @@ export const measurementCrender=(labels: any[],nameH:string,unit:string | React.
  * @param allowableV 附加字段栏目 允许取值。
  * @param seqLineName  同一个序号底下的第一行的存储。
  * @param labelOmit  因为结果字段允许取值两个栏目的多行做归并的情形，提示标题。
- * @param columns  布局调整
  * @param item  项目简短地名字 ，item允许没有
- * @return {lcNode,outNode}   预备DOM的两个组件的组合。 差别：lcNode是嵌套在<LineColumn底下的。outNode是在外部的和<LineColumn是并行的关系。
+ * @return {lcNode,}   lcNode=renderDOM
  * */
 type MeasurementCProps = {
   form: UseFormReturn<any, any, any>
@@ -182,11 +181,13 @@ type MeasurementCProps = {
   nameH: string
   unit: string | React.ReactNode;
   allowableV: boolean
-  resEdit: boolean    //结果字段+v允许修改的
+    //结果字段#v 要不要保存；  =false意思：采用resDeft计算的，不能修改保存。
+  resEdit: boolean
   only?: boolean;
   //上一级计算的取值： 默认取值
   resDeft?: any;
   seqLineName?: string,
+    //@Deprecated 合并：改成cbo方式的；
   labelOmit?: string,
 }
 /**原来measurementCrenderN返回的lcNode部分 : 旧的用纯函数const measurementCrenderN=(item:string,labels: any[],nameH:string来直接return{lcNode:做法：没法做副作用的更新能力。
@@ -204,19 +205,19 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
     //描述等抬头的：
   let descNodes=[];
   for(let l=0;l<labels.length;l++){
-    descNodes.push(<span key={l+1} css={{marginLeft: '1rem'}}>{labels[l]}</span>);
+    descNodes.push(<span key={l+1} >{labels[l]}</span>);
   }
   if(!!item){
-    descNodes.push(<span key={0} css={{marginLeft: '1rem',fontWeight:800}}>{item}</span>);
+    descNodes.push(<span key={0} className="font-semibold">{item}</span>);
   }
-  const wvvalue = form.watch(vName)
+  // const wvvalue = form.watch(vName)
   React.useEffect(() => {
     const vName=(seqLineName??nameH)+'v';       //小行的项目名字优先
     if(!only && resEdit){             //没必要保存给后端情形？
       form.setValue(vName, resDeft);
     }
     else{
-      if(wvvalue==="")  form.setValue(vName, resDeft);
+      //if(wvvalue==="")  form.setValue(vName, resDeft);
     }
   }, [resDeft, seqLineName,nameH, only]);
 
@@ -263,7 +264,7 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
                               )}
             />
             :
-            <Text>{labelOmit}测量结果= { wvvalue ?? resDeft } </Text>
+            <Text>{labelOmit}测量结果= { resDeft } </Text>
         }
         { allowableV && <FormField control={form.control} name={aName}
                                    render={({ field }) => (
@@ -307,7 +308,7 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
                               )}
             />
             :
-            <Text>测量结果= { wvvalue ?? resDeft } </Text>
+            <Text>测量结果= { resDeft } </Text>
         }
         {allowableV && <FormField control={form.control} name={aName}
                                   render={({ field }) => (

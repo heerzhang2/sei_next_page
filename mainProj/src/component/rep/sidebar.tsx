@@ -41,7 +41,7 @@ export default function Sidebar({ items }: SidebarProps) {
     return (
         <>
             {/* Desktop sidebar - always visible */}
-            <div className="hidden xl:block w-64 shrink-0 border-l p-4">
+            <div className="hidden xl:block w-64 shrink-0 border-l p-1">
                 <div className="sticky top-16">
                     <TableOfContents items={items} />
                 </div>

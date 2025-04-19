@@ -45,13 +45,13 @@ export default function PageSectionOrientation({
 
   // 添加嵌套标记
   const isNested = !!parentContext.parentOrientation
-
+  //my-8 print:my-0
   return (
     <OrientationContext.Provider value={{ parentOrientation: orientation }}>
       <div
         ref={sectionRef}
         id={sectionId}
-        className={`print-section my-8 print:my-0 ${orientationClass}`}
+        className={`print-section ${orientationClass}`}
         data-orientation={orientation}
         data-nested={isNested ? "true" : "false"}
         data-parent-orientation={parentContext.parentOrientation}
