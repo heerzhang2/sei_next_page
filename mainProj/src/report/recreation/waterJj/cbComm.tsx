@@ -31,8 +31,8 @@ export const cbK2_4 =(orc:any,parOrc:any)=> {
             names: ['抽查构件'],
     }
 };
-//父辈已经有约定了：className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4"
-//子元素className ${item.size === "large" ? "@5xl:col-span-3 @5xl:row-span-3" : ""}
+//父辈已经有约定了：className="grid grid-cols-1 @5xl:grid-cols-2 gap-4"> className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4"
+//子元素col-span-X这个X不可以超出父辈的约定最大数的。 className ${item.size === "large" ? "@5xl:col-span-3 @5xl:row-span-3" : ""}
 export const cbK3_55 =(orc:any,parOrc:any)=> {
     let schemas={} as any;
     //模型schema字段定义用的

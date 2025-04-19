@@ -37,11 +37,12 @@ export interface MeasureCallbackReturn {
      * 返回[boolean, 表示是否<tr>整体替代的。
      * */
     view?: () =>[boolean, React.ReactNode];
-    /* 返回[boolean, 表示是否布局拆分的。
+    /* 返回[boolean, 表示是否替代默认编辑项的生成；若=false就不会替换掉通常的项目编辑区
     * */
     edit?: (form: UseFormReturn<any, any, any>) =>[boolean, React.ReactNode];
 }
 /**观测数据及测量结果记录：游乐报告多了一个备忘列。
+ * EachObserveConfig[]才是一个项目编号的，可能有多个小项目分行的。
  * 来源 EachMeasureCritConfig
  *  param t: string,小小项也即每一个行的输入的标题叙述。
  *  param n: 每个字段存储名。
@@ -61,26 +62,26 @@ export interface MeasureCallbackReturn {
 export interface EachObserveConfig {
     //存储名: 除非是check结论特殊哪一行，否则必须配置的。
     n: string;
-    /**标题区域配置：最大支持多个栏目分别的叙述，最少一个标题*
+    /**标题区域配置（可恨几列的）：最大支持多个栏目分别的叙述，最少一个标题*
      * t[0] 项目的栏目标题: 类型随意，就是可以render的文本。
      * 第一行个的t[]分解列个数不能少于底下同一个区间的分解列数。
      */
     t: any[];        //可支持多个栏目。
-    /**项目的最小标题：只能每一行唯一，不能继承跨越多行地；特别地从上面t[]数组直接拆解出来的
+    /**项目的最小一级的标题：只能每一行唯一，不能继承跨越多行地；特别地从上面t[]数组直接拆解出来的
      * */
     x?: any;
-    //单位
+    //单位栏目的
     u?: string;
-    //判定标准的一列栏目的render Node; 如果有第一个行就必须配置的才行。
+    //判定标准的一列栏目的 render Node; 如果有第一个行就必须配置的才行。
     //【规则】连续的采用一行的是配置 undefined(跨行span), 空的没有该字段设置的要配为=null; #整份config的第一行cit:不能undefined，若=undefined就是没有该栏目的场景！
     cit?: any;
-    //测量值=>结果值,测量结果的转换规则，默认没有规则。
+    //测量值转换规则=>结果值,测量结果的转换规则，默认没有规则。
     c?: string;
-    //保留小数点后2个位的位数; 默认=‘1’的保留1位。
+    //转换保留小数点后2个位的位数; 默认=‘1’的保留1位。
     d?: string|number;
     //是否存储结果字段；
     save?: boolean;
-    /**说明这行=特殊行：对前面的多行进行汇总的结论行。 检验结果 单独占一行位置做配置的。 check=undefined才是普通的行。
+    /**归并结论隐形行：说明这行=特殊行：对前面的多行进行汇总的结论行。 检验结果 单独占一行位置做配置的。 check=undefined才是普通的行。
      * 检验结果 的标题提示。
      * */
     check?: string;
@@ -145,17 +146,16 @@ export function useObserveItem(config: EachObserveConfig[][], allowableV: boolea
  * @param config  config观测数据; 允许可变的。
  * @param allowableV  顺带加上 允许值 栏目吗，类似结果栏目的设置, 默认没该栏目：整个组件范围一样配置。
  * @param defaultSave  若=true的表示有做转换规则的行也必须都做存储。
- * @param memoF 有没有测量的每一大项目特有备注字段录入的。
+ * @param memoF 测量的每一个大项目有没有各自专属的备注录入。
  * 对应的正式报告用useMeasureCTableX；
  * 返回值render改成数组， 不要再套一层加<></>了；
- * @param mem 整体备注的存储名
- * cbo:回调扩展支持， names: [{n:'磨损径',t:'a',l:4}],
+ * @param mem  全表的整体备注名
+ * config: {cbo:回调扩展支持； }
  * */
 export function useObserveEdLine(config: EachObserveConfig[][],
                            allowableV: boolean, defaultSave: boolean,memoF: boolean,mem?:string
 ) {
     const { storage } = useStorage()
-    // contentRendererFactory: (form: any, arrays?: Record<string, any>) => React.ReactNode;
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
             let bigLabel: any;
@@ -165,20 +165,19 @@ export function useObserveEdLine(config: EachObserveConfig[][],
             let resultName: any;
             const itemsRender=config.map((line: EachObserveConfig[], i: number) => {
                 //line 对应了单独一个序号【编号唯一】：一个序号对应多个的 嵌套的子行；[【子项目=多个小行】]
-                const firstLn = line[0];
-                let checkLine: boolean;
+                const firstLn = line[0];    //表格的一行==小项目1的；
+                let checkLine: boolean=false;
                 if( (firstLn?.check || firstLn?.n === undefined) )
-                    checkLine = true;
+                    checkLine = true;           //隐藏的 判定结论，汇聚多个行的，能允许多个项目编序号合并。
                 //经过一次结论 check 行之后自动清空；
                 const seqLineName = line[0]?.n;     //结论存储在第一个分项目开头的字段: omit情形也只有第一行才存储
                 if(resultName===undefined && seqLineName){
                     resultName= seqLineName;            //【约定】结论行必须是最少 这整个序号的。
                 }
-                const lcColumns=allowableV?  3 : 4;           //有些情形太紧凑！
 
-                let preNodeObj: { outNode: JSX.Element|undefined; lcNode: JSX.Element; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
+                let preNodeObj: { lcNode: JSX.Element; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
                 line.forEach(({n,t,u,check,save,c,d,x,sync,cbo}: EachObserveConfig, k:number)=> {
-                    if(checkLine){
+                    if(checkLine){              //隐藏的判定结论行: 这个时候line.forEach只会是唯一一次的。
                         const labelCheck=check??bigLabel;
                         if(resultName===undefined)    throw new Error("没提供测seqLineName");
                         let resulTag=sync??(resultName + 'r');
@@ -189,7 +188,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                                     />
                                 )}
                             />;
-                        preNodeObj.push({ lcNode, outNode:undefined });
+                        preNodeObj.push({ lcNode, });
                         if(memoF){
                             let memoTag=sync??(resultName + 'm');
                             lcNode=<FormField key={i} control={form.control} name={memoTag}
@@ -203,7 +202,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                                         </FormItem>
                                     )}
                                 />;
-                            preNodeObj.push({ lcNode, outNode:undefined });
+                            preNodeObj.push({ lcNode, });
                         }
                         resultName=undefined;
                     }
@@ -242,69 +241,48 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         if(undefined!==c){
                             resEdit= (undefined===save)?  defaultSave : save;
                         }
-                        //编辑器的回调：可自定义录入字段；
-                        // const [editRp,editN]=cbo && cbo(storage).edit && cbo(storage).edit!(form) || [];
+                        //编辑器的回调：可自定义录入字段；正常的editRp=false
                         const [editRp, editN] = cbo?.(storage)?.edit?.(form) ?? [];
-                        let prepareN : { outNode: JSX.Element|undefined; lcNode: JSX.Element; };
+                        let prepareN : { lcNode: JSX.Element; };
                         let lcNode=<MeasurementCline form={form} item={x!} labels={tCopy} nameH={n} unit={unit} allowableV={allowableV}
                                                      resEdit={resEdit} only={false} resDeft={calculate} />
-                        prepareN={ lcNode, outNode:undefined };
+                       //lcNode：是一块编辑区域自带描述标题区域的
+                        prepareN={ lcNode, };
                         if(editN)
-                            preNodeObj.push({ lcNode: <>{editN}</>, outNode:undefined });
+                            preNodeObj.push({ lcNode: <>{editN}</>,  });
                         if(!editRp)
                             preNodeObj.push(prepareN);
                     }
                 });
                 let insertIdx=0;
                 let htmlNodes=[];          //考虑？肢解开：  key取值 报错
-                //往前探查方向，是否存在外部溢出元素？
+                //往前探查方向，是否存在外部溢出元素？把上面的preNodeObj转换进入lcNodesNow
                 let lcNodesNow=[];
                 for(; insertIdx<preNodeObj.length; insertIdx++){
-                    for(; insertIdx<preNodeObj.length; insertIdx++){
-                        const {lcNode,outNode}=preNodeObj[insertIdx];
-                        if(outNode)  break;
-                        let modifyNode={...lcNode};
-                        Object.assign(modifyNode,{ key: 'L'+insertIdx });
-                        lcNodesNow.push(modifyNode);
-                    }
-                    //拆分段落模式：【假定】outNode必然在前面的，而lcNode只能位于底下顺序接着的。
-                    if(lcNodesNow.length>=1){
-                        const lcHtml=<React.Fragment key={i+'_'+insertIdx}>
-                            <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
-                                { lcNodesNow }
-                            </div>
-                        </React.Fragment>;
-                        htmlNodes.push(lcHtml);
-                        lcNodesNow=[];         //局部
-                    }
-                    if(insertIdx<preNodeObj.length){
-                        if(preNodeObj[insertIdx]?.outNode){
-                            let modifyNode={ ...(preNodeObj[insertIdx]?.outNode) };
-                            Object.assign(modifyNode,{ key: 'W'+insertIdx });
-                            htmlNodes.push(modifyNode  as any);            //插入outNode 若不加 as any 类型报错。
-                        }
-                        if(preNodeObj[insertIdx]?.lcNode){
-                            let modifyNode={...(preNodeObj[insertIdx]?.lcNode)};
-                            Object.assign(modifyNode,{ key: 'Y'+insertIdx });
-                            lcNodesNow.push(modifyNode);               //给下一个区域去：被插入outNode了情形。
-                        }
-                    }
+                    const {lcNode,}=preNodeObj[insertIdx];
+                    let modifyNode={...lcNode};
+                    Object.assign(modifyNode,{ key: 'L'+insertIdx });
+                    lcNodesNow.push(modifyNode);
                 }
-                //残留的一部分：
+                //拆分段落模式：【假定】outNode必然在前面的，而lcNode只能位于底下顺序接着的。
                 if(lcNodesNow.length>=1){
-                    const lcHtml=<React.Fragment key={i+'T'}>
-                        <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
+                    const lcHtml=<React.Fragment key={i+'_'+insertIdx}>
+                        <div className="grid grid-cols-1 @xl:grid-cols-2 gap-4">
                             { lcNodesNow }
                         </div>
                     </React.Fragment>;
-                    htmlNodes.push(lcHtml);
+                    htmlNodes.push(lcHtml);     //分块分区显示
                 }
-                //这个序号结束： 一个序号对应多个内部小行的，多行就是多个 x: item多个的,可序号都是同一个的。htmlNodes对应同一序号全部几行
+                //单一个序号的多个小行结束：一个序号对应多个内部小行的，多行就是多个 x: item多个的,可序号都是同一个的。htmlNodes对应同一序号全部几行
+                //隐藏的判定结论行是可能对应多个序号区域的。
+                if(checkLine) return <div key={i} className="grid grid-cols-1 @5xl:grid-cols-2 gap-4 text-center">
+                    {htmlNodes}
+                </div>;
                 return <div key={i} >
                     {htmlNodes}
                 </div>;
             });
-
+            //itemsRender类似这样的[ 序号1 , 隐藏判定结论区 ,  序号2区域的, ..]
             return (
                 <>
                     {itemsRender}

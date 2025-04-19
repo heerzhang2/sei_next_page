@@ -75,6 +75,7 @@ export const config观测数据 : ((orc: any) => EachObserveConfig[][])=(orc: an
         {n: '磨后径', t: [undefined,undefined,undefined], x:'磨损后钢丝绳直径', cbo:cbK3_55},
     ],
     [{check: '3.5.5', }],
+
      [{n: '接地阻', t: ['K4.3','(1)','低压配电系统保护接地电阻应当不大于10Ω。'], x:'接地电阻', u: 'Ω', c: '四', d: 0},
      ],
      [{check: '4.3', }],
