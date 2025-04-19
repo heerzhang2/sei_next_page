@@ -1,6 +1,6 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {Text, InputLine, LineColumn,} from "customize-easy-ui-component";
+import {Text, InputLine, } from "customize-easy-ui-component";
 import {JSX} from "@emotion/react/jsx-runtime";
 import type {UseFormReturn} from "react-hook-form";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
@@ -163,7 +163,7 @@ export const measurementCrender=(labels: any[],nameH:string,unit:string | React.
   }
 }
 
-/**新一代测量 展示; #支持node坐标题;
+/**新一代测量 展示; #支持node当作标题;
  * @param only : 只有一个测量字段的情形，否则是俩个字段。 【注意】only=false的情况在上面不要嵌套<LineColumn；
  * @param unit 单位支持平方米的2在右上角的小写排版，所以扩充为 ReactNode ？{可兼容的}。
  * @param resDeft: 结果字段由外部规则注入的，测量结果的转换规则：同时也就不需要做存储的。 但也可能允许修改的。
@@ -184,11 +184,10 @@ type MeasurementCProps = {
   allowableV: boolean
   resEdit: boolean    //结果字段+v允许修改的
   only?: boolean;
-  //上一级计算的取值：
+  //上一级计算的取值： 默认取值
   resDeft?: any;
   seqLineName?: string,
   labelOmit?: string,
-  columns?: number
 }
 /**原来measurementCrenderN返回的lcNode部分 : 旧的用纯函数const measurementCrenderN=(item:string,labels: any[],nameH:string来直接return{lcNode:做法：没法做副作用的更新能力。
  *@param children 文本其他行的。
@@ -197,17 +196,18 @@ type MeasurementCProps = {
  * ):{ outNode: JSX.Element|undefined; lcNode: JSX.Element; } => {  return{lcNode: <div >
  * */
 export const MeasurementCline = ({form, item,labels,nameH,unit,
-                    allowableV,resEdit,only, resDeft,seqLineName,labelOmit,columns }: MeasurementCProps
+                    allowableV,resEdit,only, resDeft,seqLineName,labelOmit, }: MeasurementCProps
 ) =>{
   const oName=nameH+'o';
   const vName=(seqLineName??nameH)+'v';      //若resDeft提供的，和可能没有该存储的；
   const aName=nameH+'a';      //允许取值存储在
+    //描述等抬头的：
   let descNodes=[];
   for(let l=0;l<labels.length;l++){
-    descNodes.push(<Text key={l+1} css={{marginLeft: '1rem'}}>{labels[l]}</Text>);
+    descNodes.push(<span key={l+1} css={{marginLeft: '1rem'}}>{labels[l]}</span>);
   }
   if(!!item){
-    descNodes.push(<Text key={0} css={{marginLeft: '1rem',fontWeight:800}}>{item}</Text>);
+    descNodes.push(<span key={0} css={{marginLeft: '1rem',fontWeight:800}}>{item}</span>);
   }
   const wvvalue = form.watch(vName)
   React.useEffect(() => {
@@ -222,8 +222,8 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
 
   if(only) {
     //单独一项测量，没有结果输入框的：较为少见
-    return <div  css={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap'}}>
-            <div css={{marginLeft: '1rem'}}>{descNodes}{'>>'}</div>
+   return <div >
+            <div >{descNodes}{'>>'}</div>
             <FormField control={form.control} name={oName}
                 render={({ field }) => (
                     <FormItem className="pt-2 w-full break-inside-avoid">
@@ -235,11 +235,11 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
                     </FormItem>
                 )}
             />
-          </div>
+     </div>
   }
   else if(labelOmit){
       //合并了多个行的情况： 一个标题实际对应连续几个项目小行的。文本申明对应的层次隶属关系提升到上层一级别 =》outNode。
-      return <LineColumn column={columns??6}  >
+      return <div  >
         <FormField control={form.control} name={oName}
                    render={({ field }) => (
                        <FormItem className="pt-2 w-full break-inside-avoid">
@@ -277,13 +277,13 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
                                    )}
             />
         }
-      </LineColumn>
+      </div>
   }
   else{
     //最多情况是：  带有结果取值的栏目，是跑到这里：#是嵌套了俩层次的<LineColumn column={columns ?? 7}。
     return <div >
-      <div css={{marginLeft: '1rem'}}>{descNodes}{'>>'}</div>
-      <LineColumn column={columns ?? 7}>
+      <div >{descNodes}{'>>'}</div>
+      <div >
         <FormField control={form.control} name={oName}
                    render={({ field }) => (
                        <FormItem className="pt-2 w-full break-inside-avoid">
@@ -321,7 +321,7 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
                                   )}
           />
         }
-      </LineColumn>
+      </div>
     </div>
   }
 };
