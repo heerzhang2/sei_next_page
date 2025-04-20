@@ -23,6 +23,7 @@ import {ClearableSelect, CollapsibleFormSection, BlobInputList, SuffixInput, For
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import type {UseFormReturn} from "react-hook-form";
+import {cn} from "@/lib/utils";
 
 export interface MeasureCallbackReturn {
     /** 正常是字符串名字。  @特殊的存储形式的字段需要通过 schemas + defaults来自己定义的。
@@ -189,28 +190,30 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         const labelCheck=check??bigLabel;
                         if(resultName===undefined)    throw new Error("没提供测seqLineName");
                         let resulTag=sync??(resultName + 'r');
-                        let lcNode=<FormField key={i} control={form.control} name={resulTag}
-                                render={({ field }) => (
-                                    <FormSelectField label={labelCheck+`-结果判定:`}
-                                         options={clcOptions} field={field}
-                                    />
-                                )}
-                            />;
+                        let lcNode=<div className="grid grid-cols-[repeat(auto-fit,minmax(18rem,50%))]">
+                                    <FormField key={i} control={form.control} name={resulTag}
+                                        render={({ field }) => (
+                                            <FormSelectField label={labelCheck+`-结果判定:`}
+                                                 options={clcOptions} field={field}
+                                            />
+                                        )}
+                                />
+                            </div>;
                         preNodeObj.push({ lcNode, });
                         if(memoF){
                             let memoTag=sync??(resultName + 'm');
-                            lcNode=<FormField key={i} control={form.control} name={memoTag}
-                                    render={({ field }) => (
-                                        <FormItem className="pt-2 w-full break-inside-avoid">
-                                            <FormLabel>{labelCheck+`-备注:`}</FormLabel>
-                                            <FormControl className="w-full">
-                                                <BlobInputList rows={2} datalist={[]}  {...field}  />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />;
-                            preNodeObj.push({ lcNode, });
+                            lcNode=<div><FormField key={i} control={form.control} name={memoTag}
+                                                   render={({field}) => (
+                                                       <FormItem className="pt-2 w-full break-inside-avoid">
+                                                           <FormLabel>{labelCheck + `-备注:`}</FormLabel>
+                                                           <FormControl className="w-full">
+                                                               <BlobInputList rows={2} datalist={[]}  {...field}  />
+                                                           </FormControl>
+                                                           <FormMessage/>
+                                                       </FormItem>
+                                                   )}
+                            /></div>;
+                                preNodeObj.push({ lcNode, });
                         }
                         resultName=undefined;
                     }
@@ -254,6 +257,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         //编辑器的回调：可自定义录入字段；正常的editRp=false
                         const [editRp, editN] = cbo?.(storage)?.edit?.(form) ?? [];
                         let prepareN : { lcNode: JSX.Element; };
+                        //一个小行，小项目：
                         let lcNode=<MeasurementCline form={form} item={x!} labels={tCopy} nameH={n} unit={unit} allowableV={allowableV}
                                                      resEdit={resEdit} only={false} resDeft={calculate} />
                        //lcNode：是一块编辑区域自带描述标题区域的
@@ -276,23 +280,28 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                 }
                 //拆分段落模式：【假定】outNode必然在前面的，而lcNode只能位于底下顺序接着的。
                 if(lcNodesNow.length>=1){
+                    const nClass=lcNodesNow.length<=1? (checkLine&&!memoF ? "max-w-[fit-content]" : "")
+                        : "grid grid-cols-1 @xl:grid-cols-2 gap-4";
                     const lcHtml=<React.Fragment key={i+'_'+insertIdx}>
-                        <div className="grid grid-cols-1 @xl:grid-cols-2 gap-4">
+                        <div className={nClass}>
                             { lcNodesNow }
                         </div>
                     </React.Fragment>;
                     htmlNodes.push(lcHtml);     //分块分区显示
                 }
                 //单一个序号的多个小行结束：一个序号对应多个内部小行的，多行就是多个 x: item多个的,可序号都是同一个的。htmlNodes对应同一序号全部几行
-                //隐藏的判定结论行是可能对应多个序号区域的。
-                if(checkLine) return <div key={i} className="grid grid-cols-1 @5xl:grid-cols-2 gap-4 text-center">
-                    {htmlNodes}
-                </div>;
-                return <Card key={i} className="py-1">
-                    <CardContent className="px-0 @xl:px-1">
-                        {htmlNodes}
-                    </CardContent>
-                </Card>;
+                //隐藏的判定结论行是可能对应多个序号区域的。  className="grid grid-cols-1 @5xl:grid-cols-2 gap-4 text-center"
+                if(checkLine) return <React.Fragment key={i}>
+                                {htmlNodes}
+                            </React.Fragment>;
+                else{
+                    const nClass=htmlNodes.length<=1? "col-span-2 text-center" : "";
+                    return <Card key={i} className="py-1">
+                        <CardContent className={cn("px-0 @xl:px-1", nClass)}>
+                            {htmlNodes}
+                        </CardContent>
+                    </Card>;
+                }
             });
             //itemsRender类似这样的[ 序号1 , 隐藏判定结论区 ,  序号2区域的, ..]
             return (

@@ -183,11 +183,12 @@ type MeasurementCProps = {
   allowableV: boolean
     //结果字段#v 要不要保存；  =false意思：采用resDeft计算的，不能修改保存。
   resEdit: boolean
+    //没有结果列的
   only?: boolean;
   //上一级计算的取值： 默认取值
   resDeft?: any;
   seqLineName?: string,
-    //@Deprecated 合并：改成cbo方式的；
+  //因为结果字段允许取值两个栏目的多行做归并的情形，提示标题。？合并：改成cbo方式的；
   labelOmit?: string,
 }
 /**原来measurementCrenderN返回的lcNode部分 : 旧的用纯函数const measurementCrenderN=(item:string,labels: any[],nameH:string来直接return{lcNode:做法：没法做副作用的更新能力。
@@ -227,9 +228,9 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
             <div >{descNodes}{'>>'}</div>
             <FormField control={form.control} name={oName}
                 render={({ field }) => (
-                    <FormItem className="pt-2 w-full break-inside-avoid">
-                      <FormLabel>观测数据</FormLabel>
-                      <FormControl className="w-full">
+                    <FormItem className="flex items-center gap-1 pt-1  break-inside-avoid">
+                      <FormLabel className="text-balance">观测数据</FormLabel>
+                      <FormControl>
                         <SuffixInput  unit={unit}  {...field}  />
                       </FormControl>
                       <FormMessage />
@@ -243,9 +244,9 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
       return <div  >
         <FormField control={form.control} name={oName}
                    render={({ field }) => (
-                       <FormItem className="pt-2 w-full break-inside-avoid">
-                         <FormLabel>观测数据</FormLabel>
-                         <FormControl className="w-full">
+                       <FormItem className="flex items-center gap-1 pt-1  break-inside-avoid">
+                         <FormLabel className="text-balance">观测数据</FormLabel>
+                         <FormControl>
                            <SuffixInput  unit={unit}  {...field}  />
                          </FormControl>
                          <FormMessage />
@@ -254,9 +255,9 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
         />
         { resEdit? <FormField control={form.control} name={vName}
                               render={({ field }) => (
-                                  <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel>{(labelOmit??'')+'测量结果'}</FormLabel>
-                                    <FormControl className="w-full">
+                                  <FormItem className="flex items-center gap-1 pt-1  break-inside-avoid">
+                                    <FormLabel className="text-balance">{(labelOmit??'')+'测量结果'}</FormLabel>
+                                    <FormControl>
                                       <SuffixInput  unit={unit}  {...field}  />
                                     </FormControl>
                                     <FormMessage />
@@ -268,9 +269,9 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
         }
         { allowableV && <FormField control={form.control} name={aName}
                                    render={({ field }) => (
-                                       <FormItem className="pt-2 w-full break-inside-avoid">
-                                         <FormLabel>{(labelOmit??'')+'允许值'}</FormLabel>
-                                         <FormControl className="w-full">
+                                       <FormItem className="flex items-center gap-1 pt-1  break-inside-avoid">
+                                         <FormLabel className="text-balance">{(labelOmit??'')+'允许值'}</FormLabel>
+                                         <FormControl>
                                            <SuffixInput  unit={unit}  {...field}  />
                                          </FormControl>
                                          <FormMessage />
@@ -281,7 +282,7 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
       </div>
   }
   else{
-    //最多情况是：  带有结果取值的栏目，是跑到这里：#是嵌套了俩层次的<LineColumn column={columns ?? 7}。
+    //最多情况是：descNodes :可能很多文本内容。
     return <div >
       <div >{descNodes}{'>>'}</div>
       <div  className="flex flex-wrap items-center gap-1 justify-center">
@@ -289,7 +290,7 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
                    render={({ field }) => (
                        <FormItem className="flex items-center gap-1 pt-1  break-inside-avoid">
                          <FormLabel className="text-balance">观测数据</FormLabel>
-                         <FormControl className="">
+                         <FormControl>
                            <SuffixInput  unit={unit}  {...field}  />
                          </FormControl>
                          <FormMessage />
@@ -298,9 +299,9 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
         />
         {resEdit ? <FormField control={form.control} name={vName}
                               render={({ field }) => (
-                                  <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel>测量结果</FormLabel>
-                                    <FormControl className="w-full">
+                                  <FormItem className="flex items-center gap-1 pt-1  break-inside-avoid">
+                                    <FormLabel className="text-balance">测量结果</FormLabel>
+                                    <FormControl>
                                       <SuffixInput  unit={unit}  {...field}  />
                                     </FormControl>
                                     <FormMessage />
@@ -311,15 +312,15 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
             <Text>测量结果= { resDeft } </Text>
         }
         {allowableV && <FormField control={form.control} name={aName}
-                                  render={({ field }) => (
-                                      <FormItem className="pt-2 w-full break-inside-avoid">
-                                        <FormLabel>允许值</FormLabel>
-                                        <FormControl className="w-full">
-                                          <SuffixInput  unit={unit}  {...field}  />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                  )}
+                              render={({ field }) => (
+                                  <FormItem className="flex items-center gap-1 pt-1  break-inside-avoid">
+                                    <FormLabel className="text-balance">允许值</FormLabel>
+                                    <FormControl>
+                                      <SuffixInput  unit={unit}  {...field}  />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                              )}
           />
         }
       </div>
