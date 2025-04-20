@@ -1,8 +1,9 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-  CCell, Cell, Input, InputLine, LineColumn, SuffixInput, Table, TableBody, TableHead, TableRow, Text,
+  CCell, Cell, Input, InputLine, Table, TableBody, TableHead, TableRow, Text,
 } from "customize-easy-ui-component";
+import {SuffixInput,} from "@/components/chub";
 // import {DirectLink,} from "../../../routing/Link";
 import {RepLink,} from "../../common/base";
 import {usePrefixDataTable} from "../../hook/usePrefixData";
@@ -10,6 +11,8 @@ import {useThreeColumnView} from "../../hook/useThreeColumnSubr";
 import {render施工单位,} from "../../common/render";
 import {EachObserveConfig, useObserveTable} from "../../hook/useObserve";
 import {calcAverageArrObj} from "../../../common/tool";
+import type {UseFormReturn} from "react-hook-form";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 
 //仅正式报告用
 const config设备 = [
@@ -369,24 +372,44 @@ export const genCBoAve = (nmar: string[], resvDg: number, unit: string, title?: 
 export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?: any) => {
   return  (orc:any,parOrc:any)=> {
     return {
-      edit: (inp: any, setInp: (a: any) => void) => {
-        let valuAr = nmar.map((name: any, c: number) => inp?.[name + 'o']);
+      edit: (form: UseFormReturn<any, any, any>) => {
+        let valuAr = nmar.map((name: any, c: number) =>{
+          const ovalue = form.watch(name + 'o')
+          return ovalue
+        } );
         const avHs = calcAverageArrObj(valuAr, (row) => row, resvDg);
-        return [true, <div css={{textAlign: 'center'}}><Text css={{fontWeight: 800}}>{title}：</Text>
-          <LineColumn column={4}>
-            <InputLine label='观测数据'>
-              <SuffixInput value={inp?.[nmar[0] + 'o'] || ''}
-                           onSave={txt => setInp({...inp, [nmar[0] + 'o']: txt || undefined})}>{unit}</SuffixInput>
-            </InputLine>
-            <InputLine label='设计值'>
-              <Input value={inp?.[nmar[0] + 'a'] || ''}
-                     onChange={e => setInp({...inp, [nmar[0] + 'a']: e.currentTarget.value || undefined})}/>
-            </InputLine>
-          </LineColumn>
+        return [true, <div css={{textAlign: 'center'}}>
+          <span className="font-semibold">{title}：</span>
+          <div  >
+            <FormField
+                control={form.control}
+                name={nmar[0] + 'o'}
+                render={({ field }) => (
+                    <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
+                      <FormLabel>观测数据</FormLabel>
+                      <FormControl>
+                        <SuffixInput  unit={unit}  {...field}  />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField control={form.control} name={nmar[0] + 'a'}
+                       render={({ field }) => (
+                           <FormItem>
+                             <FormLabel>设计值</FormLabel>
+                             <FormControl>
+                               <Input  {...field}/>
+                             </FormControl>
+                             <FormMessage />
+                           </FormItem>
+                       )}
+            />
+          </div>
           <Text css={{display: 'ruby'}}>计算的测量结果： {avHs} {unit}</Text>
         </div>]
       },
-      view: (orc: any) => {
+      view: () => {
         let valuAr = nmar.map((name: any, c: number) => orc?.[name + 'o']);
         const avHs = calcAverageArrObj(valuAr, (row) => row, resvDg);
         return [false, <>
@@ -398,23 +421,31 @@ export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?:
     };
   }
 };
-
+//搞成2层的 高阶函数：
 export const genCBoOmitAl = (name: string, unit: string, title?: any) => {
   return  (orc:any,parOrc:any)=> {
     return {
-      edit: (inp: any, setInp: (a: any) => void) => {
-        return [true, <div css={{textAlign: 'center'}}><Text css={{fontWeight: 800}}>{title}：</Text>
-          <LineColumn column={5}>
-            <InputLine label='观测数据'>
-              <SuffixInput value={inp?.[name + 'o'] || ''}
-                           onSave={txt => setInp({...inp, [name + 'o']: txt || undefined})}>{unit}</SuffixInput>
-            </InputLine>
-          </LineColumn>
+      edit: (form: UseFormReturn<any, any, any>) => {
+        return [true, <div className="flex flex-wrap items-center gap-1 justify-center">
+          <span className="font-semibold">{title}：</span>
+          <FormField
+              control={form.control}
+              name={name + 'o'}
+              render={({ field }) => (
+                  <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
+                    <FormLabel>观测数据</FormLabel>
+                    <FormControl>
+                      <SuffixInput  unit={unit}  {...field}  />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+              )}
+          />
         </div>]
       },
-      view: (orc: any) => {
+      view: () => {
         return [false, <>
-          <CCell>{orc?.[name + 'o']}</CCell>
+        <CCell>{orc?.[name + 'o']}</CCell>
         </>]
       },
     }

@@ -70,7 +70,7 @@ export function useUppyUploadC({repId, storeObj, row,liveDays=2,maxSize=5,idPref
     const createUppy = useCallback(
         (userId: string) => {
             return new Uppy({id: userId, restrictions:{maxNumberOfFiles: 2,}})
-                .use(Tus, { endpoint: `${process.env.REACT_APP_BACK_END}/uploadTUS/`, withCredentials:true,
+                .use(Tus, { endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`, withCredentials:true,
                     onAfterResponse: onAfterResponse,
                 }).use(Webcam);
         },
@@ -170,7 +170,7 @@ export function useUppyUploadC({repId, storeObj, row,liveDays=2,maxSize=5,idPref
             :
             <div css={{display: 'flex',justifyContent: 'space-around',alignItems: 'center'}}>
                 { storeObj?.url &&
-                    <img src={process.env.REACT_APP_OSS_ENDP+storeObj?.url} alt={storeObj?.url}
+                    <img src={process.env.NEXT_PUBLIC_OSS_ENDP+storeObj?.url} alt={storeObj?.url}
                          css={{
                              maxHeight: '14cm',   //在这个元素的上一级元素可以自己加一个固定高度值，就像一张纸打印的应该多高的取值。这个用固定高度会导致图片自动的横竖比例不均衡压缩=会变形啊！24cm是纸张大约最多高度=报告最大图片高。
                              maxWidth: '-webkit-fill-available',

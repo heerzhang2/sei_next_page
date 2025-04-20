@@ -1,1 +1,108 @@
-{"eqpcod": "3505T107857", "下检日期": "2022-12-31", "主机型号": "YX3-100L1-4", "主机编号": "108318", "产权单位": "厦门肯德基有限公司", "产权单位地址": "中国福建省厦门市翔安区马巷街道 厦门市思明区鹭江道52号海滨大厦23层C区及24层B区", "使用单位": "厦门肯德基有限公司", "使用单位信用码": "612026631###19626", "使用单位地址": "中国福建省厦门市翔安区马巷街道 厦门市思明区鹭江道52号海滨大厦23层C区及24层B区", "使用单位电话": "", "使用地区域": "中国福建省福建省泉州市福建省泉州市丰泽区福建省泉州市丰泽区东海街道", "使用证号": "梯43闽C0024(18)", "使管部类型": "内设分支机构", "倾斜角度": "null", "出厂编号": "TWJ3-1/0158", "分支机构": "丰泽区东海泰禾广场KFC餐厅", "分支机构地址": "泉州市丰泽区通港西街东海泰禾广场16号楼铺位号16-118KFC餐厅", "制造单位": "豫榕(福州)电梯有限公司", "制造日期": "2017-09-01", "单位内部编号": "1#", "单位联系人": "张弛", "卷筒径m": "", "卷筒径o": "", "卷筒径r": "", "名义宽度": "null", "型号": "TWJ3-3", "型钢厚m": "v你好\n            好规划", "型钢厚o": "", "型钢厚r": "√", "子设备品种": "9999", "安装单位": "豫榕(福州)电梯有限公司", "工作电流m": "", "工作电流o": "", "工作电流r": "", "工电机": "", "座席高": "", "座舱深m": "", "座舱深o": "", "座舱深r": "", "开门方式": "", "意外保护型号": "", "打磨径o": "", "投用日期": "2017-12-28", "抽查构件": "", "接地阻m": "", "接地阻o": "", "接地阻r": "", "控制屏型号": "CAHT-RDU", "控制屏编号": "TWJ3-1/0158", "控制方式": "按钮", "提升高度": "null", "断丝数m": "", "断丝数o": "", "断丝数r": "", "曳引机型号": "BYJ110C", "曳引机编号": "172209", "最磨损处o": "", "最锈蚀原o": "", "机额电流": "", "检验类别": "重大修理", "油缸形式": "/", "注册代码": "34303505002018010018", "液泵型号": "/", "液泵流量": "/", "液泵编号": "/", "滑轮径o": "", "电动机型号": "YX3-100L1-4", "电梯层数": 3, "电梯站数": 2, "电梯门数": 2, "监察识别码": "TC81287", "磨后径o": "", "磨后径v": "", "磨损径": ["", "", "", ""], "磨轴原径m": "", "磨轴原径o": "", "磨轴原径r": "", "童席宽o": "", "绝缘阻m": "", "绝缘阻o": "", "绝缘阻r": "", "绳原直径o": "", "绳直径o": "", "维保单位": "福建鼎特电梯有限公司", "缓冲器型号": "ZDQ-A-10", "缓冲器形式": "", "观备注": "", "设备代码": "", "设备使用地点": "丰泽区东海泰禾广场16号KFC餐厅", "设备名称": "杂物电梯", "设备品种": "343", "设备类别": "34", "设备联系人": "许培琼", "设备联系手机": "13636925699", "运行速度": "0.4", "进口类型": "国产", "销轴损最": "", "销轴锈最": "", "锈处钢厚o": "01.238", "限速器型号": "轿厢：ZWX/200;对重：ZWX/200", "限速器编号": "轿厢：17160560;对重：17321411", "靠背高o": "", "顶升形式": "/", "额定载荷": "100"}
+http://192.168.0.100:8673/uploadTUS/
+    请求方法:
+        POST
+状态代码:
+    201 Created
+远程地址:
+    192.168.0.100:8673
+引荐来源网址政策:
+    strict-origin-when-cross-origin
+access-control-allow-credentials:
+true
+access-control-allow-origin:
+http://192.168.0.100:3765
+    access-control-expose-headers:
+Location,Upload-Offset,Upload-Length,Tus2minIoUrl
+cache-control:
+no-cache, no-store, max-age=0, must-revalidate
+connection:
+    keep-alive
+content-length:
+0
+date:
+    Sun, 20 Apr 2025 09:28:32 GMT
+expires:
+    0
+location:
+    /uploadTUS/e108e436-c9e1-45ce-8ccf-11ad3c97b04a
+pragma:
+    no-cache
+set-cookie:
+JSESSIONID=sLir6dV5n_5bxt2b1JllrNDbaYuFElrpuWRFOvHY; path=/
+tus-resumable:
+1.0.0
+upload-expires:
+Sun, 20 Apr 2025 09:29:32 GMT
+vary:
+    Origin
+vary:
+    Access-Control-Request-Method
+vary:
+    Access-Control-Request-Headers
+x-content-type-options:
+nosniff
+x-frame-options:
+DENY
+x-xss-protection:
+0
+accept:
+    */*
+accept-encoding:
+gzip, deflate
+accept-language:
+zh-CN,zh;q=0.9,en;q=0.8
+connection:
+keep-alive
+content-length:
+0
+cookie:
+authjs.csrf-token=06d901a178bd6b10f0fe66319d38d627c07192968745d8401f0937f36a17571f%7Ccfd18b1ef70412624373ca7f9bd0215609ff7308a5a8f578109f38d14421889e; authjs.callback-url=http%3A%2F%2F192.168.0.100%3A3765%2Flogin; __next_hmr_refresh_hash__=8409e5cc4c60c888dc51efa4e30db88a633457081244afec; authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiaGVkOGJsYWpNRkpLYXRjVDdNZTN5MTFCcC1MMFRsQ3hvX00tY2ZldE14ZWNOc3BYZW5qMHdMeEE0encwUXRXajNTdktIZlpPUUZfeW9jVFlneWY4T1EifQ..TsSlvC46GK60w4wZZCgdoQ.wLJfvnA0hLZdXLLYPG2UFbSj8LJDJg4PNl-vkdAE-yrn2NH8sV_OctIZ4qQS6YRLTCOjSoL9yfzLe5MdFyjPcH_1s6s_x7p3nEzm9PjN8wsaVJg5WOhM3-Dov1FvyjUKTyTdZMlZ2UPKIcIMoqa6ikfrsDXEvL5iWl4QcP7qUexHXJIj6lELRwVkpktogpJ97ZetHQNSol1p63arSRRBVxv4aLBJYAd_lUaq1pl_NEyRkwTn0UX7CVjTI7tNIA2nKnv1sdmNd5nzVuAoRrBHuRLLpr6JYDvY7VDtIQ-0MAzNMyTnisF5ZF4m4mQMVfudV2goxgoOWBnSiJ0GTq3MbOsM8j46ZBzT7HFVASUZpGFFM5p12IxwOU7ATG0ZwJVB3OnZegRKp4gE51YzmYt6lCFFRm5p8FlqGRbrzncJ41rnDTLE67kVIuBBGLnyg91Pm2KCIR0LBpZKsj4QaO1B_wzJH9ZMBDywJ1MNwEW8f5-mpH94Z5CtChMTWGO0YUWVaVBrgFuakbhqckceUd3epNXy6UnHacFa8bJA01RhWNidFizdxrXhl_XShHxsaqqBaFxACd8OcWdcBQOt-xU5XtHn_hK3Uvu81L_x3tMwkN0FrjktA_CSGp2e9unkFYTTr_xEjv4-Thaz3aySGv61xmxXH42dRDaXGQYUwt1pp_x5qhivt7rHp8C8uJmapGjh10XZBA2mC9jRMDEAXdx_TQ.GuZ5ZPxpGH9uRJ5jhdP2UmuTHjXco2t1ncy1jfyHEZs; token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc0NTE0MTE4NCwiZXhwIjoxNzQ1MTQ2NTg0fQ.rPsIZMRjrWrMr_zJ5ptGglXG3h7vvXBzcNE215H5P8MoWj0V57N8dg23OlVaWRMoU2LK344ln3xav0apEL5bbA; JSESSIONID=iEo0H-kng8EWQXdQVcWH9byXauhCs4WgElfSmJBz
+host:
+192.168.0.100:8673
+origin:
+http://192.168.0.100:3765
+referer:
+http://192.168.0.100:3765/
+tus-resumable:
+1.0.0
+upload-length:
+2865
+upload-metadata:
+rep d2pTcEQ4cXNSdkd5LXptamkwbFVLMUpsY0c5eWRB,liveDays MTA=,relativePath bnVsbA==,name 5Zu+54mHMi5wbmc=,type aW1hZ2UvcG5n,filetype aW1hZ2UvcG5n,filename 5Zu+54mHMi5wbmc=
+user-agent:
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+
+=====
+http://192.168.0.100:8673/uploadTUS/e108e436-c9e1-45ce-8ccf-11ad3c97b04a
+请求方法:
+OPTIONS
+状态代码:
+200 OK
+
+==
+http://192.168.0.100:8673/uploadTUS/e108e436-c9e1-45ce-8ccf-11ad3c97b04a
+请求方法:
+PATCH
+状态代码:
+204 No Content
+远程地址:
+192.168.0.100:8673            【payload file】
+
+http://192.168.0.100:9000/ywmast/202504/2017/e108e436-c9e1-45ce-8ccf-11ad3c97b04a
+请求方法:
+GET
+状态代码:
+200 OK【file】
+
+、、、、===
+http://192.168.0.100:3765/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/undefinedywmast/202504/2017/6624c7bb-4512-41c6-b296-10316957e4de
+
+http://192.168.0.100:9000/ywmast/202504/2017/6624c7bb-4512-41c6-b296-10316957e4de
+请求方法:
+GET
+状态代码:
+404 Not Found
+
+测点示意图：
+ywmast/202504/2019/d5eaa9b8-13cf-40b0-b63b-ad8aa3faeab8
+

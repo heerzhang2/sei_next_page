@@ -87,7 +87,7 @@ export const StrainStressVw= ({orc, rep, label} :{orc:any, rep:any, label:any}
                 测点示意图：&nbsp;{orc?.测点示意}
                 <div css={{display: 'flex',justifyContent: 'space-around',alignItems: 'center', margin: '1px 0' }}>
                   { orc?._FILE_测点?.url &&
-                      <img src={process.env.REACT_APP_OSS_ENDP+orc?._FILE_测点?.url} alt={orc?._FILE_测点?.url}
+                      <img src={process.env.NEXT_PUBLIC_OSS_ENDP+orc?._FILE_测点?.url} alt={orc?._FILE_测点?.url}
                            css={{
                              maxHeight: '14cm',   //在这个元素的上一级元素可以自己加一个固定高度值，就像一张纸打印的应该多高的取值。这个用固定高度会导致图片自动的横竖比例不均衡压缩=会变形啊！24cm是纸张大约最多高度=报告最大图片高。
                              maxWidth: '-webkit-fill-available',
