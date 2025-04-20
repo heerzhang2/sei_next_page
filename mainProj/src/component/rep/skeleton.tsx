@@ -64,12 +64,12 @@ export default function Skeleton({
                     <div className="flex h-full">
                         {/* Vertical tabs layout for landscape */}
                         <div className="flex flex-col w-full h-full">
-                            <div className="hidden flex items-center justify-between p-4 border-b">
+{/*                            <div className="hidden flex items-center justify-between p-4 border-b">
                                 <h2 className="text-lg font-medium">Project Editor</h2>
                                 <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
                                     <X className="h-4 w-4" />
                                 </Button>
-                            </div>
+                            </div>*/}
                             <Tabs value={activeTab}>
                                 <div className="flex flex-row h-screen relative">
                                     {/* Sticky Vertical TabsList with vertical text */}

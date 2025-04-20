@@ -51,7 +51,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
 
   return (
     <div className="w-full">
-      <div className="mb-4 text-sm font-medium">On this page</div>
+      <div className="mb-4 text-sm font-medium">快捷入口</div>
       <nav>
         <ul className="space-y-2 text-sm">
           {items.map((item) => (

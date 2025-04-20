@@ -41,9 +41,8 @@ export default function Sidebar({ items }: SidebarProps) {
     return (
         <>
             {/* Desktop sidebar - always visible */}
-            <div className="hidden xl:block w-20 shrink-0 border-l p-1">
+            <div className="hidden xl:block w-28 shrink-0 border-l p-1">
                 <div className="overflow-y-auto h-full">
-                    <TableOfContents items={items} />
                     <TableOfContents items={items} />
                 </div>
             </div>
@@ -55,9 +54,9 @@ export default function Sidebar({ items }: SidebarProps) {
             >
                 <Button
                     onClick={openSidebar}
-                    className="h-10 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full px-4 text-sm font-medium shadow-lg"
+                    className="h-8 flex-shrink-0 items-center justify-center gap-0 overflow-hidden rounded-full px-2 text-sm font-medium shadow-lg"
                 >
-                    Outline
+                 纲
                 </Button>
             </div>
 
@@ -69,12 +68,12 @@ export default function Sidebar({ items }: SidebarProps) {
                     <Drawer.Overlay className="fixed inset-0 bg-transparent z-[1001]" />
                     <Drawer.Content
                         className={`bg-white flex flex-col fixed top-0 right-0 
-                              rounded-l-[10px] w-[50vw] min-w-[15rem] max-w-[30rem] h-[100vh]
+                              rounded-l-[10px] w-[50vw] min-w-[13rem] max-w-[20rem] h-[100vh]
                               z-[1002] shadow-xl border-l border-gray-200
                             `}>
-                        <div className="w-full h-full overflow-auto p-4 rounded-t-[10px]">
+                        <div className="w-full h-full overflow-auto p-4 rounded-t-[10px] pb-32">
                             <div className="flex justify-between items-center mb-4">
-                                <Drawer.Title className="font-medium text-gray-900">Outline</Drawer.Title>
+                                <Drawer.Title className="font-medium text-gray-900">辅助内容</Drawer.Title>
                                 <Button
                                     variant="ghost"
                                     size="icon"

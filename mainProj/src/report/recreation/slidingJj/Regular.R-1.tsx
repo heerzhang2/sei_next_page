@@ -18,6 +18,7 @@ import Link from "next/link"
 import { DirectLink } from "@/routing/Link"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
+import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 
 export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
     const searchParams = useSearchParams()
@@ -25,9 +26,10 @@ export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
     const router = useRouter()
     const pathname = usePathname()
     useEffect(() => {
-        const original = searchParams.get("original")
+        const original = searchParams!.get("original")
         setFormatOriginal(!!original)
     }, [searchParams])
+    const createQueryString = useCreateQueryString()
     console.log("ReportView 页面刷新", { original: formatOriginal })
     console.log("ReportView页面刷新orc:", orc, "rep=", rep)
     const Component = formatOriginal ? FormatOriginal : OfficialReport
@@ -39,9 +41,7 @@ export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
                     intent="danger"
                     variant="outline"
                     onClick={() =>{
-                        const url = `${pathname}?${searchParams}`
-                        const toUrl=formatOriginal ? url : url+"original=1";
-                        router.push(toUrl)
+                        router.push(pathname + '?' + createQueryString('original', formatOriginal ? '' : "1"))
                     } }
                 >
                     {formatOriginal ? "正式报告" : "格式化版原始记录"}
@@ -186,6 +186,12 @@ export const contentItems = [
     {title: "K7载荷试验", url: "#T7-1"},
     {title: "系留式观光气球专项", url: "#T13-6"},
     {title: "附录：现场检验条件确认", url: "#SiteCondition"},
+    {title: "K7载荷4试验", url: "#T7-4"},
+    {title: "系留式观光气球4专项", url: "#T13-4"},
+    {title: "K7载荷42试验", url: "#T7-42"},
+    {title: "系留式观光气球42专项", url: "#T13-42"},
+    {title: "K7载荷43试验", url: "#T7-43"},
+    {title: "--系留式观光气球43专项", url: "#T13-43"},
 ]
 
 //5.1?make=1#5.1
