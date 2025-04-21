@@ -137,3 +137,4 @@ const NewsfeedQuery = graphql`
 Next.js的路由Link点击并没有提供独立的数据加载的纯函数，只有整个路由组件函数的提前加载的功能。不一样概念。<Suspense> 包裹异步preload数据执行代码的异步服务端组件。
 <Link href={`/post/${post.id}`} prefetch={true} // 自动预取此链接
 https://commerce.nearform.com/open-source/urql/docs/advanced/authentication/
+Turbopack 用于 `dev` 环境是稳定的，而用于 `build` 的支持仍处于 alpha 阶段。

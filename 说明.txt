@@ -680,27 +680,8 @@ MemoDateInput.displayName = "MemoDateInput"
 
 若用Server Actions方案就不需要React Hook Form了。但是formAction感觉更复杂。
 
-import {UseFormReturn} from "react-hook-form/dist/types/form";
-export const usePrefixDataEdit= ({ config,itemA, form }  :
-                                 {  config:any[][][], itemA?:string[],
-                                    form: UseFormReturn
-                                 }
-) => {
-const render= React.useMemo(() =>
-        {
-            const lastAiObj=surveyItems[surveyItems.length-1];
-            const isMemoLast= lastAiObj?.type==='m';
-            const toTailNodes: React.ReactNode[]=[];
-         return <>
-             {toTailNodes}
-             { isMemoLast && <>
-                 {lastAiObj.desc}:
-                 <TextArea value={inp?.[lastAiObj.name] || ''} rows={5}
-                           onChange={e => setInp({...inp, [lastAiObj.name]: e.currentTarget.value || undefined})}/>
-             </>
-             }
-        </>;
-        }
-        ,[surveyItems]);
-  return [render] as any;
-}
+
+    const rskey= (nestMd? ('_'+nestMd+'_'+redId) : undefined ) as string;
+    const onSure = React.useCallback(async(newinp: any) => {
+        await  setStorage({ ...storage, ...(rskey? {[rskey]: {...storage[rskey], ...newinp}} : newinp) });
+    }, [storage,setStorage,rskey]);

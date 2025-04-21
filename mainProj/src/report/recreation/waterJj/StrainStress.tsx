@@ -11,6 +11,21 @@ import {useMeasureInpFilter} from "../../common/hooks";
 import {Each_ZdSetting, useTableEditor} from "../../hook/useRepTableEditor";
 import {EditStorageContext, useStorage} from "../../StorageContext";
 import {useUppyUpload} from "../../hook/useUppyUpload";
+import {CollapsibleFormSection} from "@/components/chub";
+import {useFormFramework} from "@/report/hook/useFormFramework";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
+} from "@/components/ui";
+import {config加速度, itemA加速, tail加速度} from "@/report/recreation/waterJj/Acceleration";
+import {z} from "zod";
 
 export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
@@ -25,14 +40,57 @@ export const config测点表=[['应变值','μ',150,(obj,setObj)=>{
 //不管sensit与否，都加上存储字段名 ‘应变片#型/灵’ 。
 export const itemA应变应力=['应仪器型','应变片型','应变片灵','应天气','应温度','应料参E','应料参μ','应试工况','测点表','_FILE_测点','测点示意','危应第','应变设计','应变结论','应变备注'];
 interface Props  extends InternalItemProps{
-    //稍微一点的差别： 灵敏
+    //文字上稍微一点的差别： 灵敏
     sensit?: boolean;
 }
-export const StrainStress =
-    React.forwardRef((
-        {children, show, alone = true, repId,redId, nestMd, label,sensit}: Props, ref
-    ) => {
-        const theme = useTheme();
+export const StrainStress = ({ children, show, alone = true, redId, nestMd, label, rep,sensit }: Props) => {
+    const { storage } = useStorage()
+    const schema = React.useMemo(() => {
+        const schemaFields = {} as any
+        // 添加普通字段
+        itemA加速.forEach((namecfg) => {
+            schemaFields[namecfg] = z.string().optional()
+        })
+        const schemaTab = {} as any
+        AxyzNm.forEach((field) => {
+            schemaTab[field] = z.string().optional()
+        })
+        // 添加表格字段
+        config加速度.forEach(([name]) => {
+            schemaFields[name] = z.array(z.object(schemaTab))
+        })
+        schemaFields["加速试果"]= z.object(schemaTab)
+        schemaFields["加速设值"]= z.object(schemaTab)
+        return z.object(schemaFields)
+    }, [])
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        // 初始化普通字段
+        itemA加速.forEach((name) => {
+            fields[name] = storage[name] ?? ""
+        })
+        // 初始化表格字段
+        config加速度.forEach(([name]) => {
+            // 从storage中获取数据，如果没有则创建3行空数据
+            const tableData = storage[name] || []
+            // 确保每个表格都有3行数据
+            const rows = []
+            for (let i = 0; i < stnum; i++) {
+                const row = tableData[i] || {}
+                const newRow = {} as any
+                // 确保每行都有所有字段
+                AxyzNm.forEach((field) => {
+                    newRow[field] = row[field] || ""
+                })
+                rows.push(newRow)
+            }
+            fields[name] = rows
+        })
+
+        return fields
+    }, [storage])
+
+        // const theme = useTheme();
         const [getInpFilter]=useMeasureInpFilter(null,itemA应变应力,);
         //对比同常的const {inp, setInp} = useItemInputControl({ ref });这里增加onSure可立刻修改storage的。就差发送保存给后端操作。尽量避免丢失刚刚上传的文件：类似数据库事务ACID回滚和确保完整。
         const {inp, setInp,onSure} = useInputControlSure({ ref,redId,nestMd });
@@ -47,7 +105,7 @@ export const StrainStress =
             onSure({...inp, '_FILE_测点': upfile});
             !modified && setModified(true);
         }, [inp, modified,onSure,setModified]);
-        const [uploadDom]=useUppyUpload({ repId:repId!,
+        const [uploadDom]=useUppyUpload({ repId:rep?.id!,
             maxFile:1, onFinish, storeObj: inp?._FILE_测点 ,liveDays:10
         });
         const config=[['应变片型号','应仪器型',undefined,30],
@@ -55,51 +113,87 @@ export const StrainStress =
             ['天气情况','应天气',undefined,35],['温度','应温度','℃'],['材料参数E','应料参E'],['材料参数GPa μ','应料参μ']
         ];
 
-        return <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show} redId={redId}
-                                    nestMd={nestMd} alone={alone} label={label!}>
-            <Text variant="h5">{label}：</Text>
-            <div css={{display: 'flex',flexWrap: 'wrap',justifyContent:'space-around',alignItems:'center'}}>
-                { config.map(([title,field,unit,size]:any, i:number) => {
-                    return <div key={i} css={{ display: 'flex',alignItems:'center',
-                        [theme.mediaQueries.md]: {marginLeft: '1rem'}
-                    }}>
-                        <Text css={{whiteSpace: 'nowrap',marginRight: '0.2rem'}}>{title}</Text>
-                        <Input  value={inp?.[field] ||''}  size={size!}
-                                onChange={e => setInp({ ...inp, [field]: e.currentTarget.value||undefined }) }/>
-                        <Text css={{whiteSpace: 'nowrap',marginLeft: '0.1rem'}}>{unit}</Text>
-                    </div>;
-                }) }
-            </div>
-            测试工况：
-            <TextArea  value={inp?.应试工况 ||''} rows={2}
-                       onChange={e => setInp({ ...inp, 应试工况: e.currentTarget.value||undefined}) } />
-            {render测点表}
-            <InputLine  label='测点示意图-说明：'  lineStyle={css`max-width:unset;`}>
-                <BlobInputList value={inp?.测点示意 ||''} rows={1}  datalist={[ ]}
-                               onListChange={v => setInp({ ...inp, 测点示意: v || undefined}) } />
-            </InputLine>
-            测点示意图：
-            {uploadDom}
-            测试结果：
-            <LineColumn column={4} >
-                <InputLine  label={(sensit?'最大应力值测试点':'最危险应力点')+'为测点：'}>
-                    <Input  value={inp?.危应第 ||''} onChange={e => setInp({ ...inp, 危应第: e.currentTarget.value||undefined }) }/>
-                </InputLine>
-                <InputLine  label='设计值=' >
-                    <BlobInputList value={inp?.应变设计 ||''} rows={2}
-                                   onListChange={v => setInp({ ...inp, 应变设计: v || undefined}) } />
-                </InputLine>
-                <InputLine  label='结果判定：' >
-                    <SelectHookfork value={inp?.应变结论 ?? ''} onChange={e => {
+        const contentRendererFactory = React.useCallback(
+            (form: any, arrays?: Record<string, any>) => {
+                return (
+                    <>
+                        <div className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
+                            <FormField
+                                key={"加采频"}
+                                control={form.control}
+                                name={"加采频"}
+                                render={({ field }) => (
+                                    <FormItem className="pt-2 w-full break-inside-avoid">
+                                        <FormLabel>采样频率</FormLabel>
+                                        <FormControl className="w-full">
+                                            <SuffixInput  unit={"Hz"}  {...field}  />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div css={{display: 'flex',flexWrap: 'wrap',justifyContent:'space-around',alignItems:'center'}}>
+                            { config.map(([title,field,unit,size]:any, i:number) => {
+                                return <div key={i} css={{ display: 'flex',alignItems:'center',
+                                    [theme.mediaQueries.md]: {marginLeft: '1rem'}
+                                }}>
+                                    <Text css={{whiteSpace: 'nowrap',marginRight: '0.2rem'}}>{title}</Text>
+                                    <Input  value={inp?.[field] ||''}  size={size!}
+                                            onChange={e => setInp({ ...inp, [field]: e.currentTarget.value||undefined }) }/>
+                                    <Text css={{whiteSpace: 'nowrap',marginLeft: '0.1rem'}}>{unit}</Text>
+                                </div>;
+                            }) }
+                        </div>
+                        测试工况：
+                        <TextArea  value={inp?.应试工况 ||''} rows={2}
+                                   onChange={e => setInp({ ...inp, 应试工况: e.currentTarget.value||undefined}) } />
+                        {render测点表}
+                        <InputLine  label='测点示意图-说明：'  lineStyle={css`max-width:unset;`}>
+                            <BlobInputList value={inp?.测点示意 ||''} rows={1}  datalist={[ ]}
+                                           onListChange={v => setInp({ ...inp, 测点示意: v || undefined}) } />
+                        </InputLine>
+                        测点示意图：
+                        {uploadDom}
+                        测试结果：
+                        <LineColumn column={4} >
+                            <InputLine  label={(sensit?'最大应力值测试点':'最危险应力点')+'为测点：'}>
+                                <Input  value={inp?.危应第 ||''} onChange={e => setInp({ ...inp, 危应第: e.currentTarget.value||undefined }) }/>
+                            </InputLine>
+                            <InputLine  label='设计值=' >
+                                <BlobInputList value={inp?.应变设计 ||''} rows={2}
+                                               onListChange={v => setInp({ ...inp, 应变设计: v || undefined}) } />
+                            </InputLine>
+                            <InputLine  label='结果判定：' >
+                                <SelectHookfork value={inp?.应变结论 ?? ''} onChange={e => {
                                     setInp({ ...inp, 应变结论: e.currentTarget.value || undefined}); }} />
-                </InputLine>
-            </LineColumn>
-            备注：
-            <TextArea  value={inp?.应变备注 ||''} rows={3}
-                       onChange={e => setInp({ ...inp, 应变备注: e.currentTarget.value||undefined}) } />
-            {tail应变}
-    </InspectRecordLayout>;
-});
+                            </InputLine>
+                        </LineColumn>
+                        备注：
+                        <TextArea  value={inp?.应变备注 ||''} rows={3}
+                                   onChange={e => setInp({ ...inp, 应变备注: e.currentTarget.value||undefined}) } />
+                        <span>按测量工况分4个项目: 加速度A，单位（g）{'>>'}</span>
+
+                        <Card className="py-1">
+                            <CardHeader>
+                                <CardTitle>判定部分</CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-1">
+
+                            </CardContent>
+                        </Card>
+                        {children ?? tail应变}
+                    </>
+                )
+            },
+            [children, ],
+        )
+        const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
+        return  <CollapsibleFormSection title={label!} defaultOpen={show}>
+            {render()}
+        </CollapsibleFormSection>;
+};
 
 /**应变应力测试
  * @property sensit: 一点文字差别
