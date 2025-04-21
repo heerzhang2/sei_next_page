@@ -94,7 +94,8 @@ interface Props {
      * */
     defaultV?: any[];
 }
-/**【用的少】因为很多需要其它编辑内容的；会直接改用useTableEditor；表格数据编辑: 不能多個表格追加一起做編輯的。
+/**@Deprecated
+ * 【用的少】因为很多需要其它编辑内容的；会直接改用useTableEditor；表格数据编辑: 不能多個表格追加一起做編輯的。
  * 用了<DdMenu icon替代了<Popover>做菜单后会好点：菜单版面紧凑而且易于扩展。
  * */
 export function useRepTableEditor({ ref, nestMd, show, alone, redId, config, table,column,breaks,label,
@@ -162,12 +163,13 @@ const TabSplChars=['◆','╏','│','┋','╁','↑','╀','●','║','◇','
  * 【特别地】针对（defaultV && fixColumn && noDelAdd）同时满足的特别情况：把固定不变的列从表格存储和编辑保存方法中分离开来，这个情景下obj对象不要包括固定列。
  * 可惜缺点也明显：需要多一个确认或多一次点击菜单有点啰嗦， 但是生命力适应性也较好。
  * 上一级提供useForm,这里作为父辈form一部份构造的（form，arrayControls）=>DOM。 反方向传递控制的。
+ const isBigSrc = useMediaLayout(`${theme.breakpoints.big}`);
+ * 弹性支持小列数表格并排布局raft模式的； 定长折叠表格不支持raft。
  * */
 export function useTableEditor({config, table,column,breaks, headview,tailview,defaultV, noDelAdd,fixColumn,editAs,maxRf,
                                    stretchF=[1,1.35,1.7], saveFixC=false,
 }: TableEditorProps) {
     const theme = useTheme();
-    const isBigSrc = useMediaLayout(`${theme.breakpoints.big}`);
     const excludeFix=(defaultV && (fixColumn!>=1) && noDelAdd) && (!saveFixC);      //排除掉固定列模式的存储需要。
     //当前正在编辑的是位于表存储数组的哪一行，
     const [seq, setSeq] = React.useState<number | null>(null);   //表對象的當前一條。
@@ -205,7 +207,7 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
             }}>
             {seq===null? '新' : seq!+1}
             <div className="editLinc" css={{width: '-webkit-fill-available'}}>
-                <div className="editItems" breaks={breaks} column={column}>
+                <div className="editItems" >
                     {(config).map(([title,tag, _, callback,park]:any,i:number) => {
                         if(fixColumn && i<fixColumn)   return <React.Fragment key={i}></React.Fragment>;
                         else return (
@@ -261,7 +263,7 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
     const hBarWidth= barRect?.width || 0;
     //屏幕的类型 ：大中小屏的区分；
     const screenTp=(innerHeight!)>860 && hBarWidth>1700 ? 2: (innerHeight!)>740 && hBarWidth>1280 ? 1: 0;
-    const [fixedColW, setFixedColW] = React.useState<boolean>(isBigSrc);
+    const [fixedColW, setFixedColW] = React.useState<boolean>(false);
     const raft= React.useMemo( () => {
         //不能用 dytilRef?.current?.getBoundingClientRect();没办法更新。
         //按属性对Object分类 https://blog.csdn.net/weixin_48594833/article/details/128830644  回调行数prev 必需,cur 必需,index 可选,arr可选
@@ -276,11 +278,6 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
     // console.log("古荡苏打水建议放排barRect=",barRect);
     //不能依据状态来丢弃HOOK调用; 若是=fixedColW? useMeasure(dytilRef) :? @报错React has detected a change in the order of Hooks called           Previous render            Next render
     //旧版本用const szTil=useMeasure(dytilRef.current? dytilRef : null);          //可回避 HOOK报错
-
-    React.useLayoutEffect(() => {
-        setFixedColW(isBigSrc);
-        // target.current && setSize(target.current.getBoundingClientRect())
-    }, [isBigSrc, setFixedColW])
 
     const rowRefs = React.useRef<Map<number, HTMLDivElement | null>>(new Map());
     //【可能因位置移动变量没变化】导致不能实际变更标题条的新位置。只好麻烦点加了这个。
@@ -306,7 +303,7 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
                 <>
                     {headview}
                     <Button intent='primary' onPress={() => setFixedColW(!fixedColW)}
-                    >{fixedColW? `弹性布局` : `定长布局`}</Button>按每行{excludeFix? config.length-fixColumn! : config.length}列为一组录入
+                    >{fixedColW? `弹性布局` : `定长折叠`}</Button>按每行{excludeFix? config.length-fixColumn! : config.length}列为一组录入
                     <Button onPress={() => {
 /*                        if(excludeFix){
                             let fxkeys={} as any;       //配置里面前面几列的固定不修改的字段key名; 转为对象化形式的{key1:, key2:, ...}；

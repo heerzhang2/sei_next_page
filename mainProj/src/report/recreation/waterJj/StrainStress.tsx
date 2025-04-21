@@ -28,13 +28,20 @@ import {config加速度, itemA加速, tail加速度} from "@/report/recreation/w
 import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
+import {copyZdConfig, useElasticTable} from "@/hooks/useElasticTable";
 
 export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
     2、“+”表示测点位置结构受拉，“-”表示测点位置结构受压。
 </Text>;
 
-export const config测点表=[['应变值','μ',150,tabSuffixCb('με')],['应力值','M',150,tabSuffixCb('MPa')]] as Each_ZdSetting[];
+export const config测点表=[['应变值','μ',150,tabSuffixCb('με')],['应力值','M',150,tabSuffixCb('MPa')],
+    //【测试临时】
+    // ['taih的ou','a',80,tabSuffixCb('με')],['miaosh给u','b',250,tabSuffixCb('MPa')],
+    // ['方法','c',160,tabSuffixCb('με')],['备注','d',290],['日家期','e',190,tabSuffixCb('MPa')]
+] as Each_ZdSetting[];
+const config合于Vw=copyZdConfig(config测点表,[320,95,100,90,80,80,80,390]);
+
 //不管sensit与否，都加上存储字段名 ‘应变片#型/灵’ 。
 export const itemA应变应力=['应仪器型','应变片型','应变片灵','应天气','应温度','应料参E','应料参μ','应试工况','测点表','_FILE_测点','测点示意','危应第','应变设计','应变结论','应变备注'];
 interface Props  extends InternalItemProps{
@@ -69,6 +76,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         return [ {name:"测点表", itemTemplate,} ]
     }, [])
 
+    const [render阴保表]=useElasticTable({content: storage?.测点表, config: config合于Vw, slash:true,});
 
         const theme = useTheme();
         const [getInpFilter]=useMeasureInpFilter(null,itemA应变应力,);
@@ -215,6 +223,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         const { render,form,arrayControls } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
         return  <CollapsibleFormSection title={label!} defaultOpen={show}>
             {render()}
+            {render阴保表}
         </CollapsibleFormSection>;
 };
 
