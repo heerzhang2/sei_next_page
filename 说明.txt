@@ -685,3 +685,52 @@ MemoDateInput.displayName = "MemoDateInput"
     const onSure = React.useCallback(async(newinp: any) => {
         await  setStorage({ ...storage, ...(rskey? {[rskey]: {...storage[rskey], ...newinp}} : newinp) });
     }, [storage,setStorage,rskey]);
+
+
+
+export const StrainStress = ({ children, show, alone = true, redId, nestMd, label, rep,sensit }: Props) => {
+    const { storage } = useStorage()
+    const schema = React.useMemo(() => {
+        const schemaFields = {} as any
+        // 添加普通字段
+        itemA应变应力.forEach((namecfg) => {
+            schemaFields[namecfg] = z.string().optional()
+        })
+        return z.object(schemaFields)
+    }, [])
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        // 初始化普通字段
+        itemA应变应力.forEach((name) => {
+            fields[name] = storage[name] ?? ""
+        })
+
+        return fields
+    }, [storage])
+    const arrayFields =React.useMemo(() => {
+        // 创建每个字段的空模板
+        const itemTemplate = {} as any
+        config测点表.forEach(([n,field,s,cb,park]) => {
+            itemTemplate[field] = ""
+        })
+        return [ {name:"测点表", itemTemplate,} ]
+    }, [])
+
+        const [nestRendererFactory]=useTableEditor({breaks, headview,
+                        config: config测点表, table:'测点表', column:3, });
+
+        const contentRendererFactory = React.useCallback(
+            (form: any, arrays?: Record<string, any>) => {
+                return (
+                    <>
+                      {nestRendererFactory(form, arrays)}
+                    </>
+                )
+            },
+            [ ],
+        )
+        const { render,form, } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+        return  <CollapsibleFormSection title={label!} defaultOpen={show}>
+            {render()}
+        </CollapsibleFormSection>;
+};

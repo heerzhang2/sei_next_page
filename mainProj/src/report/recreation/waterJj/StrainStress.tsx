@@ -8,7 +8,7 @@ import {
     CCellUnit, InspectRecordLayout, InternalItemProps, RepLink, SelectHookfork, useInputControlSure,
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
-import {Each_ZdSetting, useTableEditor} from "../../hook/useRepTableEditor";
+import {Each_ZdSetting, tabSuffixCb, useTableEditor} from "../../hook/useRepTableEditor";
 import {EditStorageContext, useStorage} from "../../StorageContext";
 import {useUppyUpload} from "../../hook/useUppyUpload";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
@@ -34,11 +34,7 @@ export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
     2、“+”表示测点位置结构受拉，“-”表示测点位置结构受压。
 </Text>;
 
-export const config测点表=[['应变值','μ',150,(obj,setObj)=>{
-    return <SuffixInput  value={obj?.μ ||''} onSave={txt=> setObj({...obj,μ: txt || undefined })}>με</SuffixInput>
-}],['应力值','M',150,(obj,setObj)=>{
-    return <SuffixInput  value={obj?.M ||''} onSave={txt=> setObj({...obj,M: txt || undefined })}>MPa</SuffixInput>
-}]] as Each_ZdSetting[];
+export const config测点表=[['应变值','μ',150,tabSuffixCb('με')],['应力值','M',150,tabSuffixCb('MPa')]] as Each_ZdSetting[];
 //不管sensit与否，都加上存储字段名 ‘应变片#型/灵’ 。
 export const itemA应变应力=['应仪器型','应变片型','应变片灵','应天气','应温度','应料参E','应料参μ','应试工况','测点表','_FILE_测点','测点示意','危应第','应变设计','应变结论','应变备注'];
 interface Props  extends InternalItemProps{
@@ -64,6 +60,15 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
 
         return fields
     }, [storage])
+    const arrayFields =React.useMemo(() => {
+        // 创建每个字段的空模板
+        const itemTemplate = {} as any
+        config测点表.forEach(([n,field,s,cb,park]) => {
+            itemTemplate[field] = ""
+        })
+        return [ {name:"测点表", itemTemplate,} ]
+    }, [])
+
 
         const theme = useTheme();
         const [getInpFilter]=useMeasureInpFilter(null,itemA应变应力,);
@@ -73,9 +78,11 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         const headview=<Text variant="h5">
             测试点:按照一行2字段录入： 应变值（με）, 应力值（MPa）;
         </Text>;
-        const [render测点表]=useTableEditor({breaks, inp, setInp,  headview,
-                        config: config测点表, table:'测点表', column:3, });
+        const [nestRendererFactory]=useTableEditor({breaks, headview, config: config测点表, table:'测点表'});
 /*
+  // 现在接收form和arrays作为参数，这样可以使用真实的form对象和数组字段控制
+  nestRendererFactory: (form: any, arrays?: Record<string, any>) => React.ReactNode
+
         const {modified,setModified,} =useStorage();
         const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
             onSure({...inp, '_FILE_测点': upfile});
@@ -132,7 +139,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                         </FormItem>
                                     )}
                                 />
-                                {render测点表}
+                                {nestRendererFactory(form, arrays)}
                             </CardContent>
                         </Card>
 {/*
@@ -203,9 +210,9 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                     </>
                 )
             },
-            [children, ],
+            [children,nestRendererFactory ],
         )
-        const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
+        const { render,form,arrayControls } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
         return  <CollapsibleFormSection title={label!} defaultOpen={show}>
             {render()}
         </CollapsibleFormSection>;

@@ -90,6 +90,7 @@ export default function MultiTableFormExample() {
 
     // 3. 定义数组字段配置
     const arrayFields = React.useMemo(() => {
+        //有多张表格的：
         return config加速度.map(([name]) => {
             // 创建每个字段的空模板
             const itemTemplate = {} as any

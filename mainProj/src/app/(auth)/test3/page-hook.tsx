@@ -25,6 +25,7 @@ const baseSchema = z.object({
     customFields: z
         .array(
             z.object({
+                //和正常表格不同：只有2个固定值名称【key，value】的字段； name={`customFields.${index}.value`}
                 key: z.string(),
                 value: z.string(),
             }),
@@ -33,7 +34,7 @@ const baseSchema = z.object({
         .default([]),
     // For truly dynamic fields that aren't known in advance
     // we use a record type that can accept any string key
-    //动态字段列表存储{嵌套  z.record}
+    //动态字段+嵌套对象存储{嵌套  z.record}
     dynamicData: z.record(z.string(), z.any()).optional().default({}),
 })
 
@@ -64,7 +65,9 @@ export default function AdvancedForm() {
             role: "",
             bio: "",
             agreeToTerms: false,
+            //表格做法
             customFields: [],
+            //嵌套对象字段+动态的名字
             dynamicData: {},
         },
     })

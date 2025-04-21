@@ -1,15 +1,19 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
+    BlobInputList,
     Button,
     ButtonRefComp,
-    CCell,
+    CCell, CheckSwitch,
     DdMenu,
     DdMenuItem,
+    Input, InputDatalist,
+    InputLine,
     Layer,
-    LineColumn,
+    LineColumn, SuffixInput,
     TableRow,
     Text,
+    TextArea,
     useTheme,
 } from "customize-easy-ui-component";
 import {InspectRecordLayout, useItemInputControl} from "../common/base";
@@ -32,9 +36,6 @@ import {
 import {ClearableSelect} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {tail应变} from "@/report/recreation/waterJj/StrainStress";
-import { BlobInputList,SuffixInput,} from "@/components/chub";
-import {Input,} from "@/components/ui";
-import type {UseFormReturn} from "react-hook-form";
 
 //通用render编辑器回调类型: 因为后面修改的只好把参数field放在后面添加，避免报错太多了。
 //这里第三个field参数：实际就是表格的嵌套属性字段。而inp,setInp实际对应通用表格组件内部提供的obj,setObj的状态管理变量函数：而不是报告编辑区对话框层面的inp,setInp。混淆。
@@ -122,7 +123,7 @@ interface TableEditorProps {
     // ref: React.Ref<any>;
     //表格的基本配置  多字段
     config: Each_ZdSetting[];
-    /**存储的json表名名字：[{},]*/
+    /**存储的json表*/
     table: string;
     /**自适应 最大放下编辑框 列数： >=2 and <=5
      * 给输入编辑器区域的 LineColumn组件 用的；
@@ -161,7 +162,7 @@ const TabSplChars=['◆','╏','│','┋','╁','↑','╀','●','║','◇','
  * 可以和别的更多的 编辑表单内容直接的组合。
  * 【特别地】针对（defaultV && fixColumn && noDelAdd）同时满足的特别情况：把固定不变的列从表格存储和编辑保存方法中分离开来，这个情景下obj对象不要包括固定列。
  * 可惜缺点也明显：需要多一个确认或多一次点击菜单有点啰嗦， 但是生命力适应性也较好。
- * 上一级提供useForm,这里作为父辈form一部份构造的（form，arrayControls）=>DOM。 反方向传递控制的。
+ * 上一级提供useForm,这里作为父辈form一部份构造的（form，，）=>DOM。
  * */
 export function useTableEditor({config, table,column,breaks, headview,tailview,defaultV, noDelAdd,fixColumn,editAs,maxRf,
                                    stretchF=[1,1.35,1.7], saveFixC=false,
@@ -175,21 +176,31 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
     const [hoverr, setHoverr] = React.useState<number | null>(0);
     //【二传手的】需要多点一次(触发确认)按钮的；分离的状态对象：仅针对表格唯一行。
     const [obj, setObj] = React.useState<any>({});
-    // const onModifySeq = React.useCallback((idx:number,it:any) => {
+    // async function doLogin(e: React.FormEvent  | Event)
+    // {   console.log("点了form");  }
+    const onModifySeq = React.useCallback((idx:number,it:any) => {
+        setObj(it);
+        setSeq(idx);
+    }, [setSeq, setObj]);
+    // function onModifySeq(idx:number,it:any){
     //     setObj(it);
     //     setSeq(idx);
-    // }, [setSeq, setObj]);
-    // const onDeleteSeq = React.useCallback((idx:number) => {
-    //     inp?.[table]?.splice(idx,1);
-    //     setInp({...inp,[table]: [...inp?.[table]] });
-    //     setSeq(null);
-    // }, [inp, setInp, table]);
-    // const onInsertSeq = React.useCallback((idx:number) => {
+    // }
+    const onDeleteSeq = React.useCallback((idx:number) => {
+        inp?.[table]?.splice(idx,1);
+        setInp({...inp,[table]: [...inp?.[table]] });
+        setSeq(null);
+    }, [inp, setInp, table]);
+    const onInsertSeq = React.useCallback((idx:number) => {
+        inp?.[table]?.splice(idx,0, obj);
+        setInp({...inp,[table]:[...inp?.[table]] });
+        setSeq(idx);
+    }, [obj, inp, setInp, table]);
+    // function onInsertSeq(idx:number){
     //     inp?.[table]?.splice(idx,0, obj);
     //     setInp({...inp,[table]:[...inp?.[table]] });
     //     setSeq(idx);
-    // }, [obj, inp, setInp, table]);
-
+    // }
 
     //代替表格的边线：不被文本录入用，尽量宽度小。
     function spliteor(i:number){
@@ -197,57 +208,47 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
     }
     //【注意】回调callback局限：若加<React.Fragment > 会导致<InputLine 内勤套render时刻无法穿透提供 props 给输入组件的：层次层级不配套，造成样式不一致问题！
     const editor=React.useCallback( (form: any, arrays?: Record<string, any>) => {
-        const { fields, append, remove, move} =arrays?.[table];
-        const tabledArr = form.watch(table)
         if(editAs) return editAs(obj,setObj,seq);
         else return <Layer elevation={"sm"} css={{display: 'flex',justifyContent: 'center',flexDirection: 'column',width: '-webkit-fill-available',
                             [theme.mediaQueries.md]: {flexDirection: 'row',padding:'0.25rem'}
             }}>
             {seq===null? '新' : seq!+1}
             <div className="editLinc" css={{width: '-webkit-fill-available'}}>
-                <div className="editItems" breaks={breaks} column={column}>
+                <LineColumn className="editItems" breaks={breaks} column={column}>
                     {(config).map(([title,tag, _, callback,park]:any,i:number) => {
                         if(fixColumn && i<fixColumn)   return <React.Fragment key={i}></React.Fragment>;
                         else return (
-                            <React.Fragment key={i}>
-                                { callback ? callback(form,title,tag,park)
+                            <InputLine key={i} label={title+'：'}
+                                       css={{ "& .InputLine__Head": {alignItems: 'center'} }}
+                            >
+                                { callback ? callback(obj, setObj, tag, park)
                                     :
-                                    park? <FormField key={i} control={form.control} name={`${park}.${tag}`}
-                                                     render={({ field: formField }) => (
-                                                         <FormItem>
-                                                             <FormLabel>{title}</FormLabel>
-                                                             <FormControl>
-                                                                 <Input {...formField} />
-                                                             </FormControl>
-                                                             <FormMessage />
-                                                         </FormItem>
-                                                     )}
-                                        />
-                                        /*<Input value={obj?.[park]?.[tag] ||''}
+                                    park? <Input value={obj?.[park]?.[tag] ||''}
                                                  onChange={e => {
                                                      objNestSet(park, tag,  e.currentTarget.value||undefined, obj, setObj);
-                                                 } } />*/
+                                                 } } />
                                         :
-                                        <FormField key={i} control={form.control} name={tag}
-                                                   render={({ field: formField }) => (
-                                                       <FormItem>
-                                                           <FormLabel>{title}</FormLabel>
-                                                           <FormControl>
-                                                               <Input {...formField} />
-                                                           </FormControl>
-                                                           <FormMessage />
-                                                       </FormItem>
-                                                   )}
-                                        />
+                                    <Input value={obj?.[tag] ||''}
+                                           onChange={e => {
+                                               setObj({...obj, [tag]: (e.currentTarget.value||undefined)});
+                                           } } />
                                 }
-                            </React.Fragment>
+                            </InputLine>
                         );
                     } )  }
-                </div>
+                </LineColumn>
                 <Button onPress={() => {
-                    append(obj)
+                    if(seq !== null) {
+                        inp?.[table]?.splice(seq, 1, obj);    //替换掉的
+                        setInp({ ...inp, [table]: [...inp?.[table]] });
+                    }
+                    else if(inp?.[table]?.length>0){
+                        inp?.[table]?.splice(inp?.[table]?.length, 0, obj);    //尾巴加
+                        setInp({ ...inp, [table]: [...inp?.[table]] });
+                    }
+                    else  setInp({ ...inp, [table]: [obj] });
                 } }
-                >{(tabledArr.length>0 && seq!==null)? `改一组就确认`: `新增一组`}</Button>
+                >{(inp?.[table]?.length>0 && seq!==null)? `改一组就确认`: `新增一组`}</Button>
             </div>
         </Layer>;
     }, [ obj, seq, config,breaks,column, fixColumn, table ,editAs]);
@@ -297,18 +298,18 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
 
     //若ALL编辑区域拉上的情况{instrumentTable}还没有ref.current: 切换后才有DOM存在的；所以这个上面的useMeasure就无法注册成功，拉开展示DOM之后useMeasure不会更新了:上一级dytilRef无法体现页面点击拉开新的ref、
     // console.log("目前管壁·旧的=",raft, seq);
+    const membersum=inp?.[table]?.length;
+    const linecnt=Math.ceil(inp?.[table]?.length/raft) ;        //最多抵达行的总个数；
+
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
-            const tabledArr = form.watch(table)
-            const membersum=tabledArr.length;
-            const linecnt=Math.ceil(tabledArr.length/raft) ;        //最多抵达行的总个数；
             return (
                 <>
                     {headview}
                     <Button intent='primary' onPress={() => setFixedColW(!fixedColW)}
                     >{fixedColW? `弹性布局` : `定长布局`}</Button>按每行{excludeFix? config.length-fixColumn! : config.length}列为一组录入
                     <Button onPress={() => {
-/*                        if(excludeFix){
+                        if(excludeFix){
                             let fxkeys={} as any;       //配置里面前面几列的固定不修改的字段key名; 转为对象化形式的{key1:, key2:, ...}；
                             for(let k=0;k<fixColumn!;k++){
                                 const field=config[k][1];
@@ -325,7 +326,7 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
                             });
                             setInp({ ...inp, [table]: excludeAft})
                         }
-                        else setInp({ ...inp, [table]: defaultV});*/
+                        else setInp({ ...inp, [table]: defaultV});
                     } }>清空全表至默认</Button>
                     <hr/>
                     <div>
@@ -371,7 +372,7 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
                             // mbbLeft= mbbLeft>=raft? raft : mbbLeft;    //当前这行有几个真实的存在 data[];
                             const domRow=<div css={{display: 'flex',flexWrap: 'wrap',justifyContent:'space-around',alignItems:'center'}}>
                                 { (new Array(raft)).fill(null).map((__:any,b:number)=> {
-                                    const  a=tabledArr[raft*i +b];    //后端数据的某一行对象a={,}
+                                    const  a=inp?.[table]?.[raft*i +b];    //后端数据的某一行对象a={,}
                                     return <DdMenu key={b}  label="多选" icon={
                                         <ButtonRefComp  size="md" variant="ghost"  css={{display: 'flex',flexDirection: 'column',alignItems:'flex-start',
                                             flexWrap: 'wrap', width: '-webkit-fill-available', justifyContent: 'space-between',
@@ -402,10 +403,10 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
                                                    divStyle={{ padding: '0 !important',width: fixedColW? 'unset':`calc(${100/raft}%)` } }
                                     >
                                         { (raft*i+b < membersum)  &&  <>
-                                            <DdMenuItem label={'修改'} onClick={  () => { {/*onModifySeq(raft*i +b,a)*/} } } />
+                                            <DdMenuItem label={'修改'} onClick={  () => { onModifySeq(raft*i +b,a) } } />
                                             {!noDelAdd &&  <>
-                                                <DdMenuItem label={'刪除这条'} onClick={  () => { {/*onDeleteSeq(raft*i +b)*/} } } />
-                                                <DdMenuItem label={'插入一条'} onClick={  () => { {/*onInsertSeq(raft*i +b)*/} } } />
+                                                <DdMenuItem label={'刪除这条'} onClick={  () => { onDeleteSeq(raft*i +b) } } />
+                                                <DdMenuItem label={'插入一条'} onClick={  () => { onInsertSeq(raft*i +b) } } />
                                             </>
                                             }
                                         </>
@@ -422,7 +423,7 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
                                         rowRefs.current!.set(i, el);        //栏目条位置跟随rowRefs=第几个行Line? 而不是member第几个;
                                     },
                                 }) }
-                                {/*{(seq!=null && seq>=raft*i && seq<raft*(i+1) ) && editor(form, arrays)}*/}
+                                {(seq!=null && seq>=raft*i && seq<raft*(i+1) ) && editor(form, arrays)}
                             </React.Fragment>;
                         }) }
                     </div>
@@ -433,7 +434,7 @@ export function useTableEditor({config, table,column,breaks, headview,tailview,d
                 </>
             )
         },
-        [editor, ],
+        [ ],
     )
     //useForm依赖颠倒了：需工厂模式
     return  [contentRendererFactory];
@@ -919,22 +920,5 @@ export const tabIUserSign = (user: any) => {
                 >签名</Button>
             }
         </div>
-    }
-}
-//生成器@Genrenator  高阶函数 ：有单位的input
-export const tabSuffixCb=(unit:string,atunit?:string)=>{
-    return (form: UseFormReturn<any, any, any>, title:any, tag: string, park?:string) => {
-        const unitColVal = form.watch(`.${atunit}`)
-        return <FormField  control={form.control} name={`${park}.${tag}`}
-                          render={({ field }) => (
-                              <FormItem className="pt-2 w-full break-inside-avoid">
-                                  <FormLabel>{title}</FormLabel>
-                                  <FormControl className="w-full">
-                                      <SuffixInput  unit={unit}  {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                              </FormItem>
-                          )}
-        />
     }
 }
