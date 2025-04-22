@@ -1,6 +1,9 @@
 import {FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "./mainProj/src/components/ui";
 import {Each_ZdSetting} from "./mainProj/src/report/hook/useRepTableEditor";
-import {ButtonRefComp, DdMenu, DdMenuItem,} from "customize-easy-ui-component";
+import {ButtonRefComp, DdMenu, DdMenuItem, useTheme,} from "customize-easy-ui-component";
+import * as React from "react";
+import {useWindowSize} from "customize-easy-ui-component/esm/Hooks/use-window-size";
+import {useMeasure} from "customize-easy-ui-component/esm/Hooks/use-measure";
 
 interface TableEditorProps {
     config: Each_ZdSetting[];
@@ -225,3 +228,15 @@ export function useTableEditor({config, table, headview,tailview,defaultV, noDel
     )
     return  [contentRendererFactory];
 }
+
+
+
+
+
+
+
+
+
+
+
+

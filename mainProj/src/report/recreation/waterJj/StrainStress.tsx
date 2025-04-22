@@ -37,8 +37,8 @@ export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
 
 export const config测点表=[['应变值','μ',150,tabSuffixCb('με')],['应力值','M',150,tabSuffixCb('MPa')],
     //【测试临时】
-    // ['taih的ou','a',80,tabSuffixCb('με')],['miaosh给u','b',250,tabSuffixCb('MPa')],
-    // ['方法','c',160,tabSuffixCb('με')],['备注','d',290],['日家期','e',190,tabSuffixCb('MPa')]
+    ['taih的ou','a',80,tabSuffixCb('με')],['miaosh给u','b',250,tabSuffixCb('MPa')],
+    ['方法','c',160,tabSuffixCb('με')],['备注','d',290],['日家期','e',190,tabSuffixCb('MPa')]
 ] as Each_ZdSetting[];
 const config合于Vw=copyZdConfig(config测点表,[320,95,100,90,80,80,80,390]);
 
