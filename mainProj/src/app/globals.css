@@ -3,7 +3,11 @@
 @plugin "tailwindcss-animate";
 /*---break---*/
 @custom-variant dark (&:is(.dark *));
-/*@config "../../tailwind.config.js";*/
+/*新版本不会自动检测使用config.js配置; 版本升级办法npx @tailwindcss/upgrade
+    @config "../../tailwind.config.js";  高度宽度同时满足屏幕大小 h-md:md:text-xs
+*/
+@config "../../tailwind.config.ts";
+
 
 @theme {
   --font-sans: var(--font-geist-sans);
