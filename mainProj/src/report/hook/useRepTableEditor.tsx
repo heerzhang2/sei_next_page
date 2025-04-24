@@ -61,7 +61,8 @@ export type Each_ZdSetting =[
     n1:string,      //字段标题名
     f2:string,      //数据库标签
     l3:number,      //布局的像素宽度
-    input_render_cb?: InputRenderCallback | undefined,       //编辑回调: 编辑器特殊性要求，高阶函数。
+    extend?: any,       //扩充配置解析对象： 编辑器的: { t日期, u单位, l预定列表, s框的大小 ；  cb:？,}}
+    //input_render_cb?: InputRenderCallback | undefined,       //旧版本的:编辑回调: 编辑器特殊性要求，高阶函数。 useform版本用对象配置解析替代; editAs整体替代？？
     //只能支持1层的嵌套对象： 对于Row.{m. sgm {name,username}}无法支持的。
     park?:string,       //对于比如svp{},pa{}的嵌套字段的编辑直接支持，直接保存为嵌套的对象字段；
 ];
