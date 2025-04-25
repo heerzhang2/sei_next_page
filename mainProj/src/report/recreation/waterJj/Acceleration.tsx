@@ -49,7 +49,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
             schemaTab[field] = z.string().optional()
         })
         // 添加表格字段
-        config加速度.forEach(([name]) => {
+        config加速度.forEach(([name,_]) => {
             schemaFields[name] = z.array(z.object(schemaTab))
         })
         schemaFields["加速试果"]= z.object(schemaTab)

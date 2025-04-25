@@ -21,7 +21,7 @@ interface UseFormFrameworkProps {
 
   // 数组字段配置
   arrayFields?: {
-    name: string
+    name: string    //每一张表格存储名；
     itemTemplate: any
   }[]
 
@@ -50,8 +50,8 @@ export function useFormFramework({
   const arrayControls: Record<string, any> = {}
 
   arrayFields.forEach(({ name }) => {
-    // 为每个数组字段创建 useFieldArray 控制器
-    const { fields, append, remove, move } = useFieldArray({
+    // 为每个数组字段创建 useFieldArray 控制器  //注入：remove, move, insert append
+    const { fields, append, remove, move, insert } = useFieldArray({
       control: form.control,
       name,
     })
@@ -61,6 +61,7 @@ export function useFormFramework({
       append,
       remove,
       move,
+      insert,
     }
   })
 
@@ -75,7 +76,7 @@ export function useFormFramework({
     }
 
     // 默认提交处理
-    console.log("表单值:", JSON.stringify(values, null, 2))
+    console.log("表单值:", JSON.stringify(values, null, 2),"需排除掉")
     const { _version, ...RepData } = { ...storage, ...values }
 
     const update = async () => {
@@ -101,10 +102,8 @@ export function useFormFramework({
       }
     })
   }
-
   // 使用contentRendererFactory创建内容渲染器
   const contentRenderer = contentRendererFactory(form, arrayControls)
-
   // 创建渲染函数
   const render = () => (
       <Form {...form}>
@@ -114,6 +113,9 @@ export function useFormFramework({
             <Button type="button" variant="outline" onClick={() => form.reset()}>
               重置
             </Button>
+            { Object.keys(form.formState.errors || {}).length > 0 &&
+              <span className="bg-red-300">报错: {JSON.stringify(form.formState.errors)}</span>
+            }
             <Button type="submit" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? "提交中..." : "提交表单"}
             </Button>

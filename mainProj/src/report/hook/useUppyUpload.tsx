@@ -12,14 +12,26 @@ import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
 import {ItemOmniConfig} from "../common/omni";
+import { getAuthToken, refreshAuthToken } from '@/lib/auth-token';
 
 /**【uppy复用】
  *官方文档  https://uppy.io/docs/uppy/
+ *URQL一般请求是用authorization: Bearer 给后端token的。
  * */
 //new实例：自带状态存储的；    不是React组件管理的。
 const uppy =new Uppy({id:'Report', restrictions:{maxNumberOfFiles: 2,}})
     .use(Tus, { endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`, withCredentials:true,
-        onAfterResponse: function (req, res) {
+        async onBeforeRequest(req) {
+            const token = await getAuthToken();
+            if (token) {
+                req.setHeader('Authorization', `Bearer ${token}`);
+            }
+        },
+        async onAfterResponse(req, res) {
+            if (res.getStatus() === 401) {
+                await refreshAuthToken();
+                uppy.info("刷新token");
+            }
             let url =req.getURL();
             let value =res.getHeader("Tus2minIoUrl");       //对TUS协议还要自定义扩展的包头Tus2minIoUrl
             var occur = value?.indexOf("DO NOT TRY:");      //扩充包头含义。

@@ -616,7 +616,7 @@ interface TableEditorProps {
     fixColumn?: number
     saveFixC?: boolean
     //改useform了:就不用了，直接配置指示好了。
-    editAs?: (obj: any, setObj: React.Dispatch<React.SetStateAction<any>>, seq: number | null) => React.ReactNode
+    editAs?: (form: UseFormReturn<any, any, any>, seq: number | null) => React.ReactNode
     maxRf?: number
     stretchF?: number[]
     //初始的布局模式
@@ -646,6 +646,7 @@ interface TableEditorProps {
 
 /*目的是编辑器而不是表格显示打印。适应于编辑表格的显示编辑列数不算太多的,表格行数也比较少的情况,不支持普通表格的分页功能。
 屏幕和浏览器适应需要，多加个表头独立做复制的。
+【注意】特别要求必须把 {remove, move, insert } = arrays?.[];  从form外部注入的接口。
  * */
 export function useTableEditor({
                                    config,
@@ -696,10 +697,10 @@ export function useTableEditor({
     const [seq, setSeq] = React.useState<number | null>(null)
     const [obj, setObj] = React.useState<any>({})
     const [selectedRaft, setSelectedRaft] = React.useState<number | null>(null)
-    const [fixedColW, setFixedColW] = React.useState<boolean>(defFixedLay ?? false)
+    // const [fixedColW, setFixedColW] = React.useState<boolean>(defFixedLay ?? false)竟然被挪走放在renderFlexibleTable = React.useCallback(里面了。
     const [activeHeaderIndex, setActiveHeaderIndex] = React.useState<number | null>(null)
     const [openMenuId, setOpenMenuId] = React.useState<string | null>(null)
-    const { innerHeight, innerWidth } = useWindowSize()
+    const { innerHeight, } = useWindowSize()
     const frameRef = React.useRef<HTMLDivElement>(null)
     const barRect = useMeasure(frameRef as React.RefObject<HTMLElement>)
     const hBarWidth = barRect?.width || 0
@@ -735,170 +736,172 @@ export function useTableEditor({
             const { fields, append, remove, move } = arrays?.[table] || {}
             const tabledArr = form.watch?.(table) || []
             const index = seq ?? 0 // 表格第几行的
-
-            if (editAs) return editAs(obj, setObj, seq)
-            else
-                return (
-                    <Card className="flex justify-center w-full flex-col md:p-1" ref={editorRef}>
-                        <div>{seq === null ? "新" : seq! + 1}：</div>
-                        <div className="w-full">
-                            <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
-                                {config.map(([title, tag, _, extobj, park]: any, i: number) => {
-                                    const filedVl = tabledArr[index] ? (park ? tabledArr[index][park][tag] : tabledArr[index][tag]) : ""
-                                    const { t: type, l: list, u: unit, s: size } = extobj || {}
-                                    if ((fixColumn && i < fixColumn) || !(fields.length > 0))
-                                        return <React.Fragment key={i}></React.Fragment>
-                                    else if (type === "l")
-                                        return (
-                                            <FormField
-                                                key={i}
-                                                control={form.control}
-                                                name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-full break-inside-avoid">
-                                                        <FormLabel>{title}</FormLabel>
-                                                        <FormControl className="w-full">
-                                                            {/*<InputDatalist  datalist={list} unit={unit}  {...field}  />*/}
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        )
-                                    else if (type === "d")
-                                        return (
-                                            <FormField
-                                                key={i}
-                                                control={form.control}
-                                                name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-full break-inside-avoid">
-                                                        <FormLabel>{title}</FormLabel>
-                                                        <FormControl className="w-full">
-                                                            <Input type="date" {...field} />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        )
-                                    else if (type === "b")
-                                        return (
-                                            <FormField
-                                                key={i}
-                                                control={form.control}
-                                                name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-full break-inside-avoid">
-                                                        <FormLabel>{title}</FormLabel>
-                                                        <FormControl className="w-full">{/*<Switch   {...field}  />*/}</FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        )
-                                    else if (type === "B")
-                                        return (
-                                            <FormField
-                                                key={i}
-                                                control={form.control}
-                                                name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
-                                                        <FormLabel>{title}</FormLabel>
-                                                        <FormControl className="w-full">
-                                                            {/*<BlobInputList datalist={list} unit={unit}  {...field}  />*/}
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        )
-                                    else if (type === "m")
-                                        return (
-                                            <FormField
-                                                key={i}
-                                                control={form.control}
-                                                name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                                        <FormLabel>{title}</FormLabel>
-                                                        <FormControl className="w-full">{/*<Textarea rows={4}  {...field} />*/}</FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        )
-                                    else if (unit)
-                                        return (
-                                            <FormField
-                                                key={i}
-                                                control={form.control}
-                                                name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-full break-inside-avoid">
-                                                        <FormLabel>{title}</FormLabel>
-                                                        <FormControl className="w-full">
-                                                            {/*<SuffixInput  unit={unit}  {...field}  />*/}
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        )
-                                    else
-                                        return (
-                                            <FormField
-                                                key={i}
-                                                control={form.control}
-                                                name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                                render={({ field }) => (
-                                                    <FormItem className="w-full break-inside-avoid">
-                                                        <FormLabel>{title}</FormLabel>
-                                                        <FormControl className="w-full">
-                                                            <Input type={type === "n" ? "number" : undefined} {...field} value={filedVl} />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        )
-                                })}
-                            </div>
-                            <Button
-                                className="mt-4"
-                                onClick={(e) => {
-                                    if (append) {
-                                        // 如果 seq 是合法数据行，复制该行数据
-                                        if (seq !== null && tabledArr[seq]) {
-                                            // 创建一个深拷贝以避免引用问题
-                                            const newItem = JSON.parse(JSON.stringify(tabledArr[seq]))
-                                            append(newItem)
-                                        } else {
-                                            // 否则创建空白记录
-                                            const template = {} as any
-                                            config.forEach(([_t, tag, _w, _o, park]) => {
-                                                if (park) {
-                                                    // 确保嵌套对象存在
-                                                    if (!template[park]) template[park] = {}
-                                                    template[park][tag] = ""
-                                                } else {
-                                                    template[tag] = ""
-                                                }
-                                            })
-                                            append(template)
-                                        }
-                                        setSeq(tabledArr.length) // 设置为新添加的行
-                                        scrollToEditor() // 滚动到编辑器
-                                    }
-                                    e.preventDefault()
-                                }}
-                            >
-                                新增一条
-                            </Button>
+        return (
+            <Card className="flex justify-center w-full flex-col md:p-1 gap-2" ref={editorRef}>
+                <div>在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
+                <div className="w-full">
+                {seq!== null &&
+                    <>{ editAs ? editAs(form, seq)
+                        :
+                        <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
+                            {config.map(([title, tag, _, extobj, park]: any, i: number) => {
+                                const filedVl = tabledArr[index] ? (park ? tabledArr[index][park][tag] : tabledArr[index][tag]) : ""
+                                const { t: type, l: list, u: unit, s: size } = extobj || {}
+                                if ((fixColumn && i < fixColumn) || !(fields.length > 0))
+                                    return <React.Fragment key={i}></React.Fragment>
+                                else if (type === "l")
+                                    return (
+                                        <FormField
+                                            key={i}
+                                            control={form.control}
+                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">
+                                                        {/*<InputDatalist  datalist={list} unit={unit}  {...field}  />*/}
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )
+                                else if (type === "d")
+                                    return (
+                                        <FormField
+                                            key={i}
+                                            control={form.control}
+                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">
+                                                        <Input type="date" {...field} value={filedVl} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )
+                                else if (type === "b")
+                                    return (
+                                        <FormField
+                                            key={i}
+                                            control={form.control}
+                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">{/*<Switch   {...field}  />*/}</FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )
+                                else if (type === "B")
+                                    return (
+                                        <FormField
+                                            key={i}
+                                            control={form.control}
+                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">
+                                                        {/*<BlobInputList datalist={list} unit={unit}  {...field}  />*/}
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )
+                                else if (type === "m")
+                                    return (
+                                        <FormField
+                                            key={i}
+                                            control={form.control}
+                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">{/*<Textarea rows={4}  {...field} />*/}</FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )
+                                else if (unit)
+                                    return (
+                                        <FormField
+                                            key={i}
+                                            control={form.control}
+                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">
+                                                        <SuffixInput  unit={unit}  {...field} value={filedVl} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )
+                                else
+                                    return (
+                                        <FormField
+                                            key={i}
+                                            control={form.control}
+                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">
+                                                        <Input type={type === "n" ? "number" : undefined} {...field} value={filedVl} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )
+                            })}
                         </div>
-                    </Card>
-                )
+                    }
+                    </>
+                }
+                    <Button className="mt-4"
+                        onClick={(e) => {
+                            if (append) {
+                                // 如果 seq 是合法数据行，复制该行数据
+                                if (seq !== null && tabledArr[seq]) {
+                                    // 创建一个深拷贝以避免引用问题
+                                    const newItem = JSON.parse(JSON.stringify(tabledArr[seq]))
+                                    append(newItem)
+                                } else {
+                                    // 否则创建空白记录
+                                    const template = {} as any
+                                    config.forEach(([_t, tag, _w, _o, park]) => {
+                                        if (park) {
+                                            // 确保嵌套对象存在
+                                            if (!template[park]) template[park] = {}
+                                            template[park][tag] = ""
+                                        } else {
+                                            template[tag] = ""
+                                        }
+                                    })
+                                    append(template)
+                                }
+                                setSeq(tabledArr.length) // 设置为新添加的行
+                                scrollToEditor() // 滚动到编辑器
+                            }
+                            e.preventDefault()
+                        }}
+                    >
+                      新增一条
+                    </Button>
+                </div>
+            </Card>
+        )
         },
         [seq, config, table, editAs, fixColumn, scrollToEditor],
     )

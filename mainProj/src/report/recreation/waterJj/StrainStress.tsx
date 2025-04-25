@@ -28,19 +28,14 @@ import {config加速度, itemA加速, tail加速度} from "@/report/recreation/w
 import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
-import {copyZdConfig, useElasticTable} from "@/hooks/useElasticTable";
 
 export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
     2、“+”表示测点位置结构受拉，“-”表示测点位置结构受压。
 </Text>;
 
-export const config测点表=[['应变值','μ',150,tabSuffixCb('με')],['应力值','M',150,tabSuffixCb('MPa')],
-    //【测试临时】
-    ['taih的ou','a',80,tabSuffixCb('με')],['miaosh给u','b',250,tabSuffixCb('MPa')],
-    ['方法','c',160,tabSuffixCb('με')],['备注','d',290],['日家期','e',190,tabSuffixCb('MPa')]
+export const config测点表=[['应变值','μ',100,{u:'με'}],['应力值','M',100,{u:'MPa'}],
 ] as Each_ZdSetting[];
-const config合于Vw=copyZdConfig(config测点表,[320,95,100,90,80,80,80,390]);
 
 //不管sensit与否，都加上存储字段名 ‘应变片#型/灵’ 。
 export const itemA应变应力=['应仪器型','应变片型','应变片灵','应天气','应温度','应料参E','应料参μ','应试工况','测点表','_FILE_测点','测点示意','危应第','应变设计','应变结论','应变备注'];
@@ -49,13 +44,21 @@ interface Props  extends InternalItemProps{
     sensit?: boolean;
 }
 export const StrainStress = ({ children, show, alone = true, redId, nestMd, label, rep,sensit }: Props) => {
-    const { storage } = useStorage()
+    const {storage,setStorage,modified,setModified} =useStorage();
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
         // 添加普通字段
         itemA应变应力.forEach((namecfg) => {
-            schemaFields[namecfg] = z.string().optional()
+            //这个字段 _FILE_测点：是专用组件处理设置的，直接修改storage，必须排除在form之外。
+            if(namecfg!=="_FILE_测点")
+                schemaFields[namecfg] = z.string().optional()
         })
+        const schemaTab = {} as any
+        config测点表.forEach(([t,field,s,o,park]) => {
+            schemaTab[field] = z.string().optional()
+        })
+        // 添加表格字段
+        schemaFields["测点表"]= z.array(z.object(schemaTab))
         return z.object(schemaFields)
     }, [])
     const defaultValues = React.useMemo(() => {
@@ -64,41 +67,32 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         itemA应变应力.forEach((name) => {
             fields[name] = storage[name] ?? ""
         })
-
+        //【不初始化"测点表"】 没报错？ arrayFields里面有做等效功能。
         return fields
     }, [storage])
+
     const arrayFields =React.useMemo(() => {
         // 创建每个字段的空模板
         const itemTemplate = {} as any
-        config测点表.forEach(([n,field,s,cb,park]) => {
+        config测点表.forEach(([t,field,s,o,park]) => {
             itemTemplate[field] = ""
         })
         return [ {name:"测点表", itemTemplate,} ]
     }, [])
 
-    const [render阴保表]=useElasticTable({content: storage?.测点表, config: config合于Vw, slash:true,});
-
         const theme = useTheme();
-        const [getInpFilter]=useMeasureInpFilter(null,itemA应变应力,);
-        //对比同常的const {inp, setInp} = useItemInputControl({ ref });这里增加onSure可立刻修改storage的。就差发送保存给后端操作。尽量避免丢失刚刚上传的文件：类似数据库事务ACID回滚和确保完整。
-        // const {inp, setInp,onSure} = useInputControlSure({ ref,redId,nestMd });
-        const breaks=[140,420,620];
-        const headview=<Text variant="h5">
+        const headview=<h5>
             测试点:按照一行2字段录入： 应变值（με）, 应力值（MPa）;
-        </Text>;
-        const [nestRendererFactory]=useTableEditor({breaks, headview, config: config测点表, table:'测点表'});
-/*
-  // 现在接收form和arrays作为参数，这样可以使用真实的form对象和数组字段控制
-  nestRendererFactory: (form: any, arrays?: Record<string, any>) => React.ReactNode
+        </h5>;
 
-        const {modified,setModified,} =useStorage();
+        const [nestRendererFactory]=useTableEditor({headview, config: config测点表, table:'测点表',defFixedLay:true});
         const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
-            onSure({...inp, '_FILE_测点': upfile});
+            setStorage({...storage, '_FILE_测点': upfile});
             !modified && setModified(true);
-        }, [inp, modified,onSure,setModified]);
+        }, [storage, modified,setStorage,setModified]);
         const [uploadDom]=useUppyUpload({ repId:rep?.id!,
-            maxFile:1, onFinish, storeObj: inp?._FILE_测点 ,liveDays:10
-        });*/
+            maxFile:1, onFinish, storeObj: storage?._FILE_测点 ,liveDays:10
+        });
 
         const config=[['应变片型号','应仪器型',undefined,30],
             ['应变片'+(sensit?'灵敏度':'型式'),'应变片'+(sensit?'灵':'型'),undefined,25],
@@ -107,6 +101,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
 
         const contentRendererFactory = React.useCallback(
             (form: any, arrays?: Record<string, any>) => {
+
                 return (
                     <>
                         <div css={{display: 'flex',flexWrap: 'wrap',justifyContent:'space-around',alignItems:'center'}}>
@@ -128,10 +123,9 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                 </div>;
                             }) }
                         </div>
-                        <span>按测量工况分4个项目: 加速度A，单位（g）{'>>'}</span>
-                        <Card className="py-1">
+                        <Card className="py-1 gap-1">
                             <CardHeader>
-                                <CardTitle>测试工况：</CardTitle>
+                                <CardTitle>测试：</CardTitle>
                             </CardHeader>
                             <CardContent className="px-1">
                                 <FormField
@@ -139,7 +133,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                     name="应试工况"
                                     render={({ field }) => (
                                         <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                            <FormLabel>备注：</FormLabel>
+                                            <FormLabel>测试工况</FormLabel>
                                             <FormControl className="w-full h-24">
                                                 <Textarea rows={2} {...field} />
                                             </FormControl>
@@ -150,15 +144,19 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                 {nestRendererFactory(form, arrays)}
                             </CardContent>
                         </Card>
-{/*
-
-                        <InputLine  label='测点示意图-说明：'  lineStyle={css`max-width:unset;`}>
-                            <BlobInputList value={inp?.测点示意 ||''} rows={1}  datalist={[ ]}
-                                           onListChange={v => setInp({ ...inp, 测点示意: v || undefined}) } />
-                        </InputLine>
-                        测点示意图：
-                        {uploadDom}*/}
-
+                        <FormField control={form.control} name={'测点示意'}
+                                   render={({ field }) => (
+                                       <FormItem>
+                                           <FormLabel>测点示意图-说明</FormLabel>
+                                           <FormControl className="w-full h-40 @md:h-20">
+                                               <Textarea rows={2} {...field}  placeholder={`测点示意图`}/>
+                                           </FormControl>
+                                           <FormMessage />
+                                       </FormItem>
+                                   )}
+                        />
+                       测点示意图：
+                       {uploadDom}
                         <Card className="py-1 mb-2 gap-2">
                             <CardHeader>
                                 <CardTitle>测试结果：</CardTitle>
@@ -223,7 +221,6 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         const { render,form,arrayControls } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
         return  <CollapsibleFormSection title={label!} defaultOpen={show}>
             {render()}
-            {render阴保表}
         </CollapsibleFormSection>;
 };
 
