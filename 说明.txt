@@ -734,3 +734,4 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
             {render()}
         </CollapsibleFormSection>;
 };
+
