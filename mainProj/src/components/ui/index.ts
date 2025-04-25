@@ -38,14 +38,14 @@ export { Label } from "./label"
 // export { Switch } from "./switch"
 
 // 下拉菜单组件
-// export {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuLabel,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from "./dropdown-menu"
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./dropdown-menu"
 
 // 添加您使用的其他组件...
 export { Switch } from "./switch"
