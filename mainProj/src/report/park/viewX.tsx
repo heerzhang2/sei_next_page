@@ -50,7 +50,7 @@ export const 常用现场条件 = ({orc, rep, config,label='附录B：现场检�
                         }
                     });
 
-                    return <DirectLink key={b} href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/SiteCondition#SiteCondition`}>
+                    return <DirectLink key={b} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition#SiteCondition`}>
                         {config.map(([title,{f:field,N:descnode}]: any, i: number) =>{
                             return <TableRow key={i}>
                                 <CCell>{descnode}</CCell>

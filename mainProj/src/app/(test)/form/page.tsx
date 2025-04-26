@@ -36,12 +36,19 @@ export default function MultiTableFormExample() {
     // 1. 创建动态 schema
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
-
+        const dateSchema = z.string().transform((val) => {
+            const date = new Date(val + 'T00:00:00Z'); // 强制 UTC 时间
+            return date.getTime(); // 返回时间戳
+        });
         // 添加普通字段
         itemA加速.forEach((namecfg) => {
             schemaFields[namecfg] = z.string().optional()
         })
-
+        schemaFields["jyDate"] = z.string().transform((val) => {
+            const timestamp = Date.parse(val);
+            if (isNaN(timestamp)) throw new Error("Invalid date");
+            return timestamp; // 转换为 number
+        })
         // 添加表格字段
         config加速度.forEach(([name]) => {
             const schemaTab = {} as any
@@ -62,7 +69,7 @@ export default function MultiTableFormExample() {
         itemA加速.forEach((name) => {
             fields[name] = storage[name] ?? ""
         })
-
+        fields["jyDate"]= ""    //new Date()
         // 初始化表格字段
         config加速度.forEach(([name]) => {
             // 从storage中获取数据，如果没有则创建3行空数据
@@ -134,6 +141,22 @@ export default function MultiTableFormExample() {
         return (
             <>
                 {/* 普通文本域字段 */}
+                <FormField control={form.control}
+                           name={`jyDate`}
+                           render={({ field }) => (
+                               <FormItem>
+                                   <FormLabel>检验日期</FormLabel>
+                                   <FormControl>
+                                       <Input
+                                           {...field}
+                                           type="date"
+                                           value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
+                                       />
+                                   </FormControl>
+                                   <FormMessage />
+                               </FormItem>
+                           )}
+                />
                 <FormField
                     control={form.control}
                     name="加速备注"
