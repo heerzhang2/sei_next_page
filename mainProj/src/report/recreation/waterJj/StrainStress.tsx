@@ -28,6 +28,7 @@ import {config加速度, itemA加速, tail加速度} from "@/report/recreation/w
 import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
+import {ImageComponent} from "@/components/shub";
 
 export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
@@ -303,15 +304,8 @@ export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label
                             测点示意图：&nbsp;{orc?.测点示意}
                             <div css={{display: 'flex',justifyContent: 'space-around',alignItems: 'center', margin: '1px 0' }}>
                                 { orc?._FILE_测点?.url &&
-                                    <img src={process.env.NEXT_PUBLIC_OSS_ENDP+orc?._FILE_测点?.url} alt={orc?._FILE_测点?.url}
-                                         css={{
-                                             maxHeight: '14cm',   //在这个元素的上一级元素可以自己加一个固定高度值，就像一张纸打印的应该多高的取值。这个用固定高度会导致图片自动的横竖比例不均衡压缩=会变形啊！24cm是纸张大约最多高度=报告最大图片高。
-                                             maxWidth: '-webkit-fill-available',
-                                             [theme.mediaQueries.lg]: {maxHeight: '18cm', maxWidth: undefined},           //普通图片+大屏幕限制高度才是关键的。
-                                             //【想法】大约一整页height: '96vh' +底下一个行的。
-                                             "@media print": { maxWidth: '100%'},        //对A4纸张竖版的高度26cm基本都是图片整张纸，这里没考虑多个图片在宽度方向上的并排布局：可用软件合并。
-                                         }}
-                                    />
+                                    <ImageComponent src={process.env.NEXT_PUBLIC_OSS_ENDP+orc?._FILE_测点?.url || "/placeholder.svg"}
+                                                alt={orc?._FILE_测点?.url || "图片"} />
                                 }
                             </div>
                         </Cell>

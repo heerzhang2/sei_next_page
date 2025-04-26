@@ -10,6 +10,9 @@ import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
 import { getAuthToken, refreshAuthToken } from '@/lib/auth-token';
 import {Button} from "@/components/ui";
+import Image from "next/image"
+import {ImageComponent} from "@/components/shub";
+import {ImageComponentNatural} from "@/components/natural";
 
 /**【uppy复用】
  *官方文档  https://uppy.io/docs/uppy/
@@ -151,20 +154,30 @@ export function useUppyUpload({ repId, storeObj, maxFile=1,liveDays=2,maxSize=3,
     // const handleDelete = () => {
     //     delOssFileFunc(url, i, 'rep', repId)
     // }
+    // Images with "fill" always use position absolute - it cannot be modified.
     //单一文件情况的：
     if(1===maxFile) {
-      const onlyOne=(<>
+        const onlyOne=(<>
         {openUppy?  <Dashboard uppy={uppy} plugins={['Webcam']} />
             :
-            <div className="flex justify-around items-center">
-                {storeObj1?.url &&
-                    <img
-                        src={process.env.NEXT_PUBLIC_OSS_ENDP + storeObj1?.url || "/placeholder.svg"}
-                        alt={storeObj1?.url}
-                        className="max-h-[14cm] w-full print:max-h-[26cm] print:max-w-[705px] @lg:max-h-[18cm] @lg:w-auto"
+            storeObj1?.url?
+                <ImageComponentNatural src={`${process.env.NEXT_PUBLIC_OSS_ENDP}${storeObj1.url}` || "/placeholder.svg"}
+                            alt={storeObj1?.url || "图片"} />
+                : null
+/*            <div className="flex justify-around items-center">
+                <div className="">
+                    <Image width={300} height={200}
+                        src={imageUrl || "/placeholder.svg"}
+                        alt={storeObj1?.url || "图片"}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-contain h-auto max-h-[14cm] print:max-h-[26cm] print:max-w-[705px] lg:max-h-[18cm]"
+                        unoptimized     //为不优化，避免配置 remotePatterns
+                       style={{
+                           objectFit: 'contain',
+                       }}
                     />
-                }
-            </div>
+                </div>
+            </div>*/
         }
           <div className="text-center">
           {
