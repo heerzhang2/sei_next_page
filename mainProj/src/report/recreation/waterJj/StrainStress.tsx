@@ -9,7 +9,7 @@ import {
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {Each_ZdSetting, tabSuffixCb, useTableEditor} from "../../hook/useRepTableEditor";
-import {EditStorageContext, useStorage} from "../../StorageContext";
+import {useStorage} from "../../StorageContext";
 import {useUppyUpload} from "../../hook/useUppyUpload";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
@@ -48,10 +48,10 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
         // 添加普通字段
-        itemA应变应力.forEach((namecfg) => {
+        itemA应变应力.forEach((name) => {
             //这个字段 _FILE_测点：是专用组件处理设置的，直接修改storage，必须排除在form之外。
-            if(namecfg!=="_FILE_测点")
-                schemaFields[namecfg] = z.string().optional()
+            if(name!=="_FILE_测点")
+                schemaFields[name] = z.string().optional()
         })
         const schemaTab = {} as any
         config测点表.forEach(([t,field,s,o,park]) => {
@@ -65,7 +65,8 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         const fields = {} as any
         // 初始化普通字段
         itemA应变应力.forEach((name) => {
-            fields[name] = storage[name] ?? ""
+            if(name!=="_FILE_测点")
+                fields[name] = storage[name] ?? ""
         })
         //【不初始化"测点表"】 没报错？ arrayFields里面有做等效功能。
         return fields

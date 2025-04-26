@@ -222,6 +222,9 @@ export const 末尾链接= ( {template, verId, repId,rep }:{template: string, ve
               </Link>
             </div>
             <div>
+              <Link href="/">回首页</Link>
+            </div>
+            <div>
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
                编辑原始记录
               </Link>

@@ -38,10 +38,11 @@ export default function useOssDeleteFileMutation(callback: (resp: any,arIndex:nu
         console.log("Oh no!", result.error)
       } else {
         // 使用 sonner 的 toast.success 显示成功消息
-        toast.success("保存成功", {
-          description: "数据已成功保存到服务器",
+        toast.success("OSS服务器", {
+          description: "文件删除",
         })
-        callback(result,arIndex);
+        const {ossDeleteFile: ack }=result?.data
+        callback(ack,arIndex);
       }
     })
   }

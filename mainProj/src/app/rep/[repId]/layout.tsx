@@ -13,6 +13,7 @@ import ReportMakeable from "@/common/ReportMakeable";
 import ReportData from "@/component/rep/report-data";
 import {StorageProvider } from "@/report/StorageContext";
 import {useMediaPrint} from "@/hooks/use-media-print";
+import {ModificationIndicator} from "@/report/hook/useFormFramework";
 
 
 // const FootBar = lazy(() => import("@/component/footbar"));
@@ -39,6 +40,7 @@ export default async function ReportRootLayout({params, children} :
            <ReportMakeable />
            <StorageProvider>
                <ReportData  repId={repId}>
+                   <ModificationIndicator />
                     {/*<GlobalState>*/}
                     {/*    <AppStateProvider>*/}
                     {/*        <SwrConfigClient>*/}

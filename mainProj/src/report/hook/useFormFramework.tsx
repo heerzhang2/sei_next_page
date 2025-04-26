@@ -21,7 +21,7 @@ interface UseFormFrameworkProps {
 
   // 数组字段配置
   arrayFields?: {
-    name: string    //每一张表格存储名；
+    name: string //每一张表格存储名；
     itemTemplate: any
   }[]
 
@@ -38,7 +38,7 @@ export function useFormFramework({
                                    rep,
                                    onSubmit: customOnSubmit,
                                  }: UseFormFrameworkProps) {
-  const { storage } = useStorage()
+  const { storage, setStorage, modified, setModified } = useStorage()
 
   // 创建表单
   const form = useForm<z.infer<typeof schema>>({
@@ -65,7 +65,7 @@ export function useFormFramework({
     }
   })
 
-  // 设置mutation
+  //用URQL mutation来保存变更数据到后端数据库的
   const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
 
   // 处理表单提交
@@ -76,9 +76,10 @@ export function useFormFramework({
     }
 
     // 默认提交处理
-    console.log("表单值:", JSON.stringify(values, null, 2),"需排除掉")
+    console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
     const { _version, ...RepData } = { ...storage, ...values }
 
+    // 直接定义更新函数，不使用 useCallback
     const update = async () => {
       return await updateOriginal({
         id: rep?.id,
@@ -91,7 +92,7 @@ export function useFormFramework({
     update().then((result) => {
       console.log("updateOriginalResult=应答=", result)
       if (result.error) {
-        toast.error("保存失败", {
+        toast.error("保存失败,若断网会自动重新发送的", {
           description: result.error.toString(),
         })
         console.log("Oh no!", result.error)
@@ -99,29 +100,50 @@ export function useFormFramework({
         toast.success("保存成功", {
           description: "数据已成功保存到服务器",
         })
+        // 保存成功后，设置 modified 为 false
+        setModified(false)
       }
     })
   }
+
+  // 处理确认按钮 - 临时保存到 storage
+  const handleConfirm = () => {
+    // 获取当前表单值
+    const currentValues = form.getValues()
+    // 更新 storage
+    setStorage((prevStorage) => ({
+      ...prevStorage,
+      ...currentValues,
+    }))
+    // 设置已修改标志
+    setModified(true)
+  }
+
   // 使用contentRendererFactory创建内容渲染器
   const contentRenderer = contentRendererFactory(form, arrayControls)
   // 创建渲染函数
   const render = () => (
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 @container">
-          {contentRenderer}
-          <CardFooter className="flex justify-end space-x-4 border-t p-6">
-            <Button type="button" variant="outline" onClick={() => form.reset()}>
-              重置
-            </Button>
-            { Object.keys(form.formState.errors || {}).length > 0 &&
-              <span className="bg-red-300">报错: {JSON.stringify(form.formState.errors)}</span>
-            }
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "提交中..." : "提交表单"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Form>
+      <>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 @container">
+            {contentRenderer}
+            <CardFooter className="flex justify-end space-x-4 border-t p-6">
+              <Button type="button" variant="outline" onClick={() => form.reset()}>
+                重置
+              </Button>
+              <Button type="button" variant="outline" onClick={handleConfirm}>
+                确认
+              </Button>
+              {Object.keys(form.formState.errors || {}).length > 0 && (
+                  <span className="bg-red-300">报错: {JSON.stringify(form.formState.errors)}</span>
+              )}
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "保存到后端..." : "保存"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </>
   )
 
   return {
@@ -130,4 +152,17 @@ export function useFormFramework({
     handleSubmit,
     arrayControls,
   }
+}
+
+// 创建一个修改指示器组件
+export const ModificationIndicator = () => {
+  const { modified } = useStorage()
+  if (!modified) return null
+  return (
+      <div className="fixed top-4 left-4 z-50 bg-yellow-500 border border-pink-900 text-black px-1 py-1 rounded-lg shadow-xl animate-pulse">
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 bg-red-400 rounded-full animate-spin-slow"></div>
+        </div>
+      </div>
+  )
 }

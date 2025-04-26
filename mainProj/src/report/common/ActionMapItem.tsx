@@ -118,7 +118,7 @@ export const ActionMapItem = ({
     }, [config,editIts])
 
     // type FormValues = z.infer<typeof fullSchema>
-    const {storage, setStorage} =useStorage();
+    const { storage, setStorage, modified, setModified } = useStorage()
     //初始化区块组件的inp对象，只包含局部小范围的字段数。
     //汇总结论那一列除外：【规矩】结论是生成的就没有存储。 {[rskey] : subStorage}= storage; setInp(getInpFilter(rskey? (subStorage||{}) : storage));
     const defaultValues = React.useMemo(() => {
@@ -149,6 +149,18 @@ export const ActionMapItem = ({
         resolver: zodResolver(fullSchema),
         defaultValues: defaultValues as any,
     })
+    // 处理确认按钮 - 临时保存到 storage
+    const handleConfirm = () => {
+        // 获取当前表单值
+        const currentValues = form.getValues()
+        // 更新 storage
+        setStorage((prevStorage) => ({
+            ...prevStorage,
+            ...currentValues,
+        }))
+        // 设置已修改标志
+        setModified(true)
+    }
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
     // 处理表单提交
     async function onSubmit(values: any) {
@@ -168,7 +180,7 @@ export const ActionMapItem = ({
 
             if (result.error) {
                 // 使用 sonner 的 toast.error 显示错误
-                toast.error("保存失败", {
+                toast.error("保存失败,若断网会自动重新发送的", {
                     description: result.error.toString(),
                 })
                 console.log("Oh no!", result.error)
@@ -177,6 +189,7 @@ export const ActionMapItem = ({
                 toast.success("保存成功", {
                     description: "数据已成功保存到服务器",
                 })
+                setModified(false)
             }
         })
 
@@ -420,11 +433,17 @@ export const ActionMapItem = ({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {render}
                 <CardFooter className="flex justify-end space-x-4 border-t p-6">
-                    <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+                    <Button type="button" variant="outline" onClick={() => form.reset()}>
                         重置
                     </Button>
+                    <Button type="button" variant="outline" onClick={handleConfirm}>
+                        确认
+                    </Button>
+                    {Object.keys(form.formState.errors || {}).length > 0 && (
+                        <span className="bg-red-300">报错: {JSON.stringify(form.formState.errors)}</span>
+                    )}
                     <Button type="submit" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? "提交中..." : "提交表单"}
+                        {form.formState.isSubmitting ? "保存到后端..." : "保存"}
                     </Button>
                 </CardFooter>
             </form>

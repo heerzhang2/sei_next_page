@@ -1,8 +1,5 @@
-/** @jsxImportSource @emotion/react */
+"use client"
 import * as React from "react";
-import {
-    Button, useTheme,
-} from "customize-easy-ui-component";
 import Uppy, {State} from "@uppy/core";
 import Tus from "@uppy/tus";
 // import Webcam from "@uppy/webcam";
@@ -11,8 +8,8 @@ import {Dashboard} from "@uppy/react";
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
-import {ItemOmniConfig} from "../common/omni";
 import { getAuthToken, refreshAuthToken } from '@/lib/auth-token';
+import {Button} from "@/components/ui";
 
 /**【uppy复用】
  *官方文档  https://uppy.io/docs/uppy/
@@ -71,7 +68,6 @@ export function useUppyUpload({ repId, storeObj, maxFile=1,liveDays=2,maxSize=3,
     : {repId: string, storeObj:FileStore|FileStore[], maxFile?:number,
          liveDays?:number,maxSize?:number, onFinish?:(file:any,del:boolean)=>void,}
 ) {
-    const theme= useTheme();
     const [openUppy, setOpenUppy] = React.useState(false);
     //实际本次发起上传的活动允许的可上传文件数还会更少：扣除已经有的数量。
     //或者 storeObj instanceof Array ?
@@ -152,48 +148,39 @@ export function useUppyUpload({ repId, storeObj, maxFile=1,liveDays=2,maxSize=3,
         }
     };
     const {call:delOssFileFunc,}= useOssDeleteFileMutation(whenDeleted);
-
+    // const handleDelete = () => {
+    //     delOssFileFunc(url, i, 'rep', repId)
+    // }
     //单一文件情况的：
     if(1===maxFile) {
       const onlyOne=(<>
         {openUppy?  <Dashboard uppy={uppy} plugins={['Webcam']} />
             :
-            <div css={{display: 'flex',justifyContent: 'space-around',alignItems: 'center'}}>
-                { storeObj1?.url &&
-                    <img src={process.env.NEXT_PUBLIC_OSS_ENDP+storeObj1?.url} alt={storeObj1?.url}
-                         css={{
-                             maxHeight: '14cm',   //在这个元素的上一级元素可以自己加一个固定高度值，就像一张纸打印的应该多高的取值。这个用固定高度会导致图片自动的横竖比例不均衡压缩=会变形啊！24cm是纸张大约最多高度=报告最大图片高。
-                             maxWidth: '-webkit-fill-available',
-                             "@media print": {maxHeight: '26cm', maxWidth: '705px'},         //对A4纸张竖版的高度26cm基本都是图片整张纸，这里没考虑多个图片在宽度方向上的并排布局：可用软件合并。
-                             [theme.mediaQueries.lg]: {maxHeight: '18cm', maxWidth: undefined}           //普通图片+大屏幕限制高度才是关键的。
-                         }}
+            <div className="flex justify-around items-center">
+                {storeObj1?.url &&
+                    <img
+                        src={process.env.NEXT_PUBLIC_OSS_ENDP + storeObj1?.url || "/placeholder.svg"}
+                        alt={storeObj1?.url}
+                        className="max-h-[14cm] w-full print:max-h-[26cm] print:max-w-[705px] @lg:max-h-[18cm] @lg:w-auto"
                     />
                 }
             </div>
         }
-        <div css={{ textAlign: 'center',margin: theme.spaces.md}}>
-            {
-                storeObj1?.url?  <Button css={{ marginTop: theme.spaces.sm }} size="sm"
-                                              onPress={() =>delOssFileFunc(storeObj1?.url,0,'rep',repId) }
+          <div className="text-center">
+          {
+                storeObj1?.url?  <Button  size="sm"
+                                          onClick={(e) =>{
+                                              delOssFileFunc(storeObj1?.url,0,'rep',repId);
+                                              e.preventDefault()
+                                          }}
                         >旧的先刪除</Button>
-                        :
-                   <>
-                        <Button css={{ marginTop: theme.spaces.sm }} size="sm"
-                                onPress={() =>{
-                                    setOpenUppy(!openUppy);
-                                }}
-                        >{openUppy? '关闭上传':'开启上传'}</Button>
-{/*                        <Button css={{ marginTop: theme.spaces.sm }} size="sm"  disabled={!infiles?.[0]}
-                                onPress={ () => {
-                                    setOpenUppy(false);
-                                    const newfile=infiles?.map(({name,url}, i) => {
-                                        return  (i<maxFile)&&{name,url}
-                                    });
-                                    onSure && onSure( {...inp, [field]: newfile?.[0] || undefined} );
-                                    onFinish && onFinish(newfile?.[0] || undefined, false);
-                                }}
-                        >文件输入确认</Button>*/}
-                  </>
+                   :
+                    <Button  size="sm"
+                             onClick={(e) =>{
+                                setOpenUppy(!openUppy);
+                                e.preventDefault()
+                            }}
+                    >{openUppy? '关闭上传':'开启上传'}</Button>
             }
         </div>
      </>);
@@ -203,54 +190,43 @@ export function useUppyUpload({ repId, storeObj, maxFile=1,liveDays=2,maxSize=3,
     else if(maxFile>1) {
         //允许有多个文件情况：类似 _FILE_部位 ； 多个文件存储的  _FILE_S部位 单一文件
         const manyMore = (<>
-            <div css={{textAlign: 'center'}}>
+            <div className="text-center">
                 {
                     storeObj2?.map(({name, url}: any, i: number) => {
                         return <div key={i}>
-                            {i>0 && <hr/>}
-                            <div css={{display: 'flex', justifyContent: 'space-around', alignItems: 'center'}}>
-                                {url &&
-                                    <img src={process.env.NEXT_PUBLIC_OSS_ENDP + url} alt={url}
-                                         css={{
-                                             maxHeight: '14cm',   //在这个元素的上一级元素可以自己加一个固定高度值，就像一张纸打印的应该多高的取值。这个用固定高度会导致图片自动的横竖比例不均衡压缩=会变形啊！24cm是纸张大约最多高度=报告最大图片高。
-                                             maxWidth: '-webkit-fill-available',
-                                             "@media print": {maxHeight: '26cm', maxWidth: '705px'},         //对A4纸张竖版的高度26cm基本都是图片整张纸，这里没考虑多个图片在宽度方向上的并排布局：可用软件合并。
-                                             [theme.mediaQueries.lg]: {maxHeight: '18cm', maxWidth: undefined}           //普通图片+大屏幕限制高度才是关键的。
-                                         }}
+                            {i > 0 && <hr/>}
+                            <div className="flex justify-around items-center">
+                                {url && (
+                                    <img
+                                        src={process.env.NEXT_PUBLIC_OSS_ENDP + url || "/placeholder.svg"}
+                                        alt={url}
+                                        className="max-h-[14cm] w-full print:max-h-[26cm] print:max-w-[705px] lg:max-h-[18cm] lg:w-auto"
                                     />
-                                }
+                                )}
                             </div>
-                            <Button css={{marginTop: theme.spaces.sm}} size="sm"
-                                    onPress={() => delOssFileFunc(url, i, 'rep', repId)}
-                            >旧的刪除</Button>
+                            <Button type="button" variant="outline"
+                                    onClick={(e) =>{
+                                        delOssFileFunc(url, i, "rep", repId)
+                                        e.preventDefault()
+                                    } }>
+                                旧的刪除
+                            </Button>
                         </div>
                     })
                 }
             </div>
-            <div css={{textAlign: 'center',margin: theme.spaces.md}}>
+            <div className="text-center">
                 {openUppy && <Dashboard uppy={uppy} plugins={['Webcam']}/>}
-                <Button css={{marginTop: theme.spaces.sm}} size="sm"
-                        disabled={!openUppy && thisMaxFiles<=0}
-                        onPress={() => {
+                <Button size="sm"
+                        disabled={!openUppy && thisMaxFiles <= 0}
+                        onClick={(e) => {
                             setOpenUppy(!openUppy);
+                            e.preventDefault()
                         }}
                 >{openUppy ? '关闭上传' : '开启上传'}</Button>
-{/*                <Button css={{marginTop: theme.spaces.sm}} size="sm" disabled={!infiles?.[0]}
-                        onPress={() => {
-                            setOpenUppy(false);
-                            const newfile = infiles?.map(({name, url}, i) => {
-                                return (i < maxFile) && {name, url}
-                            }) as any;
-                            const mergedArr = [...(inp?.[field]??[]), ...newfile];
-                            onSure && onSure({...inp, [field]: mergedArr});     //直接进行输入的确认操作！避免已上传的文件就被忽略不顾了。
-                            onFinish && onFinish(newfile, false);
-                        }}
-                >文件输入确认</Button>*/}
             </div>
         </>);
 
-      return [ manyMore ];
-    }
-    else return  [ ];
+        return [manyMore];
+    } else return [];
 }
-
