@@ -14,44 +14,87 @@ import {
 import {useMeasureInpFilter} from "./hooks";
 import {itemA结论} from "../vehicle/balanceT/editor";
 import {tail测仪器} from "../recreation/waterJj/repView";
+import {z} from "zod";
+import {useStorage} from "@/report/StorageContext";
+import {config测点表, itemA应变应力, tail应变} from "@/report/recreation/waterJj/StrainStress";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui";
+import {useFormFramework} from "@/report/hook/useFormFramework";
+import {CollapsibleFormSection} from "@/components/chub";
+
 
 interface InstrumentTableProps  extends InternalItemProps{
     label: string;
     prnAttach?: string;
 }
-
+export const fork2Option = [
+    { label: "合格", value: "√" },
+    { label: "不合格", value: "×" },
+]
 //【注意】回调函数局限：若加<React.Fragment > 会导致<InputLine 内勤套render时刻无法穿透提供 props 给输入组件的：层次层级不配套，造成样式不一致问题！
 const config仪器表=[['测量设备名称','n',140],['规格型号','t',120],['测量设备编号','i',142],
-    ['性能状态-开机后','o',75,(obj,setObj)=>{
-        return <SelectHookfork value={ obj?.o ||''} onChange={e => setObj({ ...obj, o: e.currentTarget.value||undefined})}/>
-    }],
-    ['性能状态-关机前','f',75,(obj,setObj)=>{
-        return <SelectHookfork value={ obj?.f ||''} onChange={e => setObj({ ...obj, f: e.currentTarget.value||undefined})}/>
-    }],
+    ['性能状态-开机后','o',75,{t:'l',l:fork2Option}],
+    ['性能状态-关机前','f',75,{t:'l',l:fork2Option}]
 ] as Each_ZdSetting[];
 /**可复用的： 仪器表录入页面的
  * */
-export const ItemInstrumentTable=
-    React.forwardRef((
-        { children, show ,alone=true,redId,nestMd,label,prnAttach}:InstrumentTableProps,  ref
-    ) => {
-        const headview=<Text variant="h5">
-            {label}：
-        </Text>;
-        const tailview=<>
-            {tail测仪器}
-            <br/><hr/>
-            { !alone && show && prnAttach &&
-                <Text variant="h5">
-                  {prnAttach}
-                </Text>
-            }
-        </>;
-        const {render}=useRepTableEditor({ref,nestMd,show,alone,redId,
-            config: config仪器表, table:'仪器表', column:4,  label: label, headview,tailview,
-        });
-        return render;
-} );
+export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestMd, label, rep
+                                        ,prnAttach}: InstrumentTableProps) => {
+    const {storage,setStorage,modified,setModified} =useStorage();
+    const schema = React.useMemo(() => {
+        const schemaFields = {} as any
+        const schemaTab = {} as any
+        config仪器表.forEach(([t,field,s,o,park]) => {
+            schemaTab[field] = z.string().optional()
+        })
+        schemaFields["仪器表"]= z.array(z.object(schemaTab))
+        return z.object(schemaFields)
+    }, [])
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        return fields
+    }, [storage])
+    const arrayFields =React.useMemo(() => {
+        const itemTemplate = {} as any
+        config仪器表.forEach(([t,field,s,o,park]) => {
+            itemTemplate[field] = ""
+        })
+        return [ {name:"仪器表", itemTemplate,} ]
+    }, [])
+
+    const headview=<Text variant="h5">
+        {label}：
+    </Text>;
+    const tailview=<>
+        {tail测仪器}
+        <br/><hr/>
+        { !alone && show && prnAttach &&
+            <Text variant="h5">
+                {prnAttach}
+            </Text>
+        }
+    </>;
+    const [nestRendererFactory]=useTableEditor({headview, config: config仪器表, table:'仪器表',defFixedLay:true, tailview});
+    const contentRendererFactory = React.useCallback(
+        (form: any, arrays?: Record<string, any>) => {
+            return (
+                <>
+                    <Card className="py-1 gap-1">
+                        <CardContent className="px-1">
+                            {nestRendererFactory(form, arrays)}
+                        </CardContent>
+                    </Card>
+                    {children}
+                </>
+            )
+        },
+        [children,nestRendererFactory ],
+    )
+    const { render } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+    return  <CollapsibleFormSection title={label!} defaultOpen={show}>
+        {render()}
+    </CollapsibleFormSection>;
+};
+
 
 interface InstrumentReispProps  extends InternalItemProps{
     label: string;

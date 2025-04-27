@@ -79,7 +79,7 @@ interface Props {
     defaultV?: any[];
 }
 /**@Deprecated
- * 【用的少】因为很多需要其它编辑内容的；会直接改用useTableEditor；表格数据编辑: 不能多個表格追加一起做編輯的。
+ * 淘汰！
  * 用了<DdMenu icon替代了<Popover>做菜单后会好点：菜单版面紧凑而且易于扩展。
  * */
 export function useRepTableEditor({ ref, nestMd, show, alone, redId, config, table,column,breaks,label,
@@ -759,7 +759,7 @@ export function useTableEditor({
                                                 <FormItem className="w-full break-inside-avoid">
                                                     <FormLabel>{title}</FormLabel>
                                                     <FormControl className="w-full">
-                                                        {/*<InputDatalist  datalist={list} unit={unit}  {...field}  />*/}
+                                                        <InputDatalist  datalist={list} unit={unit}  {...field}  />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>

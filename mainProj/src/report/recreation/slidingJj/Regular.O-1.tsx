@@ -47,7 +47,6 @@ const 记事选=["检验过程共开出《特种设备检验意见通知书》xx
 
 const recordPrintList =[
     createItem('Entrance', <EntranceSetup/>),
-    createItem('FrontCover', <FrontCover/>),
     createItem('Instrument', <ItemInstrumentTable label={'一、主要测量设备性能检查'} />),
     createItem('Survey', <DeviceSurveyD config={config设备概况} label={'二、设备概况'}/>),
     createItem('Item', null),

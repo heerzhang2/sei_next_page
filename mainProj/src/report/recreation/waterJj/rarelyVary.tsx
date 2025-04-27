@@ -14,7 +14,7 @@ export const 检验核准WaterJj = ({orc, rep,jyt}: { orc: any, rep: any,jyt?:st
 ) => {
   return <OldTable fixed={["4.2%", "27%", "27%", "4.2%", "12%", "%"]} css={{borderCollapse: 'collapse'}} tight miniw={800}>
     <OldTableBody>
-      <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Conclusion`}>
+      <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>
         <OldTableRow>
           <CCell>{jyt??'检验'}</CCell>
           <CCell colSpan={2}>{orc.检验人IDs}</CCell>

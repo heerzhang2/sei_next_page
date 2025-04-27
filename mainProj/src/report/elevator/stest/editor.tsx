@@ -1,8 +1,23 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {BlobInputList, Input, InputLine, Select, Text, TextArea,} from "customize-easy-ui-component";
+import {Input, InputLine, Select, Text, TextArea,} from "customize-easy-ui-component";
 import {InspectRecordLayout, InternalItemProps, useItemInputControl,} from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
+import {useStorage} from "@/report/StorageContext";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel, FormMessage,
+} from "@/components/ui";
+import {useFormFramework} from "@/report/hook/useFormFramework";
+import {CollapsibleFormSection} from "@/components/chub";
+import {z} from "zod";
+import { BlobInputList,SuffixInput,} from "@/components/chub";
 
 interface WitnessParkDjProps  extends InternalItemProps{
     titles?: any[];      //可能是Node[]，不一定纯粹string;  可变的多个标题编码的。
@@ -15,39 +30,76 @@ interface WitnessParkDjProps  extends InternalItemProps{
 export const itemA技术见证=['资料编号','大备注'];
 /**通用见证材料3项的： 约定：children [] 可以嵌入俩个儿子DOM节点，分别代表两个段落插入一个div块;
  * */
-export const WitnessSimple=
-    React.forwardRef((
-        { children, show ,alone=true,redId,nestMd,label,titles,nowit,memolist,witlist}:WitnessParkDjProps,  ref
-) => {
-    const defvcbFunc = React.useCallback((par: any) => {
-        // const { 见证表, }=par||{};
-        return  par;
-    }, []);
-    const [getInpFilter]=useMeasureInpFilter(null,itemA技术见证,defvcbFunc);
-    const {inp, setInp} = useItemInputControl({ ref });
-    return <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show} redId={redId}
-                                nestMd={nestMd} alone={alone} label={label!}>
-        {!nowit && <>
-            <div>
-                <Text variant="h5">
-                    {titles![0]}
-                </Text>
-                资料及编号:
-                <BlobInputList value={inp?.资料编号 || ''} rows={6} datalist={witlist}
-                               onListChange={v => setInp({...inp, 资料编号: v || undefined}) } />
-            </div>
-            {(children as any[])?.[0]}
-            <hr/>
-          </>
-        }
-        <Text variant="h5">
-            {titles![1]}
-        </Text>
-        <BlobInputList value={inp?.大备注 || ''} rows={6} datalist={memolist}
-                       onListChange={v => setInp({...inp, 大备注: v || undefined}) } />
-        {(children as any[])?.[1]}
-    </InspectRecordLayout>;
-});
+export const WitnessSimple = ({ children, show, alone = true, redId, nestMd, label, rep,
+                                  titles,nowit,memolist,witlist }: WitnessParkDjProps) => {
+    const {storage,} =useStorage();
+    const schema = React.useMemo(() => {
+        const schemaFields = {} as any
+        itemA技术见证.forEach((name) => {
+           schemaFields[name] = z.string().optional()
+        })
+        return z.object(schemaFields)
+    }, [])
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        itemA技术见证.forEach((name) => {
+           fields[name] = storage[name] ?? ""
+        })
+        return fields
+    }, [storage])
+    const contentRendererFactory = React.useCallback(
+        (form: any, arrays?: Record<string, any>) => {
+            return (
+                <>
+                    {!nowit &&  <Card className="py-1 gap-1">
+                        <CardHeader>
+                            <CardTitle>{titles![0]}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-1">
+                            <FormField control={form.control} name="资料编号"
+                                render={({ field }) => (
+                                    <FormItem className="pt-2 w-full break-inside-avoid">
+                                        <FormLabel>资料及编号:</FormLabel>
+                                        <FormControl className="w-full">
+                                            <BlobInputList rows={6} datalist={witlist}  {...field}  />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            {(children as any[])?.[0]}
+                        </CardContent>
+                    </Card>
+                    }
+                    <Card className="py-1 mb-2 gap-2">
+                        <CardHeader>
+                            <CardTitle>{titles![1]}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-1">
+                            <FormField control={form.control} name="大备注"
+                                       render={({ field }) => (
+                                           <FormItem className="pt-2 w-full break-inside-avoid">
+                                               <FormLabel>备注:</FormLabel>
+                                               <FormControl className="w-full">
+                                                   <BlobInputList rows={6} datalist={memolist}  {...field}  />
+                                               </FormControl>
+                                               <FormMessage />
+                                           </FormItem>
+                                       )}
+                            />
+                            {(children as any[])?.[1]}
+                        </CardContent>
+                    </Card>
+                </>
+            )
+        },
+        [children,],
+    )
+    const { render } = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
+    return  <CollapsibleFormSection title={label!} defaultOpen={show}>
+        {render()}
+    </CollapsibleFormSection>;
+};
 
 interface ConclusionTestProps extends InternalItemProps{
     //需要加上 检验日期1 的编辑？

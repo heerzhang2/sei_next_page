@@ -588,7 +588,7 @@ export function ClearableSelect({
                                     value
                                 }: {
     field: any,
-    options: { label: any; value: string }[],
+    options: { label?: any; value: string }[],
     placeholder?: string,
     onClear: () => void,
     id?: string,
@@ -603,13 +603,16 @@ export function ClearableSelect({
         <div className={`relative w-full ${className || ""}`}>
             <Select  {...field}  onValueChange={field.onChange}
                      value={newValue}>
-                <SelectTrigger id={id} className="w-full pr-8">
+                <SelectTrigger id={id} className="w-full pr-8"
+                         style={{
+                        fontSize: "inherit"
+                }}>
                     <SelectValue placeholder={placeholder}/>
                 </SelectTrigger>
                 <SelectContent>
                     {options.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                            {option.label ?? option.value}
                         </SelectItem>
                     ))}
                 </SelectContent>
@@ -636,7 +639,7 @@ export function ClearableSelect({
 interface FormSelectFieldProps {
     field: ControllerRenderProps<any, any>,
     label: any,
-    options: { value: string; label: any }[],
+    options: { value: string; label?: any }[],
     className?: string,
     selectClass?: string,
     value?: any
