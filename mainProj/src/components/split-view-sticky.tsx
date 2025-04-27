@@ -155,14 +155,27 @@ export function SplitViewSticky({
     isDragging.current = true
     document.body.style.userSelect = "none"
   }
+  // 新增两个 Ref 用于追踪左右面板的存在状态
+  const prevLeftExists = useRef(!!leftPanel);
+  const prevRightExists = useRef(!!rightPanel);
   useEffect(() => {
-    if (leftPanel && !rightPanel) {
-      setSplitPosition(100)
-    } else if (!leftPanel && rightPanel) {
-      setSplitPosition(0)
+    const currentLeftExists = !!leftPanel;
+    const currentRightExists = !!rightPanel;
+    // 仅当存在性变化时才执行逻辑
+    if (currentLeftExists !== prevLeftExists.current || currentRightExists !== prevRightExists.current) {
+      if (currentLeftExists && !currentRightExists) {
+        setSplitPosition(100);
+      } else if (!currentLeftExists && currentRightExists) {
+        setSplitPosition(0);
+      } else {
+        // 只有当两边同时存在时才应用 defaultSplit
+        setSplitPosition(defaultSplit);
+      }
+      // 更新存在性记录
+      prevLeftExists.current = currentLeftExists;
+      prevRightExists.current = currentRightExists;
     }
-    else setSplitPosition(defaultSplit)
-  }, [leftPanel,rightPanel])
+  }, [leftPanel, rightPanel, defaultSplit]);
 
   return (
     <div

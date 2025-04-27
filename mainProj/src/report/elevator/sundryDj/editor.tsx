@@ -1,14 +1,14 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-    Text,  Table, TableBody, TableRow, CCell, BlobInputList,
+    Text,  BlobInputList,
 } from "customize-easy-ui-component";
 import {
     InspectRecordLayout, InternalItemProps, useItemInputControl,
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {ClearableSelect, CollapsibleFormSection, FormSelectField} from "@/components/chub";
+import {CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import {
@@ -23,7 +23,8 @@ import {
     FormMessage, Input, Select, Button,
     SelectTrigger, SelectContent, SelectValue, SelectItem
 } from "@/components/ui";
-import {clcOptions} from "@/report/common/ActionMapItem";
+import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow,CCell} from "@/components/flexible-table";
+import {Table} from "@/components/ui/table";
 
 //可以复用的组件： 尽量抽象 和 提高代码复用程度！
 interface SiteConditionSundProps  extends InternalItemProps{
@@ -77,7 +78,7 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
             return (
                 <>
                     <div>现场检验条件确认结果的记录:
-                        <Table css={{borderCollapse: 'collapse'}} tight miniw={800}>
+                        <Table css={{borderCollapse: 'collapse'}}>
                             <TableBody>
                                 <TableRow>
                                     <CCell>确认日期</CCell>
@@ -109,7 +110,7 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
                             </SelectContent>
                         </Select>
                     </div>
-                    <div>
+                    <div className="h-md:@md:max-w-[80rem] m-auto">
                         <Card className="py-1 gap-2">
                             <CardHeader>
                                 <CardTitle>{selectedIndex===null?'新增':'修改'}一条</CardTitle>
