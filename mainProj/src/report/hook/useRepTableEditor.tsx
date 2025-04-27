@@ -695,9 +695,9 @@ export function useTableEditor({
 
     //这个excludeFix仅仅对弹性布局生效的excludeFix && k < fixColumn!； 定长折叠布局模式没启用过滤字段。
     const [seq, setSeq] = React.useState<number | null>(null)
-    const [obj, setObj] = React.useState<any>({})
     const [selectedRaft, setSelectedRaft] = React.useState<number | null>(null)
     // const [fixedColW, setFixedColW] = React.useState<boolean>(defFixedLay ?? false)竟然被挪走放在renderFlexibleTable = React.useCallback(里面了。
+    //定长折叠形态才需要区分表格raft的位置；
     const [activeHeaderIndex, setActiveHeaderIndex] = React.useState<number | null>(null)
     const [openMenuId, setOpenMenuId] = React.useState<string | null>(null)
     const { innerHeight, } = useWindowSize()

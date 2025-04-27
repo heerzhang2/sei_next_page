@@ -1,11 +1,11 @@
 "use client"
 
-import React, { useId, useState, useRef, useEffect, ChangeEventHandler } from "react"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
-import { ChevronDown, ChevronRight, ChevronUp,Calendar } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import React, {useId, useState, useRef, useEffect, ChangeEventHandler} from "react"
+import {Input} from "@/components/ui/input"
+import {Textarea} from "@/components/ui/textarea"
+import {cn} from "@/lib/utils"
+import {ChevronDown, ChevronRight, ChevronUp, Calendar} from "lucide-react"
+import {Button} from "@/components/ui/button"
 import {
     autoUpdate,
     size,
@@ -17,15 +17,15 @@ import {
     FloatingFocusManager,
     FloatingPortal,
 } from "@floating-ui/react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X } from "lucide-react"
-import { useFormContext } from "react-hook-form"
+import {zodResolver} from "@hookform/resolvers/zod"
+import {ControllerRenderProps, useForm} from "react-hook-form"
+import {z} from "zod"
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
+import {X} from "lucide-react"
+import {useFormContext} from "react-hook-form"
 import {clcOptions} from "@/report/common/ActionMapItem";
-import type { ControllerRenderProps } from "react-hook-form"
+import type {ControllerRenderProps} from "react-hook-form"
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
 * */
@@ -44,10 +44,11 @@ interface LineColumnProps {
     className?: string
     children: React.ReactNode
 }
+
 /*可以用className="@container"嵌套className="columns-1 @lg:columns-2能直接替换掉LineColumn：但是顺序是分裂垂直阅读的，就不会有扩张稀疏问题较为紧凑的。
 而LineColumn这个用grid的导致：某些输入框占据较大的高度空间的就会引起一整个行的空间稀疏同一扩展开的，项目顺序是常规阅读顺序。
 * */
-export function LineColumn({ width=300, className, children }: LineColumnProps) {
+export function LineColumn({width = 300, className, children}: LineColumnProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     const [isSingleRow, setIsSingleRow] = useState(false)
     const childrenArray = React.Children.toArray(children)
@@ -93,7 +94,7 @@ export function LineColumn({ width=300, className, children }: LineColumnProps) 
             className={cn("w-full h-full", isSingleRow ? "flex flex-row items-center justify-between" : "grid", className)}
             style={
                 isSingleRow
-                    ? { gap: "1rem" }
+                    ? {gap: "1rem"}
                     : {
                         gap: "1rem",
                         gridTemplateColumns: `repeat(auto-fill, minmax(${width}px, 1fr))`,
@@ -105,7 +106,7 @@ export function LineColumn({ width=300, className, children }: LineColumnProps) 
                 <div
                     key={index}
                     className={cn("flex-grow flex items-center justify-center", isSingleRow ? "flex-1" : "")}
-                    style={isSingleRow ? { minWidth: `${width}px` } : {}}
+                    style={isSingleRow ? {minWidth: `${width}px`} : {}}
                 >
                     {child}
                 </div>
@@ -123,6 +124,7 @@ interface CollapsibleFormSectionProps {
     contentClassName?: string
     children: React.ReactNode
 }
+
 //第二个idv不能加overflow-hidden;  max-h-[2000px]
 export function CollapsibleFormSection({
                                            title,
@@ -150,9 +152,9 @@ export function CollapsibleFormSection({
             >
                 <span>{title}</span>
                 {isOpen ? (
-                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground"/>
                 ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground"/>
                 )}
             </button>
             <div
@@ -176,7 +178,7 @@ export function CollapsibleFormSection({
                                 onClick={toggleOpen}
                                 className="flex items-center gap-1"
                             >
-                                <ChevronUp className="h-4 w-4" />
+                                <ChevronUp className="h-4 w-4"/>
                                 <span>收起</span>
                             </Button>
                         </div>
@@ -198,6 +200,7 @@ interface MemoDatesInputProps {
     placeholder?: string
     dateInputWidth?: string | number
 }
+
 //包含 `onChange` 事件处理器，这些是客户端交互功能。只有当组件完全是静态的或只执行服务器端逻辑时，才可不用use client;
 export function MemoDatesInput({
                                    id,
@@ -254,7 +257,7 @@ export function MemoDatesInput({
                 <Input
                     type="date"
                     className="w-full @[500px]:w-auto @[500px]:flex-shrink-0"
-                    style={{ width: dateWidth }}
+                    style={{width: dateWidth}}
                     onChange={handleDateChange}
                     aria-label="选择日期"
                 />
@@ -269,6 +272,7 @@ interface ItemProps {
     active: boolean
     index: number
 }
+
 //不能声明为 : ItemProps & Omit<React.HTMLProps<HTMLDivElement>, "onClick"> & { ref?: React.Ref<HTMLDivElement> })
 function Item({
                   children,
@@ -329,13 +333,13 @@ export function BlobInputList({
 
     const listRef = useRef<Array<HTMLElement | null>>([])
 
-    const { x, y, refs, strategy, context } = useFloating<HTMLTextAreaElement>({
+    const {x, y, refs, strategy, context} = useFloating<HTMLTextAreaElement>({
         whileElementsMounted: autoUpdate,
         open,
         onOpenChange: setOpen,
         middleware: [
             size({
-                apply({ rects, availableHeight, elements }) {
+                apply({rects, availableHeight, elements}) {
                     Object.assign(elements.floating.style, {
                         width: `${rects.reference.width}px`,
                         maxHeight: `${availableHeight}px`,
@@ -346,8 +350,8 @@ export function BlobInputList({
         ],
     })
 
-    const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
-        useRole(context, { role: "listbox" }),
+    const {getReferenceProps, getFloatingProps, getItemProps} = useInteractions([
+        useRole(context, {role: "listbox"}),
         useDismiss(context),
         useListNavigation(context, {
             listRef,
@@ -411,7 +415,7 @@ export function BlobInputList({
                   },
               })}
           />
-          {unit}
+            {unit}
             <FloatingPortal>
                 {open && items.length > 0 && (
                     <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
@@ -462,14 +466,14 @@ interface SuffixInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function SuffixInput({
-                                  fullWidth = true,
-                                  className,
-                                  style,
-                                  value,
-                                  onChange,
-                                  unit,
-                                  ...other
-                              }: SuffixInputProps) {
+                                fullWidth = true,
+                                className,
+                                style,
+                                value,
+                                onChange,
+                                unit,
+                                ...other
+                            }: SuffixInputProps) {
     return (
         <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
             <input
@@ -546,7 +550,7 @@ export function MemoDateInput({
           onChange={handleTextChange}
           rows={rows}
           className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
-          style={{ width }}
+          style={{width}}
           placeholder="Enter date..."
       />
 
@@ -567,7 +571,7 @@ export function MemoDateInput({
                 onClick={handleCalendarClick}
                 className="flex items-center justify-center rounded-r-md border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
             >
-                <Calendar size={16} />
+                <Calendar size={16}/>
             </button>
         </div>
     )
@@ -575,28 +579,32 @@ export function MemoDateInput({
 
 // 创建一个可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。
 export function ClearableSelect({
-                             field,
-                             options,
-                             placeholder="",
-                             onClear,
-                             id,
-                             className
-                         }: {
-    field: any
-    options: { label: any; value: string }[]
-    placeholder?: string
-    onClear: () => void
-    id?: string
-    className?: string
+                                    field,
+                                    options,
+                                    placeholder = "",
+                                    onClear,
+                                    id,
+                                    className,
+                                    value
+                                }: {
+    field: any,
+    options: { label: any; value: string }[],
+    placeholder?: string,
+    onClear: () => void,
+    id?: string,
+    className?: string,
+    //允许外部控制传值，手动同步
+    value?: any
 }) {
     // 检查是否有选定的值
-    const hasValue = !!field.value
-
+    const newValue=value===undefined? (field.value || "") : value;
+    const hasValue = !!field.value;
     return (
         <div className={`relative w-full ${className || ""}`}>
-            <Select  {...field}  onValueChange={field.onChange} value={field.value || ""}>
+            <Select  {...field}  onValueChange={field.onChange}
+                     value={newValue}>
                 <SelectTrigger id={id} className="w-full pr-8">
-                    <SelectValue  placeholder={placeholder} />
+                    <SelectValue placeholder={placeholder}/>
                 </SelectTrigger>
                 <SelectContent>
                     {options.map((option) => (
@@ -618,7 +626,7 @@ export function ClearableSelect({
                     className="absolute right-8 top-0 h-full flex items-center pr-2"
                     aria-label="清除选择"
                 >
-                    <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    <X className="h-4 w-4 text-muted-foreground hover:text-foreground"/>
                 </button>
             )}
         </div>
@@ -626,24 +634,26 @@ export function ClearableSelect({
 }
 
 interface FormSelectFieldProps {
-    field: ControllerRenderProps<any, any> // 直接接收 field 对象
-    label: any      // 标签文本
-    options: { value: string; label: any }[] // 选项
-    className?: string // 可选的样式类
-    selectClass?: string
+    field: ControllerRenderProps<any, any>,
+    label: any,
+    options: { value: string; label: any }[],
+    className?: string,
+    selectClass?: string,
+    value?: any
 }
 
-export function FormSelectField({ field, label, options, className,selectClass }: FormSelectFieldProps) {
+export function FormSelectField({field, label, options, className, selectClass, value}: FormSelectFieldProps) {
     const id = useId() + "-" + field.name // 使用 field.name 生成唯一ID
     return (
         <FormItem className={`pt-2 w-full break-inside-avoid ${className || ""}`}>
             <FormLabel htmlFor={id}>{label}</FormLabel>
             <FormControl>
-                <ClearableSelect id={id} field={field} options={options} onClear={() => field.onChange("")}
+                <ClearableSelect id={id} field={field} value={value} options={options}
+                                 onClear={() => field.onChange("")}
                                  className={`${selectClass || ""}`}
                 />
             </FormControl>
-            <FormMessage />
+            <FormMessage/>
         </FormItem>
     )
 }
@@ -658,6 +668,7 @@ interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement>
     onListChange?: (value: string) => void
     unit?: any;
 }
+
 //不要自行去设置id的，<FormItem会转换的。
 export function InputDatalist({
                                   fullWidth = true,
@@ -672,7 +683,7 @@ export function InputDatalist({
                                   ...other
                               }: InputDatalistProps) {
     const [inputValue, setInputValue] = useState(value || "")
-    const uid =id;      //useId()避免不会记住用户输入文字
+    const uid = id;      //useId()避免不会记住用户输入文字
     const listId = `list-${uid}`
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -691,7 +702,7 @@ export function InputDatalist({
         <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
             <datalist id={listId}>
                 {datalist.map((option, i) => (
-                    <option key={i} value={option} />
+                    <option key={i} value={option}/>
                 ))}
             </datalist>
 

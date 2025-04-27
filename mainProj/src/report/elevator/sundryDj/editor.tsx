@@ -8,7 +8,7 @@ import {
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
+import {ClearableSelect, CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import {
@@ -23,6 +23,7 @@ import {
     FormMessage, Input, Select, Button,
     SelectTrigger, SelectContent, SelectValue, SelectItem
 } from "@/components/ui";
+import {clcOptions} from "@/report/common/ActionMapItem";
 
 //可以复用的组件： 尽量抽象 和 提高代码复用程度！
 interface SiteConditionSundProps  extends InternalItemProps{
@@ -68,12 +69,13 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
             const { fields, append, remove } = arrays?.["检验条件"] || {};
-            const tableData = form.watch("检验条件") || [];
-
+            //底下编辑项目不能直接用storage的存储数据。需要用表单自带的临时状态取值。
+            const tabledArr = form.watch("检验条件") || [];
+            const index = selectedIndex ?? 0 // 表格第几行的
+            //空行导致tabledArr可能比fields.length更多，form.watch是内部未校验的，fields.length是合法的稳定版本。append新增一条前直接编辑导致空行。
+            if(tabledArr[index]===undefined)    return null
             return (
                 <>
-                    {config.map(([title,{f:field,N:descnode}]: any, i: number) => <React.Fragment key={i}>{descnode}<br/></React.Fragment>)}
-                    <hr/>
                     <div>现场检验条件确认结果的记录:
                         <Table css={{borderCollapse: 'collapse'}} tight miniw={800}>
                             <TableBody>
@@ -90,111 +92,88 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
                             </TableBody>
                         </Table>
                     </div>
-                    <>新增检查确认时间=＞</>
-                    <div>
-                        <Card className="py-1">
-                            <CardHeader>
-                                <CardTitle>编辑区</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0 space-y-4">
-                            {/* 新增选择器和编辑区 */}
-                    <div className="mt-4 space-y-4">
-                        <Select
-                            value={selectedIndex?.toString()}
-                            onValueChange={(v) => {
-                                const index = v ? Number(v) : null;
-                                setSelectedIndex(index);
-                            }}
-                        >
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="选择要编辑的行" />
+                    <div className="w-full flex justify-center mb-1">
+                        <Select value={selectedIndex===null? "" : selectedIndex?.toString()}
+                                onValueChange={(v) => {
+                                    const index = v ? Number(v) : null;
+                                    //这里不应该出现null的选择取值，最多是取消，类似用onClear={() => field.onChange("")}特别按钮的。
+                                    if(index!==null) setSelectedIndex(index);
+                                }}>
+                            <SelectTrigger className="w-full @md:w-[20rem]">
+                                <SelectValue placeholder="选择要编辑的那行" />
                             </SelectTrigger>
                             <SelectContent>
-                                {storage?.检验条件?.map((row: any, index: number) => (
+                                {fields?.map((row: any, index: number) => (
                                     <SelectItem key={index} value={index.toString()}>行 {index + 1} (日期: {row.d || '未设置'})</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-
-                        {selectedIndex !== null && (
-<>
-                                <FormField
-                                    control={form.control}
-                                    name={`检验条件.${selectedIndex}.d`}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>检验日期</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="date"
-                                                    {...field}
-                                                    placeholder="选择日期"
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* 其他配置字段 */}
-                                {config.map(([title, { f: tag, N: desc }]) => (
-                                    <FormField
-                                        key={tag}
-                                        control={form.control}
-                                        name={`检验条件.${selectedIndex}.${tag}`}
-                                        render={({ field }) => (
-                                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                                <FormLabel>{desc}</FormLabel>
-                                                <FormControl>
-                                                    <ClearableSelect
-                                                        field={field}
-                                                        options={现场条件选}
-                                                        onClear={() => form.setValue(`检验条件.${selectedIndex}.${tag}`, "")}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                ))}
-
-                                <div className="flex justify-end gap-2">
-                                    <Button
-                                        variant="destructive"
+                    </div>
+                    <div>
+                        <Card className="py-1 gap-2">
+                            <CardHeader>
+                                <CardTitle>{selectedIndex===null?'新增':'修改'}一条</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0 space-y-1">
+                            {/* 新增选择器和编辑区 */}
+                            <div className="mt-4 space-y-4">
+                                {selectedIndex !== null && (
+                                    <>
+                                        <FormField
+                                            control={form.control}
+                                            name={`检验条件.${selectedIndex}.d`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full @md:w-[20rem]">
+                                                    <FormLabel>确认日期</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="date"{...field} placeholder="选择日期"
+                                                               value={tabledArr[index] ? tabledArr[index].d : ""}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        {config.map(([title, { f: tag, N: desc }]) => (
+                                            <FormField key={tag} control={form.control} name={`检验条件.${selectedIndex}.${tag}`}
+                                                       render={({ field }) => (
+                                                           <FormSelectField field={field} label={desc} options={现场条件选}
+                                                                            selectClass="w-full @md:w-[20rem]"
+                                                                     value={tabledArr[index] ? tabledArr[index][tag] : ""}
+                                                           />
+                                                       )}
+                                            />
+                                        ))}
+                                    </>
+                                )}
+                               </div>
+                                </CardContent>
+                                <CardFooter className="flex justify-end space-x-4 border-t p-6">
+                                    <Button className=""
+                                            onClick={(e) => {
+                                                const template = { d: "" };
+                                                config.forEach(([_, { f: field }]) => {
+                                                    template[field] = "";
+                                                });
+                                                append(template);
+                                                setSelectedIndex(fields.length)
+                                                e.preventDefault();
+                                            }}
+                                    >
+                                        新增一条
+                                    </Button>
+                                    <Button variant="destructive" disabled={selectedIndex===null}
                                         onClick={() => {
                                             if (selectedIndex !== null && arrays?.['检验条件']) {
-                                                arrays['检验条件'].remove(selectedIndex);
+                                                remove(selectedIndex);
                                                 setSelectedIndex(null);
                                             }
                                         }}
                                     >
-                                        删除该行
+                                       删除该行
                                     </Button>
-                                </div>
-</>
-                        )}
-
-                    </div>
-                </CardContent>
-
-                            <CardFooter className="flex justify-end space-x-4 border-t p-6">
-                                {/* 原有的新增按钮保持不变 */}
-                                <Button
-                                    className="mt-4"
-                                    onClick={(e) => {
-                                        const template = { d: "" };
-                                        config.forEach(([_, { f: field }]) => {
-                                            template[field] = "";
-                                        });
-                                        append(template);
-                                        setSelectedIndex(fields.length)
-                                        e.preventDefault();
-                                    }}
-                                >
-                                    新增一条
-                                </Button>
-                            </CardFooter>
-                        </Card>
+                                </CardFooter>
+                            </Card>
                     </div>
                     {children ? children:
                         <>注：每次到现场后，在检验前应对检验条件进行确认，只有确认所有与检验相关的条件满足检验要求时，才能开始开展检验工作。</>
