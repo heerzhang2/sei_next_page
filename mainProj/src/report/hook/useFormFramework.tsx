@@ -127,19 +127,23 @@ export function useFormFramework({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 @container">
             {contentRenderer}
-            <CardFooter className="flex justify-end space-x-4 border-t p-6">
-              <Button type="button" variant="outline" onClick={() => form.reset()}>
-                重置
-              </Button>
-              <Button type="button" variant="outline" onClick={handleConfirm}>
-                确认
-              </Button>
+            <CardFooter className="flex flex-col justify-between border-t p-6 space-y-4">
               {Object.keys(form.formState.errors || {}).length > 0 && (
-                  <span className="bg-red-300">报错: {JSON.stringify(form.formState.errors)}</span>
+                  <div className="bg-red-300 px-1 py-1 rounded-md text-sm break-all">
+                    报错: {JSON.stringify(form.formState.errors)}
+                  </div>
               )}
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "保存到后端..." : "保存"}
-              </Button>
+              <div className="flex gap-4 justify-end">
+                <Button type="button" variant="outline" onClick={() => form.reset()}>
+                  重置
+                </Button>
+                <Button type="button" variant="outline" onClick={handleConfirm}>
+                  确认
+                </Button>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "保存到后端..." : "保存"}
+                </Button>
+              </div>
             </CardFooter>
           </form>
         </Form>

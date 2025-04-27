@@ -42,6 +42,7 @@ export const 现场条件选 = [
 const itemA现场 = ['检验条件'];
 /**类似通用的二维表格，但有不同点：必须有一个关键字段唯一性判定；互动流程稍微有差别。适合小数量数据集合。 aDateObj直接倒手...inp;同一个对象参考inp?.检验条件?.find()。
  * 允许children=空格，这样不显示尾部 注： 哪一行： <SiteConditionSund config={tItems现场} label={'附录B：现场检测条件确认'}> </SiteConditionSund>),
+ * 表单useForm毛病【特别注意】form.setValue(`.${fields.length-1}.`,)name={`.${fields.length-1}.`}的索引序号需有效序号,新增按钮{ fields.length>0 &&隐藏编辑器，否则自动乱加空行导致后续报错。append前直接编辑导致空行。
  * */
 export const SiteConditionSund = ({ children, show, alone = true, config, label, rep}: SiteConditionSundProps) => {
     const { storage } = useStorage()
@@ -70,17 +71,14 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
         })
         return [ {name:"检验条件", itemTemplate,} ]
     }, [])
-
     // const [floor, setFloor] = React.useState<string | null>(null);
     // const cindex= storage?.检验条件?.findIndex((t: any) => t.d === floor);
     // const dateBlurRef = React.useRef(null);
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
             const { fields, append, remove, move } = arrays?.["检验条件"] || {}
-            // const tableArray = arrays!["检验条件"]
             const tableData = form.watch("检验条件") || []
-            // const tabledArr = form.watch?.(table) || []
-            const membersum = tableData?.length
+            const rowcount = tableData?.length  //空行导致可能比fields.length更多，form.watch是内部未校验的，fields.length是合法的稳定版本。append新增一条前直接编辑导致空行。
 
         return <>
                 {config.map(([title,{f:field,N:descnode}]: any, i: number) => <React.Fragment key={i}>{descnode}<br/></React.Fragment>)}
@@ -123,7 +121,7 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
                             </Button>
                             { fields.length>0 &&
                                 <CardContent className="p-0 space-y-4">
-                                    {`次数 ${fields.length }:  ;;${membersum}`}
+                                    {`实际存储行数= ${fields.length }  ; 内部状态行数=${rowcount}`}
                                     <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
                                         <FormField control={form.control}
                                                    name={`检验条件.${fields.length-1}.d`}
@@ -137,9 +135,9 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
                                                        </FormItem>
                                                    )}
                                         />
-                                        {config.map(([title,{f:field,N:desc}]) => (
-                                            <FormField key={field} control={form.control}
-                                                       name={`检验条件.${fields.length-1}.${field}`}
+                                        {config.map(([title,{f:tag,N:desc}]) => (
+                                            <FormField key={tag} control={form.control}
+                                                       name={`检验条件.${fields.length-1}.${tag}`}
                                                        render={({ field }) => (
                                                            <FormItem className="pt-2 w-full break-inside-avoid">
                                                                <FormLabel>{desc}</FormLabel>
@@ -147,7 +145,7 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
                                                                    <ClearableSelect
                                                                        field={field}
                                                                        options={现场条件选}
-                                                                       onClear={() => {form.setValue(`检验条件.${fields.length}.${field}`, "")}}
+                                                                       onClear={() => {form.setValue(`检验条件.${fields.length-1}.${tag}`, "")}}
                                                                    />
                                                                </FormControl>
                                                                <FormMessage />
