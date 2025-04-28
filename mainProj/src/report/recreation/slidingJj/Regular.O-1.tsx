@@ -48,7 +48,7 @@ const 记事选=["检验过程共开出《特种设备检验意见通知书》xx
 const recordPrintList =[
     // createItem('Entrance', <EntranceSetup/>),
     // createItem('Instrument', <ItemInstrumentTable label={'一、主要测量设备性能检查'} />),
-    // createItem('Survey', <DeviceSurveyD config={config设备概况} label={'二、设备概况'}/>),
+    createItem('Survey', <DeviceSurveyD config={config设备概况} label={'二、设备概况'}/>),
     // createItem('Item', null),
     // createItem('ReCheck', <RecheckEditor config={config检测复检表} label={'四、检验不符合项目记录及复检结果'} setup={setupItemAreaRoute}/>),
     // createItem('Conclusion', <ConclusionWaterJj startd label={'五、现场检验意见'}/>),
@@ -58,7 +58,7 @@ const recordPrintList =[
     //                      ]}
     //                 />),
     // createItem('Measure', <ObserveEdit memoF config={config观测数据} mem={'观备注'} label={'八、观测数据及测量结果记录(上)'} children={tail观测}/>),
-    createItem('Measure2', <ObserveEdit memoF config={config观测数据2} mem={'观备注'} label={'八、观测数据及测量结果记录(下)'} children={tail观测}/>),
+    // createItem('Measure2', <ObserveEdit memoF config={config观测数据2} mem={'观备注'} label={'八、观测数据及测量结果记录(下)'} children={tail观测}/>),
 
     // createItem('MainTechnical', <ObserveEdit config={config主技术} allowableV mem={'主技备注'} label={'附录A K7.5 主要技术参数测试'} children={tail主技}/>),
     // createItem('StrainStress', <StrainStress sensit label='附录B K7.6应力测试记录'/>),

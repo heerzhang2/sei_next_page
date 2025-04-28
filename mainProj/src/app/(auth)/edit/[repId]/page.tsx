@@ -17,7 +17,7 @@ const NewsfeedQuery = gql`
         getReport(id: $id) {
             id
             data
-            snapshot
+            snapshot,version
             modeltype,modelversion
             isp{id, no}
             ...pageReportIsp
@@ -100,10 +100,10 @@ function CommonReportEditor({
         event.preventDefault();
         const { target } = event;
         //能够遗留变更，新的变更内容没有发送，但是没有登录token? 但是很早前失败的变更请求也会从重新发出的！不管URL强制刷新/累积/只要没成功的。
-        const RepData={...rep_dat,'顶升形式':'2'};
+        const RepData={...rep_dat,'顶升形式':new FormData(event.target).get('link')};
         // const { _version, ...RepData }= (storage || source);
         updateTodo({id:repId,operationType:1,
-            version: 11, //new FormData(target).get('link'),
+            version: report?.version, //new FormData(target).get('link'),
             data:JSON.stringify(RepData) }).then(() =>
             target.reset()
         );
@@ -112,9 +112,9 @@ function CommonReportEditor({
     // @ts-ignore
     return (
         <article>
-            <h1>bianjiqi编辑器的 离线2？</h1>
-            {report?.data}
-
+            <h1>bianjiqi编辑器的 离线2？</h1>{report?.data}
+            <hr/><br/>
+            <span className={"text-3xl"}>{rep_dat?.顶升形式}</span>
             <form onSubmit={onSubmitLink}>
                 {updateTodoResult.fetching ? <p>Submitting...</p> : null}
                 {updateTodoResult.error ? (
@@ -124,7 +124,7 @@ function CommonReportEditor({
                 <fieldset disabled={updateTodoResult.fetching}>
                     <label>
                         {'Link to Blog Post: '}
-                        <input type="text" name="link" placeholder="https://..." />
+                        <input type="text" name="link" placeholder="https://..."/>
                     </label>
                     <button type="submit">试验看等待</button>
                 </fieldset>
