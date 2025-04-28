@@ -26,7 +26,7 @@ export function SurveyRow({
                               ...props
                           }: {
     label: string
-    value: string
+    value?: string
     columnWidths?: string[]
     [key: string]: any
 }) {

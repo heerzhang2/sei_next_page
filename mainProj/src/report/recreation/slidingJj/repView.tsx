@@ -10,6 +10,9 @@ import {useThreeColumnView} from "../../hook/useThreeColumnSubr";
 import {render施工单位,} from "../../common/render";
 import Link from "next/link";
 import {cn} from "@/lib/utils";
+import SurveyRow from "@/component/SurveyRow";
+import {businessCatspMap} from "@/agreement/AgreementList";
+import {eqpTypeAllMap} from "@/dict/eqpComm";
 
 //仅正式报告用
 const config设备 = [
@@ -32,7 +35,7 @@ const config设备 = [
 const config设备上=config设备.slice(0, 10);
 const config设备下=config设备.slice(10);
 
-export const 报告设备详情= ( {theme, orc, rep } : { orc: any,rep:any, theme:any}
+export const 报告设备详情= ( { orc, rep } : { orc: any,rep:any}
 ) => {
   const renderUpper=usePrefixDataTable({config: config设备上, orc, rep, slash:true});
   const [firstPart,_s]=useThreeColumnView({orc, config:config设备下,slash:true,

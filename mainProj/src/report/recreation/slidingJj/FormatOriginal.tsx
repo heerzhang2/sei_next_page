@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react";
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
 import {RepLink, ReportViewProps,} from "../../common/base";
@@ -19,14 +20,13 @@ import {StrainStressVw} from "../waterJj/StrainStress";
 import {AccelerationVw} from "../waterJj/Acceleration";
 import {DirectLink} from "@/routing/Link";
 import {Table} from "@/components/ui/table";
+import {首页概况WaterJj} from "@/report/recreation/waterJj/rarelyVary";
 
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'M',x:'备注',t:'B',m:true},{n:'D',x:'不合格内容',t:'B'}];
 export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
-    repId,   source: orc,  verId,rep,
+    source: orc, rep,
 }) => {
-    const qs= queryString.parse(window.location.search);
-    const printing =qs && !!qs.print;
     const impressionismAs =React.useMemo(() => {
         return setupItemAreaRoute({rep,orc});
     }, [rep,orc?._Oitems]);
@@ -34,29 +34,33 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
     const [mapNoTag]=useItemsMapOmni({ ItemArs:impressionismAs?.Item, notCheckNo:true});
   return (
     <React.Fragment>
-        <div className="mt-4 mb-4 print:mt-0 print:mb-0 text-center md:flex md:justify-between md:flex-wrap print:min-w-[538px]:flex print:min-w-[538px]:justify-between print:min-w-[538px]:flex-wrap">
-            <div className="mx-auto md:m-2 print:min-w-[538px]:m-2">
+        <div className="mt-4 mb-4 print:mt-0 print:mb-0">
+            <div className="mx-auto md:m-2 text-right md:flex md:justify-end md:flex-wrap print:flex print:justify-end print:flex-wrap">
                 <h5 className="underline">FJJ/YB-1009-1-2024</h5>
             </div>
-            <h3 className="text-center md:print:text-4xl mt-8">
+            <h1 className="text-center mt-8 text-3xl md:print:text-5xl">
               大型游乐设施监督检验原始记录
-            </h3>
-            <h5 className="text-center">（适用于系留式观光气球）</h5>
+            </h1>
+            <h5 className="text-center text-xl">（适用于系留式观光气球）</h5>
             <div className="print:h-16"/>
             <div className="print:min-h-full">
                 { 首页设备概况Cr( {orc, original:true, } ) }
             </div>
+            <div className="print:min-h-full">
+                {首页概况WaterJj(orc,rep,true)}
+            </div>
+
             <div className="print:h-20"/>
             <div className="text-center print:break-after-always print:break-inside-avoid">
                 <h4 className="text-center">福建省特种设备检验研究院编制</h4>
             </div>
             {填写须知}
             <InstrumentVw orc={orc} rep={rep} label={'一、主要测量设备性能检查'}/>
-            <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Survey`}>
+            <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Survey`}>
                 <h4 className="mt-4">二、设备概况</h4>
             </DirectLink>
             {设备概况页({orc, rep, config: config设备概况, fixed: ["5%", "13.5%", "32%", "8%", "9%", "%"] })}
-            <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
+            <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
                 <h4 className="mt-4">三、检验记录</h4>
             </DirectLink>
  {/*           <FlexibleTable columnWidths={ ["2%", "3.8%", "4.3%", "4.3%", "1%", "7%", "%","4.5%", "4.3%","4.1%","9.1%"] }>
@@ -132,7 +136,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             <AccelerationVw orc={orc} rep={rep}  stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>
             {常用现场条件({orc, rep, config: tItems现场,dcln:5,label:'附录D：现场检验条件确认'})}*/}
         </div>
-        {末尾链接({rep, template:rep?.modeltype,verId, repId: repId||''})}
+        {末尾链接({rep, template:rep?.modeltype,verId:rep?.modelversion, repId: rep?.id})}
     </React.Fragment>
   );
 }

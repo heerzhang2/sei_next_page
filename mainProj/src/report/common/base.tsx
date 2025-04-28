@@ -79,7 +79,7 @@ export interface ReportViewProps {
     //该参数没必要啊, 组件框架带?编辑器各个区块的汇总回流数据用到的，只有ALL printAll才有用的。
     ref?: any;
     //主报告模板版本，或者当前分项报告模板版本、
-    verId: string;
+    verId?: string;
     /**扩展数据获取，从路由器relay Query获得。独立流转分项+内嵌分项或主报告都可能需要提取额外的字段？。
      * 关联的检验信息 relay对象；
      * 人员权限或证书。 关联子报告情况。

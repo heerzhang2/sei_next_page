@@ -28,7 +28,7 @@ export default function Report({ items,children }: ReportProps) {
                   <div  className="flex flex-col min-h-screen">
                       <header className="print:hidden border-b">
                           <div className="container flex items-center justify-between h-14">
-                              <h1 className="text-xl font-bold">类型，版本：打印的报告</h1>
+                              <h1 className="text-xl font-bold">福建特检</h1>
 
                           </div>
                       </header>

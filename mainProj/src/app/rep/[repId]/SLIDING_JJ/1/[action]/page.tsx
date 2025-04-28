@@ -1,5 +1,4 @@
 "use client"
-
 import { useParams } from 'next/navigation'
 import { useState, useEffect, useRef } from "react"
 import {OriginalView} from "@/report/recreation/slidingJj/Regular.O-1";

@@ -22,30 +22,23 @@ import {useStorage} from "@/report/StorageContext";
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
-    const [formatOriginal, setFormatOriginal] = useState(false)
     const router = useRouter()
     const pathname = usePathname()
-    useEffect(() => {
-        const original = searchParams!.get("original")
-        setFormatOriginal(!!original)
-    }, [searchParams])
+    const original = "1"===searchParams!.get("original")
     const createQueryString = useCreateQueryString()
-    console.log("ReportView 页面刷新", { original: formatOriginal })
     const {storage, } =useStorage();
-    const orc=storage;
-    console.log("ReportView页面刷新orc:", orc, "rep=", rep)
-    const Component = formatOriginal ? FormatOriginal : OfficialReport
+    const Component = original ? FormatOriginal : OfficialReport
     return (
         <>
-            <Component source={orc} verId={verId} repId={repId} rep={rep} />
+            <Component source={storage} rep={rep} />
             <div className="m-2 print:hidden">
                 <Button
                     variant="outline"
                     onClick={() =>{
-                        router.push(pathname + '?' + createQueryString('original', formatOriginal ? '' : "1"))
+                        router.push(pathname + '?' + createQueryString('original', original ? '' : "1"))
                     } }
                 >
-                    {formatOriginal ? "正式报告" : "格式化版原始记录"}
+                    {original ? "正式报告" : "格式化版原始记录"}
                 </Button>
             </div>
         </>
@@ -63,7 +56,7 @@ const config报告: Column_Setting[] = [
     { n: "M", x: "备注", m: true },
 ]
 
-const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, source: orc, verId, rep }) => {
+const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ source: orc, rep }) => {
     const searchParams = useSearchParams()
     const [printing, setPrinting] = useState(false)
     useEffect(() => {
@@ -72,7 +65,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
     }, [searchParams])
     const impressionismAs = React.useMemo(() => {
         return setupItemAreaRoute({ rep, orc })
-    }, [verId, repId, rep, orc?._Oitems])
+    }, [rep, orc?._Oitems])
     const { renderIspContent } = useOfficialOmni({
         orc,
         ItemArs: impressionismAs?.Item,
@@ -90,7 +83,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                         <h1 id={"Conclusion"} className="text-3xl text-center print:mt-6">
                             滑行车类游乐设施监督检验报告
                         </h1>
-                        {首页概况WaterJj({orc, rep})}
+                        {首页概况WaterJj(orc,rep,)}
                         <div
                             className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址}</div>
                     </div>
@@ -102,7 +95,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
 
                 <div className="flex flex-col justify-center">
                     <h4 className="text-xl text-center print:break-before-page">
-                        <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument`}
+                        <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument`}
                               className="print:no-underline break-before-page">
                             大型游乐设施监督检验报告
                         </Link>
@@ -154,23 +147,23 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                 />
             </div>
             <div>
-                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Instrument?original=1#Instrument`}>
+                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument?original=1#Instrument`}>
                     <h4 className="print:hidden">
                         主要测量设备性能检查
                     </h4>
                 </Link>
-                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/Witness#Witness`}>
+                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
                     <h4  className="print:hidden">
                         记事 、 备注
                     </h4>
                 </Link>
-                <Link href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/SiteCondition#SiteCondition`}>
+                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition#SiteCondition`}>
                     <h4 id={"SiteCondition"}  className="print:hidden">
                         附录：现场检验条件确认
                     </h4>
                 </Link>
             </div>
-            {末尾链接({rep, template: rep?.modeltype, verId, repId: repId || "" })}
+            {末尾链接({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id})}
         </React.Fragment>
     )
 }

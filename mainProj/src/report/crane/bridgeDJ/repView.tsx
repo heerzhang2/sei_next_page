@@ -12,6 +12,9 @@ import Img_Jgd  from './PictureJgd.png';
 import {SimpleImg} from "../../../comp/Image";
 import { 检验编制核准D} from "../rarelyVary";
 import {eqpTypeAllMap} from "../../../dict/eqpComm";
+import {FlexibleTable} from "@/components/flexible-table";
+import SurveyRow from "@/component/SurveyRow";
+import {businessCatspMap} from "@/agreement/AgreementList";
 
 
 //不同版本能够直接复用的组件； 内容相对重复；减少代码数量的重复和冗余。
@@ -280,6 +283,7 @@ export const 首页设备概况Cr= ({orc, original,rep,rheight=40 } :{orc:any, o
     </TableBody>
   </Table>;
 };
+
 
 export const 安全距离观测值表= ( { orc,  repId, verId, rep } : { orc: any,repId: string,verId: string, rep: any}
 ) => {
