@@ -5,7 +5,7 @@ import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/componen
 import {crtOmni, omniCalculateDefault, pushOmni} from "../../common/omni";
 import {JumpMeasure, } from "../../common/general";
 //id标签需要规范原来5.1的改为T5-1的才能路由。
-export const setupItemAreaRoute= ({rep, orc, theme, noDefault} :{rep:any,orc?:any, theme:any,noDefault?:boolean}
+export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDefault?:boolean}
 ) => {
     let ari: any[] =[];
     pushOmni(ari,'1.1',[

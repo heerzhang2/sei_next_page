@@ -1,22 +1,21 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Button, Text, TextArea, useTheme, useToast,
-} from "customize-easy-ui-component";
-import {InspectRecordLayout, InternalItemProps, useItemInputControl} from "../../common/base";
+import {InternalItemProps, } from "../../common/base";
 import {setupItemAreaRoute} from "./orcIspConfig";
-import {useMedia} from "use-media";
 import {assertNamesUnique} from "../../common/eHelper";
 import {useStorage} from "../../StorageContext";
 import {itemA技术见证} from "../../elevator/stest/editor";
 import {itemA结论} from "../waterJj/Conclusion";
 import {EachObserveConfig} from "../../hook/useObserve";
-import {daL改造内容, 操纵方式选, 施工许可证子项选} from "../../tower/craneJj/orcBase";
+import {施工许可证子项选} from "../../tower/craneJj/orcBase";
 import {config主技术} from "./MainTechnical";
 import {itemA应变应力} from "../waterJj/StrainStress";
 import {itemA加速} from "../waterJj/Acceleration";
 import {cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21, } from "../waterJj/cbComm";
-
+import {undefined, z} from "zod";
+import {Button, Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
+import {useFormFramework} from "@/report/hook/useFormFramework";
+import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
+import { toast } from "sonner"
 
 export const config设备概况 = [
     [['使用单位统一社会信用代码', '_$使用单位信用码'], ['设备所在区域', '_$使用地区域']],
@@ -137,53 +136,66 @@ export const config观测数据2=[
     [{check: '13.8', }],
 ] as EachObserveConfig[][];
 
-export const tail观测= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
+export const tail观测= <span className={"text-[0.75rem]"}>
     注：<br/>
-    <div css={{marginLeft: '2rem', "@media print": {marginLeft: '1.5rem'}}}>
+    <div className={"ml-8 print:ml-6"}>
         1、K2.4、K2.6、K3.5.2、K3.5.5、K6.2（5）仅在不符合时，才需填观测数据和测量结果等数值；<br/>
         2、结果判定栏都需填；<br/>
         3、其他需记录的测量值和结果值填在备注栏中。
     </div>
-</Text>;
+</span>;
 
 
-export const EntranceSetup =
-    React.forwardRef((
-        {show, alone = true, verId, rep}: InternalItemProps, ref
-) => {
-    const theme = useTheme();
-    const atPrint = useMedia('print');
-    const toast = useToast();
-    const doCheckNames = React.useCallback((verId: string) => {
-        const impressionismAs = setupItemAreaRoute({rep, noDefault: true, theme});
+export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
+    const {storage,} =useStorage();
+    const schema = React.useMemo(() => {
+        const schemaFields = {} as any;
+        schemaFields["_tblFixed"] = z.string().optional().refine(
+            (value) => {
+                if (!value) return true;
+                try { JSON.parse(value);return true; } catch { return false;}
+            }, {message: "字段必须为有效的 JSON 字符串"}
+        );
+        return z.object(schemaFields);
+    }, []);
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        fields["_tblFixed"]= storage["_tblFixed"]
+        return fields
+    }, [storage])
+    const doCheckNames = React.useCallback((rep: any) => {
+        const impressionismAs = setupItemAreaRoute({rep, noDefault: true});
         const result = assertNamesUnique([{value: rep?.tzFields}, {value: impressionismAs?.Item, type: 'impr'},
             {value: config设备概况, type:'esnt'}, {value:[...itemA结论,  ...itemA技术见证, ] },
             {value: config观测数据({}), type:'mesB'},{value: config观测数据2, type:'mesB'},
             {value: config主技术, type:'mesB'},
             {value:[ ...itemA应变应力, ...itemA加速, ] },
             {value:['unq','仪器表','检验条件','观备注', '主技备注' ]} ]);
-        toast({title: "完成！", subtitle: result ? "没发现冲突" : "测试开关没开", intent: "success"});
-    }, [rep,toast,theme]);
-    const {storage, setStorage} =useStorage();
-    const getInpFilter = React.useCallback((par: any) => {
-        const {_tblFixed, } =par||{};
-        return {_tblFixed, };
-    }, []);
-    const {inp, setInp} = useItemInputControl({ref});
-    if (atPrint) return null;
-    else return (
-        <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show} alone={alone} label={'初始化本报告，默认值配置等'}>
-            {process.env.REACT_APP_TEST==='true' && <><div>
-                <Text variant="h5">构建开发模板时的工具：校验模板的存储name冲突；</Text>
-                <Button intent='primary' onPress={() => doCheckNames(verId!)}>校验模板name唯一性</Button>
-                <Text variant="h5">设置待测试表格的各列宽度：</Text>
-                <TextArea value={storage?._tblFixed || ''} rows={2} onChange={e =>{
-                    JSON.parse(e.currentTarget.value??'[]');
-                    setStorage({ ...storage, _tblFixed: e.currentTarget.value || undefined}); }}/>
-            </div>
-            </>
-            }
-            <hr/>
-        </InspectRecordLayout>
-    );
-});
+            if(result) toast.success("完成", {description: "没冲突",})
+            else toast.error("完成", {description: "冲突",})
+    }, [toast]);
+    const contentRendererFactory = React.useCallback(
+        (form: any) => {
+        return <CardContent>
+                {process.env.NEXT_PUBLIC_APP_TEST==='true' && <div>
+                    <h5>构建开发模板时的工具：校验模板的存储name冲突；</h5>
+                    <Button onClick={() => doCheckNames(rep)}>校验模板name唯一性</Button>
+                    <FormField control={form.control} name={"_tblFixed"}
+                        render={({ field }) => (
+                            <FormItem className="pt-2 w-full break-inside-avoid">
+                                <FormLabel>设置待测试表格的各列宽度：</FormLabel>
+                                <FormControl className="w-full">
+                                    <BlobInputList rows={2} {...field} datalist={["[\"4%\",\"5%\",\"4%\",\"6%\",\"%\",\"23%\"]"]}/>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                    )}/>
+                 </div>
+                }
+             </CardContent>
+    }, [])
+    const { render } = useFormFramework({schema,defaultValues, contentRendererFactory, rep})
+    return  <CollapsibleFormSection title={'初始化本报告，默认值配置等'} defaultOpen={show}>
+        {render()}
+    </CollapsibleFormSection>;
+};

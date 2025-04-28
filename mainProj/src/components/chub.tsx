@@ -17,14 +17,9 @@ import {
     FloatingFocusManager,
     FloatingPortal,
 } from "@floating-ui/react"
-import {zodResolver} from "@hookform/resolvers/zod"
-import {ControllerRenderProps, useForm} from "react-hook-form"
-import {z} from "zod"
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form"
+import {Form, FormControl, FormItem, FormLabel, FormMessage} from "@/components/ui/form"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import {X} from "lucide-react"
-import {useFormContext} from "react-hook-form"
-import {clcOptions} from "@/report/common/ActionMapItem";
 import type {ControllerRenderProps} from "react-hook-form"
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
@@ -588,7 +583,7 @@ export function ClearableSelect({
                                     value
                                 }: {
     field: any,
-    options: { label?: any; value: string }[],
+    options: { value: string; label?: any }[],
     placeholder?: string,
     onClear: () => void,
     id?: string,

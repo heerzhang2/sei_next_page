@@ -3,20 +3,18 @@ import * as React from "react";
 import {
     Text,
 } from "customize-easy-ui-component";
-import {Each_ZdSetting, useRepTableEditor, useTableEditor,} from "../hook/useRepTableEditor";
+import {Each_ZdSetting, useTableEditor,} from "../hook/useRepTableEditor";
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
 import {
     InspectRecordLayout,
-    InternalItemProps, SelectHookfork, useItemInputControl,
+    InternalItemProps, useItemInputControl,
 } from "./base";
 import {useMeasureInpFilter} from "./hooks";
-import {itemA结论} from "../vehicle/balanceT/editor";
 import {tail测仪器} from "../recreation/waterJj/repView";
 import {z} from "zod";
 import {useStorage} from "@/report/StorageContext";
-import {config测点表, itemA应变应力, tail应变} from "@/report/recreation/waterJj/StrainStress";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {CollapsibleFormSection} from "@/components/chub";
@@ -26,14 +24,14 @@ interface InstrumentTableProps  extends InternalItemProps{
     label: string;
     prnAttach?: string;
 }
-export const fork2Option = [
-    { label: "合格", value: "√" },
-    { label: "不合格", value: "×" },
+export const instrumentOption = [
+    { label: "正常", value: "√" },
+    { label: "不正常", value: "×" },
 ]
 //【注意】回调函数局限：若加<React.Fragment > 会导致<InputLine 内勤套render时刻无法穿透提供 props 给输入组件的：层次层级不配套，造成样式不一致问题！
 const config仪器表=[['测量设备名称','n',140],['规格型号','t',120],['测量设备编号','i',142],
-    ['性能状态-开机后','o',75,{t:'l',l:fork2Option}],
-    ['性能状态-关机前','f',75,{t:'l',l:fork2Option}]
+    ['性能状态-开机后','o',55,{t:'s',l:instrumentOption}],
+    ['性能状态-关机前','f',55,{t:'s',l:instrumentOption}]
 ] as Each_ZdSetting[];
 /**可复用的： 仪器表录入页面的
  * */
@@ -51,6 +49,7 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
     }, [])
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
+        fields["仪器表"]= storage["仪器表"]
         return fields
     }, [storage])
     const arrayFields =React.useMemo(() => {
@@ -61,16 +60,12 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
         return [ {name:"仪器表", itemTemplate,} ]
     }, [])
 
-    const headview=<Text variant="h5">
-        {label}：
-    </Text>;
+    const headview=<h5>{label}：</h5>;
     const tailview=<>
         {tail测仪器}
         <br/><hr/>
         { !alone && show && prnAttach &&
-            <Text variant="h5">
-                {prnAttach}
-            </Text>
+            <h5>{prnAttach}</h5>
         }
     </>;
     const [nestRendererFactory]=useTableEditor({headview, config: config仪器表, table:'仪器表',defFixedLay:true, tailview});

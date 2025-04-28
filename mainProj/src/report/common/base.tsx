@@ -21,9 +21,7 @@ import { Dispatch, SetStateAction } from "react";
 import { MutableRefObject } from "react";
 import {EditStorageContext, useStorage} from "../StorageContext";
 import {DirectLink} from "../../routing/Link";
-import {tableSetInp} from "../../common/tool";
 import {useQuery, gql, UrqlProvider, useMutation} from '@urql/next';
-// import {objNestArrSetInp} from "../../common/tool";
 import { toast } from "sonner" // 导入 sonner 的 toast 函数
 
 //公共的复用性好的组件。

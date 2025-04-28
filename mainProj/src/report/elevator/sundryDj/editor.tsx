@@ -94,16 +94,18 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
                         </Table>
                     </div>
                     <div className="w-full flex justify-center mb-1">
-                        <Select value={selectedIndex===null? "" : selectedIndex?.toString()}
+                        <FormLabel htmlFor={"selectedIndex"}>选择编辑行</FormLabel>
+                        <Select
+                            value={selectedIndex===null? "" : selectedIndex?.toString()}
                                 onValueChange={(v) => {
                                     const index = v ? Number(v) : null;
                                     //这里不应该出现null的选择取值，最多是取消，类似用onClear={() => field.onChange("")}特别按钮的。
                                     if(index!==null) setSelectedIndex(index);
                                 }}>
-                            <SelectTrigger className="w-full @md:w-[20rem]">
+                            <SelectTrigger className="w-full @md:w-[20rem]" id={"selectedIndex"}>
                                 <SelectValue placeholder="选择要编辑的那行" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent >
                                 {fields?.map((row: any, index: number) => (
                                     <SelectItem key={index} value={index.toString()}>行 {index + 1} (日期: {row.d || '未设置'})</SelectItem>
                                 ))}

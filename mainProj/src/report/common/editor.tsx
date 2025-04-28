@@ -10,6 +10,13 @@ import {itemResultUnqualifiedSsm, RecordInputConfig} from "./config";
 import {useMeasureInpFilter} from "./hooks";
 import {measurementRender} from "./measure";
 import {itemResultUnqualifiedOmni} from "./omni";
+import {z} from "zod";
+import {tail测仪器} from "@/report/recreation/waterJj/repView";
+import {Card, CardContent} from "@/components/ui";
+import {useFormFramework} from "@/report/hook/useFormFramework";
+import {CollapsibleFormSection} from "@/components/chub";
+import {instrumentOption} from "@/report/common/Instrument";
+import {clcOptions} from "@/report/common/ActionMapItem";
 // import {特殊项目编码} from "../elevator/Supervision/FormatOriginal";
 
 export interface EditorProps  extends InternalItemProps{
@@ -209,7 +216,7 @@ export interface ItemRecheckOmniRProps  extends InternalItemProps{
      *     Item: any[];
      * }
      * */
-    setup: ({rep, theme} :{rep:any,orc?:any,theme:any}) => { [key: string]: any[] };
+    setup: ({rep, orc} :{rep:any,orc?:any}) => { [key: string]: any[] };
 }
 /**机电检验项目列表情况下的， 复检的原始记录  常见的不合格编辑器 机电类常见的
  * @param setup  每个模板的setupItemAreaRoute检验项目配置构建函数： setup注入不一致了！
@@ -292,17 +299,10 @@ export const ItemRecheckOmniOther=
         );
     } );
 
-export const config检测复检表=[['类别','c',30],['项目编号','no',84],['检测不符合内容','b',150],['整改情况','rs',50,(obj, setObj)=>{
-        return <SelectHookfork value={ obj?.rs ||''} onChange={e => setObj({ ...obj, rs: e.currentTarget.value||undefined}) }/>
-    }],['确认日期','d',65,(obj,setObj)=>{
-        return <Input  value={obj?.d ||''}  type='date' onChange={e => setObj({ ...obj, d: e.currentTarget.value}) } />
-    }]] as Each_ZdSetting[];
-export const config检验复检表=[['类别','c',30],['项目编号','no',84],['检验不符合内容','b',150],['复检结果','rs',50,(obj, setObj)=>{
-    return <SelectHookfork value={ obj?.rs ||''} onChange={e => setObj({ ...obj, rs: e.currentTarget.value||undefined}) }/>
-}],['确认日期','d',65,(obj,setObj)=>{
-    return <Input  value={obj?.d ||''}  type='date' onChange={e => setObj({ ...obj, d: e.currentTarget.value}) } />
-}]] as Each_ZdSetting[];
-
+export const config检测复检表=[['类别','c',30],['项目编号','no',84],['检测不符合内容','b',150],
+    ['整改情况','rs',50,{t:'s',l:clcOptions}],['确认日期','d',65,{t:'M'}]] as Each_ZdSetting[];
+export const config检验复检表=[['类别','c',30],['项目编号','no',84],['检验不符合内容','b',150],
+    ['复检结果','rs',50, {t:'s',l:clcOptions}],['确认日期','d',65,{t:'d'}]] as Each_ZdSetting[];
 
 export interface RecheckEditorProps  extends ItemRecheckOmniRProps{
     config?: Each_ZdSetting[];
@@ -310,39 +310,63 @@ export interface RecheckEditorProps  extends ItemRecheckOmniRProps{
 /**复检的原始记录 需要自定义增加检验项目的情形：类似ItemRecheckOmniR；
  * @param setup  每个模板的setupItemAreaRoute检验项目配置构建函数  增加依赖项storage?._Oitems,  setup注入增加了orc；
  * */
-export const RecheckEditor=
-    React.forwardRef((
-        { children, show ,alone=true,label,setup,rep,config=config复检表}:RecheckEditorProps,  ref
-    ) => {
-        const theme= useTheme();
-        const {storage, setStorage} =useStorage();
-        const impressionismAs =React.useMemo(() => {
-            return setup({rep,orc:storage, theme});
-        }, [rep, storage?._Oitems, setup, theme]);
-        const getInpFilter = React.useCallback((par: any) => {
-            const {unq} =par||{};
-            return {unq};
-        }, []);
-        const {inp, setInp} = useItemInputControl({ ref });
+export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, label, rep
+                                  ,config=config复检表 ,setup}: RecheckEditorProps) => {
+    const {storage,setStorage,modified,setModified} =useStorage();
+    const impressionismAs =React.useMemo(() => {
+        return setup({rep,orc:storage});
+    }, [rep, storage?._Oitems, setup]);
+    const schema = React.useMemo(() => {
+        const schemaFields = {} as any
+        const schemaTab = {} as any
+        config.forEach(([t,field,s,o,park]) => {
+            schemaTab[field] = z.string().optional()
+        })
+        schemaFields["unq"]= z.array(z.object(schemaTab))
+        return z.object(schemaFields)
+    }, [])
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        fields["unq"]= storage["unq"]
+        return fields
+    }, [storage])
+    const arrayFields =React.useMemo(() => {
+        const itemTemplate = {} as any
+        config.forEach(([t,field,s,o,park]) => {
+            itemTemplate[field] = ""
+        })
+        return [ {name:"unq", itemTemplate,} ]
+    }, [])
 
-        const 默认复检表 =React.useMemo(()=>itemResultUnqualifiedOmni(storage, impressionismAs?.Item,),
-            [storage,impressionismAs?.Item]);
-        const headview=<Text variant="h5">
-            {label}
-        </Text>;
-        //不是真的默认不变的不能用  defaultV:默认复检表,
-        const [renderTab]=useTableEditor({inp, setInp,  headview,
-                        config, table:'unq', defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
-        return (
-            <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
-                                 alone={alone}  label={label} column={0}>
-                <Button intent='primary' onPress={() =>{
-                    let arrUnq=itemResultUnqualifiedOmni(storage, impressionismAs?.Item,);
-                    setStorage({...storage, unq:arrUnq});
-                }}
-                >依据记录来初始化本表默认值</Button>但不能重复初始化！
-                <hr/>
-                {renderTab}
-            </InspectRecordLayout>
-        );
-    } );
+    const 默认复检表 =React.useMemo(()=>itemResultUnqualifiedOmni(storage, impressionismAs?.Item,),
+        [storage,impressionismAs?.Item]);
+    const headview=<Text variant="h5">
+        {label}
+    </Text>;
+    const [nestRendererFactory]=useTableEditor({headview, config, table:'unq',defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
+    const contentRendererFactory = React.useCallback(
+        (form: any, arrays?: Record<string, any>) => {
+            return (
+                <>
+                    <Card className="py-1 gap-1">
+                        <CardContent className="px-1">
+                            <Button intent='primary' onPress={() =>{
+                                let arrUnq=itemResultUnqualifiedOmni(storage, impressionismAs?.Item,);
+                                setStorage({...storage, unq:arrUnq});
+                            }}
+                            >依据记录来初始化本表默认值</Button>但不能重复初始化！
+                            <hr/>
+                            {nestRendererFactory(form, arrays)}
+                        </CardContent>
+                    </Card>
+                    {children}
+                </>
+            )
+        },
+        [children,nestRendererFactory ],
+    )
+    const { render } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+    return  <CollapsibleFormSection title={label!} defaultOpen={show}>
+        {render()}
+    </CollapsibleFormSection>;
+};

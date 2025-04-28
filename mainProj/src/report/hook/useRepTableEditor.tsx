@@ -15,7 +15,7 @@ import {
     Card, FormControl, FormField, FormItem, FormLabel,FormMessage, Textarea, Input,
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui";
-import { BlobInputList,SuffixInput,} from "@/components/chub";
+import {BlobInputList, FormSelectField, MemoDatesInput, SuffixInput,} from "@/components/chub";
 import type {UseFormReturn} from "react-hook-form";
 
 
@@ -41,13 +41,13 @@ export declare type InputRenderCallback = (inp: any, setInp: React.Dispatch<Reac
  * input_render_cb 当前单独一个字段的编辑器重新自己定义。
  * */
 export type Each_ZdSetting =[
-    n1:string,      //字段标题名
-    f2:string,      //数据库标签
-    l3:number,      //布局的像素宽度
-    extend?: any,       //扩充配置解析对象： 编辑器的: { t日期, u单位, l预定列表, s框的大小 ；  cb:？,}}
+    n1: string,      //字段标题名
+    f2: string,      //数据库标签
+    l3: number,      //定长布局的像素宽度
+    extend?: any,       //扩充配置解析对象： 编辑器的: { t:编辑框类别, u:单位, l：预定的列表数组, s输入框行大小 }}
     //input_render_cb?: InputRenderCallback | undefined,       //旧版本的:编辑回调: 编辑器特殊性要求，高阶函数。 useform版本用对象配置解析替代; editAs整体替代？？
     //只能支持1层的嵌套对象： 对于Row.{m. sgm {name,username}}无法支持的。
-    park?:string,       //对于比如svp{},pa{}的嵌套字段的编辑直接支持，直接保存为嵌套的对象字段；
+    park?: string,       //对于比如svp{},pa{}的嵌套字段的编辑直接支持，直接保存为嵌套的对象字段；
 ];
 //通道 厚度分区（mm） :? 能不能抽象和复用“通用多行表输入”的组件？  通道表; 二维数组对象表达法。
 
@@ -749,21 +749,14 @@ export function useTableEditor({
                                 const { t: type, l: list, u: unit, s: size } = extobj || {}
                                 if ((fixColumn && i < fixColumn) || !(fields.length > 0))
                                     return <React.Fragment key={i}></React.Fragment>
-                                else if (type === "l")
+                                else if (type === "s")
                                     return (
-                                        <FormField
-                                            key={i}
-                                            control={form.control}
-                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                            render={({ field }) => (
-                                                <FormItem className="w-full break-inside-avoid">
-                                                    <FormLabel>{title}</FormLabel>
-                                                    <FormControl className="w-full">
-                                                        <InputDatalist  datalist={list} unit={unit}  {...field}  />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
+                                        <FormField key={i} control={form.control}
+                                                   name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                                   render={({ field }) => (
+                                                       <FormSelectField field={field} label={title} options={list}
+                                                                        value={filedVl} />
+                                                   )}
                                         />
                                     )
                                 else if (type === "d")
@@ -830,6 +823,19 @@ export function useTableEditor({
                                             )}
                                         />
                                     )
+                                else if (type === "M")
+                                    return <FormField key={i} control={form.control}
+                                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                            render={({ field }) => (
+                                                <FormItem className="w-full break-inside-avoid">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">
+                                                        <MemoDatesInput {...field} rows={2} value={filedVl}/>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                 else if (unit)
                                     return (
                                         <FormField

@@ -81,7 +81,6 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
         itResCB: 检验结果替换,
     })
     const [mapNoTag] = useItemsMapOmni({ ItemArs: impressionismAs?.Item, notCheckNo: false })
-    // print:text-[var(--font-size-5)]
     return (
         <React.Fragment>
             <div className="not-print:my-4">
@@ -126,7 +125,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                           </>}
                 >
                     <FlexibleTable className="border-collapse"
-                                   columnWidths={["3.4%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
+                                   columnWidths={["3.5%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
                         <TableHeader>
                             <TableRow className={"text-sm"}>
                                 <CCell id={"T5-1"}>
