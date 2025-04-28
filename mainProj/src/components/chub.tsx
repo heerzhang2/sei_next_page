@@ -196,7 +196,7 @@ interface MemoDatesInputProps {
     dateInputWidth?: string | number
 }
 
-//包含 `onChange` 事件处理器，这些是客户端交互功能。只有当组件完全是静态的或只执行服务器端逻辑时，才可不用use client;
+//随意日期录入最大情形:包含 `onChange` 事件处理器，这些是客户端交互功能。只有当组件完全是静态的或只执行服务器端逻辑时，才可不用use client;
 export function MemoDatesInput({
                                    id,
                                    value = "",
@@ -485,8 +485,8 @@ export function SuffixInput({
         </div>
     )
 }
-
-interface MemoDateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> {
+//类型告警React.InputHTMLAttributes<HTMLInputElement>  改成 TextareaHTMLAttributes<HTMLTextAreaElement>
+interface MemoDateInputProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange"> {
     /** Current date value */
     value?: string
     /** Callback when date changes */
@@ -494,7 +494,8 @@ interface MemoDateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
     /** Width of the text input */
     width?: string
     /** Number of rows for the text input */
-    rows?: number
+    rows?: number,
+    ref?: any;      //和dateInputRef冲突，剔除
 }
 
 /**
@@ -508,68 +509,62 @@ export function MemoDateInput({
                                   value = "",
                                   width = "10.7rem",
                                   rows = 1,
+                                  ref,
                                   ...other
                               }: MemoDateInputProps) {
-    const [textValue, setTextValue] = useState(value)
-    const dateInputRef = React.useRef<HTMLInputElement>(null)
+    const [textValue, setTextValue] = useState(value);
+    const dateInputRef = React.useRef<HTMLInputElement>(null);
 
-    // Keep text input in sync with external value changes
     useEffect(() => {
-        setTextValue(value)
-    }, [value])
+        setTextValue(value);
+    }, [value]);
 
-    // Handle text input changes
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const newValue = e.target.value
-        setTextValue(newValue)
-        onChange(newValue || undefined)
-    }
+        const newValue = e.target.value;
+        setTextValue(newValue);
+        onChange(newValue || undefined);
+    };
 
-    // Handle date picker changes
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value
-        onChange(newValue || undefined)
-    }
+        const newValue = e.target.value;
+        onChange(newValue || undefined);
+    };
 
-    // Handle calendar button click
     const handleCalendarClick = () => {
         if (dateInputRef.current) {
-            dateInputRef.current.showPicker()
+            dateInputRef.current.type = 'date';
+            dateInputRef.current.showPicker(); // 现在应该能获取到 ref
         }
-    }
+    };
 
     return (
         <div className={cn("flex flex-wrap items-start", className)} style={style}>
-      <textarea
-          value={textValue}
-          onChange={handleTextChange}
-          rows={rows}
-          className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
-          style={{width}}
-          placeholder="Enter date..."
-      />
-
-            {/* Hidden date input */}
-            <input
+          <textarea
+              id={id}
+              value={textValue}
+              onChange={handleTextChange}
+              rows={rows}
+              className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
+              style={{ width }}
+              ref={ref}
+              {...other}
+          />
+            <input  id={id+"di"}
                 ref={dateInputRef}
-                type="date"
                 value={value}
                 onChange={handleDateChange}
                 className="sr-only"
                 aria-label="Date picker"
-                {...other}
             />
-
-            {/* Calendar button */}
             <button
                 type="button"
                 onClick={handleCalendarClick}
                 className="flex items-center justify-center rounded-r-md border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
             >
-                <Calendar size={16}/>
+                <Calendar size={16} />
             </button>
         </div>
-    )
+    );
 }
 
 // 创建一个可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。
@@ -653,6 +648,49 @@ export function FormSelectField({field, label, options, className, selectClass, 
             </FormControl>
             <FormMessage/>
         </FormItem>
+    )
+}
+//不在局限于form绑定的情况的： 因为嵌套在form组件底下的，需要加id;
+export function CommonSelect({options, placeholder = "", onClear, id, className, value, onChange}: {
+    options: { value: string; label?: any }[],
+    placeholder?: string,
+    onClear: () => void,
+    id?: string,
+    className?: string,
+    value?: any
+    onChange?: (e: any)=> void;
+}) {
+    // const uId = useId()    防止报错，加 name={id}
+    const hasValue = !!value;
+    return (
+        <div className={`relative w-full ${className || ""}`}>
+            <Select  onValueChange={onChange} name={id}
+                     value={hasValue? value : ""}>
+                <SelectTrigger className="w-full pr-8"
+                               style={{fontSize: "inherit"}}>
+                    <SelectValue  placeholder={placeholder}/>
+                </SelectTrigger>
+                <SelectContent>
+                    {options.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                            {option.label ?? option.value}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            {hasValue && (
+                <button type="button"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onClear()
+                    }}
+                    className="absolute right-8 top-0 h-full flex items-center pr-2"
+                    aria-label="清除选择"
+                >
+                    <X className="h-4 w-4 text-muted-foreground hover:text-foreground"/>
+                </button>
+            )}
+        </div>
     )
 }
 

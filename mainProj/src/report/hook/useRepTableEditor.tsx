@@ -15,7 +15,7 @@ import {
     Card, FormControl, FormField, FormItem, FormLabel,FormMessage, Textarea, Input,
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui";
-import {BlobInputList, FormSelectField, MemoDatesInput, SuffixInput,} from "@/components/chub";
+import {BlobInputList, FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput,} from "@/components/chub";
 import type {UseFormReturn} from "react-hook-form";
 
 
@@ -836,6 +836,19 @@ export function useTableEditor({
                                                 </FormItem>
                                             )}
                                         />
+                                else if (type === "D")
+                                    return <FormField key={i} control={form.control}
+                                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                                      render={({ field }) => (
+                                                          <FormItem className="w-full break-inside-avoid">
+                                                              <FormLabel>{title}</FormLabel>
+                                                              <FormControl className="w-full">
+                                                                  <MemoDateInput {...field}  value={filedVl}/>
+                                                              </FormControl>
+                                                              <FormMessage />
+                                                          </FormItem>
+                                                      )}
+                                    />
                                 else if (unit)
                                     return (
                                         <FormField

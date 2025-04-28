@@ -8,7 +8,7 @@ import {
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {CollapsibleFormSection, FormSelectField} from "@/components/chub";
+import {ClearableSelect, CollapsibleFormSection, CommonSelect, FormSelectField} from "@/components/chub";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import {
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui";
 import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow,CCell} from "@/components/flexible-table";
 import {Table} from "@/components/ui/table";
+import {clcOptions} from "@/report/common/ActionMapItem";
 
 //可以复用的组件： 尽量抽象 和 提高代码复用程度！
 interface SiteConditionSundProps  extends InternalItemProps{
@@ -75,6 +76,9 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
             const index = selectedIndex ?? 0 // 表格第几行的
             //空行导致tabledArr可能比fields.length更多，form.watch是内部未校验的，fields.length是合法的稳定版本。append新增一条前直接编辑导致空行。
             if(tabledArr[index]===undefined)    return null
+            const seqOptions=fields?.map((row: any, index: number) => (
+                {value: index.toString(), label:`行 ${index + 1} (日期: ${row.d || '未设置'})`}
+            ));
             return (
                 <>
                     <div>现场检验条件确认结果的记录:
@@ -93,24 +97,16 @@ export const SiteConditionSund = ({ children, show, alone = true, config, label,
                             </TableBody>
                         </Table>
                     </div>
-                    <div className="w-full flex justify-center mb-1">
-                        <FormLabel htmlFor={"selectedIndex"}>选择编辑行</FormLabel>
-                        <Select
-                            value={selectedIndex===null? "" : selectedIndex?.toString()}
-                                onValueChange={(v) => {
-                                    const index = v ? Number(v) : null;
-                                    //这里不应该出现null的选择取值，最多是取消，类似用onClear={() => field.onChange("")}特别按钮的。
-                                    if(index!==null) setSelectedIndex(index);
-                                }}>
-                            <SelectTrigger className="w-full @md:w-[20rem]" id={"selectedIndex"}>
-                                <SelectValue placeholder="选择要编辑的那行" />
-                            </SelectTrigger>
-                            <SelectContent >
-                                {fields?.map((row: any, index: number) => (
-                                    <SelectItem key={index} value={index.toString()}>行 {index + 1} (日期: {row.d || '未设置'})</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                    <div className="w-full flex justify-center mb-1 items-center gap-1">
+                        <h5>选择编辑行</h5>
+                        <CommonSelect id={"selectedIndex"} value={selectedIndex?.toString()} options={seqOptions}
+                                 onChange={(v) => {
+                                        const index = v ? Number(v) : null;
+                                        if (index !== null) setSelectedIndex(index);
+                                 }}
+                                 onClear={() => setSelectedIndex(null)}
+                                 className={"w-full @md:w-[20rem]"}
+                        />
                     </div>
                     <div className="h-md:@md:max-w-[80rem] m-auto">
                         <Card className="py-1 gap-2">
