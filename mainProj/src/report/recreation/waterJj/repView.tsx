@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-  CCell, Cell, Input, InputLine, Table, TableBody, TableHead, TableRow, Text,
+   Cell, Input, InputLine, Table, TableHead,  Text,
 } from "customize-easy-ui-component";
 import {SuffixInput,} from "@/components/chub";
 // import {DirectLink,} from "../../../routing/Link";
@@ -13,6 +13,7 @@ import {EachObserveConfig, useObserveTable} from "../../hook/useObserve";
 import {calcAverageArrObj} from "../../../common/tool";
 import type {UseFormReturn} from "react-hook-form";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
 
 //仅正式报告用
 const config设备 = [
@@ -276,17 +277,17 @@ export const 测量结果单位 = ({orc, rep, label, config,children, mem, tag =
 ) => {
   const [render1,] = useObserveTable({rep, orc, config: config, tag, allowableV: true});
   return <>
-    <Text variant="h4" css={{
+    <h4 css={{
       marginTop: '1rem',
-    }}>{label}</Text>
-    <Table fixed={fixed} css={{borderCollapse: 'collapse'}} tight miniw={800}>
-      <TableHead>
+    }}>{label}</h4>
+    <FlexibleTable columnWidths={fixed} css={{borderCollapse: 'collapse'}}>
+      <TableHeader>
         <TableRow>
-          <CCell><Text css={{fontSize: '0.8rem'}}>序号</Text></CCell><CCell colSpan={5}>检测项目</CCell>
+          <CCell><span css={{fontSize: '0.8rem'}}>序号</span></CCell><CCell colSpan={5}>检测项目</CCell>
           <CCell>单位</CCell><CCell>观测数据</CCell>
-          <CCell>测量结果{runit}</CCell><CCell><Text css={{fontSize: '0.8rem'}}>结果判定</Text></CCell>
+          <CCell>测量结果{runit}</CCell><CCell><span css={{fontSize: '0.8rem'}}>结果判定</span></CCell>
         </TableRow>
-      </TableHead>
+      </TableHeader>
       <TableBody>
         <RepLink ori rep={rep} tag={tag}>
           {render1}
@@ -299,11 +300,11 @@ export const 测量结果单位 = ({orc, rep, label, config,children, mem, tag =
           }
         </RepLink>
       </TableBody>
-    </Table>
+    </FlexibleTable>
     {children ? children :
-        <Text css={{fontSize: '0.8rem'}}>
+        <span css={{fontSize: '0.8rem'}}>
           注：本表所列项目无测量时，观测数据和测量结果可不填，但结果判定应填写，对不适用项填“/”。
-        </Text>
+        </span>
     }
   </>;
 };

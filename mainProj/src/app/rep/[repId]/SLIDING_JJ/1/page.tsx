@@ -7,6 +7,7 @@ import {contentItems, ReportView} from "@/report/recreation/slidingJj/Regular.R-
 import {useQuery} from "@urql/next";
 import {ReportQuery} from "@/component/rep/report-data";
 import {useMediaPrint} from "@/hooks/use-media-print";
+import {useStorage} from "@/report/StorageContext";
 
 export default function Page({ params
                      }: Readonly<{
@@ -18,7 +19,7 @@ export default function Page({ params
     useMediaPrint(true,true)
   return (
       <Report items={contentItems}>
-          <ReportView rep={report} />
+          <ReportView rep={report}/>
       </Report>
   );
 }

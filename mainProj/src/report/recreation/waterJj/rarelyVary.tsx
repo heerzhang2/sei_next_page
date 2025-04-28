@@ -85,7 +85,7 @@ export const 注意事项WaterJj= ({comply, rep} :{comply: any, rep: any}
 /*fixed={ ["20%","%"] } css={ {borderCollapse: 'collapse'} }
 <TableBody rheight={40}>
 * */
-export const 首页概况WaterJj= ({theme, orc, original,rep} :{theme: any, orc:any, original?:boolean,rep:any}
+export const 首页概况WaterJj= ({orc, original,rep} :{orc:any, original?:boolean,rep:any}
 ) => {
   const 施工单位='重大修理'===orc.检验类别? orc.大修单 :
       '改造监检'===orc.检验类别? orc.改造单 :

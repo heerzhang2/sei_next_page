@@ -19,11 +19,11 @@ export default function Layout({
     const { repId } = React.use(params);
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
     const {getReport: report} = result?.data;
-    const {storage, setStorage} =useStorage();
     return (
         <PageSectionOrientation>
-            <ReportLayout repPanel={<ReportView rep={report} orc={storage}/>} items={contentItems}>
+            <ReportLayout repPanel={<ReportView rep={report}/>} items={contentItems}>
               {children}
+
             </ReportLayout>
         </PageSectionOrientation>
     )

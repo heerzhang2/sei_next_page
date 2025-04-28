@@ -1,29 +1,28 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, InputLine, LineColumn, TableRow, Text, TextArea,} from "customize-easy-ui-component";
-import {InspectRecordLayout, InternalItemProps, SelectHookfork, useItemInputControl,} from "../common/base";
+import { InternalItemProps,} from "../common/base";
 import {JSX} from "@emotion/react/jsx-runtime";
 import {MeasurementCline} from "../common/measure";
-import {calcAverageArrObj, convertMeasureType, floatInterception} from "../../common/tool";
-import {useMeasureInpFilter} from "../common/hooks";
-import {EditStorageContext, useStorage} from "../StorageContext";
+import {convertMeasureType, floatInterception} from "../../common/tool";
+import {useStorage} from "../StorageContext";
 import {z} from "zod";
 import {
     Card,
     CardContent,
-    CardHeader,
-    CardTitle,
     FormControl,
     FormField,
     FormItem,
     FormLabel,
-    FormMessage, Input, Textarea
+    FormMessage, Textarea
 } from "@/components/ui";
-import {ClearableSelect, CollapsibleFormSection, BlobInputList, SuffixInput, FormSelectField,} from "@/components/chub";
+import {CollapsibleFormSection, BlobInputList, FormSelectField,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import type {UseFormReturn} from "react-hook-form";
 import {cn} from "@/lib/utils";
+import {TableRow} from "@/components/ui/table";
+import {CCell} from "@/components/flexible-table";
+
 
 export interface MeasureCallbackReturn {
     /** 正常是字符串名字。  @特殊的存储形式的字段需要通过 schemas + defaults来自己定义的。

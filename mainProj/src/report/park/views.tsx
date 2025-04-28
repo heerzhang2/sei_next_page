@@ -343,8 +343,8 @@ export const 俩列检验设备概况= ( { orc,rep, repId, verId,config} : { orc
 };
 
 //在原始记录使用的：
-export const 设备概况页 = ({theme, orc, rep, config, fixed = ["4.2%", "12.1%", "39%", "9%", "11.1%", "%"],}
-                               : { theme: any, orc: any, rep: any, config: any[], fixed?: string[] }
+export const 设备概况页 = ({orc, rep, config, fixed = ["4.2%", "12.1%", "39%", "9%", "11.1%", "%"],}
+                               : {orc: any, rep: any, config: any[], fixed?: string[] }
 ) => {
   const renderUpper = usePrefixDataTable({config, orc, rep, slash: true});
   return <>

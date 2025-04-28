@@ -2,7 +2,6 @@
 import { usePathname,useSearchParams,useRouter } from "next/navigation"
 import * as React from "react"
 import { useEffect, useState } from "react"
-import { Button,  useTheme } from "customize-easy-ui-component"
 import type { ReportViewProps } from "../../common/base"
 import { 末尾链接, 落款单位地址 } from "../../common/rarelyVary"
 import { 报告设备详情 } from "./repView"
@@ -15,12 +14,13 @@ import { UnqualifiedIspTable } from "../../common/general"
 import { useItemsMapOmni } from "../../common/omni"
 import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from "../waterJj/rarelyVary"
 import Link from "next/link"
-import { DirectLink } from "@/routing/Link"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
+import {Button} from "@/components/ui";
+import {useStorage} from "@/report/StorageContext";
 
-export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
+export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
     const [formatOriginal, setFormatOriginal] = useState(false)
     const router = useRouter()
@@ -31,6 +31,8 @@ export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
     }, [searchParams])
     const createQueryString = useCreateQueryString()
     console.log("ReportView 页面刷新", { original: formatOriginal })
+    const {storage, } =useStorage();
+    const orc=storage;
     console.log("ReportView页面刷新orc:", orc, "rep=", rep)
     const Component = formatOriginal ? FormatOriginal : OfficialReport
     return (
@@ -38,7 +40,6 @@ export const ReportView = ({ repId = "", orc = {}, verId = 1, rep }: any) => {
             <Component source={orc} verId={verId} repId={repId} rep={rep} />
             <div className="m-2 print:hidden">
                 <Button
-                    intent="danger"
                     variant="outline"
                     onClick={() =>{
                         router.push(pathname + '?' + createQueryString('original', formatOriginal ? '' : "1"))
@@ -69,10 +70,9 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
         const printing = searchParams.get("print")
         setPrinting(!!printing)
     }, [searchParams])
-    const theme = useTheme()
     const impressionismAs = React.useMemo(() => {
-        return setupItemAreaRoute({ rep, orc, theme })
-    }, [verId, repId, rep, orc?._Oitems, theme])
+        return setupItemAreaRoute({ rep, orc })
+    }, [verId, repId, rep, orc?._Oitems])
     const { renderIspContent } = useOfficialOmni({
         orc,
         ItemArs: impressionismAs?.Item,
@@ -90,7 +90,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                         <h1 id={"Conclusion"} className="text-3xl text-center print:mt-6">
                             滑行车类游乐设施监督检验报告
                         </h1>
-                        {首页概况WaterJj({theme, orc, rep})}
+                        {首页概况WaterJj({orc, rep})}
                         <div
                             className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址}</div>
                     </div>
@@ -112,7 +112,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ repId, sourc
                     <span></span>
                     <span>报告编号：{rep.isp.no}</span>
                 </div>
-                {报告设备详情({theme, orc, rep})}
+                {报告设备详情({orc, rep})}
                 {检验核准WaterJj({orc, rep})}
                 <PrintReserveLeast reserve="13.3rem"
                       title={<><h4 className="text-center mt-4 print:mt-24">

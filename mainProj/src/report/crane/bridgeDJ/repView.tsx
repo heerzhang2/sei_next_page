@@ -225,7 +225,7 @@ export const 观测值及测量表= ( { orc,  repId, verId, rep } : { orc: any,r
  * @param original 是否为了打印正式版原始记录
  *@param rheight 单行的高度 默认40
  * */
-export const 首页设备概况Cr= ({theme, orc, original,rep,rheight=40 } :{theme: any, orc:any, original?:boolean,rep?:any,rheight?:number}
+export const 首页设备概况Cr= ({orc, original,rep,rheight=40 } :{orc:any, original?:boolean,rep?:any,rheight?:number}
 ) => {
   return  <Table fixed={ ["20%","%"] }   css={ {borderCollapse: 'collapse'} }  tight miniw={800}>
     <TableBody rheight={rheight}>
