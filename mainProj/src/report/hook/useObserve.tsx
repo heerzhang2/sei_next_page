@@ -66,7 +66,7 @@ export interface EachObserveConfig {
      * t[0] 项目的栏目标题: 类型随意，就是可以render的文本。
      * 第一行个的t[]分解列个数不能少于底下同一个区间的分解列数。
      */
-    t: any[];        //可支持多个栏目。
+    t: (string | undefined | React.ReactNode | null)[];    //可支持多个栏目。
     /**项目的最小一级的标题：只能每一行唯一，不能继承跨越多行地；特别地从上面t[]数组直接拆解出来的
      * */
     x?: any;
@@ -325,7 +325,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
         },
         [mem,config,allowableV,defaultSave]
     )
-    return { contentRendererFactory };
+    return [contentRendererFactory];
 }
 
 export interface ObserveEditProps extends InternalItemProps {
@@ -342,7 +342,7 @@ export interface ObserveEditProps extends InternalItemProps {
  * 可备注录入。
  *假如采用定义const defaultV = (par: any) => { };注入的，不友好。不能立刻同步更新啊。只能在本组件内部做变更，无法外部配置的形式注入。
  * */
-export const ObserveEdit = ({children, show, alone = true, refWidth, label, memoF=false,
+export const ObserveEdit = ({children, show, alone = true, label, memoF=false,
                                 config, iAname, allowableV = false, defaultSave = false, mem,rep
 }: ObserveEditProps) => {
     const { storage } = useStorage()
@@ -351,7 +351,7 @@ export const ObserveEdit = ({children, show, alone = true, refWidth, label, memo
     }, [storage]);
     //合成测量存储字段名
     const {itemObservation,itemObservationA,itemSchemaField,itemDefaultVal} = useObserveItem(newconfig, allowableV,memoF,defaultSave);
-    const {contentRendererFactory} = useObserveEdLine(newconfig, allowableV, defaultSave,memoF,mem);
+    const [contentRendererFactory] = useObserveEdLine(newconfig, allowableV, defaultSave,memoF,mem);
     const itemA备注: string[] = mem ? [`${mem}`] : [];
     const itemA = React.useMemo(() => {
         return [...itemObservationA, ...itemA备注, ...iAname ?? []];

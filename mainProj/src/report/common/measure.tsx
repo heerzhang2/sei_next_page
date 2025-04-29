@@ -206,7 +206,7 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
     //描述等抬头的：
   let descNodes=[];
   for(let l=0;l<labels.length;l++){
-    descNodes.push(<span key={l+1} >{labels[l]}</span>);
+    descNodes.push(<span key={l+1}>{labels[l]}</span>);
   }
   if(!!item){
     descNodes.push(<span key={0} className="font-semibold">{item}</span>);

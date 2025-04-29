@@ -11,7 +11,7 @@ import {config主技术} from "./MainTechnical";
 import {itemA应变应力} from "../waterJj/StrainStress";
 import {itemA加速} from "../waterJj/Acceleration";
 import {cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21, } from "../waterJj/cbComm";
-import {undefined, z} from "zod";
+import {z} from "zod";
 import {Button, Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
