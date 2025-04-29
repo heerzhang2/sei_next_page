@@ -152,7 +152,6 @@ export default function Page({
         </article>
     )
 }
-/*测试
-http://192.168.171.3:3765/edit/ 页面：断网宕机恢复自动提交，前提是form提交后updateTodoResult.fetching一直是Submitting，后面链接点击切换路由，刷新，短暂出现旧版本的取值，随后才是新的更新值
-只能submit一次？；页面直接刷新graphql是会主动发出"原始记录已在其它设备或其他人改动了，版本是271旧版本是270"
+/*宕机测试：
+后端重启后必须重新刷新页面；才能触发自动重试的；会出现2次的API同样的变更请求，导致报错？
 * */

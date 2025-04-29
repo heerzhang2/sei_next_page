@@ -4406,29 +4406,29 @@
     is-mobile "^4.0.0"
     preact "^10.5.13"
 
-"@urql/core@^5.0.0", "@urql/core@^5.1.0":
-  version "5.1.0"
-  resolved "https://registry.npmjs.org/@urql/core/-/core-5.1.0.tgz#7f4b81f1aba1ca34ae6354763abeb87ff9af84ff"
-  integrity sha512-yC3sw8yqjbX45GbXxfiBY8GLYCiyW/hLBbQF9l3TJrv4ro00Y0ChkKaD9I2KntRxAVm9IYBqh0awX8fwWAe/Yw==
+"@urql/core@^5.1.1":
+  version "5.1.1"
+  resolved "https://registry.npmjs.org/@urql/core/-/core-5.1.1.tgz#d83c405451806a5936dabbd3f10a22967199e2f5"
+  integrity sha512-aGh024z5v2oINGD/In6rAtVKTm4VmQ2TxKQBAtk2ZSME5dunZFcjltw4p5ENQg+5CBhZ3FHMzl0Oa+rwqiWqlg==
   dependencies:
     "@0no-co/graphql.web" "^1.0.5"
     wonka "^6.3.2"
 
-"@urql/exchange-auth@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.npmjs.org/@urql/exchange-auth/-/exchange-auth-2.2.0.tgz#991ebec5b3320bc0458467b466f0a749d1b3ddea"
-  integrity sha512-4bJR22EYa/flbhwMBj4lU8MI4cO3ddo/DX7FygWeaeHZU+RWfnQKifCKwxIYlnoV8/CgYRM4lFSMIByYlhmWcg==
+"@urql/exchange-auth@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.npmjs.org/@urql/exchange-auth/-/exchange-auth-2.2.1.tgz#2e6f7b4ff008f0a3f6e5a1c80f0659d1d0856321"
+  integrity sha512-n4xUxxjvY36GJh539sLaPFyvFzreADOv8EFQdTiXOCIRVoXXhWVVI7DjY/HNtLICfbg1+UlbvQ7sNkwaBouDHg==
   dependencies:
-    "@urql/core" "^5.0.0"
+    "@urql/core" "^5.1.1"
     wonka "^6.3.2"
 
-"@urql/exchange-graphcache@^7.2.2":
-  version "7.2.2"
-  resolved "https://registry.npmjs.org/@urql/exchange-graphcache/-/exchange-graphcache-7.2.2.tgz#7b35540b9b36aa80481e3af810b5d051acebd8f0"
-  integrity sha512-hSLbPkLTYKYb9zTB+fSZhFxe+zMOaXuIcSsBiaa+bxT8d5Cxt1ed/oAJfUV9vY27SJ+b0UYq6NXWHBhYOjUWNg==
+"@urql/exchange-graphcache@^7.2.3":
+  version "7.2.3"
+  resolved "https://registry.npmjs.org/@urql/exchange-graphcache/-/exchange-graphcache-7.2.3.tgz#a3cba4c329201427ae31565a9bc8d8291168dfb0"
+  integrity sha512-ClxbxlONfcGZOgZQxUIJ2hvy82mwuljQLVd957TgpSDzSCMLWCklWFubnSC5YFvQLR1kZJW+sbhWKd4ZpndF9w==
   dependencies:
     "@0no-co/graphql.web" "^1.0.5"
-    "@urql/core" "^5.1.0"
+    "@urql/core" "^5.1.1"
     wonka "^6.3.2"
 
 "@urql/introspection@^1.2.0":
@@ -4436,10 +4436,15 @@
   resolved "https://registry.npmjs.org/@urql/introspection/-/introspection-1.2.0.tgz#d52ed8a65937f43e8731b4db495d1b6564b945d0"
   integrity sha512-Mrc7YM/G4yV7NkmmHBFkRKANj8fnZIVTth23/Poo1ASErwjG3j7LERbE/wqOmzTHIkbqOw4yhe8/kimtXFMU/Q==
 
-"@urql/next@^1.1.3":
-  version "1.1.4"
-  resolved "https://registry.npmjs.org/@urql/next/-/next-1.1.4.tgz#6908f0db3c4ce2a3ec22c4f1004c1253a6404b41"
-  integrity sha512-ui0B30hfxImOvTJ1ksLM2IZSoFCWlrPEk7/coYcQ52R/BqL0g03cAune/psI1VPkIUS7WLcQViihyuYij+mMOg==
+"@urql/introspection@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.npmjs.org/@urql/introspection/-/introspection-1.2.1.tgz#4d864c681ef540d13322d31b67b45394f2f32d83"
+  integrity sha512-U9FTSISz69EEK3bHWDsqux9JqOeiLzr3eDFBQ5DmHuTLaBsd5mjPdtLRzzzmb9nW1Ygd6IR8YcuM7zeNqQ5lCQ==
+
+"@urql/next@^1.1.5":
+  version "1.1.5"
+  resolved "https://registry.npmjs.org/@urql/next/-/next-1.1.5.tgz#b63ed693153595767bfa4b3f7f37aa6326604946"
+  integrity sha512-xCNzgf6IarQ99FN4IPvj5nwkeX1z/mpO9+R54StZOK445lXlYbQnI8s4b9tNqTHbB09gt/vKE3ByRh2NLFMyfw==
 
 "@use-gesture/core@10.3.1":
   version "10.3.1"
@@ -14512,12 +14517,12 @@ url-parse@^1.5.3, url-parse@^1.5.7:
     querystringify "^2.1.1"
     requires-port "^1.0.0"
 
-urql@^4.2.1:
-  version "4.2.1"
-  resolved "https://registry.npmjs.org/urql/-/urql-4.2.1.tgz#a17621db16cf2b7b09c37eef21ef0c3e08608643"
-  integrity sha512-Y/cVi1rsR96kbF3VX6YgfHw1V3kJ287nR1TqpjGzVPyAmXuwRvBvABI+sHY2WOquWCNh+kvFapM/LLYeiC3wig==
+urql@^4.2.2:
+  version "4.2.2"
+  resolved "https://registry.npmjs.org/urql/-/urql-4.2.2.tgz#e0852fe3bea377edaa616e6175dd39be2d4bf1da"
+  integrity sha512-3GgqNa6iF7bC4hY/ImJKN4REQILcSU9VKcKL8gfELZM8mM5BnLH1BsCc8kBdnVGD1LIFOs4W3O2idNHhON1r0w==
   dependencies:
-    "@urql/core" "^5.0.0"
+    "@urql/core" "^5.1.1"
     wonka "^6.3.2"
 
 use-callback-ref@^1.3.3:

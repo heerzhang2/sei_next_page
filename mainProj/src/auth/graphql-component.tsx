@@ -13,6 +13,7 @@ import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
 import { auth } from '@/app/auth';
 // import { cookies } from 'next/headers'
 import schema from './urql-schema.json';
+import {Logger} from "@urql/exchange-graphcache/dist/urql-exchange-graphcache-chunk";
 
 
 /*这个Context.Provider模式的是客户端组件的；儿子确实可以是服务端组件的，前提是需要在直接父辈（必须也是服务端组件）内部进行{children}拼装。服务端组件render时间实际发生在更前的，网络序列化传递Props的。
@@ -47,6 +48,9 @@ export function GraphQLProvider({ children }) {
             };
         }
         const cache = offlineExchange({
+            logger(severity: 'debug' | 'error' | 'warn', message: string){
+                console.log("offlineExchange:",severity,"消息",message)
+            },
             schema,
             storage,
             updates: {},
