@@ -21,6 +21,7 @@ import {AccelerationVw} from "../waterJj/Acceleration";
 import {DirectLink} from "@/routing/Link";
 import {Table} from "@/components/ui/table";
 import {首页概况WaterJj} from "@/report/recreation/waterJj/rarelyVary";
+import {填写须知recr} from "@/report/recreation/slidingJj/rarelyVary";
 
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'M',x:'备注',t:'B',m:true},{n:'D',x:'不合格内容',t:'B'}];
@@ -35,26 +36,24 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
   return (
     <React.Fragment>
         <div className="mt-4 mb-4 print:mt-0 print:mb-0">
-            <div className="mx-auto md:m-2 text-right md:flex md:justify-end md:flex-wrap print:flex print:justify-end print:flex-wrap">
-                <h5 className="underline">FJJ/YB-1009-1-2024</h5>
+            <div className="print:h-screen print:break-after-page flex flex-col justify-evenly">
+                <div>
+                    <div className="mx-auto md:m-2 text-right md:flex md:justify-end md:flex-wrap">
+                        <h5 className="underline">FJJ/YB-1009-1-2024</h5>
+                    </div>
+                    <h1 className="text-center mt-8 text-3xl md:print:text-5xl">
+                      大型游乐设施监督检验原始记录
+                    </h1>
+                    <h5 className="text-center text-xl mt-4">（适用于系留式观光气球）</h5>
+                </div>
+                <div>
+                    {首页概况WaterJj(orc,rep,true)}
+                </div>
+                <div className="text-center ">
+                    <h4 className="text-center">福建省特种设备检验研究院编制</h4>
+                </div>
             </div>
-            <h1 className="text-center mt-8 text-3xl md:print:text-5xl">
-              大型游乐设施监督检验原始记录
-            </h1>
-            <h5 className="text-center text-xl">（适用于系留式观光气球）</h5>
-            <div className="print:h-16"/>
-            <div className="print:min-h-full">
-                { 首页设备概况Cr( {orc, original:true, } ) }
-            </div>
-            <div className="print:min-h-full">
-                {首页概况WaterJj(orc,rep,true)}
-            </div>
-
-            <div className="print:h-20"/>
-            <div className="text-center print:break-after-always print:break-inside-avoid">
-                <h4 className="text-center">福建省特种设备检验研究院编制</h4>
-            </div>
-            {填写须知}
+            {填写须知recr}
             <InstrumentVw orc={orc} rep={rep} label={'一、主要测量设备性能检查'}/>
             <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Survey`}>
                 <h4 className="mt-4">二、设备概况</h4>

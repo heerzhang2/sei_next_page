@@ -14,6 +14,7 @@ import {calcAverageArrObj} from "../../../common/tool";
 import type {UseFormReturn} from "react-hook-form";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
+import { clsx} from "clsx"
 
 //仅正式报告用
 const config设备 = [
@@ -219,7 +220,9 @@ export const tail测仪器= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
   </Text>
 </Text>;
 
-export const InstrumentVw = ({orc, rep, label,nbhead}:
+/*@param nbhead :打印时不需要断开页的也就是页首打印。
+* */
+export const InstrumentVw5 = ({orc, rep, label,nbhead}:
                                { orc: any, rep: any, label: any,nbhead?:boolean }
 ) => {
   return <>
@@ -230,9 +233,9 @@ export const InstrumentVw = ({orc, rep, label,nbhead}:
           }
       }}>
       <RepLink rep={rep} ori tag={'Instrument'}>
-        <Text variant="h4" css={{marginTop: nbhead? '1rem':undefined }}>
+        <h4 css={{marginTop: nbhead? '1rem':undefined }}>
           {label}
-        </Text>
+        </h4>
       </RepLink>
     </div>
     <Table id={'Instrument'} fixed={["%", "24%", "22%", "8%", "8%"]}  tight miniw={800}
@@ -268,6 +271,80 @@ export const InstrumentVw = ({orc, rep, label,nbhead}:
     {tail测仪器}
   </>;
 };
+export const InstrumentVw = ({ orc, rep, label, nbhead }: {
+  orc: any
+  rep: any
+  label: any
+  nbhead?: boolean
+}) => {
+  return (
+      <>
+      {/* 页眉容器 */}
+        <div className={clsx()}>
+        <RepLink rep={rep} ori tag="Instrument">
+          <h4 className={clsx(
+              "mt-4",
+              nbhead && "mt-0"
+          )}>
+            {label}
+          </h4>
+        </RepLink>
+        </div>
+
+    {/* 数据表格 */}
+    <FlexibleTable
+        id="Instrument"
+        columnWidths={["%", "24%", "22%", "8%", "8%"]}
+        className={clsx(  )}
+    >
+      <TableHeader>
+        <TableRow>
+          {/* 表头单元格 */}
+          {[1, 2, 3].map((col) => (
+              <CCell
+                  key={col}
+                  rowSpan={col === 1 ? 2 : 1}
+                  colSpan={col === 4 ? 2 : 1}
+              >
+                {col === 1 ? "仪器设备名称" :
+                    col === 2 ? "型号规格" :
+                        col === 3 ? "仪器设备编号" :
+                            "性能状态"}
+              </CCell>
+          ))}
+          <CCell>开机后</CCell>
+          <CCell>关机前</CCell>
+        </TableRow>
+        <TableRow>
+          <CCell>性能状态子项</CCell>
+          <CCell>性能状态子项</CCell>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        <RepLink rep={rep} ori tag="Instrument">
+          {orc.仪器表?.map((o: any, i: React.Key) => (
+              <TableRow key={i}>
+                {/* 表格数据单元格 */}
+                <CCell className="break-all">{o.n}</CCell>
+                <CCell className="break-all">{o.t}</CCell>
+                <CCell className="break-all">{o.i}</CCell>
+                <CCell>{o.o}</CCell>
+                <CCell className="break-all">{o.f}</CCell>
+              </TableRow>
+          ))}
+        </RepLink>
+      </TableBody>
+    </FlexibleTable>
+
+    {/* 尾部组件 */}
+    {tail测仪器}
+  </>
+  )
+}
+
+
+
 /*测量结果列的标题有 附加了（）单位；
 * */
 export const 测量结果单位 = ({orc, rep, label, config,children, mem, tag = 'Measure', runit,
