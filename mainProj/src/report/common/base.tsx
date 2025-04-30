@@ -1031,7 +1031,7 @@ export const CCellUnit= ( {unit, children, colSpan,rowSpan} : {unit:any, childre
     </CCell>;
 };
 /**目的：避免代码重复性质的字符串的出现太多了：   通常报告表格的点击转编辑器
- * @param ori 是原始记录的
+ * @param ori 是原始记录页面的
  */
 export const RepLink= ( {rep, children, tag, ori} : {rep:any, children:React.ReactNode, tag:string,ori?:boolean}
 ) => {

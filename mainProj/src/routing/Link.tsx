@@ -30,7 +30,7 @@ interface LinkProps {
 }
 
 //使用了自定义路由器的Link链接，点击这个组件的才会经过自定义路由器跳转。旧的可携带user保存当前的用户数据 state;
-/*@deprecated
+/*@deprecated 淘汰
 * */
 export const Link: React.FunctionComponent<LinkProps> =({href,state,children,...other}: LinkProps)=>
 {
@@ -153,7 +153,7 @@ interface DirectLinkProps extends React.HTMLAttributes<HTMLElement>{
     children: React.ReactNode;
     state?: any;
 }
-/**对比上面Link 缺少user的注入;
+/**任意都能做Link的；
  * 直接用next.js Link 导致报错In HTML, <tr> cannot be a child of <a>.
  * In HTML, <a> cannot be a child of <tbody>. This will cause a hydration error.
  * */

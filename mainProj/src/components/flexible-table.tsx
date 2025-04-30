@@ -80,7 +80,7 @@ export function FlexibleTable({children, columnWidths, className, variant = "def
     })
 
     return (
-        <table id={id} className={`w-full table-fixed ${variantStyles[variant]} ${className || ""}`}>
+        <table id={id} className={`w-full table-fixed break-all ${variantStyles[variant]} ${className || ""}`}>
             <colgroup>
                 {processedWidths.map((width, i) => {
                     return <col key={i} style={{width}}/>

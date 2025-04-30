@@ -24,7 +24,7 @@ export default function Report({ items,children }: ReportProps) {
   return (
       <>
           <div className="flex-1 overflow-auto">
-              <div className="mx-auto px-6 py-8 print:px-0 print:py-0">
+              <div className="mx-auto px-0 md:px-6 py-8 print:px-0 print:py-0">
                   <div  className="flex flex-col min-h-screen">
                       <header className="print:hidden border-b">
                           <div className="container flex items-center justify-between h-14">

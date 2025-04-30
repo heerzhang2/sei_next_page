@@ -1,10 +1,9 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, Cell, TableRow, useTheme,} from "customize-easy-ui-component";
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
 import {DirectLink} from "../../routing/Link";
 import {ItemOmniConfig, itemResTransformRec, RecordOmniArea} from "./omni";
 import {resTranslCm} from "./helper";
-import {css} from "@emotion/react";
+import {cn} from "@/lib/utils";
 
 //后面可变动字段的安排设置 ： 其中两个特别字段：{n:'',x:'检验结果',},{n:null,x:'结论'}
 export type Column_Setting ={
@@ -27,46 +26,25 @@ export type Column_Setting ={
  * @property qtsz  其它列的字体
  * 若想orc?._Oitems用户输入的文本有格式化换行效果等，只能在记录编辑的2个解析器这里特殊对待来做。？特殊标记，特定标签的tag '_其它'+i。
  * */
-export const useFormatOmni= ({itRes, ItemArs, rep,config,rcc,dfsz,ltsz,qtsz }
-         :{itRes:any, ItemArs:RecordOmniArea[], rep:any,config: Column_Setting[],rcc?:boolean,dfsz?:string,ltsz?:string,qtsz?:string}
-) => {
-    const theme = useTheme();
-    //类似评估打印：横板改成竖版打印的。 记录的正文区域，标题栏列的。
-    const descStyle = React.useMemo(() => {
-        return css({
-            fontSize: `0.875rem`,
-            "& > span": {fontSize: `0.875rem`},
-            "& > div > span": {fontSize: `0.875rem`},
-            "& > div > div > table td": {fontSize: `0.875rem`},
-            "& > span > div > table td": {fontSize: `0.875rem`},
-            "@media print": {
-                fontSize: `${dfsz??'0.875'}rem`,
-                "& > span": {fontSize: `${dfsz??'0.875'}rem`},
-                "& > div > span": {fontSize: `${dfsz??'0.875'}rem`},
-                "& > div > div > table td": {fontSize: `${dfsz??'0.875'}rem`},
-                "& > span > div > table td": {fontSize: `${dfsz??'0.875'}rem`},
-            }
-        });
-    }, [dfsz,theme]);
-    //不合格描述，备注区域的：
-    const longStyle = React.useMemo(() => {
-        return css({
-            fontSize: `0.875rem`,
-            "@media print": {
-                fontSize: `${ltsz??'0.875'}rem`,
-            }
-        });
-    }, [ltsz,theme]);
-    //其它列的， 项目编号 结果列的：
-    const qtStyle = React.useMemo(() => {
-        return css({
-            fontSize: `0.875rem`,
-            "@media print": {
-                fontSize: `${qtsz??'0.875'}rem`,
-            }
-        });
-    }, [qtsz,theme]);
-
+export const useFormatOmni = ({
+                                  itRes,
+                                  ItemArs,
+                                  rep,
+                                  config,
+                                  rcc,
+                                  descClasses,
+                                  longClasses,
+                                  qtClasses
+                              }: {
+    itRes: any;
+    ItemArs: RecordOmniArea[];
+    rep: any;
+    config: Column_Setting[];
+    rcc?: boolean;
+    descClasses?: string;   //步骤要求正文：
+    longClasses?: string;   //不合格描述，备注区域的：
+    qtClasses?: string;     //其它列的， 项目编号 结果列的：
+}) => {
     const renderIspContent =React.useMemo(() => {
         let seq = 0;
         let htmlTxts =[] as React.ReactNode[];
@@ -106,76 +84,76 @@ export const useFormatOmni= ({itRes, ItemArs, rep,config,rcc,dfsz,ltsz,qtsz }
                     // console.log("检验设TableRowicnameS=",seq, icname,'et',et,mergLastEt);
 
                     itemRowRender[0] =<TableRow id={n===0 ? area.tag:undefined} key={n}>
-                        <CCell key={1} css={qtStyle}>{seq}</CCell>
+                        <CCell key={1}  className={cn("text-[0.75rem]",qtClasses)}>{seq}</CCell>
                         {et.rec?.bspan && <CCell key={2} split={true} rowSpan={et.rec?.bspan} colSpan={1===nosCc? 4: 1}
-                                                 css={qtStyle}>{et.rec?.big}</CCell>
+                                                 className={cn("text-sm",qtClasses)}>{et.rec?.big}</CCell>
                         }
                         {nosCc>=2 && (et.rec?.span!)>0 && <CCell split={true} key={3} rowSpan={et.rec?.span} colSpan={2===nosCc? 3: 1}
-                                                                 css={qtStyle}>{et.rec?.seco}</CCell>
+                                                                 className={cn("text-sm",qtClasses)}>{et.rec?.seco}</CCell>
                         }
                         {nosCc>=3 && (et.rec?.tspan!)>0 && <CCell split={true} key={4} rowSpan={et.rec?.tspan} colSpan={3===nosCc? 2: 1}
-                                                                  css={qtStyle}>{et.rec?.third}</CCell>
+                                                                  className={cn("text-sm",qtClasses)}>{et.rec?.third}</CCell>
                         }
                         {nosCc>=4 && (et.rec?.fspan!)>0 && <CCell split={true} key={5} rowSpan={et.rec?.fspan}
-                                                                  css={qtStyle}>{et.rec?.four}</CCell>
+                                                                  className={cn("text-sm",qtClasses)}>{et.rec?.four}</CCell>
                         }
                         {/*新常态：单独把报告标题归为独立栏目的；一个拆分区块的 下面有三个嵌套的分区： 利用 mergLabel seco span 来辨识特殊点*/}
                         {rcc && <>
                             { (et.nconcl && et.rec?.span) ? <>
                                     <CCell key={8} split={true} rowSpan={et.rec?.span??1}
-                                           css={descStyle}>{et.mergLabel ??mergLastEt.recap }</CCell>
+                                           className={cn("text-xs", descClasses)}>{et.mergLabel ??mergLastEt.recap }</CCell>
                                 </>
                                 :
                                 <>
                                     {et.fRSpan? <>
-                                        {rtspanArea? ( et.rtspan!>1 ?
-                                                    <CCell key={8} split={true} rowSpan={et.rtspan}
-                                                           css={descStyle}>{et.tips?? (et.mergLabel?? et.recap)?? mergLastEt.recap }</CCell>
-                                                       :
-                                                       null
+                                            {rtspanArea? ( et.rtspan!>1 ?
+                                                        <CCell key={8} split={true} rowSpan={et.rtspan}
+                                                               className={cn("text-xs", descClasses)}>{et.tips?? (et.mergLabel?? et.recap)?? mergLastEt.recap }</CCell>
+                                                        :
+                                                        null
                                                 )
                                                 :
-                                            <CCell key={8} split={true} rowSpan={et.fRSpan??1}
-                                                   css={descStyle}>{et.tips?? (et.mergLabel?? et.recap)?? mergLastEt.recap }</CCell>
-                                        }</>
+                                                <CCell key={8} split={true} rowSpan={et.fRSpan??1}
+                                                       className={cn("text-xs", descClasses)}>{et.tips?? (et.mergLabel?? et.recap)?? mergLastEt.recap }</CCell>
+                                            }</>
                                         :
                                         null
                                     }
                                 </>
                             }
                             { (!et.nconcl && et.rec?.span===1 && mergLastEt===et && et.mergLabel) &&
-                                    <CCell key={8} css={descStyle}>{et.mergLabel}</CCell>
+                                <CCell key={8} className={cn("text-xs", descClasses)}>{et.mergLabel}</CCell>
                             }
-                          </>
+                        </>
                         }
 
-                        { et.name? <Cell key={6} css={descStyle}>{et.desc}</Cell>
+                        { et.name? <TableCell key={6} className={cn("text-xs", descClasses)}>{et.desc}</TableCell>
                             :
-                            <Cell key={6} colSpan={2} css={descStyle}>{et.desc}</Cell>
+                            <TableCell key={6} colSpan={2} className={cn("text-xs", descClasses)}>{et.desc}</TableCell>
                         }
                         {       //布局在记录正文栏目后面的：结果结论 等其它的栏目 'S''Z''ic' 'M','D'
                             config.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
-                                if(n==='') return  et.name && <CCell key={7} css={qtStyle}>{result || '/'}</CCell>;
-                                else if(n===null) return et.fRSpan && <CCell key={8} split={true} rowSpan={et.fRSpan??1} css={qtStyle}>{conseq || '/'}</CCell>;
+                                if(n==='') return  et.name && <CCell key={7} className={cn("text-sm",qtClasses)}>{result || '/'}</CCell>;
+                                else if(n===null)
+                                    return et.fRSpan && <CCell key={8} split={true} rowSpan={et.fRSpan??1} className={cn("text-sm",qtClasses)}>{conseq || '/'}</CCell>;
                                 const islt=(n==='M' || n==='D');            //配置【耦合的】，预定义规定的标签。
                                 //以上2个特殊，剩下是常规字段,   key==#
                                 if(!m){
-                                    if(et.name) return <CCell key={10} css={islt? longStyle:qtStyle}>{itRes?.[et.name+'_'+n] ?? ''}</CCell>;
-                                    else return <Cell key={10}></Cell>;
+                                    if(et.name) return <CCell key={10} className={cn("text-sm",islt? longClasses:qtClasses)}>{itRes?.[et.name+'_'+n] ?? ''}</CCell>;
+                                    else return <TableCell key={10}></TableCell>;
                                 }else{
                                     //自拆分的
                                     if(et.fRSpan) return <CCell key={13+'_'+i} split={true} rowSpan={et.fRSpan??1}
-                                                                css={islt? longStyle:qtStyle}>{itRes?.[icname+'_'+n]}</CCell>;
+                                                                className={cn("text-sm",islt? longClasses:qtClasses)}>{itRes?.[icname+'_'+n]}</CCell>;
                                 }
                                 return null;
                             })
                         }
                     </TableRow>;
-                    const rowsBigArea=<React.Fragment key={seq+'_'+n}>
-                        <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}?original=1#${area.tag}`}>
+                    //报错Invalid prop `columnWidths` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.
+                    const rowsBigArea= <DirectLink key={seq+'_'+n} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}?original=1#${area.tag}`}>
                             {itemRowRender}
-                        </DirectLink>
-                    </React.Fragment>;
+                        </DirectLink>;
                     htmlTxts.push(rowsBigArea);    //原先在htmlTxts.push(itemRowRender);bigItemRowCnt++;前面就处理的
                     if(rtspanArea){
                         rtspanLeft--;
@@ -186,9 +164,10 @@ export const useFormatOmni= ({itRes, ItemArs, rep,config,rcc,dfsz,ltsz,qtsz }
         });
 
         return  htmlTxts;
-    }, [itRes,rep,ItemArs,config,rcc,descStyle,longStyle,qtStyle]);
+    }, [itRes,rep,ItemArs,config,rcc]);
     return { renderIspContent };
 };
+
 /**去掉big栏目的显示; 支持big栏目的colSpan=1情况{后面必须有sceo:?}；
  * 支持类别栏 {n:'ic',x:'类别',m:true},
  */

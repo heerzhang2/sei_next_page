@@ -32,6 +32,9 @@ interface PrintReserveLeastProps {
    * 内容容器的额外类名
    */
   contentClassName?: string
+    /**必须新一页的页首开始打印的; 让reserve失去作用
+     * */
+  fromHead?: boolean
 }
 
 /**一页尾巴最少多少空间才打印，否则新一页打印的。
@@ -45,6 +48,7 @@ export function PrintReserveLeast({
                                     className = "",
                                     titleClassName = "",
                                     contentClassName = "",
+                                    fromHead,
                                   }: PrintReserveLeastProps) {
   // 创建一个唯一的样式标签，用于动态添加CSS
   React.useEffect(() => {
@@ -75,7 +79,15 @@ export function PrintReserveLeast({
   }, [])
 
 //同一个URL网页允许同时有多个不同的reserve配置的组件共存的：
-  return (
+  if(fromHead) return (
+        <div className={`print:break-before-page ${className}`}>
+            {/* 标题部分 */}
+            <div className={`${titleClassName}`}>{title}</div>
+            {/* 正文部分 */}
+            <div className={`${contentClassName}`}>{children}</div>
+        </div>
+  )
+  else return (
       <div className={`relative ${className}`} style={{"--reserve-height": reserve} as React.CSSProperties}>
         {/* 标题部分 */}
         <div className={`print-title-reserve ${titleClassName}`}>{title}</div>

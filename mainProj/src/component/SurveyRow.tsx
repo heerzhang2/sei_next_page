@@ -32,8 +32,8 @@ export function SurveyRow({
 }) {
     return (
         <TableRow columnWidths={columnWidths} variant="borderless" {...props}>
-             <TableCell className="p-1 border-0 text-sm text-right">{label}：</TableCell>
-             <TableCell className="border-0 border-b border-dashed border-gray-400 text-center text-sm">
+             <TableCell className="p-1 border-0 text-right">{label}：</TableCell>
+             <TableCell className="border-0 border-b border-dashed border-gray-400 text-center">
                  {value ?? "／"}
              </TableCell>
         </TableRow>

@@ -1,10 +1,7 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
 import { BlobInputList,InputDatalist,SuffixInput,} from "@/components/chub";
-import {Input, Switch} from "@/components/ui";
-import {FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui"
+import {FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea,Input, Switch} from "@/components/ui"
 import {CCell, TableRow} from "@/components/flexible-table";
-
 import {CCellUnit, } from "../common/base";
 import type { UseFormReturn } from "react-hook-form"
 
@@ -261,7 +258,7 @@ export const usePrefixDataTable= ({orc, config, rep, parentOrc:orgParOrc, slash,
         else prefix2='';
 
         return <React.Fragment key={i}>
-            <TableRow className={"text-sm"}>
+            <TableRow className={"text-sm break-all"}>
                 { embed && embed[i] }
                 { (typeof desc==='object' && desc.span) && <CCell rowSpan={desc.span}>{desc?.prview? desc?.prview(orc,parentOrc) : desc?.pr}</CCell> }
                 <CCell colSpan={prefix1 ? 1 : 2}>{typeof desc==='string'? desc: desc?.view? desc?.view(orc,parentOrc,rep) : desc?.t}</CCell>

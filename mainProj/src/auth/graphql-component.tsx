@@ -13,8 +13,7 @@ import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
 import { auth } from '@/app/auth';
 // import { cookies } from 'next/headers'
 import schema from './urql-schema.json';
-import {Logger, SerializedRequest} from "@urql/exchange-graphcache/dist/urql-exchange-graphcache-chunk";
-
+import { Logger, SerializedRequest } from "@urql/exchange-graphcache";
 
 /*这个Context.Provider模式的是客户端组件的；儿子确实可以是服务端组件的，前提是需要在直接父辈（必须也是服务端组件）内部进行{children}拼装。服务端组件render时间实际发生在更前的，网络序列化传递Props的。
 const ssr = ssrExchange();
@@ -60,7 +59,7 @@ export function GraphQLProvider({ children }) {
                         const newMetadata = [...(json ||[])];
                         const thisIndex=newMetadata.length-1;       //[假设前提]最后一条是最新发送失败的变更mutation操作。
                         if(thisIndex>0){
-                            //删除所有同样接口的未成功的pending操作（按操作类型）
+                            //删除所有同样接口的未成功的pending操作（按操作类型）？不是同一份的检验报告 +json[thisIndex].variables id &&条件? 来区分吗。业务层面事务性锁定的。
                             newMetadata.forEach(({query},index) => {
                                 if(index!==thisIndex && query===(json[thisIndex].query)) {
                                     delete newMetadata[index];

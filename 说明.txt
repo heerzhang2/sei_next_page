@@ -662,3 +662,4 @@ id
 :
 "KQcbgDF9RO21DsI92H3tTVJlcG9ydA"
 o
+ text-[0.75rem]

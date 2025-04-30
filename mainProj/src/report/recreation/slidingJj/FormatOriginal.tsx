@@ -22,6 +22,9 @@ import {DirectLink} from "@/routing/Link";
 import {Table} from "@/components/ui/table";
 import {首页概况WaterJj} from "@/report/recreation/waterJj/rarelyVary";
 import {填写须知recr} from "@/report/recreation/slidingJj/rarelyVary";
+import {undefined} from "zod";
+import {PrintReserveLeast} from "@/components/print-reserve-least";
+import PageSectionOrientation from "@/components/page-section-orientation";
 
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'M',x:'备注',t:'B',m:true},{n:'D',x:'不合格内容',t:'B'}];
@@ -39,50 +42,50 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             <div className="print:h-screen print:break-after-page flex flex-col justify-evenly">
                 <div>
                     <div className="mx-auto md:m-2 text-right md:flex md:justify-end md:flex-wrap">
-                        <h5 className="underline">FJJ/YB-1009-1-2024</h5>
+                        <span className="underline">FJJ/YB-1009-1-2024</span>
                     </div>
                     <h1 className="text-center mt-8 text-3xl md:print:text-5xl">
                       大型游乐设施监督检验原始记录
                     </h1>
-                    <h5 className="text-center text-xl mt-4">（适用于系留式观光气球）</h5>
+                    <span className="block text-center text-xl mt-4">（适用于系留式观光气球）</span>
                 </div>
                 <div>
                     {首页概况WaterJj(orc,rep,true)}
                 </div>
                 <div className="text-center ">
-                    <h4 className="text-center">福建省特种设备检验研究院编制</h4>
+                    <span className="text-center text-2xl">福建省特种设备检验研究院编制</span>
                 </div>
             </div>
             {填写须知recr}
             <InstrumentVw orc={orc} rep={rep} label={'一、主要测量设备性能检查'}/>
-            <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Survey`}>
-                <h4 className="mt-4">二、设备概况</h4>
-            </DirectLink>
-            {设备概况页({orc, rep, config: config设备概况, fixed: ["5%", "13.5%", "32%", "8%", "9%", "%"] })}
-            <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
-                <h4 className="mt-4">三、检验记录</h4>
-            </DirectLink>
- {/*           <FlexibleTable columnWidths={ ["2%", "3.8%", "4.3%", "4.3%", "1%", "7%", "%","4.5%", "4.3%","4.1%","9.1%"] }>
-                <TableHeader>
-                    <DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}>
-                        <TableRow>
-                            <CCell><span className="text-[0.7rem]">序号</span></CCell>
-                            <CCell colSpan={5}>检验项目</CCell>
-                            <CCell>检验内容和要求</CCell>
-                            <CCell><span className="text-[0.7rem]">检验结果</span></CCell>
-                            <CCell>结论</CCell>
-                            <CCell>备注</CCell>
-                            <CCell><span className="text-[0.75rem]">存在问题描述</span></CCell>
-                        </TableRow>
-                    </DirectLink>
-                </TableHeader>
-                <TableBody>
-                    {renderIspContent}
-                </TableBody>
-            </FlexibleTable>
-            <span id={'_See_Memo1'} className="print:text-[0.75rem]">
-                注： 以下为项目为Ⅰ类监督检验项目：K1.1※、K1.2（2）※（3）、K1.5、K1.8※、K1.9※；其余项目均为Ⅱ类监督检验项目。
-            </span>
+            {设备概况页({label:'二、设备概况', orc, rep, config: config设备概况, fixed: ["5%", "13.5%", "32%", "8%", "9%", "%"] })}
+            <PageSectionOrientation orientation="landscape">
+                <RepLink rep={rep} ori tag="ALL">
+                    <h2 className={`text-2xl`}>三、检验记录</h2>
+                </RepLink>
+                <FlexibleTable columnWidths={ ["2%", "3.8%", "4.3%", "4.3%", "1%", "7%", "%","4.5%", "4.3%","4.1%","9.1%"] }>
+                    <TableHeader>
+                        <RepLink rep={rep} ori tag="ALL">
+                            <TableRow>
+                                <CCell><span className="text-[0.7rem]">序号</span></CCell>
+                                <CCell colSpan={5}>检验项目</CCell>
+                                <CCell>检验内容和要求</CCell>
+                                <CCell><span className="text-[0.7rem]">检验结果</span></CCell>
+                                <CCell>结论</CCell>
+                                <CCell>备注</CCell>
+                                <CCell><span className="text-[0.75rem]">存在问题描述</span></CCell>
+                            </TableRow>
+                        </RepLink>
+                    </TableHeader>
+                    <TableBody>
+                        {renderIspContent}
+                    </TableBody>
+                </FlexibleTable>
+                <span id={'_See_Memo1'} className="print:text-[0.75rem]">注： 以下为项目为Ⅰ类监督检验项目：K1.1※、K1.2（2）※（3）、K1.5、K1.8※、K1.9※；其余项目均为Ⅱ类监督检验项目。</span>
+            </PageSectionOrientation>
+
+
+ {/*
             <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag} printing={printing} titles={['序号','项目编号','不合格内容描述','复检结果','复检日期']}
                     label={<h4 className="text-left">四、检测不合格记录及复检结果</h4>}
             />

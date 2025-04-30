@@ -1,6 +1,6 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, Cell, Table, TableBody, TableHead, TableRow, Text, useTheme,} from "customize-easy-ui-component";
+import { Cell, Table,  Text, useTheme,} from "customize-easy-ui-component";
 import {DirectLink,} from "../../routing/Link";
 import {multilines2Html,} from "../tools";
 import {calcAverageArrObj, floatInterception,} from "../../common/tool";
@@ -9,6 +9,8 @@ import {config梯子, defaultTl机构速度, items漏磁检} from "./editor";
 import {RepLink} from "../common/base";
 import {usePrefixDataTable} from "../hook/usePrefixData";
 import {useMeasureTable} from "../hook/useMeasure";
+import {PrintReserveLeast} from "@/components/print-reserve-least";
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
 
 /**格式化记录或报告 对应编辑器Thickness
 * */
@@ -343,23 +345,28 @@ export const 俩列检验设备概况= ( { orc,rep, repId, verId,config} : { orc
 };
 
 //在原始记录使用的：
-export const 设备概况页 = ({orc, rep, config, fixed = ["4.2%", "12.1%", "39%", "9%", "11.1%", "%"],}
-                               : {orc: any, rep: any, config: any[], fixed?: string[] }
+export const 设备概况页 = ({orc, rep, config, fixed = ["4.2%", "12.1%", "39%", "9%", "11.1%", "%"],fromHead,label}
+                           : {orc: any, rep: any, config: any[], fixed?: string[],fromHead?:boolean,label:any }
 ) => {
   const renderUpper = usePrefixDataTable({config, orc, rep, slash: true});
-  return <>
-    <div css={{"@media print": {paddingBottom: '6rem', pageBreakInside: 'avoid'}}}>
-    </div>
-    <Table fixed={fixed} tight miniw={800}
-           css={{borderCollapse: 'collapse', "@media print": {marginTop: '-6rem'}}}>
+  return <PrintReserveLeast fromHead={fromHead} reserve="8rem"
+                            title={ <RepLink rep={rep} ori tag="Survey">
+                              <h2 className={`text-2xl ${!fromHead ? 'mt-4' : ''}`}>
+                                {label}
+                              </h2>
+                            </RepLink>
+                            }>
+    <FlexibleTable id="Survey" columnWidths={fixed}>
       <TableBody>
-        <RepLink ori rep={rep} tag={'Survey'}>
+        <RepLink rep={rep} ori tag="Survey">
           {renderUpper}
         </RepLink>
       </TableBody>
-    </Table>
-  </>;
-};
+    </FlexibleTable>
+  </PrintReserveLeast>
+}
+
+
 export const 技术见证Park = ({orc, rep, bhTil = '备注', fixed = ["5%", "10%", "%", "26%"]}: {
                                orc: any,
                                rep: any,
