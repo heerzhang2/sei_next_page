@@ -1,86 +1,53 @@
-import {useStorage} from "./mainProj/src/report/StorageContext";
-import {useTableEditor} from "./mainProj/src/report/hook/useRepTableEditor";
-import {useUppyUpload} from "./mainProj/src/report/hook/useUppyUpload";
-import {
-    Card, CardContent,
-    CardHeader,
-    CardTitle,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage, Textarea
-} from "./mainProj/src/components/ui";
-import {BlobInputList, ClearableSelect, CollapsibleFormSection, SuffixInput} from "./mainProj/src/components/chub";
-import {clcOptions} from "./mainProj/src/report/common/ActionMapItem";
-import {useFormFramework} from "./mainProj/src/report/hook/useFormFramework";
-import {config测点表, itemA应变应力, tail应变} from "./mainProj/src/report/recreation/waterJj/StrainStress";
+// 修改后的 offlineExchange 配置
+const cache = offlineExchange({
+    // ...其他配置保持不变...
+    storage: {
+        ...makeDefaultStorage({ /* 原有配置 */ }),
+        // 覆盖 writeMetadata 方法
+        writeMetadata: (metadata, { key }) => {
+            return new Promise((resolve) => {
+                // 获取现有元数据
+                this.readMetadata().then(existing => {
+                    // 创建新的元数据对象
+                    const newMetadata = { ...existing };
 
-export const StrainStress = ({ children, show, alone = true, redId, nestMd, label, rep,sensit }: Props) => {
-    const {storage,setStorage,modified,setModified} =useStorage();
-    const schema = React.useMemo(() => {
-        const schemaFields = {} as any
-        // 添加普通字段
-        itemA应变应力.forEach((name) => {
-            //这个字段 _FILE_测点：是专用组件处理设置的，直接修改storage，必须排除在form之外。
-            if(name!=="_FILE_测点")
-                schemaFields[name] = z.string().optional()
-        })
-        const schemaTab = {} as any
-        config测点表.forEach(([t,field,s,o,park]) => {
-            schemaTab[field] = z.string().optional()
-        })
-        // 添加表格字段
-        schemaFields["测点表"]= z.array(z.object(schemaTab))
-        return z.object(schemaFields)
-    }, [])
-    const defaultValues = React.useMemo(() => {
-        const fields = {} as any
-        // 初始化普通字段
-        itemA应变应力.forEach((name) => {
-            if(name!=="_FILE_测点")
-                fields[name] = storage[name] ?? ""
-        })
-        //【不初始化"测点表"】 没报错？ arrayFields里面有做等效功能。
-        return fields
-    }, [storage])
+                    // 删除所有同类型pending操作（按操作类型+变量哈希）
+                    Object.keys(newMetadata.operations).forEach(opKey => {
+                        if (opKey.startsWith(key)) {
+                            delete newMetadata.operations[opKey];
+                        }
+                    });
 
-    const arrayFields =React.useMemo(() => {
-        // 创建每个字段的空模板
-        const itemTemplate = {} as any
-        config测点表.forEach(([t,field,s,o,park]) => {
-            itemTemplate[field] = ""
-        })
-        return [ {name:"测点表", itemTemplate,} ]
-    }, [])
+                    // 添加新的操作记录（使用时间戳作为版本号）
+                    newMetadata.operations[key] = {
+                        ...metadata.operations[key],
+                        version: Date.now() // 添加版本标识
+                    };
 
-    const headview=<h5>
-        测试点:按照一行2字段录入： 应变值（με）, 应力值（MPa）;
-    </h5>;
+                    // 写入更新后的元数据
+                    localStorage.setItem('graphcache-metadata', JSON.stringify(newMetadata));
+                    resolve();
+                });
+            });
+        }
+    }
+});
 
-    const [nestRendererFactory]=useTableEditor({headview, config: config测点表, table:'测点表',defFixedLay:true});
+// 在 authExchange 中添加请求指纹
+const client = createClient({
+    // ...其他配置...
+    exchanges: [
+        // ...其他交换器...
+        authExchange(async (utils) => {
+            let lastMutationId = 0;
 
-    const contentRendererFactory = React.useCallback(
-        (form: any, arrays?: Record<string, any>) => {
-
-            return (
-                <>
-                    <Card className="py-1 gap-1">
-                        <CardHeader>
-                            <CardTitle>测试：</CardTitle>
-                        </CardHeader>
-                        <CardContent className="px-1">
-                            {nestRendererFactory(form, arrays)}
-                        </CardContent>
-                    </Card>
-                    {children ?? tail应变}
-                </>
-            )
-        },
-        [children,nestRendererFactory ],
-    )
-    const { render,form,arrayControls } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
-    return  <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render()}
-    </CollapsibleFormSection>;
-};
+            return {
+                // ...原有方法...
+                async refreshAuth() {
+                    lastMutationId += 1;
+                    return { mutationId: lastMutationId.toString() };
+                }
+            }
+        }),
+    ]
+});

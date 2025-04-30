@@ -13,7 +13,7 @@ import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
 import { auth } from '@/app/auth';
 // import { cookies } from 'next/headers'
 import schema from './urql-schema.json';
-import {Logger} from "@urql/exchange-graphcache/dist/urql-exchange-graphcache-chunk";
+import {Logger, SerializedRequest} from "@urql/exchange-graphcache/dist/urql-exchange-graphcache-chunk";
 
 
 /*这个Context.Provider模式的是客户端组件的；儿子确实可以是服务端组件的，前提是需要在直接父辈（必须也是服务端组件）内部进行{children}拼装。服务端组件render时间实际发生在更前的，网络序列化传递Props的。
@@ -52,17 +52,37 @@ export function GraphQLProvider({ children }) {
                 console.log("offlineExchange:",severity,"消息",message)
             },
             schema,
-            storage,
-            updates: {
-                Mutation: {
-                    modifyOriginalRecordData: (result, args, cache, info) => {
-                        console.log("变更缓存:",result,"args=",args,"cache",cache,"info=",info)
-                    },
-                },
-            },
+            storage:{
+                ...storage,
+                // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，不需要做storage.readMetadata!().then(existing;
+                writeMetadata: (json: SerializedRequest[]) => {
+                    if(json?.length!==0){
+                        const newMetadata = [...(json ||[])];
+                        const thisIndex=newMetadata.length-1;       //[假设前提]最后一条是最新发送失败的变更mutation操作。
+                        if(thisIndex>0){
+                            //删除所有同样接口的未成功的pending操作（按操作类型）
+                            newMetadata.forEach(({query},index) => {
+                                if(index!==thisIndex && query===(json[thisIndex].query)) {
+                                    delete newMetadata[index];
+                                }
+                            });
+                        }
+                        let out=[...newMetadata.filter(a=>a!==undefined)];
+                        storage.writeMetadata!(out);
+                    }
+                    else storage.writeMetadata!(json);
+                }
+            } as any,
+            // updates: {
+            //     Mutation: {
+            //         modifyOriginalRecordData: (result, args, cache, info) => {
+            //             console.log("变更缓存:",result,"args=",args,"cache",cache,"info=",info)
+            //         },
+            //     },
+            // },
             optimistic: {
                 modifyOriginalRecordData(args, cache, info) {
-                    console.log("变更乐观:args=",args,"cache",cache,"info=",info)
+                    //没断网情况也会执行。
                     return {
                         __typename: 'Report',
                         id: args.id,
