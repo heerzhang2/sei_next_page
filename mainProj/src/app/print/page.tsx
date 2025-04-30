@@ -1,89 +1,146 @@
-/** @jsxImportSource @emotion/react */
-'use client';
-import Link from "next/link";
-import Header from "@/component/header";
-import FootBar from "@/component/footbar";
-import {Global} from "@emotion/react";
-import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
-import {useMediaPrint} from "@/hooks/use-media-print";
-import PageSectionOrientation from "@/components/page-section-orientation";
-import type React from "react";
-import NoPageBreak, {PrintTogether} from "@/components/print-together";
+"use client"
 
+import { useState } from "react"
+import { useMediaPrint } from "@/hooks/use-media-print"
+import PageSectionOrientation from "@/components/page-section-orientation"
 
-/*
-打印测试
-* */
-export default function Home() {
+export default function EnhancedPrintExample() {
   useMediaPrint(true,true,"A4","10mm")
-
   return (
       <PageSectionOrientation orientation="portrait">
-        <div className={"dASqww   Alld"}>
+        <h2 className="text-xl font-bold mb-2">纵向部分</h2>
+        <table className="w-full border-collapse border" style={{ tableLayout: "fixed" }}>
+          <colgroup>
+            <col style={{ width: "40%" }} />
+            <col style={{ width: "60%" }} />
+          </colgroup>
+          <thead>
+          <tr>
+            <th className="border p-2">标题 1</th>
+            <th className="border p-2">标题 2</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td className="important-cell border ">纵向内容 - 不再需要 cell-content 类</td>
+            <td className="border ">{"这是一段很长的文字内容。".repeat(10)}</td>
+          </tr>
+          </tbody>
+        </table>
 
-          <section className={"dASqww   Alld"} css={{minHeight: '40vh'}}>
-            111<br/>
-            正常A4 竖着的但因---------------------fdgdfgdf==============形成个性风格豆565 46564 5645腐干豆腐干
-          </section>
-          《<br/>》11版本内容！
-
-        </div>
-
-        <PageSectionOrientation>
-          <div className={"Wqww    dRTffld"} css={{minHeight: '45vh'}}>
-            cbvvccfgcfdfd<br/>
-            6787687
-          </div>
-          <NoPageBreak reserve="3.7rem" title={<>df<br/>
-            zhong jia正宗midd</>}>
-            <div >
-              <FlexibleTable className="w-full" columnWidths={["30%", "70%"]}>
-                <TableHeader>
-                  <TableRow>
-                    <TableCell>标题</TableCell>
-                    <TableCell>描述</TableCell>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="important-cell">这是一个纯文本内容示例</TableCell>
-                    <TableCell>
-                      {Array.from({ length: 115 }, (_, i) =>
-                        `这是一段很长的文字内容。。。${i + 1}`
-                    ).join('')}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </FlexibleTable>
-            </div>
-          </NoPageBreak>
+        {/* 横向部分 - 添加列宽度 */}
+        <PageSectionOrientation orientation="landscape">
+          <div style={{height: "560px"}}></div>
+          <h2 className="text-xl font-bold mb-2">sdfsdfsd3333333</h2>
+          <table className="w-full border-collapse border" style={{tableLayout: "fixed"}}>
+            <colgroup>
+              <col style={{width: "7%"}}/>
+              <col style={{width: "28%"}}/>
+              <col style={{width: "30%"}}/>
+              <col style={{width: "35%"}}/>
+            </colgroup>
+            <thead>
+            <tr>
+              <th className="border p-2">标题 1</th>
+              <th className="border p-2">标题 2</th>
+              <th className="border p-2">标题 3</th>
+              <th className="border p-2">标题 4</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td className="important-cell border ">横向内宣布 豆腐55 55干豆腐干ghfh 容33d 腐干反对bv t32内容过 忽高忽低的后果
+                好多个搞坏的是 读后感读后感33 梵蒂冈梵蒂冈哈哈哈哈个 vfdgfd 水电费水电4567 546费水电费===- --*** @@@！
+                ！！！
+              </td>
+              <td className="border  ">{"这是一段很长的文字内容。".repeat(137)}</td>
+              <td className="border ">{"更多内容。".repeat(5)}</td>
+              <td className="border ">{"额外内容。".repeat(5)}</td>
+            </tr>
+            </tbody>
+          </table>
         </PageSectionOrientation>
 
-        <div>
-          <div className={"Wqww    dRTffld"}>
-            3333中的<br/>
-            横版本
-          </div>
+        {/* 多个重要单元格示例 - 添加列宽度 */}
+        <PageSectionOrientation orientation="portrait">
+          <h2 className="text-xl font-bold mb-2">多个重要单元格示例</h2>
+          <table className="w-full border-collapse border" style={{ tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "33.33%" }} />
+              <col style={{ width: "33.33%" }} />
+              <col style={{ width: "33.33%" }} />
+            </colgroup>
+            <thead>
+            <tr>
+              <th className="border p-2">标题 1</th>
+              <th className="border p-2">标题 2</th>
+              <th className="border p-2">标题 3</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td className="important-cell border p-2">重要单元格 1 - 直接内容</td>
+              <td className="important-cell border p-2">重要单元格 2 - 直接内容</td>
+              <td className="border p-2">普通单元格</td>
+            </tr>
+            <tr>
+              <td className="border p-2">普通单元格</td>
+              <td className="important-cell border p-2">重要单元格 3 - 直接内容</td>
+              <td className="important-cell border p-2">重要单元格 4 - 直接内容</td>
+            </tr>
+            </tbody>
+          </table>
+        </PageSectionOrientation>
+
+        {/* 嵌套表格示例 - 添加列宽度 */}
+        <PageSectionOrientation orientation="landscape">
           <h2 className="text-xl font-bold mb-2">嵌套表格示例</h2>
-        </div>
+          <table className="w-full border-collapse border" style={{ tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "20%" }} />
+              <col style={{ width: "50%" }} />
+              <col style={{ width: "30%" }} />
+            </colgroup>
+            <thead>
+            <tr>
+              <th className="border p-2">标题 1</th>
+              <th className="border p-2">标题 2</th>
+              <th className="border p-2">标题 3</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td className="border p-2">普通单元格</td>
+              <td className="border p-2">
+                {/* 嵌套表格 - 添加列宽度 */}
+                <table className="w-full border-collapse border" style={{ tableLayout: "fixed" }}>
+                  <colgroup>
+                    <col style={{ width: "40%" }} />
+                    <col style={{ width: "60%" }} />
+                  </colgroup>
+                  <thead>
+                  <tr>
+                    <th className="border p-2">嵌套标题 1</th>
+                    <th className="border p-2">嵌套标题 2</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td className="important-cell border p-2">嵌套重要单元格 - 直接内容</td>
+                    <td className="border p-2">{"这是一段很长的文字内容。".repeat(68)}</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </td>
+              <td className="border p-2">{"这是一段很长的文字内容。".repeat(5)}</td>
+            </tr>
+            </tbody>
+          </table>
+        </PageSectionOrientation>
+
       </PageSectionOrientation>
-  );
+
+  )
 }
 
-/*同一个页面可能连纸张大小也能修改的：
-@page portraitPg {
-  size: 7in 5in;
-  margin: 15mm 5mm;
-}
-@page landscapePg {
-  size: a4 landscape;
-}
-@media print {
-  .WideChapter {
-    page: landscapePg;
-  }
-  .UsualChapter {
-    page: portraitPg;
-  }
-}
-* */
+//data-interval-height="730"
