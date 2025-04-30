@@ -53,9 +53,16 @@ export function GraphQLProvider({ children }) {
             },
             schema,
             storage,
-            updates: {},
+            updates: {
+                Mutation: {
+                    modifyOriginalRecordData: (result, args, cache, info) => {
+                        console.log("变更缓存:",result,"args=",args,"cache",cache,"info=",info)
+                    },
+                },
+            },
             optimistic: {
                 modifyOriginalRecordData(args, cache, info) {
+                    console.log("变更乐观:args=",args,"cache",cache,"info=",info)
                     return {
                         __typename: 'Report',
                         id: args.id,
