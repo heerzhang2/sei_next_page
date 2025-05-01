@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect } from "react"
 import { usePrintSettings } from "../contexts/print-settings-context"
 import { getPrintPreparation, measureAllCellsWithPrintMedia, measureCellHeightWithPrintMedia } from "../lib/print-utils"
+import {usePathname, useRouter} from "next/navigation";
+import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 
 // 修改 useMediaPrint hook，使用新的准确测量方法
 export function useMediaPrint(
@@ -15,7 +17,9 @@ export function useMediaPrint(
   const [isMediaSwitching, setIsMediaSwitching] = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
-
+  // const router = useRouter()
+  // const pathname = usePathname()
+  // const createQueryString = useCreateQueryString()
   // 使用传入的自定义纸张设置，如果没有则使用上下文中的设置
   const actualPaperSize = customPaperSize || settings.paperSize
   const actualPaperMargin = customPaperMargin || settings.paperMargin
@@ -257,8 +261,10 @@ export function useMediaPrint(
 
         // 使用短暂延迟确保所有打印后处理已完成
         setTimeout(() => {
-          log("重新加载页面")
+          // const href=pathname + '?' + createQueryString('print', '')
+          // router.push(href);    //以来页面实际时间很不靠谱的
           window.location.reload()
+          log("重新加载页面href=")
         }, 100)
       } else {
         // 短暂延迟后重置打印状态

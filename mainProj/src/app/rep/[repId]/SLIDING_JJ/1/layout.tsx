@@ -6,7 +6,10 @@ import {useQuery} from "@urql/next";
 import {ReportQuery} from "@/component/rep/report-data";
 import PageSectionOrientation from "@/components/page-section-orientation";
 import Report from "@/component/rep/report";
-import {useParams} from "next/navigation";
+import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
+import {EditControlProvider} from "@/component/rep/editControl-provider";
+import Skeleton from "@/component/rep/skeleton";
+import Sidebar from "@/component/rep/sidebar";
 
 export default function Layout({
   children,params
@@ -15,21 +18,30 @@ export default function Layout({
     params: Promise<{ repId: string, }>,
 }>) {
     const { repId, action } = useParams()
+    const searchParams = useSearchParams()
+    const print = "1"===searchParams!.get("print")
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
     const {getReport: report} = result?.data;
     return (
-        <PageSectionOrientation>
-            <ReportLayout repPanel={<ReportView rep={report}/>} items={contentItems}>
-                { action? children
+        <EditControlProvider>
+            <PageSectionOrientation>
+                { action? <ReportLayout repPanel={<ReportView rep={report}/>} items={contentItems}>
+                        { children }
+                    </ReportLayout>
                     :
-                    <>
-                        {children}
-                        <Report items={contentItems}>
+                    print? <>
+                            {children}
                             <ReportView rep={report}/>
-                        </Report>
-                    </>
+                        </>
+                       :
+                        <div className="flex h-screen print:h-auto">
+                            {children}
+                            <Report items={contentItems}>
+                                <ReportView rep={report}/>
+                            </Report>
+                        </div>
                 }
-            </ReportLayout>
-        </PageSectionOrientation>
+            </PageSectionOrientation>
+        </EditControlProvider>
     )
 }

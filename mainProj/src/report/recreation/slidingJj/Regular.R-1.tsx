@@ -25,24 +25,29 @@ export const ReportView = ({ rep }: any) => {
     const router = useRouter()
     const pathname = usePathname()
     const original = "1"===searchParams!.get("original")
+    const print = "1"===searchParams!.get("print")
     const createQueryString = useCreateQueryString()
     const {storage, } =useStorage();
     const Component = original ? FormatOriginal : OfficialReport
-    return (
-        <>
-            <Component source={storage} rep={rep} />
-            <div className="m-2 print:hidden">
-                <Button
-                    variant="outline"
-                    onClick={() =>{
-                        router.push(pathname + '?' + createQueryString('original', original ? '' : "1"))
-                    } }
-                >
-                    {original ? "正式报告" : "格式化版原始记录"}
-                </Button>
-            </div>
-        </>
-    )
+    const toPDF = () => {
+        window.print()
+    }
+    return <>
+        <Component source={storage} rep={rep} />
+        <div className="m-2 print:hidden">
+            <Button variant="outline" onClick={() =>router.push(pathname + '?' + createQueryString('original', original ? '' : "1")) }>
+                {original ? "正式报告" : "原始记录"}
+            </Button>
+            <Button variant="outline" onClick={() =>router.push(pathname + '?' + createQueryString('print', print ? '' : "1")) }>
+                {print ? "浏览模式" : "打印模式"}
+            </Button>
+            {print && <>
+                <Button variant="outline" onClick={() =>window.print()}>打印预览</Button>
+                <Button variant="outline" onClick={toPDF}>转为PDF</Button>
+            </>
+            }
+        </div>
+    </>
 }
 
 const 检验结果替换 = (orc: { [x: string]: any }) => {

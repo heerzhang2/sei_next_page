@@ -18,7 +18,7 @@ export function useEditControlContext() {
   const context = useContext(EditControlContext)
 
   if (context === undefined) {
-    throw new Error("useCountContext must be used within a CountProvider")
+    throw new Error("useCountContext must be used within a EditControlContext")
   }
 
   return context
