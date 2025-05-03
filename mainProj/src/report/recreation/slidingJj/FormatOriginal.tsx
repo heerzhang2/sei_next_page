@@ -67,13 +67,13 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     <TableHeader>
                         <RepLink rep={rep} ori tag="ALL">
                             <TableRow>
-                                <CCell><span className="text-[0.7rem]">序号</span></CCell>
+                                <CCell className="print:whitespace-nowrap"><span className="text-xs">序号</span></CCell>
                                 <CCell colSpan={5}>检验项目</CCell>
                                 <CCell>检验内容和要求</CCell>
                                 <CCell><span className="text-[0.7rem]">检验结果</span></CCell>
                                 <CCell>结论</CCell>
                                 <CCell>备注</CCell>
-                                <CCell><span className="text-[0.75rem]">存在问题描述</span></CCell>
+                                <CCell><span className="text-[0.7rem]">存在问题描述</span></CCell>
                             </TableRow>
                         </RepLink>
                     </TableHeader>
@@ -81,14 +81,13 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                         {renderIspContent}
                     </TableBody>
                 </FlexibleTable>
-                <span id={'_See_Memo1'} className="print:text-[0.75rem]">注： 以下为项目为Ⅰ类监督检验项目：K1.1※、K1.2（2）※（3）、K1.5、K1.8※、K1.9※；其余项目均为Ⅱ类监督检验项目。</span>
+                <span id={'_See_Memo1'} className="text-sm">注：※为重要项，其它为一般项。</span>
             </PageSectionOrientation>
 
-
- {/*
-            <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag} printing={printing} titles={['序号','项目编号','不合格内容描述','复检结果','复检日期']}
-                    label={<h4 className="text-left">四、检测不合格记录及复检结果</h4>}
+            <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag} titles={['序号','项目编号','不合格内容描述','复检结果','复检日期']}
+                    label={<h2 className="text-left">四、检测不合格记录及复检结果</h2>}
             />
+ {/*
             <h4 className="mt-4 print:mt-0 print:break-before-all">五、现场检验意见</h4>
             <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/ALL`}>
                 <h1 className={`text-center ${orc?.检验结论?.length > 12 ? 'text-2xl' : 'text-4xl'} `}>
@@ -138,7 +137,8 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             <AccelerationVw orc={orc} rep={rep}  stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>
             {常用现场条件({orc, rep, config: tItems现场,dcln:5,label:'附录D：现场检验条件确认'})}*/}
         </div>
-        {末尾链接({rep, template:rep?.modeltype,verId:rep?.modelversion, repId: rep?.id})}
     </React.Fragment>
   );
 }
+
+//text-[0.7rem] print:

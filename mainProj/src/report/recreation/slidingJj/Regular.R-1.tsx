@@ -1,5 +1,5 @@
 "use client"
-import { usePathname,useSearchParams,useRouter } from "next/navigation"
+import {usePathname, useSearchParams, useRouter, useParams} from "next/navigation"
 import * as React from "react"
 import { useEffect, useState } from "react"
 import type { ReportViewProps } from "../../common/base"
@@ -22,52 +22,30 @@ import {useStorage} from "@/report/StorageContext";
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
-    const router = useRouter()
-    const pathname = usePathname()
     const original = "1"===searchParams!.get("original")
-    const print = "1"===searchParams!.get("print")
-    const createQueryString = useCreateQueryString()
     const {storage, } =useStorage();
     const Component = original ? FormatOriginal : OfficialReport
     const toPDF = () => {
         window.print()
     }
     return <>
-        <Component source={storage} rep={rep} />
-        <div className="m-2 print:hidden">
-            <Button variant="outline" onClick={() =>router.push(pathname + '?' + createQueryString('original', original ? '' : "1")) }>
-                {original ? "正式报告" : "原始记录"}
-            </Button>
-            <Button variant="outline" onClick={() =>router.push(pathname + '?' + createQueryString('print', print ? '' : "1")) }>
-                {print ? "浏览模式" : "打印模式"}
-            </Button>
-            {print && <>
-                <Button variant="outline" onClick={() =>window.print()}>打印预览</Button>
-                <Button variant="outline" onClick={toPDF}>转为PDF</Button>
-            </>
-            }
-        </div>
+        <Component source={storage} rep={rep}/>
+        {末尾链接({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,toPDF})}
     </>
 }
 
 const 检验结果替换 = (orc: { [x: string]: any }) => {
-    const out = { ...orc }
+    const out = {...orc}
     // if(undefined!==orc?.绝缘阻o)  out.绝缘阻检=<div>电阻值{floatInterception(orc?.绝缘阻o,1)}MΩ</div>;
     return out
 }
 const config报告: Column_Setting[] = [
-    { n: "", x: "检验结果" },
-    { n: null, x: "结论" },
-    { n: "M", x: "备注", m: true },
+    {n: "", x: "检验结果"},
+    {n: null, x: "结论"},
+    {n: "M", x: "备注", m: true},
 ]
 
-const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ source: orc, rep }) => {
-    const searchParams = useSearchParams()
-    const [printing, setPrinting] = useState(false)
-    useEffect(() => {
-        const printing = searchParams.get("print")
-        setPrinting(!!printing)
-    }, [searchParams])
+const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, rep}) => {
     const impressionismAs = React.useMemo(() => {
         return setupItemAreaRoute({ rep, orc })
     }, [rep, orc?._Oitems])
@@ -146,7 +124,6 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ source: orc,
                     rep={rep}
                     orc={orc}
                     mapNoTag={mapNoTag}
-                    printing={printing}
                     titles={["序号", "项目编号", "检验不符合内容记录", "复检结果", "复检日期"]}
                     label={<h4>检验不符合项目内容及复检结果</h4>}
                 />
@@ -168,7 +145,6 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({ source: orc,
                     </h4>
                 </Link>
             </div>
-            {末尾链接({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id})}
         </React.Fragment>
     )
 }

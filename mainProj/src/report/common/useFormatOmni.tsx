@@ -34,13 +34,15 @@ export const useFormatOmni = ({
                                   rcc,
                                   descClasses,
                                   longClasses,
-                                  qtClasses
+                                  qtClasses,
+                                  noClasses
                               }: {
     itRes: any;
     ItemArs: RecordOmniArea[];
     rep: any;
     config: Column_Setting[];
     rcc?: boolean;
+    noClasses?: string;     //序数号的样式；
     descClasses?: string;   //步骤要求正文：
     longClasses?: string;   //不合格描述，备注区域的：
     qtClasses?: string;     //其它列的， 项目编号 结果列的：
@@ -84,7 +86,7 @@ export const useFormatOmni = ({
                     // console.log("检验设TableRowicnameS=",seq, icname,'et',et,mergLastEt);
 
                     itemRowRender[0] =<TableRow id={n===0 ? area.tag:undefined} key={n}>
-                        <CCell key={1}  className={cn("text-[0.75rem]",qtClasses)}>{seq}</CCell>
+                        <CCell key={1}  className={cn("text-[0.75rem]",noClasses)}>{seq}</CCell>
                         {et.rec?.bspan && <CCell key={2} split={true} rowSpan={et.rec?.bspan} colSpan={1===nosCc? 4: 1}
                                                  className={cn("text-sm",qtClasses)}>{et.rec?.big}</CCell>
                         }

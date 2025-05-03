@@ -1,26 +1,13 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-  Text,
-  Table,
-  TableBody,
-  TableRow,
-  CCell,
-  TableHead,
-  Button,
-  IconCheckSquare,
-  IconSquare,
-  InputLine,
-  CheckSwitch,
-  LineColumn, ColumnWidth, Input, PanelEnlargeCtx, Touchable,
-} from "customize-easy-ui-component";
-import {DirectLink, Link as RouterLink,} from "../../routing/Link";
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
+import {Button} from "@/components/ui";
+import {DirectLink, } from "../../routing/Link";
 import {NosTagMapping} from "./omni";
-import {大修改项目} from "../elevator/Supervision/orcBase";
 import {useContext} from "react";
 import RoutingContext from "../../routing/RoutingContext";
-import {Vector2} from "@use-gesture/core/dist/declarations/src/types/utils";
-import {css} from "@emotion/react";
+//不能用！ import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation';
+import Link from 'next/link'
 
 /**不合格表
  * @param rep 报告relay对象
@@ -155,26 +142,102 @@ export const UnqualifiedIspItemTableX= ({printing, rep,  orc, mapNoTag, original
  * @param original 是否为了打印正式版原始记录
  * @param  mapNoTag 编辑区的标签映射 tag:1对多个no
  * */
-export const UnqualifiedIspTable= ({printing, rep,  orc, mapNoTag, original,fixed=["4.5%","10.5%","%","10.5%","12.5%"],label,
+export const UnqualifiedIspTable = ({
+                                        printing,
+                                        rep,
+                                        orc,
+                                        mapNoTag,
+                                        original,
+                                        fixed = ["4.5%", "10.5%", "%", "10.5%", "12.5%"],
+                                        label,
+                                        titles = ['序号', '类别/编号', '检验不合格内容记录', '复检结果', '复检日期']
+                                    }: {
+    printing?: boolean;
+    rep: any;
+    orc: any;
+    mapNoTag?: Map<string, NosTagMapping>;
+    original?: boolean;
+    fixed?: any[];
+    label?: any;
+    titles?: string[];
+}) => {
+    const router = useRouter()
+    const tbLabel = label ?? <h2 className="text-xl font-bold text-center my-4">检验不合格项目内容及复检结果</h2>;
+    const urlhead=`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}`;
+    return <>
+        {orc?.unq ? (
+            <div className="space-y-6">
+                {/* 报告编号 */}
+                <div className="flex flex-row-reverse mr-8 mb-6 print:mb-0">
+                <span className="text-base font-medium">
+                  报告编号：{rep.isp?.no}
+                </span>
+                </div>
+
+                {/* 主表格 */}
+                <FlexibleTable columnWidths={fixed}>
+                    {/* 表头 */}
+                    <TableHeader>
+                        <TableRow className="hover:bg-transparent border-b border-gray-700">
+                            {titles.map((title, index) => (
+                                <CCell key={index} className="text-center border-r border-gray-700 last:border-r-0">
+                                    {title}
+                                </CCell>
+                            ))}
+                        </TableRow>
+                    </TableHeader>
+
+                    {/* 表格内容 */}
+                    <TableBody>
+                        {orc.unq?.map((bug: any, i: number) => {
+                            const mapn = mapNoTag!.get(bug.no);
+
+                            return <TableRow key={i} className="border-b border-gray-700 hover:bg-transparent">
+                                        <DirectLink href={`${urlhead}/${mapn?.tag}`}>
+                                            <CCell className="text-center px-0">{i + 1}</CCell>
+                                            <CCell className="text-center px-0">{`${mapn?.pre ?? ''}${mapn?.iclas ?? ''}${bug.no}`}</CCell>
+                                            <CCell className="text-center px-0">{bug.b}</CCell>
+                                        </DirectLink>
+                                        {/* 复检行 */}
+                                        <DirectLink href={`${urlhead}/ReCheck?from=${bug.no}`}>
+                                            <CCell className="text-center px-0">{bug.rs}</CCell>
+                                            <CCell className="text-center px-0">{bug.d}</CCell>
+                                        </DirectLink>
+                             </TableRow>
+                        })}
+                    </TableBody>
+                </FlexibleTable>
+            </div>
+        ) : printing ? null : (
+            <div className="text-center my-1">
+                <Button variant="ghost"
+                    className="px-4 py-2 text-base border-2 border-gray-700 rounded-lg print:hidden"
+                    onClick={() => {router.push(urlhead+`/ReCheck#ReCheck`)}}
+                >{tbLabel}</Button>
+            </div>
+        )}
+      </>
+};
+export const UnqualifiedIspTable2= ({printing, rep,  orc, mapNoTag, original,fixed=["4.5%","10.5%","%","10.5%","12.5%"],label,
                                      titles=['序号','类别/编号','检验不合格内容记录','复检结果','复检日期'] }
-                                            :{printing:boolean, rep:any, orc:any, mapNoTag?:Map<string,NosTagMapping>, original?:boolean,fixed?:any[],label?:any,titles?:string[]}
+                                            :{printing?:boolean, rep:any, orc:any, mapNoTag?:Map<string,NosTagMapping>, original?:boolean,fixed?:any[],label?:any,titles?:string[]}
 ) => {
-  const tbLabel=label?? <Text variant="h4">检验不合格项目内容及复检结果</Text>;
-  const urlhead=`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}`;
+  const tbLabel=label?? <h2>检验不合格项目内容及复检结果</h2>;
+  const urlhead=`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}`;
   return  <>
     { orc?.unq?  <div>
-          <Text css={{display: 'flex',flexDirection: 'row-reverse',marginRight: '2rem',
+          <span css={{display: 'flex',flexDirection: 'row-reverse',marginRight: '2rem',
             "@media print": {pageBreakBefore: 'always', },
-          }}>报告编号：{rep.isp?.no}</Text>
-          <Table  fixed={fixed}  css={ {borderCollapse: 'collapse'} }  tight  miniw={800}>
+          }}>报告编号：{rep.isp?.no}</span>
+          <FlexibleTable  columnWidths={fixed}>
             <TableBody>
               <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
                 <TableRow><CCell colSpan={5}>{tbLabel}</CCell></TableRow>
               </DirectLink>
             </TableBody>
-          </Table>
-          <Table  fixed={fixed} css={ {borderCollapse: 'collapse' } }  tight  miniw={800}>
-            <TableHead>
+          </FlexibleTable>
+          <FlexibleTable  columnWidths={fixed}>
+            <TableHeader>
               <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
                 <TableRow>
                   <CCell>{titles[0]}</CCell>
@@ -184,7 +247,7 @@ export const UnqualifiedIspTable= ({printing, rep,  orc, mapNoTag, original,fixe
                   <CCell>{titles[4]}</CCell>
                 </TableRow>
               </DirectLink>
-            </TableHead>
+            </TableHeader>
             <TableBody>
               {orc?.unq?.map((bug:any, i:number) => {
                 const mapn=mapNoTag!.get(bug.no);
@@ -203,12 +266,12 @@ export const UnqualifiedIspTable= ({printing, rep,  orc, mapNoTag, original,fixe
                 );
               }) }
             </TableBody>
-          </Table>
+          </FlexibleTable>
         </div>
         :
         printing?  null :
             <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
-              <Button variant="ghost" intent='primary'  block  css={{"@media print": {display: 'none'} }}  noBind
+              <Button variant="ghost"  css={{"@media print": {display: 'none'} }}  noBind
               >{tbLabel}</Button>
             </DirectLink>
     }
@@ -281,43 +344,68 @@ export const multiCheckMany = (contentArr:any[][],label:string,option?: {width?:
  * @param rep 报告对象。
  * */
 type JumpMeasureProps = {
-  children: React.ReactNode
-  tag: string
-  rep: any
+    children: React.ReactNode
+    rep: {
+        modeltype?: string
+        modelversion?: string
+        id?: string
+    }
+    tag: string
 }
-/**归纳新组件：避免太罗嗦了，没用代码重复性太多。
- * */
-export const JumpMeasure= ({ children, rep, tag}: JumpMeasureProps
-) =>{
-    return <RouterLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${tag}?original=1#${tag}`}>
-      <Text variant="h4" css={{"@media print": {display: 'none'}}}>{children}</Text>
-    </RouterLink>
-};
+export const JumpMeasure = ({ children, rep, tag }: JumpMeasureProps) => {
+    return (
+        <DirectLink
+            href={`/rep/${rep.id}/${rep.modeltype}/${rep.modelversion}/${tag}?original=1#${tag}`}
+            className="no-underline hover:no-underline group relative"
+        >
+          <span className="text-h4 font-semibold transition-colors group-hover:text-primary-600 print:hidden">
+            {children}
+          </span>
+            {/* 下划线动画效果 */}
+            <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary-600 transition-all group-hover:h-1 group-hover:origin-left" />
+        </DirectLink>
+    )
+}
 
 type JumpOrgMemoProps = {
   children: React.ReactNode
   tag: string
-  //针对左右两半框架页面封装的页面形式：是在右边的页面吗
-  right?: boolean;
   //醒目的按钮形态
   big?: boolean;
 }
 /**跳往： 格式化的“原始记录”页面 之内 的备注。
  * */
-export const JumpOrgTag= ({ children, tag, right,big}: JumpOrgMemoProps
+export const JumpOrgTag = ({ children, tag, big }: JumpOrgMemoProps) => {
+    const router = useRouter()
+    const handleClick = async (e: React.MouseEvent) => {
+        e.preventDefault()
+        await router.push(`${router.pathname}?original=1#${tag}`)
+    }
+    return (
+        <button onClick={handleClick}
+            className="border-none cursor-pointer group relative print:hidden"
+            type="button"
+        >
+            <div className={`${big ? 'mb-0 font-bold' : ''} ${big ? 'text-lg' : 'text-base'}`}>
+                {children}
+                <span className="absolute -inset-0.5 bg-gray-100 rounded-lg transition-all group-hover:opacity-0" />
+            </div>
+        </button>
+    )
+}
+export const JumpOrgTag2= ({ children, tag, big}: JumpOrgMemoProps
 ) =>{
   const { history } = useContext(RoutingContext);
-  const context =useContext(PanelEnlargeCtx);
+  // const context =useContext(PanelEnlargeCtx);
   return <Touchable css={{border:'none', "@media print": {display: 'none'}}}
                    onPress={ async (e) => {
-                     e!.stopPropagation();
+                     // e!.stopPropagation();
                      e!.preventDefault();
                      await history.push(`${history.location.pathname}?original=1#${tag}` );
-                     await context?.setActivecas(right? 0 : 1);
                    }}
           >
           {
-              big? <Text variant="h5" css={{marginBottom:0,fontWeight: 'bolder'}}>{children}</Text>
+              big? <div  css={{marginBottom:0,fontWeight: 'bolder'}}>{children}</div>
               :
               children
           }

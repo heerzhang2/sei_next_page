@@ -9,6 +9,9 @@ import Img_Ma  from '../../images/MA.png';
 import Img_ReportNoQR from '../../images/reportNoQR.png';
 import {FadeImage} from "../../comp/FadeImage";
 import {useMedia} from "use-media";
+import {Button} from "@/components/ui";
+import {useCreateQueryString} from "@/hooks/useCreateQueryString";
+import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
 
 //【报告】复用相同的。
 //很多内容相对重复，这里是报告较高层范围复用的组件；专门报告类型的可以安排在下一层次分开目录去做。
@@ -185,30 +188,102 @@ export const reportFirstPageHeadAllNmbbm= ({theme , No } :{theme: any, No:string
 };
 
 //重复性代码抽象抽取参数化后可复用。
-export const 末尾链接= ( {template, verId, repId,rep }:{template: string, verId:string, repId:string,rep:any}
+export const 末尾链接 = ({ template, verId, repId, rep, toPDF }: {
+  template: string,
+  verId: string,
+  repId: string,
+  rep: any,
+  toPDF?: ()=>void;
+}) => {
+    const searchParams = useSearchParams()
+    const print = "1"===searchParams!.get("print")
+    const createQueryString = useCreateQueryString()
+    const router = useRouter()
+    const pathname = usePathname()
+    const { action } = useParams()
+    const original = "1"===searchParams!.get("original")
+  return (
+      <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
+          <Link href="/" passHref
+                className="text-blue-600 hover:text-blue-800 block text-sm mb-4 md:mb-0 md:inline-block">
+              -报告完毕,返回-
+          </Link>
+          <div className="text-center space-y-3 md:space-y-0 md:space-x-4 md:flex md:justify-around md:flex-wrap">
+              <div className="mx-auto">
+                  <Link href={`/rep/${repId}/${template}/${verId}/printAll`}
+                        className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
+                      看完整原始记录
+                  </Link>
+              </div>
+              <div className="mx-auto">
+                  <Link href={`/report/flowSelect/${template}/${repId}`}
+                        className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
+                      流转(流程)
+                  </Link>
+              </div>
+              <div className="mx-auto">
+                  {print?
+                      <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
+                          回首页
+                      </Link>
+                      :
+                      <Link href={`/rep/${repId}/${template}/${verId}/?print=1${original?'&original=1':''}`}
+                            className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
+                        预览打印
+                      </Link>
+                  }
+              </div>
+              <div className="mx-auto">
+                  <Link href={`/rep/${repId}/${template}/${verId}/ALL`}
+                        className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
+                      编辑原始记录
+                  </Link>
+              </div>
+          </div>
+          <div className="m-2 flex justify-center gap-2 print:hidden">
+              <Button variant="outline"
+                      onClick={() => router.push(pathname + '?' + createQueryString('original', original ? '' : "1"))}>
+                  {original ? "正式报告" : "原始记录"}
+              </Button>
+              {!action && <>
+                  <Button variant="outline"
+                          onClick={() => router.push(pathname + '?' + createQueryString('print', print ? '' : "1"))}>
+                      {print ? "浏览模式" : "打印模式"}
+                  </Button>
+                  {print && <>
+                      <Button variant="outline" onClick={() => window.print()}>打印预览</Button>
+                      <Button variant="outline" onClick={toPDF}>转为PDF</Button>
+                  </>}
+              </>}
+          </div>
+      </div>
+  );
+};
+
+export const 末尾链接3 = ({template, verId, repId, rep}: { template: string, verId: string, repId: string, rep: any }
 ) => {
-  const theme = useTheme();
-  return(
-    <div id={'EndOfRep'}  css={{
+    const theme = useTheme();
+    return (
+        <div id={'EndOfRep'} css={{
             "@media print": {display: 'none'},
-            textAlign:'center',
+            textAlign: 'center',
             "@media not print": {
-              marginBottom: '0.8rem'    //影响打印！ 证书就一张的。
+                marginBottom: '0.8rem'    //影响打印！ 证书就一张的。
             }
         }}>
-        <RouterLink href="/">-报告完毕,返回-</RouterLink>
-        <div css={{
-          textAlign: "center",
-          "& > div": {
-            marginLeft: "auto",
-            marginRight: "auto",
-            marginTop: '0.5rem',
-            marginBottom: '0.5rem'
-          },
-          [theme.mediaQueries.md]: {
-            display: "flex",
-            justifyContent: "space-evenly",
-            flexWrap: 'wrap'
+            <RouterLink href="/">-报告完毕,返回-</RouterLink>
+            <div css={{
+                textAlign: "center",
+                "& > div": {
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                    marginTop: '0.5rem',
+                    marginBottom: '0.5rem'
+                },
+                [theme.mediaQueries.md]: {
+                    display: "flex",
+                    justifyContent: "space-evenly",
+                    flexWrap: 'wrap'
           }
         }}>
             <div>

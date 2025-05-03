@@ -170,7 +170,7 @@ export function CCell({
     // @ts-ignore
     return (
         <td
-            className={`px-0 py-0.5 md:px-0.5 md:py-1 lg:px-1 lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
+            className={`px-0 py-0.5 @md:px-0.5 @md:py-1 @lg:px-1 @lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
             style={{...style, ...splitStyle}}
             colSpan={colSpan}
             {...props}

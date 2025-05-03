@@ -1,8 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Text,  Button, Input, useTheme, LineColumn, InputLine,
-} from "customize-easy-ui-component";
 import {InspectRecordLayout, InternalItemProps, SelectHookfork, useItemInputControl} from "./base";
 import {Each_ZdSetting, useTableEditor} from "../hook/useRepTableEditor";
 import {EditStorageContext, useStorage} from "../StorageContext";
@@ -12,7 +8,7 @@ import {measurementRender} from "./measure";
 import {itemResultUnqualifiedOmni} from "./omni";
 import {z} from "zod";
 import {tail测仪器} from "@/report/recreation/waterJj/repView";
-import {Card, CardContent} from "@/components/ui";
+import {Button, Card, CardContent} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {CollapsibleFormSection} from "@/components/chub";
 import {instrumentOption} from "@/report/common/Instrument";
@@ -175,7 +171,7 @@ export const ItemRecheckOmni=
     React.forwardRef((
         { children, show ,alone=true,repId,verId,label,setup}:ItemRecheckResultProps,  ref
     ) => {
-        const theme= useTheme();
+        // const theme= useTheme();
         const impressionismAs =React.useMemo(() => {
             return setup({verId:verId!, repId:repId!, theme});
         }, [verId, repId,setup, theme]);
@@ -187,16 +183,16 @@ export const ItemRecheckOmni=
         const {storage, setStorage} =React.useContext(EditStorageContext) as any;
         const 默认复检表 =React.useMemo(()=>itemResultUnqualifiedOmni(storage, impressionismAs?.Item,),
             [storage,impressionismAs?.Item]);
-        const headview=<Text variant="h5">
+        const headview=<h2>
             {label}
-        </Text>;
+        </h2>;
         //不是真的默认不变的不能用  defaultV:默认复检表,
         const [renderTab]=useTableEditor({inp, setInp,  headview,
             config: config复检表, table:'unq', defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
         return (
             <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
                                  alone={alone}  label={label} column={0}>
-                <Button intent='primary' onPress={() =>{
+                <Button onClick={() =>{
                     let arrUnq=itemResultUnqualifiedOmni(storage, impressionismAs?.Item,);
                     // let arrUnq22=itRes.failure.map((ts:any, i:number) => { return {no: ts,c: itRes[ts].iClass, b: itRes[ts].fdesc}; });
                     setStorage({...storage, unq:arrUnq});
@@ -327,7 +323,7 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     }, [])
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
-        fields["unq"]= storage["unq"]
+        fields["unq"]= storage["unq"].slice(0,30)
         return fields
     }, [storage])
     const arrayFields =React.useMemo(() => {
@@ -340,9 +336,9 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
 
     const 默认复检表 =React.useMemo(()=>itemResultUnqualifiedOmni(storage, impressionismAs?.Item,),
         [storage,impressionismAs?.Item]);
-    const headview=<Text variant="h5">
+    const headview=<h2 >
         {label}
-    </Text>;
+    </h2>;
     const [nestRendererFactory]=useTableEditor({headview, config, table:'unq',defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
@@ -350,12 +346,7 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
                 <>
                     <Card className="py-1 gap-1">
                         <CardContent className="px-1">
-                            <Button intent='primary' onPress={() =>{
-                                let arrUnq=itemResultUnqualifiedOmni(storage, impressionismAs?.Item,);
-                                setStorage({...storage, unq:arrUnq});
-                            }}
-                            >依据记录来初始化本表默认值</Button>但不能重复初始化！
-                            <hr/>
+                            注意点击“清空全表至默认”会重新初始化！<hr/>
                             {nestRendererFactory(form, arrays)}
                         </CardContent>
                     </Card>
