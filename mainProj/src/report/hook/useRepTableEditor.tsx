@@ -694,7 +694,7 @@ export function useTableEditor({
     }, [])
 
     //这个excludeFix仅仅对弹性布局生效的excludeFix && k < fixColumn!； 定长折叠布局模式没启用过滤字段。
-    const [seq, setSeq] = React.useState<number | null>(null)
+    const [seq, setSeq] = React.useState<number | null>(133)    //null
     const [selectedRaft, setSelectedRaft] = React.useState<number | null>(null)
     // const [fixedColW, setFixedColW] = React.useState<boolean>(defFixedLay ?? false)竟然被挪走放在renderFlexibleTable = React.useCallback(里面了。
     //定长折叠形态才需要区分表格raft的位置；
@@ -734,10 +734,9 @@ export function useTableEditor({
     const editor = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
             const { fields, append, remove, move } = arrays?.[table] || {}
-            const tabledArr = form.watch?.(table) || []
+            // const tabledArr = form.watch?.(table) || [] 输入反馈太慢
             const index = seq ?? 0 // 表格第几行的
-        return (
-            <Card className="flex justify-center w-full flex-col md:p-1 gap-2" ref={editorRef}>
+        return <Card className="flex justify-center w-full flex-col md:p-1 gap-2" ref={editorRef}>
                 <div>在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
                 <div className="w-full">
                 {seq!== null &&
@@ -745,7 +744,7 @@ export function useTableEditor({
                         :
                         <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
                             {config.map(([title, tag, _, extobj, park]: any, i: number) => {
-                                const filedVl = tabledArr[index] ? (park ? tabledArr[index][park][tag] : tabledArr[index][tag]) : ""
+                                // const filedVl = tabledArr[index] ? (park ? tabledArr[index][park][tag] : tabledArr[index][tag]) : ""
                                 const { t: type, l: list, u: unit, s: size } = extobj || {}
                                 if ((fixColumn && i < fixColumn) || !(fields.length > 0))
                                     return <React.Fragment key={i}></React.Fragment>
@@ -755,7 +754,7 @@ export function useTableEditor({
                                                    name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                                    render={({ field }) => (
                                                        <FormSelectField field={field} label={title} options={list}
-                                                                        value={filedVl} />
+                                                                        /*value={filedVl}*/ />
                                                    )}
                                         />
                                     )
@@ -769,7 +768,9 @@ export function useTableEditor({
                                                 <FormItem className="w-full break-inside-avoid">
                                                     <FormLabel>{title}</FormLabel>
                                                     <FormControl className="w-full">
-                                                        <Input type="date" {...field} value={filedVl} />
+                                                        <Input type="date" {...field}
+                                                               /*value={filedVl}*/
+                                                        />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -830,7 +831,9 @@ export function useTableEditor({
                                                 <FormItem className="w-full break-inside-avoid">
                                                     <FormLabel>{title}</FormLabel>
                                                     <FormControl className="w-full">
-                                                        <MemoDatesInput {...field} rows={2} value={filedVl}/>
+                                                        <MemoDatesInput {...field} rows={2}
+                                                            /*value={filedVl}*/
+                                                        />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -843,7 +846,9 @@ export function useTableEditor({
                                                           <FormItem className="w-full break-inside-avoid">
                                                               <FormLabel>{title}</FormLabel>
                                                               <FormControl className="w-full">
-                                                                  <MemoDateInput {...field}  value={filedVl}/>
+                                                                  <MemoDateInput {...field}
+                                                                      /*value={filedVl}*/
+                                                                  />
                                                               </FormControl>
                                                               <FormMessage />
                                                           </FormItem>
@@ -859,7 +864,9 @@ export function useTableEditor({
                                                 <FormItem className="w-full break-inside-avoid">
                                                     <FormLabel>{title}</FormLabel>
                                                     <FormControl className="w-full">
-                                                        <SuffixInput  unit={unit}  {...field} value={filedVl} />
+                                                        <SuffixInput  unit={unit}  {...field}
+                                                            /*value={filedVl}*/
+                                                        />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -876,7 +883,9 @@ export function useTableEditor({
                                                 <FormItem className="w-full break-inside-avoid">
                                                     <FormLabel>{title}</FormLabel>
                                                     <FormControl className="w-full">
-                                                        <Input type={type === "n" ? "number" : undefined} {...field} value={filedVl} />
+                                                        <Input type={type === "n" ? "number" : undefined} {...field}
+                                                            /*value={filedVl}*/
+                                                        />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -891,7 +900,7 @@ export function useTableEditor({
                     <Button className="mt-4"
                         onClick={(e) => {
                             if (append) {
-                                // 如果 seq 是合法数据行，复制该行数据
+/*                                // 如果 seq 是合法数据行，复制该行数据
                                 if (seq !== null && tabledArr[seq]) {
                                     // 创建一个深拷贝以避免引用问题
                                     const newItem = JSON.parse(JSON.stringify(tabledArr[seq]))
@@ -911,7 +920,7 @@ export function useTableEditor({
                                     append(template)
                                 }
                                 setSeq(tabledArr.length) // 设置为新添加的行
-                                scrollToEditor() // 滚动到编辑器
+                                scrollToEditor() // 滚动到编辑器*/
                             }
                             e.preventDefault()
                         }}
@@ -919,8 +928,7 @@ export function useTableEditor({
                       新增一条
                     </Button>
                 </div>
-            </Card>
-        )
+          </Card>
         },
         [seq, config, table, editAs, fixColumn, scrollToEditor],
     )
@@ -1561,8 +1569,8 @@ export function useTableEditor({
 
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
-            const tabledArr = form.watch?.(table) || []
-            const linecnt = Math.ceil(tabledArr.length / raft)
+            const tabledArr =[]// form.watch?.(table) || []
+            const linecnt =134;// Math.ceil(tabledArr.length / raft)
 
             // 使用 useCallback 包装 setFixedColW 函数，避免不必要的重新创建
             const toggleFixedColW = React.useCallback((e: React.MouseEvent) => {
