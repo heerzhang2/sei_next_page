@@ -323,7 +323,7 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     }, [])
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
-        fields["unq"]= storage["unq"].slice(0,30)
+        fields["unq"]= storage["unq"]
         return fields
     }, [storage])
     const arrayFields =React.useMemo(() => {

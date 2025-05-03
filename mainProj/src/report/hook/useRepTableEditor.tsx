@@ -730,7 +730,7 @@ export function useTableEditor({
     function spliteor(i: number) {
         return TabSplChars[i % TabSplChars.length]
     }
-
+    //性能问题editor = React.useCallback((form: any) => {不能用const tabledArr = form.watch?.(table) || []输入太慢
     const editor = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
             const { fields, append, remove, move } = arrays?.[table] || {}
