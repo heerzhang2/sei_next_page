@@ -1,26 +1,26 @@
 "use client"
 
 import * as React from "react"
-import {Button} from "@/components/ui/button"
-import {useWindowSize} from "@/hooks/use-window-size"
-import {cn} from "@/lib/utils"
-import {useMeasure} from "@/hooks/use-measure"
+import { Button } from "@/components/ui/button"
+import { useWindowSize } from "@/hooks/use-window-size"
+import { cn } from "@/lib/utils"
+import { useMeasure } from "@/hooks/use-measure"
 import {
   Card,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
   Input,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui"
-import {FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput} from "@/components/chub"
-import type {UseFormReturn} from "react-hook-form"
-import {debounce} from "lodash"
+import { FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput } from "@/components/chub"
+import type { UseFormReturn } from "react-hook-form"
+import { debounce } from "lodash"
 
 /**
  * 通用型 {制作 报告的} 可适应 大屏 手机小屏幕的 二维表格数据编辑录入。
@@ -86,20 +86,25 @@ interface TableEditorProps {
 【注意】特别要求必须把 {remove, move, insert } = arrays?.[];  从form外部注入的接口。
  * */
 export function useTableEditor({
-  config,
-  table,
-  headview,
-  tailview,
-  defaultV,
-  noDelAdd,
-  fixColumn,
-  editAs,
-  maxRf,
-  stretchF = [1, 1.35, 1.7],
-  saveFixC = false,
-  defFixedLay,
-  styleConfig = {}, // 默认为空对象
-}: TableEditorProps) {
+                                 config,
+                                 table,
+                                 headview,
+                                 tailview,
+                                 defaultV,
+                                 noDelAdd,
+                                 fixColumn,
+                                 editAs,
+                                 maxRf,
+                                 stretchF = [1, 1.35, 1.7],
+                                 saveFixC = false,
+                                 defFixedLay,
+                                 styleConfig = {}, // 默认为空对象
+                                 externalData = null, // 添加外部数据源参数
+                                 onExternalDataChange = null, // 添加外部数据变更回调
+                               }: TableEditorProps & {
+  externalData?: any | null
+  onExternalDataChange?: ((data: any) => void) | null
+}) {
   // 修改 useTableEditor 函数，添加本地状态来管理表格数据而不是每次都使用 form.watch()
 
   // 1. 在 useTableEditor 函数顶部添加一个新的状态来存储本地表格数据
@@ -136,7 +141,7 @@ export function useTableEditor({
   }, [])
 
   //这个excludeFix仅仅对弹性布局生效的excludeFix && k < fixColumn!； 定长折叠布局模式没启用过滤字段。
-  const [seq, setSeq] = React.useState<number | null>(null)
+  const [seq, setSeq] = React.useState<number | null>(133) //null
   const [selectedRaft, setSelectedRaft] = React.useState<number | null>(null)
   // const [fixedColW, setFixedColW] = React.useState<boolean>(defFixedLay ?? false)竟然被挪走放在renderFlexibleTable = React.useCallback(里面了。
   //定长折叠形态才需要区分表格raft的位置；
@@ -176,279 +181,284 @@ export function useTableEditor({
   }
   //性能问题editor = React.useCallback((form: any) => {不能用const tabledArr = form.watch?.(table) || []输入太慢
   const handleTableOperation = React.useCallback(
-    (operation: "add" | "remove" | "update" | "move" | "insert" | "clear", params: any) => {
-      // 基于操作类型更新本地状态
-      switch (operation) {
-        case "add":
-          setLocalTableData((prev) => [...prev, params.data])
-          break
-        case "remove":
-          setLocalTableData((prev) => prev.filter((_, i) => i !== params.index))
-          break
-        case "update":
-          setLocalTableData((prev) => {
-            const newData = [...prev]
+      (operation: "add" | "remove" | "update" | "move" | "insert" | "clear", params: any) => {
+        // 基于操作类型更新本地状态
+        let newData: any[] = []
+
+        switch (operation) {
+          case "add":
+            newData = [...localTableData, params.data]
+            setLocalTableData(newData)
+            break
+          case "remove":
+            newData = localTableData.filter((_, i) => i !== params.index)
+            setLocalTableData(newData)
+            break
+          case "update":
+            newData = [...localTableData]
             newData[params.index] = params.data
-            return newData
-          })
-          break
-        case "move":
-          setLocalTableData((prev) => {
-            const newData = [...prev]
+            setLocalTableData(newData)
+            break
+          case "move":
+            newData = [...localTableData]
             const [movedItem] = newData.splice(params.fromIndex, 1)
             newData.splice(params.toIndex, 0, movedItem)
-            return newData
-          })
-          break
-        case "insert":
-          setLocalTableData((prev) => {
-            const newData = [...prev]
+            setLocalTableData(newData)
+            break
+          case "insert":
+            newData = [...localTableData]
             newData.splice(params.index, 0, params.data)
-            return newData
-          })
-          break
-        case "clear":
-          setLocalTableData(params.defaultData || [])
-          break
-      }
-    },
-    [],
+            setLocalTableData(newData)
+            break
+          case "clear":
+            newData = params.defaultData || []
+            setLocalTableData(newData)
+            break
+        }
+
+        // 如果提供了外部数据变更回调，则调用它
+        if (onExternalDataChange) {
+          // 创建一个新对象，保持外部数据的其他部分不变
+          onExternalDataChange({ [table]: newData })
+        }
+      },
+      [localTableData, onExternalDataChange, table],
   )
 
   const editor = React.useCallback(
-    (form: any, arrays?: Record<string, any>) => {
-      const { fields, append, remove, move, insert } = arrays?.[table] || {}
-      const index = seq ?? 0 // 表格第几行的
+      (form: any, arrays?: Record<string, any>) => {
+        const { fields, append, remove, move, insert } = arrays?.[table] || {}
+        const index = seq ?? 0 // 表格第几行的
 
-      // 创建编辑处理函数，使用不依赖 form.watch 的方式
-      const handleAddNewRecord = (e: React.MouseEvent) => {
-        e.preventDefault()
-        if (append) {
-          // 如果当前有选中行，复制该行数据
-          if (seq !== null && localTableData[seq]) {
-            // 创建一个深拷贝以避免引用问题
-            const newItem = JSON.parse(JSON.stringify(localTableData[seq]))
-            append(newItem)
-            // 更新本地状态
-            handleTableOperation("add", { data: newItem })
-          } else {
-            // 否则创建空白记录
-            const template = {} as any
-            config.forEach(([_t, tag, _w, _o, park]) => {
-              if (park) {
-                // 确保嵌套对象存在
-                if (!template[park]) template[park] = {}
-                template[park][tag] = ""
-              } else {
-                template[tag] = ""
-              }
-            })
-            append(template)
-            // 更新本地状态
-            handleTableOperation("add", { data: template })
+        // 创建编辑处理函数，使用不依赖 form.watch 的方式
+        const handleAddNewRecord = (e: React.MouseEvent) => {
+          e.preventDefault()
+          if (append) {
+            // 如果当前有选中行，复制该行数据
+            if (seq !== null && localTableData[seq]) {
+              // 创建一个深拷贝以避免引用问题
+              const newItem = JSON.parse(JSON.stringify(localTableData[seq]))
+              append(newItem)
+              // 更新本地状态
+              handleTableOperation("add", { data: newItem })
+            } else {
+              // 否则创建空白记录
+              const template = {} as any
+              config.forEach(([_t, tag, _w, _o, park]) => {
+                if (park) {
+                  // 确保嵌套对象存在
+                  if (!template[park]) template[park] = {}
+                  template[park][tag] = ""
+                } else {
+                  template[tag] = ""
+                }
+              })
+              append(template)
+              // 更新本地状态
+              handleTableOperation("add", { data: template })
+            }
+            setSeq(localTableData.length) // 设置为新添加的行
+            scrollToEditor() // 滚动到编辑器
           }
-          setSeq(localTableData.length) // 设置为新添加的行
-          scrollToEditor() // 滚动到编辑器
         }
-      }
 
-      // 获取当前编辑行的数据，使用 localTableData 而不是 form.watch
-      const currentRecord = seq !== null ? localTableData[seq] : null
+        // 获取当前编辑行的数据，使用 localTableData 而不是 form.watch
+        const currentRecord = seq !== null ? localTableData[seq] : null
 
-      return (
-        <Card className="flex justify-center w-full flex-col md:p-1 gap-2" ref={editorRef}>
-          <div>在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
-          <div className="w-full">
-            {seq !== null && (
-              <>
-                {editAs ? (
-                  editAs(form, seq)
-                ) : (
-                  <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
-                    {config.map(([title, tag, _, extobj, park]: any, i: number) => {
-                      // 使用当前记录而不是从 form.watch 获取
-                      // const filedVl = currentRecord ? (park ? currentRecord[park]?.[tag] : currentRecord[tag]) : ""
-                      const { t: type, l: list, u: unit, s: size } = extobj || {}
+        return (
+            <Card className="flex justify-center w-full flex-col md:p-1 gap-2" ref={editorRef}>
+              <div>在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
+              <div className="w-full">
+                {seq !== null && (
+                    <>
+                      {editAs ? (
+                          editAs(form, seq)
+                      ) : (
+                          <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
+                            {config.map(([title, tag, _, extobj, park]: any, i: number) => {
+                              // 使用当前记录而不是从 form.watch 获取
+                              // const filedVl = currentRecord ? (park ? currentRecord[park]?.[tag] : currentRecord[tag]) : ""
+                              const { t: type, l: list, u: unit, s: size } = extobj || {}
 
-                      if ((fixColumn && i < fixColumn) || !(fields?.length > 0))
-                        return <React.Fragment key={i}></React.Fragment>
+                              if ((fixColumn && i < fixColumn) || !(fields?.length > 0))
+                                return <React.Fragment key={i}></React.Fragment>
 
-                      // 下面的渲染代码保持不变...
-                      // 但确保使用 currentRecord 替代 tabledArr[index]
-                      if (type === "s")
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => <FormSelectField field={field} label={title} options={list} />}
-                          />
-                        )
-                      // ... 其余代码保持不变
-                      else if (type === "d")
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => (
-                              <FormItem className="w-full break-inside-avoid">
-                                <FormLabel>{title}</FormLabel>
-                                <FormControl className="w-full">
-                                  <Input
-                                    type="date"
-                                    {...field}
-                                    /*value={filedVl}*/
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )
-                      else if (type === "b")
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => (
-                              <FormItem className="w-full break-inside-avoid">
-                                <FormLabel>{title}</FormLabel>
-                                <FormControl className="w-full">{/*<Switch   {...field}  />*/}</FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )
-                      else if (type === "B")
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => (
-                              <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
-                                <FormLabel>{title}</FormLabel>
-                                <FormControl className="w-full">
-                                  {/*<BlobInputList datalist={list} unit={unit}  {...field}  />*/}
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )
-                      else if (type === "m")
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => (
-                              <FormItem className="w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                <FormLabel>{title}</FormLabel>
-                                <FormControl className="w-full">{/*<Textarea rows={4}  {...field} />*/}</FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )
-                      else if (type === "M")
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => (
-                              <FormItem className="w-full break-inside-avoid">
-                                <FormLabel>{title}</FormLabel>
-                                <FormControl className="w-full">
-                                  <MemoDatesInput
-                                    {...field}
-                                    rows={2}
-                                    /*value={filedVl}*/
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )
-                      else if (type === "D")
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => (
-                              <FormItem className="w-full break-inside-avoid">
-                                <FormLabel>{title}</FormLabel>
-                                <FormControl className="w-full">
-                                  <MemoDateInput
-                                    {...field}
-                                    /*value={filedVl}*/
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )
-                      else if (unit)
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => (
-                              <FormItem className="w-full break-inside-avoid">
-                                <FormLabel>{title}</FormLabel>
-                                <FormControl className="w-full">
-                                  <SuffixInput
-                                    unit={unit}
-                                    {...field}
-                                    /*value={filedVl}*/
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )
-                      else
-                        return (
-                          <FormField
-                            key={i}
-                            control={form.control}
-                            name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                            render={({ field }) => (
-                              <FormItem className="w-full break-inside-avoid">
-                                <FormLabel>{title}</FormLabel>
-                                <FormControl className="w-full">
-                                  <Input
-                                    type={type === "n" ? "number" : undefined}
-                                    {...field}
-                                    /*value={filedVl}*/
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )
-                    })}
-                  </div>
+                              // 下面的渲染代码保持不变...
+                              // 但确保使用 currentRecord 替代 tabledArr[index]
+                              if (type === "s")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => <FormSelectField field={field} label={title} options={list} />}
+                                    />
+                                )
+                              // ... 其余代码保持不变
+                              else if (type === "d")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel>{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <Input
+                                                    type="date"
+                                                    {...field}
+                                                    /*value={filedVl}*/
+                                                />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "b")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel>{title}</FormLabel>
+                                              <FormControl className="w-full">{/*<Switch   {...field}  />*/}</FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "B")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
+                                              <FormLabel>{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                {/*<BlobInputList datalist={list} unit={unit}  {...field}  />*/}
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "m")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                              <FormLabel>{title}</FormLabel>
+                                              <FormControl className="w-full">{/*<Textarea rows={4}  {...field} />*/}</FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "M")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel>{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <MemoDatesInput
+                                                    {...field}
+                                                    rows={2}
+                                                    /*value={filedVl}*/
+                                                />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "D")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel>{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <MemoDateInput
+                                                    {...field}
+                                                    /*value={filedVl}*/
+                                                />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (unit)
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel>{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <SuffixInput
+                                                    unit={unit}
+                                                    {...field}
+                                                    /*value={filedVl}*/
+                                                />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel>{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <Input
+                                                    type={type === "n" ? "number" : undefined}
+                                                    {...field}
+                                                    /*value={filedVl}*/
+                                                />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                            })}
+                          </div>
+                      )}
+                    </>
                 )}
-              </>
-            )}
-            <Button className="mt-4" onClick={handleAddNewRecord}>
-              新增一条
-            </Button>
-          </div>
-        </Card>
-      )
-    },
-    [seq, config, table, editAs, fixColumn, scrollToEditor, localTableData, handleTableOperation],
+                <Button className="mt-4" onClick={handleAddNewRecord}>
+                  新增一条
+                </Button>
+              </div>
+            </Card>
+        )
+      },
+      [seq, config, table, editAs, fixColumn, scrollToEditor, localTableData, handleTableOperation],
   )
 
   // 添加一个新的状态来跟踪浮动表头的位置和可见性
@@ -461,32 +471,32 @@ export function useTableEditor({
 
   // 修改处理表头位置的函数，使用浮动表头而不是移动原始表头
   const handleHeaderPosition = React.useCallback(
-    (rowIndex: number, tableIndex: number) => {
-      // 如果点击的是当前活动行，则重置表头位置
-      if (selectedRaft !== tableIndex) {
-        setSelectedRaft(tableIndex)
-      }
-      //定长折叠形态下：设置当前活动行
-      setActiveHeaderIndex(rowIndex)
-      // 获取点击的行元素 ：区分那一个raft表格的；
-      const clickedRow = rowRefs.current.get(`${tableIndex}-${rowIndex}`)
-      const frameRect = frameRef.current?.getBoundingClientRect() || { top: 0 }
-      // 获取对应表格的表头
-      const header = headerRefs.current.get(tableIndex)
+      (rowIndex: number, tableIndex: number) => {
+        // 如果点击的是当前活动行，则重置表头位置
+        if (selectedRaft !== tableIndex) {
+          setSelectedRaft(tableIndex)
+        }
+        //定长折叠形态下：设置当前活动行
+        setActiveHeaderIndex(rowIndex)
+        // 获取点击的行元素 ：区分那一个raft表格的；
+        const clickedRow = rowRefs.current.get(`${tableIndex}-${rowIndex}`)
+        const frameRect = frameRef.current?.getBoundingClientRect() || { top: 0 }
+        // 获取对应表格的表头
+        const header = headerRefs.current.get(tableIndex)
 
-      if (clickedRow && header) {
-        const rowRect = clickedRow.getBoundingClientRect()
-        const headerRect = header.getBoundingClientRect()
-        // 设置浮动表头的位置和可见性
-        setFloatingHeader({
-          visible: true,
-          top: rowRect.top - frameRect.top - headerRect.height - 6,
-          tableIndex,
-          rowIndex,
-        })
-      }
-    },
-    [activeHeaderIndex, selectedRaft],
+        if (clickedRow && header) {
+          const rowRect = clickedRow.getBoundingClientRect()
+          const headerRect = header.getBoundingClientRect()
+          // 设置浮动表头的位置和可见性
+          setFloatingHeader({
+            visible: true,
+            top: rowRect.top - frameRect.top - headerRect.height - 6,
+            tableIndex,
+            rowIndex,
+          })
+        }
+      },
+      [activeHeaderIndex, selectedRaft],
   )
 
   // 添加一个函数来关闭浮动表头
@@ -507,25 +517,33 @@ export function useTableEditor({
 
   // 处理行点击的函数 - 不打开菜单，只移动表头
   const handleRowClick = React.useCallback(
-    (e: React.MouseEvent, rowIndex: number, tableIndex: number) => {
-      // 如果点击的是菜单触发器，不执行任何操作
-      if ((e.target as HTMLElement).closest('[data-dropdown-trigger="true"]')) {
-        return
-      }
+      (e: React.MouseEvent, rowIndex: number, tableIndex: number) => {
+        // 如果点击的是菜单触发器，不执行任何操作
+        if ((e.target as HTMLElement).closest('[data-dropdown-trigger="true"]')) {
+          return
+        }
 
-      // 移动表头
-      handleHeaderPosition(rowIndex, tableIndex)
-    },
-    [handleHeaderPosition],
+        // 移动表头
+        handleHeaderPosition(rowIndex, tableIndex)
+      },
+      [handleHeaderPosition],
   )
 
   // 2. 添加一个 useEffect 来初始化本地数据和在关键操作后更新它
-  const form = null
+  const [form, setForm] = React.useState<UseFormReturn<any, any, any> | null>(null)
   React.useEffect(() => {
     // 从表单获取初始数据，但只执行一次
     const initialData = form?.getValues?.(table) || defaultV || []
     setLocalTableData(initialData)
   }, [defaultV, table, form]) // 不包含 form 以避免不必要的重新获取
+
+  // 添加对外部数据的监听
+  React.useEffect(() => {
+    if (externalData && externalData[table]) {
+      // 当外部数据变化时，更新本地状态
+      setLocalTableData(externalData[table] || [])
+    }
+  }, [externalData, table])
 
   // 3. 创建处理表格操作的函数，同时更新 form 和本地状态
 
@@ -538,331 +556,336 @@ export function useTableEditor({
     setTimeout(() => {
       const currentData = form?.getValues?.(table) || []
       setLocalTableData(currentData)
+
+      // 如果提供了外部数据变更回调，则调用它
+      if (onExternalDataChange) {
+        onExternalDataChange({ [table]: currentData })
+      }
     }, 0)
-  }, [table])
+  }, [table, onExternalDataChange, form])
 
   // 为常用表格操作创建包装函数，这些函数会同时更新表单和本地状态
   const wrapTableOperations = React.useCallback(
-    (arrays: Record<string, any>) => {
-      const { append, remove, move, insert } = arrays?.[table] || {}
+      (arrays: Record<string, any>) => {
+        const { append, remove, move, insert } = arrays?.[table] || {}
 
-      const wrappedOperations = {
-        append: append
-          ? (data: any) => {
-              append(data)
-              syncFormToLocalData()
-            }
-          : undefined,
+        const wrappedOperations = {
+          append: append
+              ? (data: any) => {
+                append(data)
+                syncFormToLocalData()
+              }
+              : undefined,
 
-        remove: remove
-          ? (index: number) => {
-              remove(index)
-              syncFormToLocalData()
-            }
-          : undefined,
+          remove: remove
+              ? (index: number) => {
+                remove(index)
+                syncFormToLocalData()
+              }
+              : undefined,
 
-        move: move
-          ? (from: number, to: number) => {
-              move(from, to)
-              syncFormToLocalData()
-            }
-          : undefined,
+          move: move
+              ? (from: number, to: number) => {
+                move(from, to)
+                syncFormToLocalData()
+              }
+              : undefined,
 
-        insert: insert
-          ? (index: number, data: any, options?: any) => {
-              insert(index, data, options)
-              syncFormToLocalData()
-            }
-          : undefined,
-      }
+          insert: insert
+              ? (index: number, data: any, options?: any) => {
+                insert(index, data, options)
+                syncFormToLocalData()
+              }
+              : undefined,
+        }
 
-      return wrappedOperations
-    },
-    [table, syncFormToLocalData],
+        return wrappedOperations
+      },
+      [table, syncFormToLocalData],
   )
 
   // 在renderCollapsibleTable函数中添加浮动表头组件
   const renderCollapsibleTable = React.useCallback(
-    (form: any, arrays: Record<string, any>, linecnt: number) => {
-      // 4. 修改 renderCollapsibleTable 函数中获取数据的方式
-      // 使用本地数据而不是 form.watch
-      const membersum = localTableData.length
-      const { remove, move, insert } = arrays?.[table] || {}
+      (form: any, arrays: Record<string, any>, linecnt: number) => {
+        // 4. 修改 renderCollapsibleTable 函数中获取数据的方式
+        // 使用本地数据而不是 form.watch
+        const membersum = localTableData.length
+        const { remove, move, insert } = arrays?.[table] || {}
 
-      // 其余代码保持不变...
-      // 但要确保所有使用 tabledArr[i] 的地方改为 localTableData[i]
-      return (
-        <div className="relative">
-          {/* 浮动表头 */}
-          {floatingHeader && floatingHeader.visible && (
-            <>
+        // 其余代码保持不变...
+        // 但要确保所有使用 tabledArr[i] 的地方改为 localTableData[i]
+        return (
+            <div className="relative">
+              {/* 浮动表头 */}
+              {floatingHeader && floatingHeader.visible && (
+                  <>
+                    <div
+                        className={cn(
+                            "absolute left-0 right-0 w-full flex gap-2 @md:gap-4 border rounded-md overflow-hidden box-border",
+                            customClasses.headerWrapper,
+                        )}
+                        style={{
+                          top: `${floatingHeader!.top}px`,
+                        }}
+                    >
+                      {new Array(raft).fill(null).map((_, b: number) => {
+                        return (
+                            <table key={b} className="  w-full border-collapse">
+                              <thead className={`z-[10] border-collapse table-header-group`}>
+                              <tr className="flex flex-wrap justify-around items-center">
+                                <th className="flex flex-col flex-wrap items-start justify-between w-full h-auto min-h-[33px] p-0 text-left border-0 border-b">
+                                  <div className="z-[1] flex flex-col items-start w-full justify-between h-auto p-0 text-left bg-white">
+                                    <div className="flex w-full justify-between items-center">
+                                      <span className={headerText}>{b + 1}</span>
+                                      <button className=" text-gray-500 hover:text-gray-700" onClick={closeFloatingHeader}>
+                                        ✕
+                                      </button>
+                                    </div>
+                                    <div className="flex flex-wrap justify-start items-stretch w-full min-h-[inherit] gap-0">
+                                      {config.map(([title, tag, width]: any, k: number) => {
+                                        return (
+                                            <div
+                                                key={k}
+                                                className={cn(
+                                                    `inline-flex max-w-full border border-dotted box-border break-words whitespace-normal min-h-[33px]`,
+                                                    customClasses.cellWrapper,
+                                                )}
+                                                style={{
+                                                  flexBasis: `${width * stretchF[screenTp]}px`,
+                                                  flexGrow: 1,
+                                                  flexShrink: 1,
+                                                }}
+                                            >
+                                              <div className={cn("m-auto", headerText)}>{title}</div>
+                                            </div>
+                                        )
+                                      })}
+                                    </div>
+                                  </div>
+                                </th>
+                              </tr>
+                              </thead>
+                            </table>
+                        )
+                      })}
+                    </div>
+                  </>
+              )}
+
               <div
-                className={cn(
-                  "absolute left-0 right-0 w-full flex gap-2 @md:gap-4 border rounded-md overflow-hidden box-border",
-                  customClasses.headerWrapper,
-                )}
-                style={{
-                  top: `${floatingHeader!.top}px`,
-                }}
+                  className={cn(
+                      "w-full flex gap-2 @md:gap-4 border rounded-md overflow-hidden box-border relative",
+                      customClasses.tableWrapper,
+                  )}
               >
+                {/* 原有的表格内容 */}
                 {new Array(raft).fill(null).map((_, b: number) => {
                   return (
-                    <table key={b} className="  w-full border-collapse">
-                      <thead className={`z-[10] border-collapse table-header-group`}>
+                      <table key={b} className="w-full border-collapse">
+                        <thead
+                            ref={(el) => headerRefs.current.set(b, el)}
+                            className={cn(
+                                `bg-ghostwhite z-[10] border-collapse table-header-group`,
+                                customClasses.headerWrapper,
+                            )}
+                        >
                         <tr className="flex flex-wrap justify-around items-center">
                           <th className="flex flex-col flex-wrap items-start justify-between w-full h-auto min-h-[33px] p-0 text-left border-0 border-b">
-                            <div className="z-[1] flex flex-col items-start w-full justify-between h-auto p-0 text-left bg-white">
-                              <div className="flex w-full justify-between items-center">
-                                <span className={headerText}>{b + 1}</span>
-                                <button className=" text-gray-500 hover:text-gray-700" onClick={closeFloatingHeader}>
-                                  ✕
-                                </button>
-                              </div>
+                            <div className="flex flex-col items-start w-full justify-between h-auto p-0 text-left">
+                              <span className={"text-sm"}>{b + 1}</span>
                               <div className="flex flex-wrap justify-start items-stretch w-full min-h-[inherit] gap-0">
                                 {config.map(([title, tag, width]: any, k: number) => {
                                   return (
-                                    <div
-                                      key={k}
-                                      className={cn(
-                                        `inline-flex max-w-full border border-dotted box-border break-words whitespace-normal min-h-[33px]`,
-                                        customClasses.cellWrapper,
-                                      )}
-                                      style={{
-                                        flexBasis: `${width * stretchF[screenTp]}px`,
-                                        flexGrow: 1,
-                                        flexShrink: 1,
-                                      }}
-                                    >
-                                      <div className={cn("m-auto", headerText)}>{title}</div>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                          </th>
-                        </tr>
-                      </thead>
-                    </table>
-                  )
-                })}
-              </div>
-            </>
-          )}
-
-          <div
-            className={cn(
-              "w-full flex gap-2 @md:gap-4 border rounded-md overflow-hidden box-border relative",
-              customClasses.tableWrapper,
-            )}
-          >
-            {/* 原有的表格内容 */}
-            {new Array(raft).fill(null).map((_, b: number) => {
-              return (
-                <table key={b} className="w-full border-collapse">
-                  <thead
-                    ref={(el) => headerRefs.current.set(b, el)}
-                    className={cn(
-                      `bg-ghostwhite z-[10] border-collapse table-header-group`,
-                      customClasses.headerWrapper,
-                    )}
-                  >
-                    <tr className="flex flex-wrap justify-around items-center">
-                      <th className="flex flex-col flex-wrap items-start justify-between w-full h-auto min-h-[33px] p-0 text-left border-0 border-b">
-                        <div className="flex flex-col items-start w-full justify-between h-auto p-0 text-left">
-                          <span className={"text-sm"}>{b + 1}</span>
-                          <div className="flex flex-wrap justify-start items-stretch w-full min-h-[inherit] gap-0">
-                            {config.map(([title, tag, width]: any, k: number) => {
-                              return (
-                                <div
-                                  key={k}
-                                  className={cn(
-                                    `inline-flex max-w-full border border-dotted box-border break-words whitespace-normal min-h-[33px]`,
-                                    customClasses.cellWrapper,
-                                  )}
-                                  style={{
-                                    flexBasis: `${width * stretchF[screenTp]}px`,
-                                    flexGrow: 1,
-                                    flexShrink: 1,
-                                  }}
-                                >
-                                  <div className={cn("m-auto", headerText)}>{title}</div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="border-collapse">
-                    {isNaN(linecnt) && (
-                      <tr className="border border-solid border-gray-300">
-                        <td className="text-center">空表</td>
-                      </tr>
-                    )}
-                    {!isNaN(linecnt) &&
-                      new Array(linecnt).fill(null).map((_, i: number) => {
-                        const rowId = `${b}-${i}`
-                        const isMenuOpen = openMenuId === rowId
-                        const isActive =
-                          floatingHeader && floatingHeader.tableIndex === b && floatingHeader.rowIndex === i
-
-                        return (
-                          <tr
-                            key={i}
-                            className={cn(
-                              `flex flex-wrap justify-around items-center cursor-pointer
-                                                      ${isActive ? "bg-blue-50" : ""}`,
-                              customClasses.rowWrapper,
-                            )}
-                            ref={(el) => rowRefs.current.set(rowId, el as HTMLDivElement)}
-                            onClick={(e) => handleRowClick(e, i, b)}
-                          >
-                            <td className="flex flex-col flex-wrap items-start justify-between w-full h-auto min-h-[33px] p-0 text-left border-0 border-b">
-                              {raft * i + b < membersum && (
-                                <div className="flex flex-col items-start w-full justify-between h-auto p-0 text-left">
-                                  <div className="flex justify-between w-full">
-                                    <span className={cn("", rowNumberText)}>{`${raft * i + b + 1}`}</span>
-                                    <DropdownMenu
-                                      open={isMenuOpen}
-                                      onOpenChange={(open) => handleMenuOpenChange(open, rowId)}
-                                    >
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 px-2 ml-auto"
-                                          data-dropdown-trigger="true"
-                                        >
-                                          •••
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent>
-                                        <DropdownMenuItem
-                                          onClick={() => {
-                                            setSeq(raft * i + b)
-                                            setOpenMenuId(null)
-                                            scrollToEditor() // 添加滚动到编辑器
-                                          }}
-                                        >
-                                          修改
-                                        </DropdownMenuItem>
-                                        {!noDelAdd && (
-                                          <>
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                remove(raft * i + b)
-                                                setSeq(null)
-                                                setOpenMenuId(null)
-                                                handleTableOperation("remove", { index: raft * i + b })
-                                              }}
-                                            >
-                                              刪除这条
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                // 创建空白记录
-                                                const template = {} as any
-                                                config.forEach(([_t, tag, _w, _o, park]) => {
-                                                  if (park) {
-                                                    // 确保嵌套对象存在
-                                                    if (!template[park]) template[park] = {}
-                                                    template[park][tag] = ""
-                                                  } else {
-                                                    template[tag] = ""
-                                                  }
-                                                })
-                                                insert(raft * i + b, template, { shouldFocus: false })
-                                                setSeq(raft * i + b) // 设置为新插入的行
-                                                setOpenMenuId(null)
-                                                scrollToEditor() // 添加滚动到编辑器
-                                                handleTableOperation("insert", { index: raft * i + b, data: template })
-                                              }}
-                                            >
-                                              插入一条
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                setSeq(raft * i + b)
-                                                setOpenMenuId(null)
-                                              }}
-                                            >
-                                              选定这条
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                              disabled={seq === null}
-                                              onClick={() => {
-                                                move(seq, raft * i + b)
-                                                setOpenMenuId(null)
-                                                handleTableOperation("move", { fromIndex: seq, toIndex: raft * i + b })
-                                              }}
-                                            >
-                                              移动到此
-                                            </DropdownMenuItem>
-                                          </>
-                                        )}
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                  <div className="flex flex-wrap justify-start items-stretch w-full min-h-[inherit] gap-0">
-                                    {config.map(([title, tag, width, _o, park]: any, k: number) => {
-                                      return (
-                                        <div
+                                      <div
                                           key={k}
                                           className={cn(
-                                            `inline-flex max-w-full border border-dotted box-border break-words whitespace-normal`,
-                                            customClasses.cellWrapper,
+                                              `inline-flex max-w-full border border-dotted box-border break-words whitespace-normal min-h-[33px]`,
+                                              customClasses.cellWrapper,
                                           )}
                                           style={{
                                             flexBasis: `${width * stretchF[screenTp]}px`,
                                             flexGrow: 1,
                                             flexShrink: 1,
                                           }}
-                                        >
-                                          <div className={cn("m-auto", cellText)}>
-                                            {park
-                                              ? (localTableData[i * raft + b]?.[park]?.[tag] ?? "")
-                                              : (localTableData[i * raft + b]?.[tag] ?? "")}
+                                      >
+                                        <div className={cn("m-auto", headerText)}>{title}</div>
+                                      </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          </th>
+                        </tr>
+                        </thead>
+                        <tbody className="border-collapse">
+                        {isNaN(linecnt) && (
+                            <tr className="border border-solid border-gray-300">
+                              <td className="text-center">空表</td>
+                            </tr>
+                        )}
+                        {!isNaN(linecnt) &&
+                            new Array(linecnt).fill(null).map((_, i: number) => {
+                              const rowId = `${b}-${i}`
+                              const isMenuOpen = openMenuId === rowId
+                              const isActive =
+                                  floatingHeader && floatingHeader.tableIndex === b && floatingHeader.rowIndex === i
+
+                              return (
+                                  <tr
+                                      key={i}
+                                      className={cn(
+                                          `flex flex-wrap justify-around items-center cursor-pointer
+                                                      ${isActive ? "bg-blue-50" : ""}`,
+                                          customClasses.rowWrapper,
+                                      )}
+                                      ref={(el) => rowRefs.current.set(rowId, el as HTMLDivElement)}
+                                      onClick={(e) => handleRowClick(e, i, b)}
+                                  >
+                                    <td className="flex flex-col flex-wrap items-start justify-between w-full h-auto min-h-[33px] p-0 text-left border-0 border-b">
+                                      {raft * i + b < membersum && (
+                                          <div className="flex flex-col items-start w-full justify-between h-auto p-0 text-left">
+                                            <div className="flex justify-between w-full">
+                                              <span className={cn("", rowNumberText)}>{`${raft * i + b + 1}`}</span>
+                                              <DropdownMenu
+                                                  open={isMenuOpen}
+                                                  onOpenChange={(open) => handleMenuOpenChange(open, rowId)}
+                                              >
+                                                <DropdownMenuTrigger asChild>
+                                                  <Button
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      className="h-6 px-2 ml-auto"
+                                                      data-dropdown-trigger="true"
+                                                  >
+                                                    •••
+                                                  </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                  <DropdownMenuItem
+                                                      onClick={() => {
+                                                        setSeq(raft * i + b)
+                                                        setOpenMenuId(null)
+                                                        scrollToEditor() // 添加滚动到编辑器
+                                                      }}
+                                                  >
+                                                    修改
+                                                  </DropdownMenuItem>
+                                                  {!noDelAdd && (
+                                                      <>
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                              remove(raft * i + b)
+                                                              setSeq(null)
+                                                              setOpenMenuId(null)
+                                                              handleTableOperation("remove", { index: raft * i + b })
+                                                            }}
+                                                        >
+                                                          刪除这条
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                              // 创建空白记录
+                                                              const template = {} as any
+                                                              config.forEach(([_t, tag, _w, _o, park]) => {
+                                                                if (park) {
+                                                                  // 确保嵌套对象存在
+                                                                  if (!template[park]) template[park] = {}
+                                                                  template[park][tag] = ""
+                                                                } else {
+                                                                  template[tag] = ""
+                                                                }
+                                                              })
+                                                              insert(raft * i + b, template, { shouldFocus: false })
+                                                              setSeq(raft * i + b) // 设置为新插入的行
+                                                              setOpenMenuId(null)
+                                                              scrollToEditor() // 添加滚动到编辑器
+                                                              handleTableOperation("insert", { index: raft * i + b, data: template })
+                                                            }}
+                                                        >
+                                                          插入一条
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                              setSeq(raft * i + b)
+                                                              setOpenMenuId(null)
+                                                            }}
+                                                        >
+                                                          选定这条
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            disabled={seq === null}
+                                                            onClick={() => {
+                                                              move(seq, raft * i + b)
+                                                              setOpenMenuId(null)
+                                                              handleTableOperation("move", { fromIndex: seq, toIndex: raft * i + b })
+                                                            }}
+                                                        >
+                                                          移动到此
+                                                        </DropdownMenuItem>
+                                                      </>
+                                                  )}
+                                                </DropdownMenuContent>
+                                              </DropdownMenu>
+                                            </div>
+                                            <div className="flex flex-wrap justify-start items-stretch w-full min-h-[inherit] gap-0">
+                                              {config.map(([title, tag, width, _o, park]: any, k: number) => {
+                                                return (
+                                                    <div
+                                                        key={k}
+                                                        className={cn(
+                                                            `inline-flex max-w-full border border-dotted box-border break-words whitespace-normal`,
+                                                            customClasses.cellWrapper,
+                                                        )}
+                                                        style={{
+                                                          flexBasis: `${width * stretchF[screenTp]}px`,
+                                                          flexGrow: 1,
+                                                          flexShrink: 1,
+                                                        }}
+                                                    >
+                                                      <div className={cn("m-auto", cellText)}>
+                                                        {park
+                                                            ? (localTableData[i * raft + b]?.[park]?.[tag] ?? "")
+                                                            : (localTableData[i * raft + b]?.[tag] ?? "")}
+                                                      </div>
+                                                    </div>
+                                                )
+                                              })}
+                                            </div>
                                           </div>
-                                        </div>
-                                      )
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                  </tbody>
-                </table>
-              )
-            })}
-          </div>
-        </div>
-      )
-    },
-    [
-      localTableData,
-      table,
-      raft,
-      config,
-      screenTp,
-      stretchF,
-      activeHeaderIndex,
-      handleRowClick,
-      handleMenuOpenChange,
-      openMenuId,
-      floatingHeader,
-      closeFloatingHeader,
-      headerText,
-      rowText,
-      cellText,
-      rowNumberText,
-      customClasses,
-      scrollToEditor,
-      handleTableOperation,
-    ],
+                                      )}
+                                    </td>
+                                  </tr>
+                              )
+                            })}
+                        </tbody>
+                      </table>
+                  )
+                })}
+              </div>
+            </div>
+        )
+      },
+      [
+        localTableData,
+        table,
+        raft,
+        config,
+        screenTp,
+        stretchF,
+        activeHeaderIndex,
+        handleRowClick,
+        handleMenuOpenChange,
+        openMenuId,
+        floatingHeader,
+        closeFloatingHeader,
+        headerText,
+        rowText,
+        cellText,
+        rowNumberText,
+        customClasses,
+        scrollToEditor,
+        handleTableOperation,
+      ],
   )
 
   // 同样需要修改弹性布局模式下的表头处理
@@ -871,385 +894,385 @@ export function useTableEditor({
 
   // 在弹性布局模式下，添加浮动表头
   const renderFlexibleTable = React.useCallback(
-    (form: any, arrays: Record<string, any>, linecnt: number) => {
-      // 5. 同样修改 renderFlexibleTable 函数
-      // 使用本地数据而不是 form.watch
-      const membersum = localTableData.length
-      const { remove, move, insert } = arrays?.[table] || {}
+      (form: any, arrays: Record<string, any>, linecnt: number) => {
+        // 5. 同样修改 renderFlexibleTable 函数
+        // 使用本地数据而不是 form.watch
+        const membersum = localTableData.length
+        const { remove, move, insert } = arrays?.[table] || {}
 
-      // 其余代码保持不变...
-      // 但要确保所有使用 tabledArr[i] 的地方改为 localTableData[i]
-      return (
-        <div className={cn("relative", tableSeparation)}>
-          {/* 浮动表 */}
-          {floatingHeader && floatingHeader.visible && (
-            <div
-              className={cn(
-                "absolute left-0 right-0 bg-ghostwhite z-[1] border-b shadow-md bg-white",
-                customClasses.headerWrapper,
-              )}
-              style={{
-                top: `${floatingHeader.top}px`,
-              }}
-            >
-              <div className={cn("flex justify-around items-center", tableSeparation)}>
-                {new Array(raft).fill(null).map((_, b: number) => {
-                  return (
-                    <div
-                      key={b}
-                      className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left font-bold"
-                      style={{ width: `calc(${100 / raft}%)` }}
-                    >
-                      <div className="flex w-full justify-between items-center">
-                        <span className={"text-sm"}>{b + 1}</span>
-                        <button className="text-gray-500 hover:text-gray-700" onClick={closeFloatingHeader}>
-                          ✕
-                        </button>
-                      </div>
-                      <div className="flex w-full flex-wrap justify-between items-center">
-                        {config.map(([title, tag, width]: any, k: number) => {
-                          return (
-                            <div
-                              key={k}
-                              className={cn("overflow-anywhere whitespace-normal leading-tight px-2 mb-1", headerText)}
-                              style={{ minWidth: "auto" }}
-                            >
-                              {spliteor(k)}
-                              {title}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* 原始表头 - 保持不动 */}
-          <div className={cn("bg-ghostwhite z-10", customClasses.headerWrapper)}>
-            <div
-              ref={(el) => headerRefs.current.set(0, el)}
-              className={cn("flex justify-around items-center", tableSeparation)}
-            >
-              {new Array(raft).fill(null).map((_, b: number) => {
-                return (
+        // 其余代码保持不变...
+        // 但要确保所有使用 tabledArr[i] 的地方改为 localTableData[i]
+        return (
+            <div className={cn("relative", tableSeparation)}>
+              {/* 浮动表 */}
+              {floatingHeader && floatingHeader.visible && (
                   <div
-                    key={b}
-                    className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left font-bold"
-                    style={{ width: `calc(${100 / raft}%)` }}
+                      className={cn(
+                          "absolute left-0 right-0 bg-ghostwhite z-[1] border-b shadow-md bg-white",
+                          customClasses.headerWrapper,
+                      )}
+                      style={{
+                        top: `${floatingHeader.top}px`,
+                      }}
                   >
-                    <span className={"text-sm"}>{b + 1}</span>
-                    <div className="flex w-full flex-wrap justify-between items-center">
-                      {config.map(([title, tag, width]: any, k: number) => {
+                    <div className={cn("flex justify-around items-center", tableSeparation)}>
+                      {new Array(raft).fill(null).map((_, b: number) => {
                         return (
-                          <div
-                            key={k}
-                            className={cn("overflow-anywhere whitespace-normal leading-tight px-2 mb-1", headerText)}
-                            style={{ minWidth: "auto" }}
-                          >
-                            {spliteor(k)}
-                            {title}
-                          </div>
+                            <div
+                                key={b}
+                                className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left font-bold"
+                                style={{ width: `calc(${100 / raft}%)` }}
+                            >
+                              <div className="flex w-full justify-between items-center">
+                                <span className={"text-sm"}>{b + 1}</span>
+                                <button className="text-gray-500 hover:text-gray-700" onClick={closeFloatingHeader}>
+                                  ✕
+                                </button>
+                              </div>
+                              <div className="flex w-full flex-wrap justify-between items-center">
+                                {config.map(([title, tag, width]: any, k: number) => {
+                                  return (
+                                      <div
+                                          key={k}
+                                          className={cn("overflow-anywhere whitespace-normal leading-tight px-2 mb-1", headerText)}
+                                          style={{ minWidth: "auto" }}
+                                      >
+                                        {spliteor(k)}
+                                        {title}
+                                      </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
                         )
                       })}
                     </div>
                   </div>
-                )
-              })}
-            </div>
-          </div>
+              )}
 
-          {/* 数据行 */}
-          {!isNaN(linecnt) &&
-            new Array(linecnt).fill(null).map((_, i: number) => {
-              const rowId = `row-${i}`
-              const isActive = floatingHeader && floatingHeader.rowIndex === i
-              const excludeFix = fixColumn !== undefined && fixColumn > 0
-
-              return (
+              {/* 原始表头 - 保持不动 */}
+              <div className={cn("bg-ghostwhite z-10", customClasses.headerWrapper)}>
                 <div
-                  key={i}
-                  className={cn(
-                    `flex  justify-around items-center cursor-pointer
-                                                ${isActive ? "bg-blue-50" : ""}`,
-                    customClasses.rowWrapper,
-                    tableSeparation,
-                  )}
-                  ref={(el) => rowRefs.current.set(i, el as HTMLDivElement)}
-                  onClick={(e) => {
-                    // 如果点击的是菜单触发器，不执行任何操作
-                    if ((e.target as HTMLElement).closest('[data-dropdown-trigger="true"]')) {
-                      return
-                    }
-                    // 设置当前活动行
-                    setActiveHeaderIndex(i)
-                    // 获取点击的行元素
-                    const clickedRow = rowRefs.current.get(i)
-                    const frameRect = frameRef.current?.getBoundingClientRect() || { top: 0 }
-                    //实际ref是来自 原有的表格内容，而不是隐藏的！
-                    const header = headerRefs.current.get(0)
-                    if (clickedRow && header) {
-                      const rowRect = clickedRow.getBoundingClientRect()
-                      const headerRect = header.getBoundingClientRect()
-                      // 设置浮动表头
-                      setFloatingHeader({
-                        visible: true,
-                        top: rowRect.top - frameRect.top - headerRect.height - 6,
-                        tableIndex: 0, // 弹性布局模式下没有表格索引
-                        rowIndex: i,
-                      })
-                    }
-                  }}
+                    ref={(el) => headerRefs.current.set(0, el)}
+                    className={cn("flex justify-around items-center", tableSeparation)}
                 >
-                  {/* 数据行内容 */}
-                  {new Array(raft).fill(null).map((__: any, b: number) => {
-                    const a = localTableData[raft * i + b]
-                    const cellMenuId = `${rowId}-${b}`
-                    const isCellMenuOpen = openMenuId === cellMenuId
-
+                  {new Array(raft).fill(null).map((_, b: number) => {
                     return (
-                      <div
-                        key={b}
-                        className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left"
-                        style={{ width: `calc(${100 / raft}%)` }}
-                      >
-                        {raft * i + b < membersum && (
-                          <>
-                            <div className="flex justify-between w-full">
-                              <span className={cn("", rowNumberText)}>{`${raft * i + b + 1}`}</span>
-                              <DropdownMenu
-                                open={isCellMenuOpen}
-                                onOpenChange={(open) => handleMenuOpenChange(open, cellMenuId)}
-                              >
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 px-2 ml-auto"
-                                    data-dropdown-trigger="true"
-                                  >
-                                    •••
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSeq(raft * i + b)
-                                      setOpenMenuId(null)
-                                      scrollToEditor() // 添加滚动到编辑器
-                                    }}
-                                  >
-                                    修改
-                                  </DropdownMenuItem>
-                                  {!noDelAdd && (
-                                    <>
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          remove(raft * i + b)
-                                          setSeq(null)
-                                          setOpenMenuId(null)
-                                          handleTableOperation("remove", { index: raft * i + b })
-                                        }}
-                                      >
-                                        刪除这条
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          // 创建空白记录
-                                          const template = {} as any
-                                          config.forEach(([_t, tag, _w, _o, park]) => {
-                                            if (park) {
-                                              // 确保嵌套对象存在
-                                              if (!template[park]) template[park] = {}
-                                              template[park][tag] = ""
-                                            } else {
-                                              template[tag] = ""
-                                            }
-                                          })
-                                          insert(raft * i + b, template, { shouldFocus: false })
-                                          setSeq(raft * i + b) // 设置为新插入的行
-                                          setOpenMenuId(null)
-                                          scrollToEditor() // 添加滚动到编辑器
-                                          handleTableOperation("insert", { index: raft * i + b, data: template })
-                                        }}
-                                      >
-                                        插入一条
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          setSeq(raft * i + b)
-                                          setOpenMenuId(null)
-                                        }}
-                                      >
-                                        选定这条
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        disabled={seq === null}
-                                        onClick={() => {
-                                          move(seq, raft * i + b)
-                                          setOpenMenuId(null)
-                                          handleTableOperation("move", { fromIndex: seq, toIndex: raft * i + b })
-                                        }}
-                                      >
-                                        移动到此
-                                      </DropdownMenuItem>
-                                    </>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                            <div className="flex w-full flex-wrap justify-between items-center">
-                              {config.map(([title, tag, width, _, park]: any, k: number) => {
-                                return (
+                        <div
+                            key={b}
+                            className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left font-bold"
+                            style={{ width: `calc(${100 / raft}%)` }}
+                        >
+                          <span className={"text-sm"}>{b + 1}</span>
+                          <div className="flex w-full flex-wrap justify-between items-center">
+                            {config.map(([title, tag, width]: any, k: number) => {
+                              return (
                                   <div
-                                    key={k}
-                                    className={cn("overflow-anywhere whitespace-normal px-2 mb-1", rowText)}
-                                    style={{ minWidth: "auto" }}
+                                      key={k}
+                                      className={cn("overflow-anywhere whitespace-normal leading-tight px-2 mb-1", headerText)}
+                                      style={{ minWidth: "auto" }}
                                   >
-                                    {spliteor(k) +
-                                      (excludeFix && k < fixColumn!
-                                        ? park
-                                          ? defaultV[raft * i + b]?.[park]?.[tag]
-                                          : defaultV[raft * i + b]?.[tag]
-                                        : park
-                                          ? (a?.[park]?.[tag] ?? "")
-                                          : (a?.[tag] ?? ""))}
+                                    {spliteor(k)}
+                                    {title}
                                   </div>
-                                )
-                              })}
-                            </div>
-                          </>
-                        )}
-                      </div>
+                              )
+                            })}
+                          </div>
+                        </div>
                     )
                   })}
                 </div>
-              )
-            })}
-        </div>
-      )
-    },
-    [
-      localTableData,
-      table,
-      raft,
-      config,
-      floatingHeader,
-      closeFloatingHeader,
-      activeHeaderIndex,
-      openMenuId,
-      handleMenuOpenChange,
-      defaultV,
-      fixColumn,
-      headerText,
-      rowText,
-      rowNumberText,
-      customClasses,
-      tableSeparation,
-      scrollToEditor,
-      handleTableOperation,
-    ],
+              </div>
+
+              {/* 数据行 */}
+              {!isNaN(linecnt) &&
+                  new Array(linecnt).fill(null).map((_, i: number) => {
+                    const rowId = `row-${i}`
+                    const isActive = floatingHeader && floatingHeader.rowIndex === i
+                    const excludeFix = fixColumn !== undefined && fixColumn > 0
+
+                    return (
+                        <div
+                            key={i}
+                            className={cn(
+                                `flex  justify-around items-center cursor-pointer
+                                                ${isActive ? "bg-blue-50" : ""}`,
+                                customClasses.rowWrapper,
+                                tableSeparation,
+                            )}
+                            ref={(el) => rowRefs.current.set(i, el as HTMLDivElement)}
+                            onClick={(e) => {
+                              // 如果点击的是菜单触发器，不执行任何操作
+                              if ((e.target as HTMLElement).closest('[data-dropdown-trigger="true"]')) {
+                                return
+                              }
+                              // 设置当前活动行
+                              setActiveHeaderIndex(i)
+                              // 获取点击的行元素
+                              const clickedRow = rowRefs.current.get(i)
+                              const frameRect = frameRef.current?.getBoundingClientRect() || { top: 0 }
+                              //实际ref是来自 原有的表格内容，而不是隐藏的！
+                              const header = headerRefs.current.get(0)
+                              if (clickedRow && header) {
+                                const rowRect = clickedRow.getBoundingClientRect()
+                                const headerRect = header.getBoundingClientRect()
+                                // 设置浮动表头
+                                setFloatingHeader({
+                                  visible: true,
+                                  top: rowRect.top - frameRect.top - headerRect.height - 6,
+                                  tableIndex: 0, // 弹性布局模式下没有表格索引
+                                  rowIndex: i,
+                                })
+                              }
+                            }}
+                        >
+                          {/* 数据行内容 */}
+                          {new Array(raft).fill(null).map((__: any, b: number) => {
+                            const a = localTableData[raft * i + b]
+                            const cellMenuId = `${rowId}-${b}`
+                            const isCellMenuOpen = openMenuId === cellMenuId
+
+                            return (
+                                <div
+                                    key={b}
+                                    className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left"
+                                    style={{ width: `calc(${100 / raft}%)` }}
+                                >
+                                  {raft * i + b < membersum && (
+                                      <>
+                                        <div className="flex justify-between w-full">
+                                          <span className={cn("", rowNumberText)}>{`${raft * i + b + 1}`}</span>
+                                          <DropdownMenu
+                                              open={isCellMenuOpen}
+                                              onOpenChange={(open) => handleMenuOpenChange(open, cellMenuId)}
+                                          >
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-6 px-2 ml-auto"
+                                                  data-dropdown-trigger="true"
+                                              >
+                                                •••
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                              <DropdownMenuItem
+                                                  onClick={() => {
+                                                    setSeq(raft * i + b)
+                                                    setOpenMenuId(null)
+                                                    scrollToEditor() // 添加滚动到编辑器
+                                                  }}
+                                              >
+                                                修改
+                                              </DropdownMenuItem>
+                                              {!noDelAdd && (
+                                                  <>
+                                                    <DropdownMenuItem
+                                                        onClick={() => {
+                                                          remove(raft * i + b)
+                                                          setSeq(null)
+                                                          setOpenMenuId(null)
+                                                          handleTableOperation("remove", { index: raft * i + b })
+                                                        }}
+                                                    >
+                                                      刪除这条
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => {
+                                                          // 创建空白记录
+                                                          const template = {} as any
+                                                          config.forEach(([_t, tag, _w, _o, park]) => {
+                                                            if (park) {
+                                                              // 确保嵌套对象存在
+                                                              if (!template[park]) template[park] = {}
+                                                              template[park][tag] = ""
+                                                            } else {
+                                                              template[tag] = ""
+                                                            }
+                                                          })
+                                                          insert(raft * i + b, template, { shouldFocus: false })
+                                                          setSeq(raft * i + b) // 设置为新插入的行
+                                                          setOpenMenuId(null)
+                                                          scrollToEditor() // 添加滚动到编辑器
+                                                          handleTableOperation("insert", { index: raft * i + b, data: template })
+                                                        }}
+                                                    >
+                                                      插入一条
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => {
+                                                          setSeq(raft * i + b)
+                                                          setOpenMenuId(null)
+                                                        }}
+                                                    >
+                                                      选定这条
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        disabled={seq === null}
+                                                        onClick={() => {
+                                                          move(seq, raft * i + b)
+                                                          setOpenMenuId(null)
+                                                          handleTableOperation("move", { fromIndex: seq, toIndex: raft * i + b })
+                                                        }}
+                                                    >
+                                                      移动到此
+                                                    </DropdownMenuItem>
+                                                  </>
+                                              )}
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </div>
+                                        <div className="flex w-full flex-wrap justify-between items-center">
+                                          {config.map(([title, tag, width, _, park]: any, k: number) => {
+                                            return (
+                                                <div
+                                                    key={k}
+                                                    className={cn("overflow-anywhere whitespace-normal px-2 mb-1", rowText)}
+                                                    style={{ minWidth: "auto" }}
+                                                >
+                                                  {spliteor(k) +
+                                                      (excludeFix && k < fixColumn!
+                                                          ? park
+                                                              ? defaultV[raft * i + b]?.[park]?.[tag]
+                                                              : defaultV[raft * i + b]?.[tag]
+                                                          : park
+                                                              ? (a?.[park]?.[tag] ?? "")
+                                                              : (a?.[tag] ?? ""))}
+                                                </div>
+                                            )
+                                          })}
+                                        </div>
+                                      </>
+                                  )}
+                                </div>
+                            )
+                          })}
+                        </div>
+                    )
+                  })}
+            </div>
+        )
+      },
+      [
+        localTableData,
+        table,
+        raft,
+        config,
+        floatingHeader,
+        closeFloatingHeader,
+        activeHeaderIndex,
+        openMenuId,
+        handleMenuOpenChange,
+        defaultV,
+        fixColumn,
+        headerText,
+        rowText,
+        rowNumberText,
+        customClasses,
+        tableSeparation,
+        scrollToEditor,
+        handleTableOperation,
+      ],
   )
 
   const [fixedColWState, setFixedColWState] = React.useState<boolean>(defFixedLay ?? false)
 
   // 修改 contentRendererFactory 函数来使用包装后的操作函数
   const contentRendererFactory = React.useCallback(
-    (form: any, arrays?: Record<string, any>) => {
-      // 获取包装后的操作函数
-      const wrappedOps = arrays ? wrapTableOperations(arrays) : {}
+      (form: UseFormReturn<any, any, any> | null, arrays?: Record<string, any>) => {
+        // 获取包装后的操作函数
+        const wrappedOps = arrays ? wrapTableOperations(arrays) : {}
 
-      // 合并原始操作和包装后的操作
-      const enhancedArrays = { ...arrays }
-      if (enhancedArrays[table]) {
-        enhancedArrays[table] = {
-          ...enhancedArrays[table],
-          ...wrappedOps,
+        // 合并原始操作和包装后的操作
+        const enhancedArrays = { ...arrays }
+        if (enhancedArrays[table]) {
+          enhancedArrays[table] = {
+            ...enhancedArrays[table],
+            ...wrappedOps,
+          }
         }
-      }
 
-      // 计算行数使用本地数据
-      const linecnt = Math.ceil(localTableData.length / raft)
+        // 计算行数使用本地数据
+        const linecnt = Math.ceil(localTableData.length / raft)
 
-      // 其余代码与之前类似，但传递 enhancedArrays 替代 arrays
+        // 其余代码与之前类似，但传递 enhancedArrays 替代 arrays
 
-      const renderContent = () => {
-        return fixedColWState
-          ? renderCollapsibleTable(form, enhancedArrays!, linecnt)
-          : renderFlexibleTable(form, enhancedArrays!, linecnt)
-      }
+        const renderContent = () => {
+          return fixedColWState
+              ? renderCollapsibleTable(form, enhancedArrays!, linecnt)
+              : renderFlexibleTable(form, enhancedArrays!, linecnt)
+        }
 
-      // 使用 useCallback 包装 setFixedColW 函数，避免不必要的重新创建
-      const toggleFixedColW = React.useCallback((e: React.MouseEvent) => {
-        e.preventDefault()
-        setActiveHeaderIndex(null)
-        setSelectedRaft(null)
-        setFixedColWState((prev) => !prev)
-      }, [])
-
-      // 修改 clearTable 函数，同时更新本地状态
-      const clearTable = React.useCallback(
-        (e) => {
-          form.setValue(table, defaultV ?? [])
-          // 更新本地状态
-          handleTableOperation("clear", { defaultData: defaultV ?? [] })
+        // 使用 useCallback 包装 setFixedColW 函数，避免不必要的重新创建
+        const toggleFixedColW = React.useCallback((e: React.MouseEvent) => {
           e.preventDefault()
-        },
-        [defaultV, form, table, handleTableOperation],
-      )
+          setActiveHeaderIndex(null)
+          setSelectedRaft(null)
+          setFixedColWState((prev) => !prev)
+        }, [])
 
-      // 其余代码保持不变...
+        // 修改 clearTable 函数，同时更新本地状态
+        const clearTable = React.useCallback(
+            (e) => {
+              form?.setValue(table, defaultV ?? [])
+              // 更新本地状态
+              handleTableOperation("clear", { defaultData: defaultV ?? [] })
+              e.preventDefault()
+            },
+            [defaultV, form, table, handleTableOperation],
+        )
 
-      return (
-        <div>
-          {headview}
-          <div className="flex items-center mb-4">
-            <Button variant="outline" onClick={toggleFixedColW}>
-              {fixedColWState ? `弹性布局` : `定长折叠`}
-            </Button>
-            <span className="ml-2">
+        // 其余代码保持不变...
+
+        return (
+            <div>
+              {headview}
+              <div className="flex items-center mb-4">
+                <Button variant="outline" onClick={toggleFixedColW}>
+                  {fixedColWState ? `弹性布局` : `定长折叠`}
+                </Button>
+                <span className="ml-2">
               按每行{defaultV && fixColumn! >= 1 && noDelAdd && !saveFixC ? config.length - fixColumn! : config.length}
-              列为一组录入
+                  列为一组录入
             </span>
-            <Button variant="outline" className="ml-auto" onClick={clearTable}>
-              清空全表至默认
-            </Button>
-          </div>
-          <hr className="my-2" />
-          <div ref={frameRef}>{renderContent()}</div>
-          <div className={cn("flex justify-center", "flex")} ref={editorRef}>
-            {editor(form, enhancedArrays)}
-          </div>
-          {tailview}
-        </div>
-      )
-    },
-    [
-      // 添加新的依赖项
-      localTableData,
-      wrapTableOperations,
-      // 其他依赖项保持不变
-      raft,
-      fixedColWState,
-      fixColumn,
-      editor,
-      config,
-      table,
-      headview,
-      tailview,
-      defaultV,
-      noDelAdd,
-      screenTp,
-      stretchF,
-      renderCollapsibleTable,
-      handleMenuOpenChange,
-      renderFlexibleTable,
-      handleTableOperation,
-      form,
-      saveFixC,
-    ],
+                <Button variant="outline" className="ml-auto" onClick={clearTable}>
+                  清空全表至默认
+                </Button>
+              </div>
+              <hr className="my-2" />
+              <div ref={frameRef}>{renderContent()}</div>
+              <div className={cn("flex justify-center", "flex")} ref={editorRef}>
+                {editor(form, enhancedArrays)}
+              </div>
+              {tailview}
+            </div>
+        )
+      },
+      [
+        // 添加新的依赖项
+        localTableData,
+        wrapTableOperations,
+        // 其他依赖项保持不变
+        raft,
+        fixedColWState,
+        fixColumn,
+        editor,
+        config,
+        table,
+        headview,
+        tailview,
+        defaultV,
+        noDelAdd,
+        screenTp,
+        stretchF,
+        renderCollapsibleTable,
+        handleMenuOpenChange,
+        renderFlexibleTable,
+        handleTableOperation,
+        form,
+        saveFixC,
+      ],
   )
 
   // 在 useEffect 中添加 form 的 onChange 监听，以便在适当的时候更新本地数据
@@ -1276,7 +1299,7 @@ export function useTableEditor({
     }
   }, [form, table])
 
-  return [contentRendererFactory]
+  return [contentRendererFactory, setForm]
 }
 
 // type Each_ZdSetting = any
