@@ -70,12 +70,15 @@ export default function TableEditorExample() {
   // 创建一个处理外部数据变更的回调
   const handleExternalDataChange = useCallback(
       (newData) => {
-        // 更新 form 的值
+        // 更新 form 的值，但只在数据真正变化时
         if (newData.products) {
-          form.setValue("products", newData.products)
-        }
+          const currentProducts = form.getValues("products")
+          const isEqual = JSON.stringify(currentProducts) === JSON.stringify(newData.products)
 
-        // 这里不直接更新 storage，因为我们希望只在点击确认按钮时更新
+          if (!isEqual) {
+            form.setValue("products", newData.products)
+          }
+        }
       },
       [form],
   )
@@ -102,23 +105,24 @@ export default function TableEditorExample() {
     // 可以在这里发送到服务器
   }, [form])
 
-  // 修改 handleConfirm 函数
-  const handleConfirm = () => {
+  // 修改 handleConfirm 函数，添加防抖
+  const handleConfirm = useCallback(() => {
     // 获取当前表单值
     const currentValues = form.getValues()
 
-    // 更新 storage
-    setStorage((prevStorage) => ({
-      ...prevStorage,
-      ...currentValues,
-    }))
+    // 检查是否真的有变化
+    const isEqual = JSON.stringify(storage) === JSON.stringify(currentValues)
+    if (!isEqual) {
+      // 更新 storage
+      setStorage((prevStorage) => ({
+        ...prevStorage,
+        ...currentValues,
+      }))
 
-    // 设置已修改标志
-    setModified(true)
-
-    // 强制更新表格显示
-    // 这里不需要额外操作，因为 storage 的变化会触发 useTableEditor 中的 useEffect
-  }
+      // 设置已修改标志
+      setModified(true)
+    }
+  }, [form, setStorage, setModified, storage])
 
   return (
       <div className="container mx-auto p-4">
