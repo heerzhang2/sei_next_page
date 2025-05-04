@@ -26,7 +26,8 @@ import {useMeasureInpFilter} from "../common/hooks";
 import {EachMeasureItemConfig, measurementRender} from "../common/measure";
 import {arraySetInp, calcAverageArrObj, floatInterception, tableSetInp} from "../../common/tool";
 import {useMeasureOldVer} from "../hook/useMeasureOldVer";
-import {Each_ZdSetting, useTableEditor} from "../hook/useRepTableEditor";
+import {useTableEditor} from "../hook/useRepTableEditor";
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 //可以复用的组件： 尽量抽象 和 提高代码复用程度！
 interface Props  extends InternalItemProps{

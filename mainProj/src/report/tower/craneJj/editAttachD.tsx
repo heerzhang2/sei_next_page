@@ -7,7 +7,8 @@ import {
     InspectRecordLayout, InternalItemProps, SelectHookfork, useItemInputControl,
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
-import {Each_ZdSetting, useTableEditor} from "../../hook/useRepTableEditor";
+import {useTableEditor} from "../../hook/useRepTableEditor";
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 interface Props  extends InternalItemProps{
     nos?: string;

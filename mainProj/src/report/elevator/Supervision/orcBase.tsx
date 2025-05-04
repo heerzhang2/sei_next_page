@@ -16,7 +16,7 @@ import {
 import {
     InspectRecordLayout, InternalItemProps, SelectHookfork, SelectInput, useItemInputControl
 } from "../../common/base";
-import {Each_ZdSetting, useRepTableEditor, useTableEditor} from "../../hook/useRepTableEditor";
+import {useRepTableEditor, useTableEditor} from "../../hook/useRepTableEditor";
 import {useMeasureInpFilter} from "../../common/hooks";
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
@@ -28,6 +28,7 @@ import {特殊项目编码} from "./FormatOriginal";
 import {measurementRender} from "../../common/measure";
 import {floatInterception} from "../../../common/tool";
 import {useBalanceCoefficient} from "../hook/useBalanceCoefficient";
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 
 export const 现场结果选=["符合要求","不符合要求"];

@@ -3,7 +3,8 @@ import * as React from "react";
 import {useTheme,} from "customize-easy-ui-component";
 import {useMeasure} from "customize-easy-ui-component/esm/Hooks/use-measure";
 import {useWindowSize} from "customize-easy-ui-component/esm/Hooks/use-window-size";
-import {Each_ZdSetting} from "../report/hook/useRepTableEditor";
+
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 interface ElasticTableProps {
     //表格数组内容

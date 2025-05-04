@@ -8,8 +8,9 @@ import {
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {objNestSet, } from "../../../common/tool";
-import {Each_ZdSetting, useTableEditor} from "../../hook/useRepTableEditor";
+import {useTableEditor} from "../../hook/useRepTableEditor";
 import {Dispatch, SetStateAction} from "react";
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 //可以复用的组件： 尽量抽象 和 提高代码复用程度！
 interface Props  extends InternalItemProps{

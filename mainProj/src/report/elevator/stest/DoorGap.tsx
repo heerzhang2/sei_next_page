@@ -7,8 +7,9 @@ import {
     InspectRecordLayout, InternalItemProps, RepLink, SelectHookfork, useItemInputControl,
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
-import {Each_ZdSetting, useTableEditor} from "../../hook/useRepTableEditor";
+import {useTableEditor} from "../../hook/useRepTableEditor";
 import {tableSetInp} from "../../../common/tool";
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 
 const config间隙表=[['层站','n',66],['门扇间间隙','j',60],['扇与门套间隙','t',60,],['门扇地坎间隙','s',60],['扇施力间隙','p',60],

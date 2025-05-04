@@ -3,7 +3,7 @@ import * as React from "react";
 import {
     Text,
 } from "customize-easy-ui-component";
-import {Each_ZdSetting, useTableEditor,} from "../hook/useRepTableEditor";
+import {useTableEditor,} from "../hook/useRepTableEditor";
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
@@ -18,6 +18,7 @@ import {useStorage} from "@/report/StorageContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {CollapsibleFormSection} from "@/components/chub";
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 
 interface InstrumentTableProps  extends InternalItemProps{

@@ -6,7 +6,7 @@ import {
 import {
     CCellUnit, InspectRecordLayout, InternalItemProps, RepLink, SelectHookfork, useInputControlSure,
 } from "../../common/base";
-import {Each_ZdSetting, tabSuffixCb, useTableEditor} from "../../hook/useRepTableEditor";
+import {tabSuffixCb, useTableEditor} from "../../hook/useRepTableEditor";
 import {useStorage} from "../../StorageContext";
 import {useUppyUpload} from "../../hook/useUppyUpload";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
@@ -26,6 +26,7 @@ import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {ImageComponent} from "@/components/shub";
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>

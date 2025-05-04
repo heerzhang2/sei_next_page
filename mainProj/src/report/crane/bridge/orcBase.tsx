@@ -11,7 +11,7 @@ import {
     useItemInputControl
 } from "../../common/base";
 // import queryString from "query-string";
-import {Each_ZdSetting, useRepTableEditor, useTableEditor} from "../../hook/useRepTableEditor";
+import {useRepTableEditor, useTableEditor} from "../../hook/useRepTableEditor";
 // import {WrapByLineColumn} from "../../../comp/base";
 import {measurementRender, } from "../common";
 import {arraySetInp, calcAverageArrObj, } from "../../../common/tool";
@@ -26,6 +26,7 @@ import {itemResultUnqualified} from "../helper";
 import {setupItemAreaRoute} from "./orcIspConfig";
 import {特殊项目编码} from "./FormatOriginal";
 import {useMeasureInpFilter} from "../../common/hooks";
+import {Each_ZdSetting} from "@/report/hook/use-table-editor";
 
 
 // export const 结果打勾等的=['√','×','无此项','-'];
