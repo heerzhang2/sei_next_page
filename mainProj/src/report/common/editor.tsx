@@ -12,7 +12,8 @@ import {useFormFramework} from "@/report/hook/useFormFramework";
 import {CollapsibleFormSection} from "@/components/chub";
 import {instrumentOption} from "@/report/common/Instrument";
 import {clcOptions} from "@/report/common/ActionMapItem";
-import {Each_ZdSetting, useTableEditor} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting, useTableEdit} from "@/report/hook/use-table-edit";
+import {useCallback} from "react";
 // import {特殊项目编码} from "../elevator/Supervision/FormatOriginal";
 
 export interface EditorProps  extends InternalItemProps{
@@ -64,7 +65,7 @@ export const ItemRecheckResult=
         {label}
       </Text>;
       //不是真的默认不变的不能用  defaultV:默认复检表,
-      const [renderTab]=useTableEditor({inp, setInp,  headview,
+      const [renderTab]=useTableEdit({inp, setInp,  headview,
         config: config复检表, table:'unq', defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
       return (
           <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
@@ -187,7 +188,7 @@ export const ItemRecheckOmni=
             {label}
         </h2>;
         //不是真的默认不变的不能用  defaultV:默认复检表,
-        const [renderTab]=useTableEditor({inp, setInp,  headview,
+        const [renderTab]=useTableEdit({inp, setInp,  headview,
             config: config复检表, table:'unq', defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
         return (
             <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
@@ -237,7 +238,7 @@ export const ItemRecheckOmniR=
             {label}
         </Text>;
         //不是真的默认不变的不能用  defaultV:默认复检表,
-        const [renderTab]=useTableEditor({inp, setInp,  headview,
+        const [renderTab]=useTableEdit({inp, setInp,  headview,
             config: config复检表, table:'unq', defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
         return (
             <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
@@ -278,7 +279,7 @@ export const ItemRecheckOmniOther=
             {label}
         </Text>;
         //不是真的默认不变的不能用  defaultV:默认复检表,
-        const [renderTab]=useTableEditor({inp, setInp,  headview,
+        const [renderTab]=useTableEdit({inp, setInp,  headview,
             config: config复检表, table:'unq', defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
         return (
             <InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter} show={show}
@@ -324,6 +325,11 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
         fields["unq"]= storage["unq"]
+        storage["unq"].forEach((row,index) => {
+            config.forEach(([t,field,s,o,park]) => {
+                if(row[field]===undefined)  fields["unq"][index][field]=""
+            })
+        })
         return fields
     }, [storage])
     const arrayFields =React.useMemo(() => {
@@ -333,13 +339,29 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         })
         return [ {name:"unq", itemTemplate,} ]
     }, [])
+    const handleExternalDataChange = useCallback(
+        (newData) => {
+            // 更新 form 的值，但只在数据真正变化时
+            if (newData.unq) {
+                // const currentProducts = form.getValues("unq")
+                // const isEqual = JSON.stringify(currentProducts) === JSON.stringify(newData.unq)
 
+                // if (!isEqual) {
+                //     form.setValue("unq", newData.unq)
+                // }
+            }
+        },
+        [],
+    )
     const 默认复检表 =React.useMemo(()=>itemResultUnqualifiedOmni(storage, impressionismAs?.Item,),
         [storage,impressionismAs?.Item]);
     const headview=<h2 >
         {label}
     </h2>;
-    const [nestRendererFactory]=useTableEditor({headview, config, table:'unq',defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true});
+    const [nestRendererFactory]=useTableEdit({headview, config, table:'unq',defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true,
+        externalData: storage,
+        onExternalDataChange: handleExternalDataChange,
+        });
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
             return (
@@ -356,7 +378,8 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         },
         [children,nestRendererFactory ],
     )
-    const { render } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+    const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
         {render()}
     </CollapsibleFormSection>;

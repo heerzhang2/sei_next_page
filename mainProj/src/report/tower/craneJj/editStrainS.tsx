@@ -11,7 +11,7 @@ import {useMeasureInpFilter} from "../../common/hooks";
 import {useTableEditor} from "../../hook/useRepTableEditor";
 import {EditStorageContext} from "../../StorageContext";
 import {useUppyUpload} from "../../hook/useUppyUpload";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 
 export const config测点表=[['应变值','μ',150,(obj,setObj)=>{

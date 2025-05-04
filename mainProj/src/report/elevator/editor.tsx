@@ -25,7 +25,7 @@ import {useMeasureInpFilter} from "../common/hooks";
 import {floatInterception, } from "../../common/tool";
 import {useTableEditor} from "../hook/useRepTableEditor";
 import {EachMeasureCritConfig} from "../common/msCriteria";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 //可以复用的组件： 尽量抽象 和 提高代码复用程度！
 interface Props extends InternalItemProps {

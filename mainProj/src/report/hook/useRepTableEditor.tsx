@@ -23,7 +23,7 @@ import {
 } from "@/components/ui";
 import {BlobInputList, FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput,} from "@/components/chub";
 import type {UseFormReturn} from "react-hook-form";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 
 //通用render编辑器回调类型: 因为后面修改的只好把参数field放在后面添加，避免报错太多了。
@@ -636,7 +636,7 @@ interface TableEditorProps {
 屏幕和浏览器适应需要，多加个表头独立做复制的。
 【注意】特别要求必须把 {remove, move, insert } = arrays?.[];  从form外部注入的接口。
  * */
-function useTableEditor({
+export function useTableEditor({
                                    config,
                                    table,
                                    headview,

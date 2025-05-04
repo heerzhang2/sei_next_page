@@ -81,11 +81,13 @@ interface TableEditorProps {
     }
 }
 
+const TabSplChars=['◆','╏','│','┋','╁','↑','╀','●','║','◇','┃','┩','¤','┪','╔','╝','Θ','∣','╚','╗','╡','┇','╞','╘','╕','┊','╬','┾','╮','╉','◎','♂','╰','┠','↓','╠'];
+
 /*目的是编辑器而不是表格显示打印。适应于编辑表格的显示编辑列数不算太多的,表格行数也比较少的情况,不支持普通表格的分页功能。
 屏幕和浏览器适应需要，多加个表头独立做复制的。
 【注意】特别要求必须把 {remove, move, insert } = arrays?.[];  从form外部注入的接口。
  * */
-export function useTableEditor({
+export function useTableEdit({
                                    config,
                                    table,
                                    headview,
@@ -137,11 +139,11 @@ export function useTableEditor({
                     behavior: "smooth",
                 })
             }
-        }, 100) // 短暂延迟确保 DOM 已更新
+        }, 2200) // 短暂延迟确保 DOM 已更新
     }, [])
 
     //这个excludeFix仅仅对弹性布局生效的excludeFix && k < fixColumn!； 定长折叠布局模式没启用过滤字段。
-    const [seq, setSeq] = React.useState<number | null>(133) //null
+    const [seq, setSeq] = React.useState<number | null>(null)
     const [selectedRaft, setSelectedRaft] = React.useState<number | null>(null)
     // const [fixedColW, setFixedColW] = React.useState<boolean>(defFixedLay ?? false)竟然被挪走放在renderFlexibleTable = React.useCallback(里面了。
     //定长折叠形态才需要区分表格raft的位置；
@@ -173,8 +175,6 @@ export function useTableEditor({
     const rowRefs = React.useRef<Map<number | string, HTMLDivElement | null>>(new Map())
     // 存储每个表格的表头引用
     const headerRefs = React.useRef<Map<number, HTMLTableSectionElement | null>>(new Map())
-
-    const TabSplChars = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "+", "="]
 
     function spliteor(i: number) {
         return TabSplChars[i % TabSplChars.length]
@@ -272,7 +272,9 @@ export function useTableEditor({
 
             return (
                 <Card className="flex justify-center w-full flex-col md:p-1 gap-2" ref={editorRef}>
-                    <div>在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
+                    { noDelAdd && seq === null ? null
+                        : <div>在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
+                    }
                     <div className="w-full">
                         {seq !== null && (
                             <>
@@ -456,16 +458,16 @@ export function useTableEditor({
                                 )}
                             </>
                         )}
-                        <Button className="mt-4" onClick={handleAddNewRecord}>
-                            新增一条
-                        </Button>
+                        {!noDelAdd &&
+                            <Button className="mt-4" onClick={handleAddNewRecord}>
+                                新增一条
+                            </Button>
+                        }
                     </div>
                 </Card>
             )
         },
-        [seq, config, table, editAs, fixColumn, scrollToEditor,
-            // localTableData,
-            handleTableOperation],
+        [seq, config, table, editAs, fixColumn, scrollToEditor, localTableData, handleTableOperation],
     )
 
     // 添加一个新的状态来跟踪浮动表头的位置和可见性
@@ -536,22 +538,30 @@ export function useTableEditor({
         [handleHeaderPosition],
     )
 
-    // 2. 添加一个 useEffect 来初始化本地数据和在关键操作后更新它
+    // 2. 添加一个 useEffect 来初始化本地数据和在关键操作后更新它【没有用到？】实际用contentRendererFactory传递的(form)=>
     const [form, setForm] = React.useState<UseFormReturn<any, any, any> | null>(null)
+    // 修改这个 useEffect 钩子，添加一个 ref 来确保它只在初始化时运行一次
+    const initializedRef = React.useRef(false)
+
     React.useEffect(() => {
-        // 从表单获取初始数据，但只执行一次
-        const initialData = form?.getValues?.(table) || defaultV || []
-        setLocalTableData(initialData)
-    }, [defaultV, table]) // 不包含 form 以避免不必要的重新获取
+        // 只在组件首次挂载时执行一次
+        if (!initializedRef.current) {
+            const initialData = form?.getValues?.(table) || defaultV || []
+            setLocalTableData(initialData)
+            initializedRef.current = true
+        }
+    }, [defaultV, table, form])
 
     // 添加对外部数据的监听
+    // 修改外部数据同步的 useEffect，添加深度比较
     React.useEffect(() => {
         if (externalData && externalData[table]) {
             // 添加深度比较，只在数据真正变化时才更新
             const externalTableData = externalData[table] || []
-            const isEqual = JSON.stringify(externalTableData) === JSON.stringify(localTableData)
+            const currentData = JSON.stringify(externalTableData)
+            const localData = JSON.stringify(localTableData)
 
-            if (!isEqual) {
+            if (currentData !== localData) {
                 // 当外部数据变化时，更新本地状态
                 setLocalTableData(externalTableData)
             }
@@ -567,12 +577,14 @@ export function useTableEditor({
     const syncFormToLocalData = React.useCallback(() => {
         // 使用 setTimeout 避免在渲染周期中修改状态
         setTimeout(() => {
-            const currentData = form?.getValues?.(table) || []
-            setLocalTableData(currentData)
+            if(form){
+                const currentData = form?.getValues?.(table) || []
+                setLocalTableData(currentData)
 
-            // 如果提供了外部数据变更回调，则调用它
-            if (onExternalDataChange) {
-                onExternalDataChange({ [table]: currentData })
+                // 如果提供了外部数据变更回调，则调用它
+                if (onExternalDataChange) {
+                    onExternalDataChange({ [table]: currentData })
+                }
             }
         }, 0)
     }, [table, onExternalDataChange, form])
@@ -593,7 +605,7 @@ export function useTableEditor({
                 remove: remove
                     ? (index: number) => {
                         remove(index)
-                        syncFormToLocalData()
+                        // syncFormToLocalData()
                     }
                     : undefined,
 
@@ -879,7 +891,7 @@ export function useTableEditor({
             )
         },
         [
-            // localTableData,
+            localTableData,
             table,
             raft,
             config,
@@ -1168,7 +1180,7 @@ export function useTableEditor({
             )
         },
         [
-            // localTableData,
+            localTableData,
             table,
             raft,
             config,
@@ -1263,13 +1275,13 @@ export function useTableEditor({
         },
         [
             // 添加新的依赖项
-            // localTableData,
+            localTableData,
             wrapTableOperations,
             // 其他依赖项保持不变
             raft,
             fixedColWState,
             fixColumn,
-            // editor,
+            editor,
             config,
             table,
             headview,
@@ -1278,11 +1290,11 @@ export function useTableEditor({
             noDelAdd,
             screenTp,
             stretchF,
-            // renderCollapsibleTable,
+            renderCollapsibleTable,
             handleMenuOpenChange,
-            // renderFlexibleTable,
-            // handleTableOperation,
-            // form,
+            renderFlexibleTable,
+            handleTableOperation,
+            form,
             saveFixC,
         ],
     )
@@ -1310,7 +1322,7 @@ export function useTableEditor({
             subscription.unsubscribe()
         }
     }, [form, table])
-
+    //setForm实际作废
     return [contentRendererFactory, setForm]
 }
 

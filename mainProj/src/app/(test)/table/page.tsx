@@ -1,7 +1,7 @@
 "use client"
 
+import { useTableEdit } from "@/report/hook/use-table-edit"
 import { useForm, useFieldArray, FormProvider } from "react-hook-form"
-import { useTableEditor } from "@/report/hook/use-table-editor"
 import { Button } from "@/components/ui/button"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -84,7 +84,7 @@ export default function TableEditorExample() {
   )
 
   // 添加自定义样式配置
-  const [renderTable] = useTableEditor({
+  const [renderTable] = useTableEdit({
     config,
     table: "products",
     headview: <h2 className="text-xl font-bold mb-4">产品列表</h2>,
@@ -105,19 +105,18 @@ export default function TableEditorExample() {
     // 可以在这里发送到服务器
   }, [form])
 
-  // 修改 handleConfirm 函数，添加防抖
+  // 修改 handleConfirm 函数，添加深度比较
   const handleConfirm = useCallback(() => {
     // 获取当前表单值
     const currentValues = form.getValues()
 
     // 检查是否真的有变化
-    const isEqual = JSON.stringify(storage) === JSON.stringify(currentValues)
-    if (!isEqual) {
+    const currentData = JSON.stringify(currentValues)
+    const storageData = JSON.stringify(storage)
+
+    if (currentData !== storageData) {
       // 更新 storage
-      setStorage((prevStorage) => ({
-        ...prevStorage,
-        ...currentValues,
-      }))
+      setStorage(currentValues) // 直接设置新值，而不是合并
 
       // 设置已修改标志
       setModified(true)

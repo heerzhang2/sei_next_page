@@ -18,7 +18,7 @@ import {useStorage} from "@/report/StorageContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {CollapsibleFormSection} from "@/components/chub";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 
 interface InstrumentTableProps  extends InternalItemProps{

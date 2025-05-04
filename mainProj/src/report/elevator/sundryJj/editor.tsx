@@ -8,7 +8,7 @@ import {
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {useTableEditor} from "../../hook/useRepTableEditor";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 
 const config间隙表=[['层站','n',86],['门扇间间隙','j',90],['扇与门楣间隙','t',90,],['门扇地坎间隙','s',90],['轿层门框间隙','K',90]] as Each_ZdSetting[];

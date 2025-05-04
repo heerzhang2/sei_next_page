@@ -24,7 +24,7 @@ import '@uppy/webcam/dist/style.min.css';
 import {measurementRender} from "../../common/measure";
 import {floatInterception} from "../../../common/tool";
 import {useBalanceCoefficient} from "../hook/useBalanceCoefficient";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 export const 现场结果选=["符合要求","不符合要求"];
 //下结论页面：

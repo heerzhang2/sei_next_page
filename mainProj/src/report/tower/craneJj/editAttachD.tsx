@@ -8,7 +8,7 @@ import {
 } from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {useTableEditor} from "../../hook/useRepTableEditor";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 interface Props  extends InternalItemProps{
     nos?: string;

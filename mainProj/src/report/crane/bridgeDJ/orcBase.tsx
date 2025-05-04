@@ -24,7 +24,7 @@ import {itemResultUnqualified} from "../helper";
 import {setupItemAreaRoute} from "./orcIspConfig";
 import {特殊项目编码} from "./FormatOriginal";
 import {useMeasureInpFilter} from "../../common/hooks";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 
 // export const 结果打勾等的=['√','×','无此项','-'];

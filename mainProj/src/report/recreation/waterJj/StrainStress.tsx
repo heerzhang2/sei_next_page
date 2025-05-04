@@ -26,7 +26,7 @@ import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {ImageComponent} from "@/components/shub";
-import {Each_ZdSetting} from "@/report/hook/use-table-editor";
+import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
