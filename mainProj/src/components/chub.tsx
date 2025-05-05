@@ -511,8 +511,15 @@ export function MemoDateInput({
                                   ...other
                               }: MemoDateInputProps) {
     const [textValue, setTextValue] = useState(value)
-    const [isDateMode, setIsDateMode] = useState(false)
-
+    // 日期验证函数
+    const isValidDate = (dateStr: string): boolean => {
+        const date = new Date(dateStr);
+        return !isNaN(date.getTime()) && dateStr !== "Invalid Date";
+    };
+    const [isDateMode, setIsDateMode] = useState(() => {
+        if (!value) return true; // 空值时默认启用日期模式
+        return isValidDate(value);
+    });
     // 同步外部value变化到内部状态
     useEffect(() => {
         setTextValue(value)
