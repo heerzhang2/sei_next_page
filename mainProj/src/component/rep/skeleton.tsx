@@ -150,7 +150,7 @@ export default function Skeleton({
                                         </div>
                                     </div>
                                     <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
-                                        <div
+                                        <div id='tabEditor-boundary'
                                             className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content">
                                             {children}
                                         </div>

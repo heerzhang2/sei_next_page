@@ -21,6 +21,8 @@ import {
 import { FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput } from "@/components/chub"
 import type { UseFormReturn } from "react-hook-form"
 import { debounce } from "lodash"
+import scrollIntoView from 'scroll-into-view-if-needed';
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 
 /**
  * 通用型 {制作 报告的} 可适应 大屏 手机小屏幕的 二维表格数据编辑录入。
@@ -144,6 +146,12 @@ export function useTableEdit({
   externalData?: any | null
   onExternalDataChange?: ((data: any) => void) | null
 }) {
+  React.useEffect(() => {
+    document.body.style.overflow = 'hidden'; // 禁用
+    return () => {
+      document.body.style.overflow = 'auto'; // 恢复
+    };
+  }, []);
   // 修改 useTableEditor 函数，添加本地状态来管理表格数据而不是每次都使用 form.watch()
 
   // 1. 在 useTableEditor 函数顶部添加一个新的状态来存储本地表格数据
@@ -162,17 +170,18 @@ export function useTableEdit({
 
   // 添加一个 ref 来引用编辑器区域
   const editorRef = React.useRef<HTMLDivElement>(null)
-
+  // const boundary = React.useRef<HTMLDivElement>(null);
   // 修改 scrollToEditor 函数，使其能够处理嵌套滚动容器
   const scrollToEditor = React.useCallback(() => {
     setTimeout(() => {
       if (editorRef.current) {
         try {
           // 1. 尝试使用更现代的方法滚动到视图
-          editorRef.current.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          })
+          scrollIntoView(editorRef.current, {
+            behavior: 'smooth',
+            block: 'end',
+            boundary: document.getElementById('tabEditor-boundary'),
+          });
         } catch (e) {
           // 2. 如果 scrollIntoView 不支持选项或失败，回退到手动滚动
           // 查找所有可能的滚动容器
@@ -852,10 +861,10 @@ export function useTableEdit({
                                   <div className="flex justify-between w-full">
                                     <span className={cn("", rowNumberText)}>{`${raft * i + b + 1}`}</span>
                                     <DropdownMenu
-                                      open={isMenuOpen}
+                                      open={isMenuOpen} modal={false}
                                       onOpenChange={(open) => handleMenuOpenChange(open, rowId)}
                                     >
-                                      <DropdownMenuTrigger asChild>
+                                      <DropdownMenuTrigger asChild >
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -865,12 +874,17 @@ export function useTableEdit({
                                           •••
                                         </Button>
                                       </DropdownMenuTrigger>
-                                      <DropdownMenuContent>
+                                      <DropdownMenuContent onCloseAutoFocus={(e)=>{
+                                        // console.log("onCloseAutoFocus焦点:"+e)
+                                        e.preventDefault()
+                                      }}
+                                      >
                                         <DropdownMenuItem
-                                          onClick={() => {
+                                          onClick={(e) => {
                                             setSeq(raft * i + b)
                                             setOpenMenuId(null)
                                             scrollToEditor() // 添加滚动到编辑器
+                                            // e.preventDefault(); // 可选：阻止菜单关闭（按需）
                                           }}
                                         >
                                           修改
@@ -1332,7 +1346,7 @@ export function useTableEdit({
       // 其余代码保持不变...
 
       return (
-        <div>
+        <div >
           {headview}
           <div className="flex items-center mb-4">
             <Button variant="outline" onClick={toggleFixedColW}>

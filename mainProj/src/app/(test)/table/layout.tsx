@@ -7,10 +7,10 @@ export default async function ReportRootLayout({params, children} :
     }
 ) {
     return (
-        <>
+        <div>
            <StorageProvider>
                    {children}
            </StorageProvider>
-        </>
+        </div>
     );
 }

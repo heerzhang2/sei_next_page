@@ -4,7 +4,7 @@ import React, {useId, useState, useRef, useEffect, ChangeEventHandler} from "rea
 import {Input} from "@/components/ui/input"
 import {Textarea} from "@/components/ui/textarea"
 import {cn} from "@/lib/utils"
-import {ChevronDown, ChevronRight, ChevronUp, Calendar} from "lucide-react"
+import {ChevronDown, ChevronRight, ChevronUp,X, Calendar, Type } from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {
     autoUpdate,
@@ -19,7 +19,6 @@ import {
 } from "@floating-ui/react"
 import {Form, FormControl, FormItem, FormLabel, FormMessage} from "@/components/ui/form"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
-import {X} from "lucide-react"
 import type {ControllerRenderProps} from "react-hook-form"
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
@@ -485,7 +484,8 @@ export function SuffixInput({
         </div>
     )
 }
-//类型告警React.InputHTMLAttributes<HTMLInputElement>  改成 TextareaHTMLAttributes<HTMLTextAreaElement>
+
+
 interface MemoDateInputProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange"> {
     /** Current date value */
     value?: string
@@ -494,12 +494,11 @@ interface MemoDateInputProps extends Omit<React.TextareaHTMLAttributes<HTMLTextA
     /** Width of the text input */
     width?: string
     /** Number of rows for the text input */
-    rows?: number,
-    ref?: any;      //和dateInputRef冲突，剔除
+    rows?: number
 }
 
 /**
- * A component that allows both text input and date picker for dates
+ * A component that allows switching between text input and date picker for dates
  */
 export function MemoDateInput({
                                   id,
@@ -509,62 +508,73 @@ export function MemoDateInput({
                                   value = "",
                                   width = "10.7rem",
                                   rows = 1,
-                                  ref,
                                   ...other
                               }: MemoDateInputProps) {
-    const [textValue, setTextValue] = useState(value);
-    const dateInputRef = React.useRef<HTMLInputElement>(null);
+    const [textValue, setTextValue] = useState(value)
+    const [isDateMode, setIsDateMode] = useState(false)
 
+    // 同步外部value变化到内部状态
     useEffect(() => {
-        setTextValue(value);
-    }, [value]);
+        setTextValue(value)
+    }, [value])
 
+    // 文本输入变化处理
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const newValue = e.target.value;
-        setTextValue(newValue);
-        onChange(newValue || undefined);
-    };
+        const newValue = e.target.value
+        setTextValue(newValue)
+        onChange(newValue || undefined)
+    }
 
+    // 日期输入变化处理
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value;
-        onChange(newValue || undefined);
-    };
+        const newValue = e.target.value
+        setTextValue(newValue)
+        onChange(newValue || undefined)
+    }
 
-    const handleCalendarClick = () => {
-        if (dateInputRef.current) {
-            dateInputRef.current.type = 'date';
-            dateInputRef.current.showPicker(); // 现在应该能获取到 ref
-        }
-    };
+    // 切换输入模式
+    const toggleInputMode = () => {
+        setIsDateMode(!isDateMode)
+    }
 
     return (
-        <div className={cn("flex flex-wrap items-start", className)} style={style}>
-          <textarea
-              id={id}
-              value={textValue}
-              onChange={handleTextChange}
-              rows={rows}
-              className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
-              style={{ width }}
-              ref={ref}
-              {...other}
-          />
-            <input  id={id+"di"}
-                ref={dateInputRef}
-                value={value}
-                onChange={handleDateChange}
-                className="sr-only"
-                aria-label="Date picker"
-            />
+        <div className={cn("flex flex-wrap items-start relative", className)} style={style}>
+            {/* 根据当前模式显示不同的输入框 */}
+            {isDateMode ? (
+                // 日期输入模式
+                <input
+                    id={id ? `${id}-date` : undefined}
+                    type="date"
+                    value={value}
+                    onChange={handleDateChange}
+                    className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+                    style={{ width }}
+                    aria-label="Date picker"
+                />
+            ) : (
+                // 文本输入模式
+                <textarea
+                    id={id}
+                    value={textValue}
+                    onChange={handleTextChange}
+                    rows={rows}
+                    className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
+                    style={{ width }}
+                    {...other}
+                />
+            )}
+
+            {/* 模式切换按钮 */}
             <button
                 type="button"
-                onClick={handleCalendarClick}
-                className="flex items-center justify-center rounded-r-md border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+                onClick={toggleInputMode}
+                className="flex items-center justify-center border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+                aria-label={isDateMode ? "Switch to text input" : "Switch to date picker"}
             >
-                <Calendar size={16} />
+                {isDateMode ? <Type size={16} /> : <Calendar size={16} />}
             </button>
         </div>
-    );
+    )
 }
 
 // 创建一个可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。

@@ -124,7 +124,7 @@ export default function TableEditorExample() {
   }, [form, setStorage, setModified, storage])
 
   return (
-      <div className="container mx-auto p-4">
+      <div  id={'tabEditor-boundary'}  className="container mx-auto p-4">
         <FormProvider {...form}>
           <form className="space-y-8 @container">
             {renderTable(form, { products: { fields, append, remove, move, insert } })}
