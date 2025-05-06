@@ -253,7 +253,7 @@ export const itemResultUnqualifiedOmni =(orc: any, ItemArs:RecordOmniArea[]
             else   row++;
         }
     });
-    //返回  存储数据库的对象{no: ts,c: itRes[ts].iClass, b: itRes[ts].fdesc}; } + 前端的导航点击URL跳转编辑器关联的tag；
+    //返回  存储数据库的对象{no: ts, b: itRes[ts].fdesc}; } + 前端的导航点击URL跳转编辑器关联的tag；当没有保存c: itRes[ts].iClass,
     return failure;
 }
 

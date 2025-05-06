@@ -125,7 +125,7 @@ export function useFormFramework({
   const render = () => (
       <>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 @container">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 @container">
             {contentRenderer}
             <CardFooter className="flex flex-col justify-between border-t p-6 space-y-4">
               {Object.keys(form.formState.errors || {}).length > 0 && (
