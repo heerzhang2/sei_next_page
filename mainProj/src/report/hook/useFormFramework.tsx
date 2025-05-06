@@ -155,6 +155,7 @@ export function useFormFramework({
     render,
     handleSubmit,
     arrayControls,
+    handleConfirm
   }
 }
 

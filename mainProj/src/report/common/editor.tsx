@@ -14,6 +14,7 @@ import {instrumentOption} from "@/report/common/Instrument";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {Each_ZdSetting, useTableEdit} from "@/report/hook/use-table-edit";
 import {useCallback} from "react";
+import type {UseFormReturn} from "react-hook-form";
 // import {特殊项目编码} from "../elevator/Supervision/FormatOriginal";
 
 export interface EditorProps  extends InternalItemProps{
@@ -353,6 +354,13 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         },
         [],
     )
+    const onConfirm = useCallback(
+        (form: UseFormReturn<any, any, any>) => {
+                //保存更新externalData的操作
+        },
+        []
+    )
+
     const 默认复检表 =React.useMemo(()=>itemResultUnqualifiedOmni(storage, impressionismAs?.Item,),
         [storage,impressionismAs?.Item]);
     const headview=<h2 >
@@ -378,7 +386,7 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         },
         [children,nestRendererFactory ],
     )
-    const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+    const { render,handleConfirm } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
 
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
         {render()}
