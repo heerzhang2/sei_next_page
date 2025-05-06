@@ -20,15 +20,15 @@ export default function ReportLayout({
   }[],
 }>) {
   const params = useParams()
-  // const [isClient, setIsClient] = useState(false);
-  // useEffect(() => {
-  //   setIsClient(true);
-  // }, []);
-  // // Server and initial client render - must match exactly
-  // if (!isClient) {
-  //   return <div className="skelon-placeholder">Loading...</div>;
-  // }
-  // // After hydration, render the full component
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  //这才能绝对避免水和的报错！
+  if (!isClient) {
+    return <div className="skelon-placeholder">SSR加载中...</div>;
+  }
+  // After hydration, render the full component
 
     //children有两类情形：1，正式报告或记录  2，单独的编制编辑器。
     return (<>
