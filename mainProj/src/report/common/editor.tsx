@@ -4,7 +4,7 @@ import {EditStorageContext, useStorage} from "../StorageContext";
 import {itemResultUnqualifiedSsm, RecordInputConfig} from "./config";
 import {useMeasureInpFilter} from "./hooks";
 import {measurementRender} from "./measure";
-import {itemResultUnqualifiedOmni} from "./omni";
+import {itemResultUnqualifiedOmni, useItemsMapOmni} from "./omni";
 import {z} from "zod";
 import {tail测仪器} from "@/report/recreation/waterJj/repView";
 import {Button, Card, CardContent} from "@/components/ui";
@@ -314,11 +314,13 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     const impressionismAs =React.useMemo(() => {
         return setup({rep,orc:storage});
     }, [rep, storage?._Oitems, setup]);
+    const [mapNoTag] = useItemsMapOmni({ ItemArs: impressionismAs?.Item, notCheckNo: false })
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
         const schemaTab = {} as any
         config.forEach(([t,field,s,o,park]) => {
-            schemaTab[field] = z.string().optional()
+            if(field!=="c")         //项目类别字段不要给用户编辑
+                schemaTab[field] = z.string().optional()
         })
         schemaFields["unq"]= z.array(z.object(schemaTab))
         return z.object(schemaFields)
@@ -336,7 +338,7 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     const arrayFields =React.useMemo(() => {
         const itemTemplate = {} as any
         config.forEach(([t,field,s,o,park]) => {
-            itemTemplate[field] = ""
+           itemTemplate[field] = ""
         })
         return [ {name:"unq", itemTemplate,} ]
     }, [])
@@ -357,20 +359,29 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
 
     const onConfirm = useCallback(
         (form: UseFormReturn<any, any, any>) => {
-                //保存更新externalData的操作
+            //保存更新externalData的操作
             handleConfirm()
         },
         []
     )
 
-    const 默认复检表 =React.useMemo(()=>itemResultUnqualifiedOmni(storage, impressionismAs?.Item,),
+    const 默认复检表 =React.useMemo(()=>{
+            let falts=itemResultUnqualifiedOmni(storage, impressionismAs?.Item);
+            falts.forEach((row,index) => {
+                const mapn = mapNoTag!.get(row.no);
+                //数据库没有存储c 不合格表的类别字段；
+                falts[index].c= `${mapn?.pre ?? ''}${mapn?.iclas ?? ''}`
+            })
+            return falts;
+          },
         [storage,impressionismAs?.Item]);
+
     const headview=<h2 >
         {label}
     </h2>;
 
     const [nestRendererFactory]=useTableEdit({onConfirm, config, table:'unq',externalData: storage,
-        headview,defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,saveFixC:true,
+        headview,defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,
         // onExternalDataChange: handleExternalDataChange
     });
 

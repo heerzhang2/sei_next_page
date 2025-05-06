@@ -243,7 +243,7 @@ export const itemResultUnqualifiedOmni =(orc: any, ItemArs:RecordOmniArea[]
                         if(because){
                             let mgLastOneEt=area.items[row+et.offset];
                             if(!mgLastOneEt)   throw new Error(`没对应最后行${row+et.offset}`);
-                            failure.push({no:mgLastOneEt.mergNos, b: because });
+                            failure.push({no:mgLastOneEt.mergNos, b: because});
                         }
                     }
                     else failure.push({no:et.nos, b: orc[et.name+'_D']});
@@ -253,7 +253,7 @@ export const itemResultUnqualifiedOmni =(orc: any, ItemArs:RecordOmniArea[]
             else   row++;
         }
     });
-    //返回  存储数据库的对象{no: ts, b: itRes[ts].fdesc}; } + 前端的导航点击URL跳转编辑器关联的tag；当没有保存c: itRes[ts].iClass,
+    //返回  存储数据库的对象{no: ts,b: itRes[ts].fdesc}; } + 前端的导航点击URL跳转编辑器关联的tag；
     return failure;
 }
 
