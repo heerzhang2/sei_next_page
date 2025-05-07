@@ -108,8 +108,8 @@ export function useFormFramework({
 
   // 处理确认按钮 - 临时保存到 storage
   const handleConfirm = () => {
-    // 获取当前表单值
-    const currentValues = form.getValues()
+    // 获取当前表单值    :最早的有问题版本 const currentValues = form.getValues()  //const currentValues = { ...form.getValues() }     //浅拷贝
+    const currentValues =structuredClone(form.getValues())
     // 更新 storage
     setStorage((prevStorage) => ({
       ...prevStorage,
