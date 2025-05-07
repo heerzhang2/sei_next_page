@@ -1,8 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Text, CCell, Table, TableBody, TableRow, TableHead, Cell,
-} from "customize-easy-ui-component";
 import {CCellUnit, InternalItemProps, } from "../../common/base";
 import {calcAverageArrObj, } from "../../../common/tool";
 import {RepLink} from "../../common/base";
@@ -15,14 +11,14 @@ import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {Input,} from "@/components/ui";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-
+import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 
 export const config加速度=[ ['加空载','空载'],['加满载','满载'],['加偏载','偏载'],['加他况','其他载荷工况'] ];
-export const tail加速度= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
+export const tail加速度= <span className="text-[0.75rem]">
     注：<br/>
     （1）设计加速度未涉及的工况无需检测；<br/>
     （2）设计加速度在不同乘坐位置之间有明显差异时，应选择不少于三处位置进行测试，在本表中备注栏中填写其余位置说明及测试结果且对加速度区域进行综合判定。
-</Text>;
+</span>;
 
 interface Props  extends InternalItemProps{
     sseq: number;
@@ -223,7 +219,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                                                     </CardContent>
                                                 </Card>
                                             ))}
-                                            <Text variant="h6">{title}-平均值：Ax.max= {avv[0]} ,Ax.min= {avv[1]} ,Ay.max= {avv[2]} ,Ay.min= {avv[3]} ,Az.max= {avv[4]} ,Az.min= {avv[5]} ;</Text>
+                                            <span>{title}-平均值：Ax.max= {avv[0]} ,Ax.min= {avv[1]} ,Ay.max= {avv[2]} ,Ay.min= {avv[3]} ,Az.max= {avv[4]} ,Az.min= {avv[5]} ;</span>
                                         </CardContent>
                                     </Card>
                                 </TabsContent>
@@ -231,17 +227,17 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                         })}
                     </Tabs>
 
-                    <Card className="py-1">
+                    <Card className="py-1 mr-1">
                         <CardHeader>
                             <CardTitle>判定部分</CardTitle>
                         </CardHeader>
                         <CardContent className="px-1">
                             <div className="flex flex-row gap-1">
                                 <div>
-                                    <h3 className="text-lg font-medium mb-4">测试结果:</h3>
+                                    <h4 className="text-lg font-medium mb-4">测试结果:</h4>
                                     <div className="flex flex-wrap justify-center gap-1">
                                         {AxyzCfg.map(([field, fieldTitle]) => (
-                                            <div key={field} className="flex items-center gap-2">
+                                            <div key={field} className="flex items-center gap-1">
                                                 <span>{fieldTitle}</span>
                                                 <FormField
                                                     control={form.control}
@@ -264,10 +260,10 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-medium mb-4">设计值:</h3>
+                                    <h4 className="text-lg font-medium mb-4">设计值:</h4>
                                     <div className="flex flex-wrap justify-center gap-1">
                                         {AxyzCfg.map(([field, fieldTitle]) => (
-                                            <div key={field} className="flex items-center gap-2">
+                                            <div key={field} className="flex items-center gap-1">
                                                 <span>{fieldTitle}</span>
                                                 <FormField
                                                     control={form.control}
@@ -373,11 +369,10 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                                { orc: any, rep: any, label: any, children?: any, stnum?: number }
 ) => {
     return <>
-        <div css={{"@media print": {paddingBottom: '4rem', pageBreakInside: 'avoid'}}}>
-            <Text variant="h4" css={{marginTop: '1rem',}}>{label}</Text>
+        <div>
+            <h2>{label}</h2>
         </div>
-        <Table id={'Acceleration'} fixed={ ["13%", "44%", "10%", "%"] }
-               css={{borderCollapse: 'collapse', "@media print": {marginTop: '-4rem'}}} tight miniw={800}>
+        <FlexibleTable id={'Acceleration'} columnWidths={ ["13%", "44%", "10%", "%"] }>
             <TableBody>
                 <RepLink ori rep={rep} tag={'Acceleration'}>
                     <TableRow>
@@ -392,17 +387,16 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                     </TableRow>
                 </RepLink>
             </TableBody>
-        </Table>
-        <div css={{"@media print": {paddingBottom: '7rem', pageBreakInside: 'avoid'}}}/>
-        <Table fixed={ ["13%", "9%", "13%", "13%", "13%", "13%", "%", "13%"] }
-               css={{borderCollapse: 'collapse', "@media print": {marginTop: '-7rem'}}} tight miniw={800}>
-            <TableHead>
+        </FlexibleTable>
+
+        <FlexibleTable columnWidths={ ["13%", "9%", "13%", "13%", "13%", "13%", "%", "13%"] }>
+            <TableHeader>
                 <TableRow><CCell rowSpan={3}>测量工况</CCell><CCell rowSpan={3}>测量次数</CCell><CCell
                     colSpan={6}>加速度A（g）</CCell></TableRow>
                 <TableRow><CCell colSpan={2}>Ax</CCell><CCell colSpan={2}>Ay</CCell><CCell
                     colSpan={2}>Az</CCell></TableRow>
                 <TableRow><CCell>max</CCell><CCell>min</CCell><CCell>max</CCell><CCell>min</CCell><CCell>max</CCell><CCell>min</CCell></TableRow>
-            </TableHead>
+            </TableHeader>
             <TableBody>
                 <RepLink ori rep={rep} tag={'Acceleration'}>
                     {config加速度.map(([name, title], t: number) => {
@@ -431,8 +425,8 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                     </TableRow>
                 </RepLink>
             </TableBody>
-        </Table>
-        <Table fixed={ ["10.1%", "44%", "14.1%", "%"] } css={{borderCollapse: 'collapse', }} tight miniw={800}>
+        </FlexibleTable>
+        <FlexibleTable columnWidths={ ["10.1%", "44%", "14.1%", "%"] }>
             <TableBody>
                 <RepLink ori rep={rep} tag={'Acceleration'}>
                     <TableRow>
@@ -444,13 +438,13 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                     </TableRow>
                     <TableRow>
                         <CCell>备注</CCell>
-                        <Cell split={true} colSpan={3}>
-                            <div css={{whiteSpace: 'pre-wrap'}}><Text>{orc?.加速备注 || '／'}</Text></div>
-                        </Cell>
+                        <TableCell split={true} colSpan={3}>
+                            <div className="text-sm min-h-4 whitespace-pre-wrap">{orc?.加速备注 || '／'}</div>
+                        </TableCell>
                     </TableRow>
                 </RepLink>
             </TableBody>
-        </Table>
+        </FlexibleTable>
         {children ?? tail加速度}
     </>;
 };

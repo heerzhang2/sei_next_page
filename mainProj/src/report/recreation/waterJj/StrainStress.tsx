@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-    Text, Input, TextArea, InputLine, LineColumn, useTheme, Table, TableBody, TableRow, CCell, Cell, TableHead,
+    Text, Input, TextArea, InputLine, LineColumn, useTheme, Table,  Cell, TableHead,
 } from "customize-easy-ui-component";
 import {
     CCellUnit, InspectRecordLayout, InternalItemProps, RepLink, SelectHookfork, useInputControlSure,
@@ -27,6 +27,7 @@ import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {ImageComponent} from "@/components/shub";
 import {Each_ZdSetting} from "@/report/hook/use-table-edit";
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 
 export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
