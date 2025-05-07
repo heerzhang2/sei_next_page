@@ -21,7 +21,7 @@ import {
 } from "@/components/ui"
 import { FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput } from "@/components/chub"
 import type { UseFormReturn } from "react-hook-form"
-import { Check, X } from "lucide-react"
+import { Check, X, Undo,EyeClosed } from "lucide-react"
 
 export type Each_ZdSetting = [
   n1: string, //字段标题名
@@ -139,8 +139,7 @@ export function useTableEdit({
   onExternalDataChange?: ((data: any) => void) | null
   onConfirm?: ((form: UseFormReturn<any, any, any>) => void) | null
 }) {
-  // 修改 useTableEditor 函数，添加本地状态来管理表格数据而不是每次都使用 form.watch()
-  // 1. 在 useTableEditor 函数顶部添加一个新的状态来存储本地表格数据
+  //避免输入性能问题：引入 1. 在 useTableEditor 函数顶部添加一个新的状态来存储本地表格数据
   const [localTableData, setLocalTableData] = React.useState<any[]>([])
 
   // 添加一个状态来跟踪当前编辑的行是否是新插入的行
@@ -316,11 +315,12 @@ export function useTableEdit({
         }
 
         // 添加关闭编辑器的函数
-        const handleCloseEditor = () => {
+        const handleCloseEditor = (e) => {
           setShowEditorPortal(false)
           setSeq(null)
+          setIsEditingNewRow(false)
+          e.preventDefault()
         }
-
         // 添加确认编辑的函数
         const handleConfirmEdit = (e) => {
           if (form && onConfirm) {
@@ -332,7 +332,7 @@ export function useTableEdit({
           setIsEditingNewRow(false) // 重置新行状态
         }
         // 修改取消编辑的函数，只重置当前行数据
-        const handleCancel = React.useCallback(() => {
+        const handleCancel = React.useCallback((e) => {
           if (form && seq !== null) {
             if (isEditingNewRow && remove) {
               // 如果是新增或插入的行，直接移除
@@ -367,11 +367,11 @@ export function useTableEdit({
               })
             }
           }
-
           // 关闭编辑器并重置状态
           setShowEditorPortal(false)
           setSeq(null)
           setIsEditingNewRow(false) // 重置新行状态
+          e.preventDefault()
         }, [form, seq, config, table, localTableData, remove, handleTableOperation, isEditingNewRow])
 
         const isCenterMode = editorPosition?.position === "center"
@@ -389,12 +389,16 @@ export function useTableEdit({
                   <div>在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
                   <div className="flex gap-2 ml-auto">
                         <>
+                          <Button variant="ghost" size="sm" onClick={handleCloseEditor}>
+                            <Check className="mr-2 h-4 w-4" />
+                            关闭
+                          </Button>
                           <Button variant="default" size="sm" onClick={handleConfirmEdit}>
-                            <Check className="h-4 w-4 mr-2" />
-                            确认
+                            <EyeClosed className="h-4 w-4 mr-2" />
+                            同步
                           </Button>
                           <Button variant="ghost" size="sm" onClick={handleCancel}>
-                            <X className="mr-2 h-4 w-4" />
+                            <Undo className="mr-2 h-4 w-4" />
                             取消
                           </Button>
                         </>

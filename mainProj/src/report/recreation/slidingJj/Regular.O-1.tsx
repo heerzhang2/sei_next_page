@@ -14,7 +14,7 @@ import {ActionMapItem} from "../../common/ActionMapItem";
 import {config记录} from "./FormatOriginal";
 import {DeviceSurveyD} from "../../crane/editor";
 import {WitnessSimple} from "../../elevator/stest/editor";
-import {config检测复检表, RecheckEditor} from "../../common/editor";
+import {config检测复检表, config检验复检表, RecheckEditor} from "../../common/editor";
 import {ConclusionWaterJj} from "../waterJj/Conclusion";
 import {ObserveEdit} from "../../hook/useObserve";
 import {config主技术, tail主技} from "./MainTechnical";
@@ -50,7 +50,7 @@ const recordPrintList =[
     createItem('Instrument', <ItemInstrumentTable label={'一、主要测量设备性能检查'} />),
     createItem('Survey', <DeviceSurveyD config={config设备概况} label={'二、设备概况'}/>),
     createItem('Item', null),
-    createItem('ReCheck', <RecheckEditor config={config检测复检表} label={'四、检验不符合项目记录及复检结果'} setup={setupItemAreaRoute}/>),
+    createItem('ReCheck', <RecheckEditor config={config检验复检表} label={'四、检验不符合项目记录及复检结果'} setup={setupItemAreaRoute}/>),
     createItem('Conclusion', <ConclusionWaterJj startd label={'五、现场检验意见'}/>),
     createItem('Witness', <WitnessSimple label={'六、 备注 七、记事'} titles={['七、记事','六、备注']} witlist={记事选}
                                          children={[null,

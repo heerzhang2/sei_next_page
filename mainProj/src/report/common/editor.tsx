@@ -300,7 +300,7 @@ export const ItemRecheckOmniOther=
 export const config检测复检表=[['类别','c',30],['项目编号','no',84],['检测不符合内容','b',150],
     ['整改情况','rs',50,{t:'s',l:clcOptions}],['确认日期','d',65,{t:'D'}]] as Each_ZdSetting[];
 export const config检验复检表=[['类别','c',30],['项目编号','no',84],['检验不符合内容','b',150],
-    ['复检结果','rs',50, {t:'s',l:clcOptions}],['确认日期','d',65,{t:'d'}]] as Each_ZdSetting[];
+    ['复检结果','rs',50, {t:'s',l:clcOptions}],['确认日期','d',65,{t:'D'}]] as Each_ZdSetting[];
 
 export interface RecheckEditorProps  extends ItemRecheckOmniRProps{
     config?: Each_ZdSetting[];

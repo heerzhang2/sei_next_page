@@ -180,7 +180,8 @@ export const UnqualifiedIspTable = ({
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-gray-700">
                             {titles.map((title, index) => (
-                                <CCell key={index} className="text-center border-r border-gray-700 last:border-r-0">
+                                //删除 ”last:border-r-0“
+                                <CCell key={index} className="text-center border-r border-gray-700">
                                     {title}
                                 </CCell>
                             ))}
@@ -218,7 +219,7 @@ export const UnqualifiedIspTable = ({
         )}
       </>
 };
-export const UnqualifiedIspTable2= ({printing, rep,  orc, mapNoTag, original,fixed=["4.5%","10.5%","%","10.5%","12.5%"],label,
+const UnqualifiedIspTable2= ({printing, rep,  orc, mapNoTag, original,fixed=["4.5%","10.5%","%","10.5%","12.5%"],label,
                                      titles=['序号','类别/编号','检验不合格内容记录','复检结果','复检日期'] }
                                             :{printing?:boolean, rep:any, orc:any, mapNoTag?:Map<string,NosTagMapping>, original?:boolean,fixed?:any[],label?:any,titles?:string[]}
 ) => {
