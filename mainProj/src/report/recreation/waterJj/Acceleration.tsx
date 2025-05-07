@@ -12,6 +12,7 @@ import {Input,} from "@/components/ui";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
+import {cn} from "@/lib/utils";
 
 export const config加速度=[ ['加空载','空载'],['加满载','满载'],['加偏载','偏载'],['加他况','其他载荷工况'] ];
 export const tail加速度= <span className="text-[0.75rem]">
@@ -137,7 +138,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
                                     <FormLabel>测试位置</FormLabel>
-                                    <FormControl className="w-full">
+                                    <FormControl className="w-full mr-1">
                                         <BlobInputList rows={2}  {...field}  />
                                     </FormControl>
                                     <FormMessage />
@@ -151,7 +152,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
                                     <FormLabel>风速</FormLabel>
-                                    <FormControl className="w-full">
+                                    <FormControl className="w-full mr-1">
                                         <SuffixInput  unit={"m/s"}  {...field}  />
                                     </FormControl>
                                     <FormMessage />
@@ -190,7 +191,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             const avv = AxyzNm.map((tag, t: number) => calcAverageArrObj(currentTableData, (row) => row?.[tag], 1, stnum));
                             return (
                                 <TabsContent key={name} value={name} >
-                                    <Card className="py-1">
+                                    <Card className="bg-transparent border-dashed py-1">
                                         <CardHeader>
                                             <CardTitle>{title} 加速度测量</CardTitle>
                                         </CardHeader>
@@ -226,8 +227,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             )
                         })}
                     </Tabs>
-
-                    <Card className="py-1 mr-1">
+                    <Card className="bg-transparent border-dashed py-1">
                         <CardHeader>
                             <CardTitle>判定部分</CardTitle>
                         </CardHeader>
@@ -297,7 +297,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
                                     <FormLabel>加速度区域</FormLabel>
-                                    <FormControl className="w-full">
+                                    <FormControl className="w-full mr-1">
                                         <BlobInputList rows={2} datalist={regions} {...field}  />
                                     </FormControl>
                                     <FormMessage />
@@ -311,7 +311,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
                                     <FormLabel>设计加速度区域</FormLabel>
-                                    <FormControl className="w-full">
+                                    <FormControl className="w-full mr-1">
                                         <BlobInputList rows={2}  {...field}  />
                                     </FormControl>
                                     <FormMessage />
