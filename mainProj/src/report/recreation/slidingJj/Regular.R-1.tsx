@@ -120,12 +120,9 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 </PrintReserveLeast>
 
                 <span className="print:text-[0.75rem]"></span>
-                <UnqualifiedIspTable
-                    rep={rep}
-                    orc={orc}
-                    mapNoTag={mapNoTag}
+                <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag}
                     titles={["序号", "项目编号", "检验不符合内容记录", "复检结果", "复检日期"]}
-                    label={<h4>检验不符合项目内容及复检结果</h4>}
+                    label={<h2 className="text-center text-3xl mb-2">检验不符合项目内容及复检结果</h2>}
                 />
             </div>
             <div>

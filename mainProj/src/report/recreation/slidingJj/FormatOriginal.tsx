@@ -1,29 +1,22 @@
 "use client"
 import * as React from "react";
-import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {RepLink, ReportViewProps,} from "../../common/base";
-import {末尾链接,} from "../../common/rarelyVary";
 import {setupItemAreaRoute} from "./orcIspConfig";
 import {useItemsMapOmni} from "../../common/omni";
-import queryString from "query-string";
 import {config观测数据, config观测数据2, config设备概况, tail观测} from "./orcBase";
 import {tItems现场} from "./Regular.O-1";
 import {Column_Setting, useFormatOmni} from "../../common/useFormatOmni";
 import {设备概况页} from "../../park/views";
 import {常用现场条件} from "../../park/viewX";
-import {首页设备概况Cr} from "../../crane/bridgeDJ/repView";
 import {UnqualifiedIspTable} from "../../common/general";
 import {InstrumentVw, 测量允许检测, 测量备注两半, } from "../waterJj/repView";
 import {config主技术, tail主技} from "./MainTechnical";
-import {填写须知} from "../../escalator/rarelyVary";
 import {StrainStressVw} from "../waterJj/StrainStress";
 import {AccelerationVw} from "../waterJj/Acceleration";
 import {DirectLink} from "@/routing/Link";
-import {Table} from "@/components/ui/table";
 import {首页概况WaterJj} from "@/report/recreation/waterJj/rarelyVary";
 import {填写须知recr} from "@/report/recreation/slidingJj/rarelyVary";
-import {undefined} from "zod";
-import {PrintReserveLeast} from "@/components/print-reserve-least";
 import PageSectionOrientation from "@/components/page-section-orientation";
 
 
@@ -85,14 +78,13 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             </PageSectionOrientation>
 
             <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag} titles={['序号','项目编号','不合格内容描述','复检结果','复检日期']}
-                    label={<h2 className="text-left">四、检测不合格记录及复检结果</h2>}
+                    label={<h2 className="text-left text-xl mb-2">四、检测不合格记录及复检结果</h2>}
             />
- {/*
-            <h4 className="mt-4 print:mt-0 print:break-before-all">五、现场检验意见</h4>
-            <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/ALL`}>
-                <h1 className={`text-center ${orc?.检验结论?.length > 12 ? 'text-2xl' : 'text-4xl'} `}>
+            <h2 className="mt-4 print:mt-0 text-2xl break-before-page">五、现场检验意见</h2>
+            <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
+                <div className={`text-center ${orc?.检验结论?.length > 12 ? 'text-2xl' : 'text-4xl'} w-full border-1 border-solid border-black rounded-lg p-4`}>
                     {orc?.检验结论}
-                </h1>
+                </div>
             </DirectLink>
             <FlexibleTable columnWidths={["15%", "%", "15%", "20%"]}>
                 <TableBody>
@@ -112,33 +104,25 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     </DirectLink>
                 </TableBody>
             </FlexibleTable>
-            <span>注：特殊情况，应在备注中说明检验员所负责检验的项目编号。</span>
-            <h4 className="mt-4">六、备注</h4>
-            <Table><TableBody>
-                <RepLink ori rep={rep} tag={'Witness'}>
-                    <TableRow><TableCell>
-                       <div className="min-h-4 whitespace-pre-wrap">{orc.大备注 ?? '／'}</div>
-                    </TableCell></TableRow>
-                </RepLink>
-            </TableBody></Table>
+            <h2 className="mt-4 text-2xl">六、备注</h2>
+            <RepLink ori rep={rep} tag={'Witness'}>
+                <div className={`text-sm min-h-4 whitespace-pre-wrap w-full border-1 border-solid border-black p-1`}>
+                    {orc.大备注 ?? '／'}
+                </div>
+            </RepLink>
             <span className="text-[0.75rem]">注：本备注的内容在报告中体现。</span>
-            <h4 className="mt-4">七、记事</h4>
-            <Table><TableBody>
-                <RepLink ori rep={rep} tag={'Witness'}>
-                    <TableRow><TableCell>
-                        <div className="min-h-4 whitespace-pre-wrap">{orc.资料编号 || '／'}</div>
-                    </TableCell></TableRow>
-                </RepLink>
-            </TableBody></Table>
-
+            <h2 className="mt-4 text-2xl">七、记事</h2>
+            <RepLink ori rep={rep} tag={'Witness'}>
+                <div className={`text-sm min-h-4 whitespace-pre-wrap w-full border-1 border-solid border-black p-1`}>
+                    {orc.资料编号 ?? '／'}
+                </div>
+            </RepLink>
             {测量备注两半({orc, rep, config:config观测数据(orc),config2:config观测数据2,mem:'观备注',label:'八、观测数据及测量结果记录',children:tail观测})}
             {测量允许检测({orc, rep, config:config主技术,tag:'MainTechnical',mem:'主技备注',label:'附录A K7.5 主要技术参数测试',children:tail主技})}
             <StrainStressVw orc={orc} rep={rep} sensit label={'附录B K7.6应力测试记录'}/>
             <AccelerationVw orc={orc} rep={rep}  stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>
-            {常用现场条件({orc, rep, config: tItems现场,dcln:5,label:'附录D：现场检验条件确认'})}*/}
+            {常用现场条件({orc, rep, config: tItems现场,dcln:5,label:'附录D：现场检验条件确认'})}
         </div>
     </React.Fragment>
   );
 }
-
-//text-[0.7rem] print:

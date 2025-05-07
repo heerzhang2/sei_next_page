@@ -239,15 +239,11 @@ export const InstrumentVw = ({ orc, rep, label, fromHead }: {
           <FlexibleTable id="Instrument" columnWidths={["%", "24%", "22%", "8%", "8%"]}>
             <TableHeader>
               <TableRow>
-                <CCell>测量设备名称</CCell>
-                <CCell>规格型号</CCell>
-                <CCell>仪器设备编号</CCell>
+                <CCell className="text-sm">测量设备名称</CCell>
+                <CCell className="text-sm">规格型号</CCell>
+                <CCell className="text-sm">仪器设备编号</CCell>
                 <CCell className="text-sm">仪器设备状态-开机后</CCell>
                 <CCell className="text-sm">仪器设备状态-关机前</CCell>
-              </TableRow>
-              <TableRow>
-                <CCell>开机后</CCell>
-                <CCell>关机前</CCell>
               </TableRow>
             </TableHeader>
             <TableBody>

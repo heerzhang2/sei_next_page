@@ -166,43 +166,34 @@ export const UnqualifiedIspTable = ({
     const urlhead=`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}`;
     return <>
         {orc?.unq ? (
-            <div className="space-y-6">
-                {/* 报告编号 */}
-                <div className="flex flex-row-reverse mr-8 mb-6 print:mb-0">
-                <span className="text-base font-medium">
-                  报告编号：{rep.isp?.no}
-                </span>
-                </div>
-
-                {/* 主表格 */}
+            <div className="space-y-6 break-before-page">
+                <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
+                  {tbLabel}
+                </DirectLink>
                 <FlexibleTable columnWidths={fixed}>
-                    {/* 表头 */}
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-gray-700">
                             {titles.map((title, index) => (
                                 //删除 ”last:border-r-0“
-                                <CCell key={index} className="text-center border-r border-gray-700">
+                                <CCell key={index} className="text-sm border-r border-gray-700">
                                     {title}
                                 </CCell>
                             ))}
                         </TableRow>
                     </TableHeader>
-
-                    {/* 表格内容 */}
                     <TableBody>
                         {orc.unq?.map((bug: any, i: number) => {
                             const mapn = mapNoTag!.get(bug.no);
-
                             return <TableRow key={i} className="border-b border-gray-700 hover:bg-transparent">
                                         <DirectLink href={`${urlhead}/${mapn?.tag}`}>
-                                            <CCell className="text-center px-0">{i + 1}</CCell>
-                                            <CCell className="text-center px-0">{`${mapn?.pre ?? ''}${mapn?.iclas ?? ''}${bug.no}`}</CCell>
-                                            <CCell className="text-center px-0">{bug.b}</CCell>
+                                            <CCell className="text-sm px-0">{i + 1}</CCell>
+                                            <CCell className="text-sm px-0">{`${mapn?.pre ?? ''}${mapn?.iclas ?? ''}${bug.no}`}</CCell>
+                                            <CCell className="text-sm px-0">{bug.b}</CCell>
                                         </DirectLink>
                                         {/* 复检行 */}
                                         <DirectLink href={`${urlhead}/ReCheck?from=${bug.no}`}>
-                                            <CCell className="text-center px-0">{bug.rs}</CCell>
-                                            <CCell className="text-center px-0">{bug.d}</CCell>
+                                            <CCell className="px-0">{bug.rs}</CCell>
+                                            <CCell className="text-sm px-0">{bug.d}</CCell>
                                         </DirectLink>
                              </TableRow>
                         })}
@@ -219,65 +210,7 @@ export const UnqualifiedIspTable = ({
         )}
       </>
 };
-const UnqualifiedIspTable2= ({printing, rep,  orc, mapNoTag, original,fixed=["4.5%","10.5%","%","10.5%","12.5%"],label,
-                                     titles=['序号','类别/编号','检验不合格内容记录','复检结果','复检日期'] }
-                                            :{printing?:boolean, rep:any, orc:any, mapNoTag?:Map<string,NosTagMapping>, original?:boolean,fixed?:any[],label?:any,titles?:string[]}
-) => {
-  const tbLabel=label?? <h2>检验不合格项目内容及复检结果</h2>;
-  const urlhead=`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}`;
-  return  <>
-    { orc?.unq?  <div>
-          <span css={{display: 'flex',flexDirection: 'row-reverse',marginRight: '2rem',
-            "@media print": {pageBreakBefore: 'always', },
-          }}>报告编号：{rep.isp?.no}</span>
-          <FlexibleTable  columnWidths={fixed}>
-            <TableBody>
-              <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
-                <TableRow><CCell colSpan={5}>{tbLabel}</CCell></TableRow>
-              </DirectLink>
-            </TableBody>
-          </FlexibleTable>
-          <FlexibleTable  columnWidths={fixed}>
-            <TableHeader>
-              <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
-                <TableRow>
-                  <CCell>{titles[0]}</CCell>
-                  <CCell>{titles[1]}</CCell>
-                  <CCell>{titles[2]}</CCell>
-                  <CCell>{titles[3]}</CCell>
-                  <CCell>{titles[4]}</CCell>
-                </TableRow>
-              </DirectLink>
-            </TableHeader>
-            <TableBody>
-              {orc?.unq?.map((bug:any, i:number) => {
-                const mapn=mapNoTag!.get(bug.no);
-                return (
-                    <TableRow key={i}>
-                      <DirectLink key={i} href={urlhead+`/${mapn?.tag}`}>
-                        <CCell>{i+1}</CCell>
-                        <CCell>{mapn?.pre??''}{mapn?.iclas??''}{bug.no}</CCell>
-                        <CCell>{bug.b}</CCell>
-                      </DirectLink>
-                      <DirectLink key={i+'r'} href={urlhead+`/ReCheck?from=${bug.no}`}>
-                        <CCell>{bug.rs}</CCell>
-                        <CCell>{bug.d}</CCell>
-                      </DirectLink>
-                    </TableRow>
-                );
-              }) }
-            </TableBody>
-          </FlexibleTable>
-        </div>
-        :
-        printing?  null :
-            <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
-              <Button variant="ghost"  css={{"@media print": {display: 'none'} }}  noBind
-              >{tbLabel}</Button>
-            </DirectLink>
-    }
-  </>;
-};
+
 /**编辑器多选的组件 基础 回调：类似高阶函数？
  * @returns {} view: 格式化记录或报告；edit: 编辑器
  * */

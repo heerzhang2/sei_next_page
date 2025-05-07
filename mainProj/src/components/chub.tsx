@@ -178,7 +178,7 @@ export function CollapsibleFormSection({
                         </div>
                     )}
                 </div>
-                {/*取经自JumpMeasure的意外效果来纠正手机上编制页面滚动条效果*/}
+                {/*取经自JumpMeasure的意外效果来纠正手机上编制页面滚动条效果,台式机该删除这个*/}
                 <span className="absolute -bottom-1 left-0 right-0 h-[1px]"/>
             </div>
         </div>
