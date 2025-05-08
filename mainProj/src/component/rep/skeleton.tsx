@@ -11,7 +11,8 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
 
-//公用的组件： <ReportOrRecord id={""} />
+/**报告记录结合显示的框架
+* */
 export default function Skeleton({
                                    children,repPanel
                                }: Readonly<{
@@ -62,7 +63,7 @@ export default function Skeleton({
             {isSmallScreen? <>
                 {isLandscape ? (
                     <div className="flex h-full">
-                        {/* Vertical tabs layout for landscape */}
+                        {/*手机横屏的 Vertical tabs layout for landscape */}
                         <div className="flex flex-col w-full h-full">
 {/*                            <div className="hidden flex items-center justify-between p-4 border-b">
                                 <h2 className="text-lg font-medium">Project Editor</h2>
@@ -101,14 +102,14 @@ export default function Skeleton({
                                             <div
                                                 className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
                                                 <div
-                                                    className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto scrollable-content">
+                                                    className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto ">
                                                     {repPanel}
                                                 </div>
                                             </div>
                                             <div
                                                 className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
                                                 <div
-                                                    className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content">
+                                                    className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto  touch-pan-y touch-pinch-zoom">
                                                     {children}
                                                 </div>
                                             </div>
@@ -120,7 +121,7 @@ export default function Skeleton({
                     </div>
 
                 ) : (
-                    /* Portrait mode with sticky tabs */
+                    /*手机竖屏的 Portrait mode with sticky tabs */
                     <Tabs value={activeTab}>
                         <div className="flex flex-col h-screen">
                             <div className="sticky top-0  bg-white border-b">
@@ -145,13 +146,13 @@ export default function Skeleton({
                                 <div className="h-[calc(100vh-33px)]">
                                     <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
                                         <div
-                                            className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto scrollable-content">
+                                            className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto ">
                                             {repPanel}
                                         </div>
                                     </div>
                                     <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
                                         <div id='tabEditor-boundary'
-                                            className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto scrollable-content">
+                                            className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto ">
                                             {children}
                                         </div>
                                     </div>
@@ -162,7 +163,7 @@ export default function Skeleton({
                 )}
                 </>
                 :
-                <SplitViewSticky
+                <SplitViewSticky      //正常电脑屏幕的
                     className="overflow-auto"
                     defaultSplit={50}
                     minLeftWidth={0}
