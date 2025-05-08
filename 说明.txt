@@ -490,4 +490,8 @@ http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/5.1
 1. `-webkit-overflow-scrolling: touch` 在较新的 iOS 版本中已经是默认行为，但在一些旧版本或特定情况下仍然有用
 2. Tailwind CSS 4.0 中的 `touch-pan-y` 和 `touch-pan-x` 类是处理触摸滚动的推荐方式
 3. 如果遇到特定的 iOS 滚动问题，可能需要结合其他技术，如自定义滚动处理或使用专门的滚动库
-touch-pan-y touch-pinch-zoom
+touch-pan-y touch-pinch-zoom 手机横屏的
+                                                <div
+                                                    className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto  touch-pan-y touch-pinch-zoom">
+                                                    {children}
+                                                </div>
