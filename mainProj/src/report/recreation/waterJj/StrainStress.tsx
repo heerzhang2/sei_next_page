@@ -14,6 +14,7 @@ import {clcOptions} from "@/report/common/ActionMapItem";
 import {ImageComponent} from "@/components/shub";
 import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
+import {PrintReserveLeast} from "@/components/print-reserve-least";
 
 export const tail应变= <span className="text-[0.75rem]">
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
@@ -218,8 +219,8 @@ export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label
     const rowsc=Math.ceil(orc?.测点表?.length/2) || 0;        //最多抵达行个数
     //因“测点1 2”列的并不在config字段，无法上const [renderRows,]=useRep2hTableViewer(config测点表, '测点表', orc,true,true,true);
     return <>
-        <h2 className="text-2xl">{label}</h2>
-        <FlexibleTable id={'StrainStress'} columnWidths={ ["8.2%","3%","39%","11%","%"] }>
+        <h2 className="text-2xl mt-4">{label}</h2>
+        <FlexibleTable id={'StrainStress'} columnWidths={ ["8.2%","3%","39%","11%","%"] }  className="text-sm">
             <TableBody>
                 <RepLink ori rep={rep} tag={'StrainStress'}>
                     <TableRow>
@@ -242,14 +243,14 @@ export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label
                     </TableRow>
                     <TableRow>
                         <CCell>测试工况</CCell>
-                        <TableCell colSpan={4}><div className="text-sm min-h-4 whitespace-pre-wrap">
+                        <TableCell colSpan={4} className="border border-gray-700"><div className="text-sm min-h-4 whitespace-pre-wrap">
                             {orc.应试工况}
                         </div></TableCell>
                     </TableRow>
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        <FlexibleTable columnWidths={ ["10%","20%","20%","10%","20%","%"] }>
+        <FlexibleTable columnWidths={ ["10%","20%","20%","10%","20%","%"] }  className="text-sm">
             <TableHeader>
                 <TableRow>
                     <CCell>测试点</CCell>
@@ -276,7 +277,7 @@ export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        <FlexibleTable columnWidths={ ["10%","%"] }>
+        <FlexibleTable columnWidths={ ["10%","%"] }  className="text-sm border border-gray-700">
             <TableBody>
                 <RepLink ori rep={rep} tag={'StrainStress'}>
                     <TableRow>

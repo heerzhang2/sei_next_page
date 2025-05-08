@@ -1,7 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
 import { InternalItemProps,} from "../common/base";
-import {JSX} from "@emotion/react/jsx-runtime";
 import {MeasurementCline} from "../common/measure";
 import {convertMeasureType, floatInterception} from "../../common/tool";
 import {useStorage} from "../StorageContext";
@@ -20,8 +18,7 @@ import {clcOptions} from "@/report/common/ActionMapItem";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import type {UseFormReturn} from "react-hook-form";
 import {cn} from "@/lib/utils";
-import {TableRow} from "@/components/ui/table";
-import {CCell} from "@/components/flexible-table";
+import {CCell,TableRow} from "@/components/flexible-table";
 
 
 export interface MeasureCallbackReturn {
@@ -182,7 +179,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                     resultName= seqLineName;            //【约定】结论行必须是最少 这整个序号的。
                 }
 
-                let preNodeObj: { lcNode: JSX.Element; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
+                let preNodeObj: { lcNode: React.ReactNode; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
                 //save:要不要保存#v结果数值的。
                 line.forEach(({n,t,u,check,save,c,d,x,sync,cbo}: EachObserveConfig, k:number)=> {
                     if(checkLine){              //隐藏的判定结论行: 这个时候line.forEach只会是唯一一次的。
@@ -255,7 +252,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         }
                         //编辑器的回调：可自定义录入字段；正常的editRp=false
                         const [editRp, editN] = cbo?.(storage)?.edit?.(form) ?? [];
-                        let prepareN : { lcNode: JSX.Element; };
+                        let prepareN : { lcNode: React.ReactNode; };
                         //一个小行，小项目：
                         let lcNode=<MeasurementCline form={form} item={x!} labels={tCopy} nameH={n} unit={unit} allowableV={allowableV}
                                                      resEdit={resEdit} only={false} resDeft={calculate} />
@@ -589,39 +586,39 @@ export const useObserveTable= ({orc, config,allowableV,defaultSave,rep,seqOfs=0,
                             {(i===0 && k===0) && inPreN?  inPreN :
                                 (i!==0 || k!==0) && inPreN? null :
                                     <>
-                                        {!nseq && <CCell>{seq}</CCell> }
-                                        { bspan && <CCell colSpan={xmqColmun===1?4:1} rowSpan={bspan} split>{t[0]}</CCell>
+                                        {!nseq && <CCell className="text-xs">{seq}</CCell> }
+                                        { bspan && <CCell colSpan={xmqColmun===1?4:1} rowSpan={bspan} split className="text-sm">{t[0]}</CCell>
                                         }
-                                        { span && xmqColmun>=2 && <CCell colSpan={xmqColmun===2?3:1} rowSpan={span} split>{t[1]}</CCell>
+                                        { span && xmqColmun>=2 && <CCell colSpan={xmqColmun===2?3:1} rowSpan={span} split className="text-sm">{t[1]}</CCell>
                                         }
-                                        { tspan && xmqColmun>=3 && <CCell colSpan={xmqColmun===3?2:1} rowSpan={tspan} split>{t[2]}</CCell>
+                                        { tspan && xmqColmun>=3 && <CCell colSpan={xmqColmun===3?2:1} rowSpan={tspan} split className="text-sm">{t[2]}</CCell>
                                         }
-                                        { xmqColmun>=4 && <CCell >{t[3]}</CCell>
+                                        { xmqColmun>=4 && <CCell className="text-sm">{t[3]}</CCell>
                                         }
                                     </>
                             }
 
-                            { x && <CCell>{x}</CCell>
+                            { x && <CCell className="text-sm">{x}</CCell>
                             }
-                            { u && uspan && <CCell rowSpan={uspan} split>{u}</CCell>
+                            { u && uspan && <CCell rowSpan={uspan} split className="text-sm">{u}</CCell>
                             }
-                            { caseCrit && ( (cit && cspan) ? <CCell rowSpan={cspan} split>{cit}</CCell>
+                            { caseCrit && ( (cit && cspan) ? <CCell rowSpan={cspan} split className="text-sm">{cit}</CCell>
                                     : cit===undefined? null :
                                         <CCell></CCell>
                             ) }
 
                             { viewN ? viewN :
                                 <React.Fragment>
-                                    <CCell>{orc?.[n+'o']}</CCell>
-                                    {  <CCell>{orc?.[n+'v']??calculate}</CCell>
+                                    <CCell className="text-sm">{orc?.[n+'o']}</CCell>
+                                    {  <CCell className="text-sm">{orc?.[n+'v']??calculate}</CCell>
                                     }
-                                    { allowableV && <CCell rowSpan={vspan}>{orc?.[n+'a']}</CCell>
+                                    { allowableV && <CCell rowSpan={vspan} className="text-sm">{orc?.[n+'a']}</CCell>
                                     }
                                 </React.Fragment>
                             }
 
                             { rspan && resultName && <><CCell rowSpan={rspan} split>{orc?.[resultName]}</CCell>
-                                {memoF && <CCell rowSpan={rspan}>{orc?.[line[0]?.n+'m']}</CCell>}
+                                {memoF && <CCell rowSpan={rspan} className="text-sm">{orc?.[line[0]?.n+'m']}</CCell>}
                             </>
                             }
                         </TableRow>

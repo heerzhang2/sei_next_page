@@ -1012,23 +1012,42 @@ export function twoForkSelect(res: string) {
 export function twoForkSelectS(res: string) {
     return '√'===res? "符合" : '×'===res? "不符合" : res;
 }
+
+export type CCellUnitProps = {
+    unit: React.ReactNode;
+    children: React.ReactNode;
+    colSpan?: number;
+    rowSpan?: number;
+    className?: string;
+};
 /**CCell带了单位两个布局 ；有些单位是有上下标的影响，加flex-wrap: wrap;
  */
-export const CCellUnit= ( {unit, children, colSpan,rowSpan} : {unit:any, children:React.ReactNode, colSpan?:number,rowSpan?:number}
-) => {
-    const theme= useTheme();
-    return <CCell colSpan={colSpan} rowSpan={rowSpan}>
-        <div css={{ display: 'flex',justifyContent: 'space-around',alignItems: 'center',flexWrap: 'wrap'}}>
-        { typeof children==='string'?  <span>{children}</span>
-                :
-            <>{children}</>
-        }
-        { typeof unit==='string'?  <span css={{ [theme.mediaQueries.lg+', print']: {wordBreak: 'keep-all'} }}>{unit}</span>
-            :
-            <div css={{display: 'inline-flex'}}>{unit}</div>
-        }
-    </div>
-    </CCell>;
+export const CCellUnit = ({
+                              unit,
+                              children,
+                              colSpan,
+                              rowSpan,
+                              className,
+                          }: CCellUnitProps) => {
+    return (
+        <CCell colSpan={colSpan} rowSpan={rowSpan}>
+            <div className={`flex justify-around items-center flex-wrap ${className || ""}`}>
+                {typeof children === 'string' ? (
+                    <span className="whitespace-nowrap">{children}</span>
+                ) : (
+                    <>{children}</>
+                )}
+
+                {typeof unit === 'string' ? (
+                    <span className="lg:whitespace-nowrap print:whitespace-nowrap">
+                        {unit}
+                    </span>
+                ) : (
+                    <div className="inline-flex">{unit}</div>
+                )}
+            </div>
+        </CCell>
+    );
 };
 /**目的：避免代码重复性质的字符串的出现太多了：   通常报告表格的点击转编辑器
  * @param ori 是原始记录页面的

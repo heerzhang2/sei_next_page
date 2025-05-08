@@ -138,26 +138,29 @@ export const 测量允许检测= ({ orc, rep,label,config,fixed=["4.1%", "16%", 
 ) => {
   const [render1, ]=useObserveTable({rep,orc, config:config, tag, allowableV:true});
   return <>
-    <h2 className="text-2xl">{label}</h2>
-    <FlexibleTable columnWidths={fixed}>
-      <TableHeader>
-        <TableRow>
-          <CCell><span >序号</span></CCell><CCell colSpan={5}>检测项目</CCell>
-          <CCell>单位</CCell><CCell>观测数据</CCell>
-          <CCell>测量结果</CCell><CCell>设计值</CCell><CCell><span  >结果判定</span></CCell>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <RepLink ori rep={rep} tag={tag}>
-          {render1}
-          {mem && <TableRow>
-            <CCell>备注</CCell>
-            <TableCell colSpan={10}><div className="text-sm min-h-4 whitespace-pre-wrap">{orc?.[mem] || '／'}</div></TableCell>
+    <PrintReserveLeast reserve="7rem"
+                       title={<h2 className="text-2xl mt-4">{label}</h2>}
+    >
+      <FlexibleTable columnWidths={fixed}>
+        <TableHeader>
+          <TableRow className="text-sm">
+            <CCell className="text-xs">序号</CCell><CCell colSpan={5}>检测项目</CCell>
+            <CCell>单位</CCell><CCell>观测数据</CCell>
+            <CCell>测量结果</CCell><CCell>设计值</CCell><CCell>结果判定</CCell>
           </TableRow>
-          }
-        </RepLink>
-      </TableBody>
-    </FlexibleTable>
+        </TableHeader>
+        <TableBody>
+          <RepLink ori rep={rep} tag={tag}>
+            {render1}
+            {mem && <TableRow>
+              <CCell className="text-sm">备注</CCell>
+              <TableCell colSpan={10} className="border border-gray-700"><div className="text-sm min-h-4 whitespace-pre-wrap">{orc?.[mem] || '／'}</div></TableCell>
+            </TableRow>
+            }
+          </RepLink>
+        </TableBody>
+      </FlexibleTable>
+    </PrintReserveLeast>
     {children? children :
         <div>
           注：本表所列项目无测量时，观测数据和测量结果可不填，但结果判定应填写，对不适用项填“/”。
@@ -165,10 +168,11 @@ export const 测量允许检测= ({ orc, rep,label,config,fixed=["4.1%", "16%", 
     }
   </>;
 };
-//【表格工具】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
+
+//【表格工具】    ; 编辑器3段式窗口总宽度1595px；
 //有备注列的： 拆解成2个部分编辑器的。
 export const 测量备注两半= ({ orc, rep,label,config,
-                              fixed=["2.8%","7%","4%", "7%","%", "7%","5%", "9%", "8%", "6%", "11%"]
+                              fixed=["2.8%","6.8%","3.3%", "9%","%", "10.5%","5%", "9%", "8%", "6.1%", "10%"]
                               ,children, config2, mem}
                   : { orc: any, rep: any,label:string,fixed?:string[],children?: React.ReactNode,
                   config: EachObserveConfig[][]; config2: EachObserveConfig[][]; mem?: string; }
@@ -176,37 +180,40 @@ export const 测量备注两半= ({ orc, rep,label,config,
   const [render1, seq1e]=useObserveTable({rep,orc, config:config,memoF:true,tag:'Measure'});
   const [render2, ]=useObserveTable({rep,orc, config:config2,memoF:true,seqOfs:seq1e,tag:'Measure2'});
   return <>
-    <h2 className="text-2xl mt-4">{label}</h2>
-    <FlexibleTable columnWidths={["2.8%","7%","4%", "7%","%", "7%","5%", "9%", "8%", "6%", "11%"]}>
-      <TableHeader>
-        <TableRow>
-          <CCell><span className="text-sm">序号</span></CCell>
-          <CCell colSpan={2} className="text-sm">项目编号</CCell>
-          <CCell colSpan={2}>检验内容与要求</CCell>
-          <CCell>检测项目</CCell>
-          <CCell>单位</CCell><CCell>观测数据</CCell>
-          <CCell className="text-sm">测量结果</CCell>
-          <CCell><span className="text-sm">结果判定</span></CCell><CCell>备注</CCell>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <RepLink ori rep={rep} tag='Measure'>
-          {render1}
-        </RepLink>
-        <RepLink ori rep={rep} tag='Measure2'>
-          {render2}
-          {mem && <TableRow>
-            <CCell colSpan={2}>备注</CCell>
-            <TableCell colSpan={9}><div className="text-sm min-h-4 whitespace-pre-wrap">{orc?.[mem] || '／'}</div></TableCell>
+    <PrintReserveLeast reserve="8rem"
+         title={<h2 className="text-2xl mt-4">{label}</h2>}
+    >
+      <FlexibleTable columnWidths={fixed}>
+        <TableHeader>
+          <TableRow>
+            <CCell><span className="text-xs">序号</span></CCell>
+            <CCell colSpan={2} className="text-sm">项目编号</CCell>
+            <CCell colSpan={2}>检验内容与要求</CCell>
+            <CCell>检测项目</CCell>
+            <CCell className="text-sm">单位</CCell><CCell className="text-sm">观测数据</CCell>
+            <CCell className="text-sm">测量结果</CCell>
+            <CCell><span className="text-sm">结果判定</span></CCell><CCell>备注</CCell>
           </TableRow>
-          }
-        </RepLink>
-      </TableBody>
-    </FlexibleTable>
+        </TableHeader>
+        <TableBody>
+          <RepLink ori rep={rep} tag='Measure'>
+            {render1}
+          </RepLink>
+          <RepLink ori rep={rep} tag='Measure2'>
+            {render2}
+            {mem && <TableRow>
+              <CCell colSpan={2}>备注</CCell>
+              <TableCell colSpan={9} className="border border-gray-700">
+                <div className="text-sm min-h-4 whitespace-pre-wrap">{orc?.[mem] || '／'}</div>
+              </TableCell>
+            </TableRow>
+            }
+          </RepLink>
+        </TableBody>
+      </FlexibleTable>
+    </PrintReserveLeast>
     {children? children :
-        <div>
-          注：本表所列项目无测量时，观测数据和测量结果可不填，但结果判定应填写，对不适用项填“/”。
-        </div>
+        <div>注：本表所列项目无测量时，观测数据和测量结果可不填，但结果判定应填写，对不适用项填“/”。</div>
     }
   </>;
 };
@@ -238,11 +245,14 @@ export const InstrumentVw = ({ orc, rep, label, fromHead }: {
           <FlexibleTable id="Instrument" columnWidths={["%", "24%", "22%", "8%", "8%"]}>
             <TableHeader>
               <TableRow>
-                <CCell className="text-sm">测量设备名称</CCell>
-                <CCell className="text-sm">规格型号</CCell>
-                <CCell className="text-sm">仪器设备编号</CCell>
-                <CCell className="text-sm">仪器设备状态-开机后</CCell>
-                <CCell className="text-sm">仪器设备状态-关机前</CCell>
+                <CCell className="text-sm" rowSpan={2}>测量设备名称</CCell>
+                <CCell className="text-sm" rowSpan={2}>规格型号</CCell>
+                <CCell className="text-sm" rowSpan={2}>仪器设备编号</CCell>
+                <CCell className="text-sm" colSpan={2}>仪器设备状态</CCell>
+              </TableRow>
+              <TableRow>
+                <CCell className="text-sm">开机后</CCell>
+                <CCell className="text-sm">关机前</CCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -413,9 +423,9 @@ export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?:
         let valuAr = nmar.map((name: any, c: number) => orc?.[name + 'o']);
         const avHs = calcAverageArrObj(valuAr, (row) => row, resvDg);
         return [false, <>
-          <CCell>{orc?.[nmar[0] + 'o']}</CCell>
-          <CCell split rowSpan={nmar.length}>{avHs}</CCell>
-          <CCell split rowSpan={nmar.length}>{orc?.[nmar[0] + 'a']}</CCell>
+          <CCell className="text-sm">{orc?.[nmar[0] + 'o']}</CCell>
+          <CCell split rowSpan={nmar.length} className="text-sm">{avHs}</CCell>
+          <CCell split rowSpan={nmar.length} className="text-sm">{orc?.[nmar[0] + 'a']}</CCell>
         </>]
       },
     };

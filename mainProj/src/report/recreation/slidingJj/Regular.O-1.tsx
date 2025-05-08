@@ -1,12 +1,10 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
 import { OriginalViewProps, } from "../../common/base";
 import {EntranceSetup, config设备概况, config观测数据, tail观测, config观测数据2} from "./orcBase";
 import {createItem, } from "../../common/eHelper";
 import {useRecordList} from "../../hook/useRecordList";
 import {setupItemAreaRoute} from "./orcIspConfig";
-import {EditStorageContext, useStorage} from "../../StorageContext";
-import {Text, useTheme} from "customize-easy-ui-component";
+import {useStorage} from "../../StorageContext";
 import {ItemInstrumentTable} from "../../common/Instrument";
 import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
 import {GenCode} from "../../common/GenCode";
@@ -14,7 +12,7 @@ import {ActionMapItem} from "../../common/ActionMapItem";
 import {config记录} from "./FormatOriginal";
 import {DeviceSurveyD} from "../../crane/editor";
 import {WitnessSimple} from "../../elevator/stest/editor";
-import {config检测复检表, config检验复检表, RecheckEditor} from "../../common/editor";
+import {config检验复检表, RecheckEditor} from "../../common/editor";
 import {ConclusionWaterJj} from "../waterJj/Conclusion";
 import {ObserveEdit} from "../../hook/useObserve";
 import {config主技术, tail主技} from "./MainTechnical";
@@ -35,11 +33,11 @@ const defaultTitle=`安全距离
 
 export const tItems现场=[
     ['1、温度、湿度、照明及气候',{f:'T',
-        N: <Text>1、温度、湿度、照明及室外气候条件能满足游乐设施正常运行及检验作业要求；</Text>},],
+        N: <span>1、温度、湿度、照明及室外气候条件能满足游乐设施正常运行及检验作业要求；</span>},],
     ['2、供电电压波动',{f:'V',
-        N: <Text>2、输入电气系统的电压正常，电压波动在允许值以内；</Text>},],
+        N: <span>2、输入电气系统的电压正常，电压波动在允许值以内；</span>},],
     ['3、现场不应有与检验无关的',{f:'x',
-        N: <Text>3、检验现场不应有与游乐设施工作无关的物品和设备，并应放置表明现场正在进行检验的警示牌。</Text>},],
+        N: <span>3、检验现场不应有与游乐设施工作无关的物品和设备，并应放置表明现场正在进行检验的警示牌。</span>},],
 ];
 
 const 记事选=["检验过程共开出《特种设备检验意见通知书》xx份： 第x份编号为xxxxxx，整改确认时间为xxxx-xx-xx；第x份编号为xxxxxx，整改确认时间为xxxx-xx-xx。",
@@ -75,11 +73,10 @@ export const OriginalView=
     :OriginalViewProps, ref
   ) => {
     const {storage, setStorage} =useStorage();
-    const theme = useTheme();
     console.log("OriginalViewaction=", action);
     const recordPrintListNow =React.useMemo(() => {
       let routeAreas=[] as any[];
-      const impressionismAs =setupItemAreaRoute({rep, orc:storage, theme});
+      const impressionismAs =setupItemAreaRoute({rep, orc:storage});
       let extendTags =Reflect.ownKeys(impressionismAs) as string[];
       const oldItCount=recordPrintList.length;
       let prevpos=0;
@@ -103,15 +100,10 @@ export const OriginalView=
       }
       routeAreas=routeAreas.concat(recordPrintList.slice(prevpos));
       return routeAreas;
-    }, [verId, repId,rep, storage?._Oitems, theme]);
+    }, [verId, repId,rep, storage?._Oitems]);
 
     const {list}=useRecordList(ref,rep,recordPrintListNow,action,verId);
     return <React.Fragment>
       {list}
-        {/*      <Button  intent="primary"
-                   onPress={(e) => { handleSubmit!();
-                   }}
-          >送打印转换器
-          </Button>*/}
     </React.Fragment>;
   } );

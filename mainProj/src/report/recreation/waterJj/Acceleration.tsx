@@ -369,8 +369,8 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                                { orc: any, rep: any, label: any, children?: any, stnum?: number }
 ) => {
     return <>
-        <h2 className="text-2xl">{label}</h2>
-        <FlexibleTable id={'Acceleration'} columnWidths={ ["13%", "44%", "10%", "%"] }>
+        <h2 className="text-2xl mt-4">{label}</h2>
+        <FlexibleTable id={'Acceleration'} columnWidths={ ["13%", "44%", "10%", "%"] } className="text-sm">
             <TableBody>
                 <RepLink ori rep={rep} tag={'Acceleration'}>
                     <TableRow>
@@ -386,8 +386,7 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-
-        <FlexibleTable columnWidths={ ["13%", "9%", "13%", "13%", "13%", "13%", "%", "13%"] }>
+        <FlexibleTable columnWidths={ ["13%", "9%", "13%", "13%", "13%", "13%", "%", "13%"] } className="text-sm">
             <TableHeader>
                 <TableRow><CCell rowSpan={3}>测量工况</CCell><CCell rowSpan={3}>测量次数</CCell><CCell
                     colSpan={6}>加速度A（g）</CCell></TableRow>
@@ -424,7 +423,7 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        <FlexibleTable columnWidths={ ["10.1%", "44%", "14.1%", "%"] }>
+        <FlexibleTable columnWidths={ ["10.1%", "44%", "14.1%", "%"] } className="text-sm border border-gray-700">
             <TableBody>
                 <RepLink ori rep={rep} tag={'Acceleration'}>
                     <TableRow>
@@ -432,7 +431,7 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                         <CCell>设计加速度区域</CCell><CCell>{orc?.设计加速}</CCell>
                     </TableRow>
                     <TableRow>
-                        <CCell>结果判定</CCell><CCell colSpan={3}>{orc?.加速结论 || '／'}</CCell>
+                        <CCell>结果判定</CCell><CCell colSpan={3} className="text-lg">{orc?.加速结论 || '／'}</CCell>
                     </TableRow>
                     <TableRow>
                         <CCell>备注</CCell>

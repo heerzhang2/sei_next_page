@@ -27,7 +27,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
     const impressionismAs =React.useMemo(() => {
         return setupItemAreaRoute({rep,orc});
     }, [rep,orc?._Oitems]);
-    const {renderIspContent} =useFormatOmni({itRes:orc,ItemArs:impressionismAs?.Item, config:config记录, rep, rcc:true,dfsz:'0.75',ltsz:'0.75',qtsz:'0.75'});
+    const {renderIspContent} =useFormatOmni({itRes:orc,ItemArs:impressionismAs?.Item, config:config记录, rep, rcc:true});
     const [mapNoTag]=useItemsMapOmni({ ItemArs:impressionismAs?.Item, notCheckNo:true});
   return (
     <React.Fragment>
@@ -40,7 +40,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     <h1 className="text-center mt-8 text-3xl md:print:text-5xl">
                       大型游乐设施监督检验原始记录
                     </h1>
-                    <span className="block text-center text-xl mt-4">（适用于系留式观光气球）</span>
+                    <span className="block text-center text-xl mt-4">（适用于滑行车类、架空游览车类）</span>
                 </div>
                 <div>
                     {首页概况WaterJj(orc,rep,true)}

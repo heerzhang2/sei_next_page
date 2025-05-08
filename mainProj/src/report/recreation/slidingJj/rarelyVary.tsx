@@ -2,7 +2,7 @@
 export const 填写须知recr = <>
   <div className="print:h-screen print:break-after-page flex flex-col justify-evenly">
     {/* 标题 */}
-    <h2 className="block text-xl print:text-3xl mb-[3rem] text-center">填 写 须 知</h2>
+    <h2 className="block text-xl print:text-3xl print:mb-[3rem] text-center">填 写 须 知</h2>
     {/* 正文内容 */}
     <div className="leading-4 print:leading-10">
       1、本记录适用于滑行车类、架空游览车类大型游乐设施的监督检验。<br/>

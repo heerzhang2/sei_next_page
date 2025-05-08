@@ -37,9 +37,10 @@ interface PrintReserveLeastProps {
   fromHead?: boolean
 }
 
-/**一页尾巴最少多少空间才打印，否则新一页打印的。
+/**一页尾巴最少多少空间才打印，否则新一页打印的。  替代旧的 NoPageBreak 组件；
  * 使用动态生成的类名和内联样式的组合方式
  * 防止命名冲突 "--reserve-height":。仅作用于 .relative div 及其子元素。:root {--reserve-height:;全局默认值}; 内联样式优先级最高.
+ * 【没必要】mainProj/src/styles/print-styles.css 自带h1 h2 h3等的特别打印处理
  * */
 export function PrintReserveLeast({
                                     reserve,

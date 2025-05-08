@@ -21,9 +21,6 @@ export type Column_Setting ={
  * 但是，常规的自拆分项目（非嵌套组合地）就不能设置mergLabel；  另外thitrd，tspan地配置也不再这里考虑中。
  * @property rcc 新常态设置true：把正式报告标题当作独立一列放在desc内容前面一列
  * @property config: 配置原始录入的字段和顺序等。
- * @property dfsz 主体内容字体大小 "0.7" 单位=rem,有些文字太多的要统一缩小字体，但不影响编辑器的字体
- * @property ltsz  不合格描述，备注的字体
- * @property qtsz  其它列的字体
  * 若想orc?._Oitems用户输入的文本有格式化换行效果等，只能在记录编辑的2个解析器这里特殊对待来做。？特殊标记，特定标签的tag '_其它'+i。
  * */
 export const useFormatOmni = ({
@@ -33,7 +30,7 @@ export const useFormatOmni = ({
                                   config,
                                   rcc,
                                   descClasses,
-                                  longClasses,
+                                  longClasses="text-xs",
                                   qtClasses,
                                   noClasses
                               }: {

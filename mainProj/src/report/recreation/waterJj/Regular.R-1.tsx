@@ -102,7 +102,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({
            {报告设备详情({theme, orc, rep})}
            {检验核准WaterJj({orc,rep})}
             <div css={{"@media print": {paddingBottom: '13.3rem', pageBreakInside: 'avoid'}}}>
-                <Text variant="h4" css={{textAlign: 'center',marginTop:'1rem'}}>大型游乐设施监督检验报告附页</Text>
+                <Text variant="h2" css={{textAlign: 'center',marginTop:'1rem'}}>大型游乐设施监督检验报告附页</Text>
                 <div css={{display: 'flex', justifyContent: 'space-between'}}>
                     <Text></Text><Text>报告编号：{rep.isp.no}</Text>
                 </div>
