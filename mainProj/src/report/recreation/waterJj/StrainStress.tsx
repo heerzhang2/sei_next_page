@@ -1,38 +1,24 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {
-    Text, Input, TextArea, InputLine, LineColumn, useTheme, Table,  Cell, TableHead,
-} from "customize-easy-ui-component";
-import {
-    CCellUnit, InspectRecordLayout, InternalItemProps, RepLink, SelectHookfork, useInputControlSure,
+    CCellUnit, InternalItemProps, RepLink,
 } from "../../common/base";
-import {tabSuffixCb, useTableEditor} from "../../hook/useRepTableEditor";
+import {useTableEditor} from "../../hook/useRepTableEditor";
 import {useStorage} from "../../StorageContext";
 import {useUppyUpload} from "../../hook/useUppyUpload";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage, Textarea
-} from "@/components/ui";
+import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
 import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {ImageComponent} from "@/components/shub";
 import {Each_ZdSetting} from "@/report/hook/use-table-edit";
-import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 
-export const tail应变= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
+export const tail应变= <span className="text-[0.75rem]">
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
     2、“+”表示测点位置结构受拉，“-”表示测点位置结构受压。
-</Text>;
+</span>;
 
 export const config测点表=[['应变值','μ',100,{u:'με'}],['应力值','M',100,{u:'MPa'}],
 ] as Each_ZdSetting[];
@@ -81,10 +67,9 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         return [ {name:"测点表", itemTemplate,} ]
     }, [])
 
-        const theme = useTheme();
-        const headview=<h5>
+        const headview=<div>
             测试点:按照一行2字段录入： 应变值（με）, 应力值（MPa）;
-        </h5>;
+        </div>;
 
         const [nestRendererFactory]=useTableEditor({headview, config: config测点表, table:'测点表',defFixedLay:true});
         const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
@@ -219,7 +204,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
             },
             [children,nestRendererFactory ],
         )
-        const { render,form,arrayControls } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+        const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
         return  <CollapsibleFormSection title={label!} defaultOpen={show}>
             {render()}
         </CollapsibleFormSection>;
@@ -230,15 +215,11 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
  * */
 export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label:any,sensit?:boolean}
 ) => {
-    const theme = useTheme();
     const rowsc=Math.ceil(orc?.测点表?.length/2) || 0;        //最多抵达行个数
     //因“测点1 2”列的并不在config字段，无法上const [renderRows,]=useRep2hTableViewer(config测点表, '测点表', orc,true,true,true);
     return <>
-        <div  css={{"@media print": {paddingBottom: '5rem', pageBreakInside: 'avoid'}} }>
-            <Text variant="h4" css={{marginTop: '1rem',}}>{label}</Text>
-        </div>
-        <Table id={'StrainStress'} fixed={ ["8.2%","3%","39%","11%","%"] }
-               css={ {borderCollapse: 'collapse', "@media print": {marginTop: '-5rem'}} }  tight  miniw={800}>
+        <h2 className="text-2xl">{label}</h2>
+        <FlexibleTable id={'StrainStress'} columnWidths={ ["8.2%","3%","39%","11%","%"] }>
             <TableBody>
                 <RepLink ori rep={rep} tag={'StrainStress'}>
                     <TableRow>
@@ -261,15 +242,15 @@ export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label
                     </TableRow>
                     <TableRow>
                         <CCell>测试工况</CCell>
-                        <Cell colSpan={4}><div css={{minHeight: '1rem', whiteSpace: 'pre-wrap'}}>
+                        <TableCell colSpan={4}><div className="text-sm min-h-4 whitespace-pre-wrap">
                             {orc.应试工况}
-                        </div></Cell>
+                        </div></TableCell>
                     </TableRow>
                 </RepLink>
             </TableBody>
-        </Table>
-        <Table fixed={ ["10%","20%","20%","10%","20%","%"] }  css={ {borderCollapse: 'collapse' } }  tight  miniw={800}>
-            <TableHead>
+        </FlexibleTable>
+        <FlexibleTable columnWidths={ ["10%","20%","20%","10%","20%","%"] }>
+            <TableHeader>
                 <TableRow>
                     <CCell>测试点</CCell>
                     <CCell>应变值（με）</CCell>
@@ -278,7 +259,7 @@ export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label
                     <CCell>应变值（με）</CCell>
                     <CCell>应力值（MPa）</CCell>
                 </TableRow>
-            </TableHead>
+            </TableHeader>
             <TableBody>
                 <RepLink ori rep={rep} tag={'StrainStress'}>
                     { (new Array(rowsc)).fill(null).map((_, i:number) => {
@@ -294,24 +275,27 @@ export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label
                     }) }
                 </RepLink>
             </TableBody>
-        </Table>
-        <Table fixed={ ["10%","%"] }  css={ {borderCollapse: 'collapse' } }  tight  miniw={800}>
+        </FlexibleTable>
+        <FlexibleTable columnWidths={ ["10%","%"] }>
             <TableBody>
                 <RepLink ori rep={rep} tag={'StrainStress'}>
                     <TableRow>
-                        <Cell colSpan={2} css={ {"@media print": { height: undefined },  padding: 0,} }>
+                        <TableCell colSpan={2} className="p-0 @print:h-auto">
                             测点示意图：&nbsp;{orc?.测点示意}
-                            <div css={{display: 'flex',justifyContent: 'space-around',alignItems: 'center', margin: '1px 0' }}>
-                                { orc?._FILE_测点?.url &&
-                                    <ImageComponent src={process.env.NEXT_PUBLIC_OSS_ENDP+orc?._FILE_测点?.url || "/placeholder.svg"}
-                                                alt={orc?._FILE_测点?.url || "图片"} />
-                                }
+                            <div className="flex justify-around items-center my-1">
+                                {orc?._FILE_测点?.url && (
+                                    <ImageComponent
+                                        src={`${process.env.NEXT_PUBLIC_OSS_ENDP}${orc?._FILE_测点?.url}`}
+                                        alt={orc?._FILE_测点?.url || "图片"}
+                                        className="w-auto h-auto"
+                                    />
+                                )}
                             </div>
-                        </Cell>
+                        </TableCell>
                     </TableRow>
                     <TableRow>
                         <CCell>测试结果</CCell>
-                        <Cell>{(sensit?'最大应力值测试点':'最危险应力点')+'为测点'}（ {orc?.危应第} ）</Cell>
+                        <TableCell>{(sensit?'最大应力值测试点':'最危险应力点')+'为测点'}（ {orc?.危应第} ）</TableCell>
                     </TableRow>
                     <TableRow>
                         <CCell>设计值</CCell>
@@ -323,13 +307,13 @@ export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label
                     </TableRow>
                     <TableRow>
                         <CCell>备注</CCell>
-                        <Cell><div css={{minHeight: '1rem', whiteSpace: 'pre-wrap'}}>
+                        <TableCell><div className="text-sm min-h-4 whitespace-pre-wrap">
                             {orc.应变备注 || '／'}
-                        </div></Cell>
+                        </div></TableCell>
                     </TableRow>
                 </RepLink>
             </TableBody>
-        </Table>
+        </FlexibleTable>
         {tail应变}
     </>;
 };

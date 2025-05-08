@@ -369,9 +369,7 @@ export const AccelerationVw = ({children, orc, rep, label, stnum = 3}:
                                { orc: any, rep: any, label: any, children?: any, stnum?: number }
 ) => {
     return <>
-        <div>
-            <h2>{label}</h2>
-        </div>
+        <h2 className="text-2xl">{label}</h2>
         <FlexibleTable id={'Acceleration'} columnWidths={ ["13%", "44%", "10%", "%"] }>
             <TableBody>
                 <RepLink ori rep={rep} tag={'Acceleration'}>

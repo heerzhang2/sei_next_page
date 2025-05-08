@@ -163,8 +163,8 @@ export default function Skeleton({
                 )}
                 </>
                 :
-                <SplitViewSticky      //正常电脑屏幕的
-                    className="overflow-auto"
+                <SplitViewSticky      //正常电脑屏幕的,overflow-hidden避免右半边页面俩个滚动条。
+                    className="overflow-hidden"
                     defaultSplit={50}
                     minLeftWidth={0}
                     minRightWidth={0}

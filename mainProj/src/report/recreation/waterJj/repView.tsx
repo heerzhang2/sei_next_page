@@ -1,8 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-   Cell, Input, InputLine, Table, TableHead,  Text,
-} from "customize-easy-ui-component";
 import {SuffixInput,} from "@/components/chub";
 // import {DirectLink,} from "../../../routing/Link";
 import {RepLink,} from "../../common/base";
@@ -142,54 +138,57 @@ export const 测量允许检测= ({ orc, rep,label,config,fixed=["4.1%", "16%", 
 ) => {
   const [render1, ]=useObserveTable({rep,orc, config:config, tag, allowableV:true});
   return <>
-    <Text variant="h4" css={{marginTop: '1rem',
-    }}>{label}</Text>
-    <Table fixed={fixed}  css={ {borderCollapse: 'collapse' } } tight  miniw={800}>
-      <TableHead>
+    <h2 className="text-2xl">{label}</h2>
+    <FlexibleTable columnWidths={fixed}>
+      <TableHeader>
         <TableRow>
-          <CCell><Text css={{fontSize:'0.8rem'}}>序号</Text></CCell><CCell colSpan={5}>检测项目</CCell>
+          <CCell><span >序号</span></CCell><CCell colSpan={5}>检测项目</CCell>
           <CCell>单位</CCell><CCell>观测数据</CCell>
-          <CCell>测量结果</CCell><CCell>设计值</CCell><CCell><Text css={{fontSize:'0.8rem'}}>结果判定</Text></CCell>
+          <CCell>测量结果</CCell><CCell>设计值</CCell><CCell><span  >结果判定</span></CCell>
         </TableRow>
-      </TableHead>
+      </TableHeader>
       <TableBody>
         <RepLink ori rep={rep} tag={tag}>
           {render1}
           {mem && <TableRow>
             <CCell>备注</CCell>
-            <Cell colSpan={10}><div css={{minHeight: '2rem', whiteSpace: 'pre-wrap'}}>{orc?.[mem] || '／'}</div></Cell>
+            <TableCell colSpan={10}><div className="text-sm min-h-4 whitespace-pre-wrap">{orc?.[mem] || '／'}</div></TableCell>
           </TableRow>
           }
         </RepLink>
       </TableBody>
-    </Table>
+    </FlexibleTable>
     {children? children :
-        <Text css={{fontSize:'0.8rem'}}>
+        <div>
           注：本表所列项目无测量时，观测数据和测量结果可不填，但结果判定应填写，对不适用项填“/”。
-        </Text>
+        </div>
     }
   </>;
 };
-
+//【表格工具】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
 //有备注列的： 拆解成2个部分编辑器的。
-export const 测量备注两半= ({ orc, rep,label,config,fixed=["2%", "5%", "3%", "6%", "%", "15%", "5%", "9%", "7%", "5%", "11%"],children,
-                              config2, mem}
+export const 测量备注两半= ({ orc, rep,label,config,
+                              fixed=["2.8%","7%","4%", "7%","%", "7%","5%", "9%", "8%", "6%", "11%"]
+                              ,children, config2, mem}
                   : { orc: any, rep: any,label:string,fixed?:string[],children?: React.ReactNode,
                   config: EachObserveConfig[][]; config2: EachObserveConfig[][]; mem?: string; }
 ) => {
   const [render1, seq1e]=useObserveTable({rep,orc, config:config,memoF:true,tag:'Measure'});
   const [render2, ]=useObserveTable({rep,orc, config:config2,memoF:true,seqOfs:seq1e,tag:'Measure2'});
   return <>
-    <Text variant="h4" css={{marginTop: '1rem',
-    }}>{label}</Text>
-    <Table fixed={fixed}  css={ {borderCollapse: 'collapse' } } tight  miniw={800}>
-      <TableHead>
+    <h2 className="text-2xl mt-4">{label}</h2>
+    <FlexibleTable columnWidths={JSON.parse(orc?._tblFixed??'[]')}>
+      <TableHeader>
         <TableRow>
-          <CCell><Text css={{fontSize:'0.8rem'}}>序号</Text></CCell><CCell colSpan={2}>项目编号</CCell>
-          <CCell colSpan={2}>检验内容与要求</CCell><CCell>检测项目</CCell><CCell>单位</CCell><CCell>观测数据</CCell>
-          <CCell>测量结果</CCell><CCell><Text css={{fontSize:'0.8rem'}}>结果判定</Text></CCell><CCell>备注</CCell>
+          <CCell><span className="text-sm">序号</span></CCell>
+          <CCell colSpan={2} className="text-sm">项目编号</CCell>
+          <CCell colSpan={2}>检验内容与要求</CCell>
+          <CCell>检测项目</CCell>
+          <CCell>单位</CCell><CCell>观测数据</CCell>
+          <CCell className="text-sm">测量结果</CCell>
+          <CCell><span className="text-sm">结果判定</span></CCell><CCell>备注</CCell>
         </TableRow>
-      </TableHead>
+      </TableHeader>
       <TableBody>
         <RepLink ori rep={rep} tag='Measure'>
           {render1}
@@ -198,16 +197,16 @@ export const 测量备注两半= ({ orc, rep,label,config,fixed=["2%", "5%", "3%
           {render2}
           {mem && <TableRow>
             <CCell colSpan={2}>备注</CCell>
-            <Cell colSpan={9}><div css={{minHeight: '2rem', whiteSpace: 'pre-wrap'}}>{orc?.[mem] || '／'}</div></Cell>
+            <TableCell colSpan={9}><div className="text-sm min-h-4 whitespace-pre-wrap">{orc?.[mem] || '／'}</div></TableCell>
           </TableRow>
           }
         </RepLink>
       </TableBody>
-    </Table>
+    </FlexibleTable>
     {children? children :
-        <Text css={{fontSize:'0.8rem'}}>
+        <div>
           注：本表所列项目无测量时，观测数据和测量结果可不填，但结果判定应填写，对不适用项填“/”。
-        </Text>
+        </div>
     }
   </>;
 };

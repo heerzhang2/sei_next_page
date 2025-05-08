@@ -49,24 +49,30 @@ export function FormField({ id, label, required = false, error, className, child
 interface ImageProps {
     src: string
     alt?: string
+    className?: string  // 新增 className 属性
 }
-export const ImageComponent: React.FC<ImageProps> = ({ src, alt = "图片" }) => {
-    //适配A4竖着打印的；
+/**报告打印专用的：
+ * */
+export const ImageComponent: React.FC<ImageProps> = ({
+                                                         src,
+                                                         alt = "图片",
+                                                         className  // 解构 className
+                                                     }) => {
     return (
-        <div className="flex justify-around items-center">
+        <div className={`flex justify-around items-center ${className || ''}`}>
             <div>
-                {/* 使用原生 img 标签代替 Next.js Image 组件 */}
                 <img
                     src={src || "/placeholder.svg"}
                     alt={alt}
-                    className="object-contain max-h-[14cm] print:max-h-[26cm] print:max-w-[705px] lg:max-h-[18cm]"
+                    className={`object-contain max-h-[14cm] print:max-h-[26cm] print:max-w-[705px] lg:max-h-[18cm] ${className || ''}`}
                     style={{
-                        width: "auto", // 让图片保持其自然宽度
-                        height: "auto", // 让图片保持其自然高度
-                        maxWidth: "100%", // 确保图片不会超出容器
+                        width: "auto",
+                        height: "auto",
+                        maxWidth: "100%",
                     }}
                 />
             </div>
         </div>
     )
 }
+
