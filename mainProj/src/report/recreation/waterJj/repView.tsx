@@ -177,7 +177,7 @@ export const 测量备注两半= ({ orc, rep,label,config,
   const [render2, ]=useObserveTable({rep,orc, config:config2,memoF:true,seqOfs:seq1e,tag:'Measure2'});
   return <>
     <h2 className="text-2xl mt-4">{label}</h2>
-    <FlexibleTable columnWidths={JSON.parse(orc?._tblFixed??'[]')}>
+    <FlexibleTable columnWidths={["2.8%","7%","4%", "7%","%", "7%","5%", "9%", "8%", "6%", "11%"]}>
       <TableHeader>
         <TableRow>
           <CCell><span className="text-sm">序号</span></CCell>
