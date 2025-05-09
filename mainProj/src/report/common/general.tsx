@@ -286,20 +286,23 @@ type JumpMeasureProps = {
     }
     tag: string
 }
+
+// Add print-specific styling to ensure normal colors when printing
 export const JumpMeasure = ({ children, rep, tag }: JumpMeasureProps) => {
     return (
-        <DirectLink
+       <DirectLink
             href={`/rep/${rep.id}/${rep.modeltype}/${rep.modelversion}/${tag}?original=1#${tag}`}
-            className="no-underline hover:no-underline group relative"
+            className="no-underline hover:no-underline group relative cursor-pointer print:hidden"
         >
-          <span className="text-h4 font-semibold transition-colors group-hover:text-primary-600 print:hidden">
+          <span className="text-h4 font-semibold transition-colors group-hover:text-primary-600 print:text-foreground print:hidden">
             {children}
           </span>
-            {/* 下划线动画效果 */}
-            <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary-600 transition-all group-hover:h-1 group-hover:origin-left" />
-        </DirectLink>
+            {/* Print-specific version without hover effects */}
+          <span className="hidden print:inline print:text-foreground">{children}</span>
+       </DirectLink>
     )
 }
+
 
 type JumpOrgMemoProps = {
   children: React.ReactNode

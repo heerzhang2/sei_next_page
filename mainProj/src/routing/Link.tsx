@@ -1,11 +1,8 @@
-/** @jsxImportSource @emotion/react */
 "use client"
 import RoutingContext from './RoutingContext';
-import React from 'react';
 import UserContext from "./UserContext";
-import { useRouter } from 'next/navigation';
-
-const { useCallback, useContext } = React;
+import React, { useCallback, useEffect, useState, useContext } from "react"
+import { useRouter } from "next/navigation"
 
 
 /** SPA程序不要用 customize-easy-ui-component 简易的Link也就是<a></a>组件。要用这里的Link，避免强制刷新整个APP缓存。
@@ -30,7 +27,7 @@ interface LinkProps {
 }
 
 //使用了自定义路由器的Link链接，点击这个组件的才会经过自定义路由器跳转。旧的可携带user保存当前的用户数据 state;
-/*@deprecated 淘汰
+/*@deprecated  淘汰！
 * */
 export const Link: React.FunctionComponent<LinkProps> =({href,state,children,...other}: LinkProps)=>
 {
@@ -111,7 +108,7 @@ export const Link: React.FunctionComponent<LinkProps> =({href,state,children,...
  * 可支持把被<></>包裹下的组件直接合并给上一级的级别来作为并列的儿子，只支持第一层的非嵌套的<></>标签。
  * 避免相同的key就报错，但是有副作用后果：把全部儿子的key 统一再做个修改。 "_N**"作为排他性的key;
  * */
-export function validChildrenFragmentSpread(children: any,assert:boolean=true) {
+function validChildrenFragmentSpread(children: any,assert:boolean=true) {
     let idseq=1;
     let outs: React.ReactElement<unknown, string | React.JSXElementConstructor<any>>[]=[];
     let sons=React.Children.toArray(children);
@@ -142,50 +139,121 @@ export function validChildrenFragmentSpread(children: any,assert:boolean=true) {
 }
 
 
-/**有些场合不能加一层<a></a>的；只能使用透明模式DirectLink:
- * 检验报告的正常展示需要。 为了应付这种情况：
- * <tr> cannot appear as a child of <a>. <a> cannot appear as a child of <tbody>. <a> cannot appear as a child of <thead>.
- * [考虑] ?再套一个<div > <a>来避免?。或者其他的<div OnClick()>
- * 直接触发 子组件的onClick()
- */
-interface DirectLinkProps extends React.HTMLAttributes<HTMLElement>{
-    href: string;
-    children: React.ReactNode;
-    state?: any;
+interface DirectLinkProps extends React.HTMLAttributes<HTMLElement> {
+    href: string
+    children: React.ReactNode
+    state?: any
+    className?: string
 }
-/**任意都能做Link的；
+
+/**
+ * 任意都能做Link的；
  * 直接用next.js Link 导致报错In HTML, <tr> cannot be a child of <a>.
  * In HTML, <a> cannot be a child of <tbody>. This will cause a hydration error.
- * */
-export const DirectLink: React.FunctionComponent<DirectLinkProps> =(props: DirectLinkProps)=>
-{
-    const router = useRouter();
-    const valChilds=validChildrenFragmentSpread(props.children);
+ */
+export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: DirectLinkProps) => {
+    const router = useRouter()
+    const valChilds = validChildrenFragmentSpread(props.children)
+    const [isVisited, setIsVisited] = useState(false)
+
+    // Check if the link has been visited before
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const visitedLinks = JSON.parse(localStorage.getItem("visitedLinks") || "[]")
+            const isLinkVisited = visitedLinks.some((link: any) => link.url === props.href)
+            setIsVisited(isLinkVisited)
+
+            // Clean up expired links on component mount (once per session)
+            const sessionCleaned = sessionStorage.getItem("linksCleanedUp")
+            if (!sessionCleaned) {
+                // Remove links older than 7 days
+                const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+                const recentLinks = visitedLinks.filter((link: any) => link.timestamp > oneWeekAgo)
+
+                // Save back to localStorage if we removed any old links
+                if (recentLinks.length < visitedLinks.length) {
+                    localStorage.setItem("visitedLinks", JSON.stringify(recentLinks))
+                }
+
+                // Mark that we've cleaned up this session
+                sessionStorage.setItem("linksCleanedUp", "true")
+            }
+        }
+    }, [props.href])
+
     const changeRoute = useCallback(
-        (event :any )=> {
-            event.preventDefault();
-            event.stopPropagation();        //不想向祖辈组件传递点击事件。
+        (event: any) => {
+            event.preventDefault()
+            event.stopPropagation() // 不想向祖辈组件传递点击事件。
+
+            // Mark this link as visited in localStorage with improved management
+            if (typeof window !== "undefined") {
+                // Get current visited links
+                const visitedLinks = JSON.parse(localStorage.getItem("visitedLinks") || "[]")
+
+                // Add timestamp to the link data
+                const newVisitedLink = {
+                    url: props.href,
+                    timestamp: Date.now(),
+                }
+
+                // Check if this link is already in the list
+                const existingIndex = visitedLinks.findIndex((item: any) => item.url === props.href)
+
+                if (existingIndex >= 0) {
+                    // Update the timestamp if link exists
+                    visitedLinks[existingIndex].timestamp = Date.now()
+                } else {
+                    // Add new link
+                    visitedLinks.push(newVisitedLink)
+                }
+
+                // Sort by timestamp (newest first)
+                visitedLinks.sort((a: any, b: any) => b.timestamp - a.timestamp)
+
+                // Keep only the 200 most recent links
+                const trimmedLinks = visitedLinks.slice(0, 200)
+
+                // Remove links older than 3 days
+                const oneWeekAgo = Date.now() - 3 * 24 * 60 * 60 * 1000
+                const recentLinks = trimmedLinks.filter((link: any) => link.timestamp > oneWeekAgo)
+
+                // Save back to localStorage
+                localStorage.setItem("visitedLinks", JSON.stringify(recentLinks))
+                setIsVisited(true)
+            }
+
             router.push(props.href)
         },
         [props.href, router],
-    );
+    )
 
     const preloadRouteCode = useCallback(() => {
         router.prefetch(props.href)
-    }, [props.href, router]);
+    }, [props.href, router])
+
     return (
         <React.Fragment>
-        {
-            valChilds.map((one,row) =>
-                React.cloneElement(one as React.ReactElement<any>, {
+            {valChilds.map((one, row) => {
+                const element = one as React.ReactElement<any>
+                const originalClassName = element.props.className || ""
+                const visitedClass = isVisited ? "visited-link" : ""
+
+                return React.cloneElement(element, {
                     onClick: changeRoute,
                     onMouseEnter: preloadRouteCode,
+                    className: `${originalClassName} ${visitedClass} cursor-pointer`,
+                    style: {
+                        ...element.props.style,
+                        ...(isVisited ? { color: "rgb(6, 19, 45)" } : {}), // Gray color for visited links
+                    },
+                    key: row,
                 })
-            )
-        }
+            })}
         </React.Fragment>
-    );
+    )
 }
+
 
 //export { Link , DirectLink as Likes }
 /* 【用法】 使用了const { history } = useContext(RoutingContext); 后从.history.push(`/`,  {servu: });发起:
