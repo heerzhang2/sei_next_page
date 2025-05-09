@@ -6,17 +6,10 @@ import {useQuery} from "@urql/next";
 import {ReportQuery} from "@/component/rep/report-data";
 import PageSectionOrientation from "@/components/page-section-orientation";
 import Report from "@/component/rep/report";
-import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
 import {EditControlProvider} from "@/component/rep/editControl-provider";
-import Skeleton from "@/component/rep/skeleton";
-import Sidebar from "@/component/rep/sidebar";
 
-export default function Layout({
-  children,params
-}: Readonly<{
-    children: React.ReactNode,
-    params: Promise<{ repId: string, }>,
-}>) {
+export default function Layout({children}: Readonly<{children: React.ReactNode}>) {
     const { repId, action } = useParams()
     const searchParams = useSearchParams()
     const print = "1"===searchParams!.get("print")

@@ -186,13 +186,13 @@ export const 测量备注两半= ({ orc, rep,label,config,
       <FlexibleTable columnWidths={fixed}>
         <TableHeader>
           <TableRow>
-            <CCell><span className="text-xs">序号</span></CCell>
+            <CCell className="text-xs">序号</CCell>
             <CCell colSpan={2} className="text-sm">项目编号</CCell>
             <CCell colSpan={2}>检验内容与要求</CCell>
             <CCell>检测项目</CCell>
             <CCell className="text-sm">单位</CCell><CCell className="text-sm">观测数据</CCell>
             <CCell className="text-sm">测量结果</CCell>
-            <CCell><span className="text-sm">结果判定</span></CCell><CCell>备注</CCell>
+            <CCell className="text-xs">结果判定</CCell><CCell>备注</CCell>
           </TableRow>
         </TableHeader>
         <TableBody>
