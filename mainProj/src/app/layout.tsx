@@ -39,7 +39,7 @@ export default async function RootLayout({
   return (
       <html suppressHydrationWarning>
       <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased @container`}
       >
       <ThemeProvider>
         <PrintSettingsProvider>

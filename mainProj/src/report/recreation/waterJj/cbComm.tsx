@@ -1,18 +1,17 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, Input, InputLine, Text,} from "customize-easy-ui-component";
-import {arraySetInp, calcAverageArrObj, initialFormArr} from "../../../common/tool";
+import {calcAverageArrObj, initialFormArr} from "../../../common/tool";
 import type {UseFormReturn} from "react-hook-form";
-import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
-import {SuffixInput,} from "@/components/chub";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
+import {BlobInputList, SuffixInput,} from "@/components/chub";
 import {z} from "zod";
+import {CCell} from "@/components/flexible-table";
 
 /*较通用的，同一个规范共享的
 * */
 export const cbK2_4 =(orc:any,parOrc:any)=> {
     return {
         edit: (form: UseFormReturn<any, any, any>) => {
-            return [false, <div><Text>K2.4抽查的结构件为：</Text>
+            return [false, <div><h4>K2.4抽查的结构件为：</h4>
                 <FormField key={"抽查构件"}
                            control={form.control}
                            name={"抽查构件"}
@@ -78,10 +77,14 @@ export const cbK3_55 =(orc:any,parOrc:any)=> {
         defaults: defaults,
         view: () => {
             const avsDiam = calcAverageArrObj(orc?.磨损径, (row) => row, 1, 4);
-            let node = ['一', '二', '三', '四'].map((cap: any, c: number) => <div key={c}
-                     css={{borderTop: c === 0 ? 'unset' : '1px solid'}}>{orc?.磨损径?.[c]}</div>);
+            let node = ['一', '二', '三', '四'].map((cap: any, c: number) => (
+                <div key={c}
+                     className={c === 0 ? "border-t-0" : "border-t border-gray-900"}>
+                    {orc?.磨损径?.[c]}
+                </div>
+            ));
             return [false, <>
-                <CCell css={{padding: 0}}>{node}</CCell>
+                <CCell className="p-0">{node}</CCell>
                 {<CCell>{avsDiam}</CCell>
                 }
             </>]
@@ -92,7 +95,7 @@ export const cbK3_55 =(orc:any,parOrc:any)=> {
 export const cbK2_6 =(orc:any,parOrc:any)=> {
     return  {
       edit: (form: UseFormReturn<any, any, any>) => {
-        return [false, <div><Text>磨损最大的重要轴（销轴）为：</Text>
+        return [false, <div><h4>磨损最大的重要轴（销轴）为：</h4>
             <FormField control={form.control} name={`销轴损最`}
                 render={({ field }) => (
                     <FormItem className="flex-1">
@@ -103,7 +106,7 @@ export const cbK2_6 =(orc:any,parOrc:any)=> {
                     </FormItem>
                 )}
             />
-          <Text>锈蚀最大的重要轴（销轴）为：</Text>
+          <h4>锈蚀最大的重要轴（销轴）为：</h4>
             <FormField control={form.control} name={`销轴锈最`}
                 render={({ field }) => (
                     <FormItem className="flex-1">
@@ -161,7 +164,7 @@ export const cbK5_21 =(orc:any,parOrc:any)=> {
   edit: (form: UseFormReturn<any, any, any>) => {
     return [false, <div className="flex flex-wrap items-center gap-1 justify-center content-center">
         <span>座席距地面最大高度：</span>
-      <FormField control={form.control} name={"座席高"}
+      <FormField control={form.control} name="座席高"
                  render={({ field }) => (
                      <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
                        <FormLabel>高度</FormLabel>
@@ -186,4 +189,54 @@ export const genCBoOmit = (name: string,) => {
       </>]
     },
   };
+};
+
+export const cbK2_12_3 =(orc:any,parOrc:any)=> {
+    return  {
+        edit: (form: UseFormReturn<any, any, any>) => {
+            return [false, <div><h4>轨道型式为：</h4>
+                <FormField control={form.control} name="道型式"
+                           render={({ field }) => (
+                               <FormItem className="flex-1">
+                                   <FormControl>
+                                       <BlobInputList rows={1} datalist={['型钢','钢管']} {...field}  />
+                                   </FormControl>
+                                   <FormMessage />
+                               </FormItem>
+                           )}
+                />
+            </div>]
+        },
+        names: ['道型式'],
+    }
+};
+export const cbK2_12_4 =(orc:any,parOrc:any)=> {
+    return  {
+        edit: (form: UseFormReturn<any, any, any>) => {
+            return [false, <div><h4>侧轮在轨道哪一侧：</h4>
+                <FormField control={form.control} name="侧轮哪侧"
+                           render={({ field }) => (
+                               <FormItem className="flex-1">
+                                   <FormControl>
+                                       <BlobInputList rows={1} datalist={['内','外']} {...field}  />
+                                   </FormControl>
+                                   <FormMessage />
+                               </FormItem>
+                           )}
+                />
+                <h4>是不是木质轨道：</h4>
+                <FormField control={form.control} name="木质轨"
+                           render={({ field }) => (
+                               <FormItem className="flex-1">
+                                   <FormControl>
+                                       <BlobInputList rows={1} datalist={['是','不是']} {...field}  />
+                                   </FormControl>
+                                   <FormMessage />
+                               </FormItem>
+                           )}
+                />
+            </div>]
+        },
+        names: ['侧轮哪侧', '木质轨'],
+    }
 };

@@ -117,7 +117,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     {orc.资料编号 ?? '／'}
                 </div>
             </RepLink>
-            {测量备注两半({orc, rep, config:config观测数据(orc),config2:config观测数据2,mem:'观备注',label:'八、观测数据及测量结果记录',children:tail观测})}
+            {测量备注两半({orc, rep, config:config观测数据(orc),config2:config观测数据2(orc),mem:'观备注',label:'八、观测数据及测量结果记录',children:tail观测})}
             {测量允许检测({orc, rep, config:config主技术,tag:'MainTechnical',mem:'主技备注',label:'附录A K7.5 主要技术参数测试',children:tail主技})}
             <StrainStressVw orc={orc} rep={rep} sensit label={'附录B K7.6应力测试记录'}/>
             <AccelerationVw orc={orc} rep={rep}  stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>

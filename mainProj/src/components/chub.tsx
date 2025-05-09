@@ -170,7 +170,7 @@ export function CollapsibleFormSection({
                                 variant="outline"
                                 size="sm"
                                 onClick={toggleOpen}
-                                className="flex items-center gap-1"
+                                className="flex items-center gap-1 mr-8"
                             >
                                 <ChevronUp className="h-4 w-4"/>
                                 <span>收起</span>

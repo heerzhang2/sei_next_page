@@ -1,6 +1,5 @@
 import * as React from "react";
 import {SuffixInput,} from "@/components/chub";
-// import {DirectLink,} from "../../../routing/Link";
 import {RepLink,} from "../../common/base";
 import {usePrefixDataTable} from "../../hook/usePrefixData";
 import {useThreeColumnView} from "../../hook/useThreeColumnSubr";
@@ -8,7 +7,7 @@ import {render施工单位,} from "../../common/render";
 import {EachObserveConfig, useObserveTable} from "../../hook/useObserve";
 import {calcAverageArrObj} from "../../../common/tool";
 import type {UseFormReturn} from "react-hook-form";
-import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
 import { clsx} from "clsx"
 import {PrintReserveLeast} from "@/components/print-reserve-least";
@@ -416,7 +415,7 @@ export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?:
                        )}
             />
           </div>
-          <Text css={{display: 'ruby'}}>计算的测量结果： {avHs} {unit}</Text>
+          <h4>计算的测量结果： {avHs} {unit}</h4>
         </div>]
       },
       view: () => {

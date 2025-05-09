@@ -83,7 +83,7 @@ export function FlexibleTable({ children, columnWidths, className, variant = "de
   })
 
   return (
-    <table id={id} className={`w-full table-fixed break-all ${variantStyles[variant]} ${className || ""}`}>
+    <table id={id} className={`w-full table-fixed break-all border-collapse ${variantStyles[variant]} ${className || ""}`}>
       <colgroup>
         {processedWidths.map((width, i) => {
           return <col key={i} style={{ width }} />
@@ -142,6 +142,8 @@ export function TableRow({
   )
 }
 
+/*祖先级需要添加上 @container类。
+* */
 // 修改TableCell组件，添加split参数
 export function TableCell({
   children,
@@ -153,15 +155,18 @@ export function TableCell({
 }: React.TdHTMLAttributes<HTMLTableCellElement> & { split?: boolean }) {
   // 根据split参数设置pageBreakInside样式
   const splitStyle = !split ? { pageBreakInside: "avoid", breakInside: "avoid" } : {}
-
+  //默认：不加边线的。
   return (
-    <td className={`p-2 ${className || ""}`} style={{ ...style, ...splitStyle }} colSpan={colSpan} {...props}>
+    <td className={`px-0 py-0.5 @md:px-[0.1rem] @md:py-1 @lg:px-1 @lg:py-1 print:px-0.5 print:py-[0.2rem] ${className || ""}`}
+        style={{ ...style, ...splitStyle }}
+        colSpan={colSpan} {...props}
+    >
       {children}
     </td>
   )
 }
 
-// 修改CCell组件，添加split参数
+//默认：加边线的。居中的；
 export function CCell({
   children,
   className,
@@ -173,13 +178,10 @@ export function CCell({
   // 根据split参数设置pageBreakInside样式
   const splitStyle = !split ? { pageBreakInside: "avoid", breakInside: "avoid" } : {}
 
-  // @ts-ignore
   return (
-    <td
-      className={`px-0 py-0.5 @md:px-0.5 @md:py-1 @lg:px-1 @lg:py-1.5 print:px-0 print:py-0.75rem text-center border border-gray-700 ${className || ""}`}
+    <td className={`px-0 py-0.5 @md:px-[0.1rem] @md:py-1 @lg:px-1 @lg:py-1 print:px-0.5 print:py-[0.2rem] text-center border border-gray-700 ${className || ""}`}
       style={{ ...style, ...splitStyle }}
-      colSpan={colSpan}
-      {...props}
+      colSpan={colSpan} {...props}
     >
       {children}
     </td>

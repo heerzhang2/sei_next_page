@@ -10,7 +10,7 @@ import {施工许可证子项选} from "../../tower/craneJj/orcBase";
 import {config主技术} from "./MainTechnical";
 import {itemA应变应力} from "../waterJj/StrainStress";
 import {itemA加速} from "../waterJj/Acceleration";
-import {cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21, } from "../waterJj/cbComm";
+import {cbK2_12_3, cbK2_12_4, cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21,} from "../waterJj/cbComm";
 import {z} from "zod";
 import {Button, Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
@@ -66,6 +66,18 @@ export const config观测数据 : ((orc: any) => EachObserveConfig[][])=(orc: an
         {n: '打磨径', t: [undefined,undefined,undefined], x:'最大锈蚀轴最大锈蚀处实测直径(打磨后)', c: '四', d: 1 },
     ],
     [{check: '2.6', }],
+     [{n: '道原厚', t: ['※K2.12.3','(1)',<>型钢轨道磨损量应当小于原厚度尺寸的20%；钢管轨道磨损量应当小于原钢管壁厚的15%。轨道型式为（{orc?.道型式??' '}）。</>],
+                    x:'轨道原厚度（壁厚）值', u: 'mm', c: '四', d: 1,cbo:cbK2_12_3},
+         {n: '道厚实', t: [undefined,undefined,null], x:'轨道原厚度（壁厚）实测值', c: '四', d: 1},
+     ],
+     [{check: '2.12.3' }],
+     [{n: '轨距设', t: ['K2.12.4','(1)',<>侧轮在轨道内时轨距允 许误差为-3mm～5mm,侧轮在轨道外时轨距允许误差为-5mm～3mm,木制轨道轨距允许误差为 -5mm～6mm。
+                    侧轮在轨道（{orc?.侧轮哪侧??' '}）侧； （{orc?.木质轨??' '}）木质轨道。</>], x:'轨距设计值', u: 'mm', c: '四', d: 0,cbo:cbK2_12_4},
+         {n: '轨距测', t: [undefined,undefined,null], x:'轨距测量值', c: '四', d: 0},
+     ],
+     [{check: '2.12.4' }],
+     [{n: '接口高差', t: ['K2.12.5','(1)','轨道与车轮接触面的接口处高低差应当不大于 1 mm。'], x:'轨道接口处高低差', u: 'mm', c: '四', d: 1},],
+     [{check: '2.12.5', }],
     [{n: '卷筒径', t: ['K3.5.2','(1)',<>提升乘人装置用的卷筒、滑轮直径与钢丝绳直径之比应当不小于30；钢丝绳对滑轮包角不大于90°时，滑轮直径与钢丝绳直径之比应当不小于20。</>],
                 x:'卷筒直径', u: 'mm', c: '四', d: 1},
          {n: '滑轮径', t: [undefined,undefined,null], x:'滑轮直径', c: '四', d: 1 },
@@ -77,36 +89,45 @@ export const config观测数据 : ((orc: any) => EachObserveConfig[][])=(orc: an
         {n: '磨后径', t: [undefined,undefined,undefined], x:'磨损后钢丝绳直径', cbo:cbK3_55},
     ],
     [{check: '3.5.5', }],
-
-     [{n: '接地阻', t: ['K4.3','(1)','低压配电系统保护接地电阻应当不大于10Ω。'], x:'接地电阻', u: 'Ω', c: '四', d: 0},
-     ],
-     [{check: '4.3', }],
-     [{n: '绝缘阻', t: ['※K4.4','(1)','电压有效值大于50V的带电回路与接地装置之间的绝缘电阻应当能保证用电安全，绝缘电阻应当不小于1MΩ。'],
-            x:'绝缘电阻', u: 'MΩ', c: '四', d: 1},
-     ],
-     [{check: '4.4', }],
-     [{n: '工作电流', t: ['K4.6','(1)',<>满载或者偏载运转平稳后，电动机电流值应符合设计文件及以下要求。在满载和设计允许偏载的情况下，连续工作的异步电机工作电流
-                应当不大于电机的额定电流。 （{orc?.工电机??''}）电机额定电流为（{orc?.机额电流??''}）A。</>],
-         x:'工作电流', u: 'A', c: '四', d: 1,cbo:cbK4_6},
-     ],
-     [{check: '4.6', }],
-     [{n: '座舱深', t: ['K5.2','(1)',<>座席距地面最大高度5m以下时, 座舱深度不小于550mm, 座席靠背高度不小于300mm。座席距地面最大高度5m以上时, 座舱深度不小于800mm,座席靠背高度不小于400mm。当设有安全杠和安全带等设施时,
-             可适当减少座舱深度。乘人座席宽度每人应不小于400mm，专供儿童乘坐的每人应不小于250mm。座席距地面最大高度（{orc?.座席高??''}）m。</>],
-            x:'座舱深度', u: 'mm', c: '四', d: 0,cbo:cbK5_21},
-        {n: '靠背高', t: [undefined,undefined,null], x:'靠背高度', c: '四', d: 0},
-        {n: '童席宽', t: [undefined,undefined,undefined], x:'专供儿童座席宽度', c: '四', d: 0,},
-     ],
-     [{check: '5.2', }],
 ] as EachObserveConfig[][]};
-
-export const config观测数据2=[
+//原本：5.2  【--】 5.4.1
+export const config观测数据2 : ((orc: any) => EachObserveConfig[][])=(orc: any)=>{
+    return [
+        [{n: '主轮原直', t: ['※K3.8','(1)',<>滑行车车轮的磨损量应当小于原直径尺寸的 2.5%，且主车轮最大磨损量不超过6mm，侧轮和底轮最大磨损量不超过4mm。</>],
+            x:'主车轮原直径', u: 'mm', c: '四', d: 1},
+            {n: '主轮径实', t: [undefined,undefined,null], x:'主车轮实测直径', c: '四', d: 1 },
+            {n: '侧轮原直', t: [undefined,undefined,undefined], x:'侧轮轮原直径', c: '四', d: 1 },
+            {n: '侧轮径实', t: [undefined,undefined,undefined], x:'侧轮实测直径', c: '四', d: 1 },
+            {n: '底轮原直', t: [undefined,undefined,undefined], x:'底轮原直径', c: '四', d: 1 },
+            {n: '底轮径实', t: [undefined,undefined,undefined], x:'底轮实测直径', c: '四', d: 1 },
+        ],
+        [{check: '3.8', }],
+        [{n: '接地阻', t: ['K4.3','(1)','低压配电系统保护接地电阻应当不大于10Ω。'], x:'接地电阻', u: 'Ω', c: '四', d: 0},
+        ],
+        [{check: '4.3', }],
+        [{n: '绝缘阻', t: ['※K4.4','(1)','电压有效值大于50V的带电回路与接地装置之间的绝缘电阻应当能保证用电安全，绝缘电阻应当不小于1MΩ。'],
+            x:'绝缘电阻', u: 'MΩ', c: '四', d: 1},
+        ],
+        [{check: '4.4', }],
+        [{n: '轨绝缘阻', t: ['K4.5','(1)',"路轨与导电轨之间的绝缘电阻应当不小于 0.1MΩ。"], x:'绝缘电阻', u: 'MΩ', c: '四', d: 2},],
+        [{check: '4.5', }],
+        [{n: '工作电流', t: ['K4.6','(1)',<>满载或者偏载运转平稳后，电动机电流值应符合设计文件及以下要求。在满载和设计允许偏载的情况下，连续工作的异步电机工作电流
+                应当不大于电机的额定电流。 （{orc?.工电机??''}）电机额定电流为（{orc?.机额电流??''}）A。</>],
+            x:'工作电流', u: 'A', c: '四', d: 1,cbo:cbK4_6},
+        ],
+        [{check: '4.6', }],
+    [{n: '座舱深', t: ['K5.2','(1)',<>座席距地面最大高度5m以下时, 座舱深度不小于550mm, 座席靠背高度不小于300mm。座席距地面最大高度5m以上时, 座舱深度不小于800mm,座席
+                靠背高度不小于400mm。当设有安全杠和安全带等设施时, 可适当减少座舱深度。 座席距地面最大高度（{orc?.座席高??' '}）m。</>],
+             x:'座舱深度', u: 'mm', c: '四', d: 0,cbo:cbK5_21},
+        {n: '靠背高', t: [undefined,undefined,null], x:'靠背高度', c: '四', d: 0},
+    ],
+    [{check: '5.2', }],
     [{n: '安全带宽', t: ['K5.4.1','(1)',`安全带织带的宽度应当不小于30mm。`], x:'安全带织带的宽度', u: 'mm', c: '四', d: 1},
     ],
     [{check: '5.4.1', }],
     [{n: '满制距', t: ['※K6.2','(4)','在满载工况下最大速度运行时的制动距离，应符合设计文件要求。'], x:'制动距离', u: 'm',c: '四', d: 1},
-        {n: '衬原厚', t: [undefined,'(5)','对有磨损的机械式制动装置在磨损严重部位测量闸衬厚度，磨损量应当不大于原厚度50%且满足设计文件要求。'],
-                    x:'闸衬原厚度', u: 'mm', c: '四', d: 1},
-        {n: '闸衬厚', t: [undefined,undefined,null], x:'磨损后闸衬厚度', },
+        {n: '闸衬厚', t: [undefined,'(5)','对有磨损的机械式制动装置在磨损严重部位测量闸衬厚度，磨损量应当不大于原厚度50%且满足设计文件要求。'],
+                    x:'磨损后闸衬厚度', u: 'mm', c: '四', d: 2},
     ],
     [{check: '6.2', }],
     [{n: '栅栏高', t: ['K6.20','(1)','安全栅栏高度应当不低于1100mm；栅栏的间隙和距离地面的间隙应当不大于 120mm。'], x:'高度', u: 'mm', c: '四', d: 0},
@@ -121,28 +142,12 @@ export const config观测数据2=[
         {n: '防滑坡', t: [undefined,undefined,undefined], x:'有防滑措施的斜坡坡度', c: '四', d: 1},
     ],
     [{check: '6.22', }],
-    [{n: '升空高', t: ['K13.1','(1)','升空高度应当不大于50m。'], x:'升空高度',u: 'm', c: '四', d: 1},
-    ],
-    [{check: '13.1', }],
-    [{n: '升空速', t: ['K13.2','(1)',<>升空速度应当不大于2m/s，回收速度应当不大于1m/s。</>],
-                    x:'升空速度', u: 'm/s', c: '四', d: 1},
-    ],
-    [{check: '13.2升空', }],
-    [{n: '回收速', t: [undefined,undefined,undefined], x:'回收速度', c: '四', d: 1},
-    ],
-    [{check: '13.2回收', }],
-    [{n: '舱拦高', t: ['K13.7','(3)','非封闭式吊舱侧面拦挡物高度应当不低于1.2m'], x:'非封闭式吊舱侧面拦挡物高度',u: 'm', c: '四', d: 2},
-    ],
-    [{check: '13.7', }],
-    [{n: '锚绳数', t: ['K13.8','(6)','锚绳数量应当不少于3根。'], x:'锚绳数量',u: '根', c: '四', d: 0},
-    ],
-    [{check: '13.8', }],
-] as EachObserveConfig[][];
+] as EachObserveConfig[][]};
 
 export const tail观测= <div className={"text-[0.75rem]"}>
     注：
     <div className={"ml-8 print:ml-6 mt-[-1rem]"}>
-        1、K2.4、K2.6、K3.5.2、K3.5.5、K6.2（5）仅在不符合时，才需填观测数据和测量结果等数值；<br/>
+        1、K2.4、K2.6、K2.12.3、K2.12.4、K2.12.5、K3.5.2、K3.5.5、K3.8、K5.2、K6.2（5）、K6.20、K6.22、仅在不符合时，才需填观测数据和测量结果等数值。<br/>
         2、结果判定栏都需填；<br/>
         3、其他需记录的测量值和结果值填在备注栏中。
     </div>
@@ -170,7 +175,7 @@ export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
         const impressionismAs = setupItemAreaRoute({rep, noDefault: true});
         const result = assertNamesUnique([{value: rep?.tzFields}, {value: impressionismAs?.Item, type: 'impr'},
             {value: config设备概况, type:'esnt'}, {value:[...itemA结论,  ...itemA技术见证, ] },
-            {value: config观测数据({}), type:'mesB'},{value: config观测数据2, type:'mesB'},
+            {value: config观测数据({}), type:'mesB'},{value: config观测数据2(), type:'mesB'},
             {value: config主技术, type:'mesB'},
             {value:[ ...itemA应变应力, ...itemA加速, ] },
             {value:['unq','仪器表','检验条件','观备注', '主技备注' ]} ]);
