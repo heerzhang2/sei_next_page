@@ -4,7 +4,7 @@ import {
     Table,  TableBody, TableRow, Cell, CCell, TableHead, Text,
     useTheme, Button,
 } from "customize-easy-ui-component";
-import {DirectLink, Link as RouterLink,} from "../../../routing/Link";
+import {DirectLink} from "../../../routing/Link";
 import { ReportViewProps, } from "../../common/base";
 import {
     末尾链接, 落款单位地址,

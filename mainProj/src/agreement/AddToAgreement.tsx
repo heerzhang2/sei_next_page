@@ -1,32 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Text,
-    Button,
-    useTheme,
-    useToast,
-    LayerLoading,
-    Spinner,
-    Input,
-    TwoHalfRightPanel,
-    Container,
-    MenuItem,
-    MenuList,
-    InputLine,
-    Select,
-    CheckSwitch,
-    IconButton,
-    IconArrowLeft,
-    IconKey, VerticalMenu, DdMenuItem, CommitInput
-} from "customize-easy-ui-component";
-//import {   useAddToTask } from "../db";
-//import { useSession } from "../auth";
-
-//import { Link as RouterLink,  } from "wouter";
 import useBuildAgreementMutation from "./hook/useBuildAgreementMutation";
-// import NewDevice from "../device/NewDevice";
-
-import {Link as RouterLink} from "../routing/Link";
 import {useContext} from "react";
 import UserContext from "../routing/UserContext";
 import {ContainerDesignClsTil, getFeeTitleFe} from "../dict/feeTitleFe";

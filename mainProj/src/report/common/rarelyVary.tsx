@@ -1,9 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-  Text, Divider, Embed, useTheme, IconButton, IconMinimize2, IconMaximize2, TableBody, TableRow, RCell,Table, Cell,
-} from "customize-easy-ui-component";
-import {DirectLink, Link as RouterLink,} from "../../routing/Link";
+import {DirectLink} from "../../routing/Link";
 import Link from "next/link"
 import Img_Ma  from '../../images/MA.png';
 import Img_ReportNoQR from '../../images/reportNoQR.png';
@@ -18,8 +14,7 @@ import {useParams, usePathname, useRouter, useSearchParams} from "next/navigatio
 
 /**【特别！要！注意】打印情形： pagebreakBefore='always' 的必须小心，前面不要紧跟这是 <br/> 空白变成了空一整页了的可能性出现！！
  * */
-export const 注意事项=<React.Fragment>
-  <Text variant="h4">
+export const 注意事项=<div>
     2. 本报告应当由计算机打印输出，或者用钢笔、签字笔填写，字迹应当工整，修改无效。<br/>
     <br/>
     3. 本报告无检验、编制、审核、批准人员签字和检验机构的核准证号、检验专用章或者公章无效。<br/>
@@ -31,28 +26,57 @@ export const 注意事项=<React.Fragment>
     6. 根据《中华人民共和国特种设备安全法》，使用单位应于下次检验日期届满前1个月向检验机构提出定期检验申请。<br/>
     <br/>
     7. 有关检测数据未经允许，施工、使用单位不得擅自向社会发布信息。
-  </Text>
-</React.Fragment>;
+  </div>;
 
-export const 落款单位地址=<React.Fragment>
-    <Text variant="h4" css={{textAlign:'center'}}>福建省特种设备检验研究院</Text>
-    <Text variant="h6" css={{textAlign:'center'}}>
-      FUJIAN SPECIAL EQUIPMENT INSPECTION AND RESEARCH INSTITUTE
-    </Text>
-    <Divider css={{borderTopColor: 'black'}}/>
-    <Text variant="h5" >
-      地址（Add.）：福建省福州市仓山区卢滨路370号
-    </Text>
-    <div css={{display:'flex'}}>
-      <span css={{flex:'1'}}>电话（Tel.）：0591-968829</span>
-      <span css={{flex:'1'}}>	传真（Fax）：0591-88700509</span>
-      <span css={{flex:'1'}}>邮政编码：350008</span>
-    </div>
-    <div css={{display:'flex'}}>
-      <span css={{flex:'1'}}>网址（Website）：www.fjtj.com</span>
-      <span css={{flex:'1'}}>	电子邮箱（Email）：fjtj@fjtj.org</span>
-    </div>
-</React.Fragment>;
+export const 落款单位地址 = () => (
+    <React.Fragment>
+        {/* 标题部分 */}
+        <div className="text-center space-y-6">
+            <h4 className="text-2xl font-bold">福建省特种设备检验研究院</h4>
+            <h6 className="text-lg text-gray-600">
+                FUJIAN SPECIAL EQUIPMENT INSPECTION AND RESEARCH INSTITUTE
+            </h6>
+
+            {/* 分割线 */}
+            <div className="border-t-2 border-gray-600 w-64 mx-auto"></div>
+
+            {/* 地址信息 */}
+            <p className="text-xl text-gray-700 mt-8">地址（Add.）：福建省福州市仓山区卢滨路370号</p>
+
+            {/* 联系方式容器 */}
+            <div className="flex flex-wrap gap-4 mt-6">
+                <div className="flex-1">
+                    <span className="block text-sm font-medium text-gray-600">电话（Tel.）：</span>
+                    <span className="block text-gray-500">0591-968829</span>
+                </div>
+                <div className="flex-1">
+                    <span className="block text-sm font-medium text-gray-600">传真（Fax）：</span>
+                    <span className="block text-gray-500">0591-88700509</span>
+                </div>
+                <div className="flex-1">
+                    <span className="block text-sm font-medium text-gray-600">邮政编码：</span>
+                    <span className="block text-gray-500">350008</span>
+                </div>
+            </div>
+
+            {/* 网站信息容器 */}
+            <div className="flex flex-wrap gap-4 mt-6">
+                <div className="flex-1">
+                    <span className="block text-sm font-medium text-gray-600">网址（Website）：</span>
+                    <a href="https://www.fjtj.com" className="block text-blue-600 hover:underline">
+                        www.fjtj.com
+                    </a>
+                </div>
+                <div className="flex-1">
+                    <span className="block text-sm font-medium text-gray-600">电子邮箱（Email）：</span>
+                    <a href="mailto:fjtj@fjtj.org" className="block text-blue-600 hover:underline">
+                        fjtj@fjtj.org
+                    </a>
+                </div>
+            </div>
+        </div>
+    </React.Fragment>
+);
 
 //表格TableRow + 字体1rem 极限压缩每一行高度 19px;  rheight最大压缩Body行到32px;
 export const 型试落款地址= ({theme, } :{theme: any, }) => {
@@ -391,54 +415,57 @@ export const useViewReportALL = () => {
 };
 
 type AttentionPointProps = {
-  /**报告对象*/
-  rep: any
-  // onClick: () => void
-  children: React.ReactNode
-  //第一行的 本报告 遵照“”
-  comply?: any
-  //最后一行 带上 报检 电话网址
-  telurl?: boolean
+    /**报告对象*/
+    rep: any
+    // onClick: () => void
+    children: React.ReactNode
+    //第一行的 本报告 遵照“”
+    comply?: any
+    //最后一行 带上 报检 电话网址
+    telurl?: boolean
 }
 /**更为通用的注意事项 报告显示页面 【特别提醒】rep?.isp?.ispu是动态的数据；并非静态化方式生成数据。
  *@param children 文本其他行的。
  * */
-export const AttentionPoint = ({ rep, children, comply ,telurl }: AttentionPointProps) =>{
-  const atPrint = useMedia('print');
-  return (
-    <RouterLink  href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/FrontCover#FrontCover`}>
-      <div css={{
-        "@media print": {
-          //【特殊】布局流如何定位到中间某一张纸张的末尾打印；纸张高度上 剪掉 上面的一行 “目录” 并没有被本div所都囊括的元素高度：推定剪掉高度是2rem。A4纸张竖版大约可接受高度大小=775pt再换算=273.4mm；A4纸297mm-2*(11.7=边距+页眉页脚)；
-          //【有问题】目标div必须小于一张纸高度？这里若稍微超出了当前定位纸张区域，@@就可能被切分两页的！！，变成后续尾随空白页面的。所以尽量考虑有余量“- 10pt”:A4纸张竖版。
-          height: `calc(100vh - 2rem - 10pt)`,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',   //'flex-end', 吸附本页纸张的底部区域打印，还是在本张纸张中间打印的？
-          margin: '0 3rem 0',
-        },
-      }}>
-        <Text variant={atPrint? "h3":'h5'} css={{ textAlign: 'center',
-          "@media print": {
-            marginBottom: '3rem',
-          },
-        }}>注意事项</Text>
-        <Text variant="h5" css={{ lineHeight: 0.95,
-          "@media print": {
-            lineHeight: 2.3,
-          },
-        }}>
-          { comply && <>
-            1．本报告{comply}。<br/>
-            </>
-          }
-          {children}
-          { telurl && <>
-              报检电话：{rep?.isp?.ispu?.agency?.bjtel}，网址：{rep?.isp?.ispu?.agency?.bjurl}。
-             </>
-          }
-        </Text>
-      </div>
-    </RouterLink>
-)};
+export const AttentionPoint = ({ rep, children, comply, telurl }: AttentionPointProps) => {
+    const atPrint = useMedia('print');
 
+    return (
+        <DirectLink
+            href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/FrontCover#FrontCover`}
+            className="no-underline hover:underline" // 添加链接交互样式
+        >
+            {/* 主容器：使用打印专用层和响应式断点 */}
+            <div className="print:mb-12 print:mt-auto print:flex print:items-center print:justify-center print:px-8"
+                 style={{
+                     '@print': {
+                         height: 'calc(100vh - 2rem - 10pt)',
+                         flexDirection: 'column'
+                     }
+                 }}
+            >
+                {/* 标题部分 */}
+                <h2 className="text-center text-xl print:mb-8">
+                    注意事项
+                </h2>
+
+                {/* 内容容器：使用打印专用行高和间距 */}
+                <div className="leading-relaxed print:leading-relaxed-print">
+                    {comply && (
+                        <>
+                            1．本报告{comply}。<br />
+                        </>
+                    )}
+
+                    {children}
+
+                    {telurl && (
+                        <>
+                            报检电话：{rep?.isp?.ispu?.agency?.bjtel}，网址：{rep?.isp?.ispu?.agency?.bjurl}。
+                        </>
+                    )}
+                </div>
+            </div>
+        </DirectLink>
+    );
+};

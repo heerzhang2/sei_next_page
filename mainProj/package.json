@@ -68,7 +68,6 @@
     "@urql/next": "^1.1.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "customize-easy-ui-component": "5.5.1",
     "framer-motion": "^12.4.1",
     "graphql": "^16.10.0",
     "hash.js": "^1.1.7",

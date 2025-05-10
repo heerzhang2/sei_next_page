@@ -1,45 +1,6 @@
-/** @jsxImportSource @emotion/react */
 "use client"
 //You're importing a component that needs `useEffect`. This React hook only works in a client component. To fix, mark the file (or its parent) with the `"use client"` directive.
 import * as React from "react";
-import {css} from "@emotion/react";
-import {
-    List,
-    ListItem,
-    Avatar,
-    MenuItem,
-    Text,
-    Stack,
-    StackTitle,
-    StackItem,
-    useTheme,
-    IconChevronRight,
-    IconMoreVertical,
-    Skeleton,
-    IconRefButton,
-    Spinner,
-    IconLayers,
-    Dialog,
-    InputLine,
-    Select,
-    Button,
-    Input,
-    useToast,
-    useMMenuBarOcup,
-    DialogContent,
-    DialogHeading,
-    DialogDescription,
-    DialogClose,
-    DdMenu,
-    DdMenuItem,
-    VerticalMenu,
-    CommitInput,
-    CheckSwitch,
-    IconButton,
-    IconArchive,
-    IconCpu
-} from "customize-easy-ui-component";
-
 import {AgreementList$data, AgreementList$key} from "./__generated__/AgreementList.graphql";
 import {SyntheticEvent, useContext, useEffect, } from "react";
 import { AgreementBoundDevices } from "./AgreementBoundDevices";

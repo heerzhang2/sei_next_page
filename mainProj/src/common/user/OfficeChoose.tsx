@@ -1,23 +1,7 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    IconButton,
-    IconX,
-    InputPure,
-    SuffixInput,
-    Dialog,
-    Text,
-    Button,
-    useTheme,
-    InputLine,
-    Select,
-    Layer, IconChevronUp, IconChevronDown, useCollapse,
-    DialogHeading, DialogContent, DialogDescription, DialogClose
-} from "customize-easy-ui-component";
 // import {DialogClose, DialogContent, DialogDescription, DialogHeading} from "@/comp/Dialog";
 import {Dispatch, SetStateAction, useContext} from "react";
 import {OfficeChooseQuery$data} from "./__generated__/OfficeChooseQuery.graphql";
-import {css} from "@emotion/react";
 import UserContext from "../../routing/UserContext";
 const OfficeChooseQuery = require('./__generated__/OfficeChooseQuery.graphql');
 import { gql, useMutation } from 'urql';

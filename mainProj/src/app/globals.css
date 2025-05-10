@@ -343,16 +343,8 @@ body {
 }
 
 /*点击测量跳转 Add this to your globals.css file */
-.visited-link::after {
-  content: " ✓";
-  font-size: 0.75em;
-  vertical-align: super;
-  color: #10b981; /* Green checkmark */
-}
-
-/* You can also use the :visited pseudo-class for basic styling */
 a:visited {
-  color: rgb(6, 19, 45);
+  color: rgb(6, 19, 45) !important; /* Darker gray for better visibility */
 }
 
 /* Add print styles to ensure normal colors when printing */
@@ -361,13 +353,10 @@ a:visited {
   .visited-link {
     color: inherit !important; /* Use normal text color when printing */
   }
-
-  .visited-link::after {
-    display: none !important; /* Hide the checkmark when printing */
-  }
 }
 
 /* Make sure the visited-link class has a darker color too */
 .visited-link {
-  color: rgb(6, 19, 45);
+  color: rgb(6, 19, 45); /* Darker gray to match a:visited */
 }
+

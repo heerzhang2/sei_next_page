@@ -1,20 +1,30 @@
 import * as React from "react";
-import {
-    CCellUnit, InternalItemProps, RepLink,
-} from "../../common/base";
+import {CCellUnit, InternalItemProps, RepLink,} from "../../common/base";
 import {useTableEditor} from "../../hook/useRepTableEditor";
 import {useStorage} from "../../StorageContext";
 import {useUppyUpload} from "../../hook/useUppyUpload";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+    Input,
+    Textarea
+} from "@/components/ui";
 import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {ImageComponent} from "@/components/shub";
 import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
-import {PrintReserveLeast} from "@/components/print-reserve-least";
+
 
 export const tail应变= <span className="text-[0.75rem]">
     注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
@@ -91,24 +101,24 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
 
                 return (
                     <>
-                        <div css={{display: 'flex',flexWrap: 'wrap',justifyContent:'space-around',alignItems:'center'}}>
-                            { config.map(([title,field,unit,size]:any, i:number) => {
-                                return <div key={i} css={{ display: 'flex',alignItems:'center',
-                                    [theme.mediaQueries.md]: {marginLeft: '1rem'}
-                                }}>
-                                    <FormField key={i} control={form.control} name={field}
-                                        render={({ field }) => (
-                                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                                <FormLabel>{title}</FormLabel>
-                                                <FormControl className="w-full">
-                                                    <SuffixInput  unit={unit}  {...field}  size={size!} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>;
-                            }) }
+                        <div className="flex flex-wrap justify-around items-center">
+                            {config.map(([title, field, unit, size]: any, i: number) => {
+                                return (
+                                    <div key={i} className="flex items-center md:ml-4">
+                                        <FormField key={i} control={form.control} name={field}
+                                            render={({field}) => (
+                                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormControl className="w-full">
+                                                        <SuffixInput unit={unit}{...field} size={size!}/>
+                                                    </FormControl>
+                                                    <FormMessage/>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                );
+                            })}
                         </div>
                         <Card className="py-1 gap-1">
                             <CardHeader>
@@ -118,13 +128,14 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                 <FormField
                                     control={form.control}
                                     name="应试工况"
-                                    render={({ field }) => (
-                                        <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                    render={({field}) => (
+                                        <FormItem
+                                            className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
                                             <FormLabel>测试工况</FormLabel>
                                             <FormControl className="w-full h-24">
                                                 <Textarea rows={2} {...field} />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -132,18 +143,18 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                             </CardContent>
                         </Card>
                         <FormField control={form.control} name={'测点示意'}
-                                   render={({ field }) => (
+                                   render={({field}) => (
                                        <FormItem>
                                            <FormLabel>测点示意图-说明</FormLabel>
                                            <FormControl className="w-full h-40 @md:h-20">
-                                               <Textarea rows={2} {...field}  placeholder={`测点示意图`}/>
+                                               <Textarea rows={2} {...field} placeholder={`测点示意图`}/>
                                            </FormControl>
-                                           <FormMessage />
+                                           <FormMessage/>
                                        </FormItem>
                                    )}
                         />
-                       测点示意图：
-                       {uploadDom}
+                        测点示意图：
+                        {uploadDom}
                         <Card className="py-1 mb-2 gap-2">
                             <CardHeader>
                                 <CardTitle>测试结果：</CardTitle>
@@ -151,35 +162,38 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                             <CardContent className="px-1">
                                 <div className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
                                     <FormField control={form.control} name={'危应第'}
-                                               render={({ field: formField }) => (
+                                               render={({field: formField}) => (
                                                    <FormItem>
-                                                       <FormLabel>{(sensit?'最大应力值测试点':'最危险应力点')+'为测点：'}</FormLabel>
+                                                       <FormLabel>{(sensit ? '最大应力值测试点' : '最危险应力点') + '为测点：'}</FormLabel>
                                                        <FormControl>
-                                                           <Input {...formField} placeholder={`请输入测点`} />
+                                                           <Input {...formField} placeholder={`请输入测点`}/>
                                                        </FormControl>
-                                                       <FormMessage />
+                                                       <FormMessage/>
                                                    </FormItem>
                                                )}
                                     />
                                     <FormField control={form.control} name={"应变设计"}
-                                               render={({ field }) => (
+                                               render={({field}) => (
                                                    <FormItem className="pt-2 w-full break-inside-avoid">
                                                        <FormLabel>设计值=</FormLabel>
                                                        <FormControl className="w-full">
                                                            <BlobInputList rows={2}  {...field}  />
                                                        </FormControl>
-                                                       <FormMessage />
+                                                       <FormMessage/>
                                                    </FormItem>
                                                )}
                                     />
                                     <FormField control={form.control} name={"应变结论"}
-                                               render={({ field }) => (
+                                               render={({field}) => (
                                                    <FormItem className="pt-2 w-full break-inside-avoid">
                                                        <FormLabel>结果判定</FormLabel>
                                                        <FormControl>
-                                                           <ClearableSelect field={field} options={clcOptions} onClear={() => {form.setValue("应变结论", "")}}/>
+                                                           <ClearableSelect field={field} options={clcOptions}
+                                                                            onClear={() => {
+                                                                                form.setValue("应变结论", "")
+                                                                            }}/>
                                                        </FormControl>
-                                                       <FormMessage />
+                                                       <FormMessage/>
                                                    </FormItem>
                                                )}
                                     />
@@ -189,13 +203,13 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                         <FormField
                             control={form.control}
                             name="应变备注"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
                                     <FormLabel>备注：</FormLabel>
                                     <FormControl className="w-full h-24">
                                         <Textarea rows={3} {...field} />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -203,20 +217,20 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                     </>
                 )
             },
-            [children,nestRendererFactory ],
+            [children, nestRendererFactory],
         )
-        const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
-        return  <CollapsibleFormSection title={label!} defaultOpen={show}>
-            {render()}
-        </CollapsibleFormSection>;
+    const {render,} = useFormFramework({schema, defaultValues, contentRendererFactory, arrayFields, rep})
+    return <CollapsibleFormSection title={label!} defaultOpen={show}>
+        {render()}
+    </CollapsibleFormSection>;
 };
 
 /**应变应力测试
  * @property sensit: 一点文字差别
  * */
-export const StrainStressVw= ({orc, rep, label,sensit} :{orc:any, rep:any, label:any,sensit?:boolean}
+export const StrainStressVw = ({orc, rep, label, sensit}: { orc: any, rep: any, label: any, sensit?: boolean }
 ) => {
-    const rowsc=Math.ceil(orc?.测点表?.length/2) || 0;        //最多抵达行个数
+    const rowsc = Math.ceil(orc?.测点表?.length / 2) || 0;        //最多抵达行个数
     //因“测点1 2”列的并不在config字段，无法上const [renderRows,]=useRep2hTableViewer(config测点表, '测点表', orc,true,true,true);
     return <>
         <h2 className="text-2xl mt-4">{label}</h2>

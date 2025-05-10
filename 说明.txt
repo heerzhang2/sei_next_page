@@ -495,3 +495,4 @@ touch-pan-y touch-pinch-zoom 手机横屏的
                                                     className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto  touch-pan-y touch-pinch-zoom">
                                                     {children}
                                                 </div>
+    "customize-easy-ui-component": "5.5.1",

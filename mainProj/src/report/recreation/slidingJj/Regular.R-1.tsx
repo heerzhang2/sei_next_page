@@ -67,8 +67,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                             滑行车类游乐设施监督检验报告
                         </h1>
                         {首页概况WaterJj(orc,rep,)}
-                        <div
-                            className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址}</div>
+                        <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
                 </div>
                 {注意事项WaterJj({
