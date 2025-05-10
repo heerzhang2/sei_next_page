@@ -1,11 +1,6 @@
-/** @jsxImportSource @emotion/react */
 'use client';
-
 import React from "react";
 import { UserContext } from "./UserContext";
-import {
-    PanelEnlargeCtx,
-} from "customize-easy-ui-component";
 
 interface Props {
     children: React.ReactNode;
