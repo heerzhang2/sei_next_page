@@ -8,8 +8,8 @@ import Img_Ma  from '../../images/MA.png';
 import {FadeImage} from "../../comp/FadeImage";
 import Img_Seal from "../../images/seal.png";
 import {eqpTypeAllMap} from "../../dict/eqpComm";
-import {businessCatspMap} from "../../agreement/AgreementList";
 import {AttentionPoint} from "../common/rarelyVary";
+import {businessCatspMap} from "@/common/sei";
 
 /**【特别！要！注意】打印情形： pagebreakBefore='always' 的必须小心，前面不要紧跟这是 <br/> 空白变成了空一整页了的可能性出现！！
  * */

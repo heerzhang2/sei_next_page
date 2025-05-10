@@ -1,11 +1,7 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-  TableRow, CCell, Table, TableBody, RCell,
-} from "customize-easy-ui-component";
 import {eqpTypeAllMap} from "../../dict/eqpComm";
-import {businessCatspMap} from "../../agreement/AgreementList";
 import Image from 'next/image'
+import {businessCatspMap} from "@/common/sei";
 
 
 export const 首页概况EscaJj= ({theme, orc, original,rep} :{theme: any, orc:any, original?:boolean,rep:any}

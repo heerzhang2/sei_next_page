@@ -1,9 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {Text, } from "customize-easy-ui-component";
 import {InspectRecordLayout, InternalItemProps, SelectInput, useItemInputControl,} from "../../common/base";
-import {useMeasureInpFilter} from "../../common/hooks";
-import {css} from "@emotion/react";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import {
@@ -19,8 +15,6 @@ import {
 } from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {itemA技术见证} from "@/report/elevator/stest/editor";
-import {tail应变} from "@/report/recreation/waterJj/StrainStress";
 
 interface ConclusionProps  extends InternalItemProps{
     startd?: boolean;

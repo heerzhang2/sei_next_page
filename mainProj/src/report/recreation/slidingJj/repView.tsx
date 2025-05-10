@@ -11,8 +11,8 @@ import {render施工单位,} from "../../common/render";
 import Link from "next/link";
 import {cn} from "@/lib/utils";
 import SurveyRow from "@/component/SurveyRow";
-import {businessCatspMap} from "@/agreement/AgreementList";
 import {eqpTypeAllMap} from "@/dict/eqpComm";
+import {businessCatspMap} from "@/common/sei";
 
 //仅正式报告用
 const config设备 = [

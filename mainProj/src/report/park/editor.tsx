@@ -1,19 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Text,
-    LineColumn,
-    InputLine,
-    SuffixInput,
-    TextArea,
-    Input,
-    Select,
-    Button,
-    BlobInputList,
-    InputDatalist,
-    CheckSwitch,
-    useTheme, Table, TableBody, TableRow, CCell, ButtonRefComp,
-} from "customize-easy-ui-component";
 import {
     InspectRecordLayout,
     InternalItemProps,

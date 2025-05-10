@@ -1,16 +1,5 @@
-/** @jsxImportSource @emotion/react */
 "use client"
 import * as React from "react";
-import {
-    Text,
-    useTheme,
-    Button,
-    useToast,
-    TextArea,
-    InputLine,
-    IconButton,
-    IconZapOff, IconCheckSquare,
-} from "customize-easy-ui-component";
 import {
     InspectRecordLayout,
     InternalItemProps,
@@ -18,7 +7,6 @@ import {
     SelectValDescPair,
     useItemInputControl
 } from "../common/base";
-import {useMedia} from "use-media";
 import {assertNamesUnique, PlainArConfigs} from "../common/eHelper";
 import {EditStorageContext} from "../StorageContext";
 import {useState} from "react";

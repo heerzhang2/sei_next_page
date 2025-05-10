@@ -14,7 +14,8 @@ import { 检验编制核准D} from "../rarelyVary";
 import {eqpTypeAllMap} from "../../../dict/eqpComm";
 import {FlexibleTable} from "@/components/flexible-table";
 import SurveyRow from "@/component/SurveyRow";
-import {businessCatspMap} from "@/agreement/AgreementList";
+
+import {businessCatspMap} from "@/common/sei";
 
 
 //不同版本能够直接复用的组件； 内容相对重复；减少代码数量的重复和冗余。

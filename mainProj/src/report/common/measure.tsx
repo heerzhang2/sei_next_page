@@ -1,7 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {Text, InputLine, } from "customize-easy-ui-component";
-import {JSX} from "@emotion/react/jsx-runtime";
 import type {UseFormReturn} from "react-hook-form";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 import { BlobInputList,SuffixInput,} from "@/components/chub";

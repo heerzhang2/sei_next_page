@@ -1,6 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {Input, InputLine, Select, Text, TextArea,} from "customize-easy-ui-component";
 import {InspectRecordLayout, InternalItemProps, useItemInputControl,} from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {useStorage} from "@/report/StorageContext";

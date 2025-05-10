@@ -1,16 +1,9 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Text,
-} from "customize-easy-ui-component";
 import {useTableEditor,} from "../hook/useRepTableEditor";
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
-import {
-    InspectRecordLayout,
-    InternalItemProps, useItemInputControl,
-} from "./base";
+import {InspectRecordLayout, InternalItemProps, useItemInputControl,} from "./base";
 import {useMeasureInpFilter} from "./hooks";
 import {tail测仪器} from "../recreation/waterJj/repView";
 import {z} from "zod";

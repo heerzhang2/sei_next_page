@@ -1,22 +1,5 @@
-/** @jsxImportSource @emotion/react */
-import {css, SerializedStyles,} from "@emotion/react";
 import * as React from "react";
-import {
-    useTheme,
-    Text,
-    Button,
-    SelectProps,
-    IconChevronUp,
-    IconChevronDown,
-    Collapse,
-    useCollapse,
-    Select,
-    Check,
-    Layer,
-    LineColumn,
-} from "customize-easy-ui-component";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
-// import PropTypes from "prop-types";
 import { Dispatch, SetStateAction } from "react";
 import { MutableRefObject } from "react";
 import {EditStorageContext, useStorage} from "../StorageContext";

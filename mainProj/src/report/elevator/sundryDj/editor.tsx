@@ -1,11 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Text,  BlobInputList,
-} from "customize-easy-ui-component";
-import {
-    InspectRecordLayout, InternalItemProps, useItemInputControl,
-} from "../../common/base";
+import {InspectRecordLayout, InternalItemProps, useItemInputControl,} from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {ClearableSelect, CollapsibleFormSection, CommonSelect, FormSelectField} from "@/components/chub";
@@ -25,7 +19,6 @@ import {
 } from "@/components/ui";
 import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow,CCell} from "@/components/flexible-table";
 import {Table} from "@/components/ui/table";
-import {clcOptions} from "@/report/common/ActionMapItem";
 
 //可以复用的组件： 尽量抽象 和 提高代码复用程度！
 interface SiteConditionSundProps  extends InternalItemProps{

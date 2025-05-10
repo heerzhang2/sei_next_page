@@ -1,11 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Text, LineColumn, InputLine, SuffixInput, TextArea, Input, Select, Button, useTheme, Table, TableBody, TableRow, CCell, ButtonRefComp,
-} from "customize-easy-ui-component";
-import {
-    InspectRecordLayout, InternalItemProps, SelectHookfork, SelectPair, useItemInputControl, 现场条件选
-} from "../common/base";
+import {InspectRecordLayout, InternalItemProps, SelectHookfork, SelectPair, useItemInputControl, 现场条件选} from "../common/base";
 import {useMeasureInpFilter} from "../common/hooks";
 import {arraySetInp, calcAverageArrObj, floatInterception,} from "../../common/tool";
 import {TechnicalWitness} from "../park/editor";

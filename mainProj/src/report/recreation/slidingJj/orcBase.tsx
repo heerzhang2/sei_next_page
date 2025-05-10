@@ -6,7 +6,6 @@ import {useStorage} from "../../StorageContext";
 import {itemA技术见证} from "../../elevator/stest/editor";
 import {itemA结论} from "../waterJj/Conclusion";
 import {EachObserveConfig} from "../../hook/useObserve";
-import {施工许可证子项选} from "../../tower/craneJj/orcBase";
 import {config主技术} from "./MainTechnical";
 import {itemA应变应力} from "../waterJj/StrainStress";
 import {itemA加速} from "../waterJj/Acceleration";
@@ -17,6 +16,7 @@ import {useFormFramework} from "@/report/hook/useFormFramework";
 import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
 import { toast } from "sonner"
 
+export const 施工许可证子项选=['' ];
 export const 设用方式选=["固定式", "移动式"];
 export const config设备概况 = [
     [['使用单位统一社会信用代码', '_$使用单位信用码'], ['设备所在区域', '_$使用地区域']],

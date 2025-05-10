@@ -1,9 +1,7 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {eqpTypeAllMap} from "../../dict/eqpComm";
-import {businessCatspMap} from "../../agreement/AgreementList";
-import {Input, InputLine, Text} from "customize-easy-ui-component";
 import {MemoDatesInput} from "../../comp/base";
+import {businessCatspMap} from "@/common/sei";
 
 //常用 特殊的转换：
 

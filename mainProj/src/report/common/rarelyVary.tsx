@@ -3,8 +3,8 @@ import {DirectLink} from "../../routing/Link";
 import Link from "next/link"
 import Img_Ma  from '../../images/MA.png';
 import Img_ReportNoQR from '../../images/reportNoQR.png';
-import {FadeImage} from "../../comp/FadeImage";
-import {useMedia} from "use-media";
+// import {FadeImage} from "../../comp/FadeImage";
+// import {useMedia} from "use-media";
 import {Button} from "@/components/ui";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
@@ -428,8 +428,6 @@ type AttentionPointProps = {
  *@param children 文本其他行的。
  * */
 export const AttentionPoint = ({ rep, children, comply, telurl }: AttentionPointProps) => {
-    const atPrint = useMedia('print');
-
     return (
         <DirectLink
             href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/FrontCover#FrontCover`}

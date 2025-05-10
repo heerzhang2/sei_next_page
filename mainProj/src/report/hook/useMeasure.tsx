@@ -1,8 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, InputLine, LineColumn, TableRow, Text, TextArea,} from "customize-easy-ui-component";
 import {InspectRecordLayout, InternalItemProps, SelectHookfork, useItemInputControl,} from "../common/base";
-import {JSX} from "@emotion/react/jsx-runtime";
 import {EachMeasureItemConfig, MeasurementCline} from "../common/measure";
 import {convertMeasureType, floatInterception} from "../../common/tool";
 import {useMeasureInpFilter} from "../common/hooks";

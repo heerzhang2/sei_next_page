@@ -2,9 +2,9 @@ import * as React from "react";
 //单个项目整体检验结论；没输入的也算不合格， 但是：无此项／如都是／合并也是／。多个小项统筹判定。
 import {useCallback, useContext} from "react";
 import RoutingContext from "../../routing/RoutingContext";
-import queryString from "query-string";
-import {useMedia} from "use-media";
-import {usePressable} from "customize-easy-ui-component";
+// import queryString from "query-string";
+// import {useMedia} from "use-media";
+// import {usePressable} from "customize-easy-ui-component";
 
 export const aItemTransform = (orc: any, iClass:string,  ...ns:any[]) => {
   let size=ns.length;

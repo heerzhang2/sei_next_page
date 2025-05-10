@@ -1,8 +1,7 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
 import {CCell,TableRow} from "@/components/flexible-table";
 import {DirectLink} from "@/routing/Link";
-import {useMedia} from "use-media";
+// import {useMedia} from "use-media";
 import {RecordOmniArea, ItemOmniConfig, resTranslOmni, itemResTransformRpo,} from "../common/omni";
 import {resTranslCm} from "../common/helper";
 import {Column_Setting} from "./useFormatOmni";
@@ -36,7 +35,7 @@ interface Props {
 export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : Props
 ) => {
     // const theme = useTheme();
-    const atPrint = useMedia('print');
+    // const atPrint = useMedia('print');
     const renderIspContent =React.useMemo(() => {
         const itRes=itResCB? itResCB(orc) : orc;
         let seq = 0;      //按照每个结论单独一块的依据对应唯一个序号。
@@ -184,7 +183,7 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
         });
 
         return  htmlTxts;
-    }, [orc,rep,ItemArs,atPrint,config,bOmt,itResCB,secN]);
+    }, [orc,rep,ItemArs,config,bOmt,itResCB,secN]);
     return { renderIspContent };
 };
 

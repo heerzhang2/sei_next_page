@@ -1,9 +1,6 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Button, IconChevronDown, IconX, Input, InputLine, InputPure, Layer, MenuItem, MenuList, Popover, PopoverClose, PopoverContent, PopoverDescription, PopoverRefer,
-} from "customize-easy-ui-component";
 import {EditStorageContext, useStorage} from "../StorageContext";
+import {Button} from "@/components/ui";
 
 
 /**【代码复用】分项报告
@@ -77,7 +74,7 @@ export function useSubRepController(nestMd: string, callback: (store: any) => Re
     </>;
 
     const view=(
-        <Layer elevation={"sm"}  css={{ padding: '0.25rem' }}>
+        <div elevation={"sm"}  css={{ padding: '0.25rem' }}>
             { inp?.['_'+nestMd]?.length>0? <>
                     <div>{myTable}</div>
                     分项报告的排序操作:
@@ -147,7 +144,7 @@ export function useSubRepController(nestMd: string, callback: (store: any) => Re
                     修改确认
                 </Button>
             </div>
-        </Layer>
+        </div>
     );
 
   return { view };

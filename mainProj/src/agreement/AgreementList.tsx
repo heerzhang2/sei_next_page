@@ -1,9 +1,8 @@
 "use client"
 //You're importing a component that needs `useEffect`. This React hook only works in a client component. To fix, mark the file (or its parent) with the `"use client"` directive.
 import * as React from "react";
-import {AgreementList$data, AgreementList$key} from "./__generated__/AgreementList.graphql";
-import {SyntheticEvent, useContext, useEffect, } from "react";
-import { AgreementBoundDevices } from "./AgreementBoundDevices";
+import {useContext, useEffect} from "react";
+import {AgreementList$key} from "./__generated__/AgreementList.graphql";
 import useDispatchToOfficeMutation from "../task/useDispatchToOfficeMutation";
 import useDispatchToLiablerMutation from "../task/useDispatchToLiablerMutation";
 import useDispatchTaskToMutation from "../task/useDispatchTaskToMutation";
@@ -13,16 +12,12 @@ import RoutingContext from "../routing/RoutingContext";
 import {TaskLikeData, useLiablerDialogMenu, useOfficeDialogMenu} from "../task/useHelpers";
 import {ChooseUnit} from "../unit/ChooseUnit";
 import UserContext from "../routing/UserContext";
-import {
-    bool3t,
-    fromObjToInput,
-    mutiSelectedArr,
-    omitArnull, userIdName,
-} from "../common/tool";
+import {fromObjToInput, mutiSelectedArr, omitArnull, userIdName,} from "../common/tool";
 import {useUserDepOffice} from "../common/user/useUserDepOffice";
 // import {业务类型s} from "../device/edit/CommnBase";
 import {OneUserChoose} from "../common/user/OneUserChoose";
 import {协议类型s} from "./AddToAgreement";
+import {businessCatspMap} from "@/common/sei";
 // import {DialogClose, DialogContent, DialogDescription, DialogHeading} from "@/comp/Dialog";
 // import {useInView} from "react-intersection-observer";
 // import {Stack, StackTitle, StackItem,} from "../../UiDebugSave/sample/Stack";
@@ -38,12 +33,6 @@ const agreementStatusObj = {'INIT':'新的', 'SUBMIT':'已提交申请单', 'CHE
 };
 export const agreementStatusMap = new Map(Object.entries(agreementStatusObj));        //不能用WeakMap()
 
-//后端enum BusinessCat_Enum  类似语义 业务类型s ； 专门针对图标单个字符显示的
-const businessCatspObj = {'REGUL':'定期', 'ANNUAL':'年度', 'INSTA':'安装', 'FIRST':'首检', 'TEST':'测','DELIVERY':'收',
-    'ESTIMATE':'评估','EXPERIMENT':'试验', 'IDENTIFIC':'鉴定','MANUFACT':'制造','PRESSURE':'耐压','PRODUCT':'产品',
-    'REFORM':'改造','REPAIR':'大修','SAFETYINS':'进口','THERMAL':'热效', 'TYPETST':'型式','OTHER':'它'
-};
-export const businessCatspMap = new Map(Object.entries(businessCatspObj));
 //三态逻辑转映射 false=0， true=1， ANY=2等于Java的null不明确的？;  两态的Bool不够用了。
 // export const 委托法定s=[['2','全部'],['0','法定'],['1','委托']];
 

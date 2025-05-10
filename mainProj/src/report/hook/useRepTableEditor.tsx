@@ -1,26 +1,11 @@
-/** @jsxImportSource @emotion/react */
 "use client"
-
 import * as React from "react"
 import {Button} from "@/components/ui/button"
 import {useWindowSize} from "@/hooks/use-window-size"
 import {cn} from "@/lib/utils"
 import {useMeasure} from "@/hooks/use-measure"
-import {CCell, TableRow,} from "customize-easy-ui-component";
 import {InspectRecordLayout, useItemInputControl} from "../common/base";
-import {
-    Card,
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-    Input
-} from "@/components/ui";
+import {Card, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
 import {BlobInputList, FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput,} from "@/components/chub";
 import type {UseFormReturn} from "react-hook-form";
 import {Each_ZdSetting} from "@/report/hook/use-table-edit";

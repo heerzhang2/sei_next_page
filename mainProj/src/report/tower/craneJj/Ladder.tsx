@@ -1,10 +1,8 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, Cell, Table, TableBody, TableHead, TableRow, Text, TextArea,} from "customize-easy-ui-component";
 import {InspectRecordLayout, RepLink, useItemInputControl,} from "../../common/base";
 import {useMeasureInpFilter} from "../../common/hooks";
 import {EachMeasureItemConfig,} from "../../common/measure";
-import {ObservationMeasureProps} from "../../gantry/editorDj";
+// import {ObservationMeasureProps} from "../../gantry/editorDj";
 import {useMeasureItem, useMeasureRow, useMeasureTable} from "../../hook/useMeasure";
 
 export const config梯子 = [

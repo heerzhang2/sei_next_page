@@ -1,21 +1,18 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, RCell,Table as OldTable,TableBody as OldTableBody,TableRow as OldTableRow} from "customize-easy-ui-component";
 import {DirectLink} from "../../../routing/Link";
 import Img_Seal from "../../../images/seal.png";
 import {AttentionPoint} from "../../common/rarelyVary";
 import {eqpTypeAllMap} from "../../../dict/eqpComm";
-import {businessCatspMap} from "../../../agreement/AgreementList";
-import {Table} from "@/components/ui/table";
-import {FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexible-table";
+import {FlexibleTable, TableBody, TableCell, TableRow,CCell} from "@/components/flexible-table";
 import SurveyRow from "@/component/SurveyRow";
+import {businessCatspMap} from "@/common/sei";
 
 export const 检验核准WaterJj = ({orc, rep,jyt}: { orc: any, rep: any,jyt?:string}
 ) => {
-  return <OldTable fixed={["4.2%", "27%", "27%", "4.2%", "12%", "%"]} css={{borderCollapse: 'collapse'}} tight miniw={800}>
-    <OldTableBody>
+  return <FlexibleTable columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]} css={{borderCollapse: 'collapse'}} tight miniw={800}>
+    <TableBody>
       <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>
-        <OldTableRow>
+        <TableRow>
           <CCell>{jyt??'检验'}</CCell>
           <CCell colSpan={2}>{orc.检验人IDs}</CCell>
           <CCell>日期</CCell>
@@ -36,39 +33,39 @@ export const 检验核准WaterJj = ({orc, rep,jyt}: { orc: any, rep: any,jyt?:st
                 backgroundPosition: 'center',
               }
             }}>
-              <OldTable fixed={["50%", "%"]} css={{borderCollapse: 'collapse', height: 'fill-available'}}
+              <FlexibleTable columnWidths={["50%", "%"]} css={{borderCollapse: 'collapse', height: 'fill-available'}}
                      tight  miniw={800}>
-                <OldTableBody>
-                  <OldTableRow>
+                <TableBody>
+                  <TableRow>
                     <CCell css={{border: 'none'}}>检验机构核准证号：</CCell>
                     <CCell css={{border: 'none'}}>{rep?.isp?.ispu?.agency?.apno}</CCell>
-                  </OldTableRow>
-                  <OldTableRow>
+                  </TableRow>
+                  <TableRow>
                     <CCell css={{border: 'none'}} colSpan={2}>（机构公章或者检验专用章）</CCell>
-                  </OldTableRow>
-                  <OldTableRow>
+                  </TableRow>
+                  <TableRow>
                     <CCell css={{border: 'none'}} colSpan={2}>{orc.检验日期}</CCell>
-                  </OldTableRow>
-                </OldTableBody>
-              </OldTable>
+                  </TableRow>
+                </TableBody>
+              </FlexibleTable>
             </div>
           </CCell>
-        </OldTableRow>
+        </TableRow>
       </DirectLink>
-      <OldTableRow>
+      <TableRow>
         <CCell>审核</CCell>
         <CCell colSpan={2}></CCell>
         <CCell>日期</CCell>
         <CCell></CCell>
-      </OldTableRow>
-      <OldTableRow>
+      </TableRow>
+      <TableRow>
         <CCell>批准</CCell>
         <CCell colSpan={2}></CCell>
         <CCell>日期</CCell>
         <CCell></CCell>
-      </OldTableRow>
-    </OldTableBody>
-  </OldTable>;
+      </TableRow>
+    </TableBody>
+  </FlexibleTable>;
 };
 
 export const 注意事项WaterJj= ({comply, rep} :{comply: any, rep: any}

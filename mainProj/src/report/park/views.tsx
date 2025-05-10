@@ -1,6 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import { Cell, Table,  Text, useTheme,} from "customize-easy-ui-component";
 import {DirectLink,} from "../../routing/Link";
 import {multilines2Html,} from "../tools";
 import {calcAverageArrObj, floatInterception,} from "../../common/tool";

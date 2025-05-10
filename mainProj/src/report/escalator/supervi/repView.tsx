@@ -12,8 +12,8 @@ import {floatInterception} from "../../../common/tool";
 import {useOmnipotentPref} from "../../hook/useOmnipotentPref";
 import {item监控设施} from "./editor";
 import {usePrefixDataTable} from "../../hook/usePrefixData";
-import {businessCatspMap} from "../../../agreement/AgreementList";
 import {useThreeRaftSurveyTbl} from "../../hook/useThreeRaft";
+import {businessCatspMap} from "@/common/sei";
 
 
 const render设备品种={
