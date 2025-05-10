@@ -8,13 +8,10 @@ import {setupItemAreaRoute} from "./orcIspConfig";
 import {EditStorageContext} from "../../StorageContext";
 import {Text, useTheme} from "customize-easy-ui-component";
 import {ItemInstrumentTable} from "../../common/Instrument";
-import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
 import {GenCode} from "../../common/GenCode";
 import {ActionMapItem} from "../../common/ActionMapItem";
 import {config记录} from "./FormatOriginal";
-import {DeviceSurveyD} from "../../crane/editor";
-import {WitnessSimple} from "../../elevator/stest/editor";
-import {config检测复检表, RecheckEditor} from "../../common/editor";
+import {config检测复检表, RecheckEditor, SiteConditionSund, WitnessSimple} from "../../common/editor";
 import {ConclusionWaterJj} from "./Conclusion";
 import {ObserveEdit} from "../../hook/useObserve";
 import {config主技术, tail主技} from "./MainTechnical";
@@ -23,6 +20,7 @@ import {Acceleration} from "./Acceleration";
 import {config格栅流} from "./Safetygap";
 import {config最驶速} from "./Maxspeed";
 import {FrontCover, } from "../../mobilecr/editorIN";
+import {DeviceSurveyD} from "@/report/common/survey";
 
 //模型参数 "pr":"※", "r":3,"s":1, "big":"", "ts":[13,14] ,"vx":1 ,"ss":[1]
 //这个报告特例 nos：没有区分开啊。 【看着像】自采分项目的但是全部算成独立的结论。 生成假定是nos连续的编码，然后【手动进一步做修改】nos:

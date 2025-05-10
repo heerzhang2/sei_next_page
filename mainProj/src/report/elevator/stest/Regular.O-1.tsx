@@ -9,17 +9,16 @@ import {EditStorageContext} from "../../StorageContext";
 import {Text, useTheme} from "customize-easy-ui-component";
 import {ItemInstrumentTable} from "../../common/Instrument";
 import {FrontCover } from "../../mobilecr/editorIN";
-import {ConclusionTest, WitnessSimple,} from "./editor";
-import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
+import {ConclusionTest, } from "./editor";
 import {GenCode} from "../../common/GenCode";
 import {ActionMapItem} from "../../common/ActionMapItem";
 import {config记录} from "./FormatOriginal";
 import {MeasureCritMem} from "../../hook/useMeasure";
-import {config检测复检表, RecheckEditor} from "../../common/editor";
-import {DeviceSurveyD} from "../../crane/editor";
+import {config检测复检表, RecheckEditor, SiteConditionSund, WitnessSimple} from "../../common/editor";
 import {DoorGap} from "./DoorGap";
 import {Equilibrium} from "./Equilibrium";
 import {DzLimiterSpeed, LimiterSpeed,} from "./LimiterSpeed";
+import {DeviceSurveyD} from "@/report/common/survey";
 
 export const tItems现场=[
     ['1、井道和机器空间内温度',{f:'T',

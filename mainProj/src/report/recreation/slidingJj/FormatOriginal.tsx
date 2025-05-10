@@ -1,23 +1,21 @@
 "use client"
 import * as React from "react";
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
-import {RepLink, ReportViewProps,} from "../../common/base";
-import {setupItemAreaRoute} from "./orcIspConfig";
-import {useItemsMapOmni} from "../../common/omni";
-import {config观测数据, config观测数据2, config设备概况, tail观测} from "./orcBase";
-import {tItems现场} from "./Regular.O-1";
-import {Column_Setting, useFormatOmni} from "../../common/useFormatOmni";
-import {设备概况页} from "../../park/views";
-import {常用现场条件} from "../../park/viewX";
-import {UnqualifiedIspTable} from "../../common/general";
-import {InstrumentVw, 测量允许检测, 测量备注两半, } from "../waterJj/repView";
-import {config主技术, tail主技} from "./MainTechnical";
+import {DirectLink} from "@/routing/Link";
+import PageSectionOrientation from "@/components/page-section-orientation";
+import {RepLink, ReportViewProps} from "@/report/common/base";
+import {useItemsMapOmni} from "@/report/common/omni";
+import {Column_Setting, useFormatOmni} from "@/report/common/useFormatOmni";
+import {UnqualifiedIspTable} from "@/report/common/general";
+import {InstrumentVw, 常用现场条件, 测量允许检测, 测量备注两半, 设备概况页} from "@/report/common/view";
+import {首页概况WaterJj} from "@/report/recreation/waterJj/rarelyVary";
 import {StrainStressVw} from "../waterJj/StrainStress";
 import {AccelerationVw} from "../waterJj/Acceleration";
-import {DirectLink} from "@/routing/Link";
-import {首页概况WaterJj} from "@/report/recreation/waterJj/rarelyVary";
-import {填写须知recr} from "@/report/recreation/slidingJj/rarelyVary";
-import PageSectionOrientation from "@/components/page-section-orientation";
+import {填写须知recr} from "./rarelyVary";
+import {setupItemAreaRoute} from "./orcIspConfig";
+import {config主技术, tail主技} from "./MainTechnical";
+import {tItems现场} from "./Regular.O-1";
+import {config观测数据, config观测数据2, config设备概况, tail观测} from "./orcBase";
 
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'M',x:'备注',t:'B',m:true},{n:'D',x:'不合格内容',t:'B'}];

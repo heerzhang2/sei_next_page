@@ -13,9 +13,10 @@ import {ItemInstrumentTable} from "../../common/Instrument";
 import {DeviceSurvey, } from "../../elevator/editor";
 import {FrontCover, ItemConclusion, } from "../../mobilecr/editorIN";
 import {DoorGap, } from "./editor";
-import {SiteConditionSund, WitnessSound} from "../sundryDj/editor";
+import {WitnessSound} from "../sundryDj/editor";
 import {ActionMapItemLikeSundJj} from "../ActionMapItemLikeSundJj";
 import {MeasureCritMem} from "../../hook/useMeasure";
+import {SiteConditionSund} from "@/report/common/editor";
 
 
 const 大备注可选: string[] | undefined=[

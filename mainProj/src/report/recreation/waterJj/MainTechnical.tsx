@@ -3,7 +3,8 @@ import * as React from "react";
 import {CCell, Input, InputLine, LineColumn, SuffixInput, Text,} from "customize-easy-ui-component";
 import {EachObserveConfig} from "../../hook/useObserve";
 import {calcAverageArrObj,} from "../../../common/tool";
-import {genCBoAvAl, genCBoOmitAl} from "./repView";
+
+import {genCBoAvAl, genCBoOmitAl} from "@/report/common/cbo";
 
 export const tail主技= <Text css={{"@media print": {fontSize: '0.75rem'}}}>
    注：运行速度根据测量仪器填写相应栏。

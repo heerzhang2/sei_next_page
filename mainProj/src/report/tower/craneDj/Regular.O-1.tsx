@@ -9,12 +9,10 @@ import {EditStorageContext} from "../../StorageContext";
 import {Text, useTheme} from "customize-easy-ui-component";
 import {ItemInstrumentTable} from "../../common/Instrument";
 import {FrontCover, ItemConclusion} from "../../mobilecr/editorIN";
-import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
 import {GenCode} from "../../common/GenCode";
 import {ActionMapItem} from "../../common/ActionMapItem";
 import {config记录} from "./FormatOriginal";
-import {RecheckEditor} from "../../common/editor";
-import {DeviceSurveyD} from "../../crane/editor";
+import {RecheckEditor, SiteConditionSund} from "../../common/editor";
 import {MeasureJudgmentMem, } from "../../amusement/editor";
 import {WitnessParkDj} from "../../park/Periodical/editor";
 import {Thickness} from "../../tower/craneJj/editThicknes";
@@ -23,6 +21,7 @@ import {MonitoringSys} from "../../tower/craneJj/editMonitori";
 import {config距离, SafeDistance} from "../../tower/craneJj/editSafDist";
 import {AxisVert} from "../../tower/craneJj/editAxisVert";
 import {AttachmentDevice} from "../../tower/craneJj/editAttachD";
+import {DeviceSurveyD} from "@/report/common/survey";
 
 //方便调试和生成代码：   ,"pr":"※","ses":6  "r":3,"s":1,  ## "s":9非自拆分的同一个项目编号有多行小项目。
 const defFrameM={

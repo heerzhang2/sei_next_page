@@ -10,7 +10,6 @@ import {Text, useTheme} from "customize-easy-ui-component";
 import {ItemInstrumentTable} from "../../common/Instrument";
 import {FrontCover, ItemConclusion, } from "../../mobilecr/editorIN";
 import {WitnessParkDj,} from "./editor";
-import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
 import {GenCode} from "../../common/GenCode";
 import {ActionMapItem} from "../../common/ActionMapItem";
 import {config记录} from "./FormatOriginal";
@@ -20,9 +19,10 @@ import {config梯子, MagneticLeak, MoveSpeed} from "../editor";
 import {Braking} from "../../tower/craneJj/editBraking";
 import {Synchronization} from "./Synchronization";
 import {ParkSpecial} from "./ParkSpecial";
-import {ItemRecheckOmniOther} from "../../common/editor";
+import {ItemRecheckOmniOther, SiteConditionSund} from "../../common/editor";
 
-import {DeviceSurveyD} from "../../crane/editor";
+
+import {DeviceSurveyD} from "@/report/common/survey";
 
 
 export const tItems现场=[

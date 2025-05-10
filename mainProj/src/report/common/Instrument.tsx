@@ -5,13 +5,13 @@ import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
 import {InspectRecordLayout, InternalItemProps, useItemInputControl,} from "./base";
 import {useMeasureInpFilter} from "./hooks";
-import {tail测仪器} from "../recreation/waterJj/repView";
 import {z} from "zod";
 import {useStorage} from "@/report/StorageContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {CollapsibleFormSection} from "@/components/chub";
 import {Each_ZdSetting} from "@/report/hook/use-table-edit";
+import {tail测仪器} from "@/report/common/view";
 
 
 interface InstrumentTableProps  extends InternalItemProps{

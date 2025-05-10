@@ -12,7 +12,8 @@ import {EachMeasureItemConfig} from "../../common/measure";
 import {itemA结论} from "./editor";
 import {render交通型} from "../supervi/orcBase";
 import {itemA扶速差, } from "../supervi/editor";
-import {itemA技术见证} from "../../elevator/stest/editor";
+
+import {itemA技术见证} from "@/report/common/editor";
 
 
 export const 检测依据选=['《电梯自行检测规则》(TSGT7008-2023)',

@@ -1,6 +1,6 @@
 import * as React from "react";
-import {EachObserveConfig} from "../../hook/useObserve";
-import {genCBoAvAl, genCBoOmitAl} from "../waterJj/repView";
+import {EachObserveConfig} from "@/report/hook/useObserve";
+import {genCBoAvAl, genCBoOmitAl} from "@/report/common/cbo";
 
 export const tail主技= <div className={"text-[0.75rem]"}>
 </div>;

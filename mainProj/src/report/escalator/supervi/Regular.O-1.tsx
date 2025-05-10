@@ -13,10 +13,11 @@ import {ItemInstrumentTable} from "../../common/Instrument";
 import {FrontCover, ItemConclusion, } from "../../mobilecr/editorIN";
 import {HandrailBias, MonitoringFacili,} from "./editor";
 import {ActionMapItemLikeYyWt} from "../../elevator/ActionMapItemLikeYyWt";
-import {SiteConditionSund, WitnessSound} from "../../elevator/sundryDj/editor";
+import {WitnessSound} from "../../elevator/sundryDj/editor";
 import {GenCode} from "../../common/GenCode";
 import {MeasureCritMem} from "../../hook/useMeasure";
-import {DeviceSurveyD} from "../../crane/editor";
+import {SiteConditionSund} from "@/report/common/editor";
+import {DeviceSurveyD} from "@/report/common/survey";
 
 
 const 大备注可选=[

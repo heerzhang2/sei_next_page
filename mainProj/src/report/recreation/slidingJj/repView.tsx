@@ -1,18 +1,11 @@
 import * as React from "react";
-// import {
-//   CCell, Cell, Table, TableBody, TableRow, Text,
-// } from "customize-easy-ui-component";
-import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
-import {DirectLink,} from "@/routing/Link";
-import {RepLink,} from "../../common/base";
-import {usePrefixDataTable} from "../../hook/usePrefixData";
-import {useThreeColumnView} from "../../hook/useThreeColumnSubr";
-import {render施工单位,} from "../../common/render";
-import Link from "next/link";
 import {cn} from "@/lib/utils";
-import SurveyRow from "@/component/SurveyRow";
-import {eqpTypeAllMap} from "@/dict/eqpComm";
-import {businessCatspMap} from "@/common/sei";
+import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
+import {DirectLink} from "@/routing/Link";
+import {RepLink} from "@/report/common/base";
+import {usePrefixDataTable} from "@/report/hook/usePrefixData";
+import {useThreeColumnView} from "@/report/hook/useThreeColumnSubr";
+import {render施工单位} from "@/report/common/render";
 
 //仅正式报告用
 const config设备 = [
@@ -82,5 +75,3 @@ export const 报告设备详情= ( { orc, rep } : { orc: any,rep:any}
     </FlexibleTable>
   </React.Fragment>;
 };
-// <h1 css={{fontSize:orc?.检验结论?.length>12? '1.4rem':'2.8rem',
-//                       margin: 'auto',padding:'0 1rem'}}>{orc?.检验结论}</h1>

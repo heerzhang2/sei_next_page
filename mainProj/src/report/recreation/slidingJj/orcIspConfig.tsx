@@ -1,7 +1,8 @@
 import * as React from "react";
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
-import {crtOmni, omniCalculateDefault, pushOmni} from "../../common/omni";
-import {JumpMeasure, } from "../../common/general";
+import {crtOmni, omniCalculateDefault, pushOmni} from "@/report/common/omni";
+import {JumpMeasure} from "@/report/common/general";
+
 //id标签需要规范原来5.1的改为T5-1的才能路由。
 export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDefault?:boolean}
 ) => {

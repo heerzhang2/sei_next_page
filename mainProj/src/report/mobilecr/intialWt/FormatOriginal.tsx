@@ -13,8 +13,7 @@ import queryString from "query-string";
 import {config梯子, config观测数据, config设备概况} from "./orcBase";
 import {tItems现场} from "./Regular.O-1";
 import {Column_Setting, useFormatOmni} from "../../common/useFormatOmni";
-import {技术资料见证, 记事的, 设备概况页} from "../../park/views";
-import {常用现场条件} from "../../park/viewX";
+import {技术资料见证, 记事的} from "../../park/views";
 import {UnqualifiedIspTable} from "../../common/general";
 import {首页设备概况Cr} from "../../crane/bridgeDJ/repView";
 import {MeasureDistanceVw, MeasurePortalVw} from "../../gantry/portalJj/views";
@@ -27,6 +26,7 @@ import {config运行速度, MoveSpeedVw, tail速度} from "./MoveSpeed";
 import {BrakingVw, tail制距} from "./Braking";
 import {SpecialTopicVw, tail流动专} from "./SpecialTopic";
 import {MagneticLeakVw} from "./MagneticLeak";
+import {常用现场条件, 设备概况页} from "@/report/common/view";
 
 /**Pdf模板的仪器表 “叉车货叉自然下滑量和门架倾角变化量激光测量仪” 名称太长了，打印不出问题！
  * */

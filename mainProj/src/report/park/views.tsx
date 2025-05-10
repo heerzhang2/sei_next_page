@@ -5,10 +5,8 @@ import {calcAverageArrObj, floatInterception,} from "../../common/tool";
 import {useMeasureCTable} from "../hook/useMeasureOldVer";
 import {config梯子, defaultTl机构速度, items漏磁检} from "./editor";
 import {RepLink} from "../common/base";
-import {usePrefixDataTable} from "../hook/usePrefixData";
 import {useMeasureTable} from "../hook/useMeasure";
-import {PrintReserveLeast} from "@/components/print-reserve-least";
-import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell} from "@/components/flexible-table";
+import {CCell, TableBody, TableRow} from "@/components/flexible-table";
 
 /**格式化记录或报告 对应编辑器Thickness
 * */
@@ -341,28 +339,6 @@ export const 俩列检验设备概况= ( { orc,rep, repId, verId,config} : { orc
         </React.Fragment>;
       });
 };
-
-//在原始记录使用的：
-export const 设备概况页 = ({orc, rep, config, fixed = ["4.2%", "12.1%", "39%", "9%", "11.1%", "%"],fromHead,label}
-                           : {orc: any, rep: any, config: any[], fixed?: string[],fromHead?:boolean,label:any }
-) => {
-  const renderUpper = usePrefixDataTable({config, orc, rep, slash: true});
-  return <PrintReserveLeast fromHead={fromHead} reserve="8rem"
-                            title={ <RepLink rep={rep} ori tag="Survey">
-                              <h2 className={`text-2xl ${!fromHead ? 'mt-4' : ''}`}>
-                                {label}
-                              </h2>
-                            </RepLink>
-                            }>
-    <FlexibleTable id="Survey" columnWidths={fixed}>
-      <TableBody>
-        <RepLink rep={rep} ori tag="Survey">
-          {renderUpper}
-        </RepLink>
-      </TableBody>
-    </FlexibleTable>
-  </PrintReserveLeast>
-}
 
 
 export const 技术见证Park = ({orc, rep, bhTil = '备注', fixed = ["5%", "10%", "%", "26%"]}: {

@@ -1,14 +1,13 @@
 "use client"
+import * as React from "react";
+import {InternalItemProps} from "./base";
+import {useStorage} from "../StorageContext";
+import {z} from "zod";
+import {useFormFramework} from "@/report/hook/useFormFramework";
+import {CollapsibleFormSection} from "@/components/chub";
+import {usePrefixDataEdit} from "@/report/hook/usePrefixData";
 
-import * as React from "react"
-import type { InternalItemProps } from "../common/base"
-import { CollapsibleFormSection } from "@/components/chub"
-import { useFormFramework } from "@/report/hook/useFormFramework"
-import { usePrefixDataEdit } from "../hook/usePrefixData"
-import { z } from "zod"
-import { useStorage } from "@/report/StorageContext"
-
-interface Props extends InternalItemProps {
+interface DeviceSurveyDProps extends InternalItemProps {
     label: string
     config?: any[]
     itemA?: string[]
@@ -18,8 +17,18 @@ interface Props extends InternalItemProps {
  * 资料审查主体 config={config资料审查}
  * ？？ 分项报告情况还未考虑：！》 nestMd={nestMd} redId={redId}
  */
-export const DeviceSurveyD = ({ children, show, alone = true, redId, nestMd, label, config, itemA, rep }: Props) => {
-    const { storage } = useStorage()
+export const DeviceSurveyD = ({
+                                  children,
+                                  show,
+                                  alone = true,
+                                  redId,
+                                  nestMd,
+                                  label,
+                                  config,
+                                  itemA,
+                                  rep
+                              }: DeviceSurveyDProps) => {
+    const {storage} = useStorage()
 
     // 创建动态 schema
     const fullSchema = React.useMemo(() => {
@@ -28,18 +37,18 @@ export const DeviceSurveyD = ({ children, show, alone = true, redId, nestMd, lab
 
         config?.forEach(([[desc, name, cb], add2p]: any, i: number) => {
             const [desc2, name2, cb2] = add2p || []
-            if (typeof name === "string" && !name?.startsWith("_$")) surveyItems.push({ name, cb })
+            if (typeof name === "string" && !name?.startsWith("_$")) surveyItems.push({name, cb})
             else if (typeof name === "object" && name.n && !name.r && !name.n.startsWith("_$"))
-                surveyItems.push({ name: name.n, cb })
-            if (typeof name2 === "string" && name2 && !name2.startsWith("_$")) surveyItems.push({ name: name2, cb: cb2 })
+                surveyItems.push({name: name.n, cb})
+            if (typeof name2 === "string" && name2 && !name2.startsWith("_$")) surveyItems.push({name: name2, cb: cb2})
             else if (typeof name2 === "object" && name2.n && !name2.r && !name2.n.startsWith("_$"))
-                surveyItems.push({ name: name2.n, cb: cb2 })
+                surveyItems.push({name: name2.n, cb: cb2})
         })
 
         const itemA设备概况: string[] = itemA ? [...itemA] : []
 
         // 初始化存储字段
-        surveyItems.forEach(({ name, cb }: any) => {
+        surveyItems.forEach(({name, cb}: any) => {
             if (cb?.names) itemA设备概况.push(...cb?.names)
             else itemA设备概况.push(name)
         })
@@ -76,7 +85,7 @@ export const DeviceSurveyD = ({ children, show, alone = true, redId, nestMd, lab
     const contentRendererFactory = React.useCallback(
         (form: any) => {
             // 使用真实的form对象进行编辑器渲染
-            const [renderEditor] = usePrefixDataEdit({ config: config!, form })
+            const [renderEditor] = usePrefixDataEdit({config: config!, form})
 
             return (
                 <>
@@ -90,7 +99,7 @@ export const DeviceSurveyD = ({ children, show, alone = true, redId, nestMd, lab
     )
 
     // 使用通用表单框架hook
-    const { render } = useFormFramework({
+    const {render} = useFormFramework({
         schema: fullSchema,
         defaultValues,
         contentRendererFactory,
@@ -104,7 +113,3 @@ export const DeviceSurveyD = ({ children, show, alone = true, redId, nestMd, lab
     )
 }
 
-
-// <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show} redId={redId}
-//                                 nestMd={nestMd} alone={alone} label={label ?? '一、设备概况'}>
-//     </InspectRecordLayout>;

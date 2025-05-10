@@ -8,10 +8,11 @@ import {assertNamesUnique} from "../../common/eHelper";
 // import {itemA结论,} from "../../mobilecr/editorIN";
 import {EditStorageContext} from "../../StorageContext";
 import {EachMeasureItemConfig} from "../../common/measure";
-import {itemA技术见证, itemA结论} from "./editor";
+import {itemA结论} from "./editor";
 import {itemA间隙} from "./DoorGap";
 import {itemn平衡} from "./Equilibrium";
 import {itemA限速器对, itemA限速器轿} from "./LimiterSpeed";
+import {itemA技术见证} from "@/report/common/editor";
 // import {itemA技术见证} from "./editor";
 
 const 监检依据选=[

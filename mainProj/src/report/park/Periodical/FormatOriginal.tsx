@@ -19,11 +19,11 @@ import {config梯子} from "../editor";
 import {BrakingVw} from "../../tower/craneJj/viewBraking";
 import {SynchronizationVw} from "./Synchronization";
 import {ParkSpecialVw} from "./ParkSpecial";
-import {技术见证Park, 测量记录Park, 漏磁检查记录, 设备概况页} from "../views";
-import {常用现场条件} from "../viewX";
+import {技术见证Park, 测量记录Park, 漏磁检查记录} from "../views";
 import {UnqualifiedIspItemTableX} from "../../common/general";
 import {首页设备概况Cr} from "../../crane/bridgeDJ/repView";
 import {LadderVw} from "../../tower/craneJj/Ladder";
+import {常用现场条件, 设备概况页} from "@/report/common/view";
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'M',x:'备注',m:true},{n:'D',x:'不合格内容',t:'B'}];
 export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({

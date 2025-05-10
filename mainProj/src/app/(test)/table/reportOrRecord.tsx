@@ -1,6 +1,7 @@
 import type React from "react"
 import {ContentSection} from "@/component/content-section";
 import Link from "next/link";
+
 interface ContentSectionProps {
   id: string
   title?: string

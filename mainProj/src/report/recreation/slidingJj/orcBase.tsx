@@ -1,20 +1,21 @@
 import * as React from "react";
-import {InternalItemProps, } from "../../common/base";
-import {setupItemAreaRoute} from "./orcIspConfig";
-import {assertNamesUnique} from "../../common/eHelper";
-import {useStorage} from "../../StorageContext";
-import {itemA技术见证} from "../../elevator/stest/editor";
-import {itemA结论} from "../waterJj/Conclusion";
-import {EachObserveConfig} from "../../hook/useObserve";
-import {config主技术} from "./MainTechnical";
-import {itemA应变应力} from "../waterJj/StrainStress";
-import {itemA加速} from "../waterJj/Acceleration";
-import {cbK2_12_3, cbK2_12_4, cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21,} from "../waterJj/cbComm";
 import {z} from "zod";
-import {Button, Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
+import {toast} from "sonner"
+import {Button, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
-import { toast } from "sonner"
+import {InternalItemProps} from "@/report/common/base";
+import {assertNamesUnique} from "@/report/common/eHelper";
+import {useStorage} from "@/report/StorageContext";
+import {EachObserveConfig} from "@/report/hook/useObserve";
+import {itemA技术见证} from "@/report/common/editor";
+import {itemA应变应力} from "../waterJj/StrainStress";
+import {itemA加速} from "../waterJj/Acceleration";
+import {itemA结论} from "../waterJj/Conclusion";
+import {setupItemAreaRoute} from "./orcIspConfig";
+import {cbK2_12_3, cbK2_12_4, cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21,} from "../waterJj/cbComm";
+import {config主技术} from "./MainTechnical";
+
 
 export const 施工许可证子项选=['' ];
 export const 设用方式选=["固定式", "移动式"];

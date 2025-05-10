@@ -1,14 +1,5 @@
 "use client"
-import Link from 'next/link';
-import {ContentSection} from "@/component/content-section";
-import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord";
-// import { ContentSection } from "./content-section"
-import {TableOfContents} from "@/component/table-of-contents";
-import {Button} from "@/components/ui/button";
-import React, {useEffect, useRef, useState} from "react";
-import {Drawer} from "vaul";
-import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import {X} from "lucide-react";
+import React, {useEffect} from "react";
 import Sidebar from "@/component/rep/sidebar";
 
 interface ReportProps {

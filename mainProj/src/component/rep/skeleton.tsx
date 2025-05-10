@@ -1,14 +1,11 @@
 "use client"
-// import "@/app/globals.css"
 import "./skeleton.css"
 import { Button } from "@/components/ui/button"
 import { SplitViewSticky } from "@/components/split-view-sticky"
 import { X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord"
-import { Drawer } from "vaul"
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
 
 /**报告记录结合显示的框架

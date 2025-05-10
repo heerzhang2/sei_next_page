@@ -1,24 +1,21 @@
 import * as React from "react";
-import { OriginalViewProps, } from "../../common/base";
-import {EntranceSetup, config设备概况, config观测数据, tail观测, config观测数据2} from "./orcBase";
-import {createItem, } from "../../common/eHelper";
-import {useRecordList} from "../../hook/useRecordList";
-import {setupItemAreaRoute} from "./orcIspConfig";
-import {useStorage} from "../../StorageContext";
-import {ItemInstrumentTable} from "../../common/Instrument";
-import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
-import {GenCode} from "../../common/GenCode";
-import {ActionMapItem} from "../../common/ActionMapItem";
-import {config记录} from "./FormatOriginal";
-import {DeviceSurveyD} from "../../crane/editor";
-import {WitnessSimple} from "../../elevator/stest/editor";
-import {config检验复检表, RecheckEditor} from "../../common/editor";
+import {OriginalViewProps} from "@/report/common/base";
+import {createItem} from "@/report/common/eHelper";
+import {useRecordList} from "@/report/hook/useRecordList";
+import {useStorage} from "@/report/StorageContext";
+import {ItemInstrumentTable} from "@/report/common/Instrument";
+import {GenCode} from "@/report/common/GenCode";
+import {ActionMapItem} from "@/report/common/ActionMapItem";
+import {DeviceSurveyD} from "@/report/common/survey";
+import {config检验复检表, RecheckEditor, SiteConditionSund, WitnessSimple} from "@/report/common/editor";
+import {ObserveEdit} from "@/report/hook/useObserve";
 import {ConclusionWaterJj} from "../waterJj/Conclusion";
-import {ObserveEdit} from "../../hook/useObserve";
-import {config主技术, tail主技} from "./MainTechnical";
-import {FrontCover, } from "../../mobilecr/editorIN";
 import {StrainStress} from "../waterJj/StrainStress";
 import {Acceleration} from "../waterJj/Acceleration";
+import {config记录} from "./FormatOriginal";
+import {config主技术, tail主技} from "./MainTechnical";
+import {setupItemAreaRoute} from "./orcIspConfig";
+import {EntranceSetup, config设备概况, config观测数据, tail观测, config观测数据2} from "./orcBase";
 
 const defFrameM={
     'CmnTowerCrane': `{ "mg":2, "dcl":"K","cl":"K",

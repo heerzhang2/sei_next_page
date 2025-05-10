@@ -306,7 +306,7 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
                               )}
             />
             :
-            <Text>测量结果= { resDeft } </Text>
+            <span>测量结果= { resDeft } </span>
         }
         {allowableV && <FormField control={form.control} name={aName}
                               render={({ field }) => (

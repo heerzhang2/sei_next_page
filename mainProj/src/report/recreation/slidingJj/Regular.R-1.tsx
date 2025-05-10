@@ -1,24 +1,21 @@
 "use client"
-import {usePathname, useSearchParams, useRouter, useParams} from "next/navigation"
 import * as React from "react"
-import { useEffect, useState } from "react"
-import type { ReportViewProps } from "../../common/base"
-import { 末尾链接, 落款单位地址 } from "../../common/rarelyVary"
+import Link from "next/link"
+import {useSearchParams} from "next/navigation"
+import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
+import {PrintReserveLeast} from "@/components/print-reserve-least";
+import {useStorage} from "@/report/StorageContext";
+import type { ReportViewProps } from "@/report/common/base"
+import { 末尾链接, 落款单位地址 } from "@/report/common/rarelyVary"
+import type { Column_Setting } from "@/report/common/useFormatOmni"
+import { useOfficialOmni } from "@/report/common/useOfficialOmni"
+import { UnqualifiedIspTable } from "@/report/common/general"
+import { useItemsMapOmni } from "@/report/common/omni"
+import { ReportFirstPageHeadJd } from "@/report/park/rarelyVary"
+import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from "@/report/recreation/waterJj/rarelyVary"
 import { 报告设备详情 } from "./repView"
 import { setupItemAreaRoute } from "./orcIspConfig"
 import { FormatOriginal } from "./FormatOriginal"
-import type { Column_Setting } from "../../common/useFormatOmni"
-import { useOfficialOmni } from "../../common/useOfficialOmni"
-import { ReportFirstPageHeadJd } from "../../park/rarelyVary"
-import { UnqualifiedIspTable } from "../../common/general"
-import { useItemsMapOmni } from "../../common/omni"
-import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from "../waterJj/rarelyVary"
-import Link from "next/link"
-import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
-import {PrintReserveLeast} from "@/components/print-reserve-least";
-import {useCreateQueryString} from "@/hooks/useCreateQueryString";
-import {Button} from "@/components/ui";
-import {useStorage} from "@/report/StorageContext";
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()

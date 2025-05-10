@@ -9,12 +9,10 @@ import {EditStorageContext} from "../../StorageContext";
 import {Text, useTheme} from "customize-easy-ui-component";
 import {ItemInstrumentTable} from "../../common/Instrument";
 import {FrontCover, WitnessCraTwo} from "../../mobilecr/editorIN";
-import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
 import {GenCode} from "../../common/GenCode";
 import {ActionMapItem} from "../../common/ActionMapItem";
 import {config记录} from "./FormatOriginal";
-import {config检验复检表, RecheckEditor} from "../../common/editor";
-import {DeviceSurveyD} from "../../crane/editor";
+import {config检验复检表, RecheckEditor, SiteConditionSund} from "../../common/editor";
 import {ConclusionHydlic} from "../../lift/hydlicDj/editor";
 import {config距离, SafeDistance} from "../Intial/orcBase";
 import {MeasureCritMem} from "../../hook/useMeasure";
@@ -25,6 +23,7 @@ import {config运行速度, MoveSpeed, tail速度} from "./MoveSpeed";
 import {Braking, tail制距} from "./Braking";
 import {SpecialTopic, tail流动专} from "./SpecialTopic";
 import {MagneticLeak} from "./MagneticLeak";
+import {DeviceSurveyD} from "@/report/common/survey";
 
 
 /*快组织代码的 CmnTowerCrane配置例子， 整个编辑区块统筹：

@@ -13,12 +13,11 @@ import queryString from "query-string";
 import {config观测数据, config观测数据2, config设备概况} from "./orcBase";
 import {tItems现场} from "./Regular.O-1";
 import {Column_Setting, useFormatOmni} from "../../common/useFormatOmni";
-import {设备概况页} from "../../park/views";
-import {常用现场条件} from "../../park/viewX";
 import {UnqualifiedIspTable} from "../../common/general";
 import {首页设备概况Cr} from "../../crane/bridgeDJ/repView";
 import {测量记录两半} from "../../safe/walk/repView";
 import {扶手带速度偏差Jj} from "../supervi/repView";
+import {常用现场条件, 设备概况页} from "@/report/common/view";
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'D',x:'不合格内容',t:'B'}];
 export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({

@@ -1,12 +1,8 @@
 "use client"
-import Link from 'next/link';
-import {ContentSection} from "@/component/content-section";
-import ReportOrRecord from "@/report/recreation/slidingJj/reportOrRecord";
 import {TableOfContents} from "@/component/table-of-contents";
 import {Button} from "@/components/ui/button";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useState} from "react";
 import {Drawer} from "vaul";
-import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import { X } from 'lucide-react';
 import {useEditControlContext} from "@/component/rep/editControl-provider";
 

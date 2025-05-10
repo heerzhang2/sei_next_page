@@ -12,17 +12,16 @@ import queryString from "query-string";
 import {config观测数据, config观测数据2, config观测数据3, config设备概况, tail观测} from "./orcBase";
 import {tItems现场} from "./Regular.O-1";
 import {Column_Setting, useFormatOmni} from "../../common/useFormatOmni";
-import {设备概况页} from "../../park/views";
-import {常用现场条件} from "../../park/viewX";
 import {首页设备概况Cr} from "../../crane/bridgeDJ/repView";
 import {UnqualifiedIspTable} from "../../common/general";
-import {InstrumentVw, 测量允许检测, 测量备注三半, 测量结果单位} from "./repView";
+import {测量备注三半, 测量结果单位} from "./repView";
 import {config主技术, tail主技} from "./MainTechnical";
 import {StrainStressVw} from "./StrainStress";
 import {AccelerationVw} from "./Acceleration";
 import {config格栅流} from "./Safetygap";
 import {config最驶速} from "./Maxspeed";
 import {填写须知} from "../../escalator/rarelyVary";
+import {InstrumentVw, 常用现场条件, 测量允许检测, 设备概况页} from "@/report/common/view";
 
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'M',x:'备注',t:'B',m:true},{n:'D',x:'不合格内容',t:'B'}];

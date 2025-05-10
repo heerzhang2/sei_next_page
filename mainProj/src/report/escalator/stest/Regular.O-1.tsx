@@ -10,15 +10,13 @@ import {Text, useTheme} from "customize-easy-ui-component";
 import {ItemInstrumentTable} from "../../common/Instrument";
 import {FrontCover } from "../../mobilecr/editorIN";
 import {ConclusionEscaTest, } from "./editor";
-import {SiteConditionSund,} from "../../elevator/sundryDj/editor";
 import {GenCode} from "../../common/GenCode";
 import {ActionMapItem} from "../../common/ActionMapItem";
 import {config记录} from "./FormatOriginal";
 import {MeasureCritMem} from "../../hook/useMeasure";
-import {config检测复检表, RecheckEditor} from "../../common/editor";
-import {DeviceSurveyD} from "../../crane/editor";
+import {config检测复检表, RecheckEditor, SiteConditionSund, WitnessSimple} from "../../common/editor";
 import {HandrailBias} from "../supervi/editor";
-import {WitnessSimple} from "../../elevator/stest/editor";
+import {DeviceSurveyD} from "@/report/common/survey";
 
 //【可直接】在这里改： "pr":"*","ses":6  "r":3,"s":1, "big":"",
 const defFrameM={
