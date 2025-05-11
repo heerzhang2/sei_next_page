@@ -31,7 +31,7 @@ export type Each_ZdSetting = [
   park?: string, //对于比如svp{},pa{}的嵌套字段的编辑直接支持，直接保存为嵌套的对象字段；只能支持1层的嵌套对象： 对于Row.{m. sgm {name,username}}无法支持的。
 ]
 
-interface TableEditorProps {
+interface TableEditProps {
   config: Each_ZdSetting[]
   table: string
   headview: React.ReactNode
@@ -134,7 +134,7 @@ export function useTableEdit({
                                externalData = null, // 添加外部数据源参数
                                onExternalDataChange = null, // 添加外部数据变更回调，改成onConfirm
                                onConfirm, // 添加确认回调函数
-                             }: TableEditorProps & {
+                             }: TableEditProps & {
   externalData?: any | null
   onExternalDataChange?: ((data: any) => void) | null
   onConfirm?: ((form: UseFormReturn<any, any, any>) => void) | null
@@ -380,17 +380,17 @@ export function useTableEdit({
           return (
               <Card
                   className={cn(
-                      "flex justify-center w-full flex-col md:p-1 gap-2",
+                      "flex justify-center w-full flex-col md:p-1 gap-1",
                       showEditorPortal && (isCenterMode ? "h-full flex flex-col" : "max-h-[70vh] overflow-y-auto"), // 添加滚动支持
                   )}
                   ref={editorRef}
               >
-                <div className="flex justify-between items-center sticky top-0 bg-background z-10 p-2 border-b lg:pr-[35rem]">
-                  <div>在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
+                <div className="flex justify-between items-center sticky top-0 bg-background z-10 p-2 border-b @md:pr-[5rem] @4xl:pr-[33rem]">
+                  <div className="flex-nowrap">在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
                   <div className="flex gap-2 ml-auto">
                         <>
                           <Button variant="ghost" size="sm" onClick={handleCloseEditor}>
-                            <Check className="mr-2 h-4 w-4" />
+                            <Check className="h-4 w-4 mr-2" />
                             关闭
                           </Button>
                           <Button variant="default" size="sm" onClick={handleConfirmEdit}>
@@ -398,7 +398,7 @@ export function useTableEdit({
                             同步
                           </Button>
                           <Button variant="ghost" size="sm" onClick={handleCancel}>
-                            <Undo className="mr-2 h-4 w-4" />
+                            <Undo className="h-4 w-4 mr-2" />
                             取消
                           </Button>
                         </>
@@ -410,7 +410,7 @@ export function useTableEdit({
                         {editAs ? (
                             editAs(form, seq)
                         ) : (
-                            <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4 p-2">
+                            <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2 p-2">
                               {config.map(([title, tag, _, extobj, park]: any, i: number) => {
                                 const { t: type, l: list, u: unit, s: size } = extobj || {}
                                 if ((fixColumn && i < fixColumn) || !(fields?.length > 0))
@@ -562,7 +562,7 @@ export function useTableEdit({
                       </>
                   )}
                   {!noDelAdd && !showEditorPortal && (
-                      <Button className="mt-4" onClick={handleAddNewRecord}>
+                      <Button className="mt-1" onClick={handleAddNewRecord}>
                         新增一条
                       </Button>
                   )}

@@ -10,14 +10,12 @@ import {useStorage} from "@/report/StorageContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {CollapsibleFormSection} from "@/components/chub";
-import {Each_ZdSetting} from "@/report/hook/use-table-edit";
+import {Each_ZdSetting, useTableEdit} from "@/report/hook/use-table-edit";
 import {tail测仪器} from "@/report/common/view";
+import {useCallback} from "react";
+import type {UseFormReturn} from "react-hook-form";
 
 
-interface InstrumentTableProps  extends InternalItemProps{
-    label: string;
-    prnAttach?: string;
-}
 export const instrumentOption = [
     { label: "正常", value: "√" },
     { label: "不正常", value: "×" },
@@ -29,8 +27,7 @@ const config仪器表=[['测量设备名称','n',140],['规格型号','t',120],[
 ] as Each_ZdSetting[];
 /**可复用的： 仪器表录入页面的
  * */
-export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestMd, label, rep
-                                        ,prnAttach}: InstrumentTableProps) => {
+export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestMd, label, rep}: InternalItemProps) => {
     const {storage,setStorage,modified,setModified} =useStorage();
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
@@ -57,12 +54,12 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
     const headview=<h5>{label}：</h5>;
     const tailview=<>
         {tail测仪器}
-        <br/><hr/>
-        { !alone && show && prnAttach &&
-            <h5>{prnAttach}</h5>
-        }
     </>;
-    const [nestRendererFactory]=useTableEditor({headview, config: config仪器表, table:'仪器表',defFixedLay:true, tailview});
+    const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
+    //也可考虑配上 onConfirm,
+    const [nestRendererFactory]=useTableEdit({ config: config仪器表, table:'仪器表',externalData: storage,
+                headview,defFixedLay:true, tailview
+    });
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
             return (
@@ -78,7 +75,7 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
         },
         [children,nestRendererFactory ],
     )
-    const { render } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+    const { render,handleConfirm } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
         {render()}
     </CollapsibleFormSection>;

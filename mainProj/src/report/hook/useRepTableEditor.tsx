@@ -617,7 +617,7 @@ interface TableEditorProps {
     }
 }
 
-/*@Deprecated
+/*@Deprecated 请改用useTableEdit
 目的是编辑器而不是表格显示打印。适应于编辑表格的显示编辑列数不算太多的,表格行数也比较少的情况,不支持普通表格的分页功能。
 屏幕和浏览器适应需要，多加个表头独立做复制的。
 【注意】特别要求必须把 {remove, move, insert } = arrays?.[];  从form外部注入的接口。

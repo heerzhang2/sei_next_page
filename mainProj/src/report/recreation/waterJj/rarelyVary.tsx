@@ -1,4 +1,6 @@
 import * as React from "react";
+import type { FC } from "react"
+import Link from "next/link"
 import {DirectLink} from "../../../routing/Link";
 import Img_Seal from "../../../images/seal.png";
 import {AttentionPoint} from "../../common/rarelyVary";
@@ -7,9 +9,9 @@ import {FlexibleTable, TableBody, TableCell, TableRow,CCell} from "@/components/
 import SurveyRow from "@/component/SurveyRow";
 import {businessCatspMap} from "@/common/sei";
 
-export const 检验核准WaterJj = ({orc, rep,jyt}: { orc: any, rep: any,jyt?:string}
+export const 检验核准WaterJj__ee = ({orc, rep,jyt}: { orc: any, rep: any,jyt?:string}
 ) => {
-  return <FlexibleTable columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]} css={{borderCollapse: 'collapse'}} tight miniw={800}>
+  return <FlexibleTable columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]} css={{borderCollapse: 'collapse'}}>
     <TableBody>
       <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>
         <TableRow>
@@ -33,8 +35,7 @@ export const 检验核准WaterJj = ({orc, rep,jyt}: { orc: any, rep: any,jyt?:st
                 backgroundPosition: 'center',
               }
             }}>
-              <FlexibleTable columnWidths={["50%", "%"]} css={{borderCollapse: 'collapse', height: 'fill-available'}}
-                     tight  miniw={800}>
+              <FlexibleTable columnWidths={["50%", "%"]}>
                 <TableBody>
                   <TableRow>
                     <CCell css={{border: 'none'}}>检验机构核准证号：</CCell>
@@ -67,6 +68,146 @@ export const 检验核准WaterJj = ({orc, rep,jyt}: { orc: any, rep: any,jyt?:st
     </TableBody>
   </FlexibleTable>;
 };
+export const 检验核准WaterJj33 = ({ orc, rep, jyt }: { orc: any; rep: any; jyt?: string }) => {
+  return (
+      <FlexibleTable
+          columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]}
+          className="border-collapse"
+      >
+        <TableBody>
+          <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>
+            <TableRow>
+              <CCell>{jyt ?? '检验'}</CCell>
+              <CCell colSpan={2}>{orc.检验人IDs}</CCell>
+              <CCell>日期</CCell>
+              <CCell>{orc.检验日期 || '／'}</CCell>
+              <CCell rowSpan={3}>
+                <div className="relative h-32">
+                  {/* 印章背景层 */}
+                  <div
+                      className="absolute inset-0 bg-no-repeat bg-center opacity-30"
+                      style={{
+                        backgroundImage: `url(${Img_Seal})`,
+                        backgroundSize: 'contain'
+                      }}
+                  />
+
+                  {/* 内容表格 */}
+                  <FlexibleTable
+                      columnWidths={["50%", "%"]}
+                      className="relative z-10 h-full"
+                  >
+                    <TableBody>
+                      <TableRow>
+                        <CCell className="border-none">检验机构核准证号：</CCell>
+                        <CCell className="border-none">{rep?.isp?.ispu?.agency?.apno}</CCell>
+                      </TableRow>
+                      <TableRow>
+                        <CCell className="border-none" colSpan={2}>
+                          （机构公章或者检验专用章）
+                        </CCell>
+                      </TableRow>
+                      <TableRow>
+                        <CCell className="border-none" colSpan={2}>
+                          {orc.检验日期}
+                        </CCell>
+                      </TableRow>
+                    </TableBody>
+                  </FlexibleTable>
+                </div>
+              </CCell>
+            </TableRow>
+          </DirectLink>
+
+          <TableRow>
+            <CCell>审核</CCell>
+            <CCell colSpan={2}></CCell>
+            <CCell>日期</CCell>
+            <CCell></CCell>
+          </TableRow>
+
+          <TableRow>
+            <CCell>批准</CCell>
+            <CCell colSpan={2}></CCell>
+            <CCell>日期</CCell>
+            <CCell></CCell>
+          </TableRow>
+        </TableBody>
+      </FlexibleTable>
+  );
+};
+
+interface InspectionApprovalProps {
+  orc: any
+  rep: any
+  jyt?: string
+}
+
+export const 检验核准WaterJj: FC<InspectionApprovalProps> = ({ orc, rep, jyt = "检验" }) => {
+  return (
+      <div className="w-full">
+        <table className="w-full border-collapse">
+          <tbody>
+          <tr>
+            <td className="border border-gray-300 w-[4.2%] p-2 text-center">
+              <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>{jyt}</Link>
+            </td>
+            <td className="border border-gray-300 w-[27%] p-2 text-center" colSpan={2}>
+              <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>{orc.检验人IDs}</Link>
+            </td>
+            <td className="border border-gray-300 w-[4.2%] p-2 text-center">
+              <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>日期</Link>
+            </td>
+            <td className="border border-gray-300 w-[12%] p-2 text-center">
+              <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>
+                {orc.检验日期 || "／"}
+              </Link>
+            </td>
+            <td className="border border-gray-300 p-2 text-center relative" rowSpan={3}>
+              <div className="h-32 relative">
+                <div
+                    className="absolute inset-0 opacity-30 bg-no-repeat bg-center"
+                    style={{ backgroundImage: `url(/images/seal.png)` }}
+                ></div>
+                <table className="w-full">
+                  <tbody>
+                  <tr>
+                    <td className="border-none w-1/2 text-left">检验机构核准证号：</td>
+                    <td className="border-none text-left">{rep?.isp?.ispu?.agency?.apno}</td>
+                  </tr>
+                  <tr>
+                    <td className="border-none text-center" colSpan={2}>
+                      （机构公章或者检验专用章）
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border-none text-center" colSpan={2}>
+                      {orc.检验日期}
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td className="border border-gray-300 w-[4.2%] p-2 text-center">审核</td>
+            <td className="border border-gray-300 w-[27%] p-2 text-center" colSpan={2}></td>
+            <td className="border border-gray-300 w-[4.2%] p-2 text-center">日期</td>
+            <td className="border border-gray-300 w-[12%] p-2 text-center"></td>
+          </tr>
+          <tr>
+            <td className="border border-gray-300 w-[4.2%] p-2 text-center">批准</td>
+            <td className="border border-gray-300 w-[27%] p-2 text-center" colSpan={2}></td>
+            <td className="border border-gray-300 w-[4.2%] p-2 text-center">日期</td>
+            <td className="border border-gray-300 w-[12%] p-2 text-center"></td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+  )
+}
+
 
 export const 注意事项WaterJj= ({comply, rep} :{comply: any, rep: any}
 ) => {

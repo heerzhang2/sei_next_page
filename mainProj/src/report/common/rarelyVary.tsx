@@ -3,8 +3,6 @@ import {DirectLink} from "../../routing/Link";
 import Link from "next/link"
 import Img_Ma  from '../../images/MA.png';
 import Img_ReportNoQR from '../../images/reportNoQR.png';
-// import {FadeImage} from "../../comp/FadeImage";
-// import {useMedia} from "use-media";
 import {Button} from "@/components/ui";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
@@ -31,45 +29,38 @@ export const 注意事项=<div>
 export const 落款单位地址 = () => (
     <React.Fragment>
         {/* 标题部分 */}
-        <div className="text-center space-y-6">
+        <div className="text-center space-y-1">
             <h4 className="text-2xl font-bold">福建省特种设备检验研究院</h4>
-            <h6 className="text-lg text-gray-600">
+            <h6 className="text-base">
                 FUJIAN SPECIAL EQUIPMENT INSPECTION AND RESEARCH INSTITUTE
             </h6>
-
-            {/* 分割线 */}
-            <div className="border-t-2 border-gray-600 w-64 mx-auto"></div>
-
-            {/* 地址信息 */}
-            <p className="text-xl text-gray-700 mt-8">地址（Add.）：福建省福州市仓山区卢滨路370号</p>
-
-            {/* 联系方式容器 */}
-            <div className="flex flex-wrap gap-4 mt-6">
-                <div className="flex-1">
-                    <span className="block text-sm font-medium text-gray-600">电话（Tel.）：</span>
+            <div className="border-t-2 border-gray-600 w-full mx-auto"></div>
+            <p className="mt-1 text-left">地址（Add.）：福建省福州市仓山区卢滨路370号</p>
+            <div className="flex flex-wrap gap-1 mt-1">
+                <div className="flex-1 inline-flex flex-nowrap items-center">
+                    <span className="block text-sm font-medium">电话（Tel.）：</span>
                     <span className="block text-gray-500">0591-968829</span>
                 </div>
-                <div className="flex-1">
-                    <span className="block text-sm font-medium text-gray-600">传真（Fax）：</span>
+                <div className="flex-1 inline-flex flex-nowrap items-center">
+                    <span className="block text-sm font-medium">传真（Fax）：</span>
                     <span className="block text-gray-500">0591-88700509</span>
                 </div>
-                <div className="flex-1">
-                    <span className="block text-sm font-medium text-gray-600">邮政编码：</span>
+                <div className="flex-1 inline-flex flex-nowrap items-center">
+                    <span className="block text-sm font-medium">邮政编码：</span>
                     <span className="block text-gray-500">350008</span>
                 </div>
             </div>
-
             {/* 网站信息容器 */}
-            <div className="flex flex-wrap gap-4 mt-6">
-                <div className="flex-1">
-                    <span className="block text-sm font-medium text-gray-600">网址（Website）：</span>
-                    <a href="https://www.fjtj.com" className="block text-blue-600 hover:underline">
+            <div className="flex flex-wrap gap-1 mt-1">
+                <div className="flex-1 inline-flex flex-nowrap items-center">
+                    <span className="block text-sm font-medium">网址（Website）：</span>
+                    <a href="https://www.fjtj.com" className="block hover:underline">
                         www.fjtj.com
                     </a>
                 </div>
-                <div className="flex-1">
-                    <span className="block text-sm font-medium text-gray-600">电子邮箱（Email）：</span>
-                    <a href="mailto:fjtj@fjtj.org" className="block text-blue-600 hover:underline">
+                <div className="flex-1 inline-flex flex-nowrap items-center">
+                    <span className="block text-sm font-medium">电子邮箱（Email）：</span>
+                    <a href="mailto:fjtj@fjtj.org" className="block hover:underline">
                         fjtj@fjtj.org
                     </a>
                 </div>
@@ -415,53 +406,39 @@ export const useViewReportALL = () => {
 };
 
 type AttentionPointProps = {
-    /**报告对象*/
     rep: any
-    // onClick: () => void
     children: React.ReactNode
-    //第一行的 本报告 遵照“”
     comply?: any
-    //最后一行 带上 报检 电话网址
     telurl?: boolean
 }
-/**更为通用的注意事项 报告显示页面 【特别提醒】rep?.isp?.ispu是动态的数据；并非静态化方式生成数据。
- *@param children 文本其他行的。
- * */
+
 export const AttentionPoint = ({ rep, children, comply, telurl }: AttentionPointProps) => {
     return (
         <DirectLink
             href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/FrontCover#FrontCover`}
-            className="no-underline hover:underline" // 添加链接交互样式
+            className="no-underline hover:underline"
         >
-            {/* 主容器：使用打印专用层和响应式断点 */}
-            <div className="print:mb-12 print:mt-auto print:flex print:items-center print:justify-center print:px-8"
-                 style={{
-                     '@print': {
-                         height: 'calc(100vh - 2rem - 10pt)',
-                         flexDirection: 'column'
-                     }
-                 }}
-            >
+            {/* 主容器 */}
+            <div className="print:mb-12 print:mt-auto print:flex print:h-[calc(100vh-2rem-10pt)] print:items-center print:justify-center print:px-8 print:flex-col">
                 {/* 标题部分 */}
-                <h2 className="text-center text-xl print:mb-8">
+                <h2 className="text-center text-xl font-semibold print:mb-8 print:text-2xl print:mb-16">
                     注意事项
                 </h2>
-
-                {/* 内容容器：使用打印专用行高和间距 */}
-                <div className="leading-relaxed print:leading-relaxed-print">
-                    {comply && (
-                        <>
-                            1．本报告{comply}。<br />
-                        </>
-                    )}
-
-                    {children}
-
-                    {telurl && (
-                        <>
-                            报检电话：{rep?.isp?.ispu?.agency?.bjtel}，网址：{rep?.isp?.ispu?.agency?.bjurl}。
-                        </>
-                    )}
+                {/* 修改后的内容容器 */}
+                <div className="mx-auto flex w-full max-w-3xl flex-col items-center print:max-w-none print:items-start">
+                    <div className="w-full space-y-3 leading-4 print:space-y-4 print:leading-[1.8]">
+                        {comply && (
+                            <span>1．本报告{comply}。</span>
+                        )}
+                        <div className="space-y-3 print:space-y-4">
+                            {children}
+                            {telurl && (
+                                <span className="print:text-base">
+                        报检电话：{rep?.isp?.ispu?.agency?.bjtel}，网址：{rep?.isp?.ispu?.agency?.bjurl}。
+                    </span>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </DirectLink>

@@ -16,6 +16,7 @@ import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from "@
 import { 报告设备详情 } from "./repView"
 import { setupItemAreaRoute } from "./orcIspConfig"
 import { FormatOriginal } from "./FormatOriginal"
+import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
@@ -63,7 +64,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         <h1 id={"Conclusion"} className="text-3xl text-center print:mt-6">
                             滑行车类游乐设施监督检验报告
                         </h1>
-                        {首页概况WaterJj(orc,rep,)}
+                        {首页概况recr(orc,rep,)}
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
                 </div>

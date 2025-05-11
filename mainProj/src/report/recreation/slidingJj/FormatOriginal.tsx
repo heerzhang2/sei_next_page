@@ -11,7 +11,7 @@ import {InstrumentVw, 常用现场条件, 测量允许检测, 测量备注两半
 import {首页概况WaterJj} from "@/report/recreation/waterJj/rarelyVary";
 import {StrainStressVw} from "../waterJj/StrainStress";
 import {AccelerationVw} from "../waterJj/Acceleration";
-import {填写须知recr} from "./rarelyVary";
+import {填写须知recr, 首页概况recr} from "./rarelyVary";
 import {setupItemAreaRoute} from "./orcIspConfig";
 import {config主技术, tail主技} from "./MainTechnical";
 import {tItems现场} from "./Regular.O-1";
@@ -41,7 +41,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     <span className="block text-center text-xl mt-4">（适用于滑行车类、架空游览车类）</span>
                 </div>
                 <div>
-                    {首页概况WaterJj(orc,rep,true)}
+                    {首页概况recr(orc,rep,true)}
                 </div>
                 <div className="text-center ">
                     <span className="text-center text-2xl">福建省特种设备检验研究院编制</span>
