@@ -50,7 +50,7 @@ export const 报告设备详情= ( { orc, rep } : { orc: any,rep:any}
           <CCell colSpan={2}>检验依据</CCell>
           <CCell colSpan={5}>《大型游乐设施安全技术规程》（TSG 71-2023）</CCell>
         </TableRow>
-        <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Conclusion#Conclusion`}>
+        <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion#Conclusion`}>
           <TableRow className={"text-sm"}>
             <CCell>检验结论</CCell>
             <CCell colSpan={6}>
@@ -59,10 +59,10 @@ export const 报告设备详情= ( { orc, rep } : { orc: any,rep:any}
             </CCell>
           </TableRow>
         </DirectLink>
-        <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Witness#Witness`}>
+        <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
           <TableRow className={"text-sm"}>
             <CCell>备注</CCell>
-            <TableCell split={true} colSpan={6}><div css={{minHeight: '1rem', whiteSpace: 'pre-wrap'}}>
+            <TableCell split={true} colSpan={6}><div className="text-sm min-h-4 whitespace-pre-wrap">
               {orc.大备注 ?? '／'}
             </div></TableCell>
           </TableRow>

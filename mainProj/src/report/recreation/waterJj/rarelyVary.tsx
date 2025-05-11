@@ -2,10 +2,10 @@ import * as React from "react";
 import type { FC } from "react"
 import Link from "next/link"
 import {DirectLink} from "../../../routing/Link";
+import {FlexibleTable, TableBody, TableCell, TableRow,CCell} from "@/components/flexible-table";
 import Img_Seal from "../../../images/seal.png";
 import {AttentionPoint} from "../../common/rarelyVary";
 import {eqpTypeAllMap} from "../../../dict/eqpComm";
-import {FlexibleTable, TableBody, TableCell, TableRow,CCell} from "@/components/flexible-table";
 import SurveyRow from "@/component/SurveyRow";
 import {businessCatspMap} from "@/common/sei";
 
@@ -143,67 +143,67 @@ interface InspectionApprovalProps {
   jyt?: string
 }
 
-export const 检验核准WaterJj: FC<InspectionApprovalProps> = ({ orc, rep, jyt = "检验" }) => {
+export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprovalProps) => {
   return (
       <div className="w-full">
-        <table className="w-full border-collapse">
-          <tbody>
-          <tr>
-            <td className="border border-gray-300 w-[4.2%] p-2 text-center">
+        <FlexibleTable className="w-full border-collapse" columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]}>
+          <TableBody>
+          <TableRow>
+            <CCell className="border border-gray-300 w-[4.2%] p-2 text-center">
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>{jyt}</Link>
-            </td>
-            <td className="border border-gray-300 w-[27%] p-2 text-center" colSpan={2}>
+            </CCell>
+            <CCell className="border border-gray-300 w-[27%] p-2 text-center" colSpan={2}>
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>{orc.检验人IDs}</Link>
-            </td>
-            <td className="border border-gray-300 w-[4.2%] p-2 text-center">
+            </CCell>
+            <CCell className="border border-gray-300 w-[4.2%] p-2 text-center">
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>日期</Link>
-            </td>
-            <td className="border border-gray-300 w-[12%] p-2 text-center">
+            </CCell>
+            <CCell className="border border-gray-300 w-[12%] p-2 text-center">
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>
                 {orc.检验日期 || "／"}
               </Link>
-            </td>
-            <td className="border border-gray-300 p-2 text-center relative" rowSpan={3}>
+            </CCell>
+            <CCell className="border border-gray-300 p-2 text-center relative" rowSpan={3}>
               <div className="h-32 relative">
                 <div
                     className="absolute inset-0 opacity-30 bg-no-repeat bg-center"
                     style={{ backgroundImage: `url(/images/seal.png)` }}
                 ></div>
-                <table className="w-full">
-                  <tbody>
-                  <tr>
-                    <td className="border-none w-1/2 text-left">检验机构核准证号：</td>
-                    <td className="border-none text-left">{rep?.isp?.ispu?.agency?.apno}</td>
-                  </tr>
-                  <tr>
-                    <td className="border-none text-center" colSpan={2}>
+                <FlexibleTable className="w-full" columnWidths={["50%", "%"]}>
+                  <TableBody>
+                  <TableRow>
+                    <CCell className="border-none w-1/2 text-left">检验机构核准证号：</CCell>
+                    <CCell className="border-none text-left">{rep?.isp?.ispu?.agency?.apno}</CCell>
+                  </TableRow>
+                  <TableRow>
+                    <CCell className="border-none text-center" colSpan={2}>
                       （机构公章或者检验专用章）
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border-none text-center" colSpan={2}>
+                    </CCell>
+                  </TableRow>
+                  <TableRow>
+                    <CCell className="border-none text-center" colSpan={2}>
                       {orc.检验日期}
-                    </td>
-                  </tr>
-                  </tbody>
-                </table>
+                    </CCell>
+                  </TableRow>
+                  </TableBody>
+                </FlexibleTable>
               </div>
-            </td>
-          </tr>
-          <tr>
-            <td className="border border-gray-300 w-[4.2%] p-2 text-center">审核</td>
-            <td className="border border-gray-300 w-[27%] p-2 text-center" colSpan={2}></td>
-            <td className="border border-gray-300 w-[4.2%] p-2 text-center">日期</td>
-            <td className="border border-gray-300 w-[12%] p-2 text-center"></td>
-          </tr>
-          <tr>
-            <td className="border border-gray-300 w-[4.2%] p-2 text-center">批准</td>
-            <td className="border border-gray-300 w-[27%] p-2 text-center" colSpan={2}></td>
-            <td className="border border-gray-300 w-[4.2%] p-2 text-center">日期</td>
-            <td className="border border-gray-300 w-[12%] p-2 text-center"></td>
-          </tr>
-          </tbody>
-        </table>
+            </CCell>
+          </TableRow>
+          <TableRow>
+            <CCell className="text-sm">审核</CCell>
+            <CCell className="text-sm" colSpan={2}></CCell>
+            <CCell className="text-xs">日期</CCell>
+            <CCell className="text-sm"></CCell>
+          </TableRow>
+          <TableRow>
+            <CCell className="text-base">批准</CCell>
+            <CCell className="text-sm" colSpan={2}></CCell>
+            <CCell className="text-sm">日期</CCell>
+            <CCell className="text-sm"></CCell>
+          </TableRow>
+          </TableBody>
+        </FlexibleTable>
       </div>
   )
 }

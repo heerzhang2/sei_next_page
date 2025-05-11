@@ -1,34 +1,10 @@
-/** @jsxImportSource @emotion/react */
 'use client';
-
-import { jsx, css, Global, ClassNames } from '@emotion/react'
-import {useActionState, useEffect, useRef, useState,} from 'react';
-import SubmitButtonWithStatus from '@/component/SubmitButtonWithStatus';
-// import {KEY_CALLBACK_URL, KEY_CREDENTIALS_SIGN_IN_ERROR, } from '.';
-import {useSearchParams} from 'next/navigation';
-import { FiLock } from 'react-icons/fi';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-// import { revalidatePath } from 'next/cache'
-import {useAppState} from "@/action/AppState";
 import * as React from "react";
-import {
-    useTheme,
-    Layer,
-    Text,
-    Button,
-    Link as StyledLink,
-    LayerLoading,
-    Alert, Spinner,
-    Container, Input, InputGroup, IconArrowRight
-} from "customize-easy-ui-component";
-// import queryString from "query-string";
-// import {useContext} from "react";
-// import {UserContext} from "../routing/UserContext";
-// import useLoginMutation from "./useLoginMutation";
-// import useRegisterMutation from "./useRegisterMutation";
-import {AloneContainer} from "@/comp/AloneContainer";
 import Link from "next/link";
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+import { useAppState } from "@/action/AppState";
 
 // import { z } from "zod";
 // import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,196 +27,120 @@ import Link from "next/link";
 
 
 //密码hash 防止在服务后台泄密
-var sha256 = require('hash.js/lib/hash/sha/256');
+// var sha256 = require('hash.js/lib/hash/sha/256');
 /*登录表单；却在浏览器端运行的。
 * */
+
+
 export default function SignInForm() {
-  const router = useRouter();
-  // const params = useSearchParams();
-  const { setUserEmail } = useAppState();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  // const {call:submitfunc, doing:isInFlight}= useLoginMutation();
+    const router = useRouter();
+    const { setUserEmail } = useAppState();
 
-  const signInAction = async (_prevState: string | undefined, formData: FormData,
-  ) => {
-    const data = formData;  //{ email: '', password: '' }
-    console.log("signInAction录入formData:{}", formData);
-    const response = await signIn('credentials', {
-      username: 'herzhang',
-      email: 'herzhang@163.com', //data.email,
-      password: '768768', //data.password,
-      redirect: true
-    });
-    if (!response?.error) {
-        window.location.reload()
-        router.push('/user')
-        window.location.href = '/user';
-    } else {
-      // setError(response.error);
-      // resetForm();
-      window.location.href = '/';
-    }
-  };
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [error, setError] = useState("");
+    const usernameRef = useRef<HTMLInputElement>(null);
 
-  // @ts-ignore
-  const [response, action, isPending] = useActionState(signInAction, undefined);
+    // 自动聚焦用户名输入框
+    useEffect(() => {
+        const timeout = setTimeout(() => usernameRef.current?.focus(), 100);
+        return () => clearTimeout(timeout);
+    }, []);
 
-  const usernameRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const timeout = setTimeout(() => usernameRef.current?.focus(), 100);
-    return () => clearTimeout(timeout);
-  }, []);
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.currentTarget;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
-  // useEffect(() => {
-  //   return () => {
-  //     // Capture user email before unmounting
-  //     getAuthAction().then(auth =>
-  //       setUserEmail?.(auth?.user?.email ?? undefined));
-  //   };
-  // }, [setUserEmail]);
-    const theme = useTheme();
-    const [error, setError] = React.useState("");
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const response = await signIn('credentials', {
+            ...formData,
+            redirect: false
+        });
 
-  return (
-      <>
-      <AloneContainer>
-          <Layer
-              css={{
-                  boxShadow: "none",
-                  marginBottom: theme.spaces.md,
-                  background: "white",
-                  [theme.mediaQueries.md]: {
-                      marginTop: theme.spaces.xl,
-                      boxShadow: theme.shadows.xl
-                  }
-              }}
-          >
-              <div
-                  css={{
-                      borderBottom: "1px solid",
-                      borderColor: theme.colors.border.muted,
-                      textAlign: "center",
-                      padding: theme.spaces.lg,
-                      paddingBottom: theme.spaces.sm
-                  }}
-              >
-                  <Text variant="h4">
-                      "使用前先登陆账户"
-                  </Text>
+        if (!response?.error) {
+            setUserEmail(formData.email);
+            router.push('/user');
+        } else {
+            setError("登录失败，请检查您的账户信息");
+        }
+    };
 
-                  <div
-                      css={{
-                          textAlign: "center",
-                          paddingBottom: theme.spaces.sm
-                      }}
-                  >
-                      <Text css={{fontSize: theme.fontSizes[0]}}>
-                          若没有账户?{" "}先要
-                          <StyledLink href="#">
-                              <Button size="xs" noBind intent="primary" iconAfter={<IconArrowRight/>}
-                              >申请注册
-                              </Button>
-                          </StyledLink>
-                      </Text>
-                  </div>
-              </div>
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white p-6 rounded-xl shadow-md">
+                <div className="text-center">
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
+                        用户登录
+                    </h2>
+                    <p className="text-sm text-gray-500 mb-6">
+                        欢迎回来！请输入您的账户信息
+                    </p>
+                </div>
 
-              <div
-                  css={{
-                      padding: theme.spaces.lg
-                  }}
-              >
-                  <form action={action}>
-                      <div css={{marginTop: theme.spaces.md}}>
-                          <Text muted css={{textAlign: "center"}} variant="subtitle">
-                              请使用您的用户名密码登录:
-                          </Text>
-                          <InputGroup label={"账户"}>
-                              <Input required
-                                     onChange={e => {
-                                         setUsername(e.currentTarget.value);
-                                     }}
-                                     value={username}
-                                     inputSize="md"
-                                     type="text"
-                                     placeholder="账户"
-                              />
-                          </InputGroup>
-                          <InputGroup label={"密码"}>
-                              <Input required
-                                     onChange={e => {
-                                         setPassword(e.currentTarget.value);
-                                     }}
-                                     value={password}
-                                     inputSize="md"
-                                     type="password"
-                                     placeholder="密码最少6位的复杂"
-                                     autoComplete="off"
-                              />
-                          </InputGroup>
+                {error && (
+                    <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">
+                        {error}
+                    </div>
+                )}
 
-                          {error && (
-                              <Alert
-                                  css={{marginTop: theme.spaces.md}}
-                                  intent={"error"}
-                                  title={"报错"}
-                                  subtitle={error}
-                              />
-                          )}
-                          <div css={{display: "flex", justifyContent: "flex-end"}}>
-                              <Button
-                                  disabled={!username || !password}
-                                  block
-                                  component="button"
-                                  css={{
-                                      textAlign: "center",
-                                      width: "100%",
-                                      marginTop: theme.spaces.md
-                                  }}
-                                  type="submit"
-                                  size="md"
-                                  intent="primary"
-                                  //onPress={e =>{isRegistering ? doRegister(e) : doLogin(e) } }
-                              >
-                                  登录
-                              </Button>
+                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                    <div className="rounded-md shadow-sm -space-y-px">
+                        <div className="mb-4">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                邮箱
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    placeholder="请输入邮箱地址"
+                                />
+                            </div>
+                        </div>
 
-                          </div>
-                      </div>
-                  </form>
-              </div>
-              <div className="mt-10">
-                  <Link href="/mainProj/public">⬅️ Go back home</Link>
-              </div>
-              <div className="mt-10">
-                  <Link href="/user">⬅️ Go 不能尼克酸y用户</Link>
-              </div>
-              <div className="mt-10">
-                  <Link href="/profile">⬅️ Profile y用户</Link>
-              </div>
-          </Layer>
-      </AloneContainer>
-          <Spinner doing={isPending}/>
-      </>
-  );
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                密码
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    required
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    placeholder="请输入密码"
+                                    minLength={6}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            disabled={!formData.email || !formData.password}
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            登录
+                        </button>
+                    </div>
+                </form>
+
+                <div className="text-center text-sm text-gray-500">
+                    <Link href="/signup" className="text-blue-600 hover:text-blue-700">
+                        没有账户？立即注册
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
 }
-
-//          <div  >
-//             <input
-//               id="username"
-//               ref={usernameRef}
-//               value={username}
-//             />
-//             <input
-//               id="password"
-//               type="password"
-//               value={password}
-//             />
-//             <input
-//                 id="email"
-//                 type="email"
-//                 value={email}
-//             />
-//           </div>
