@@ -7,20 +7,7 @@ import {useMeasureInpFilter} from "./hooks";
 import {measurementRender} from "./measure";
 import {itemResultUnqualifiedOmni, useItemsMapOmni} from "./omni";
 import {z} from "zod";
-import {
-    Button,
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-    Input
-} from "@/components/ui";
+import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {BlobInputList, CollapsibleFormSection, CommonSelect, FormSelectField} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
@@ -581,9 +568,9 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
                         </Table>
                     </div>
                     <div className="w-full flex justify-center mb-1 items-center gap-1">
-                        <h5>选择编辑行</h5>
+                        <h4>选择编辑行</h4>
                         <CommonSelect id={"selectedIndex"} value={selectedIndex?.toString()} options={seqOptions}
-                                      onChange={(v) => {
+                                      onValueChange={(v) => {
                                           const index = v ? Number(v) : null;
                                           if (index !== null) setSelectedIndex(index);
                                       }}

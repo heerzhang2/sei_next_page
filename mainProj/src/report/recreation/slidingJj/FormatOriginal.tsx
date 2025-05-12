@@ -8,7 +8,6 @@ import {useItemsMapOmni} from "@/report/common/omni";
 import {Column_Setting, useFormatOmni} from "@/report/common/useFormatOmni";
 import {UnqualifiedIspTable} from "@/report/common/general";
 import {InstrumentVw, 常用现场条件, 测量允许检测, 测量备注两半, 设备概况页} from "@/report/common/view";
-import {首页概况WaterJj} from "@/report/recreation/waterJj/rarelyVary";
 import {StrainStressVw} from "../waterJj/StrainStress";
 import {AccelerationVw} from "../waterJj/Acceleration";
 import {填写须知recr, 首页概况recr} from "./rarelyVary";
@@ -78,10 +77,12 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag} titles={['序号','项目编号','不合格内容描述','复检结果','复检日期']}
                     label={<h2 className="text-left text-xl mb-2">四、检测不合格记录及复检结果</h2>}
             />
-            <h2 className="mt-4 print:mt-0 text-2xl break-before-page">五、现场检验意见</h2>
             <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
-                <div className={`text-center ${orc?.检验结论?.length > 12 ? 'text-2xl' : 'text-4xl'} w-full border-1 border-solid border-black rounded-lg p-4`}>
-                    {orc?.检验结论}
+                <div>
+                    <h2 className="mt-4 print:mt-0 text-2xl break-before-page">五、现场检验意见</h2>
+                    <div className={`text-center ${orc?.检验结论?.length > 12 ? 'text-2xl' : 'text-4xl'} w-full border-1 border-solid border-black rounded-lg p-4`}>
+                        {orc?.检验结论}
+                    </div>
                 </div>
             </DirectLink>
             <FlexibleTable columnWidths={["15%", "%", "15%", "20%"]}>
@@ -102,17 +103,21 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     </DirectLink>
                 </TableBody>
             </FlexibleTable>
-            <h2 className="mt-4 text-2xl">六、备注</h2>
             <RepLink ori rep={rep} tag={'Witness'}>
-                <div className={`text-sm min-h-4 whitespace-pre-wrap w-full border-1 border-solid border-black p-1`}>
-                    {orc.大备注 ?? '／'}
+                <div>
+                    <h2 className="mt-4 text-2xl">六、备注</h2>
+                    <div className={`text-sm min-h-4 whitespace-pre-wrap w-full border-1 border-solid border-black p-1`}>
+                        {orc.大备注 ?? '／'}
+                    </div>
                 </div>
             </RepLink>
             <span className="text-[0.75rem]">注：本备注的内容在报告中体现。</span>
-            <h2 className="mt-4 text-2xl">七、记事</h2>
             <RepLink ori rep={rep} tag={'Witness'}>
-                <div className={`text-sm min-h-4 whitespace-pre-wrap w-full border-1 border-solid border-black p-1`}>
-                    {orc.资料编号 ?? '／'}
+                <div>
+                    <h2 className="mt-4 text-2xl">七、记事</h2>
+                    <div className={`text-sm min-h-4 whitespace-pre-wrap w-full border-1 border-solid border-black p-1`}>
+                        {orc.资料编号 ?? '／'}
+                    </div>
                 </div>
             </RepLink>
             {测量备注两半({orc, rep, config:config观测数据(orc),config2:config观测数据2(orc),mem:'观备注',label:'八、观测数据及测量结果记录',children:tail观测})}

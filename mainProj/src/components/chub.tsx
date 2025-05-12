@@ -39,7 +39,8 @@ interface LineColumnProps {
     children: React.ReactNode
 }
 
-/*可以用className="@container"嵌套className="columns-1 @lg:columns-2能直接替换掉LineColumn：但是顺序是分裂垂直阅读的，就不会有扩张稀疏问题较为紧凑的。
+/*@Deprecated
+可以用className="@container"嵌套className="columns-1 @lg:columns-2能直接替换掉LineColumn：但是顺序是分裂垂直阅读的，就不会有扩张稀疏问题较为紧凑的。
 而LineColumn这个用grid的导致：某些输入框占据较大的高度空间的就会引起一整个行的空间稀疏同一扩展开的，项目顺序是常规阅读顺序。
 * */
 export function LineColumn({width = 300, className, children}: LineColumnProps) {
@@ -587,6 +588,8 @@ export function MemoDateInput({
 }
 
 // 创建一个可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。
+/*必须配套useForm使用的;
+* */
 export function ClearableSelect({
                                     field,
                                     options,
@@ -653,7 +656,8 @@ interface FormSelectFieldProps {
     selectClass?: string,
     value?: any
 }
-
+/*配套于useForm；
+* */
 export function FormSelectField({field, label, options, className, selectClass, value}: FormSelectFieldProps) {
     const id = useId() + "-" + field.name // 使用 field.name 生成唯一ID
     return (
@@ -669,22 +673,26 @@ export function FormSelectField({field, label, options, className, selectClass, 
         </FormItem>
     )
 }
-//不在局限于form绑定的情况的： 因为嵌套在form组件底下的，需要加id;
-export function CommonSelect({options, placeholder = "", onClear, id, className, value, onChange}: {
+
+/**
+ * 不在局限于form绑定的情况的： 因为嵌套在form组件底下的，需要加id;
+* */
+export function CommonSelect({options, placeholder = "", onClear, id, className, value, onValueChange}: {
     options: { value: string; label?: any }[],
     placeholder?: string,
     onClear: () => void,
     id?: string,
     className?: string,
     value?: any
-    onChange?: (e: any)=> void;
+    //特殊：不是传递e:event;直接拆地选择取值的。
+    onValueChange?: (value: any)=> void;
 }) {
     // const uId = useId()    防止报错，加 name={id}
     const hasValue = !!value;
     return (
         <div className={`relative w-full ${className || ""}`}>
-            <Select  onValueChange={onChange} name={id}
-                     value={hasValue? value : ""}>
+            <Select onValueChange={onValueChange} name={id}
+                    value={hasValue? value : ""}>
                 <SelectTrigger className="w-full pr-8"
                                style={{fontSize: "inherit"}}>
                     <SelectValue  placeholder={placeholder}/>

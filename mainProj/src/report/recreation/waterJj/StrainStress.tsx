@@ -1,23 +1,11 @@
 import * as React from "react";
-import {CCellUnit, InternalItemProps, RepLink,} from "../../common/base";
-import {useTableEditor} from "../../hook/useRepTableEditor";
-import {useStorage} from "../../StorageContext";
-import {useUppyUpload} from "../../hook/useUppyUpload";
+import {CCellUnit, InternalItemProps, RepLink,} from "@/report/common/base";
+import {useTableEditor} from "@/report/hook/useRepTableEditor";
+import {useStorage} from "@/report/StorageContext";
+import {useUppyUpload} from "@/report/hook/useUppyUpload";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-    Input,
-    Textarea
-} from "@/components/ui";
+import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input, Textarea} from "@/components/ui";
 import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";

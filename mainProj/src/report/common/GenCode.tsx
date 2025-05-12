@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react";
+import {toast} from "sonner"
 import {
     InspectRecordLayout,
     InternalItemProps,
@@ -13,6 +14,8 @@ import {useState} from "react";
 import {ItemOmniConfig} from "./omni";
 import {splitNosByLastDot, splitNosByLastDotPan} from "./helper";
 import useClipboard from "react-use-clipboard";
+import {CollapsibleFormSection, CommonSelect} from "@/components/chub";
+import {Button, Textarea} from "@/components/ui";
 
 function groupAndMergeStrings(arr: string[], size: number): string[] {
     // 首先按照固定大小分组
@@ -75,12 +78,24 @@ const defaultDesc=
 
 /**几种模型的能力简要叙述： 越后面适应性可能性更强大的。
  * */
-const 生成模型选=[['New2ColBase',"两栏新常态-最简情况的"],
-    ['New2ColBigSpl',"两栏新常态可适应性强的"],
-    ['Rec3ClRep2Cl',"记录有三栏的正式报告却才两栏，x.y.z在记录以x.y加一栏"],
-    ['CmnTowerCrane',"类似塔式起重机模板的，分4个栏目，报告显示小拆分项"],
-    ['JavaMember',"Java class类的成员提取,准备进一步加工"],
-] as SelectValDescPair[];
+const 生成模型选 = [
+    {
+        value: 'New2ColBase',
+        label: "两栏新常态-最简情况的"
+    },
+    {
+        value: 'New2ColBigSpl',
+        label: "两栏新常态可适应性强的"
+    },
+    {
+        value: 'Rec3ClRep2Cl',
+        label: "记录有三栏的正式报告却才两栏，x.y.z在记录以x.y加一栏"
+    },
+    {
+        value: 'CmnTowerCrane',
+        label: "类似塔式起重机模板的，分4个栏目，报告显示小拆分项"
+    }
+];
 
 function removeLeadingChars(str: string, specialChar: string) {
     // 直接构造正则表达式，无需对specialChar进行转义（因为它在这个上下文中不是正则表达式的特殊字符）
@@ -123,16 +138,15 @@ function splitAndInsertEmptyLines(text: string) {
 }
 
 /**有些代码太罗嗦：可 尝试生成启动框架模式的代码；
+ *@param frameMod: 模型对象
+ * 本地状态管理方式的，没有用useForm；
  * */
 export const GenCode =
 React.forwardRef((
     {show, alone = true,type:defaultType,frameMod,defTitle,defDesc}: Props, ref
 ) => {
     const defaultFrameDyn= frameMod?? defaultFrameM;   //允许动态：配置决定列表
-    const cust模型选= 生成模型选.filter(([mtag,_d]:any) => defaultFrameDyn[mtag]!==undefined);      //缩小列表
-    const theme = useTheme();
-    const atPrint = useMedia('print');
-    const toast = useToast();
+    const cust模型选= 生成模型选.filter(({value,label}) => defaultFrameDyn[value]!==undefined);      //缩小列表
     const [type, setType] =useState<string|undefined>(defaultType);
     const [frame, setFrame] =useState<string>(defaultFrameDyn[type as keyof typeof defaultFrameDyn]);
     const [title, setTitle] =useState<string>(defTitle??'');
@@ -171,7 +185,7 @@ React.forwardRef((
         else if('Rec3ClRep2Cl'===type)   codes=genRec3ClRep2Cl(obj);
         else if('CmnTowerCrane'===type)   codes=genCmnTowerCrane(obj);
         setResult(codes);
-        toast({title: "完成！", subtitle: "可复制到工程中", intent: "success"});
+        toast.success("完成", {description: "可复制到工程中",})
     }, [type,title,setResult,desc, toast]);
     //每行标题 前面明显没用的字符剔除：
     const autoModifyTitle = React.useCallback((frame: string) => {
@@ -208,44 +222,71 @@ React.forwardRef((
     const getInpFilter = React.useCallback((par: any) => par, []);
     const {inp, setInp} = useItemInputControl({ref});
     const [isCopied, setCopied] = useClipboard(result || '');    //其它申请单关联了本申请单地情况。
-    if (atPrint) return null;
-    else return (
-        <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show} alone={alone}
-                             label={'快组织代码的生成'}>
+    return (
+        <CollapsibleFormSection title={'快组织代码的生成'} defaultOpen={show}>
             首先{`选择模型，当前是(${type})`} 》
-            <SelectPair value={type ?? ''} dlist={cust模型选}
-                        css={{          //"div:has(&)": { width: '-webkit-fill-available' },  是所有的父辈？
-                            "div:has(&).Select": { maxWidth: '40rem' },
-                        }}
-                        onChange={e => {
-                    setType(e.currentTarget.value || undefined);
-                    const newFrm = defaultFrameDyn[e.currentTarget.value as keyof typeof defaultFrameDyn];
-                    setFrame(newFrm);
-            }}/>
-            <Text variant="h6">输入构想配置，根据底层代码和类型来组织配置模型：</Text>
-            <TextArea value={frame || '{}'} rows={4} css={{fontSize: '1.15rem'}}
-                      onChange={e => setFrame(e.currentTarget.value)}/>
-            <div className="container" css={{position: 'relative'}}>
-                <Button size='xs' intent='warning' css={{position: 'absolute',right:'0.5rem',bottom: 0}}
-                        onPress={() => onVerifyJson(frame)}>校验</Button>
+            <div className="flex flex-col sm:flex-row gap-1 justify-center items-center mb-1 w-full">
+                <h4 className="text-sm font-medium">选择编辑行</h4>
+                <CommonSelect id={"selectedIndex"} value={type ?? ''} options={cust模型选}
+                          onValueChange={(value) => {
+                              if (value !== '') {
+                                  setType(value || '');
+                                  const newFrm = defaultFrameDyn[value as keyof typeof defaultFrameDyn];
+                                  setFrame(newFrm);
+                              }
+                          }}
+                          onClear={() => setType('')}
+                    className="w-full max-w-[20rem]" // 移动端自动收缩
+                />
             </div>
-            {errors && <>
-                <Text variant="h3"> 输入错误：</Text><Text variant="h5">{errors}</Text>
-            <br/></>}
-            输入正式报告的标题：
-            <Button intent='primary' onPress={() => autoModifyTitle(frame)}>修正标题首部</Button>
-            <TextArea value={title || ''} rows={6} onChange={e => setTitle(e.currentTarget.value)}/>
-            <Text variant="h6"
-                  css={{display: 'contents'}}>输入原始记录的叙述，规定每一行都必须尾随唯一一个的空行(作分割标记)：</Text>
-            <Button intent='primary' disabled={descSpld} onPress={() => autoSplitDesc(frame)}>分拆记录叙述</Button>
-            <TextArea value={desc || ''} rows={30} onChange={e => setDesc(e.currentTarget.value)}/>
-            <Button intent='success' onPress={() => doGenCode(frame)}>生成快速消费的代码</Button>
+            <h3>输入构想配置，根据底层代码和类型来组织配置模型：</h3>
+            <div className="relative h-full">
+                {/* Textarea 部分 */}
+                <div className="relative h-full">
+                    <Textarea
+                        value={frame || '{}'}
+                        rows={4}
+                        className="text-lg"
+                        onChange={e => setFrame(e.currentTarget.value)}
+                    />
+
+                    {/* 校验按钮定位到 Textarea 右下角 */}
+                    <div className="absolute right-2 bottom-[-1]">
+                        <Button
+                            onClick={() => onVerifyJson(frame)}
+                            className="px-2 py-1"
+                        >
+                            校验
+                        </Button>
+                    </div>
+                </div>
+                {errors && <>
+                    <span> 输入错误：</span><div>{errors}</div><br/>
+                </>}
+                {/* 标题和按钮行 */}
+                <div className="mt-4 flex items-center gap-4">
+                    <div>
+                        <span className="mr-2">输入正式报告的标题：</span>
+                        <Button
+                            onClick={() => autoModifyTitle(frame)}
+                            className="px-3 py-1"
+                        >
+                            修正标题首部
+                        </Button>
+                    </div>
+                </div>
+            </div>
+            <Textarea value={title || ''} rows={6} onChange={e => setTitle(e.currentTarget.value)}/>
+            <h3 className="contents">输入原始记录的叙述，规定每一行都必须尾随唯一一个的空行(作分割标记)：</h3>
+            <Button  disabled={descSpld} onClick={() => autoSplitDesc(frame)}>分拆记录叙述</Button>
+            <Textarea value={desc || ''} rows={30} onChange={e => setDesc(e.currentTarget.value)}/>
+            <Button  onClick={() => doGenCode(frame)}>生成快速消费的代码</Button>
             生成的代码：
-            <TextArea value={result || ''} readOnly={true} rows={18}/>
-            <Button intent='primary' disabled={isCopied}  onPress={async (e) => setCopied()
+            <Textarea value={result || ''} readOnly={true} rows={18}/>
+            <Button disabled={isCopied}  onClick={async (e) => setCopied()
             }>复制代码</Button>
-        </InspectRecordLayout>
-    );
+        </CollapsibleFormSection>
+    )
 });
 
 /**生成源代码： 适用性= 机电项目表， 新常态， 原始记录只有两栏目的。

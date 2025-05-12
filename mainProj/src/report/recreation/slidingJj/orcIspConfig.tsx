@@ -95,6 +95,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
         crtOmni('轨距误差',{third:'K2.12.4',},undefined,
             <div>(1)轨矩误差应符合设计文件及以下要求。侧轮在轨道内时轨距允许误差为-3mm～5mm,侧轮在轨道外时轨距允许误差为-5mm～3mm,木制轨道轨距允许误差为-5mm～6mm，
                 不同曲率半径轨道应当过渡平顺，保证车辆运行平稳。
+                <JumpMeasure tag={'Measure'} rep={rep}>八、观测数据及测量结果</JumpMeasure>
             </div>, {nos:'2.12.4',},false,'轨距误差'),
         crtOmni('轨平圆滑',{third:'K2.12.5',},undefined,
             <div>(1)轨道对接方式、轨道表面平整情况和曲线轨道过渡圆滑情况应符合要求，无明显冲击现象，轨道接口应当平滑过渡，轨道与车轮接触面的接口处高低差应当不大于1 mm。
@@ -164,6 +165,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
             </div>, {nos:'3.7',},false,'乘人部分油（气）缸保险装置'),
         crtOmni('车轮磨损',{span:1,seco:'K3.8※',},undefined,
             <div>(1)滑行车类设备主车轮、侧轮和底轮的磨损量应符合设计文件要求。滑行车车轮的磨损量应当小于原直径尺寸的2.5%，且主车轮最大磨损量不超过6mm，侧轮和底轮最大磨损量不超过4mm。
+                <JumpMeasure tag={'Measure2'} rep={rep}>八、观测数据及测量结果</JumpMeasure>
             </div>, {nos:'3.8',pre:'※',},false,'车轮磨损'),
     ],'3.6.1提升系统-3.8车轮磨损');
     //"sk":[ {"no":"4.1","r":0,"bs":[7],"ss":[1]}, 0,0,{"pr":"※","r":0},{"no":"4.6","r":0},0,{"pr":"※","r":0}
@@ -176,16 +178,17 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
             </div>, {nos:'4.2',},false,'低压配电系统接地型式'),
         crtOmni('接地要求',{seco:'K4.3',},undefined,
             <div>(1)电气设备中正常不带电的金属外壳、金属管槽、电缆金属保护层、互感器二次回路、变压器铁芯等应当可靠接地；低压配电系统保护接地电阻应当不大于10Ω。
+                <JumpMeasure tag={'Measure2'} rep={rep}>八、观测数据及测量结果</JumpMeasure>
             </div>, {nos:'4.3',},false,'接地要求和接地电阻'),
         crtOmni('绝缘电阻',{seco:'※K4.4',},undefined,
             <div>(1)电压有效值大于50V的带电回路与接地装置之间的绝缘电阻应当能保证用电安全，绝缘电阻应当不小于1MΩ。
-                <JumpMeasure tag={'Measure'} rep={rep}>八、观测数据及测量结果</JumpMeasure>
             </div>, {nos:'4.4',pre:'※',},false,'绝缘电阻'),
         crtOmni('轨绝缘',{seco:'K4.5',},undefined,
             <div>(1)路轨与导电轨之间的绝缘电阻应当不小于0.1MΩ。
             </div>, {nos:'4.5',},false,'路轨与导电轨间的绝缘电阻'),
         crtOmni('电机电流',{seco:'K4.6',},undefined,
             <div>(1)满载或者偏载运转平稳后，电动机电流值应符合设计文件及以下要求，在满载和设计允许偏载的情况下，连续工作的异步电机工作电流应当不大于电机的额定电流。
+                <JumpMeasure tag={'Measure2'} rep={rep}>八、观测数据及测量结果</JumpMeasure>
             </div>, {nos:'4.6',},false,'电动机电流'),
         crtOmni('控制系统',{seco:'K4.7',},undefined,
             <div>(1)控制系统应符合设计文件要求。
@@ -234,7 +237,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
         crtOmni('座席',{seco:'K5.2',},undefined,
             <div>(1)抽查测量相关尺寸，座席型式和尺寸应符合设计文件及以下要求。座席距地面最大高度5m以下时,座舱深度不小于550mm,座席靠背高度不小于300mm。座席距地面最大高度5m以上时,座舱深度
                 不小于800mm,座席靠背高度不小于400mm。当设有安全杠和安全带等设施时,可适当减少座舱深度。乘人座席宽度每人应不小于400mm，专供儿童乘坐的每人应不小于250mm。
-                <JumpMeasure tag={'Measure'} rep={rep}>八、观测数据及测量结果</JumpMeasure>
+                <JumpMeasure tag={'Measure2'} rep={rep}>八、观测数据及测量结果</JumpMeasure>
             </div>, {nos:'5.2',},false,'座席尺寸和型式'),
         crtOmni('尖角毛刺',{seco:'K5.3',},undefined,
             <div>(1)乘客可能触及之处应无有外露的锐边、尖角、毛刺和危险突出物等。

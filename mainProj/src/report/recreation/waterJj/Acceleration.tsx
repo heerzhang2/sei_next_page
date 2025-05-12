@@ -1,7 +1,6 @@
 import * as React from "react";
-import {CCellUnit, InternalItemProps, } from "../../common/base";
-import {calcAverageArrObj, } from "../../../common/tool";
-import {RepLink} from "../../common/base";
+import {CCellUnit, InternalItemProps,RepLink } from "@/report/common/base";
+import {calcAverageArrObj, } from "@/common/tool";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import {useFormFramework} from "@/report/hook/useFormFramework";
@@ -12,7 +11,6 @@ import {Input,} from "@/components/ui";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
-import {cn} from "@/lib/utils";
 
 export const config加速度=[ ['加空载','空载'],['加满载','满载'],['加偏载','偏载'],['加他况','其他载荷工况'] ];
 export const tail加速度= <span className="text-[0.75rem]">

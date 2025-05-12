@@ -889,6 +889,8 @@ const InspectRecordLayout0: React.FunctionComponent<InspectRecordLayoutProps> = 
 };
 
 //原来两阶段保存的：需要确认ref->inp:，准备改为直接操作setStorage，避免需要确认按钮。
+/*@deprecated
+* */
 export const InspectRecordLayout: React.FunctionComponent<InspectRecordLayoutProps> = ({
                                                                                            alone,
                                                                                            label,
@@ -1034,6 +1036,7 @@ export const CCellUnit = ({
 };
 /**目的：避免代码重复性质的字符串的出现太多了：   通常报告表格的点击转编辑器
  * @param ori 是原始记录页面的
+ * 注意DirectLink：主动把直接儿子的 div或span改成了 <a>标签。
  */
 export const RepLink= ( {rep, children, tag, ori} : {rep:any, children:React.ReactNode, tag:string,ori?:boolean}
 ) => {

@@ -91,7 +91,7 @@ export const config观测数据 : ((orc: any) => EachObserveConfig[][])=(orc: an
     ],
     [{check: '3.5.5', }],
 ] as EachObserveConfig[][]};
-//原本：5.2  【--】 5.4.1
+
 export const config观测数据2 : ((orc: any) => EachObserveConfig[][])=(orc: any)=>{
     return [
         [{n: '主轮原直', t: ['※K3.8','(1)',<>滑行车车轮的磨损量应当小于原直径尺寸的 2.5%，且主车轮最大磨损量不超过6mm，侧轮和底轮最大磨损量不超过4mm。</>],
@@ -172,23 +172,24 @@ export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
         fields["_tblFixed"]= storage["_tblFixed"]
         return fields
     }, [storage])
-    const doCheckNames = React.useCallback((rep: any) => {
+    const doCheckNames = React.useCallback((e,rep: any) => {
         const impressionismAs = setupItemAreaRoute({rep, noDefault: true});
         const result = assertNamesUnique([{value: rep?.tzFields}, {value: impressionismAs?.Item, type: 'impr'},
             {value: config设备概况, type:'esnt'}, {value:[...itemA结论,  ...itemA技术见证, ] },
-            {value: config观测数据({}), type:'mesB'},{value: config观测数据2(), type:'mesB'},
+            {value: config观测数据({}), type:'mesB'},{value: config观测数据2({}), type:'mesB'},
             {value: config主技术, type:'mesB'},
             {value:[ ...itemA应变应力, ...itemA加速, ] },
             {value:['unq','仪器表','检验条件','观备注', '主技备注' ]} ]);
             if(result) toast.success("完成", {description: "没冲突",})
             else toast.error("完成", {description: "冲突",})
+        e.preventDefault()
     }, [toast]);
     const contentRendererFactory = React.useCallback(
         (form: any) => {
         return <CardContent>
                 {process.env.NEXT_PUBLIC_APP_TEST==='true' && <div>
                     <h5>构建开发模板时的工具：校验模板的存储name冲突；</h5>
-                    <Button onClick={() => doCheckNames(rep)}>校验模板name唯一性</Button>
+                    <Button onClick={(e) => doCheckNames(e,rep)}>校验模板name唯一性</Button>
                     <FormField control={form.control} name={"_tblFixed"}
                         render={({ field }) => (
                             <FormItem className="pt-2 w-full break-inside-avoid">

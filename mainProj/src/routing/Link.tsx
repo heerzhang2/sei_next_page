@@ -166,7 +166,7 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
                 const element = one as React.ReactElement<any>
                 const originalClassName = element.props.className || ""
                 const visitedClass = isVisited ? "visited-link" : ""
-
+                //直接儿子中若是：div 和 span 标签被强制改成<a>标签了！ 有好处：状态栏可显示链接；还是保留该特性
                 // Create a wrapper with an actual <a> tag to leverage browser's native visited state
                 if (element.type === "span" || element.type === "div") {
                     return (
@@ -185,7 +185,6 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
                         </a>
                     )
                 }
-
                 // For other elements, use the original approach
                 return React.cloneElement(element, {
                     onClick: changeRoute,
