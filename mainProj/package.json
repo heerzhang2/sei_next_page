@@ -8,7 +8,7 @@
   "scripts": {
     "yarn": "yarn",
     "yarnAdd": "yarn add @types/hash.js --dev",
-    "v0dev/Vercel自带组件添加": "npx shadcn@latest add dropdown-menu  --overwrite",
+    "v0dev/Vercel自带组件添加": "npx shadcn@latest add alert  --overwrite",
     "dev正常": "next dev --turbopack -p 3765",
     "dev服务端调试": "next dev -p 3765",
     "build-alpha阶段": "next build --turbopack",

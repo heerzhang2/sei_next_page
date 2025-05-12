@@ -1,71 +1,50 @@
-'use client';
-import * as React from "react";
-import Link from "next/link";
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
-import { useAppState } from "@/action/AppState";
+"use client"
 
-// import { z } from "zod";
-// import { zodResolver } from '@hookform/resolvers/zod';
-// import { useForm } from 'react-hook-form';             =感觉是罗嗦了
-// const formSchema = z.object({
-//   name: z.string().min(2, 'Name must be at least 2 characters'),
-//   email: z.string().email('Invalid email address'),
-//   password: z.string().min(6, 'Password must be at least 6 characters'),
-//   confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
-// }).refine((data) => data.password === data.confirmPassword, {
-//   message: "Passwords must match",
-//   path: ['confirmPassword'],
-// });
-// export default function LoginForm() {
-//   const form = useForm<z.infer<typeof FormSchema>>({       =感觉可以学习的点？
-//     resolver: zodResolver(FormSchema),
-//     defaultValues: {email: '', password: '',},
-//   });
-// async function onSubmit(data: z.infer<typeof FormSchema>) {const res = await signIn('credentials', {}
-
+import * as React from "react"
+import Link from "next/link"
+import { useActionState, useEffect, useRef, useState } from "react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { useAppState } from "@/action/AppState"
 
 //密码hash 防止在服务后台泄密
 // var sha256 = require('hash.js/lib/hash/sha/256');
-/*登录表单；却在浏览器端运行的。
-* */
-
-
 export default function SignInForm() {
-    const router = useRouter();
-    const { setUserEmail } = useAppState();
+    const router = useRouter()
+    const { setUserEmail } = useAppState()
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [username, setUsername] = useState("")
 
-    const [formData, setFormData] = useState({ email: '', password: '' });
-    const [error, setError] = useState("");
-    const usernameRef = useRef<HTMLInputElement>(null);
-
-    // 自动聚焦用户名输入框
-    useEffect(() => {
-        const timeout = setTimeout(() => usernameRef.current?.focus(), 100);
-        return () => clearTimeout(timeout);
-    }, []);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.currentTarget;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const response = await signIn('credentials', {
-            ...formData,
-            redirect: false
-        });
-
+    const signInAction = async (_prevState: string | undefined, formData: FormData) => {
+        const data = formData
+        console.log("signInAction录入formData:{}", formData)
+        const response = await signIn("credentials", {
+            username: "herzhang",
+            email: "herzhang@163.com", //data.email,
+            password: "768768", //data.password,
+            redirect: true,
+        })
         if (!response?.error) {
-            setUserEmail(formData.email);
-            router.push('/user');
+            window.location.reload()
+            router.push("/user")
+            window.location.href = "/user"
         } else {
-            setError("登录失败，请检查您的账户信息");
+            window.location.href = "/"
         }
-    };
+    }
+    const [response, action, isPending] = useActionState(signInAction, undefined)
 
+    const usernameRef = useRef<HTMLInputElement>(null)
+    useEffect(() => {
+        const timeout = setTimeout(() => usernameRef.current?.focus(), 100)
+        return () => clearTimeout(timeout)
+    }, [])
+    const [error, setError] = React.useState("")
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 bg-white p-6 rounded-xl shadow-md">
@@ -84,54 +63,45 @@ export default function SignInForm() {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                <form action={action} className="mt-8 space-y-6">
                     <div className="rounded-md shadow-sm -space-y-px">
                         <div className="mb-4">
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                邮箱
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    placeholder="请输入邮箱地址"
-                                />
-                            </div>
+                            <Label htmlFor="username">账户</Label>
+                            <Input
+                                id="username"
+                                ref={usernameRef}
+                                required
+                                onChange={(e) => setUsername(e.currentTarget.value)}
+                                value={username}
+                                type="text"
+                                placeholder="账户"
+                                className="mt-1"
+                            />
                         </div>
-
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                密码
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={handleInputChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    placeholder="请输入密码"
-                                    minLength={6}
-                                />
-                            </div>
+                        <div className="mt-4">
+                            <Label htmlFor="password">密码</Label>
+                            <Input
+                                id="password"
+                                required
+                                onChange={(e) => setPassword(e.currentTarget.value)}
+                                value={password}
+                                type="password"
+                                placeholder="密码最少6位的复杂"
+                                autoComplete="off"
+                                className="mt-1"
+                            />
                         </div>
                     </div>
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={!formData.email || !formData.password}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
+                    {error && (
+                        <Alert variant="destructive" className="mt-4">
+                            <AlertTitle>报错</AlertTitle>
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
+                    <div className="flex justify-end">
+                        <Button disabled={!username || !password} className="w-full mt-4" type="submit">
                             登录
-                        </button>
+                        </Button>
                     </div>
                 </form>
 
@@ -140,7 +110,24 @@ export default function SignInForm() {
                         没有账户？立即注册
                     </Link>
                 </div>
+                <div className="p-6 border-t border-gray-200">
+                    <div className="mt-4">
+                        <Link href="/mainProj/public" className="text-blue-600 hover:underline">
+                            ⬅️ Go back home
+                        </Link>
+                    </div>
+                    <div className="mt-4">
+                        <Link href="/user" className="text-blue-600 hover:underline">
+                            ⬅️ Go 不能尼克酸y用户
+                        </Link>
+                    </div>
+                    <div className="mt-4">
+                        <Link href="/profile" className="text-blue-600 hover:underline">
+                            ⬅️ Profile y用户
+                        </Link>
+                    </div>
+                </div>
             </div>
         </div>
-    );
+    )
 }

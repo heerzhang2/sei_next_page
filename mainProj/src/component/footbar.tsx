@@ -1,20 +1,8 @@
-/** @jsxImportSource @emotion/react */
 'use client';
 
 // import { auth } from '@/app/auth';
 import { UserNav } from './user-nav';
 import { SessionProvider } from 'next-auth/react';
-import { Global } from "@emotion/react";
-import {
-    Button, ButtonRefComp, DarkMode, DarkRefMode,
-    IconArrowRight, IconChevronDown,
-    IconKey,
-    LightMode, LightRefMode, MenuItem, MenuList,
-    Navbar,
-    Text,
-    Toolbar,
-    useTheme, MainMenuBar, IconTruck, DdMenu, DdMenuItem,
-} from "customize-easy-ui-component";
 import {footbarQuery} from "./__generated__/footbarQuery.graphql";
 // import {useRouter} from "next/navigation";
 import {Suspense, useContext, } from "react";

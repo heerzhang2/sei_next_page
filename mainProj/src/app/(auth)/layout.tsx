@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: "Relay Streaming SSR ✨",
 };
 
-const FootBar = lazy(() => import("@/component/footbar"));
+// const FootBar = lazy(() => import("@/component/footbar"));
 
 /*只提供静态化（保障SessionProvider不提供客户端user也能Build的情形），不考虑鉴别用户context认证才能使用的。
 水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
