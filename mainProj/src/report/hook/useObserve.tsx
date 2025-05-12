@@ -4,15 +4,7 @@ import {MeasurementCline} from "../common/measure";
 import {convertMeasureType, floatInterception} from "../../common/tool";
 import {useStorage} from "../StorageContext";
 import {z} from "zod";
-import {
-    Card,
-    CardContent,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage, Textarea
-} from "@/components/ui";
+import {Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
 import {CollapsibleFormSection, BlobInputList, FormSelectField,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {useFormFramework} from "@/report/hook/useFormFramework";

@@ -176,7 +176,7 @@ export const 测量允许检测 = ({
     const [render1,] = useObserveTable({rep, orc, config: config, tag, allowableV: true});
     return <>
         <PrintReserveLeast reserve="7rem"
-                           title={<h2 className="text-2xl mt-4">{label}</h2>}
+                title={<h2 className="text-2xl mt-4">{label}</h2>}
         >
             <FlexibleTable columnWidths={fixed}>
                 <TableHeader>
@@ -211,7 +211,7 @@ export const 测量允许检测 = ({
 //有备注列的： 拆解成2个部分编辑器的。
 export const 测量备注两半 = ({
                                  orc, rep, label, config,
-                                 fixed = ["2.8%", "6.8%", "3.3%", "9%", "%", "10.5%", "5%", "9%", "8%", "6.1%", "10%"]
+                                 fixed = ["2.8%", "6.2%", "3.3%", "9%", "%", "12%", "5%", "9%", "8%", "6.1%", "10%"]
                                  , children, config2, mem
                              }
                              : {
@@ -222,8 +222,8 @@ export const 测量备注两半 = ({
     const [render1, seq1e] = useObserveTable({rep, orc, config: config, memoF: true, tag: 'Measure'});
     const [render2,] = useObserveTable({rep, orc, config: config2, memoF: true, seqOfs: seq1e, tag: 'Measure2'});
     return <>
-        <PrintReserveLeast reserve="8rem"
-                           title={<h2 className="text-2xl mt-4">{label}</h2>}
+        <PrintReserveLeast reserve="7rem"
+             title={<h2 className="text-2xl mt-4">{label}</h2>}
         >
             <FlexibleTable columnWidths={fixed}>
                 <TableHeader>

@@ -13,11 +13,11 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 
 export const config加速度=[ ['加空载','空载'],['加满载','满载'],['加偏载','偏载'],['加他况','其他载荷工况'] ];
-export const tail加速度= <span className="text-[0.75rem]">
+export const tail加速度=<div className="text-[0.75rem] leading-[1.3]">
     注：<br/>
     （1）设计加速度未涉及的工况无需检测；<br/>
     （2）设计加速度在不同乘坐位置之间有明显差异时，应选择不少于三处位置进行测试，在本表中备注栏中填写其余位置说明及测试结果且对加速度区域进行综合判定。
-</span>;
+</div>;
 
 interface Props  extends InternalItemProps{
     sseq: number;

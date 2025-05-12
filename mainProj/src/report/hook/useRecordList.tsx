@@ -1,14 +1,16 @@
 "use client"
 import * as React from "react";
-import { mergeEditorItemSubRefs} from "../tools";
+import { useStorage} from "../StorageContext";
 import {useThrottle} from "../../hooks/useHelpers";
 import {useSubNestAcion} from "../common/helper";
-import { useStorage} from "../StorageContext";
 import {EditorAreaConfig, } from "../common/eHelper";
 import {useSubRepController} from "./useSubRepController";
 import {Button} from "@/components/ui";
+import { mergeEditorItemSubRefs} from "../tools";
+
 
 /**起重监督检验的 范本； 支持分项报告的原始记录
+ * ref: useImperativeHandle， throttledSetDoConfirmModify， doConfirm，outCome，refCount 都已经作废：
  * */
 export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList: EditorAreaConfig[],
                               modAction: string, verId: string, nestMdConfig?: string, titleRender?: (store: any) => React.ReactNode
@@ -20,16 +22,16 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     // const rskey= '_'+nestMdConfig+'_'+redId;  带分项报告的机制：
     const { [iDskey]: SubRepIds }=storage;
     //印象派的项目列表需对应Ref=[...recordPrintList.length, 后面的]  ？分项报告有redoId重复的倍数。
-    let editorRefCount=recordPrintList.length;      //+maxItemsSeq 伸展开的电梯item1.1列表编辑区域数量;
+    // let editorRefCount=recordPrintList.length;      //+maxItemsSeq 伸展开的电梯item1.1列表编辑区域数量;
     //【奇怪】有时重启才会报错：违反hook规则？useProjectListAs因为是hook函数不能放在三元表达式中，但是参数就不管了。
-    const refCount=(action==='ALL')? editorRefCount*(nestMdConfig? (SubRepIds?.length||1) : 1)  : 0;
+    // const refCount=(action==='ALL')? editorRefCount*(nestMdConfig? (SubRepIds?.length||1) : 1)  : 0;
     // const clRefs =useProjectListAs({count: refCount } );
     //同名字的字段：清除／覆盖，编辑器未定义的字段数据可保留。[分项_2]{}如何正常合并？只有ALL printAll才会用到这的。
-    const outCome=(action==='ALL')? (
-            nestMdConfig? mergeEditorItemSubRefs([], SubRepIds, nestMdConfig!, editorRefCount,storage, redId)
-                : storage
-        )
-        : null;
+    // const outCome=(action==='ALL')? (
+    //         nestMdConfig? mergeEditorItemSubRefs([], SubRepIds, nestMdConfig!, editorRefCount,storage, redId)
+    //             : storage
+    //     )
+    //     : null;
     //旧模式两次暴露传递，返回给爷辈组件。
     const [doConfirmModify, setDoConfirmModify] = React.useState(false);
     //这个用在：框架右边页面菜单上"全部项目一起确认" 点击收集数据setDoConfirmModify=。然后底下的副作用React.useEffect(自动收集存储。”确认“后再保存。当一个区块不允许点击因ref空的!
@@ -38,12 +40,12 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     }), [setDoConfirmModify, action] );
     const {doFunc:throttledSetDoConfirmModify, ready} = useThrottle(setDoConfirmModify,1500);
     //点按钮后outCome先要render一次获得最新值；必须从false到true的变化才能触发执行。 true->true不能执行的。 useLayoutEffect
-    React.useEffect(() => {
-        if(doConfirmModify){
-            setStorage({...storage, ...outCome});
-            setDoConfirmModify(false);
-        }
-    }, [doConfirmModify, outCome, storage, setStorage] );
+    // React.useEffect(() => {
+    //     if(doConfirmModify){
+    //         setStorage({...storage, ...outCome});
+    //         setDoConfirmModify(false);
+    //     }
+    // }, [doConfirmModify, outCome, storage, setStorage] );
 
     const {view} =useSubRepController(nestMdConfig!, titleRender!); //callback: (store: any) => React.ReactNode
     // const [refMyLineC,widthMyLinec]= useReferenceWidth();
@@ -163,23 +165,12 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
             }
             return  null;
         }
-        ,[action, rep, SubRepIds,nestMdConfig,redId, verId,recordPrintList,editorRefCount, view]);
+        ,[action, rep, SubRepIds,nestMdConfig,redId, verId,recordPrintList,view]);
 
     const list=(
      <div id="allOrgEdt">
          {recordList}
-         { (action==='ALL' || action==='printAll') &&
-             <Button size="lg" disabled ={!ready}
-                     onClick={() =>{
-                         //按钮“全部已编辑项目一起确认”必须使用ref切配对好才有效的。
-                         throttledSetDoConfirmModify!(true);
-                     }
-                     }>
-                 全部已编辑项目一起确认
-             </Button>
-         }
      </div>
   );
-
   return { list };
 }

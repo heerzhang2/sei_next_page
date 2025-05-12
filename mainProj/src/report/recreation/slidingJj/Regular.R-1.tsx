@@ -5,7 +5,7 @@ import {useSearchParams} from "next/navigation"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
-import type { ReportViewProps } from "@/report/common/base"
+import {ReportViewProps, TitleUpdateRep} from "@/report/common/base"
 import { 末尾链接, 落款单位地址 } from "@/report/common/rarelyVary"
 import type { Column_Setting } from "@/report/common/useFormatOmni"
 import { useOfficialOmni } from "@/report/common/useOfficialOmni"
@@ -27,6 +27,7 @@ export const ReportView = ({ rep }: any) => {
         window.print()
     }
     return <>
+        <TitleUpdateRep code={storage?.eqpcod} original={original}/>
         <Component source={storage} rep={rep}/>
         {末尾链接({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,toPDF})}
     </>
@@ -98,12 +99,10 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                           </>}
                 >
                     <FlexibleTable className="border-collapse"
-                                   columnWidths={["3.5%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "9.8%"]}>
+                                   columnWidths={["3.5%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "10.9%"]}>
                         <TableHeader>
                             <TableRow className={"text-sm"}>
-                                <CCell id={"T5-1"}>
-                                    <span className="text-[0.7rem]">序号</span>
-                                </CCell>
+                                <CCell id={"T5-1"} className="text-[0.7rem]">序号</CCell>
                                 <CCell colSpan={5}>检验项目及内容</CCell>
                                 <CCell>
                                     <span className="text-[0.8rem]">检验结果</span>
@@ -124,19 +123,19 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
             </div>
             <div>
                 <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument?original=1#Instrument`}>
-                    <h4 className="print:hidden">
+                    <h3 className="print:hidden">
                         主要测量设备性能检查
-                    </h4>
+                    </h3>
                 </Link>
                 <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
-                    <h4  className="print:hidden">
+                    <h3  className="print:hidden">
                         记事 、 备注
-                    </h4>
+                    </h3>
                 </Link>
                 <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition#SiteCondition`}>
-                    <h4 id={"SiteCondition"}  className="print:hidden">
+                    <h3 id={"SiteCondition"}  className="print:hidden">
                         附录：现场检验条件确认
-                    </h4>
+                    </h3>
                 </Link>
             </div>
         </React.Fragment>

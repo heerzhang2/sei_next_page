@@ -57,8 +57,8 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
     </>;
     const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
     //也可考虑配上 onConfirm,
-    const [nestRendererFactory]=useTableEdit({ config: config仪器表, table:'仪器表',externalData: storage,
-                headview,defFixedLay:true, tailview
+    const [nestRendererFactory]=useTableEdit({config: config仪器表, table:'仪器表',externalData: storage,
+            defFixedLay:true, headview,tailview
     });
     const contentRendererFactory = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {

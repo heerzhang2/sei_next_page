@@ -81,7 +81,7 @@ export const genCBoOmitAl = (name: string, unit: string, title?: any) => {
             },
             view: () => {
                 return [false, <>
-                    <CCell>{orc?.[name + 'o']}</CCell>
+                    <CCell className="text-sm">{orc?.[name + 'o']}</CCell>
                 </>]
             },
         }

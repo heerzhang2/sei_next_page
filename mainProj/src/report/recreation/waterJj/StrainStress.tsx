@@ -1,6 +1,5 @@
 import * as React from "react";
 import {CCellUnit, InternalItemProps, RepLink,} from "@/report/common/base";
-import {useTableEditor} from "@/report/hook/useRepTableEditor";
 import {useStorage} from "@/report/StorageContext";
 import {useUppyUpload} from "@/report/hook/useUppyUpload";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
@@ -10,14 +9,18 @@ import {z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {ImageComponent} from "@/components/shub";
-import {Each_ZdSetting} from "@/report/hook/use-table-edit";
+import {Each_ZdSetting, useTableEdit} from "@/report/hook/use-table-edit";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
+import {useCallback} from "react";
+import type {UseFormReturn} from "react-hook-form";
 
 
-export const tail应变= <span className="text-[0.75rem]">
-    注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
+export const tail应变 = (
+    <div className="text-[0.75rem] leading-[1.3]">
+        注： 1、所测应力值为试验载荷产生的应力，不含自重产生的应力。<br/>
     2、“+”表示测点位置结构受拉，“-”表示测点位置结构受压。
-</span>;
+  </div>
+);
 
 export const config测点表=[['应变值','μ',100,{u:'με'}],['应力值','M',100,{u:'MPa'}],
 ] as Each_ZdSetting[];
@@ -69,8 +72,8 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         const headview=<div>
             测试点:按照一行2字段录入： 应变值（με）, 应力值（MPa）;
         </div>;
-
-        const [nestRendererFactory]=useTableEditor({headview, config: config测点表, table:'测点表',defFixedLay:true});
+        const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
+        const [nestRendererFactory]=useTableEdit({config: config测点表,onConfirm,table:'测点表',defFixedLay:true,externalData: storage,headview, });
         const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
             setStorage({...storage, '_FILE_测点': upfile});
             !modified && setModified(true);
@@ -207,7 +210,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
             },
             [children, nestRendererFactory],
         )
-    const {render,} = useFormFramework({schema, defaultValues, contentRendererFactory, arrayFields, rep})
+    const {render,handleConfirm} = useFormFramework({schema, defaultValues, contentRendererFactory, arrayFields, rep})
     return <CollapsibleFormSection title={label!} defaultOpen={show}>
         {render()}
     </CollapsibleFormSection>;
@@ -283,7 +286,7 @@ export const StrainStressVw = ({orc, rep, label, sensit}: { orc: any, rep: any, 
             <TableBody>
                 <RepLink ori rep={rep} tag={'StrainStress'}>
                     <TableRow>
-                        <TableCell colSpan={2} className="p-0 @print:h-auto">
+                        <TableCell colSpan={2} className="p-0 @print:h-auto whitespace-pre-wrap">
                             测点示意图：&nbsp;{orc?.测点示意}
                             <div className="flex justify-around items-center my-1">
                                 {orc?._FILE_测点?.url && (

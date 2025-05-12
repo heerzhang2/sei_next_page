@@ -1,17 +1,17 @@
 "use client"
 import * as React from "react";
 import Uppy, {State} from "@uppy/core";
+import {DashboardModal } from "@uppy/react";
 import Tus from "@uppy/tus";
 // import Webcam from "@uppy/webcam";
 import useOssDeleteFileMutation from "../../hooks/useOssDeleteFileMutation";
-import {Dashboard} from "@uppy/react";
-import '@uppy/core/dist/style.min.css';
-import '@uppy/dashboard/dist/style.min.css';
-import '@uppy/webcam/dist/style.min.css';
+// import '@uppy/core/dist/style.min.css';
+// import '@uppy/dashboard/dist/style.min.css';
+// import '@uppy/webcam/dist/style.min.css';
 import { getAuthToken, refreshAuthToken } from '@/lib/auth-token';
 import {Button} from "@/components/ui";
-import Image from "next/image"
-import {ImageComponent} from "@/components/shub";
+// import Image from "next/image"
+// import {ImageComponent} from "@/components/shub";
 import {ImageComponentNatural} from "@/components/natural";
 
 /**【uppy复用】
@@ -155,10 +155,19 @@ export function useUppyUpload({ repId, storeObj, maxFile=1,liveDays=2,maxSize=3,
     //     delOssFileFunc(url, i, 'rep', repId)
     // }
     // Images with "fill" always use position absolute - it cannot be modified.
-    //单一文件情况的：
+    //单一文件情况的：<DashboardModal
+    //         uppy={uppy}
+    //         open={open}
+    //         onRequestClose={this.handleClose}
+    //       />
+    const handleClose = () => {
+        setOpenUppy(!openUppy);
+        // e.preventDefault()
+    }
+
     if(1===maxFile) {
         const onlyOne=(<>
-        {openUppy?  <Dashboard uppy={uppy} plugins={['Webcam']} />
+        {openUppy?  <DashboardModal uppy={uppy} open={openUppy} plugins={['Webcam']} onRequestClose={handleClose}/>
             :
             storeObj1?.url?
                 <ImageComponentNatural src={`${process.env.NEXT_PUBLIC_OSS_ENDP}${storeObj1.url}` || "/placeholder.svg"}

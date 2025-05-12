@@ -6,6 +6,10 @@ export const tail主技= <div className={"text-[0.75rem]"}>
 </div>;
 
 export const config主技术=[
+    [{n: '行速1', t: ['运行速度',], x:'第1次', u: 'm/min', c: '四', d: 1, cbo:genCBoAvAl(['行速1','行速2','行速3'],1,'m/min','运行速度> 第1次')},
+        {n: '行速2', t: [undefined,], x:'第2次', c: '四', d: 1, cbo:genCBoOmitAl('行速2','m/min','运行速度> 第2次')},
+        {n: '行速3', t: [undefined,], x:'第3次', c: '四', d: 1, cbo:genCBoOmitAl('行速3','m/min','运行速度> 第3次')},
+    ],
     [{n: '行高1', t: ['运行高度',], x:'第1次', u: 'm', c: '四', d: 1, cbo:genCBoAvAl(['行高1','行高2','行高3'],1,'m','运行高度> 第1次')},
         {n: '行高2', t: [undefined,], x:'第2次', c: '四', d: 1, cbo:genCBoOmitAl('行高2','m','运行高度> 第2次')},
         {n: '行高3', t: [undefined,], x:'第3次', c: '四', d: 1, cbo:genCBoOmitAl('行高3','m','运行高度> 第3次')},

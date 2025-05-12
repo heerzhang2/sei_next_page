@@ -243,7 +243,7 @@ React.forwardRef((
             <div className="relative h-full">
                 {/* Textarea 部分 */}
                 <div className="relative h-full">
-                    <Textarea
+                    <Textarea name="frame"
                         value={frame || '{}'}
                         rows={4}
                         className="text-lg"
@@ -276,13 +276,13 @@ React.forwardRef((
                     </div>
                 </div>
             </div>
-            <Textarea value={title || ''} rows={6} onChange={e => setTitle(e.currentTarget.value)}/>
+            <Textarea name="title" value={title || ''} rows={6} onChange={e => setTitle(e.currentTarget.value)}/>
             <h3 className="contents">输入原始记录的叙述，规定每一行都必须尾随唯一一个的空行(作分割标记)：</h3>
             <Button  disabled={descSpld} onClick={() => autoSplitDesc(frame)}>分拆记录叙述</Button>
-            <Textarea value={desc || ''} rows={30} onChange={e => setDesc(e.currentTarget.value)}/>
+            <Textarea name="desc" value={desc || ''} rows={30} onChange={e => setDesc(e.currentTarget.value)}/>
             <Button  onClick={() => doGenCode(frame)}>生成快速消费的代码</Button>
             生成的代码：
-            <Textarea value={result || ''} readOnly={true} rows={18}/>
+            <Textarea id="GenCode" value={result || ''} readOnly={true} rows={18}/>
             <Button disabled={isCopied}  onClick={async (e) => setCopied()
             }>复制代码</Button>
         </CollapsibleFormSection>

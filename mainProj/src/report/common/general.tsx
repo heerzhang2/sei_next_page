@@ -8,6 +8,7 @@ import RoutingContext from "../../routing/RoutingContext";
 //不能用！ import { useRouter } from 'next/router'
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'
+import {cn} from "@/lib/utils";
 
 /**不合格表
  * @param rep 报告relay对象
@@ -174,8 +175,8 @@ export const UnqualifiedIspTable = ({
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-gray-700">
                             {titles.map((title, index) => (
-                                //删除 ”last:border-r-0“
-                                <CCell key={index} className="text-sm border-r border-gray-700">
+                                //第一个项目：默认序号情形的
+                                <CCell key={index} className={cn("border-r border-gray-700", index===0? 'text-xs':'text-sm')}>
                                     {title}
                                 </CCell>
                             ))}
@@ -287,7 +288,8 @@ type JumpMeasureProps = {
     tag: string
 }
 
-// Add print-specific styling to ensure normal colors when printing
+/**打印时不显示
+* */
 export const JumpMeasure = ({ children, rep, tag }: JumpMeasureProps) => {
     return (
        <DirectLink
@@ -297,12 +299,9 @@ export const JumpMeasure = ({ children, rep, tag }: JumpMeasureProps) => {
           <span className="text-h4 font-semibold transition-colors group-hover:text-primary-600 print:text-foreground print:hidden">
             {children}
           </span>
-            {/* Print-specific version without hover effects */}
-          <span className="hidden print:inline print:text-foreground">{children}</span>
        </DirectLink>
     )
 }
-
 
 type JumpOrgMemoProps = {
   children: React.ReactNode

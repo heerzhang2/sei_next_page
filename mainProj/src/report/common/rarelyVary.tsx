@@ -225,12 +225,6 @@ export const 末尾链接 = ({ template, verId, repId, rep, toPDF }: {
           </Link>
           <div className="text-center space-y-3 md:space-y-0 md:space-x-4 md:flex md:justify-around md:flex-wrap">
               <div className="mx-auto">
-                  <Link href={`/rep/${repId}/${template}/${verId}/printAll`}
-                        className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
-                      看完整原始记录
-                  </Link>
-              </div>
-              <div className="mx-auto">
                   <Link href={`/report/flowSelect/${template}/${repId}`}
                         className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
                       流转(流程)
@@ -239,7 +233,7 @@ export const 末尾链接 = ({ template, verId, repId, rep, toPDF }: {
               <div className="mx-auto">
                   {print?
                       <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
-                          回首页
+                        回首页
                       </Link>
                       :
                       <Link href={`/rep/${repId}/${template}/${verId}/?print=1${original?'&original=1':''}`}
@@ -251,7 +245,7 @@ export const 末尾链接 = ({ template, verId, repId, rep, toPDF }: {
               <div className="mx-auto">
                   <Link href={`/rep/${repId}/${template}/${verId}/ALL`}
                         className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
-                      编辑原始记录
+                     原始记录列表
                   </Link>
               </div>
           </div>

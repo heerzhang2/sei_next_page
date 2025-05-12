@@ -53,17 +53,17 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                 <RepLink rep={rep} ori tag="ALL">
                     <h2 className={`text-2xl`}>三、检验记录</h2>
                 </RepLink>
-                <FlexibleTable columnWidths={ ["2%", "3.8%", "4.3%", "4.3%", "1%", "7%", "%","4.5%", "4.3%","4.1%","9.1%"] }>
+                <FlexibleTable columnWidths={ ["2%", "3.2%", "3.8%", "4%", "1%", "7%", "%","4.5%", "4.3%","4.1%","10.9%"] }>
                     <TableHeader>
                         <RepLink rep={rep} ori tag="ALL">
                             <TableRow>
-                                <CCell className="print:whitespace-nowrap"><span className="text-xs">序号</span></CCell>
+                                <CCell className="text-xs">序号</CCell>
                                 <CCell colSpan={5}>检验项目</CCell>
                                 <CCell>检验内容和要求</CCell>
-                                <CCell><span className="text-[0.7rem]">检验结果</span></CCell>
+                                <CCell><span className="text-sm">检验结果</span></CCell>
                                 <CCell>结论</CCell>
                                 <CCell>备注</CCell>
-                                <CCell><span className="text-[0.7rem]">存在问题描述</span></CCell>
+                                <CCell><span className="text-sm">存在问题描述</span></CCell>
                             </TableRow>
                         </RepLink>
                     </TableHeader>
@@ -121,7 +121,8 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                 </div>
             </RepLink>
             {测量备注两半({orc, rep, config:config观测数据(orc),config2:config观测数据2(orc),mem:'观备注',label:'八、观测数据及测量结果记录',children:tail观测})}
-            {测量允许检测({orc, rep, config:config主技术,tag:'MainTechnical',mem:'主技备注',label:'附录A K7.5 主要技术参数测试',children:tail主技})}
+            {测量允许检测({orc, rep, config:config主技术,tag:'MainTechnical',mem:'主技备注',fixed:["4.1%", "16%", "9%", "6%", "%", "19%", "9%", "10%", "9%", "11%", "10%"],
+                label:'附录A K7.5 主要技术参数测试',children:tail主技})}
             <StrainStressVw orc={orc} rep={rep} sensit label={'附录B K7.6应力测试记录'}/>
             <AccelerationVw orc={orc} rep={rep}  stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>
             {常用现场条件({orc, rep, config: tItems现场,dcln:5,label:'附录D：现场检验条件确认'})}
