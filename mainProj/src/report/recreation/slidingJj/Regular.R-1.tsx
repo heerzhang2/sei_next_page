@@ -5,7 +5,7 @@ import {useSearchParams} from "next/navigation"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
-import {ReportViewProps, TitleUpdateRep} from "@/report/common/base"
+import {ReportViewProps, RepTitleUpdate} from "@/report/common/base"
 import { 末尾链接, 落款单位地址 } from "@/report/common/rarelyVary"
 import type { Column_Setting } from "@/report/common/useFormatOmni"
 import { useOfficialOmni } from "@/report/common/useOfficialOmni"
@@ -27,7 +27,7 @@ export const ReportView = ({ rep }: any) => {
         window.print()
     }
     return <>
-        <TitleUpdateRep code={storage?.eqpcod} original={original}/>
+        <RepTitleUpdate code={storage?.eqpcod} original={original}/>
         <Component source={storage} rep={rep}/>
         {末尾链接({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,toPDF})}
     </>

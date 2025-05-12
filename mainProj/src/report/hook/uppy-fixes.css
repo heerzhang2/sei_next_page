@@ -1,0 +1,39 @@
+/* Fix for Uppy Dashboard styles that get overridden by Tailwind */
+.uppy-Dashboard-AddFiles-title {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* Ensure other critical Uppy styles aren't overridden */
+.uppy-Dashboard-inner {
+  position: relative !important;
+}
+
+.uppy-Dashboard-AddFiles {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+
+/* Preserve Uppy's z-index layering */
+.uppy-Dashboard-files {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Ensure Uppy modal appears above other content */
+.uppy-Dashboard--modal {
+  z-index: 1001 !important;
+}
+
+/* Force Uppy styles to take precedence over Tailwind */
+.uppy-Dashboard * {
+  box-sizing: border-box !important;
+}

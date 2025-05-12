@@ -1,13 +1,13 @@
 "use client"
-import ReportLayout from "@/component/rep/reportLayout";
-import {contentItems, ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 import React from "react";
 import {useQuery} from "@urql/next";
+import ReportLayout from "@/component/rep/reportLayout";
 import {ReportQuery} from "@/component/rep/report-data";
 import PageSectionOrientation from "@/components/page-section-orientation";
 import Report from "@/component/rep/report";
 import {useParams, useSearchParams} from "next/navigation";
 import {EditControlProvider} from "@/component/rep/editControl-provider";
+import {contentItems, ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 
 export default function Layout({children}: Readonly<{children: React.ReactNode}>) {
     const { repId, action } = useParams()

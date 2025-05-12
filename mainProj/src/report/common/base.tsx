@@ -1051,7 +1051,7 @@ export const RepLink= ( {rep, children, tag, ori} : {rep:any, children:React.Rea
 };
 /*修改打印的默认文件名
 * */
-export function TitleUpdateRep({code,original}: {code:string,original?:boolean}) {
+export function RepTitleUpdate({code,original}: {code:string,original?:boolean}) {
     React.useEffect(() => {
         document.title = `${code}-${original? '原始记录':'报告'}`
     }, [code, original])

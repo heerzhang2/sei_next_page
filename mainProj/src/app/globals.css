@@ -159,6 +159,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Prevent Tailwind from resetting styles for Uppy components */
+  .uppy-Root *,
+  .uppy-Root *::before,
+  .uppy-Root *::after {
+    box-sizing: border-box;
+  }
 }
 
 /*原始记录跨越2页3页的行打印*/

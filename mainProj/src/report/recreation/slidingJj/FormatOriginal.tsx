@@ -57,10 +57,10 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     <TableHeader>
                         <RepLink rep={rep} ori tag="ALL">
                             <TableRow>
-                                <CCell className="text-xs">序号</CCell>
+                                <CCell className="text-xs leading-[1] p-0">序号</CCell>
                                 <CCell colSpan={5}>检验项目</CCell>
                                 <CCell>检验内容和要求</CCell>
-                                <CCell><span className="text-sm">检验结果</span></CCell>
+                                <CCell className="text-xs leading-[1] p-0">检验结果</CCell>
                                 <CCell>结论</CCell>
                                 <CCell>备注</CCell>
                                 <CCell><span className="text-sm">存在问题描述</span></CCell>
