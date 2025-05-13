@@ -135,7 +135,10 @@ export default function ReportData({
 //     )
 // }
 
-
+export interface ReportParams {
+    repId: string
+    action?: string
+}
 
 /*
 最有可能的未来是，人工智能成为 Next.js 生态系统中的一个强大工具，而非完全取代它。开发者将使用人工智能来加速开发，同时依赖 Next.js 提供结构、优化和生产就绪的功能。

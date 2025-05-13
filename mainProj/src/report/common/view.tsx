@@ -30,7 +30,7 @@ export const 设备概况页 = ({orc, rep, config, fixed = ["4.2%", "12.1%", "39
  * 允许设置 children:' '；
  * @param dcln 布局日期列数正常=5；或3;
  * */
-export const 常用现场条件 = ({orc, rep, config, label = '附录B：现场检验条件确认', children, dcln = 5, jyt = '检验'}:
+export const 常用现场条件 = ({orc, rep, config, label = '附录B：现场检验条件确认', children, dcln = 5, jyt = '检验',fixed}:
                              {
                                  orc: any,
                                  rep: any,
@@ -39,15 +39,17 @@ export const 常用现场条件 = ({orc, rep, config, label = '附录B：现场�
                                  children?: React.ReactNode,
                                  dcln?: number,
                                  jyt?: string
+                                 fixed?: string[]
                              }
 ) => {
-    const fixed = 3 === dcln ? ["%", "10.4%", "10.4%", "10.4%"] : ["%", "8.1%", "8.1%", "8.1%", "8.1%", "8.1%"];
+    const fixwidths =fixed? fixed :
+                (3 === dcln ? ["%", "10.4%", "10.4%", "10.4%"] : ["%","9.1%","9.1%","9.1%","9.1%","9.1%"]);
     if (dcln !== 5 && dcln !== 3) throw new Error("非法列数");
     const recNums = orc?.检验条件?.length;
     const blocks = Math.ceil(recNums / dcln) || 1;     //倒转的，每dcln行的一块块布局:固定的dcln个日期汇集打印的一行。
     return <>
         <h2 className="text-2xl mt-4">{label!}</h2>
-        <FlexibleTable id={'SiteCondition'} columnWidths={fixed} className="text-sm">
+        <FlexibleTable id={'SiteCondition'} columnWidths={fixwidths} className="text-sm">
             <TableHeader>
                 <TableRow>
                     <CCell>现场{jyt}条件</CCell><CCell>确认结果</CCell><CCell>确认结果</CCell><CCell>确认结果</CCell>
@@ -207,7 +209,7 @@ export const 测量允许检测 = ({
         }
     </>;
 };
-//【表格工具】    ; 编辑器3段式窗口总宽度1595px；
+//【表格工具】 JSON.parse(orc?._tblFixed??'[]'); 编辑器3段式窗口总宽度1595px；
 //有备注列的： 拆解成2个部分编辑器的。
 export const 测量备注两半 = ({
                                  orc, rep, label, config,

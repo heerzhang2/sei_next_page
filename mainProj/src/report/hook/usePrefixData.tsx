@@ -220,6 +220,7 @@ interface PrefixDataTableProps {
  * 空白用 [' ',{r:' '}]
  *用例  [ [{pr:'性能参数', span:2, t:'额'}, '_$量', 't/h'],   [],  ],
  *      [[{t:'锅筒工作压力'}, '_$锅', 'MPa'],  ['锅',{n:'筒工温', u:'℃'}, input工作温],   ],
+ * className="text-sm" 外部表格定义？
  * */
 export const usePrefixDataTable= ({orc, config, rep, parentOrc:orgParOrc, slash,embed} : PrefixDataTableProps
 ) => {
@@ -258,7 +259,7 @@ export const usePrefixDataTable= ({orc, config, rep, parentOrc:orgParOrc, slash,
         else prefix2='';
 
         return <React.Fragment key={i}>
-            <TableRow className={"text-sm break-all"}>
+            <TableRow className={"break-all"}>
                 { embed && embed[i] }
                 { (typeof desc==='object' && desc.span) && <CCell rowSpan={desc.span}>{desc?.prview? desc?.prview(orc,parentOrc) : desc?.pr}</CCell> }
                 <CCell colSpan={prefix1 ? 1 : 2}>{typeof desc==='string'? desc: desc?.view? desc?.view(orc,parentOrc,rep) : desc?.t}</CCell>

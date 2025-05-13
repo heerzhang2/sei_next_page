@@ -1,46 +1,6 @@
 "use client"
-import UserContext from "./UserContext";
-import React, { useCallback, useEffect, useState, useContext } from "react"
+import React, { useCallback } from "react"
 import { useRouter } from "next/navigation"
-
-interface LinkProps {
-    href: string;
-    children: React.ReactNode;
-    state?: any;
-}
-/*@deprecated  淘汰！
-使用了自定义路由器的Link链接，点击这个组件的才会经过自定义路由器跳转。旧的可携带user保存当前的用户数据 state;
-* */
-const Link: React.FunctionComponent<LinkProps> =({href,state,children,...other}: LinkProps)=>
-{
-  const router ={}// useContext(RoutingContext);
-    const {user, } = useContext(UserContext);
-  const changeRoute = useCallback(
-      (event :any )=> {
-      event.preventDefault();
-      if(state)
-          router.history.push(href, state);
-      else {
-          router.history.push(href);
-      }
-    },
-    [href, router, state],
-  );
-  const preloadRouteCode = useCallback(() => {
-    // router.preloadCode(href, user);
-  }, [href, router, user]);
-  return (
-    <a
-      href={href}
-      onClick={changeRoute}
-      onMouseEnter={preloadRouteCode}
-      {...other}
-    >
-      {children}
-    </a>
-  );
-}
-
 
 /**儿子里面若是<></>包裹的需要改造替代，支持一层层次的替换。
  * 替换旧的 validChildrenMap ； 【来由】代码里面经常出现逻辑render { boolean && <> nodes </> }这样子的会导致以前普通办法失效。
@@ -93,69 +53,14 @@ interface DirectLinkProps extends React.HTMLAttributes<HTMLElement> {
 export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: DirectLinkProps) => {
     const router = useRouter()
     const valChilds = validChildrenFragmentSpread(props.children)
-    const [isVisited, setIsVisited] = useState(false)
-
-    // Check if the link has been visited before
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const visitedLinks = JSON.parse(localStorage.getItem("visitedLinks") || "[]")
-            const isLinkVisited = visitedLinks.some((link: any) => link.url === props.href)
-            setIsVisited(isLinkVisited)
-
-            // Clean up old links when checking visited status
-            const oneWeekAgo = Date.now() - 2 * 24 * 60 * 60 * 1000
-            const recentLinks = visitedLinks.filter((link: any) => link.timestamp > oneWeekAgo)
-
-            // Save back to localStorage if we removed any old links
-            if (recentLinks.length < visitedLinks.length) {
-                localStorage.setItem("visitedLinks", JSON.stringify(recentLinks))
-            }
-        }
-    }, [props.href])
-
     const changeRoute = useCallback(
         (event: any) => {
             event.preventDefault()
             event.stopPropagation() // 不想向祖辈组件传递点击事件。
-
-            // Mark this link as visited in localStorage with improved management
-            if (typeof window !== "undefined") {
-                // Get current visited links
-                const visitedLinks = JSON.parse(localStorage.getItem("visitedLinks") || "[]")
-
-                // Add timestamp to the link data
-                const newVisitedLink = {
-                    url: props.href,
-                    timestamp: Date.now(),
-                }
-
-                // Check if this link is already in the list
-                const existingIndex = visitedLinks.findIndex((item: any) => item.url === props.href)
-
-                if (existingIndex >= 0) {
-                    // Update the timestamp if link exists
-                    visitedLinks[existingIndex].timestamp = Date.now()
-                } else {
-                    // Add new link
-                    visitedLinks.push(newVisitedLink)
-                }
-
-                // Sort by timestamp (newest first)
-                visitedLinks.sort((a: any, b: any) => b.timestamp - a.timestamp)
-
-                // Keep only the 50 most recent links
-                const trimmedLinks = visitedLinks.slice(0, 50)
-
-                // Save back to localStorage
-                localStorage.setItem("visitedLinks", JSON.stringify(trimmedLinks))
-                setIsVisited(true)
-            }
-
             router.push(props.href)
         },
         [props.href, router],
     )
-
     const preloadRouteCode = useCallback(() => {
         router.prefetch(props.href)
     }, [props.href, router])
@@ -165,8 +70,8 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
             {valChilds.map((one, row) => {
                 const element = one as React.ReactElement<any>
                 const originalClassName = element.props.className || ""
-                const visitedClass = isVisited ? "visited-link" : ""
                 //直接儿子中若是：div 和 span 标签被强制改成<a>标签了！ 有好处：状态栏可显示链接；还是保留该特性
+                //只能直接的，不能时{render}方式嵌套的？   但是<div className="丢失?">{render}</div>却可以的。
                 // Create a wrapper with an actual <a> tag to leverage browser's native visited state
                 if (element.type === "span" || element.type === "div") {
                     return (
@@ -174,7 +79,7 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
                             href={props.href}
                             onClick={changeRoute}
                             onMouseEnter={preloadRouteCode}
-                            className={`${originalClassName} ${visitedClass} cursor-pointer`}
+                            className={`${originalClassName} cursor-pointer`}
                             style={{
                                 ...element.props.style,
                                 textDecoration: "none",
@@ -189,10 +94,10 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
                 return React.cloneElement(element, {
                     onClick: changeRoute,
                     onMouseEnter: preloadRouteCode,
-                    className: `${originalClassName} ${visitedClass} cursor-pointer`,
+                    className: `${originalClassName} cursor-pointer`,
                     style: {
                         ...element.props.style,
-                        ...(isVisited ? { color: "rgb(6, 19, 45)" } : {}), // Darker gray color for visited links
+                       //别加上 ...(isVisited ? { color: "rgb(21, 175, 53)" } : {}), // Darker gray color for visited links
                     },
                     key: row,
                 })
@@ -200,3 +105,4 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
         </React.Fragment>
     )
 }
+

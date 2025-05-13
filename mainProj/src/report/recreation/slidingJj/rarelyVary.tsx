@@ -37,11 +37,12 @@ export const 首页概况recr= (orc:any, rep:any, original?:boolean
   const 施工单位='重大修理'===orc.检验类别? orc.大修单 :
       '改造监检'===orc.检验类别? orc.改造单 :
           orc.安装单;
+  //表格布局的只能设置tr的height: 3rem;
   return  <FlexibleTable columnWidths={ ["20%","%"] } variant={'borderless'}>
     <TableBody>
-      <SurveyRow label="使用单位" value={orc.使用单位}/>
-      <SurveyRow label="分支机构" value={orc.分支机构}/>
-      <SurveyRow label="施工单位" value={施工单位} />
+      <SurveyRow label="使用单位" value={orc.使用单位} className="print:h-9"/>
+      <SurveyRow label="分支机构" value={orc.分支机构} className="print:h-9"/>
+      <SurveyRow label="施工单位" value={施工单位} className="print:h-9"/>
       <SurveyRow label="施工类别" value={businessCatspMap.get(rep?.isp?.bsType)} />
       <SurveyRow label="设备类别" value={eqpTypeAllMap.get(orc?.设备类别) ?? '／'} />
       <SurveyRow label="设备品种" value={eqpTypeAllMap.get(orc.设备品种)} />
@@ -49,7 +50,7 @@ export const 首页概况recr= (orc:any, rep:any, original?:boolean
       {original && <SurveyRow label="记录编号" value={rep?.isp?.no} />}
       <SurveyRow label="检验日期" value={orc.检验日期1? `${orc.检验日期1} 至 ${orc.检验日期}` : orc.检验日期} />
       <SurveyRow label="设备代码" value={orc.设备代码}/>
-      <SurveyRow label="设  备  号" value={orc.eqpcod} />
+      <SurveyRow label="设  备  号" value={orc.eqpcod} className="print:h-9"/>
       <SurveyRow label="监察识别码" value={orc.监察识别码}/>
     </TableBody>
   </FlexibleTable>;

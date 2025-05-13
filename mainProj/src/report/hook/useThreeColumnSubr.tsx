@@ -188,7 +188,7 @@ export function useThreeColumnView({orc, config, split, slash,embedCol}: ThreeCo
                                 name3.t==='b'? (orc?.[name3.n]? '是':'否') :
                                     orc?.[name3.n];
                 return <React.Fragment key={i}>
-                    <TableRow className={"text-sm"}>
+                    <TableRow >
                         {0===i && embedCol && embedCol[p] }
                         {typeof desc!=='object'? <CCell>{desc}</CCell> : desc?.view(orc)}
                         { tailUnit1?

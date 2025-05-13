@@ -22,7 +22,9 @@ const config设备 = [
   [['施工单位名称','_$改造单位',render施工单位] ],
   [['制造单位名称', '_$制造单位']  ],
   //技术参数
-  [['承载人数', '_$额定乘客数','人'], ['运行高度','_$提升高度','m'], ],
+  [['每车承载人数', '_$额定乘客数','人'], ['车辆数', '_$车船数量','个'], ],
+  [['轨道高度', '_$轨道高度','m'], ['轨道长度','_$轨道长度','m'], ],
+  [['轨距', '_$车道轨距','m'], ['运行速度','_$额定速度','km/h'], ]
 ];
 //拆分成2个编辑器的
 const config设备上=config设备.slice(0, 10);
@@ -32,42 +34,42 @@ export const 报告设备详情= ( { orc, rep } : { orc: any,rep:any}
 ) => {
   const renderUpper=usePrefixDataTable({config: config设备上, orc, rep, slash:true});
   const [firstPart,_s]=useThreeColumnView({orc, config:config设备下,slash:true,
-                embedCol: [ <CCell rowSpan={1}>设备技术参数</CCell> ] });
+                embedCol: [ <CCell rowSpan={3}>设备技术参数</CCell> ] });
   return <React.Fragment>
-    <FlexibleTable id={'Survey'} columnWidths={ ["6.1%","6%","38%","12.1%","4%","%"] } className="border-collapse">
+    <FlexibleTable id={'Survey'} columnWidths={["6.1%","6.8%","38%","12.8%","4%","%"]} className="text-sm border-collapse">
       <TableBody>
         <RepLink rep={rep} tag={'Survey'}>
           {renderUpper}
         </RepLink>
       </TableBody>
     </FlexibleTable>
-    <FlexibleTable columnWidths={ ["4.8%","12%","23%","15%","10%","18.6%","%"] }  className="border-collapse">
+    <FlexibleTable columnWidths={ ["4.8%","13%","23%","15%","10%","18.6%","%"] }  className="text-sm">
       <TableBody>
         <RepLink rep={rep} tag={'Survey'}>
           {firstPart}
         </RepLink>
-        <TableRow className={"text-sm"}>
+        <TableRow>
           <CCell colSpan={2}>检验依据</CCell>
           <CCell colSpan={5}>《大型游乐设施安全技术规程》（TSG 71-2023）</CCell>
         </TableRow>
         <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion#Conclusion`}>
-          <TableRow className={"text-sm"}>
+          <TableRow>
             <CCell>检验结论</CCell>
             <CCell colSpan={6}>
-            <h1 className={cn("px-0 py-4 m-auto", orc?.检验结论?.length>12? "text-2xl" : "text-5xl")}>
+            <h1 className={cn("px-0 py-4 m-auto", orc?.检验结论?.length>12? "text-2xl" : "text-4xl tracking-[1rem]")}>
               {orc?.检验结论}</h1>
             </CCell>
           </TableRow>
         </DirectLink>
         <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
-          <TableRow className={"text-sm"}>
+          <TableRow>
             <CCell>备注</CCell>
-            <TableCell split={true} colSpan={6}><div className="text-sm min-h-4 whitespace-pre-wrap">
+            <TableCell split={true} colSpan={6}><div className="min-h-4 whitespace-pre-wrap">
               {orc.大备注 ?? '／'}
             </div></TableCell>
           </TableRow>
         </DirectLink>
-        <TableRow className={"text-sm"}>
+        <TableRow>
           <CCell colSpan={2}>下次定期检验日期</CCell>
           <CCell colSpan={5}>{orc.新下检日 ?? '／'}</CCell>
         </TableRow>

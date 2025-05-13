@@ -17,6 +17,7 @@ import { 报告设备详情 } from "./repView"
 import { setupItemAreaRoute } from "./orcIspConfig"
 import { FormatOriginal } from "./FormatOriginal"
 import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
+import {DirectLink} from "@/routing/Link";
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
@@ -43,24 +44,19 @@ const config报告: Column_Setting[] = [
     {n: null, x: "结论"},
     {n: "M", x: "备注", m: true},
 ]
-
+/*有些内容放页眉页脚：<span>报告编号：{rep.isp.no}</span>页号安排放入页眉页脚。
+* */
 const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, rep}) => {
     const impressionismAs = React.useMemo(() => {
         return setupItemAreaRoute({ rep, orc })
     }, [rep, orc?._Oitems])
-    const { renderIspContent } = useOfficialOmni({
-        orc,
-        ItemArs: impressionismAs?.Item,
-        rep,
-        config: config报告,
-        itResCB: 检验结果替换,
-    })
+    const { renderIspContent } = useOfficialOmni({orc,rep, ItemArs: impressionismAs?.Item, config: config报告, itResCB: 检验结果替换,})
     const [mapNoTag] = useItemsMapOmni({ ItemArs: impressionismAs?.Item, notCheckNo: false })
     return (
         <React.Fragment>
             <div className="not-print:my-4">
                 <div className="print:h-screen">
-                    {ReportFirstPageHeadJd({rep, mbbm: "FJJ/YB-1009-1-2024"})}
+                    {ReportFirstPageHeadJd({rep, mbbm: "FJB/YB-1002-1-2024"})}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
                         <h1 id={"Conclusion"} className="text-3xl text-center print:mt-6">
                             滑行车类游乐设施监督检验报告
@@ -69,39 +65,31 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
                 </div>
-                {注意事项WaterJj({
-                    rep,
-                    comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
-                })}
-
-                <div className="flex flex-col justify-center">
-                    <h4 className="text-xl text-center print:break-before-page">
-                        <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument`}
-                              className="print:no-underline break-before-page">
-                            大型游乐设施监督检验报告
-                        </Link>
-                    </h4>
-                </div>
-                <div className="flex justify-between">
-                    <span></span>
-                    <span>报告编号：{rep.isp.no}</span>
-                </div>
+                <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline">
+                    <div>
+                        {注意事项WaterJj({
+                            rep,
+                            comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
+                        })}
+                    </div>
+                </DirectLink>
+                <h4 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
+                    <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument`}
+                          className="print:no-underline">
+                        大型游乐设施监督检验报告
+                    </Link>
+                </h4>
                 {报告设备详情({orc, rep})}
                 {检验核准WaterJj({orc, rep})}
-                <PrintReserveLeast reserve="13.3rem"
-                      title={<><h4 className="text-center mt-4 print:mt-24">
-                              大型游乐设施监督检验报告附页
-                          </h4>
-                              <div className="flex justify-between">
-                                  <span></span>
-                                  <span>报告编号：{rep.isp.no}</span>
-                              </div>
-                          </>}
+                <PrintReserveLeast reserve="13rem"
+                       title={<h4 className="text-xl text-center mt-4 print:mt-24">
+                           大型游乐设施监督检验报告附页
+                       </h4>}
                 >
-                    <FlexibleTable className="border-collapse"
+                    <FlexibleTable className="text-sm border-collapse"
                                    columnWidths={["3.5%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "10.9%"]}>
                         <TableHeader>
-                            <TableRow className={"text-sm"}>
+                            <TableRow>
                                 <CCell id={"T5-1"} className="text-[0.7rem]">序号</CCell>
                                 <CCell colSpan={5}>检验项目及内容</CCell>
                                 <CCell>
@@ -114,11 +102,9 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         <TableBody>{renderIspContent}</TableBody>
                     </FlexibleTable>
                 </PrintReserveLeast>
-
-                <span className="print:text-[0.75rem]"></span>
                 <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag}
                     titles={["序号", "项目编号", "检验不符合内容记录", "复检结果", "复检日期"]}
-                    label={<h2 className="text-center text-3xl mb-2">检验不符合项目内容及复检结果</h2>}
+                    label={<h2 className="text-center text-3xl mb-2 mt-64 print:mt-0">检验不符合项目内容及复检结果</h2>}
                 />
             </div>
             <div>
@@ -127,8 +113,8 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         主要测量设备性能检查
                     </h3>
                 </Link>
-                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
-                    <h3  className="print:hidden">
+                <Link id={"Witness"} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
+                    <h3 className="print:hidden">
                         记事 、 备注
                     </h3>
                 </Link>

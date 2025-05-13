@@ -15,19 +15,19 @@ export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprov
   //内嵌的表格高度无法自适应撑开：另一个办法设置内嵌表格固定height: 9rem;
   return (
       <div className="w-full">
-        <FlexibleTable className="w-full border-collapse" columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]}>
+        <FlexibleTable className="text-sm w-full border-collapse" columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]}>
           <TableBody>
           <TableRow>
-            <CCell className="text-sm">
+            <CCell>
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>{jyt}</Link>
             </CCell>
-            <CCell className="text-sm" colSpan={2}>
+            <CCell colSpan={2}>
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>{orc.检验人IDs}</Link>
             </CCell>
             <CCell className="text-xs">
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>日期</Link>
             </CCell>
-            <CCell className="text-sm">
+            <CCell>
               <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion`}>
                 {orc.检验日期 || "／"}
               </Link>
@@ -36,14 +36,14 @@ export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprov
               <div className="h-full flex flex-col">
                 <div className="print:hidden absolute inset-0 opacity-30 bg-no-repeat bg-center"
                         style={{ backgroundImage: `url(/images/seal.png)` }}></div>
-                <FlexibleTable className="w-full h-full flex-grow border-none" columnWidths={["50%", "%"]}>
+                <FlexibleTable className="text-sm w-full h-full flex-grow border-none" columnWidths={["50%", "%"]}>
                   <TableBody>
                     <TableRow className="border-none">
-                      <TableCell className="w-1/2 text-sm">检验机构核准证号：</TableCell>
-                      <TableCell className="text-sm">{rep?.isp?.ispu?.agency?.apno}</TableCell>
+                      <TableCell className="w-1/2">检验机构核准证号：</TableCell>
+                      <TableCell>{rep?.isp?.ispu?.agency?.apno}</TableCell>
                     </TableRow>
                     <TableRow className="border-none">
-                      <CCell className="border-none text-sm h-12" colSpan={2}>
+                      <CCell className="border-none h-12" colSpan={2}>
                         （机构公章或者检验专用章）
                       </CCell>
                     </TableRow>
@@ -59,16 +59,16 @@ export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprov
 
           </TableRow>
           <TableRow>
-            <CCell className="text-sm">审核</CCell>
-            <CCell className="text-sm" colSpan={2}></CCell>
+            <CCell>审核</CCell>
+            <CCell colSpan={2}></CCell>
             <CCell className="text-xs">日期</CCell>
-            <CCell className="text-sm"></CCell>
+            <CCell></CCell>
           </TableRow>
           <TableRow>
-            <CCell className="text-sm">批准</CCell>
-            <CCell className="text-sm" colSpan={2}></CCell>
+            <CCell>批准</CCell>
+            <CCell colSpan={2}></CCell>
             <CCell className="text-xs">日期</CCell>
-            <CCell className="text-sm"></CCell>
+            <CCell></CCell>
           </TableRow>
           </TableBody>
         </FlexibleTable>
@@ -79,7 +79,7 @@ export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprov
 
 export const 注意事项WaterJj= ({comply, rep} :{comply: any, rep: any}
 ) => {
-  return <AttentionPoint rep={rep} comply={comply} telurl>
+  return <AttentionPoint rep={rep} comply={comply} telurl btClass="print:mb-60">
     2．本报告应当由计算机打印输出，或者用钢笔、签字笔填写，字迹要工整，涂改无效。<br/>
     3．本报告无检验、审核、批准人员的签字以及检验机构的核准证号和检验专用章(或者公章)无效。<br/>
     4．本报告一式三份，由检验机构、施工单位和使用单位分别保存。<br/>

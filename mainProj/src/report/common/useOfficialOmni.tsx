@@ -1,7 +1,6 @@
 import * as React from "react";
 import {CCell,TableRow} from "@/components/flexible-table";
 import {DirectLink} from "@/routing/Link";
-// import {useMedia} from "use-media";
 import {RecordOmniArea, ItemOmniConfig, resTranslOmni, itemResTransformRpo,} from "../common/omni";
 import {resTranslCm} from "../common/helper";
 import {Column_Setting} from "./useFormatOmni";
@@ -30,12 +29,10 @@ interface Props {
  * 项目编号栏目统一预备虚拟的四个列colSpan。 外部Table必须预留4列给项目栏目的。
  * @param itRes: 相比orc参数，差别是前者可能被测量数据替换掉部分检验结果栏目的显示数据。
  * 【特殊点】大标题列不显示了。  自拆分可能遇到合并的或嵌套模式的，也需特殊处理的：。
- * 支持特列栏 {n:'ic',x:'类别',m:true},；
+ * 支持特别定义的类别列 {n:'ic',x:'类别',m:true},；
  * */
 export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : Props
 ) => {
-    // const theme = useTheme();
-    // const atPrint = useMedia('print');
     const renderIspContent =React.useMemo(() => {
         const itRes=itResCB? itResCB(orc) : orc;
         let seq = 0;      //按照每个结论单独一块的依据对应唯一个序号。
@@ -86,7 +83,7 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                         //检验结果栏目的  :display=false没展开的后面一种,就只能出现一行result！
                         //检验结果栏目的特例：测量数据直接替换掉这个cell显示情况：1：拆分只有一小项的或者普通项的：看name； 2拆分且是仅仅显示一个合并汇总结果而不显示每一个小项多行的情况：看mergName。
                         const result=mergLastEt.mergName? (mergLastEt.display? resTranslCm(itRes?.[et.name!]) : resTranslOmni(et, orc, itRes, conseq))
-                                        : mergLastEt===et? resTranslCm(itRes?.[et.name!]) : `@报告模板配置有错误！`;
+                                        : mergLastEt===et? resTranslCm(itRes?.[et.name!]) : `@模板配置有错！`;
                         // console.log("结果栏SEQ=",seq, result,'mergLastEt=',mergLastEt,"#et=",et,itRes,conseq);
                         //跨行的破碎？
                         let captionOcp=1;            //主标题的 扩大空间，不一定colSpan=1;
@@ -127,7 +124,7 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                         const four_Spl=splitNewBlock? splitHeadEt!.rpo.four : et.rpo.four;
                         // console.log("行碎例",b,"n=",n,area.tag,"nosCc=",nosCc,"ET=",et,'caption:',caption,'mergLastEt',mergLastEt,"倒退n-1行",area.items[n-1],splitHeadEt);
                         //【特殊】正式报告的大标题这列不做显示了！ 结果栏目也不现实，改名内容等于是结论对应栏目的。
-                        itemRowRender[0] =<TableRow className={"text-sm"} id={!tagSetted ? area.tag:undefined} key={n}>
+                        itemRowRender[0] =<TableRow id={!tagSetted ? area.tag:undefined} key={n}>
                             <CCell key={1}>{seq}</CCell>
                             {bOmt!=='0' && ((et.rpo.bspan!)>0) && <CCell key={2} split={true} rowSpan={et.rpo.bspan} colSpan={bigColOcp}
                                  >{big_Spl}</CCell>
@@ -142,7 +139,8 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                                 >{four_Spl}</CCell>
                             }
 
-                            <CCell key={6} colSpan={captionOcp}>{caption}</CCell>
+                            <CCell split={false} key={6} colSpan={captionOcp}>{caption}</CCell>
+
                             {/*其他可变的列 */}
                             {
                                 config.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
