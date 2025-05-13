@@ -36,7 +36,7 @@ export const 报告设备详情= ( { orc, rep } : { orc: any,rep:any}
   const [firstPart,_s]=useThreeColumnView({orc, config:config设备下,slash:true,
                 embedCol: [ <CCell rowSpan={3}>设备技术参数</CCell> ] });
   return <React.Fragment>
-    <FlexibleTable id={'Survey'} columnWidths={["6.1%","6.8%","38%","12.8%","4%","%"]} className="text-sm border-collapse">
+    <FlexibleTable id='Survey' columnWidths={["6.1%","6.8%","38%","12.8%","4%","%"]} className="text-sm border-collapse">
       <TableBody>
         <RepLink rep={rep} tag={'Survey'}>
           {renderUpper}
@@ -53,11 +53,11 @@ export const 报告设备详情= ( { orc, rep } : { orc: any,rep:any}
           <CCell colSpan={5}>《大型游乐设施安全技术规程》（TSG 71-2023）</CCell>
         </TableRow>
         <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion#Conclusion`}>
-          <TableRow>
+          <TableRow id='Conclusion'>
             <CCell>检验结论</CCell>
             <CCell colSpan={6}>
-            <h1 className={cn("px-0 py-4 m-auto", orc?.检验结论?.length>12? "text-2xl" : "text-4xl tracking-[1rem]")}>
-              {orc?.检验结论}</h1>
+            <span className={cn("px-0 py-4 m-auto", orc?.检验结论?.length>12? "text-2xl" : "text-4xl tracking-[1rem]")}>
+              {orc?.检验结论}</span>
             </CCell>
           </TableRow>
         </DirectLink>

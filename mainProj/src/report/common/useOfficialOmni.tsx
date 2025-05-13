@@ -125,7 +125,7 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                         // console.log("行碎例",b,"n=",n,area.tag,"nosCc=",nosCc,"ET=",et,'caption:',caption,'mergLastEt',mergLastEt,"倒退n-1行",area.items[n-1],splitHeadEt);
                         //【特殊】正式报告的大标题这列不做显示了！ 结果栏目也不现实，改名内容等于是结论对应栏目的。
                         itemRowRender[0] =<TableRow id={!tagSetted ? area.tag:undefined} key={n}>
-                            <CCell key={1}>{seq}</CCell>
+                            <CCell key={1} className="text-xs">{seq}</CCell>
                             {bOmt!=='0' && ((et.rpo.bspan!)>0) && <CCell key={2} split={true} rowSpan={et.rpo.bspan} colSpan={bigColOcp}
                                  >{big_Spl}</CCell>
                             }

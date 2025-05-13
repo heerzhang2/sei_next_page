@@ -7,7 +7,7 @@ import {JumpMeasure} from "@/report/common/general";
 export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDefault?:boolean}
 ) => {
     let ari: any[] =[];
-    pushOmni(ari,'1.1',[
+    pushOmni(ari,'T1-1',[
         crtOmni('许可证',{big:'K1资料审查',bspan:11,span:2,seco:'※K1.1特种设备生产许可证',},{seco:'※K1.1' },
             <div>(1)制造、安装、改造或者修理单位的相关许可证件，应符合许可证的范围，有效期应符合要求。
             </div>, {nos:'1.1(1)',pre:'※', mergLabel:'特种设备生产许可证'},true, '（1）特种设备生产许可证',),
@@ -42,7 +42,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
             <div>(1)审查相关资料、特种设备及安全附件的使用手续、定期检验报告、校验报告，其应符合相应设备的要求。
             </div>, {nos:'1.9',pre:'※',},false,'其他特种设备、安全附件及安全保护装置资料'),
     ],'1.1生产许可证-1.9安全附件及安全保护装置资料');
-    pushOmni(ari,'2.1',[
+    pushOmni(ari,'T2-1',[
         crtOmni('铭牌',{big:'K2机械与结构检验',bspan:11,span:2,seco:'K2.1产品铭牌与乘客须知',}, {seco:'K2.1',},
             <div>(1)设备显著位置应固定产品铭牌，产品铭牌内容至少包括制造单位名称与制造地址、特种设备生产许可证号、设备类别和型式、产品编号、制造日期、主要技术参数。
             </div>, {nos:'2.1(1)', mergLabel:'产品铭牌与乘客须知'},true, '（1）产品铭牌',),
@@ -102,7 +102,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
             </div>, {nos:'2.12.5',},false,'轨道表面平整情况和曲线轨道过渡圆滑情况'),
     ],'2.12.1轨道支柱-2.12.5轨道表面平整和圆滑情况');
     //"sk":[ {"no":"3.1","r":0,"bs":[9],"ss":[1]}, 0,0,0, {"no":"3.5.1","r":0,"ss":[5],"ts":[1]},0,0, {"pr":"※","no":"3.5.4","r":0},0
-    pushOmni(ari,'3.1',[
+    pushOmni(ari,'T3-1',[
         crtOmni('液压系统',{big:'K3传动系统检验',bspan:9,span:1,seco:'K3.1',},undefined,
             <div>(1)液压（气动）系统应符合设计文件要求；液压（气动）系统运转正常。
             </div>, {nos:'3.1',},false,'液压（气动）系统装置'),
@@ -169,7 +169,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
             </div>, {nos:'3.8',pre:'※',},false,'车轮磨损'),
     ],'3.6.1提升系统-3.8车轮磨损');
     //"sk":[ {"no":"4.1","r":0,"bs":[7],"ss":[1]}, 0,0,{"pr":"※","r":0},{"no":"4.6","r":0},0,{"pr":"※","r":0}
-    pushOmni(ari,'4.1',[
+    pushOmni(ari,'T4-1',[
         crtOmni('电气安装',{big:'K4电气及控制系统检验',bspan:8,span:1,seco:'K4.1',},undefined,
             <div>(1)电气设备应当安装牢固、完好。
             </div>, {nos:'4.1',},false,'电气设备安装'),
@@ -224,7 +224,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
     ],'4.9按钮、信号灯等标志-4.15潮湿场所电气设备保护');
     //"sk":[{"no":"5.1","r":3,"bs":[12],"ss":[3],"vx":1},0,0,{"pr":"※","no":"5.4.1","ss":[7],"ts":[1],"r":0},{"pr":"※","r":0},{"pr":"※","r":0},{"pr":"※","ts":[4],"r":4,"vx":1}
     //生成后手动给自拆分项目首行上加 mergLabel :'';改动+加{seco:' ' }；
-    pushOmni(ari,'5.1',[
+    pushOmni(ari,'T5-1',[
         crtOmni('乘人结构',{big:'K5乘载系统检验',bspan:12,span:3,seco:'K5.1结构',},{seco:'K5.1',},
             <div>(1)乘人装置结构应符合设计文件要求。
             </div>, {nos:'5.1(1)',mergLabel:'结构'},true, '（1）乘人装置结构',),
@@ -283,7 +283,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
                  适当，不应当对乘客的脚部造成危险;且应符合设计文件要求。
             </div>, {nos:'5.5.3',},false,'转动平台台面及其间隙'),
     ],'5.5.1安全距离-5.5.3转动平台台面间隙');
-    pushOmni(ari,'6.1',[
+    pushOmni(ari,'T6-1',[
         crtOmni('安保要求',{big:'K6安全保护装置和防护措施检验',bspan:7,span:1,seco:'K6.1',},undefined,
             <div>(1)安全联锁装置、起动确认按钮、监控措施的设置等安全保护装置和防护措施应符合设计文件要求。
             </div>, {nos:'6.1',},false,'一般要求'),
@@ -341,7 +341,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
             <div>(1)防护罩等机械安全防护应符合设计文件及以下要求，人员可触及的机械传动部件（如齿轮、皮带轮、联轴器等），应当有防护罩或者其他防护措施。
             </div>, {nos:'6.13',},false,'防护罩等机械安全防护'),
     ],'6.4防超速控制装置-6.13防护罩等安全防护');
-    pushOmni(ari,'6.14',[
+    pushOmni(ari,'T6-14',[
         crtOmni('安全网',{bspan:12,span:1,seco:'K6.14',},undefined,
             <div>(1)在易发生乘客、物体坠落从而导致（或造成）人员伤害的位置（或区域），应当设置安全网或者有相应的安全措施。安全网或者防坠设施（措施）应完好。
             </div>, {nos:'6.14',},false,'安全网或者其他措施'),
@@ -387,7 +387,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
             </div>, {nos:'6.25',},false,'备用电源和救援设备'),
     ],'6.14安全网或其他-6.25备用电源和救援设备');
     //"sk":[{"no":"7.1","r":2,"bs":[7],"ss":[2],"vx":1},0,0,{"no":"7.5","r":0},0,0
-    pushOmni(ari,'7.1',[
+    pushOmni(ari,'T7-1',[
         crtOmni('空载运',{big:'K7载荷试验与测试',bspan:8,span:2,seco:'K7.1空载运行试验',},{seco:'K7.1',},
             <div>(1)审查受检单位提供的不少于2h的空载运行报告，该报告应符合如下要求：(1)设备的起动、换向、停机、制动和安全联锁等动作，均应当正确、灵敏、可靠；(2)整机应当运行正常，不允许有爬
                 行和异常的振动、冲击、发热及声响；(3)各传动部件应当平稳，无异常振动、窜动、冲击、噪声、磨损和永久变形；(4)轴承温升及油箱油温应当符合设计要求；(5)齿轮及齿条传动不应当有偏啮合及

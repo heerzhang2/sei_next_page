@@ -171,12 +171,12 @@ export const UnqualifiedIspTable = ({
                 <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
                   {tbLabel}
                 </DirectLink>
-                <FlexibleTable columnWidths={fixed}>
+                <FlexibleTable columnWidths={fixed} className="text-sm">
                     <TableHeader>
-                        <TableRow className="hover:bg-transparent border-b border-gray-700">
+                        <TableRow>
                             {titles.map((title, index) => (
                                 //第一个项目：默认序号情形的
-                                <CCell key={index} className={cn("border-r border-gray-700", index===0? 'text-xs':'text-sm')}>
+                                <CCell key={index} className={cn("", index===0? 'text-xs':'text-sm')}>
                                     {title}
                                 </CCell>
                             ))}
@@ -185,16 +185,16 @@ export const UnqualifiedIspTable = ({
                     <TableBody>
                         {orc.unq?.map((bug: any, i: number) => {
                             const mapn = mapNoTag!.get(bug.no);
-                            return <TableRow key={i} className="border-b border-gray-700 hover:bg-transparent">
+                            return <TableRow key={i}>
                                         <DirectLink href={`${urlhead}/${mapn?.tag}`}>
-                                            <CCell className="text-sm px-0">{i + 1}</CCell>
-                                            <CCell className="text-sm px-0">{`${mapn?.pre ?? ''}${mapn?.iclas ?? ''}${bug.no}`}</CCell>
-                                            <CCell className="text-sm px-0">{bug.b}</CCell>
+                                            <CCell className="px-0">{i + 1}</CCell>
+                                            <CCell className="px-0">{`${mapn?.pre ?? ''}${mapn?.iclas ?? ''}${bug.no}`}</CCell>
+                                            <CCell className="px-0">{bug.b}</CCell>
                                         </DirectLink>
                                         {/* 复检行 */}
                                         <DirectLink href={`${urlhead}/ReCheck?from=${bug.no}`}>
-                                            <CCell className="px-0">{bug.rs}</CCell>
-                                            <CCell className="text-sm px-0">{bug.d}</CCell>
+                                            <CCell className="text-base px-0">{bug.rs}</CCell>
+                                            <CCell className="px-0">{bug.d}</CCell>
                                         </DirectLink>
                              </TableRow>
                         })}
@@ -202,9 +202,9 @@ export const UnqualifiedIspTable = ({
                 </FlexibleTable>
             </div>
         ) : printing ? null : (
-            <div className="text-center my-1">
+            <div className="text-center my-1 print:hidden">
                 <Button variant="ghost"
-                    className="px-4 py-2 text-base border-2 border-gray-700 rounded-lg print:hidden"
+                    className="px-4 py-2 text-base border-2 border-gray-700 rounded-lg"
                     onClick={() => {router.push(urlhead+`/ReCheck#ReCheck`)}}
                 >{tbLabel}</Button>
             </div>

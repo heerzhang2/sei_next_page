@@ -49,6 +49,7 @@ interface DirectLinkProps extends React.HTMLAttributes<HTMLElement> {
  * 任意都能做Link的；
  * 直接用next.js Link 导致报错In HTML, <tr> cannot be a child of <a>.
  * In HTML, <a> cannot be a child of <tbody>. This will cause a hydration error.
+ * 表头不能加上<DirectLink >传递各列宽度？
  */
 export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: DirectLinkProps) => {
     const router = useRouter()

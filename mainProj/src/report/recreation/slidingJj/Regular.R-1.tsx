@@ -58,7 +58,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 <div className="print:h-screen">
                     {ReportFirstPageHeadJd({rep, mbbm: "FJB/YB-1002-1-2024"})}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
-                        <h1 id={"Conclusion"} className="text-3xl text-center print:mt-6">
+                        <h1 className="text-3xl text-center print:mt-6">
                             滑行车类游乐设施监督检验报告
                         </h1>
                         {首页概况recr(orc,rep,)}
@@ -86,11 +86,11 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                            大型游乐设施监督检验报告附页
                        </h4>}
                 >
-                    <FlexibleTable className="text-sm border-collapse"
-                                   columnWidths={["3.5%", "6.4%", "8.3%", "5.3%", "5%", "%", "12.6%", "6.2%", "10.9%"]}>
+                    <FlexibleTable className="text-sm"
+                                   columnWidths={["3.5%", "6.3%", "6.3%", "5%", "5%", "%", "12.6%", "7.1%", "11.5%"]}>
                         <TableHeader>
                             <TableRow>
-                                <CCell id={"T5-1"} className="text-[0.7rem]">序号</CCell>
+                                <CCell className="text-[0.7rem] !p-0">序号</CCell>
                                 <CCell colSpan={5}>检验项目及内容</CCell>
                                 <CCell>
                                     <span className="text-[0.8rem]">检验结果</span>
@@ -103,49 +103,48 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                     </FlexibleTable>
                 </PrintReserveLeast>
                 <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag}
-                    titles={["序号", "项目编号", "检验不符合内容记录", "复检结果", "复检日期"]}
-                    label={<h2 className="text-center text-3xl mb-2 mt-64 print:mt-0">检验不符合项目内容及复检结果</h2>}
+                    titles={["序号", "项目编号", "不合格内容描述", "复检结果", "复检日期"]}
+                    label={<h2 id='ReCheck' className="text-center text-2xl mb-2 mt-4 print:mt-0">检验不合格项目内容及复检结果</h2>}
                 />
             </div>
             <div>
                 <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument?original=1#Instrument`}>
-                    <h3 className="print:hidden">
-                        主要测量设备性能检查
-                    </h3>
+                    <h3 id='Instrument' className="print:hidden">主要测量设备性能检查</h3>
                 </Link>
-                <Link id={"Witness"} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
-                    <h3 className="print:hidden">
-                        记事 、 备注
-                    </h3>
+                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
+                    <h3 id="Witness" className="print:hidden">记事 、 备注</h3>
                 </Link>
                 <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition#SiteCondition`}>
-                    <h3 id={"SiteCondition"}  className="print:hidden">
-                        附录：现场检验条件确认
-                    </h3>
+                    <h3 id="SiteCondition" className="print:hidden">附录：现场检验条件确认</h3>
                 </Link>
             </div>
         </React.Fragment>
     )
 }
 
-
+//原始记录的导航该放在后面：
 export const contentItems = [
     {title: "设备概况", url: "#Survey"},
-    {title: "结论概要的页", url: "#Conclusion"},
+    {title: "检验结论", url: "#Conclusion"},
     {title: "K1资料审查", url: "#T1-1"},
-    {title: "电气及控制系统", url: "#T4-1"},
-    {title: "K5乘载系统检验  K5.1", url: "#T5-1"},
-    {title: "K7载荷试验", url: "#T7-1"},
-    {title: "系留式观光气球专项", url: "#T13-6"},
-    {title: "附录：现场检验条件确认", url: "#SiteCondition"},
-    {title: "K7载荷4试验", url: "#T7-4"},
-    {title: "系留式观光气球4专项", url: "#T13-4"},
-    {title: "K7载荷42试验", url: "#T7-42"},
-    {title: "系留式观光气球42专项", url: "#T13-42"},
-    {title: "K7载荷43试验", url: "#T7-43"},
-    {title: "--系留式观光气球43专项", url: "#T13-43"},
+    {title: 'K2机械与结构检验', url: "#T2-1"},
+    {title: 'K3传动系统检验', url: "#T3-1"},
+    {title: 'K4电气及控制系统检验', url: "#T4-1"},
+    {title: "K5乘载系统检验", url: "#T5-1"},
+    {title: 'K6安全保护装置和防护措施检验', url: "#T6-1"},
+    {title: "K6.14安全网或者其他措施", url: "#T6-14"},
+    {title: 'K7载荷试验与测试', url: "#T7-1"},
+    {title: '检验不合格项目内容及复检结果', url: "#ReCheck"},
+    {title: "附录D：现场检验条件", url: "#SiteCondition"},
+    {title: "记事 备注", url: "#Witness"},
+    {title: "主要测量设备性能检查", url: "#Instrument"},
+    {title: "观测数据及测量结果记录", url: "#Measure"},
+    {title: "附录A主要技术参数测试", url: "#MainTechnical"},
+    {title: "附录B应力测试记录", url: "#StrainStress"},
+    {title: "附录C加速度检测记录", url: "#Acceleration"},
 ]
 
-//5.1?make=1#5.1
-//#5.1 #51 #5-1都会报错的。 const friendlyId = originalId.replace(/\./g, '-');
+//【表格工具】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
+//5.1?make=1#5.1       {title: "K5乘载系统检验  K5.1", url: "#T5-1"},
+//#5.1 #51 #5-1都会在document.querySelector(item.url)?.scrollIntoView({报错的。  const friendlyId = originalId.replace(/\./g, '-');
 //表头不能加上<DirectLink href={`/report/${rep?.modeltype}/ver/${verId}/${repId}/ALL`}> 传递各列宽度？

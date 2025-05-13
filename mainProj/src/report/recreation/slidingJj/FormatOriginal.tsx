@@ -75,11 +75,11 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             </PageSectionOrientation>
 
             <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag} titles={['序号','项目编号','不合格内容描述','复检结果','复检日期']}
-                    label={<h2 className="text-left text-xl mb-2">四、检测不合格记录及复检结果</h2>}
+                    label={<h2 id='ReCheck' className="text-left text-xl mb-2">四、检测不合格记录及复检结果</h2>}
             />
             <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
                 <div>
-                    <h2 className="mt-4 print:mt-0 text-2xl break-before-page">五、现场检验意见</h2>
+                    <h2 id='Conclusion' className="mt-4 print:mt-0 text-2xl break-before-page">五、现场检验意见</h2>
                     <div className={`text-center ${orc?.检验结论?.length > 12 ? 'text-2xl' : 'text-4xl'} w-full border-1 border-solid border-black rounded-lg p-4`}>
                         {orc?.检验结论}
                     </div>
@@ -105,7 +105,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             </FlexibleTable>
             <RepLink ori rep={rep} tag={'Witness'}>
                 <div>
-                    <h2 className="mt-4 text-2xl">六、备注</h2>
+                    <h2 id='Witness' className="mt-4 text-2xl">六、备注</h2>
                     <div className={`text-sm min-h-4 whitespace-pre-wrap w-full border-1 border-solid border-black p-1`}>
                         {orc.大备注 ?? '／'}
                     </div>
