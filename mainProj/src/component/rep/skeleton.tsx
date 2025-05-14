@@ -84,26 +84,30 @@ export default function Skeleton({
             }
         }
     }
+    const needScrollBtn=!isSmallScreen || (isSmallScreen && activeTab==="editor");
     return (
         <div className="flex flex-col">
-            <div className="fixed top-4 right-4 flex flex-col gap-5 z-40">
-                <Button
-                    variant="outline"
-                    className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
-                    onClick={scrollToTop}
-                >
-                    <ChevronUp className="h-2 w-2" />
-                    <span className="sr-only">Scroll to top</span>
-                </Button>
-                <Button
-                    variant="outline"
-                    className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
-                    onClick={scrollToBottom}
-                >
-                    <ChevronDown className="h-2 w-2" />
-                    <span className="sr-only">Scroll to bottom</span>
-                </Button>
-            </div>
+            {needScrollBtn &&
+                <div className="fixed top-4 right-4 flex flex-col gap-5 z-40">
+                    <Button
+                        variant="outline"
+                        className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
+                        onClick={scrollToTop}
+                    >
+                        <ChevronUp className="h-2 w-2" />
+                        <span className="sr-only">Scroll to top</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
+                        onClick={scrollToBottom}
+                    >
+                        <ChevronDown className="h-2 w-2" />
+                        <span className="sr-only">Scroll to bottom</span>
+                    </Button>
+                </div>
+            }
+
             {isSmallScreen ? (
                 <>
                     {isLandscape ? (
@@ -113,7 +117,7 @@ export default function Skeleton({
                                 <Tabs value={activeTab}>
                                     <div className="flex flex-row h-screen relative">
                                         {/* Sticky Vertical TabsList with vertical text */}
-                                        <div className="sticky top-0 h-full flex items-center">
+                                        <div className="sticky top-0 h-full flex items-center pt-10">
                                             <TabsList className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
                                                 <TabsTrigger
                                                     value="preview"
@@ -129,9 +133,6 @@ export default function Skeleton({
                                                 >
                                                     <span className="vertical-text">编制</span>
                                                 </TabsTrigger>
-                                                <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
-                                                    <X className="h-4 w-4" />
-                                                </Button>
                                             </TabsList>
                                         </div>
                                         <div className="flex-1">
@@ -161,7 +162,7 @@ export default function Skeleton({
                         <Tabs value={activeTab}>
                             <div className="flex flex-col h-screen">
                                 <div className="sticky top-0  bg-white border-b">
-                                    <div className="flex items-center justify-between p-0">
+                                    <div className="flex items-center justify-between p-0 pl-10">
                                         <TabsList className="grid w-full grid-cols-2 h-6 pt-0">
                                             <TabsTrigger value="preview" className="h-6" onClick={() => handleTabChange("preview")}>
                                                 报告
@@ -170,9 +171,6 @@ export default function Skeleton({
                                                 编制
                                             </TabsTrigger>
                                         </TabsList>
-                                        <Button variant="ghost" size="sm" className="ml-2" onClick={() => setIsDialogOpen(false)}>
-                                            <X className="h-4 w-4" />
-                                        </Button>
                                     </div>
                                 </div>
                                 <div className="flex-1">

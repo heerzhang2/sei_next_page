@@ -3,7 +3,7 @@ import ReportMakeable from "@/common/ReportMakeable"
 import ReportData from "@/component/rep/report-data"
 import { StorageProvider } from "@/report/StorageContext"
 import { ModificationIndicator } from "@/report/hook/useFormFramework"
-import { ReportSidebar } from "@/components/report-sidebar"
+import { ReportMainbar } from "@/components/report-mainbar"
 
 /*报告和编制都用到的部分：能支持不要用登录看报告。
 只提供静态化（保障SessionProvider不提供客户端user也能Build的情形），不考虑鉴别用户context认证才能使用的。
@@ -22,7 +22,7 @@ export default async function ReportRootLayout({
             <StorageProvider>
                 <ReportData repId={repId}>
                     <ModificationIndicator />
-                    <ReportSidebar repId={repId} />
+                    <ReportMainbar repId={repId} />
                     <div >{children}</div>
                 </ReportData>
             </StorageProvider>

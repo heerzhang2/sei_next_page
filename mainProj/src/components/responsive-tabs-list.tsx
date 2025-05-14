@@ -15,8 +15,7 @@ interface ResponsiveTabsListProps extends React.ComponentPropsWithoutRef<typeof 
 export function ResponsiveTabsList({
                                      children,
                                      className,
-                                     scrollAmount = 360,
-                                     minTabWidth = 60,
+                                     minTabWidth = 50,
                                      ...props
                                    }: ResponsiveTabsListProps) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
@@ -59,6 +58,24 @@ export function ResponsiveTabsList({
     }
   }, [])
 
+  // 新增获取Tabs实际宽度的ref
+  const tabsWidthRef = React.useRef<number>(0);
+
+  // 计算Tabs实际宽度的函数
+  const calculateTabsWidth = () => {
+    if (tabsListRef.current) {
+      const containerWidth = scrollContainerRef.current?.clientWidth || 0;
+      const requiredWidth = childCount * minTabWidth;
+
+      // 根据布局策略计算实际显示宽度
+      const actualWidth = useScrollLayout
+          ? Math.min(requiredWidth, containerWidth)
+          : requiredWidth;
+
+      tabsWidthRef.current = actualWidth;
+    }
+  };
+
   // Add scroll event listener
   React.useEffect(() => {
     const scrollContainer = scrollContainerRef.current
@@ -80,20 +97,30 @@ export function ResponsiveTabsList({
     }
   }, [checkScroll])
 
-  // Scroll functions
-  const scrollLeft = (e) => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -scrollAmount, behavior: "smooth" })
-    }
-    e.preventDefault()
-  }
+  // 在布局检查时更新宽度
+  React.useEffect(() => {
+    calculateTabsWidth();
+    window.addEventListener("resize", calculateTabsWidth);
+    return () => window.removeEventListener("resize", calculateTabsWidth);
+  }, [childCount, minTabWidth, useScrollLayout]);
 
-  const scrollRight = (e) => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" })
-    }
-    e.preventDefault()
-  }
+  // 修改后的滚动函数
+  const scrollPage = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, direction: 'left' | 'right') => {
+    e.preventDefault();
+    if (!scrollContainerRef.current || !tabsWidthRef.current) return;
+
+    const currentScroll = scrollContainerRef.current.scrollLeft;
+    const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
+
+    const newScroll = direction === 'left'
+        ? Math.max(currentScroll - tabsWidthRef.current, 0)
+        : Math.min(currentScroll + tabsWidthRef.current, maxScroll);
+
+    scrollContainerRef.current.scrollTo({
+      left: newScroll,
+      behavior: "smooth"
+    });
+  };
 
   return (
       <div className="relative flex items-center w-full">
@@ -103,7 +130,7 @@ export function ResponsiveTabsList({
                 variant="ghost"
                 size="icon"
                 className="absolute left-0 z-10 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm"
-                onClick={scrollLeft}
+                onClick={(e) => scrollPage(e,'left')}
             >
               <ChevronLeft className="h-4 w-4" />
               <span className="sr-only">向左滚动</span>
@@ -155,7 +182,7 @@ export function ResponsiveTabsList({
                 variant="ghost"
                 size="icon"
                 className="absolute right-0 z-10 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm"
-                onClick={scrollRight}
+                onClick={(e) => scrollPage(e,'right')}
             >
               <ChevronRight className="h-4 w-4" />
               <span className="sr-only">向右滚动</span>

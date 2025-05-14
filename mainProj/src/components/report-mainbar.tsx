@@ -16,8 +16,9 @@ interface ReportSidebarProps {
     }[]
     children?: React.ReactNode
 }
-
-export function ReportSidebar({ repId, items = [], children }: ReportSidebarProps) {
+/**主菜单区域的
+ * */
+export function ReportMainbar({ repId, items = [], children }: ReportSidebarProps) {
     const pathname = usePathname()
     const [isOpen, setIsOpen] = React.useState(false)
     const sidebarRef = React.useRef<HTMLDivElement>(null)
@@ -73,7 +74,7 @@ export function ReportSidebar({ repId, items = [], children }: ReportSidebarProp
         <>
             {/* Trigger button - fixed in the top-left corner */}
             <Button ref={triggerRef} variant="ghost" size="icon"
-                className="fixed top-2 left-2 print:hidden z-50 hover:backdrop-blur-[1px] active:bg-white/50 mix-blend-multiply transition-all h-8 w-8"
+                className="fixed top-0 md:top-2 left-2 print:hidden z-50 hover:backdrop-blur-[1px] active:bg-white/50 mix-blend-multiply transition-all h-8 w-8"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <Menu className="h-3.5 w-3.5 opacity-90" />
