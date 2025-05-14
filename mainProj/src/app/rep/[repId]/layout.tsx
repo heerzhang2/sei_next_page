@@ -15,6 +15,7 @@ export default async function ReportRootLayout({
                                                    children,
                                                }: { params: Promise<{ repId: string }>; children: ReactNode }) {
     const { repId } = await params
+    //className="pt-10 ?哪来的 className="pt-0"
     return (
         <>
             <ReportMakeable />
@@ -22,7 +23,7 @@ export default async function ReportRootLayout({
                 <ReportData repId={repId}>
                     <ModificationIndicator />
                     <ReportSidebar repId={repId} />
-                    <div className="pt-10 md:pt-0">{children}</div>
+                    <div >{children}</div>
                 </ReportData>
             </StorageProvider>
         </>

@@ -1,24 +1,248 @@
-import {Button} from "./mainProj/src/components/ui";
+"use client"
+import "./skeleton.css"
+import { Button } from "@/components/ui/button"
+import { SplitViewSticky } from "@/components/split-view-sticky"
+import { X, ChevronUp, ChevronDown } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type React from "react"
+import { useState, useEffect, useRef } from "react"
+import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider"
 
-const scrollEndOrTop = (e: React.MouseEvent) => {
-    // This is crucial - we need to stop the event completely
-    e.preventDefault();
-    e.stopPropagation();
-    // if(setActiveTab!==null)  setActiveTab("preview");
-    // setIsDialogOpen(true);
-    return false; // Ensure no further handling
+/**报告记录结合显示的框架
+ * */
+export default function Skeleton({
+                                     children,
+                                     repPanel,
+                                 }: Readonly<{
+    children: React.ReactNode
+    repPanel: React.ReactNode
+}>) {
+    const [isSmallScreen, setIsSmallScreen] = useState(() => {
+        return typeof window !== "undefined" ? window.innerWidth < 1024 : false
+    })
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const { activeTab, setActiveTab } = useEditControlContext()
+    const [isLandscape, setIsLandscape] = useState(false)
+    const [showScrollButtons, setShowScrollButtons] = useState(true)
+
+    // Refs for scroll containers
+    const mobileEditorRef = useRef<HTMLDivElement>(null)
+    const desktopEditorRef = useRef<HTMLDivElement>(null)
+
+    // Combined resize handler
+    useEffect(() => {
+        const handleResize = () => {
+            // Check screen size
+            const smallScreen = window.innerWidth < 1024
+            setIsSmallScreen(smallScreen)
+            // Check orientation
+            setIsLandscape(window.innerWidth > window.innerHeight)
+        }
+        // Initial calls
+        handleResize()
+        // Add event listeners
+        window.addEventListener("resize", handleResize)
+        window.addEventListener("orientationchange", handleResize)
+        // Cleanup
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            window.removeEventListener("orientationchange", handleResize)
+        }
+    }, [isSmallScreen])
+
+    useEffect(() => {
+        if (isSmallScreen) setIsDialogOpen(true)
+    }, [isSmallScreen])
+
+    // Handle tab change
+    const handleTabChange = (value: ReportPanelType) => {
+        // Change the active tab
+        setActiveTab(value)
+    }
+
+    // Scroll functions
+    const scrollToTop = () => {
+        if (isSmallScreen) {
+            mobileEditorRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+        } else {
+            desktopEditorRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+        }
+    }
+
+    const scrollToBottom = () => {
+        if (isSmallScreen) {
+            if (mobileEditorRef.current) {
+                mobileEditorRef.current.scrollTo({
+                    top: mobileEditorRef.current.scrollHeight,
+                    behavior: "smooth",
+                })
+            }
+        } else {
+            if (desktopEditorRef.current) {
+                desktopEditorRef.current.scrollTo({
+                    top: desktopEditorRef.current.scrollHeight,
+                    behavior: "smooth",
+                })
+            }
+        }
+    }
+
+    // Toggle scroll buttons
+    const toggleScrollButtons = () => {
+        setShowScrollButtons(!showScrollButtons)
+    }
+
+    return (
+        <div className="flex flex-col">
+            {/* Floating scroll buttons */}
+            {showScrollButtons && (
+                <div className="fixed top-4 right-4 flex flex-col gap-2 z-40">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="bg-white/80 backdrop-blur-sm shadow-md hover:bg-gray-100 dark:bg-gray-800/80 dark:hover:bg-gray-700 rounded-full"
+                        onClick={scrollToTop}
+                    >
+                        <ChevronUp className="h-4 w-4" />
+                        <span className="sr-only">Scroll to top</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="bg-white/80 backdrop-blur-sm shadow-md hover:bg-gray-100 dark:bg-gray-800/80 dark:hover:bg-gray-700 rounded-full"
+                        onClick={scrollToBottom}
+                    >
+                        <ChevronDown className="h-4 w-4" />
+                        <span className="sr-only">Scroll to bottom</span>
+                    </Button>
+                </div>
+            )}
+
+            {/* Toggle button for scroll buttons */}
+            <Button
+                variant="outline"
+                size="sm"
+                className="fixed bottom-14 left-24 z-40 bg-white/80 backdrop-blur-sm shadow-md hover:bg-gray-100 dark:bg-gray-800/80 dark:hover:bg-gray-700"
+                onClick={toggleScrollButtons}
+            >
+                {showScrollButtons ? "隐藏滚动按钮" : "显示滚动按钮"}
+            </Button>
+
+            {isSmallScreen ? (
+                <>
+                    {isLandscape ? (
+                        <div className="flex h-full">
+                            {/*手机横屏的 Vertical tabs layout for landscape */}
+                            <div className="flex flex-col w-full h-full">
+                                <Tabs value={activeTab}>
+                                    <div className="flex flex-row h-screen relative">
+                                        {/* Sticky Vertical TabsList with vertical text */}
+                                        <div className="sticky top-0 h-full flex items-center">
+                                            <TabsList className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
+                                                <TabsTrigger
+                                                    value="preview"
+                                                    className="vertical-tab-trigger px-2 py-6"
+                                                    onClick={() => handleTabChange("preview")}
+                                                >
+                                                    <span className="vertical-text">报告</span>
+                                                </TabsTrigger>
+                                                <TabsTrigger
+                                                    value="editor"
+                                                    className="vertical-tab-trigger px-2 py-6"
+                                                    onClick={() => handleTabChange("editor")}
+                                                >
+                                                    <span className="vertical-text">编制</span>
+                                                </TabsTrigger>
+                                                <Button variant="ghost" size="icon" className="ml-2" onClick={() => setIsDialogOpen(false)}>
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </TabsList>
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="h-screen">
+                                                <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
+                                                    <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto ">
+                                                        {repPanel}
+                                                    </div>
+                                                </div>
+                                                <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
+                                                    <div
+                                                        ref={mobileEditorRef}
+                                                        id="tabEditor-boundary"
+                                                        className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom"
+                                                    >
+                                                        {children}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Tabs>
+                            </div>
+                        </div>
+                    ) : (
+                        /*手机竖屏的 Portrait mode with sticky tabs */
+                        <Tabs value={activeTab}>
+                            <div className="flex flex-col h-screen">
+                                <div className="sticky top-0  bg-white border-b">
+                                    <div className="flex items-center justify-between p-0">
+                                        <TabsList className="grid w-full grid-cols-2 h-6 pt-0">
+                                            <TabsTrigger value="preview" className="h-6" onClick={() => handleTabChange("preview")}>
+                                                报告
+                                            </TabsTrigger>
+                                            <TabsTrigger value="editor" className="h-6" onClick={() => handleTabChange("editor")}>
+                                                编制
+                                            </TabsTrigger>
+                                        </TabsList>
+                                        <Button variant="ghost" size="sm" className="ml-2" onClick={() => setIsDialogOpen(false)}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <div className="h-[calc(100vh-33px)]">
+                                        <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
+                                            <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto ">
+                                                {repPanel}
+                                            </div>
+                                        </div>
+                                        <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
+                                            <div
+                                                ref={mobileEditorRef}
+                                                id="tabEditor-boundary"
+                                                className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto "
+                                            >
+                                                {children}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Tabs>
+                    )}
+                </>
+            ) : (
+                <SplitViewSticky //正常电脑屏幕的,overflow-hidden避免右半边页面俩个滚动条。
+                    className="overflow-hidden"
+                    defaultSplit={50}
+                    minLeftWidth={0}
+                    minRightWidth={0}
+                    independentScrolling={true}
+                    leftPanel={
+                        <div className="flex flex-col h-screen">
+                            <div className="overflow-auto flex-1">{repPanel}</div>
+                        </div>
+                    }
+                    rightPanel={
+                        <div className="h-full flex flex-col editor-panel">
+                            <div ref={desktopEditorRef} className="editor-content overflow-auto">
+                                {children}
+                            </div>
+                        </div>
+                    }
+                    sticky={true}
+                />
+            )}
+        </div>
+    )
 }
-<div
-    className="print:hidden xl:hidden fixed top-4 right-4 z-[1000]"
-    style={{ isolation: 'isolate' }} // Creates a new stacking context
->
-    <Button
-        onClick={scrollEndOrTop}
-        className="h-8 flex-shrink-0 items-center justify-center gap-0 overflow-hidden rounded-full px-2 text-sm font-medium shadow-lg"
-    >
-        {'下'}
-    </Button>
-</div>
-<div id='EHEAD'/>
-{recordList}
-<div id='ETAIL'/>
