@@ -8,7 +8,6 @@
 */
 @config "../../tailwind.config.ts";
 
-
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -338,7 +337,7 @@ body {
   }
 
   .print-container-min-5h::before {
-    content: '';
+    content: "";
     display: block;
     height: 4rem;         /* 创建5rem高度的占位空间 */
     margin-bottom: -4rem; /* 负边距抵消占位高度 */
