@@ -72,17 +72,13 @@ export function ReportSidebar({ repId, items = [], children }: ReportSidebarProp
     return (
         <>
             {/* Trigger button - fixed in the top-left corner */}
-            <Button
-                ref={triggerRef}
-                variant="ghost"
-                size="icon"
-                className="fixed top-2 left-2 z-50 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-gray-100 dark:bg-gray-800/80 dark:hover:bg-gray-700"
+            <Button ref={triggerRef} variant="ghost" size="icon"
+                className="fixed top-2 left-2 print:hidden z-50 hover:backdrop-blur-[1px] active:bg-white/50 mix-blend-multiply transition-all h-8 w-8"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <Menu className="h-4 w-4" />
+                <Menu className="h-3.5 w-3.5 opacity-90" />
                 <span className="sr-only">Open menu</span>
             </Button>
-
             {/* Overlay - visible on all screen sizes when sidebar is open */}
             {isOpen && <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setIsOpen(false)} />}
 

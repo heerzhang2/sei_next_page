@@ -11,6 +11,7 @@ import {Input,} from "@/components/ui";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
+import {ResponsiveTabsList} from "@/components/responsive-tabs-list";
 
 export const config加速度=[ ['加空载','空载'],['加满载','满载'],['加偏载','偏载'],['加他况','其他载荷工况'] ];
 export const tail加速度=<div className="text-[0.75rem] leading-[1.3]">
@@ -174,14 +175,13 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                     </div>
                     <span>按测量工况分4个项目: 加速度A，单位（g）{'>>'}</span>
                     <Tabs defaultValue={config加速度[0][0]} className="w-full ">
-                        <TabsList className="grid" style={{ gridTemplateColumns: `repeat(${config加速度.length}, 1fr)` }}>
+                        <ResponsiveTabsList minTabWidth={80}>
                             {config加速度.map(([name, title]) => (
                                 <TabsTrigger key={name} value={name}>
                                     {title}
                                 </TabsTrigger>
                             ))}
-                        </TabsList>
-
+                        </ResponsiveTabsList>
                         {config加速度.map(([name, title]) => {
                             const tableArray = arrays![name]
                             const currentTableData = form.watch(name)
