@@ -61,7 +61,9 @@ export default function Sidebar({ items }: SidebarProps) {
             </div>
 
             {/* Mobile sidebar with Vaul drawer */}
-            <Drawer.Root open={isDialogOpen} onOpenChange={handleOpenChange} direction={"right"}>
+            <Drawer.Root open={isDialogOpen} onOpenChange={handleOpenChange} direction={"right"}
+                         autoFocus={true}
+            >
                 {/* We don't use Drawer.Trigger anymore */}
                 <Drawer.Portal>
                     {/* Transparent overlay that only blocks interactions */}
