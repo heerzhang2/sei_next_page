@@ -136,7 +136,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             name={"加测位"}
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel>测试位置</FormLabel>
+                                    <FormLabel className="select-text">测试位置</FormLabel>
                                     <FormControl className="w-full mr-1">
                                         <BlobInputList rows={2}  {...field}  />
                                     </FormControl>
@@ -150,7 +150,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             name={"加风速"}
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel>风速</FormLabel>
+                                     <FormLabel className="select-text">风速</FormLabel>
                                     <FormControl className="w-full mr-1">
                                         <SuffixInput  unit={"m/s"}  {...field}  />
                                     </FormControl>
@@ -164,7 +164,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             name={"加采频"}
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel>采样频率</FormLabel>
+                                     <FormLabel className="select-text">采样频率</FormLabel>
                                     <FormControl className="w-full">
                                         <SuffixInput  unit={"Hz"}  {...field}  />
                                     </FormControl>
@@ -177,7 +177,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                     <Tabs defaultValue={config加速度[0][0]} className="w-full ">
                         <ResponsiveTabsList minTabWidth={80}>
                             {config加速度.map(([name, title]) => (
-                                <TabsTrigger key={name} value={name}>
+                                <TabsTrigger key={name} value={name} className="select-text">
                                     {title}
                                 </TabsTrigger>
                             ))}
@@ -205,7 +205,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                                                                     name={`${name}.${index}.${field}`}
                                                                     render={({ field: formField }) => (
                                                                         <FormItem>
-                                                                            <FormLabel>{`次数 ${index + 1} ${fieldTitle}`}</FormLabel>
+                                                                             <FormLabel className="select-text">{`次数 ${index + 1} ${fieldTitle}`}</FormLabel>
                                                                             <FormControl>
                                                                                 <Input {...formField} placeholder={`请输入${fieldTitle}`} />
                                                                             </FormControl>
@@ -294,7 +294,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             name={"加速区域"}
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel>加速度区域</FormLabel>
+                                     <FormLabel className="select-text">加速度区域</FormLabel>
                                     <FormControl className="w-full mr-1">
                                         <BlobInputList rows={2} datalist={regions} {...field}  />
                                     </FormControl>
@@ -308,7 +308,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             name={"设计加速"}
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel>设计加速度区域</FormLabel>
+                                     <FormLabel className="select-text">设计加速度区域</FormLabel>
                                     <FormControl className="w-full mr-1">
                                         <BlobInputList rows={2}  {...field}  />
                                     </FormControl>
@@ -322,7 +322,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             name={"加速结论"}
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel>结果判定</FormLabel>
+                                     <FormLabel className="select-text">结果判定</FormLabel>
                                     <FormControl>
                                         <ClearableSelect
                                             field={field}
@@ -339,7 +339,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
                             name="加速备注"
                             render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                    <FormLabel>备注：</FormLabel>
+                                     <FormLabel className="select-text">备注：</FormLabel>
                                     <FormControl className="w-full h-24">
                                         <Textarea rows={4} {...field} />
                                     </FormControl>

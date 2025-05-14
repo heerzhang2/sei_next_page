@@ -130,7 +130,7 @@ export function CollapsibleFormSection({
                 type="button"
                 onClick={toggleOpen}
                 className={cn(
-                    "flex w-full items-center justify-between px-4 py-3 text-left font-medium bg-muted/50 hover:bg-muted transition-colors",
+                    "flex w-full items-center justify-between px-4 py-3 text-left font-medium bg-muted/50 hover:bg-muted transition-colors select-text",
                     titleClassName,
                 )}
                 aria-expanded={isOpen}
