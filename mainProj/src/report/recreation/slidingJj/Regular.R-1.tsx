@@ -5,7 +5,7 @@ import {useSearchParams} from "next/navigation"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
-import {ReportViewProps, RepTitleUpdate} from "@/report/common/base"
+import {OriginalDataMutation, ReportViewProps, RepTitleUpdate} from "@/report/common/base"
 import { 末尾链接, 落款单位地址 } from "@/report/common/rarelyVary"
 import type { Column_Setting } from "@/report/common/useFormatOmni"
 import { useOfficialOmni } from "@/report/common/useOfficialOmni"
@@ -18,6 +18,12 @@ import { setupItemAreaRoute } from "./orcIspConfig"
 import { FormatOriginal } from "./FormatOriginal"
 import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
 import {DirectLink} from "@/routing/Link";
+import {useFieldArray, useForm} from "react-hook-form";
+import type {z} from "zod";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {useMutation} from "@urql/next";
+import {toast} from "sonner";
+import {Button, CardFooter, Form} from "@/components/ui";
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
@@ -28,9 +34,11 @@ export const ReportView = ({ rep }: any) => {
         window.print()
     }
     return <>
+        <div id='PHEAD'/>
         <RepTitleUpdate code={storage?.eqpcod} original={original}/>
         <Component source={storage} rep={rep}/>
         {末尾链接({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,toPDF})}
+        <div id='PTAIL'/>
     </>
 }
 
@@ -123,26 +131,35 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
 }
 
 //原始记录的导航该放在后面：
-export const contentItems = [
-    {title: "设备概况", url: "#Survey"},
-    {title: "检验结论", url: "#Conclusion"},
-    {title: "K1资料审查", url: "#T1-1"},
-    {title: 'K2机械与结构检验', url: "#T2-1"},
-    {title: 'K3传动系统检验', url: "#T3-1"},
-    {title: 'K4电气及控制系统检验', url: "#T4-1"},
-    {title: "K5乘载系统检验", url: "#T5-1"},
-    {title: 'K6安全保护装置和防护措施检验', url: "#T6-1"},
-    {title: "K6.14安全网或者其他措施", url: "#T6-14"},
-    {title: 'K7载荷试验与测试', url: "#T7-1"},
-    {title: '检验不合格项目内容及复检结果', url: "#ReCheck"},
-    {title: "附录D：现场检验条件", url: "#SiteCondition"},
-    {title: "记事 备注", url: "#Witness"},
-    {title: "主要测量设备性能检查", url: "#Instrument"},
-    {title: "观测数据及测量结果记录", url: "#Measure"},
-    {title: "附录A主要技术参数测试", url: "#MainTechnical"},
-    {title: "附录B应力测试记录", url: "#StrainStress"},
-    {title: "附录C加速度检测记录", url: "#Acceleration"},
-]
+export function useCatalog() {
+    const {storage} = useStorage()
+    const dirs = React.useMemo(() => {
+        let list =[
+            {title: "页面头部", url: "#PHEAD"},
+            {title: "页面尾巴", url: "#PTAIL"},
+            {title: "设备概况", url: "#Survey"},
+            {title: "检验结论", url: "#Conclusion"},
+            {title: "K1资料审查", url: "#T1-1"},
+            {title: 'K2机械与结构检验', url: "#T2-1"},
+            {title: 'K3传动系统检验', url: "#T3-1"},
+            {title: 'K4电气及控制系统检验', url: "#T4-1"},
+            {title: "K5乘载系统检验", url: "#T5-1"},
+            {title: 'K6安全保护装置和防护措施检验', url: "#T6-1"},
+            {title: "K6.14安全网或者其他措施", url: "#T6-14"},
+            {title: 'K7载荷试验与测试', url: "#T7-1"},
+            {title: '检验不合格项目内容及复检结果', url: "#ReCheck"},
+            {title: "附录D：现场检验条件", url: "#SiteCondition"},
+            {title: "记事 备注", url: "#Witness"},
+            {title: "主要测量设备性能检查", url: "#Instrument"},
+            {title: "观测数据及测量结果记录", url: "#Measure"},
+            {title: "附录A主要技术参数测试", url: "#MainTechnical"},
+            {title: "附录B应力测试记录", url: "#StrainStress"},
+            {title: "附录C加速度检测记录", url: "#Acceleration"},
+        ]
+        return list
+    }, [storage])
+    return dirs
+}
 
 //【表格工具】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
 //5.1?make=1#5.1       {title: "K5乘载系统检验  K5.1", url: "#T5-1"},

@@ -7,7 +7,7 @@ import PageSectionOrientation from "@/components/page-section-orientation";
 import Report from "@/component/rep/report";
 import {useParams, useSearchParams} from "next/navigation";
 import {EditControlProvider} from "@/component/rep/editControl-provider";
-import {contentItems, ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
+import {ReportView, useCatalog} from "@/report/recreation/slidingJj/Regular.R-1";
 
 export default function Layout({children}: Readonly<{children: React.ReactNode}>) {
     const params = useParams() as unknown as ReportParams
@@ -16,10 +16,11 @@ export default function Layout({children}: Readonly<{children: React.ReactNode}>
     const print = "1"===searchParams!.get("print")
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
     const {getReport: report} = result?.data;
+    const catItems=useCatalog()
     return (
         <EditControlProvider>
             <PageSectionOrientation>
-                { action? <ReportLayout repPanel={<ReportView rep={report}/>} items={contentItems}>
+                { action? <ReportLayout repPanel={<ReportView rep={report}/>} items={catItems}>
                         { children }
                     </ReportLayout>
                     :
@@ -30,7 +31,7 @@ export default function Layout({children}: Readonly<{children: React.ReactNode}>
                        :
                         <div className="flex h-screen print:h-auto">
                             {children}
-                            <Report items={contentItems}>
+                            <Report items={catItems}>
                                 <ReportView rep={report}/>
                             </Report>
                         </div>

@@ -99,6 +99,6 @@ export const OriginalView=
 
     const {list}=useRecordList(ref,rep,recordPrintListNow,action,verId);
     return <React.Fragment>
-      {list}
+            {list}
     </React.Fragment>;
   } );

@@ -29,11 +29,10 @@ export default function ReportLayout({
     return <div className="skelon-placeholder">SSR加载中...</div>;
   }
   // After hydration, render the full component
-
+    //不能再加<EditControlProvider>，上面层次组件提供了
     //children有两类情形：1，正式报告或记录  2，单独的编制编辑器。
-    return (<>
+    return (
       <div  className="flex h-screen print:h-auto">
-        <EditControlProvider>
           {params?.action ? <>
                 <div className="flex-1 overflow-hidden">
                   <div className="mx-auto px-0 pt-0 pb-0">
@@ -49,8 +48,6 @@ export default function ReportLayout({
             :
             children
           }
-        </EditControlProvider>
       </div>
-        </>
     )
 }

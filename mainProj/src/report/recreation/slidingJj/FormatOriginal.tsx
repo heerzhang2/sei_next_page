@@ -26,8 +26,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
     }, [rep,orc?._Oitems]);
     const {renderIspContent} =useFormatOmni({itRes:orc,ItemArs:impressionismAs?.Item, config:config记录, rep, rcc:true});
     const [mapNoTag]=useItemsMapOmni({ ItemArs:impressionismAs?.Item, notCheckNo:true});
-  return (
-    <React.Fragment>
+  return <>
         <div className="mt-4 mb-4 print:mt-0 print:mb-0">
             <div className="print:h-screen print:break-after-page flex flex-col justify-evenly">
                 <div>
@@ -127,6 +126,5 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             <AccelerationVw orc={orc} rep={rep}  stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>
             {常用现场条件({orc, rep, config: tItems现场,dcln:5,label:'附录D：现场检验条件确认'})}
         </div>
-    </React.Fragment>
-  );
+    </>
 }
