@@ -4,7 +4,10 @@ import {Button} from "@/components/ui/button";
 import React, {useState} from "react";
 import {Drawer} from "vaul";
 import { X } from 'lucide-react';
+import {VisuallyHidden} from "@radix-ui/react-visually-hidden";
+// import * as HiddenPrimitives from "@radix-ui/react-visually-hidden"
 import {useEditControlContext} from "@/component/rep/editControl-provider";
+
 
 interface SidebarProps {
     items: {
@@ -33,7 +36,8 @@ export default function Sidebar({ items }: SidebarProps) {
         setIsDialogOpen(true);
         return false; // Ensure no further handling
     }
-
+    //<Drawer.Title /><Drawer.Description />都是必须的；<Dialog.Title asChild> <VisuallyHidden>设置偏好</VisuallyHidden> </Dialog.Title>
+    //但是报错<div> cannot be a descendant of <p>. 加个空白的
     return (
         <>
             {/* Desktop sidebar - always visible */}
@@ -69,7 +73,9 @@ export default function Sidebar({ items }: SidebarProps) {
                             `}>
                         <div className="w-full h-full overflow-auto p-4 rounded-t-[10px] pb-32">
                             <div className="flex justify-between items-center mb-4">
-                                <Drawer.Title className="font-medium text-gray-900">辅助内容</Drawer.Title>
+                                <Drawer.Title className="font-medium text-gray-900">
+                                    <VisuallyHidden>辅助内容</VisuallyHidden>
+                                </Drawer.Title>
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -80,6 +86,7 @@ export default function Sidebar({ items }: SidebarProps) {
                                 </Button>
                             </div>
                             <TableOfContents items={items} />
+                            <Drawer.Description />
                         </div>
                     </Drawer.Content>
                 </Drawer.Portal>
