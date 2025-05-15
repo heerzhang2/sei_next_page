@@ -53,10 +53,12 @@
     <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/use-table-edit (2).tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/use-table-edit (3).tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/use-table-edit.tsx" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/use-table-editor.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/useFieldArrays.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/useFormFramework (1).tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/useFormFramework-with-arrays.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/useFormFramework.tsx" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mainProj/src/report/hook/useTableEdit.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/mobilecr" charset="GBK" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/mobilecr/Intial/i.E.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mainProj/src/report/mobilecr/intialWt/i.E.tsx" charset="UTF-8" />
