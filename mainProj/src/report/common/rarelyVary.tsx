@@ -1,8 +1,6 @@
+"use client";
 import * as React from "react";
-import {DirectLink} from "../../routing/Link";
 import Link from "next/link"
-import Img_Ma  from '../../images/MA.png';
-import Img_ReportNoQR from '../../images/reportNoQR.png';
 import {Button} from "@/components/ui";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
@@ -71,140 +69,139 @@ export const 落款单位地址 = () => (
 );
 
 //表格TableRow + 字体1rem 极限压缩每一行高度 19px;  rheight最大压缩Body行到32px;
-export const 型试落款地址= ({theme, } :{theme: any, }) => {
-    //没有表线的表格,避免显示过空的，极度压缩Table空间 ； [theme.mediaQueries.phone]: {}  但打印需要行高空大的。
- return <React.Fragment>
-    <Table fixed={["60%", "%"]} css={{borderCollapse: 'collapse',
-        "@media not print": {
-            "& tr": {
-              height: '1.1rem',
-            },
-            "& tr>td": {
-              padding: 0,
-            },
-        }
-    }} tight miniw={800}>
-      <TableBody>
-        <TableRow>
-          <RCell css={{border: 'none'}}><Text>型式试验机构地址：</Text></RCell>
-          <Cell css={{border: 'none'}}><Text>福建省福州市仓山区卢滨路370号</Text></Cell>
-        </TableRow>
-        <TableRow>
-          <RCell css={{border: 'none'}}><Text>邮政编码：</Text></RCell>
-          <Cell css={{border: 'none'}}><Text>350008</Text></Cell>
-        </TableRow>
-        <TableRow>
-          <RCell css={{border: 'none'}}><Text>联系电话：</Text></RCell>
-          <Cell css={{border: 'none'}}><Text>0591-88700710</Text></Cell>
-        </TableRow>
-      </TableBody>
-    </Table>
-  </React.Fragment>;
-}
+// export const 型试落款地址= ({theme, } :{theme: any, }) => {
+//     //没有表线的表格,避免显示过空的，极度压缩Table空间 ； [theme.mediaQueries.phone]: {}  但打印需要行高空大的。
+//  return <React.Fragment>
+//     <Table fixed={["60%", "%"]} css={{borderCollapse: 'collapse',
+//         "@media not print": {
+//             "& tr": {
+//               height: '1.1rem',
+//             },
+//             "& tr>td": {
+//               padding: 0,
+//             },
+//         }
+//     }} tight miniw={800}>
+//       <TableBody>
+//         <TableRow>
+//           <RCell css={{border: 'none'}}><Text>型式试验机构地址：</Text></RCell>
+//           <Cell css={{border: 'none'}}><Text>福建省福州市仓山区卢滨路370号</Text></Cell>
+//         </TableRow>
+//         <TableRow>
+//           <RCell css={{border: 'none'}}><Text>邮政编码：</Text></RCell>
+//           <Cell css={{border: 'none'}}><Text>350008</Text></Cell>
+//         </TableRow>
+//         <TableRow>
+//           <RCell css={{border: 'none'}}><Text>联系电话：</Text></RCell>
+//           <Cell css={{border: 'none'}}><Text>0591-88700710</Text></Cell>
+//         </TableRow>
+//       </TableBody>
+//     </Table>
+//   </React.Fragment>;
+// }
+
 /**报告封面的头部区域：
  * */
-export const reportFirstPageHead= ( {theme , No } :{theme: any, No:string}
-) => {
-  return <React.Fragment>
-      <div css={{
-        textAlign: "center",
-        "& > div": {
-          marginLeft: "auto",
-          marginRight: "auto"
-        },
-        "@media (min-width:690px),print and (min-width:538px)": {
-          display: "flex",
-          justifyContent: "space-between",
-          flexWrap: 'wrap',
-          "& > div": {
-            margin: theme.spaces.sm,
-          }
-        }
-      }}
-      >
-        <div>
-          <Embed css={{width: "190px",margin: "auto"}} width={95} height={45}>
-            <FadeImage src={Img_Ma}/>
-          </Embed>
-          <br/>
-          <Text variant="h5">181320110160</Text>
-        </div>
-        <div>
-          <Embed css={{width: "140px",margin: "auto"}} width={10} height={10}>
-            <FadeImage src={Img_ReportNoQR}/>
-          </Embed>
-        </div>
-        <div>
-          <Text variant="h5">FJB/TC-1001-1-0-2017</Text>
-          <br/><br/>
-          <Text variant="h5" css={{
-            "@media (min-width:690px),print and (min-width:538px)": {
-              marginRight: "1rem"
-            }
-          }}
-          >No：{No}
-          </Text>
-        </div>
-      </div>
-  </React.Fragment>;
-};
+// export const reportFirstPageHead= ( {theme , No } :{theme: any, No:string}
+// ) => {
+//   return <React.Fragment>
+//       <div css={{
+//         textAlign: "center",
+//         "& > div": {
+//           marginLeft: "auto",
+//           marginRight: "auto"
+//         },
+//         "@media (min-width:690px),print and (min-width:538px)": {
+//           display: "flex",
+//           justifyContent: "space-between",
+//           flexWrap: 'wrap',
+//           "& > div": {
+//             margin: theme.spaces.sm,
+//           }
+//         }
+//       }}
+//       >
+//         <div>
+//           <Embed css={{width: "190px",margin: "auto"}} width={95} height={45}>
+//             <FadeImage src={Img_Ma}/>
+//           </Embed>
+//           <br/>
+//           <Text variant="h5">181320110160</Text>
+//         </div>
+//         <div>
+//           <Embed css={{width: "140px",margin: "auto"}} width={10} height={10}>
+//             <FadeImage src={Img_ReportNoQR}/>
+//           </Embed>
+//         </div>
+//         <div>
+//           <Text variant="h5">FJB/TC-1001-1-0-2017</Text>
+//           <br/><br/>
+//           <Text variant="h5" css={{
+//             "@media (min-width:690px),print and (min-width:538px)": {
+//               marginRight: "1rem"
+//             }
+//           }}
+//           >No：{No}
+//           </Text>
+//         </div>
+//       </div>
+//   </React.Fragment>;
+// };
 
-/*@Deprecated
-旧版本的：
-* */
-export const reportFirstPageHeadAllNmbbm= ({theme , No } :{theme: any, No:string}
-) => {
-  return <React.Fragment>
-    <div css={{
-      textAlign: "center",
-      "& > div": {
-        marginLeft: "auto",
-        marginRight: "auto"
-      },
-      "@media (min-width:690px),print and (min-width:538px)": {
-        display: "flex",
-        justifyContent: "space-between",
-        flexWrap: 'wrap',
-        "& > div": {
-          margin: theme.spaces.sm,
-        }
-      }
-    }}
-    >
-      <div>
-        <Embed css={{width: "190px",margin: "auto"}} width={95} height={45}>
-          <FadeImage src={Img_Ma}/>
-        </Embed>
-        <br/>
-        <Text variant="h5">181320110160</Text>
-      </div>
-      <div>
-        <Embed css={{width: "140px",margin: "auto"}} width={10} height={10}>
-          <FadeImage src={Img_ReportNoQR}/>
-        </Embed>
-      </div>
-      <div css={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end'
-      }}>
-        <br/><br/><br/><br/><br/>
-        <div  css={{
-          display: 'flex',
-          "@media (min-width:690px),print and (min-width:538px)": {
-            marginRight: "1rem"
-          }
-        }}
-        ><Text variant="h5" >报告编号：</Text>
-          <Text variant="h5" css={{textDecoration: 'underline'}}>{No}</Text>
-        </div>
-      </div>
-    </div>
-  </React.Fragment>;
-};
+
+// export const reportFirstPageHeadAllNmbbm= ({theme , No } :{theme: any, No:string}
+// ) => {
+//   return <React.Fragment>
+//     <div css={{
+//       textAlign: "center",
+//       "& > div": {
+//         marginLeft: "auto",
+//         marginRight: "auto"
+//       },
+//       "@media (min-width:690px),print and (min-width:538px)": {
+//         display: "flex",
+//         justifyContent: "space-between",
+//         flexWrap: 'wrap',
+//         "& > div": {
+//           margin: theme.spaces.sm,
+//         }
+//       }
+//     }}
+//     >
+//       <div>
+//         <Embed css={{width: "190px",margin: "auto"}} width={95} height={45}>
+//           <FadeImage src={Img_Ma}/>
+//         </Embed>
+//         <br/>
+//         <Text variant="h5">181320110160</Text>
+//       </div>
+//       <div>
+//         <Embed css={{width: "140px",margin: "auto"}} width={10} height={10}>
+//           <FadeImage src={Img_ReportNoQR}/>
+//         </Embed>
+//       </div>
+//       <div css={{
+//         display: 'flex',
+//         flexDirection: 'column',
+//         alignItems: 'flex-end'
+//       }}>
+//         <br/><br/><br/><br/><br/>
+//         <div  css={{
+//           display: 'flex',
+//           "@media (min-width:690px),print and (min-width:538px)": {
+//             marginRight: "1rem"
+//           }
+//         }}
+//         ><Text variant="h5" >报告编号：</Text>
+//           <Text variant="h5" css={{textDecoration: 'underline'}}>{No}</Text>
+//         </div>
+//       </div>
+//     </div>
+//   </React.Fragment>;
+// };
 
 //重复性代码抽象抽取参数化后可复用。
-export const 末尾链接 = ({ template, verId, repId, rep, toPDF }: {
+export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
   template: string,
   verId: string,
   repId: string,
@@ -270,135 +267,86 @@ export const 末尾链接 = ({ template, verId, repId, rep, toPDF }: {
   );
 };
 
-export const 末尾链接3 = ({template, verId, repId, rep}: { template: string, verId: string, repId: string, rep: any }
-) => {
-    const theme = useTheme();
-    return (
-        <div id={'EndOfRep'} css={{
-            "@media print": {display: 'none'},
-            textAlign: 'center',
-            "@media not print": {
-                marginBottom: '0.8rem'    //影响打印！ 证书就一张的。
-            }
-        }}>
-            <RouterLink href="/">-报告完毕,返回-</RouterLink>
-            <div css={{
-                textAlign: "center",
-                "& > div": {
-                    marginLeft: "auto",
-                    marginRight: "auto",
-                    marginTop: '0.5rem',
-                    marginBottom: '0.5rem'
-                },
-                [theme.mediaQueries.md]: {
-                    display: "flex",
-                    justifyContent: "space-evenly",
-                    flexWrap: 'wrap'
-          }
-        }}>
-            <div>
-              <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/printAll`}>
-                看完整原始记录
-              </Link>
-            </div>
-            <div>
-              <Link href={`/report/${template}/ver/${verId}/${repId}/flowSelect`}>
-                流转(流程)
-              </Link>
-            </div>
-            <div>
-              <Link href="/">回首页</Link>
-            </div>
-            <div>
-              <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
-               编辑原始记录
-              </Link>
-            </div>
-        </div>
-    </div>
-  );
-};
 /**因为击链接出现hook报错只好假如2个参数了：ALL printAll需要去掉，要求跳转迂回才能避免编辑器列表的动态增加的ref.独立流转报告切换主报告时刻的编辑器的个数变化引起的useXXX报错。
  * 还是有detected a change in the order of Hooks called by ReportView. 报错的？
  * @param nestIn   嵌入显示于主报告视图上的情况;
  * @param flowNest  需要防止Hook报错的; 组件切换之间实际的可能并没有被卸载掉。
  * */
-export const 分项末尾链接= ( {template, verId, repId,urlMainRep,flowNest,nestIn}
-       : {template: string, verId:string, repId:string,urlMainRep:string,flowNest?:boolean,nestIn?:boolean}
-) => {
-  const theme = useTheme();
-  // const {history } = useContext(RoutingContext);
-  return  <div css={{
-    "@media print": {
-      display:'none'
-    },
-    textAlign:'center',
-    marginBottom: '0.8rem'
-  }}
-  >
-    { !nestIn &&
-        <RouterLink href={urlMainRep}>-分项报告完毕,返回主报告-</RouterLink>
-    }
-    <div css={{
-      textAlign: "center",
-      "& > div": {
-        marginLeft: "auto",
-        marginRight: "auto",
-        marginTop: '0.5rem',
-        marginBottom: '0.5rem'
-      },
-      [theme.mediaQueries.md]: {
-        display: "flex",
-        justifyContent: "space-evenly",
-        flexWrap: 'wrap'
-      }
-    }}
-    >
-      {flowNest? <div>
-          <RouterLink href={`/report/${template}/ver/${verId}/${repId}/`}>
-            看独立流转的报告记录
-          </RouterLink>
-        </div>
-        :
-        <>
-          <div>
-            <RouterLink href={`/report/${template}/ver/${verId}/${repId}/printAll`}>
-              看完整原始记录
-            </RouterLink>
-          </div>
-          <div>
-            <RouterLink href={`/report/${template}/ver/${verId}/${repId}/ALL`}>
-              编辑原始记录
-            </RouterLink>
-          </div>
-        </>
-      }
-    </div>
-  </div>;
-};
+// export const 分项末尾链接= ( {template, verId, repId,urlMainRep,flowNest,nestIn}
+//        : {template: string, verId:string, repId:string,urlMainRep:string,flowNest?:boolean,nestIn?:boolean}
+// ) => {
+//   const theme = useTheme();
+//   // const {history } = useContext(RoutingContext);
+//   return  <div css={{
+//     "@media print": {
+//       display:'none'
+//     },
+//     textAlign:'center',
+//     marginBottom: '0.8rem'
+//   }}
+//   >
+//     { !nestIn &&
+//         <RouterLink href={urlMainRep}>-分项报告完毕,返回主报告-</RouterLink>
+//     }
+//     <div css={{
+//       textAlign: "center",
+//       "& > div": {
+//         marginLeft: "auto",
+//         marginRight: "auto",
+//         marginTop: '0.5rem',
+//         marginBottom: '0.5rem'
+//       },
+//       [theme.mediaQueries.md]: {
+//         display: "flex",
+//         justifyContent: "space-evenly",
+//         flexWrap: 'wrap'
+//       }
+//     }}
+//     >
+//       {flowNest? <div>
+//           <RouterLink href={`/report/${template}/ver/${verId}/${repId}/`}>
+//             看独立流转的报告记录
+//           </RouterLink>
+//         </div>
+//         :
+//         <>
+//           <div>
+//             <RouterLink href={`/report/${template}/ver/${verId}/${repId}/printAll`}>
+//               看完整原始记录
+//             </RouterLink>
+//           </div>
+//           <div>
+//             <RouterLink href={`/report/${template}/ver/${verId}/${repId}/ALL`}>
+//               编辑原始记录
+//             </RouterLink>
+//           </div>
+//         </>
+//       }
+//     </div>
+//   </div>;
+// };
 
 
-//@Deprecated    待删除！
 //全部显示报告内容的按钮和控制：hook复用模式的。 点击按钮：全部显示(打印的，做全文搜索需要的)，再点击按钮恢复到默认初始化取值。
 //const {viewAll, viewAllBtnLine}=useViewReportALL();  整体显示 还是隐藏部分？
-export const useViewReportALL = () => {
-  const [viewAll, setViewAll] = React.useState(false);      //完全显示所有内容的！；
-  const viewAllBtnLine =<div css={{
-    "@media print": {
-      display:'none'
-    },
-    textAlign: 'center',
-  }}>
-      <IconButton  icon={viewAll?  <IconMinimize2 />: <IconMaximize2 />}
-                   variant="ghost"  label="全部显示"  size="md"
-                   onPress={e => {
-                     setViewAll(!viewAll)
-                   } }
-      />
-  </div>;
-
-  return { viewAll, viewAllBtnLine };
-};
+// export const useViewReportALL = () => {
+//   const [viewAll, setViewAll] = React.useState(false);      //完全显示所有内容的！；
+//   const viewAllBtnLine =<div css={{
+//     "@media print": {
+//       display:'none'
+//     },
+//     textAlign: 'center',
+//   }}>
+//       <IconButton  icon={viewAll?  <IconMinimize2 />: <IconMaximize2 />}
+//                    variant="ghost"  label="全部显示"  size="md"
+//                    onPress={e => {
+//                      setViewAll(!viewAll)
+//                    } }
+//       />
+//   </div>;
+//
+//   return { viewAll, viewAllBtnLine };
+// };
 
 type AttentionPointProps = {
     rep: any

@@ -1,37 +1,7 @@
 import * as React from "react";
 import type {UseFormReturn} from "react-hook-form";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
-import { BlobInputList,SuffixInput,} from "@/components/chub";
-
-/**针对性优化：measurementRender新版本：不拍外面用<LineColumn column={3}>嵌套后的效果也不错。
- * @param only : 只有一个测量字段的情形，否则是俩个字段。 【注意】only=false的情况在上面不要嵌套<LineColumn；嵌套两层的LineColumn布局不好。
- * @param unit 单位支持平方米的2在右上角的小写排版，所以扩充为 ReactNode ？{可兼容的}。
- * */
-export const measurementRender=(label: string,nameH:string,unit:string | React.ReactNode,inp:any,setInp:React.Dispatch<React.SetStateAction<any>>,only?:boolean
-)=> {
-  const oName=nameH+'o';
-  const vName=nameH+'v';
-  if(only){
-    return <div css={{display: 'flex',justifyContent:'space-between',alignItems:'flex-end',flexWrap: 'wrap'}}>
-      <Text css={{marginLeft: '3rem'}}>{label}：</Text>
-      <InputLine  label='观测数据' >
-        <SuffixInput  value={inp?.[oName] ||''} onSave={txt=> setInp({...inp,[oName]: txt || undefined })}>{unit}</SuffixInput>
-      </InputLine>
-    </div>;
-  }
-  else return <div>
-    <Text css={{marginLeft: '3rem'}}>{label}：</Text>
-    {/*这里 column=一行最多就2列布局的  !important */}
-    <LineColumn column={7}  >
-      <InputLine  label='观测数据' >
-        <SuffixInput  value={inp?.[oName] ||''} onSave={txt=> setInp({...inp,[oName]: txt || undefined })}>{unit}</SuffixInput>
-      </InputLine>
-      <InputLine  label='测量结果' >
-        <SuffixInput  value={inp?.[vName] ||''} onSave={txt=> setInp({...inp,[vName]: txt || undefined })}>{unit}</SuffixInput>
-      </InputLine>
-    </LineColumn>
-  </div>;
-}
+import { SuffixInput,} from "@/components/chub";
 
 //新一代测量：  多个测量的子项目项目配置 【关键目的】规范化配置模式。但是解析层次可能不一样代码。
 /** param t: string,小小项也即每一个行的输入的标题叙述。
@@ -77,88 +47,6 @@ export interface EachMeasureItemConfig {
   sync?: string;
 }
 
-/**新一代测量 展示
- * @param only : 只有一个测量字段的情形，否则是俩个字段。 【注意】only=false的情况在上面不要嵌套<LineColumn；嵌套两层的LineColumn布局不好。
- * @param unit 单位支持平方米的2在右上角的小写排版，所以扩充为 ReactNode ？{可兼容的}。
- * @param resDeft: 结果字段由外部规则注入的，测量结果的转换规则：同时也就不需要做存储的。 但也可能允许修改的。
- * @param resEdit: 结果字段允许修改的。 自动转换的 可能无法修改的。
- * @param allowableV 附加字段栏目 允许取值。
- * @param seqLineName  同一个序号底下的第一行的存储。
- * @param labelOmit  因为结果字段允许取值两个栏目的多行做归并的情形，提示标题。
- * @param columns  布局调整
- * @return {lcNode,outNode}   预备DOM的两个组件的组合。
- * */
-export const measurementCrender=(labels: any[],nameH:string,unit:string | React.ReactNode,inp:any,setInp:React.Dispatch<React.SetStateAction<any>>,
-                                 allowableV:boolean,resEdit:boolean,only?:boolean, resDeft?:any,seqLineName?:string,labelOmit?:string,columns?:number
-):{ outNode: JSX.Element|undefined; lcNode: JSX.Element; } => {
-  const oName=nameH+'o';
-  const vName=(seqLineName??nameH)+'v';      //若resDeft提供的，和可能没有该存储的；
-  const aName=nameH+'a';      //允许取值存储在
-  let iDesc='';     //局限 约定为：string;  若Node合并麻烦
-  for(let l=0;l<labels.length;l++){
-    if(l!==0) iDesc+=" ";
-    iDesc+=labels[l];
-  }
-  if(only) {
-    return {
-      lcNode:
-        <div  css={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap'}}>
-          <Text css={{marginLeft: '3rem'}}>{iDesc}：</Text>
-          <InputLine label='观测数据'>
-            <SuffixInput value={inp?.[oName] || ''}
-                         onSave={txt => setInp({...inp, [oName]: txt || undefined})}>{unit}</SuffixInput>
-          </InputLine>
-        </div>,
-      outNode: undefined,
-    }
-  }
-  else if(labelOmit) return{
-    outNode: <Text css={{marginLeft: '3rem'}} >{iDesc}：</Text> ,
-    lcNode: <LineColumn column={columns??6}  >
-          <InputLine  label='观测数据' >
-            <SuffixInput  value={inp?.[oName] ||''} onSave={txt=> setInp({...inp,[oName]: txt || undefined })}>{unit}</SuffixInput>
-          </InputLine>
-          { resEdit? <InputLine  label={(labelOmit??'')+'测量结果'}>
-                <SuffixInput  value={inp?.[vName] || resDeft || ''} onSave={txt=> setInp({...inp,[vName]: txt || undefined })}>{unit}</SuffixInput>
-              </InputLine>
-              :
-              <Text>{labelOmit}测量结果= { inp?.[vName]??resDeft } </Text>
-          }
-          { allowableV && <InputLine  label={(labelOmit??'')+'允许值'} >
-            <SuffixInput  value={inp?.[aName] ||''} onSave={txt=> setInp({...inp,[aName]: txt || undefined })}>{unit}</SuffixInput>
-          </InputLine>
-          }
-       </LineColumn>
-    };
-  else return{
-    lcNode: <div >
-        <Text css={{marginLeft: '3rem'}} >{iDesc}：</Text>
-        <LineColumn column={columns ?? 7}
-           css={{         //底层是display: grid布局的
-              alignItems: 'center',
-              justifyItems: 'center',
-           }}>
-          <InputLine label='观测数据'>
-            <SuffixInput value={inp?.[oName] || ''}
-                         onSave={txt => setInp({...inp, [oName]: txt || undefined})}>{unit}</SuffixInput>
-          </InputLine>
-          {resEdit ? <InputLine label={'测量结果'}>
-                <SuffixInput value={inp?.[vName] || resDeft || ''}
-                             onSave={txt => setInp({...inp, [vName]: txt || undefined})}>{unit}</SuffixInput>
-              </InputLine>
-              :
-              <Text>测量结果= {inp?.[vName] ?? resDeft} </Text>
-          }
-          {allowableV && <InputLine label={'允许值'}>
-            <SuffixInput value={inp?.[aName] || ''}
-                         onSave={txt => setInp({...inp, [aName]: txt || undefined})}>{unit}</SuffixInput>
-          </InputLine>
-          }
-        </LineColumn>
-      </div>,
-      outNode: undefined,
-  }
-}
 
 /**新一代测量 展示; #支持node当作标题;
  * @param only : 只有一个测量字段的情形，否则是俩个字段。 【注意】only=false的情况在上面不要嵌套<LineColumn；
@@ -262,7 +150,7 @@ export const MeasurementCline = ({form, item,labels,nameH,unit,
                               )}
             />
             :
-            <Text>{labelOmit}测量结果= { resDeft } </Text>
+            <span>{labelOmit}测量结果= { resDeft } </span>
         }
         { allowableV && <FormField control={form.control} name={aName}
                                    render={({ field }) => (

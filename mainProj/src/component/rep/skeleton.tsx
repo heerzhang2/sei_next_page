@@ -2,7 +2,7 @@
 import "./skeleton.css"
 import { Button } from "@/components/ui/button"
 import { SplitViewSticky } from "@/components/split-view-sticky"
-import { X, ChevronUp, ChevronDown } from "lucide-react"
+import { ChevronUp, ChevronDown } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
@@ -20,7 +20,6 @@ export default function Skeleton({
     const [isSmallScreen, setIsSmallScreen] = useState(() => {
         return typeof window !== "undefined" ? window.innerWidth < 1024 : false
     })
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
     const { activeTab, setActiveTab } = useEditControlContext()
     const [isLandscape, setIsLandscape] = useState(false)
     // Refs for scroll containers
@@ -46,10 +45,6 @@ export default function Skeleton({
             window.removeEventListener("resize", handleResize)
             window.removeEventListener("orientationchange", handleResize)
         }
-    }, [isSmallScreen])
-
-    useEffect(() => {
-        if (isSmallScreen) setIsDialogOpen(true)
     }, [isSmallScreen])
 
     // Handle tab change

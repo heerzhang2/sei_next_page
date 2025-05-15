@@ -7,7 +7,7 @@ import {RepLink, ReportViewProps} from "@/report/common/base";
 import {useItemsMapOmni} from "@/report/common/omni";
 import {Column_Setting, useFormatOmni} from "@/report/common/useFormatOmni";
 import {UnqualifiedIspTable} from "@/report/common/general";
-import {InstrumentVw, 常用现场条件, 测量允许检测, 测量备注两半, 设备概况页} from "@/report/common/view";
+import {InstrumentVw, 常用现场条件, MeasureAllowTest, MeasureMemoTwoRaft, DeviceServeyView} from "@/report/common/view";
 import {StrainStressVw} from "../waterJj/StrainStress";
 import {AccelerationVw} from "../waterJj/Acceleration";
 import {填写须知recr, 首页概况recr} from "./rarelyVary";
@@ -47,7 +47,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             </div>
             {填写须知recr}
             <InstrumentVw orc={orc} rep={rep} label={'一、主要测量设备性能检查'}/>
-            {设备概况页({label:'二、设备概况', orc, rep, config: config设备概况, fixed: ["5%", "13.5%", "32%", "8%", "9%", "%"] })}
+            {DeviceServeyView({label:'二、设备概况', orc, rep, config: config设备概况, fixed: ["5%", "13.5%", "32%", "8%", "9%", "%"] })}
             <PageSectionOrientation orientation="landscape">
                 <RepLink rep={rep} ori tag="ALL">
                     <h2 className={`text-2xl`}>三、检验记录</h2>
@@ -119,8 +119,8 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     </div>
                 </div>
             </RepLink>
-            {测量备注两半({orc, rep, config:config观测数据(orc),config2:config观测数据2(orc),mem:'观备注',label:'八、观测数据及测量结果记录',children:tail观测})}
-            {测量允许检测({orc, rep, config:config主技术,tag:'MainTechnical',mem:'主技备注',fixed:["4.1%", "16%", "9%", "6%", "%", "19%", "9%", "10%", "9%", "11%", "10%"],
+            {MeasureMemoTwoRaft({orc, rep, config:config观测数据(orc),config2:config观测数据2(orc),mem:'观备注',label:'八、观测数据及测量结果记录',children:tail观测})}
+            {MeasureAllowTest({orc, rep, config:config主技术,tag:'MainTechnical',mem:'主技备注',fixed:["4.1%", "16%", "9%", "6%", "%", "19%", "9%", "10%", "9%", "11%", "10%"],
                 label:'附录A K7.5 主要技术参数测试',children:tail主技})}
             <StrainStressVw orc={orc} rep={rep} sensit label={'附录B K7.6应力测试记录'}/>
             <AccelerationVw orc={orc} rep={rep}  stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>

@@ -1,19 +1,11 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-    Button,
-} from "customize-easy-ui-component";
-import {EditStorageContext} from "../StorageContext";
-import {useContext} from "react";
-import RoutingContext from "../../routing/RoutingContext";
-
+import {useStorage} from "../StorageContext";
 
 /**【代码复用】分项报告 当前的分项删除，或在这个后面增加一个新的分项,
  * */
 export function useDeleteAddSub(nestMd: string, redId: string,verId: string,repId: string
 ) {
-    const { history } = useContext(RoutingContext);
-    const {storage, setStorage} =React.useContext(EditStorageContext) as any;
+    const {storage, setStorage} =useStorage();
     function onInsertSeq(no:number){
         const maxIdNum =Math.max(...(storage?.['_'+nestMd] || [-1]) );
         const idx=storage?.['_'+nestMd]?.findIndex((it:any) => it === no);
@@ -33,17 +25,17 @@ export function useDeleteAddSub(nestMd: string, redId: string,verId: string,repI
              alignItems: 'center',
              justifyContent: 'space-evenly',
          }}>
-             <Button key={1} onClick={async () => {
-                 onDeleteSeq(Number(redId) );
-                 history.push('/report/'+nestMd+'/ver/'+verId+'/'+repId+'/ALL', {time: Date()} );      //清理掉被删除内容
-             }}
-             >删除当前分项
-             </Button>
-             <Button key={2}  onClick={async () => {
-                     onInsertSeq(Number(redId) );
-                     }}
-             >后面增加分项
-             </Button>
+             {/*<Button key={1} onClick={async () => {*/}
+             {/*    onDeleteSeq(Number(redId) );*/}
+             {/*    history.push('/report/'+nestMd+'/ver/'+verId+'/'+repId+'/ALL', {time: Date()} );      //清理掉被删除内容*/}
+             {/*}}*/}
+             {/*>删除当前分项*/}
+             {/*</Button>*/}
+             {/*<Button key={2}  onClick={async () => {*/}
+             {/*        onInsertSeq(Number(redId) );*/}
+             {/*        }}*/}
+             {/*>后面增加分项*/}
+             {/*</Button>*/}
          </div>
   );
     //数据还没有保存到服务器

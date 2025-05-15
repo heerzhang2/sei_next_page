@@ -6,14 +6,14 @@ import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/componen
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
 import {OriginalDataMutation, ReportViewProps, RepTitleUpdate} from "@/report/common/base"
-import { 末尾链接, 落款单位地址 } from "@/report/common/rarelyVary"
+import { RepFootLink, 落款单位地址 } from "@/report/common/rarelyVary"
 import type { Column_Setting } from "@/report/common/useFormatOmni"
 import { useOfficialOmni } from "@/report/common/useOfficialOmni"
 import { UnqualifiedIspTable } from "@/report/common/general"
 import { useItemsMapOmni } from "@/report/common/omni"
-import { ReportFirstPageHeadJd } from "@/report/park/rarelyVary"
+// import { ReportFirstPageHeadJd } from "@/report/park/rarelyVary"
 import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from "@/report/recreation/waterJj/rarelyVary"
-import { 报告设备详情 } from "./repView"
+import { RepDeviceDetail } from "./repView"
 import { setupItemAreaRoute } from "./orcIspConfig"
 import { FormatOriginal } from "./FormatOriginal"
 import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
@@ -24,6 +24,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {useMutation} from "@urql/next";
 import {toast} from "sonner";
 import {Button, CardFooter, Form} from "@/components/ui";
+import {ReportFirstPageHeadJd} from "@/report/common/head";
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
@@ -37,7 +38,7 @@ export const ReportView = ({ rep }: any) => {
         <div id='PHEAD'/>
         <RepTitleUpdate code={storage?.eqpcod} original={original}/>
         <Component source={storage} rep={rep}/>
-        {末尾链接({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,toPDF})}
+        {RepFootLink({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,toPDF})}
         <div id='PTAIL'/>
     </>
 }
@@ -87,7 +88,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         大型游乐设施监督检验报告
                     </Link>
                 </h4>
-                {报告设备详情({orc, rep})}
+                {RepDeviceDetail({orc, rep})}
                 {检验核准WaterJj({orc, rep})}
                 <PrintReserveLeast reserve="13rem"
                        title={<h4 className="text-xl text-center mt-4 print:mt-24">

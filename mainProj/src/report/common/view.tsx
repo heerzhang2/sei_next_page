@@ -6,7 +6,7 @@ import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from 
 import {DirectLink} from "@/routing/Link";
 import {EachObserveConfig, useObserveTable} from "@/report/hook/useObserve";
 //在原始记录使用的：
-export const 设备概况页 = ({orc, rep, config, fixed = ["4.2%", "12.1%", "39%", "9%", "11.1%", "%"], fromHead, label}
+export const DeviceServeyView = ({orc, rep, config, fixed = ["4.2%", "12.1%", "39%", "9%", "11.1%", "%"], fromHead, label}
                            : { orc: any, rep: any, config: any[], fixed?: string[], fromHead?: boolean, label: any }
 ) => {
     const renderUpper = usePrefixDataTable({config, orc, rep, slash: true});
@@ -160,7 +160,7 @@ export const InstrumentVw = ({orc, rep, label, fromHead}: {
 }
 /*单一个编辑区的, 有设计值列；
 * */
-export const 测量允许检测 = ({
+export const MeasureAllowTest = ({
                                  orc,
                                  rep,
                                  label,
@@ -211,7 +211,7 @@ export const 测量允许检测 = ({
 };
 //【表格工具】 JSON.parse(orc?._tblFixed??'[]'); 编辑器3段式窗口总宽度1595px；
 //有备注列的： 拆解成2个部分编辑器的。
-export const 测量备注两半 = ({
+export const MeasureMemoTwoRaft = ({
                                  orc, rep, label, config,
                                  fixed = ["2.8%", "6.2%", "3.3%", "9%", "%", "12%", "5%", "9%", "8%", "6.1%", "10%"]
                                  , children, config2, mem

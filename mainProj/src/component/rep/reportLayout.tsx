@@ -39,7 +39,7 @@ export default function ReportLayout({
                     <div className="flex flex-col min-h-screen">
                       <header className="border-b">
                       </header>
-                      <Skeleton children={children} repPanel={repPanel}/>
+                      <Skeleton repPanel={repPanel}>{children}</Skeleton>
                     </div>
                   </div>
                 </div>

@@ -1,10 +1,10 @@
 import * as React from "react";
-import {useTableEditor,} from "../hook/useRepTableEditor";
+// import {useTableEditor,} from "../hook/useRepTableEditor";
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
-import {InspectRecordLayout, InternalItemProps, useItemInputControl,} from "./base";
-import {useMeasureInpFilter} from "./hooks";
+import {InternalItemProps} from "./base";
+// import {useMeasureInpFilter} from "./hooks";
 import {z} from "zod";
 import {useStorage} from "@/report/StorageContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui";
@@ -82,9 +82,9 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
 };
 
 
-interface InstrumentReispProps  extends InternalItemProps{
-    label: string;
-}
+// interface InstrumentReispProps  extends InternalItemProps{
+//     label: string;
+// }
 const defaultValCb= (par: { 仪器表?: any; 复检仪器?: any; })=>{
     const { 复检仪器 }=par||{};
     if(!复检仪器)   par.复检仪器=[...(par.仪器表??[])];
@@ -94,25 +94,25 @@ export const itemA复检仪 = ['复检仪器','仪器表'];
 /**复检 仪器表录入页面的
  * 默认：第一次检验的仪表是 orc?.仪器表; 复检仪器表是 orc?.复检仪器=[];
  * */
-export const InstrumentReisp=
-    React.forwardRef((
-        { children, show ,alone=true,redId,nestMd,label,}:InstrumentReispProps,  ref
-    ) => {
-        const headview=<Text variant="h5">
-            {label}：
-        </Text>;
-        const tailview=<>
-            {tail测仪器}
-            <br/><hr/>
-        </>;
-
-        const [getInpFilter] = useMeasureInpFilter(null, itemA复检仪,defaultValCb);
-        const {inp, setInp} = useItemInputControl({ref});
-        const [renderInner]=useTableEditor({config:config仪器表, table:'复检仪器',column:4,
-                        inp, setInp,  headview, tailview,  });
-        const render=<InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter}  show={show}  redId={redId} nestMd={nestMd}
-                                          alone={alone}  label={label}>
-            {renderInner}
-        </InspectRecordLayout>;
-        return render;
-} );
+// export const InstrumentReisp=
+//     React.forwardRef((
+//         { children, show ,alone=true,redId,nestMd,label,}:InstrumentReispProps,  ref
+//     ) => {
+//         const headview=<Text variant="h5">
+//             {label}：
+//         </Text>;
+//         const tailview=<>
+//             {tail测仪器}
+//             <br/><hr/>
+//         </>;
+//
+//         const [getInpFilter] = useMeasureInpFilter(null, itemA复检仪,defaultValCb);
+//         const {inp, setInp} = useItemInputControl({ref});
+//         const [renderInner]=useTableEditor({config:config仪器表, table:'复检仪器',column:4,
+//                         inp, setInp,  headview, tailview,  });
+//         const render=<InspectRecordLayout inp={inp} setInp={setInp}  getInpFilter={getInpFilter}  show={show}  redId={redId} nestMd={nestMd}
+//                                           alone={alone}  label={label}>
+//             {renderInner}
+//         </InspectRecordLayout>;
+//         return render;
+// } );

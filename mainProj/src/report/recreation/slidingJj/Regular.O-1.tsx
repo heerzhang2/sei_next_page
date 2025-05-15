@@ -48,13 +48,13 @@ const recordPrintList =[
     createItem('ReCheck', <RecheckEditor config={config检验复检表} label={'四、检验不符合项目记录及复检结果'} setup={setupItemAreaRoute}/>),
     createItem('Conclusion', <ConclusionWaterJj startd label={'五、现场检验意见'}/>),
     createItem('Witness', <WitnessSimple label={'六、 备注 七、记事'} titles={['七、记事','六、备注']} witlist={记事选}
-                                         children={[null,
+                                         tails={[null,
                              <React.Fragment key={12}>注：特殊情况，应在备注中说明检验人员所负责检验的项目编号。</React.Fragment>
                          ]}
                     />),
-    createItem('Measure', <ObserveEdit memoF config={config观测数据} mem={'观备注'} label={'八、观测数据及测量结果记录(上)'} children={tail观测}/>),
-    createItem('Measure2', <ObserveEdit memoF config={config观测数据2} mem={'观备注'} label={'八、观测数据及测量结果记录(下)'} children={tail观测}/>),
-    createItem('MainTechnical', <ObserveEdit config={config主技术} allowableV mem={'主技备注'} label={'附录A K7.5 主要技术参数测试'} children={tail主技}/>),
+    createItem('Measure', <ObserveEdit memoF config={config观测数据} mem={'观备注'} label={'八、观测数据及测量结果记录(上)'}>{tail观测}</ObserveEdit>),
+    createItem('Measure2', <ObserveEdit memoF config={config观测数据2} mem={'观备注'} label={'八、观测数据及测量结果记录(下)'}>{tail观测}</ObserveEdit>),
+    createItem('MainTechnical', <ObserveEdit config={config主技术} allowableV mem={'主技备注'} label={'附录A K7.5 主要技术参数测试'}>{tail主技}</ObserveEdit>),
     createItem('StrainStress', <StrainStress sensit label='附录B K7.6应力测试记录'/>),
     createItem('Acceleration', <Acceleration sseq={4} stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>),
     createItem('SiteCondition', <SiteConditionSund config={tItems现场} label={'附录D：现场检验条件确认'}/>),
@@ -62,11 +62,7 @@ const recordPrintList =[
 if(process.env.NEXT_PUBLIC_APP_TEST==='true')  recordPrintList.splice(0,0,createItem('GenCode', <GenCode type='CmnTowerCrane' frameMod={defFrameM} defTitle={defaultTitle}/>));
 
 //repId传递无效： 实际最后还用rep动态克隆配置的。
-export const OriginalView=
-  React.forwardRef((
-    { action,  verId, repId='', rep,}
-    :OriginalViewProps, ref
-  ) => {
+export const OriginalView=({ action,  verId, repId='', rep}:OriginalViewProps)=>{
     const {storage, setStorage} =useStorage();
     console.log("OriginalViewaction=", action);
     const recordPrintListNow =React.useMemo(() => {
@@ -97,8 +93,8 @@ export const OriginalView=
       return routeAreas;
     }, [verId, repId,rep, storage?._Oitems]);
 
-    const {list}=useRecordList(ref,rep,recordPrintListNow,action,verId);
+    const {list}=useRecordList(rep,recordPrintListNow,action,verId);
     return <React.Fragment>
             {list}
     </React.Fragment>;
-  } );
+}

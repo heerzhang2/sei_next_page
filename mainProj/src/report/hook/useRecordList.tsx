@@ -5,14 +5,11 @@ import {useThrottle} from "../../hooks/useHelpers";
 import {useSubNestAcion} from "../common/helper";
 import {EditorAreaConfig, } from "../common/eHelper";
 import {useSubRepController} from "./useSubRepController";
-import {Button} from "@/components/ui";
-import { mergeEditorItemSubRefs} from "../tools";
-
 
 /**起重监督检验的 范本； 支持分项报告的原始记录
  * ref: useImperativeHandle， throttledSetDoConfirmModify， doConfirm，outCome，refCount 都已经作废：
  * */
-export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList: EditorAreaConfig[],
+export function useRecordList(rep: any, recordPrintList: EditorAreaConfig[],
                               modAction: string, verId: string, nestMdConfig?: string, titleRender?: (store: any) => React.ReactNode
 ) {
     const {redId,nestMd,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板
@@ -35,9 +32,9 @@ export function useRecordList(ref: React.Ref<unknown>, rep: any, recordPrintList
     //旧模式两次暴露传递，返回给爷辈组件。
     const [doConfirmModify, setDoConfirmModify] = React.useState(false);
     //这个用在：框架右边页面菜单上"全部项目一起确认" 点击收集数据setDoConfirmModify=。然后底下的副作用React.useEffect(自动收集存储。”确认“后再保存。当一个区块不允许点击因ref空的!
-    React.useImperativeHandle( ref,() => ({
-        doConfirm: (action==='ALL')? setDoConfirmModify: noOp
-    }), [setDoConfirmModify, action] );
+    // React.useImperativeHandle( ref,() => ({
+    //     doConfirm: (action==='ALL')? setDoConfirmModify: noOp
+    // }), [setDoConfirmModify, action] );
     const {doFunc:throttledSetDoConfirmModify, ready} = useThrottle(setDoConfirmModify,1500);
     //点按钮后outCome先要render一次获得最新值；必须从false到true的变化才能触发执行。 true->true不能执行的。 useLayoutEffect
     // React.useEffect(() => {

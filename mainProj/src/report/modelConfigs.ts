@@ -826,14 +826,14 @@ export const ModelTypeArr={
     "OXIDESKIN_AC": {path: "./boiler/oxideskin_ac/i" },
     "OXIDESKIN_THICK": {path: "./boiler/oxideskin_thick/i" },
     "ENDOSCOPIC_EX": {path: "./boiler/endoscopic_ex/i" },
-} as any;
+};
 
 
 
 /**报告类型 转换成 模板文件的文件路径名：
  * */
-function ModelConfigs(type: keyof typeof ModelTypeArr) {
-    return  ModelTypeArr[type]?.path;
-}
+// function ModelConfigs(type: keyof typeof ModelTypeArr) {
+//     return  ModelTypeArr[type]?.path;
+// }
 //返回字符串： 文件相对路径名字的前缀；
-export default ModelConfigs;
+// export default ModelConfigs;

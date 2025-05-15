@@ -1,7 +1,6 @@
 import * as React from "react";
 //单个项目整体检验结论；没输入的也算不合格， 但是：无此项／如都是／合并也是／。多个小项统筹判定。
 import {useCallback, useContext} from "react";
-import RoutingContext from "../../routing/RoutingContext";
 // import queryString from "query-string";
 // import {useMedia} from "use-media";
 // import {usePressable} from "customize-easy-ui-component";
@@ -122,24 +121,26 @@ export const itemResultTransform =(orc: any, inspectionContent:any[],
  * 【主报告】 /THICK_MS/0/Remark 可重复分项
  * */
 export function useSubNestAcion(modAction :string) {
+  //【未考虑承压的分项！】
   return {  action: modAction };
-  const { get:getRouteUrl } = useContext(RoutingContext);
-  const routeLevels=getRouteUrl().entries.length;      //3层次/report/:template ；原始记录的预览打印场景的是 2层次的/originalView/:template
-  const routePath =getRouteUrl().entries[routeLevels-1]?.routeData?.url;
-  const leftPath=window.location.pathname.substring(routePath.length);
-  const leftPathAr=leftPath.split('/');
-  // console.log(`动太嵌套的为部:`, modAction,leftPath,leftPathAr);  //THICK_MS 剩下 /0/Corrosive
-  //  /report/THICK_MS/ver/1/akDHJi77Qh2xTd4BJwdb5FJlcG9ydA/0/Corrosive
-  //  /report/VS-DJ/ver/1/akDHJi77Qh2xTd4BJwdb5FJlcG9ydA/THICK_MS/0/Remark"
-  if(leftPathAr.length<=1)   return {  action: modAction };
-  else if(leftPathAr.length<=2)  return {  action: leftPathAr[1], redId: modAction};
-  else {
-    const action=leftPathAr[2];
-    const redId=leftPathAr[1];
-    const nestMd=modAction;
-    return { redId,nestMd,action };
-  }
+  // const { get:getRouteUrl } = useContext(RoutingContext);
+  // const routeLevels=getRouteUrl().entries.length;      //3层次/report/:template ；原始记录的预览打印场景的是 2层次的/originalView/:template
+  // const routePath =getRouteUrl().entries[routeLevels-1]?.routeData?.url;
+  // const leftPath=window.location.pathname.substring(routePath.length);
+  // const leftPathAr=leftPath.split('/');
+  // // console.log(`动太嵌套的为部:`, modAction,leftPath,leftPathAr);  //THICK_MS 剩下 /0/Corrosive
+  // //  /report/THICK_MS/ver/1/akDHJi77Qh2xTd4BJwdb5FJlcG9ydA/0/Corrosive
+  // //  /report/VS-DJ/ver/1/akDHJi77Qh2xTd4BJwdb5FJlcG9ydA/THICK_MS/0/Remark"
+  // if(leftPathAr.length<=1)   return {  action: modAction };
+  // else if(leftPathAr.length<=2)  return {  action: leftPathAr[1], redId: modAction};
+  // else {
+  //   const action=leftPathAr[2];
+  //   const redId=leftPathAr[1];
+  //   const nestMd=modAction;
+  //   return { redId,nestMd,action };
+  // }
 }
+
 
 //报告太大了：部分区域局部化可折叠形式；initArr数组可以支持多个状态变量一起封装生成的。
 //【关键原因】initArr的数组大小变动导致的：hook错误抛出！！

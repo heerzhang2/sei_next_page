@@ -1,6 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-
 
 /**结论区域只有唯一一个的；但是允许自己拆分为多个的可输入的字段名的区域。
  * 一个路由标签sno可以路由到多个的RecordInputConfig对应视图的。

@@ -11,7 +11,7 @@ import {CCell} from "@/components/flexible-table";
 export const cbK2_4 =(orc:any,parOrc:any)=> {
     return {
         edit: (form: UseFormReturn<any, any, any>) => {
-            return [false, <div><h4>K2.4抽查的结构件为：</h4>
+            return [false, <div key='1'><h4>K2.4抽查的结构件为：</h4>
                 <FormField key={"抽查构件"}
                            control={form.control}
                            name={"抽查构件"}
@@ -45,7 +45,7 @@ export const cbK3_55 =(orc:any,parOrc:any)=> {
         edit: (form: UseFormReturn<any, any, any>) => {
             const watchedValues = form.watch('磨损径') as number[]
             const avsDiam = calcAverageArrObj(watchedValues, (row) => row, 1, 4);
-            return [true, <div className="@7xl:col-span-2 @7xl:row-span-2 text-center">
+            return [true, <div key='1' className="@7xl:col-span-2 @7xl:row-span-2 text-center">
                 <h3 className="text-lg font-medium mb-0">磨损钢丝绳直径测量4个：</h3>
                 <div className="flex flex-wrap items-center gap-4 justify-center">
                     {Array.from({ length: 4 }).map((_, index) => (
@@ -95,7 +95,7 @@ export const cbK3_55 =(orc:any,parOrc:any)=> {
 export const cbK2_6 =(orc:any,parOrc:any)=> {
     return  {
       edit: (form: UseFormReturn<any, any, any>) => {
-        return [false, <div><h4>磨损最大的重要轴（销轴）为：</h4>
+        return [false, <div key='1'><h4>磨损最大的重要轴（销轴）为：</h4>
             <FormField control={form.control} name={`销轴损最`}
                 render={({ field }) => (
                     <FormItem className="flex-1">
@@ -126,7 +126,7 @@ export const cbK2_6 =(orc:any,parOrc:any)=> {
 export const cbK4_6 =(orc:any,parOrc:any)=> {
     return  {
   edit: (form: UseFormReturn<any, any, any>) => {
-    return [false, <div className="flex flex-wrap items-center gap-1 justify-center">
+    return [false, <div key='1' className="flex flex-wrap items-center gap-1 justify-center">
         <span>连续工作的异步电机工作电流应当不大于电机的额定电流。</span>
         <FormField
             control={form.control}
@@ -162,7 +162,7 @@ export const cbK4_6 =(orc:any,parOrc:any)=> {
 export const cbK5_21 =(orc:any,parOrc:any)=> {
     return  {
   edit: (form: UseFormReturn<any, any, any>) => {
-    return [false, <div className="flex flex-wrap items-center gap-1 justify-center content-center">
+    return [false, <div key='1' className="flex flex-wrap items-center gap-1 justify-center content-center">
         <span>座席距地面最大高度：</span>
       <FormField control={form.control} name="座席高"
                  render={({ field }) => (
@@ -194,7 +194,7 @@ export const genCBoOmit = (name: string,) => {
 export const cbK2_12_3 =(orc:any,parOrc:any)=> {
     return  {
         edit: (form: UseFormReturn<any, any, any>) => {
-            return [false, <div><h4>轨道型式为：</h4>
+            return [false, <div key='1'><h4>轨道型式为：</h4>
                 <FormField control={form.control} name="道型式"
                            render={({ field }) => (
                                <FormItem className="flex-1">
@@ -213,7 +213,7 @@ export const cbK2_12_3 =(orc:any,parOrc:any)=> {
 export const cbK2_12_4 =(orc:any,parOrc:any)=> {
     return  {
         edit: (form: UseFormReturn<any, any, any>) => {
-            return [false, <div><h4>侧轮在轨道哪一侧：</h4>
+            return [false, <div key='1'><h4>侧轮在轨道哪一侧：</h4>
                 <FormField control={form.control} name="侧轮哪侧"
                            render={({ field }) => (
                                <FormItem className="flex-1">

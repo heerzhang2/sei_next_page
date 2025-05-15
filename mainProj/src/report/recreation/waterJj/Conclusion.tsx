@@ -1,5 +1,5 @@
 import * as React from "react";
-import {InspectRecordLayout, InternalItemProps, SelectInput, useItemInputControl,} from "../../common/base";
+import { InternalItemProps } from "../../common/base";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import {

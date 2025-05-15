@@ -1,7 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, TableRow, Text,} from "customize-easy-ui-component";
-import { JSX } from "@emotion/react/jsx-runtime";
+
 /**通用的模型，
  * 可能配置的每一行定义 [name, prefixCols[{t:'title1',s: 3,cs:-1}, {},], item, unit,[defaultColValue1, 2]] 形式；
 * */
@@ -63,46 +61,46 @@ export interface OmnipotentPrefProps {
  * @property split : 比如配置split:[0,1]可以支持把第二行做特别处理的，输出分成三个部分，您可舍弃第二行后手动拼凑。
  * @property unitCel: 是否有单位栏。 项目类别也可能看作单位栏目。在配置数组的第四个位置的,unit没有默认继承性，
 * */
-export function useOmnipotentPref({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1,tag}: OmnipotentPrefProps
-) {
-    let outnode = [];        //根据split[] 拆分多个的。默认一个
-    let morenode: JSX.Element[]=[];
-    let splitptr=0;
-    //手动拆分 影响 标题各列的span配置？
-    config.forEach(([name,titlps,item,unit]: any, i:number) => {
-        //遇到了拆分哪一个输赢序号了：
-        if(split && i>split[splitptr]){
-            outnode.push(morenode);
-            morenode=[];
-            splitptr++;
-        }
-        morenode.push(<TableRow key={i} id={tag? tag+'_'+i : undefined}>
-            {!noNo && <CCell>{i+1}</CCell>}
-
-            {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
-                if( titlps[c]?.t ){           //最少配置 [{} ],
-                    if(c===titlps?.length-1){
-                        const leftCol=pcols-c;       //最后一格合并剩下的预设的标题列范围。
-                        return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
-                    }
-                    else return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
-                }
-            })}
-
-            <CCell colSpan={titlps?.length>0? xmcol: xmcol+pcols}>{item}</CCell>
-
-            { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-            }
-
-            { unitCel && <CCell>{unit??''}</CCell>
-            }
-            {tailRender!(orc, name,i,unit)}
-        </TableRow>);
-    });
-    outnode.push(morenode);
-    //不要用return [ outnode ]; 嵌套深
-    return [ ...outnode ];
-}
+// export function useOmnipotentPref({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1,tag}: OmnipotentPrefProps
+// ) {
+//     let outnode = [];        //根据split[] 拆分多个的。默认一个
+//     let morenode: JSX.Element[]=[];
+//     let splitptr=0;
+//     //手动拆分 影响 标题各列的span配置？
+//     config.forEach(([name,titlps,item,unit]: any, i:number) => {
+//         //遇到了拆分哪一个输赢序号了：
+//         if(split && i>split[splitptr]){
+//             outnode.push(morenode);
+//             morenode=[];
+//             splitptr++;
+//         }
+//         morenode.push(<TableRow key={i} id={tag? tag+'_'+i : undefined}>
+//             {!noNo && <CCell>{i+1}</CCell>}
+//
+//             {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
+//                 if( titlps[c]?.t ){           //最少配置 [{} ],
+//                     if(c===titlps?.length-1){
+//                         const leftCol=pcols-c;       //最后一格合并剩下的预设的标题列范围。
+//                         return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
+//                     }
+//                     else return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
+//                 }
+//             })}
+//
+//             <CCell colSpan={titlps?.length>0? xmcol: xmcol+pcols}>{item}</CCell>
+//
+//             { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//             }
+//
+//             { unitCel && <CCell>{unit??''}</CCell>
+//             }
+//             {tailRender!(orc, name,i,unit)}
+//         </TableRow>);
+//     });
+//     outnode.push(morenode);
+//     //不要用return [ outnode ]; 嵌套深
+//     return [ ...outnode ];
+// }
 
 /**更特殊的配置：
  * 增加支持： cs列数可配置。 并且能支持最后一个前缀栏 cs= -1 配置来让渡空间。
@@ -110,214 +108,215 @@ export function useOmnipotentPref({orc, config, tailRender, split, contc,unitCel
  * @param split [] 拆分
  * unit必须每一行独立配，不做传递继承地。
  * */
-export function useOmnipotentPrefCs({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1,tag}: OmnipotentPrefProps
-) {
-    let outnode = [];        //根据split[] 拆分多个的。默认一个
-    let morenode: JSX.Element[]=[];
-    let splitptr=0;
-    //手动拆分 影响 标题各列的span配置？
-    config.forEach(([name,titlps,item,unit]: any, i:number) => {
-        //遇到了拆分哪一个输赢序号了：
-        if(split && i>split[splitptr]){
-            outnode.push(morenode);
-            morenode=[];
-            splitptr++;
-        }
-        let xmcspan=titlps?.length>0? xmcol: xmcol+pcols;
-        if(titlps?.length>1 && titlps[titlps?.length-1]?.cs===-1)
-            xmcspan=xmcspan+1;       //前缀区域可让渡一个栏目空间给主项目栏。
-        morenode.push(<TableRow key={i} id={tag? tag+'_'+i : undefined}>
-            {!noNo && <CCell>{i+1}</CCell>}
-
-            {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
-                //最少配置 [{} ],
-                if( titlps[c]?.t || titlps[c]?.cs){
-                    if(c===titlps?.length-1){
-                        const leftCol=titlps[c]?.cs?  titlps[c]?.cs : (pcols-c);       //最后一格合并剩下的预设的标题列范围。
-                        if(titlps[c]?.cs===-1)  return null;
-                        else return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
-                    }
-                    else return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
-                }
-            })}
-
-            <CCell colSpan={xmcspan}>{item}</CCell>
-
-            { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-            }
-
-            { unitCel && <CCell>{unit??''}</CCell>
-            }
-            {tailRender!(orc, name,i,unit)}
-        </TableRow>);
-    });
-    outnode.push(morenode);
-    //不要用return [ outnode ]; 嵌套深
-    return [ ...outnode ];
-}
+// export function useOmnipotentPrefCs({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1,tag}: OmnipotentPrefProps
+// ) {
+//     let outnode = [];        //根据split[] 拆分多个的。默认一个
+//     let morenode: JSX.Element[]=[];
+//     let splitptr=0;
+//     //手动拆分 影响 标题各列的span配置？
+//     config.forEach(([name,titlps,item,unit]: any, i:number) => {
+//         //遇到了拆分哪一个输赢序号了：
+//         if(split && i>split[splitptr]){
+//             outnode.push(morenode);
+//             morenode=[];
+//             splitptr++;
+//         }
+//         let xmcspan=titlps?.length>0? xmcol: xmcol+pcols;
+//         if(titlps?.length>1 && titlps[titlps?.length-1]?.cs===-1)
+//             xmcspan=xmcspan+1;       //前缀区域可让渡一个栏目空间给主项目栏。
+//         morenode.push(<TableRow key={i} id={tag? tag+'_'+i : undefined}>
+//             {!noNo && <CCell>{i+1}</CCell>}
+//
+//             {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
+//                 //最少配置 [{} ],
+//                 if( titlps[c]?.t || titlps[c]?.cs){
+//                     if(c===titlps?.length-1){
+//                         const leftCol=titlps[c]?.cs?  titlps[c]?.cs : (pcols-c);       //最后一格合并剩下的预设的标题列范围。
+//                         if(titlps[c]?.cs===-1)  return null;
+//                         else return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
+//                     }
+//                     else return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
+//                 }
+//             })}
+//
+//             <CCell colSpan={xmcspan}>{item}</CCell>
+//
+//             { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//             }
+//
+//             { unitCel && <CCell>{unit??''}</CCell>
+//             }
+//             {tailRender!(orc, name,i,unit)}
+//         </TableRow>);
+//     });
+//     outnode.push(morenode);
+//     //不要用return [ outnode ]; 嵌套深
+//     return [ ...outnode ];
+// }
 
 /**特殊版本：@单位栏目 在 项目栏目 前面位置的；unit单位列插入到titlps的尾巴后面面那一列的位置布局。
  * */
-export function useOmnipotentPrefUahit({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1}: OmnipotentPrefProps
-) {
-    let outnode = [];        //根据split[] 拆分多个的。默认一个
-    let morenode: JSX.Element[]=[];
-    let splitptr=0;
-    //手动拆分 影响 标题各列的span配置？
-    config.forEach(([name,titlps,item,unit]: any, i:number) => {
-        //遇到了拆分哪一个输赢序号了：
-        if(split && i>split[splitptr]){
-            outnode.push(morenode);
-            morenode=[];
-            splitptr++;
-        }
-        morenode.push(<TableRow key={i}>
-            {!noNo && <CCell>{i+1}</CCell>}
-
-            {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
-                if( titlps[c]?.t ){           //最少配置 [{} ],
-                    if(c===titlps?.length-1){
-                        const leftCol=pcols-c;       //最后一格合并剩下的预设的标题列范围。
-                        return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
-                    }
-                    else return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
-                }
-            })}
-
-            { unitCel && <CCell>{unit??'／'}</CCell>
-            }
-
-            <CCell colSpan={titlps?.length>0? xmcol: xmcol+pcols}>{item}</CCell>
-
-            { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-            }
-
-            {tailRender!(orc, name,i,unit)}
-        </TableRow>);
-    });
-    outnode.push(morenode);
-    return [ ...outnode ];
-}
+// export function useOmnipotentPrefUahit({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1}: OmnipotentPrefProps
+// ) {
+//     let outnode = [];        //根据split[] 拆分多个的。默认一个
+//     let morenode: JSX.Element[]=[];
+//     let splitptr=0;
+//     //手动拆分 影响 标题各列的span配置？
+//     config.forEach(([name,titlps,item,unit]: any, i:number) => {
+//         //遇到了拆分哪一个输赢序号了：
+//         if(split && i>split[splitptr]){
+//             outnode.push(morenode);
+//             morenode=[];
+//             splitptr++;
+//         }
+//         morenode.push(<TableRow key={i}>
+//             {!noNo && <CCell>{i+1}</CCell>}
+//
+//             {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
+//                 if( titlps[c]?.t ){           //最少配置 [{} ],
+//                     if(c===titlps?.length-1){
+//                         const leftCol=pcols-c;       //最后一格合并剩下的预设的标题列范围。
+//                         return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
+//                     }
+//                     else return <CCell key={c} split={true} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
+//                 }
+//             })}
+//
+//             { unitCel && <CCell>{unit??'／'}</CCell>
+//             }
+//
+//             <CCell colSpan={titlps?.length>0? xmcol: xmcol+pcols}>{item}</CCell>
+//
+//             { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//             }
+//
+//             {tailRender!(orc, name,i,unit)}
+//         </TableRow>);
+//     });
+//     outnode.push(morenode);
+//     return [ ...outnode ];
+// }
 
 /**极为特殊版本：
  * 增加支持item项目特别拆分组合。
  * @property itemRender: 若有设置itemRender那么 表格后半部分全部自定义的，此刻tailRender也就无效的。
  * @property avpsp: 避免对前缀的跨行的栏目左打印跨页的拆分。
  * */
-export function useOmnipotentPrefItspe({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1,tag,itemRender,avpsp}: OmnipotentPrefProps
-) {
-    let outnode = [];        //根据split[] 拆分多个的。默认一个
-    let morenode: JSX.Element[]=[];
-    let splitptr=0;
-    //手动拆分 影响 标题各列的span配置？
-    config.forEach(([name,titlps,item,unit]: any, i:number) => {
-        //遇到了拆分哪一个输赢序号了：
-        if(split && i>split[splitptr]){
-            outnode.push(morenode);
-            morenode=[];
-            splitptr++;
-        }
-        let xmcspan=titlps?.length>0? xmcol: xmcol+pcols;
-        if(titlps?.length>1 && titlps[titlps?.length-1]?.cs===-1)
-            xmcspan=xmcspan+1;       //前缀区域可让渡一个栏目空间给主项目栏。
-        morenode.push(<TableRow key={i} id={tag? tag+'_'+i : undefined}>
-            {!noNo && <CCell>{i+1}</CCell>}
+// export function useOmnipotentPrefItspe({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1,tag,itemRender,avpsp}: OmnipotentPrefProps
+// ) {
+//     let outnode = [];        //根据split[] 拆分多个的。默认一个
+//     let morenode: JSX.Element[]=[];
+//     let splitptr=0;
+//     //手动拆分 影响 标题各列的span配置？
+//     config.forEach(([name,titlps,item,unit]: any, i:number) => {
+//         //遇到了拆分哪一个输赢序号了：
+//         if(split && i>split[splitptr]){
+//             outnode.push(morenode);
+//             morenode=[];
+//             splitptr++;
+//         }
+//         let xmcspan=titlps?.length>0? xmcol: xmcol+pcols;
+//         if(titlps?.length>1 && titlps[titlps?.length-1]?.cs===-1)
+//             xmcspan=xmcspan+1;       //前缀区域可让渡一个栏目空间给主项目栏。
+//         morenode.push(<TableRow key={i} id={tag? tag+'_'+i : undefined}>
+//             {!noNo && <CCell>{i+1}</CCell>}
+//
+//             {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
+//                 //最少配置 [{} ],
+//                 if( titlps[c]?.t || titlps[c]?.cs){
+//                     if(c===titlps?.length-1){
+//                         const leftCol=titlps[c]?.cs?  titlps[c]?.cs : (pcols-c);       //最后一格合并剩下的预设的标题列范围。
+//                         if(titlps[c]?.cs===-1)  return null;
+//                         else return <CCell key={c} split={!avpsp} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
+//                     }
+//                     else return <CCell key={c} split={!avpsp} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
+//                 }
+//             })}
+//
+//             { itemRender?
+//                 itemRender(orc, name, i, item, xmcspan,unit,config)
+//                 :
+//                 <>
+//                     <CCell colSpan={xmcspan}>{item}</CCell>
+//                     { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//                     }
+//                     { unitCel && <CCell>{unit??''}</CCell>
+//                     }
+//                     {tailRender!(orc, name,i,unit)}
+//                 </>
+//             }
+//         </TableRow>);
+//     });
+//     outnode.push(morenode);
+//     //不要用return [ outnode ]; 嵌套深
+//     return [ ...outnode ];
+// }
 
-            {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
-                //最少配置 [{} ],
-                if( titlps[c]?.t || titlps[c]?.cs){
-                    if(c===titlps?.length-1){
-                        const leftCol=titlps[c]?.cs?  titlps[c]?.cs : (pcols-c);       //最后一格合并剩下的预设的标题列范围。
-                        if(titlps[c]?.cs===-1)  return null;
-                        else return <CCell key={c} split={!avpsp} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
-                    }
-                    else return <CCell key={c} split={!avpsp} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
-                }
-            })}
-
-            { itemRender?
-                itemRender(orc, name, i, item, xmcspan,unit,config)
-                :
-                <>
-                    <CCell colSpan={xmcspan}>{item}</CCell>
-                    { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-                    }
-                    { unitCel && <CCell>{unit??''}</CCell>
-                    }
-                    {tailRender!(orc, name,i,unit)}
-                </>
-            }
-        </TableRow>);
-    });
-    outnode.push(morenode);
-    //不要用return [ outnode ]; 嵌套深
-    return [ ...outnode ];
-}
 
 /**超多定制能力的版本：把前缀部分移动开也可以单独的render多行的。
  * 增加支持item项目特别拆分组合。
  * @property itemRender: 若有设置itemRender那么 表格后半部分全部自定义的，此刻tailRender也就无效的。
  * @property avpsp: 避免对前缀的跨行的栏目左打印跨页的拆分。
  * */
-export function useOmnipotentPrefMove({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1,tag,itemRender,avpsp,rowsCB,cbIdx}: OmnipotentPrefProps
-) {
-    let outnode = [];        //根据split[] 拆分多个的。默认一个
-    let morenode: JSX.Element[]=[];
-    let splitptr=0;
-    //手动拆分 影响 标题各列的span配置？
-    config.forEach(([name,titlps,item,unit,_dfvs]: any, i:number) => {
-        //遇到了拆分哪一个输赢序号了：
-        if(split && i>split[splitptr]){
-            outnode.push(morenode);
-            morenode=[];
-            splitptr++;
-        }
-        let xmcspan=titlps?.length>0? xmcol: xmcol+pcols;
-        if(titlps?.length>1 && titlps[titlps?.length-1]?.cs===-1)
-            xmcspan=xmcspan+1;       //前缀区域可让渡一个栏目空间给主项目栏。
-        let needitmr=true;      //可能被rowsCB替换掉了
-        if(rowsCB && cbIdx!.has(i)){
-                    //这里允许客户定制返回多行 TableRow 甚至嵌套表格div;
-            const [userNodes, addmd]=rowsCB(orc, name, i, item, xmcspan,unit,config);
-            needitmr=addmd;
-                    // Object.assign(userNodes,{ key: 'C'+i });
-            morenode.push(userNodes as  any);
-        }
-        if(needitmr){
-            morenode.push(<TableRow key={i} id={tag? tag+'_'+i : undefined}>
-                {!noNo && <CCell>{i+1}</CCell>}
-
-                {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
-                    //最少配置 [{} ],
-                    if( titlps[c]?.t || titlps[c]?.cs){
-                        if(c===titlps?.length-1){
-                            const leftCol=titlps[c]?.cs?  titlps[c]?.cs : (pcols-c);       //最后一格合并剩下的预设的标题列范围。
-                            if(titlps[c]?.cs===-1)  return null;
-                            else return <CCell key={c} split={!avpsp} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
-                        }
-                        else return <CCell key={c} split={!avpsp} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
-                    }
-                })}
-
-                { itemRender?
-                    itemRender(orc, name, i, item, xmcspan,unit,config)
-                    :
-                    <>
-                        <CCell colSpan={xmcspan}>{item}</CCell>
-                        { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-                        }
-                        { unitCel && <CCell>{unit??''}</CCell>
-                        }
-                        {tailRender!(orc, name,i,unit)}
-                    </>
-                }
-            </TableRow>);
-        }
-    });
-    outnode.push(morenode);
-    //不要用return [ outnode ]; 嵌套深
-    return [ ...outnode ];
-}
+// export function useOmnipotentPrefMove({orc, config, tailRender, split, contc,unitCel,noNo,pcols=0,xmcol=1,tag,itemRender,avpsp,rowsCB,cbIdx}: OmnipotentPrefProps
+// ) {
+//     let outnode = [];        //根据split[] 拆分多个的。默认一个
+//     let morenode: JSX.Element[]=[];
+//     let splitptr=0;
+//     //手动拆分 影响 标题各列的span配置？
+//     config.forEach(([name,titlps,item,unit,_dfvs]: any, i:number) => {
+//         //遇到了拆分哪一个输赢序号了：
+//         if(split && i>split[splitptr]){
+//             outnode.push(morenode);
+//             morenode=[];
+//             splitptr++;
+//         }
+//         let xmcspan=titlps?.length>0? xmcol: xmcol+pcols;
+//         if(titlps?.length>1 && titlps[titlps?.length-1]?.cs===-1)
+//             xmcspan=xmcspan+1;       //前缀区域可让渡一个栏目空间给主项目栏。
+//         let needitmr=true;      //可能被rowsCB替换掉了
+//         if(rowsCB && cbIdx!.has(i)){
+//                     //这里允许客户定制返回多行 TableRow 甚至嵌套表格div;
+//             const [userNodes, addmd]=rowsCB(orc, name, i, item, xmcspan,unit,config);
+//             needitmr=addmd;
+//                     // Object.assign(userNodes,{ key: 'C'+i });
+//             morenode.push(userNodes as  any);
+//         }
+//         if(needitmr){
+//             morenode.push(<TableRow key={i} id={tag? tag+'_'+i : undefined}>
+//                 {!noNo && <CCell>{i+1}</CCell>}
+//
+//                 {pcols>0 && titlps?.length>0 && (new Array(titlps?.length).fill(null)).map((_,c:number) => {
+//                     //最少配置 [{} ],
+//                     if( titlps[c]?.t || titlps[c]?.cs){
+//                         if(c===titlps?.length-1){
+//                             const leftCol=titlps[c]?.cs?  titlps[c]?.cs : (pcols-c);       //最后一格合并剩下的预设的标题列范围。
+//                             if(titlps[c]?.cs===-1)  return null;
+//                             else return <CCell key={c} split={!avpsp} rowSpan={titlps[c]?.s??1} colSpan={leftCol}>{titlps[c]?.t}</CCell>
+//                         }
+//                         else return <CCell key={c} split={!avpsp} rowSpan={titlps[c]?.s??1}>{titlps[c]?.t}</CCell>
+//                     }
+//                 })}
+//
+//                 { itemRender?
+//                     itemRender(orc, name, i, item, xmcspan,unit,config)
+//                     :
+//                     <>
+//                         <CCell colSpan={xmcspan}>{item}</CCell>
+//                         { contc &&  <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//                         }
+//                         { unitCel && <CCell>{unit??''}</CCell>
+//                         }
+//                         {tailRender!(orc, name,i,unit)}
+//                     </>
+//                 }
+//             </TableRow>);
+//         }
+//     });
+//     outnode.push(morenode);
+//     //不要用return [ outnode ]; 嵌套深
+//     return [ ...outnode ];
+// }
 
 export interface OmnipotentPrefTitleProps {
     //每一行配置如下的 [name, prefixCols[{t:'title1',s: 2},,], item, unit] 形式；其中prefixCols可变的长度。t是文本,s是跨越几行的TD数默认=1。unit默认='';item=必须有的主标题描述。
@@ -332,136 +331,137 @@ export interface OmnipotentPrefTitleProps {
  * 单位栏目[, _2]没有处理:
  * 【注意】若多个前缀的，非最后一个前缀的 s参数不能省略，可加,s:1 ；
 * */
-export function useOmnipotentPrefTitle({config, baseSeq=0}: OmnipotentPrefTitleProps
-) {
-    let morenode: JSX.Element[]=[];
-    let bsLeft=0,sLeft=0,tLeft=0;
-    let bsCirc='',sCirc='',tCirc='';
-    //前缀可支持三个附加列配置的；
-    config.forEach(([_1, titlps,item, _2]: any, i:number) => {
-        const [{t: title, s:bspan}, more2, more3] = titlps?.length > 0 ? titlps : ([{}] as any);
-        const {t: title2, s:span=1} = more2 || {};
-        const {t: title3, s:tspan=1} = more3 || {};
-        if(tspan>0){
-            tLeft=tspan;
-            tCirc= title3!==undefined? title3:tCirc;
-        }else if(tLeft>0){
-            tLeft--;
-            if(null===title3)   tCirc=title3;
-        }
-        if(span>0){
-            sLeft=span;
-            sCirc= title2!==undefined? title2:sCirc;
-        }else if(sLeft>0){
-            sLeft--;
-            //支持这样的 [{},{t:null}],  后续几个免去显示太长的标题。
-            if(null===title2)   sCirc=title2;
-        }
-        if(bspan>0){
-            bsLeft=bspan;
-            bsCirc= title!==undefined? title:bsCirc;
-        }else if(bsLeft>0){
-            bsLeft--;
-            if(null===title)   bsCirc=title;
-        }
-        const tlNode=<Text>项目{i + 1+baseSeq} {bsLeft>0? bsCirc:''} - {sLeft>0 && sCirc? sCirc:''} {'>'} {tLeft>0 && tCirc? (tCirc+' >'):''}
-            <Text css={{fontWeight: 800}}>{item}</Text>  ：</Text>;
-
-        morenode.push(tlNode);
-    });
-    return morenode;
-}
+// export function useOmnipotentPrefTitle({config, baseSeq=0}: OmnipotentPrefTitleProps
+// ) {
+//     let morenode: JSX.Element[]=[];
+//     let bsLeft=0,sLeft=0,tLeft=0;
+//     let bsCirc='',sCirc='',tCirc='';
+//     //前缀可支持三个附加列配置的；
+//     config.forEach(([_1, titlps,item, _2]: any, i:number) => {
+//         const [{t: title, s:bspan}, more2, more3] = titlps?.length > 0 ? titlps : ([{}] as any);
+//         const {t: title2, s:span=1} = more2 || {};
+//         const {t: title3, s:tspan=1} = more3 || {};
+//         if(tspan>0){
+//             tLeft=tspan;
+//             tCirc= title3!==undefined? title3:tCirc;
+//         }else if(tLeft>0){
+//             tLeft--;
+//             if(null===title3)   tCirc=title3;
+//         }
+//         if(span>0){
+//             sLeft=span;
+//             sCirc= title2!==undefined? title2:sCirc;
+//         }else if(sLeft>0){
+//             sLeft--;
+//             //支持这样的 [{},{t:null}],  后续几个免去显示太长的标题。
+//             if(null===title2)   sCirc=title2;
+//         }
+//         if(bspan>0){
+//             bsLeft=bspan;
+//             bsCirc= title!==undefined? title:bsCirc;
+//         }else if(bsLeft>0){
+//             bsLeft--;
+//             if(null===title)   bsCirc=title;
+//         }
+//         const tlNode=<Text>项目{i + 1+baseSeq} {bsLeft>0? bsCirc:''} - {sLeft>0 && sCirc? sCirc:''} {'>'} {tLeft>0 && tCirc? (tCirc+' >'):''}
+//             <Text css={{fontWeight: 800}}>{item}</Text>  ：</Text>;
+//
+//         morenode.push(tlNode);
+//     });
+//     return morenode;
+// }
 
 /**这个是较老版本的 useOmnipotentPrefTitle，对比修新版的： 默认都是1行的rowSpan;这样配置数组无需要配置s参数的;
  * */
-export function useOmnipotentPrefTitle1R({config,}: OmnipotentPrefTitleProps
-) {
-    let morenode: JSX.Element[]=[];
-    let bsLeft=0,sLeft=0,tLeft=0;
-    let bsCirc='',sCirc='',tCirc='';
-    //前缀可支持三个附加列配置的；
-    config.forEach(([_1, titlps,item, _2]: any, i:number) => {
-        const [{t: title, s:bspan=1}, more2, more3] = titlps?.length > 0 ? titlps : ([{}] as any);
-        //默认的span ==1;      要注意：t=null ='' 不同于 undefined 的处理的。   支持null缩减
-        const {t: title2, s:span=1} = more2 || {};
-        const {t: title3, s:tspan=1} = more3 || {};
-        if(tspan>0){
-            tLeft=tspan;
-            tCirc= title3!==undefined? title3:tCirc;
-        }else if(tLeft>0){
-            tLeft--;
-        }
-        if(span>0){
-            sLeft=span;
-            sCirc= title2!==undefined? title2:sCirc;
-        }else if(sLeft>0){
-            sLeft--;
-        }
-        if(bspan>0){
-            bsLeft=bspan;
-            bsCirc= title!==undefined? title:bsCirc;
-        }else if(bsLeft>0){
-            bsLeft--;
-        }
-        const tlNode=<Text>项目{i + 1} {bsLeft>0? bsCirc:''} - {sLeft>0 && sCirc? sCirc:''} {'>'} {tLeft>0 && tCirc? (tCirc+' >'):''}
-            <Text css={{fontWeight: 800}}>{item}</Text>  ：</Text>;
+// export function useOmnipotentPrefTitle1R({config,}: OmnipotentPrefTitleProps
+// ) {
+//     let morenode: JSX.Element[]=[];
+//     let bsLeft=0,sLeft=0,tLeft=0;
+//     let bsCirc='',sCirc='',tCirc='';
+//     //前缀可支持三个附加列配置的；
+//     config.forEach(([_1, titlps,item, _2]: any, i:number) => {
+//         const [{t: title, s:bspan=1}, more2, more3] = titlps?.length > 0 ? titlps : ([{}] as any);
+//         //默认的span ==1;      要注意：t=null ='' 不同于 undefined 的处理的。   支持null缩减
+//         const {t: title2, s:span=1} = more2 || {};
+//         const {t: title3, s:tspan=1} = more3 || {};
+//         if(tspan>0){
+//             tLeft=tspan;
+//             tCirc= title3!==undefined? title3:tCirc;
+//         }else if(tLeft>0){
+//             tLeft--;
+//         }
+//         if(span>0){
+//             sLeft=span;
+//             sCirc= title2!==undefined? title2:sCirc;
+//         }else if(sLeft>0){
+//             sLeft--;
+//         }
+//         if(bspan>0){
+//             bsLeft=bspan;
+//             bsCirc= title!==undefined? title:bsCirc;
+//         }else if(bsLeft>0){
+//             bsLeft--;
+//         }
+//         const tlNode=<Text>项目{i + 1} {bsLeft>0? bsCirc:''} - {sLeft>0 && sCirc? sCirc:''} {'>'} {tLeft>0 && tCirc? (tCirc+' >'):''}
+//             <Text css={{fontWeight: 800}}>{item}</Text>  ：</Text>;
+//
+//         morenode.push(tlNode);
+//     });
+//     return morenode;
+// }
 
-        morenode.push(tlNode);
-    });
-    return morenode;
-}
 /**标题区域文字太多的：不需要递增的序号。
  * 布局样式参照 src/report/common/ActionMapItem.tsx
  * */
-export function useOmnipotentPrefTitBar({config, baseSeq=0}: OmnipotentPrefTitleProps
-) {
-    let morenode: JSX.Element[]=[];
-    let bsLeft=0,sLeft=0,tLeft=0;
-    let bsCirc='',sCirc='',tCirc='';
-    //前缀可支持三个附加列配置的；
-    config.forEach(([_1, titlps,item, _2]: any, i:number) => {
-        const [{t: title, s:bspan}, more2, more3] = titlps?.length > 0 ? titlps : ([{}] as any);
-        const {t: title2, s:span=1} = more2 || {};
-        const {t: title3, s:tspan=1} = more3 || {};
-        if(tspan>0){
-            tLeft=tspan;
-            tCirc= title3!==undefined? title3:tCirc;
-        }else if(tLeft>0){
-            tLeft--;
-            if(null===title3)   tCirc=title3;
-        }
-        if(span>0){
-            sLeft=span;
-            sCirc= title2!==undefined? title2:sCirc;
-        }else if(sLeft>0){
-            sLeft--;
-            //支持这样的 [{},{t:null}],  后续几个免去显示太长的标题。
-            if(null===title2)   sCirc=title2;
-        }
-        if(bspan>0){
-            bsLeft=bspan;
-            bsCirc= title!==undefined? title:bsCirc;
-        }else if(bsLeft>0){
-            bsLeft--;
-            if(null===title)   bsCirc=title;
-        }
-        const tlNode=<div key={i} css={{marginTop: '1rem',width:'100%'}}>
-            <div css={{display: 'flex', justifyContent: 'space-around' }}>
-                <Text variant={'subtitle'}>{`${i+1+baseSeq}`}</Text>
-                <div css={{display: 'flex', justifyContent: 'space-around',flex:'auto'}}>
-                    <Text variant="h6">{bsLeft>0? bsCirc:''}</Text>
-                    <Text variant="h6" css={{marginLeft: '0.5rem'}}>{sLeft>0 && sCirc? sCirc:''}</Text>
-                    <Text variant="h6" css={{marginLeft: '0.5rem'}}>{tLeft>0 && tCirc? tCirc:''}</Text>
-                </div>
-            </div>
-            { typeof item === "string"?
-                <Text css={{textAlign:'center',display:'block'}}>{item}</Text>
-                :
-                <div css={{ display: 'flex', justifyContent: 'center' }}>{item}</div>
-            }
-            <hr/>
-        </div>;
-        morenode.push(tlNode);
-    });
-    return morenode;
-}
+// export function useOmnipotentPrefTitBar({config, baseSeq=0}: OmnipotentPrefTitleProps
+// ) {
+//     let morenode: JSX.Element[]=[];
+//     let bsLeft=0,sLeft=0,tLeft=0;
+//     let bsCirc='',sCirc='',tCirc='';
+//     //前缀可支持三个附加列配置的；
+//     config.forEach(([_1, titlps,item, _2]: any, i:number) => {
+//         const [{t: title, s:bspan}, more2, more3] = titlps?.length > 0 ? titlps : ([{}] as any);
+//         const {t: title2, s:span=1} = more2 || {};
+//         const {t: title3, s:tspan=1} = more3 || {};
+//         if(tspan>0){
+//             tLeft=tspan;
+//             tCirc= title3!==undefined? title3:tCirc;
+//         }else if(tLeft>0){
+//             tLeft--;
+//             if(null===title3)   tCirc=title3;
+//         }
+//         if(span>0){
+//             sLeft=span;
+//             sCirc= title2!==undefined? title2:sCirc;
+//         }else if(sLeft>0){
+//             sLeft--;
+//             //支持这样的 [{},{t:null}],  后续几个免去显示太长的标题。
+//             if(null===title2)   sCirc=title2;
+//         }
+//         if(bspan>0){
+//             bsLeft=bspan;
+//             bsCirc= title!==undefined? title:bsCirc;
+//         }else if(bsLeft>0){
+//             bsLeft--;
+//             if(null===title)   bsCirc=title;
+//         }
+//         const tlNode=<div key={i} css={{marginTop: '1rem',width:'100%'}}>
+//             <div css={{display: 'flex', justifyContent: 'space-around' }}>
+//                 <Text variant={'subtitle'}>{`${i+1+baseSeq}`}</Text>
+//                 <div css={{display: 'flex', justifyContent: 'space-around',flex:'auto'}}>
+//                     <Text variant="h6">{bsLeft>0? bsCirc:''}</Text>
+//                     <Text variant="h6" css={{marginLeft: '0.5rem'}}>{sLeft>0 && sCirc? sCirc:''}</Text>
+//                     <Text variant="h6" css={{marginLeft: '0.5rem'}}>{tLeft>0 && tCirc? tCirc:''}</Text>
+//                 </div>
+//             </div>
+//             { typeof item === "string"?
+//                 <Text css={{textAlign:'center',display:'block'}}>{item}</Text>
+//                 :
+//                 <div css={{ display: 'flex', justifyContent: 'center' }}>{item}</div>
+//             }
+//             <hr/>
+//         </div>;
+//         morenode.push(tlNode);
+//     });
+//     return morenode;
+// }

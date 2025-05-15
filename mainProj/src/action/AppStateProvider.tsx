@@ -5,7 +5,7 @@ import { AppStateContext } from './AppState';
 import { AnimationConfig } from '@/component/AnimateItems';
 import usePathnames from '@/utility/usePathnames';
 // import { getAuthAction } from '@/auth/actions';
-import useSWR from 'swr';
+// import useSWR from 'swr';
 // import {
 //   HIGH_DENSITY_GRID,
 //   MATTE_PHOTOS,
@@ -40,8 +40,6 @@ export default function AppStateProvider({
     useState<string>();
   const [adminUpdateTimes, setAdminUpdateTimes] =
     useState<Date[]>([]);
-  const [hiddenPhotosCount, setHiddenPhotosCount] =
-    useState(0);
   const [selectedPhotoIds, setSelectedPhotoIds] =
     useState<string[] | undefined>();
   const [isPerformingSelectEdit, setIsPerformingSelectEdit] =
@@ -107,7 +105,6 @@ export default function AppStateProvider({
         isUserSignedIn,
         adminUpdateTimes,
         registerAdminUpdate,
-        hiddenPhotosCount,
         selectedPhotoIds,
         setSelectedPhotoIds,
         isPerformingSelectEdit,

@@ -1,10 +1,8 @@
 "use client"
 
-import Link from 'next/link';
 import React, { Suspense } from 'react';
-import {useQuery, gql, UrqlProvider} from '@urql/next';
+import {useQuery, gql} from '@urql/next';
 // import {getSsr, urqlClient} from "@/auth/urql";
-import {ReportView} from "@/report/recreation/slidingJj/Regular.R-1";
 import {useStorage} from "@/report/StorageContext";
 
 

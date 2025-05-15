@@ -125,7 +125,7 @@ export const 会计项目录= {
 /**会计目录
  * NODE_ID不能重复*/
 export const accountingCateMap = new Map(Object.entries(会计项目录));
-Object.entries(会计项目录).map(([bigclass , bobj  ], i) => {
+Object.entries(会计项目录).map(([_ , bobj  ], i) => {
        return bobj.map(({NODE_ID,NODE_NAME}, i) => {
             if(accountingCateMap.has(NODE_ID))  throw new Error(`会计目录${NODE_ID}重复`);
             accountingCateMap.set(NODE_ID, NODE_NAME as any);

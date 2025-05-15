@@ -1,8 +1,6 @@
 "use client"
 // 'use server';
-
-import {cache} from "react";
-import { gql, useMutation } from 'urql';
+import { gql,  } from 'urql';
 
 export const AppQuery = gql`
     query actionsgetReportQuery($id: ID! ) {

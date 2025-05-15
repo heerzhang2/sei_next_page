@@ -14,7 +14,6 @@ export default function Page() {
             setAction(params.action as string)
         }
     }, [params])
-    if(params?.repId === undefined)  return null;
     const [result] = useQuery({ query: ReportQuery, variables: { id: params?.repId } });
     const {getReport: report} = result?.data;
     return (

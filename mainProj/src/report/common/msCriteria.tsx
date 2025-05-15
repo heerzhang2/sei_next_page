@@ -1,9 +1,4 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {
-  Text, InputLine, SuffixInput, LineColumn,
-} from "customize-easy-ui-component";
-
 
 /** param t: string,小小项也即每一个行的输入的标题叙述。
  *  param n: 每个字段存储名。
@@ -95,85 +90,85 @@ type MeasurementLineCritProps = {
  *                                  allowableV:boolean,resEdit:boolean,only?:boolean, resDeft?:any,seqLineName?:string,labelOmit?:string,columns?:number
  * ):{ outNode: JSX.Element|undefined; lcNode: JSX.Element; } => {  return{lcNode: <div >
  * */
-export const MeasurementLineCrit = ({ children, item,labels,nameH,unit,inp,setInp,
-        allowableV,resEdit,only, resDeft,seqLineName,labelOmit,columns,cit }: MeasurementLineCritProps
-) =>{
-  const oName=nameH+'o';
-  const vName=(seqLineName??nameH)+'v';      //若resDeft提供的，和可能没有该存储的；
-  const aName=nameH+'a';      //允许取值存储在
-  let descNodes=[];
-  //抬头说明哪一行 组装：
-  for(let l=0;l<labels.length;l++){
-    descNodes.push(<Text key={l+2} css={{marginLeft: l>0? '1rem':'unset'}}>{labels[l]}</Text>);
-  }
-  if(!!item){
-    descNodes.push(<Text key={0} css={{marginLeft: '1rem'}}>{item}</Text>);
-  }
-  if(cit)
-    descNodes.push(<Text key={1} css={{marginLeft: '1rem'}}>判断标准: {cit} ；</Text>);
-
-  React.useEffect(() => {
-    if(!only && resEdit){             //需 && resEdit：没必要保存给后端情形？ 不然后端多出该字段的 **v:
-      const vName=(seqLineName??nameH)+'v';
-      setInp({...inp,[vName]: resDeft});
-    }
-  }, [resDeft, seqLineName,nameH, only,setInp]);    //不加上inp
-
-  if(only) {
-    //较为少见到的：
-    return <div  css={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap'}}>
-            <div css={{marginLeft: '0rem'}}>{descNodes}{' >>'}</div>
-            <InputLine label='观测数据'>
-              <SuffixInput value={inp?.[oName] || ''}
-                           onSave={txt => setInp({...inp, [oName]: txt || undefined})}>{unit}</SuffixInput>
-            </InputLine>
-          </div>
-  }
-  else if(labelOmit){
-    //合并了多个行的情况： 一个标题实际对应连续几个项目小行的。文本申明对应的层次隶属关系提升到上层一级别 =》outNode。
-    return <LineColumn column={columns??6}  >
-      <InputLine  label='观测数据' >
-        <SuffixInput  value={inp?.[oName] ||''} onSave={txt=> setInp({...inp,[oName]: txt || undefined })}>{unit}</SuffixInput>
-      </InputLine>
-      { resEdit? <InputLine  label={(labelOmit??'')+'测量结果'}>
-            <SuffixInput  value={inp?.[vName] || resDeft || ''} onSave={txt=> setInp({...inp,[vName]: txt || undefined })}>{unit}</SuffixInput>
-          </InputLine>
-          :
-          <Text>{labelOmit}测量结果= { inp?.[vName]??resDeft } </Text>
-      }
-      { allowableV && <InputLine  label={(labelOmit??'')+'允许值'} >
-        <SuffixInput  value={inp?.[aName] ||''} onSave={txt=> setInp({...inp,[aName]: txt || undefined })}>{unit}</SuffixInput>
-      </InputLine>
-      }
-    </LineColumn>
-  }
-  else{
-    //【最多情况】： 带有结果取值的栏目，是跑到这里：#是嵌套了俩层次的<LineColumn组件的。
-    return <div >
-      <div css={{marginLeft: '0rem'}}>{descNodes}{' >'}</div>
-      <LineColumn column={columns ?? 7}
-                  css={{         //底层是display: grid布局的
-                    alignItems: 'center',
-                    justifyItems: 'center',
-                  }}>
-        <InputLine label='观测数据'>
-          <SuffixInput value={inp?.[oName] || ''}
-                       onSave={txt => setInp({...inp, [oName]: txt || undefined})}>{unit}</SuffixInput>
-        </InputLine>
-        {resEdit ? <InputLine label={'测量结果'}>
-              <SuffixInput value={inp?.[vName] || resDeft || ''}
-                           onSave={txt => setInp({...inp, [vName]: txt || undefined})}>{unit}</SuffixInput>
-            </InputLine>
-            :
-            <Text>测量结果= {inp?.[vName] ?? resDeft} </Text>
-        }
-        {allowableV && <InputLine label={'允许值'}>
-          <SuffixInput value={inp?.[aName] || ''}
-                       onSave={txt => setInp({...inp, [aName]: txt || undefined})}>{unit}</SuffixInput>
-        </InputLine>
-        }
-      </LineColumn>
-    </div>
-  }
-};
+// export const MeasurementLineCrit = ({ children, item,labels,nameH,unit,inp,setInp,
+//         allowableV,resEdit,only, resDeft,seqLineName,labelOmit,columns,cit }: MeasurementLineCritProps
+// ) =>{
+//   const oName=nameH+'o';
+//   const vName=(seqLineName??nameH)+'v';      //若resDeft提供的，和可能没有该存储的；
+//   const aName=nameH+'a';      //允许取值存储在
+//   let descNodes=[];
+//   //抬头说明哪一行 组装：
+//   for(let l=0;l<labels.length;l++){
+//     descNodes.push(<Text key={l+2} css={{marginLeft: l>0? '1rem':'unset'}}>{labels[l]}</Text>);
+//   }
+//   if(!!item){
+//     descNodes.push(<Text key={0} css={{marginLeft: '1rem'}}>{item}</Text>);
+//   }
+//   if(cit)
+//     descNodes.push(<Text key={1} css={{marginLeft: '1rem'}}>判断标准: {cit} ；</Text>);
+//
+//   React.useEffect(() => {
+//     if(!only && resEdit){             //需 && resEdit：没必要保存给后端情形？ 不然后端多出该字段的 **v:
+//       const vName=(seqLineName??nameH)+'v';
+//       setInp({...inp,[vName]: resDeft});
+//     }
+//   }, [resDeft, seqLineName,nameH, only,setInp]);    //不加上inp
+//
+//   if(only) {
+//     //较为少见到的：
+//     return <div  css={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap'}}>
+//             <div css={{marginLeft: '0rem'}}>{descNodes}{' >>'}</div>
+//             <InputLine label='观测数据'>
+//               <SuffixInput value={inp?.[oName] || ''}
+//                            onSave={txt => setInp({...inp, [oName]: txt || undefined})}>{unit}</SuffixInput>
+//             </InputLine>
+//           </div>
+//   }
+//   else if(labelOmit){
+//     //合并了多个行的情况： 一个标题实际对应连续几个项目小行的。文本申明对应的层次隶属关系提升到上层一级别 =》outNode。
+//     return <LineColumn column={columns??6}  >
+//       <InputLine  label='观测数据' >
+//         <SuffixInput  value={inp?.[oName] ||''} onSave={txt=> setInp({...inp,[oName]: txt || undefined })}>{unit}</SuffixInput>
+//       </InputLine>
+//       { resEdit? <InputLine  label={(labelOmit??'')+'测量结果'}>
+//             <SuffixInput  value={inp?.[vName] || resDeft || ''} onSave={txt=> setInp({...inp,[vName]: txt || undefined })}>{unit}</SuffixInput>
+//           </InputLine>
+//           :
+//           <Text>{labelOmit}测量结果= { inp?.[vName]??resDeft } </Text>
+//       }
+//       { allowableV && <InputLine  label={(labelOmit??'')+'允许值'} >
+//         <SuffixInput  value={inp?.[aName] ||''} onSave={txt=> setInp({...inp,[aName]: txt || undefined })}>{unit}</SuffixInput>
+//       </InputLine>
+//       }
+//     </LineColumn>
+//   }
+//   else{
+//     //【最多情况】： 带有结果取值的栏目，是跑到这里：#是嵌套了俩层次的<LineColumn组件的。
+//     return <div >
+//       <div css={{marginLeft: '0rem'}}>{descNodes}{' >'}</div>
+//       <LineColumn column={columns ?? 7}
+//                   css={{         //底层是display: grid布局的
+//                     alignItems: 'center',
+//                     justifyItems: 'center',
+//                   }}>
+//         <InputLine label='观测数据'>
+//           <SuffixInput value={inp?.[oName] || ''}
+//                        onSave={txt => setInp({...inp, [oName]: txt || undefined})}>{unit}</SuffixInput>
+//         </InputLine>
+//         {resEdit ? <InputLine label={'测量结果'}>
+//               <SuffixInput value={inp?.[vName] || resDeft || ''}
+//                            onSave={txt => setInp({...inp, [vName]: txt || undefined})}>{unit}</SuffixInput>
+//             </InputLine>
+//             :
+//             <Text>测量结果= {inp?.[vName] ?? resDeft} </Text>
+//         }
+//         {allowableV && <InputLine label={'允许值'}>
+//           <SuffixInput value={inp?.[aName] || ''}
+//                        onSave={txt => setInp({...inp, [aName]: txt || undefined})}>{unit}</SuffixInput>
+//         </InputLine>
+//         }
+//       </LineColumn>
+//     </div>
+//   }
+// };
 

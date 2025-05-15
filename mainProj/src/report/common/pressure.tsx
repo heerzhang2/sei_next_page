@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
 
 //承压类的，较为常用的：

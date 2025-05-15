@@ -17,7 +17,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ items }: SidebarProps) {
-    const { activeTab, setActiveTab } = useEditControlContext()
+    const { setActiveTab } = useEditControlContext()
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
     const handleOpenChange = (newOpen: boolean) => {

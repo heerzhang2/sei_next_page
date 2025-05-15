@@ -2,7 +2,7 @@
 // import { auth } from '@/app/auth';
 import { UserNav } from './user-nav';
 // import { SessionProvider } from 'next-auth/react';
-import { useSession, signIn, signOut } from "next-auth/react"
+// import { useSession, signIn, signOut } from "next-auth/react"
 import {auth} from "@/app/auth";
 export const dynamic = "force-dynamic";
 

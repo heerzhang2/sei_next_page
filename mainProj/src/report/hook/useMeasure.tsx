@@ -1,8 +1,6 @@
 import * as React from "react";
-import {InspectRecordLayout, InternalItemProps, SelectHookfork, useItemInputControl,} from "../common/base";
-import {EachMeasureItemConfig, MeasurementCline} from "../common/measure";
-import {convertMeasureType, floatInterception} from "../../common/tool";
-import {useMeasureInpFilter} from "../common/hooks";
+import {InternalItemProps} from "../common/base";
+import {EachMeasureItemConfig} from "../common/measure";
 import {EachMeasureCritConfig} from "../common/msCriteria";
 
 
@@ -14,190 +12,190 @@ import {EachMeasureCritConfig} from "../common/msCriteria";
  * @param defaultSave  若=true的表示有做转换规则的行也必须都做存储。
  * 注意，正式报告可以直接用 floatInterception(ovalue,digits,); floatInterception(ovalue,digits, 'floor')来填充测量结果值。
  * */
-export function useMeasureEdit(inp:any, setInp:React.Dispatch<React.SetStateAction<any>>, config: EachMeasureItemConfig[][], allowableV: boolean, defaultSave: boolean
-) {
-    const [itemObservation, itemObservationA] = React.useMemo(() => {
-        const itemObserv: string[] = [];
-        const itemAObserv: string[] = [];
-        config.forEach((line: EachMeasureItemConfig[], i: number) => {
-            if (line[0]?.n) {
-                const itrsName = line[0]?.n + 'r';
-                line.forEach(({n,}: EachMeasureItemConfig, k: number) => {
-                    itemObserv.push(n);
-                    if(allowableV)   itemAObserv.push(n+'a');        //扩充字段：允许取值；
-                });
-                itemAObserv.push(itrsName);
-            }
-            if (line[0]?.check && line[0]?.sync) {
-                itemAObserv.push(line[0]?.sync);
-            }
-        });
-        return [itemObserv, itemAObserv];
-    }, [config,allowableV]);
-            // const [getInpFilter] = useMeasureInpFilter(itemObservation, itemObservationA,);
-            // const {inp, setInp} = useItemInputControl({ref});
-    //正常的每一行都独立 布局； 若一个序号多个小项目的：可能遭遇太过拥挤情况。
-    const render= React.useMemo(() =>
-        {
-            let bigLabel: any;
-            let secoLabel: any;
-            let thirdLabel: any;     //第三个级别继承做显示的？
-            let unit: any;
-            let resultName: any;
-         return <>
-            {
-                config.map((line: EachMeasureItemConfig[], i: number) => {
-                    //line 对应了单独一个序号：一个序号对应多个的 嵌套的子行；
-                    const firstLn = line[0];
-                    let checkLine: boolean;
-                    if( (firstLn?.check || firstLn?.n === undefined) )
-                        checkLine = true;
-                    //经过一次结论 check 行之后自动清空；
-                    const seqLineName = line[0]?.n;     //结论存储在第一个分项目开头的字段: omit情形也只有第一行才存储
-                    if(resultName===undefined && seqLineName){
-                        resultName= seqLineName;            //【约定】结论行必须是最少 这整个序号的。
-                    }
-                    const lcColumns=allowableV? (firstLn?.omit? 5 : 3) : (firstLn?.omit? 3 : 4);           //有些情形太紧凑！
-
-                    let preNodeObj: { outNode: JSX.Element|undefined; lcNode: JSX.Element; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
-                    line.forEach(({n,t,u,check,omit,save,c,d,x,sync}: EachMeasureItemConfig, k:number)=> {
-                        // React.useEffect(() => {
-                        //   setInp({...inp, sss: 'dfg'});
-                        // }, []);
-                        if(checkLine){
-                            const labelCheck=check??bigLabel;
-                            if(resultName===undefined)    throw new Error("没提供测seqLineName");
-                            let resulTag=sync??(resultName + 'r');
-                            let lcNode=<InputLine label={labelCheck+`-结果判定:`} key={i}>
-                                <SelectHookfork value={ inp?.[resulTag] ||''}
-                                                onChange={e => setInp({ ...inp, [resulTag]: e.currentTarget.value||undefined}) }/>
-                            </InputLine>;
-                            preNodeObj.push({ lcNode, outNode:undefined });
-                            resultName=undefined;
-                        }
-                        else{
-                            if(!t)    throw new Error("没提供测量子项");
-                            const tCopy=[...t];       //确保原始配置不会被这里修改了。后续其它代码浅层拷贝的，依赖旧的原始配置。
-                            //对于t:[undefined,undefined,undefined]那么前面几个标题会显示继承文字的，但是若t:[],就会忽略掉的。 若最后一个有配置的导致t不是[]的必然就复制默认，前面几个标题就都会显示出来。
-                            if(t[0]!==undefined)
-                                bigLabel=t[0];
-                            else if(t.length>=1)
-                                tCopy[0]=bigLabel;
-                            if(t[1]!==undefined)
-                                secoLabel=t[1];
-                            else if(t.length>=2)
-                                tCopy[1]=secoLabel;      //继承了默认值
-                            if(t[2]!==undefined)
-                                thirdLabel=t[2];
-                            else if(t.length>=3)
-                                tCopy[2]=thirdLabel;      //继承
-                            if(u!==undefined)
-                                unit=u;
-                            let resEdit: boolean =true;       //结果字段允许修改的。 自动转换的 可能无法修改的。
-                            let calculate;
-                            const oname=n+'o';
-                            const ovalue=inp?.[oname];
-                            //【未考虑】omit合并结果的同时还要转换结果同时生效的情形？
-                            if('四'===c){
-                                let digits =0===d? 0 : d? Number(d) : 1;
-                                calculate=floatInterception(ovalue,digits,);
-                            }
-                            else if('弃'===c){
-                                let digits =0===d? 0 : d? Number(d) : 1;
-                                calculate=floatInterception(ovalue,digits, 'floor');
-                            }
-                            //默认自动转换计算的 还是人工修改后的，在显示上差别处理
-                            if(undefined!==c){
-                                resEdit= (undefined===save)?  defaultSave : save;
-                            }
-                            let prepareN : { outNode: JSX.Element|undefined; lcNode: JSX.Element; };
-                            if(omit===true){
-                                let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
-                                                             resEdit={resEdit} only={true} resDeft={calculate} />
-                                prepareN={ lcNode, outNode:undefined };
-                            }
-                            else{
-                                if(omit===undefined) {
-                                    //【多数情形】
-                                    let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
-                                                                 resEdit={resEdit} only={false} resDeft={calculate} />
-                                    prepareN={ lcNode, outNode:undefined };
-                                }
-                                else{
-                                    //若有合并多行的特殊情况： 标题突出指代几个编辑器所属含义= omit 的文本。
-                                    let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
-                                                                 resEdit={resEdit} only={false} resDeft={calculate} seqLineName={seqLineName} labelOmit={omit as string} />
-                                    let descNodes=[];
-                                    for(let l=0;l<tCopy.length;l++){
-                                        descNodes.push(<Text key={l+1} css={{marginLeft: '1rem'}}>{tCopy[l]}</Text>);
-                                    }
-                                    if(x){
-                                        descNodes.push(<Text key={0} css={{marginLeft: '1rem'}}>{x}</Text>);
-                                    }
-                                    let outNode=<div css={{marginLeft: '1rem'}}>{descNodes}{'>>'}</div>;
-                                    prepareN={ lcNode, outNode:outNode };
-                                }
-                            }
-                            preNodeObj.push(prepareN);
-                        }
-                    });
-                    let insertIdx=0;
-                    let htmlNodes=[];          //考虑？肢解开：  key取值 报错
-                    //往前探查方向，是否存在外部溢出元素？
-                    let lcNodesNow=[];
-                    for(; insertIdx<preNodeObj.length; insertIdx++){
-                        for(; insertIdx<preNodeObj.length; insertIdx++){
-                            const {lcNode,outNode}=preNodeObj[insertIdx];
-                            if(outNode)  break;
-                            let modifyNode={...lcNode};
-                            Object.assign(modifyNode,{ key: 'L'+insertIdx });
-                            lcNodesNow.push(modifyNode);
-                        }
-                        //拆分段落模式：【假定】outNode必然在前面的，而lcNode只能位于底下顺序接着的。
-                        if(lcNodesNow.length>=1){
-                            const lcHtml=<React.Fragment key={i+'_'+insertIdx}>
-                                <LineColumn  column={lcColumns} >
-                                    { lcNodesNow }
-                                </LineColumn>
-                            </React.Fragment>;
-                            htmlNodes.push(lcHtml);
-                            lcNodesNow=[];         //局部
-                        }
-                        if(insertIdx<preNodeObj.length){
-                            if(preNodeObj[insertIdx]?.outNode){
-                                let modifyNode={ ...(preNodeObj[insertIdx]?.outNode) };
-                                Object.assign(modifyNode,{ key: 'W'+insertIdx });
-                                htmlNodes.push(modifyNode  as any);            //插入outNode 若不加 as any 类型报错。
-                            }
-                            if(preNodeObj[insertIdx]?.lcNode){
-                                let modifyNode={...(preNodeObj[insertIdx]?.lcNode)};
-                                Object.assign(modifyNode,{ key: 'Y'+insertIdx });
-                                lcNodesNow.push(modifyNode);               //给下一个区域去：被插入outNode了情形。
-                            }
-                        }
-                    }
-                    //残留的一部分：
-                    if(lcNodesNow.length>=1){
-                        const lcHtml=<React.Fragment key={i+'T'}>
-                            <LineColumn  column={lcColumns} >
-                                { lcNodesNow }
-                            </LineColumn>
-                        </React.Fragment>;
-                        htmlNodes.push(lcHtml);
-                    }
-                    //这个序号结束： 一个序号对应多个内部小行的，多行就是多个 x: item多个的,可序号都是同一个的。htmlNodes对应同一序号全部几行
-                    return <div key={i} css={{marginTop: '1rem',}}>
-                        {htmlNodes}
-                    </div>;
-                })
-            }
-        </>;
-        }
-        ,[config,inp,allowableV,defaultSave,setInp]);
-
-    //状态控制部分useItemInputControl({ref})等需要上一级组件一起公用的，所以拆分穿插掉。需要返回itemObservation给上级组件
-  return { render ,itemObservation, itemObservationA};
-}
+// export function useMeasureEdit(inp:any, setInp:React.Dispatch<React.SetStateAction<any>>, config: EachMeasureItemConfig[][], allowableV: boolean, defaultSave: boolean
+// ) {
+//     const [itemObservation, itemObservationA] = React.useMemo(() => {
+//         const itemObserv: string[] = [];
+//         const itemAObserv: string[] = [];
+//         config.forEach((line: EachMeasureItemConfig[], i: number) => {
+//             if (line[0]?.n) {
+//                 const itrsName = line[0]?.n + 'r';
+//                 line.forEach(({n,}: EachMeasureItemConfig, k: number) => {
+//                     itemObserv.push(n);
+//                     if(allowableV)   itemAObserv.push(n+'a');        //扩充字段：允许取值；
+//                 });
+//                 itemAObserv.push(itrsName);
+//             }
+//             if (line[0]?.check && line[0]?.sync) {
+//                 itemAObserv.push(line[0]?.sync);
+//             }
+//         });
+//         return [itemObserv, itemAObserv];
+//     }, [config,allowableV]);
+//             // const [getInpFilter] = useMeasureInpFilter(itemObservation, itemObservationA,);
+//             // const {inp, setInp} = useItemInputControl({ref});
+//     //正常的每一行都独立 布局； 若一个序号多个小项目的：可能遭遇太过拥挤情况。
+//     const render= React.useMemo(() =>
+//         {
+//             let bigLabel: any;
+//             let secoLabel: any;
+//             let thirdLabel: any;     //第三个级别继承做显示的？
+//             let unit: any;
+//             let resultName: any;
+//          return <>
+//             {
+//                 config.map((line: EachMeasureItemConfig[], i: number) => {
+//                     //line 对应了单独一个序号：一个序号对应多个的 嵌套的子行；
+//                     const firstLn = line[0];
+//                     let checkLine: boolean;
+//                     if( (firstLn?.check || firstLn?.n === undefined) )
+//                         checkLine = true;
+//                     //经过一次结论 check 行之后自动清空；
+//                     const seqLineName = line[0]?.n;     //结论存储在第一个分项目开头的字段: omit情形也只有第一行才存储
+//                     if(resultName===undefined && seqLineName){
+//                         resultName= seqLineName;            //【约定】结论行必须是最少 这整个序号的。
+//                     }
+//                     const lcColumns=allowableV? (firstLn?.omit? 5 : 3) : (firstLn?.omit? 3 : 4);           //有些情形太紧凑！
+//
+//                     let preNodeObj: { outNode: JSX.Element|undefined; lcNode: JSX.Element; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
+//                     line.forEach(({n,t,u,check,omit,save,c,d,x,sync}: EachMeasureItemConfig, k:number)=> {
+//                         // React.useEffect(() => {
+//                         //   setInp({...inp, sss: 'dfg'});
+//                         // }, []);
+//                         if(checkLine){
+//                             const labelCheck=check??bigLabel;
+//                             if(resultName===undefined)    throw new Error("没提供测seqLineName");
+//                             let resulTag=sync??(resultName + 'r');
+//                             let lcNode=<InputLine label={labelCheck+`-结果判定:`} key={i}>
+//                                 <SelectHookfork value={ inp?.[resulTag] ||''}
+//                                                 onChange={e => setInp({ ...inp, [resulTag]: e.currentTarget.value||undefined}) }/>
+//                             </InputLine>;
+//                             preNodeObj.push({ lcNode, outNode:undefined });
+//                             resultName=undefined;
+//                         }
+//                         else{
+//                             if(!t)    throw new Error("没提供测量子项");
+//                             const tCopy=[...t];       //确保原始配置不会被这里修改了。后续其它代码浅层拷贝的，依赖旧的原始配置。
+//                             //对于t:[undefined,undefined,undefined]那么前面几个标题会显示继承文字的，但是若t:[],就会忽略掉的。 若最后一个有配置的导致t不是[]的必然就复制默认，前面几个标题就都会显示出来。
+//                             if(t[0]!==undefined)
+//                                 bigLabel=t[0];
+//                             else if(t.length>=1)
+//                                 tCopy[0]=bigLabel;
+//                             if(t[1]!==undefined)
+//                                 secoLabel=t[1];
+//                             else if(t.length>=2)
+//                                 tCopy[1]=secoLabel;      //继承了默认值
+//                             if(t[2]!==undefined)
+//                                 thirdLabel=t[2];
+//                             else if(t.length>=3)
+//                                 tCopy[2]=thirdLabel;      //继承
+//                             if(u!==undefined)
+//                                 unit=u;
+//                             let resEdit: boolean =true;       //结果字段允许修改的。 自动转换的 可能无法修改的。
+//                             let calculate;
+//                             const oname=n+'o';
+//                             const ovalue=inp?.[oname];
+//                             //【未考虑】omit合并结果的同时还要转换结果同时生效的情形？
+//                             if('四'===c){
+//                                 let digits =0===d? 0 : d? Number(d) : 1;
+//                                 calculate=floatInterception(ovalue,digits,);
+//                             }
+//                             else if('弃'===c){
+//                                 let digits =0===d? 0 : d? Number(d) : 1;
+//                                 calculate=floatInterception(ovalue,digits, 'floor');
+//                             }
+//                             //默认自动转换计算的 还是人工修改后的，在显示上差别处理
+//                             if(undefined!==c){
+//                                 resEdit= (undefined===save)?  defaultSave : save;
+//                             }
+//                             let prepareN : { outNode: JSX.Element|undefined; lcNode: JSX.Element; };
+//                             if(omit===true){
+//                                 let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
+//                                                              resEdit={resEdit} only={true} resDeft={calculate} />
+//                                 prepareN={ lcNode, outNode:undefined };
+//                             }
+//                             else{
+//                                 if(omit===undefined) {
+//                                     //【多数情形】
+//                                     let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
+//                                                                  resEdit={resEdit} only={false} resDeft={calculate} />
+//                                     prepareN={ lcNode, outNode:undefined };
+//                                 }
+//                                 else{
+//                                     //若有合并多行的特殊情况： 标题突出指代几个编辑器所属含义= omit 的文本。
+//                                     let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
+//                                                                  resEdit={resEdit} only={false} resDeft={calculate} seqLineName={seqLineName} labelOmit={omit as string} />
+//                                     let descNodes=[];
+//                                     for(let l=0;l<tCopy.length;l++){
+//                                         descNodes.push(<Text key={l+1} css={{marginLeft: '1rem'}}>{tCopy[l]}</Text>);
+//                                     }
+//                                     if(x){
+//                                         descNodes.push(<Text key={0} css={{marginLeft: '1rem'}}>{x}</Text>);
+//                                     }
+//                                     let outNode=<div css={{marginLeft: '1rem'}}>{descNodes}{'>>'}</div>;
+//                                     prepareN={ lcNode, outNode:outNode };
+//                                 }
+//                             }
+//                             preNodeObj.push(prepareN);
+//                         }
+//                     });
+//                     let insertIdx=0;
+//                     let htmlNodes=[];          //考虑？肢解开：  key取值 报错
+//                     //往前探查方向，是否存在外部溢出元素？
+//                     let lcNodesNow=[];
+//                     for(; insertIdx<preNodeObj.length; insertIdx++){
+//                         for(; insertIdx<preNodeObj.length; insertIdx++){
+//                             const {lcNode,outNode}=preNodeObj[insertIdx];
+//                             if(outNode)  break;
+//                             let modifyNode={...lcNode};
+//                             Object.assign(modifyNode,{ key: 'L'+insertIdx });
+//                             lcNodesNow.push(modifyNode);
+//                         }
+//                         //拆分段落模式：【假定】outNode必然在前面的，而lcNode只能位于底下顺序接着的。
+//                         if(lcNodesNow.length>=1){
+//                             const lcHtml=<React.Fragment key={i+'_'+insertIdx}>
+//                                 <LineColumn  column={lcColumns} >
+//                                     { lcNodesNow }
+//                                 </LineColumn>
+//                             </React.Fragment>;
+//                             htmlNodes.push(lcHtml);
+//                             lcNodesNow=[];         //局部
+//                         }
+//                         if(insertIdx<preNodeObj.length){
+//                             if(preNodeObj[insertIdx]?.outNode){
+//                                 let modifyNode={ ...(preNodeObj[insertIdx]?.outNode) };
+//                                 Object.assign(modifyNode,{ key: 'W'+insertIdx });
+//                                 htmlNodes.push(modifyNode  as any);            //插入outNode 若不加 as any 类型报错。
+//                             }
+//                             if(preNodeObj[insertIdx]?.lcNode){
+//                                 let modifyNode={...(preNodeObj[insertIdx]?.lcNode)};
+//                                 Object.assign(modifyNode,{ key: 'Y'+insertIdx });
+//                                 lcNodesNow.push(modifyNode);               //给下一个区域去：被插入outNode了情形。
+//                             }
+//                         }
+//                     }
+//                     //残留的一部分：
+//                     if(lcNodesNow.length>=1){
+//                         const lcHtml=<React.Fragment key={i+'T'}>
+//                             <LineColumn  column={lcColumns} >
+//                                 { lcNodesNow }
+//                             </LineColumn>
+//                         </React.Fragment>;
+//                         htmlNodes.push(lcHtml);
+//                     }
+//                     //这个序号结束： 一个序号对应多个内部小行的，多行就是多个 x: item多个的,可序号都是同一个的。htmlNodes对应同一序号全部几行
+//                     return <div key={i} css={{marginTop: '1rem',}}>
+//                         {htmlNodes}
+//                     </div>;
+//                 })
+//             }
+//         </>;
+//         }
+//         ,[config,inp,allowableV,defaultSave,setInp]);
+//
+//     //状态控制部分useItemInputControl({ref})等需要上一级组件一起公用的，所以拆分穿插掉。需要返回itemObservation给上级组件
+//   return { render ,itemObservation, itemObservationA};
+// }
 
 interface EachMeasureItemConfig2X extends EachMeasureItemConfig{
     /**项目编号第一级bspan, 检验项目第二级别span标题；单位； 结果值{允许取值}；检验结果；
@@ -327,92 +325,91 @@ interface MeasureTableProps {
  * [注意] 上级组件要对“检测项目”栏目，判别是否要显示该列，表头一起改！
  * 类似 useJudgmentTable 的功能；
  * */
-export const useMeasureTable= ({orc, config,allowableV,defaultSave,rep,seqOfs=0} : MeasureTableProps
-) => {
-    //对配置的跨行span:初始化处置，默认计算的字段。
-    const [configExtend] = useMeasureCconfigExtend2({ config });
-    const render =React.useMemo(() => {
-        let seq=seqOfs;
-        // let bigLabel: any;
-        // let secoLabel: any;
-        let resultName: any;
-        // let unit: any;
-        //不能用let configExtend=config观测数据  ；这样的导致实际同一个数据。
-        // let configExtend=[...config观测数据] as EachMeasureItemConfig2X[][];
-        //外部无法穿透的，只能挪到这
-        return <>
-            {/*<DirectLink  href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Measure2#Measure2`}>*/}
-
-            {configExtend.map((line: EachMeasureItemConfig[], i:number) => {
-                const firstLn = line[0];
-                let checkLine: boolean;
-                if( (firstLn?.check || firstLn?.n === undefined) )
-                    checkLine = true;
-                else  seq++;
-                //经过一次结论 check 行之后自动清空；
-                const seqLineName = line[0]?.n;     //结论存储在第一个分项目开头的字段: omit情形也只有第一行才存储
-                if(resultName===undefined && seqLineName){
-                    resultName= line[0]?.sync?  line[0]?.sync : seqLineName+'r';            //【约定】结论行必须是最少 这整个序号的。单独配置的sync优先使用check行配置。
-                }
-                return line.map(({n,t,x,u,check,omit,save,c,d,bspan,span,tspan,uspan,vspan,rspan}: EachMeasureItemConfig2X, k:number)=> {
-                    if(checkLine){
-                        // const labelCheck=check??bigLabel;
-                        if(resultName===undefined)    throw new Error("没提供测seqLineName");
-                        resultName=undefined;
-                        return null;
-                    }
-                    else{
-                        //【浅层拷贝】这里不能够用  t[1]=secoLabel; 会导致直接修改了config观测数据的配置，导致上面逻辑失效repModel =React.useMemo(() => {}
-                        const xmqColmun=t.length;
-                        // let resEdit: boolean =true;       //结果字段允许修改的。 自动转换的 可能无法修改的。
-                        let calculate;
-                        const oname=n+'o';
-                        const ovalue=orc?.[oname];
-                        calculate=convertMeasureType(ovalue,c!,d!);
-                        //config观测数据[0][0].t[0]='撒'; 这里修改影响到了原配置数组的！
-                        //默认自动转换计算的 还是人工修改后的，在显示上差别处理
-                        if(undefined!==c){
-                            // resEdit= (undefined===save)?  defaultSave! : save;
-                        }
-                        // console.log("检验设TableRow备情况$seq=", seq,'t=',t,bspan, "SPAN",span,secoLabel,t[1]);
-                        //底下的omit && vspan 只考虑序号行的第一个子项目的存储名字情形，归并不考虑自动转换的，只能支持手动输入；
-                        return (
-                            <TableRow key={i+'_'+k}>
-                                <CCell>{seq}</CCell>
-                                { bspan && <CCell colSpan={xmqColmun===1?4:1} rowSpan={bspan} split>{t[0]}</CCell>
-                                }
-                                { span && xmqColmun>=2 && <CCell colSpan={xmqColmun===2?3:1} rowSpan={span} split>{t[1]}</CCell>
-                                }
-                                { tspan && xmqColmun>=3 && <CCell colSpan={xmqColmun===3?2:1} rowSpan={tspan} split>{t[2]}</CCell>
-                                }
-                                { xmqColmun>=4 && <CCell >{t[3]}</CCell>
-                                }
-                                { x && <CCell>{x}</CCell>
-                                }
-                                { u && uspan && <CCell rowSpan={uspan} split>{u}</CCell>
-                                }
-                                <CCell>{orc?.[n+'o']}</CCell>
-                                { omit && vspan && <CCell rowSpan={vspan} split>{orc?.[n+'v']}</CCell>
-                                }
-                                { !omit  && <CCell>{orc?.[n+'v']??calculate}</CCell>
-                                }
-                                { allowableV && omit && vspan && <CCell rowSpan={vspan}>{orc?.[n+'a']}</CCell>
-                                }
-                                { allowableV && !omit && <CCell rowSpan={vspan}>{orc?.[n+'a']}</CCell>
-                                }
-                                { rspan && resultName && <CCell rowSpan={rspan} split>{orc?.[resultName]}</CCell>
-                                }
-                            </TableRow>
-                        );
-                    }
-                });
-            }) }
-
-            {/*</DirectLink>*/}
-        </>;
-    }, [orc,allowableV, configExtend,seqOfs]);
-    return  render;
-};
+// export const useMeasureTable= ({orc, config,allowableV,defaultSave,rep,seqOfs=0} : MeasureTableProps
+// ) => {
+//     //对配置的跨行span:初始化处置，默认计算的字段。
+//     const [configExtend] = useMeasureCconfigExtend2({ config });
+//     const render =React.useMemo(() => {
+//         let seq=seqOfs;
+//         // let bigLabel: any;
+//         // let secoLabel: any;
+//         let resultName: any;
+//         // let unit: any;
+//         //不能用let configExtend=config观测数据  ；这样的导致实际同一个数据。
+//         // let configExtend=[...config观测数据] as EachMeasureItemConfig2X[][];
+//         //外部无法穿透的，只能挪到这
+//         return <>
+//             {/*<DirectLink  href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Measure2#Measure2`}>*/}
+//
+//             {configExtend.map((line: EachMeasureItemConfig[], i:number) => {
+//                 const firstLn = line[0];
+//                 let checkLine: boolean;
+//                 if( (firstLn?.check || firstLn?.n === undefined) )
+//                     checkLine = true;
+//                 else  seq++;
+//                 //经过一次结论 check 行之后自动清空；
+//                 const seqLineName = line[0]?.n;     //结论存储在第一个分项目开头的字段: omit情形也只有第一行才存储
+//                 if(resultName===undefined && seqLineName){
+//                     resultName= line[0]?.sync?  line[0]?.sync : seqLineName+'r';            //【约定】结论行必须是最少 这整个序号的。单独配置的sync优先使用check行配置。
+//                 }
+//                 return line.map(({n,t,x,u,check,omit,save,c,d,bspan,span,tspan,uspan,vspan,rspan}: EachMeasureItemConfig2X, k:number)=> {
+//                     if(checkLine){
+//                         // const labelCheck=check??bigLabel;
+//                         if(resultName===undefined)    throw new Error("没提供测seqLineName");
+//                         resultName=undefined;
+//                         return null;
+//                     }
+//                     else{
+//                         //【浅层拷贝】这里不能够用  t[1]=secoLabel; 会导致直接修改了config观测数据的配置，导致上面逻辑失效repModel =React.useMemo(() => {}
+//                         const xmqColmun=t.length;
+//                         // let resEdit: boolean =true;       //结果字段允许修改的。 自动转换的 可能无法修改的。
+//                         let calculate;
+//                         const oname=n+'o';
+//                         const ovalue=orc?.[oname];
+//                         calculate=convertMeasureType(ovalue,c!,d!);
+//                         //config观测数据[0][0].t[0]='撒'; 这里修改影响到了原配置数组的！
+//                         //默认自动转换计算的 还是人工修改后的，在显示上差别处理
+//                         if(undefined!==c){
+//                             // resEdit= (undefined===save)?  defaultSave! : save;
+//                         }
+//                         // console.log("检验设TableRow备情况$seq=", seq,'t=',t,bspan, "SPAN",span,secoLabel,t[1]);
+//                         //底下的omit && vspan 只考虑序号行的第一个子项目的存储名字情形，归并不考虑自动转换的，只能支持手动输入；
+//                         return (
+//                             <TableRow key={i+'_'+k}>
+//                                 <CCell>{seq}</CCell>
+//                                 { bspan && <CCell colSpan={xmqColmun===1?4:1} rowSpan={bspan} split>{t[0]}</CCell>
+//                                 }
+//                                 { span && xmqColmun>=2 && <CCell colSpan={xmqColmun===2?3:1} rowSpan={span} split>{t[1]}</CCell>
+//                                 }
+//                                 { tspan && xmqColmun>=3 && <CCell colSpan={xmqColmun===3?2:1} rowSpan={tspan} split>{t[2]}</CCell>
+//                                 }
+//                                 { xmqColmun>=4 && <CCell >{t[3]}</CCell>
+//                                 }
+//                                 { x && <CCell>{x}</CCell>
+//                                 }
+//                                 { u && uspan && <CCell rowSpan={uspan} split>{u}</CCell>
+//                                 }
+//                                 <CCell>{orc?.[n+'o']}</CCell>
+//                                 { omit && vspan && <CCell rowSpan={vspan} split>{orc?.[n+'v']}</CCell>
+//                                 }
+//                                 { !omit  && <CCell>{orc?.[n+'v']??calculate}</CCell>
+//                                 }
+//                                 { allowableV && omit && vspan && <CCell rowSpan={vspan}>{orc?.[n+'a']}</CCell>
+//                                 }
+//                                 { allowableV && !omit && <CCell rowSpan={vspan}>{orc?.[n+'a']}</CCell>
+//                                 }
+//                                 { rspan && resultName && <CCell rowSpan={rspan} split>{orc?.[resultName]}</CCell>
+//                                 }
+//                             </TableRow>
+//                         );
+//                     }
+//                 });
+//             }) }
+//
+//         </>;
+//     }, [orc,allowableV, configExtend,seqOfs]);
+//     return  render;
+// };
 
 
 interface ObservationMeasureProps  extends InternalItemProps{
@@ -423,26 +420,26 @@ interface ObservationMeasureProps  extends InternalItemProps{
 /**自带编辑器框架
  * 更为通用性的测量： 可拆分两个编辑器， children也能注入内容。 iAname：附加存储。
  * */
-export const ObservationMeasure =
-    React.forwardRef((
-        {children, show, alone = true, refWidth,label,config,iAname}: ObservationMeasureProps, ref
-    ) => {
-        const {inp, setInp} = useItemInputControl({ref});
-        const {render,itemObservation, itemObservationA,}=useMeasureEdit(inp,setInp, config, false ,false);
-        const itemA = React.useMemo(() => {
-            return [...itemObservationA, ...iAname??[]];       //，'观测备注'
-        }, [itemObservationA, iAname]);
-        const [getInpFilter] = useMeasureInpFilter(itemObservation, itemA,);
-        return (
-            <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show}
-                                 alone={alone} label={label}>
-                {label}<br/>
-                { render }
-
-                {children}
-            </InspectRecordLayout>
-        );
-    } );
+// export const ObservationMeasure =
+//     React.forwardRef((
+//         {children, show, alone = true, refWidth,label,config,iAname}: ObservationMeasureProps, ref
+//     ) => {
+//         const {inp, setInp} = useItemInputControl({ref});
+//         const {render,itemObservation, itemObservationA,}=useMeasureEdit(inp,setInp, config, false ,false);
+//         const itemA = React.useMemo(() => {
+//             return [...itemObservationA, ...iAname??[]];       //，'观测备注'
+//         }, [itemObservationA, iAname]);
+//         const [getInpFilter] = useMeasureInpFilter(itemObservation, itemA,);
+//         return (
+//             <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show}
+//                                  alone={alone} label={label}>
+//                 {label}<br/>
+//                 { render }
+//
+//                 {children}
+//             </InspectRecordLayout>
+//         );
+//     } );
 
 
 /**和useMeasureCSlistX配套的：
@@ -485,166 +482,166 @@ export function useMeasureItem(config: EachMeasureItemConfig[][], allowableV: bo
  * 对应的正式报告用useMeasureCTableX；
  * 返回值render改成数组， 不要再套一层加<></>了；
  * */
-export function useMeasureRow(inp:any, setInp:React.Dispatch<React.SetStateAction<any>>, config: EachMeasureItemConfig[][], allowableV: boolean, defaultSave: boolean
-) {
-    //正常的每一行都独立 布局； 若一个序号多个小项目的：可能遭遇太过拥挤情况。
-    const render= React.useMemo(() =>
-        {
-            let bigLabel: any;
-            let secoLabel: any;
-            let thirdLabel: any;     //第三个级别继承做显示的？
-            let unit: any;
-            let resultName: any;
-            return config.map((line: EachMeasureItemConfig[], i: number) => {
-                        //line 对应了单独一个序号：一个序号对应多个的 嵌套的子行；
-                        const firstLn = line[0];
-                        let checkLine: boolean;
-                        if( (firstLn?.check || firstLn?.n === undefined) )
-                            checkLine = true;
-                        //经过一次结论 check 行之后自动清空；
-                        const seqLineName = line[0]?.n;     //结论存储在第一个分项目开头的字段: omit情形也只有第一行才存储
-                        if(resultName===undefined && seqLineName){
-                            resultName= seqLineName;            //【约定】结论行必须是最少 这整个序号的。
-                        }
-                        const lcColumns=allowableV? (firstLn?.omit? 5 : 3) : (firstLn?.omit? 3 : 4);           //有些情形太紧凑！
-
-                        let preNodeObj: { outNode: JSX.Element|undefined; lcNode: JSX.Element; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
-                        line.forEach(({n,t,u,check,omit,save,c,d,x,sync}: EachMeasureItemConfig, k:number)=> {
-                            // React.useEffect(() => {
-                            //   setInp({...inp, sss: 'dfg'});
-                            // }, []);
-                            if(checkLine){
-                                const labelCheck=check??bigLabel;
-                                if(resultName===undefined)    throw new Error("没提供测seqLineName");
-                                let resulTag=sync??(resultName + 'r');
-                                let lcNode=<InputLine label={labelCheck+`-结果判定:`} key={i}>
-                                    <SelectHookfork value={ inp?.[resulTag] ||''}
-                                                    onChange={e => setInp({ ...inp, [resulTag]: e.currentTarget.value||undefined}) }/>
-                                </InputLine>;
-                                preNodeObj.push({ lcNode, outNode:undefined });
-                                resultName=undefined;
-                            }
-                            else{
-                                if(!t)    throw new Error("没提供测量子项");
-                                const tCopy=[...t];       //确保原始配置不会被这里修改了。后续其它代码浅层拷贝的，依赖旧的原始配置。
-                                //对于t:[undefined,undefined,undefined]那么前面几个标题会显示继承文字的，但是若t:[],就会忽略掉的。 若最后一个有配置的导致t不是[]的必然就复制默认，前面几个标题就都会显示出来。
-                                if(t[0]!==undefined)
-                                    bigLabel=t[0];
-                                else if(t.length>=1)
-                                    tCopy[0]=bigLabel;
-                                if(t[1]!==undefined)
-                                    secoLabel=t[1];
-                                else if(t.length>=2)
-                                    tCopy[1]=secoLabel;      //继承了默认值
-                                if(t[2]!==undefined)
-                                    thirdLabel=t[2];
-                                else if(t.length>=3)
-                                    tCopy[2]=thirdLabel;      //继承
-                                if(u!==undefined)
-                                    unit=u;
-                                let resEdit: boolean =true;       //结果字段允许修改的。 自动转换的 可能无法修改的。
-                                let calculate;
-                                const oname=n+'o';
-                                const ovalue=inp?.[oname];
-                                //【未考虑】omit合并结果的同时还要转换结果同时生效的情形？
-                                if('四'===c){
-                                    let digits =0===d? 0 : d? Number(d) : 1;
-                                    calculate=floatInterception(ovalue,digits,);
-                                }
-                                else if('弃'===c){
-                                    let digits =0===d? 0 : d? Number(d) : 1;
-                                    calculate=floatInterception(ovalue,digits, 'floor');
-                                }
-                                //默认自动转换计算的 还是人工修改后的，在显示上差别处理
-                                if(undefined!==c){
-                                    resEdit= (undefined===save)?  defaultSave : save;
-                                }
-                                let prepareN : { outNode: JSX.Element|undefined; lcNode: JSX.Element; };
-                                if(omit===true){
-                                    let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
-                                                                 resEdit={resEdit} only={true} resDeft={calculate} />
-                                    prepareN={ lcNode, outNode:undefined };
-                                }
-                                else{
-                                    if(omit===undefined || omit===false) {
-                                        //【多数情形】
-                                        let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
-                                                                     resEdit={resEdit} only={false} resDeft={calculate} />
-                                        prepareN={ lcNode, outNode:undefined };
-                                    }
-                                    else{
-                                        //若有合并多行的特殊情况： 标题突出指代几个编辑器所属含义= omit 的文本。
-                                        let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
-                                                                     resEdit={resEdit} only={false} resDeft={calculate} seqLineName={seqLineName} labelOmit={omit as string} />
-                                        let descNodes=[];
-                                        for(let l=0;l<tCopy.length;l++){
-                                            descNodes.push(<Text key={l+1} css={{marginLeft: '1rem'}}>{tCopy[l]}</Text>);
-                                        }
-                                        if(x){
-                                            descNodes.push(<Text key={0} css={{marginLeft: '1rem'}}>{x}</Text>);
-                                        }
-                                        let outNode=<div css={{marginLeft: '1rem'}}>{descNodes}{'>>'}</div>;
-                                        prepareN={ lcNode, outNode:outNode };
-                                    }
-                                }
-                                preNodeObj.push(prepareN);
-                            }
-                        });
-                        let insertIdx=0;
-                        let htmlNodes=[];          //考虑？肢解开：  key取值 报错
-                        //往前探查方向，是否存在外部溢出元素？
-                        let lcNodesNow=[];
-                        for(; insertIdx<preNodeObj.length; insertIdx++){
-                            for(; insertIdx<preNodeObj.length; insertIdx++){
-                                const {lcNode,outNode}=preNodeObj[insertIdx];
-                                if(outNode)  break;
-                                let modifyNode={...lcNode};
-                                Object.assign(modifyNode,{ key: 'L'+insertIdx });
-                                lcNodesNow.push(modifyNode);
-                            }
-                            //拆分段落模式：【假定】outNode必然在前面的，而lcNode只能位于底下顺序接着的。
-                            if(lcNodesNow.length>=1){
-                                const lcHtml=<React.Fragment key={i+'_'+insertIdx}>
-                                    <LineColumn  column={lcColumns} >
-                                        { lcNodesNow }
-                                    </LineColumn>
-                                </React.Fragment>;
-                                htmlNodes.push(lcHtml);
-                                lcNodesNow=[];         //局部
-                            }
-                            if(insertIdx<preNodeObj.length){
-                                if(preNodeObj[insertIdx]?.outNode){
-                                    let modifyNode={ ...(preNodeObj[insertIdx]?.outNode) };
-                                    Object.assign(modifyNode,{ key: 'W'+insertIdx });
-                                    htmlNodes.push(modifyNode  as any);            //插入outNode 若不加 as any 类型报错。
-                                }
-                                if(preNodeObj[insertIdx]?.lcNode){
-                                    let modifyNode={...(preNodeObj[insertIdx]?.lcNode)};
-                                    Object.assign(modifyNode,{ key: 'Y'+insertIdx });
-                                    lcNodesNow.push(modifyNode);               //给下一个区域去：被插入outNode了情形。
-                                }
-                            }
-                        }
-                        //残留的一部分：
-                        if(lcNodesNow.length>=1){
-                            const lcHtml=<React.Fragment key={i+'T'}>
-                                <LineColumn  column={lcColumns} >
-                                    { lcNodesNow }
-                                </LineColumn>
-                            </React.Fragment>;
-                            htmlNodes.push(lcHtml);
-                        }
-                        //这个序号结束： 一个序号对应多个内部小行的，多行就是多个 x: item多个的,可序号都是同一个的。htmlNodes对应同一序号全部几行
-                        return <div key={i} css={{marginTop: '1rem',}}>
-                            {htmlNodes}
-                        </div>;
-                    });
-        }
-        ,[config,inp,allowableV,defaultSave,setInp]);
-
-    //状态控制部分useItemInputControl({ref})等需要上一级组件一起公用的，所以拆分穿插掉。需要返回itemObservation给上级组件
-    return { render };
-}
+// export function useMeasureRow(inp:any, setInp:React.Dispatch<React.SetStateAction<any>>, config: EachMeasureItemConfig[][], allowableV: boolean, defaultSave: boolean
+// ) {
+//     //正常的每一行都独立 布局； 若一个序号多个小项目的：可能遭遇太过拥挤情况。
+//     const render= React.useMemo(() =>
+//         {
+//             let bigLabel: any;
+//             let secoLabel: any;
+//             let thirdLabel: any;     //第三个级别继承做显示的？
+//             let unit: any;
+//             let resultName: any;
+//             return config.map((line: EachMeasureItemConfig[], i: number) => {
+//                         //line 对应了单独一个序号：一个序号对应多个的 嵌套的子行；
+//                         const firstLn = line[0];
+//                         let checkLine: boolean;
+//                         if( (firstLn?.check || firstLn?.n === undefined) )
+//                             checkLine = true;
+//                         //经过一次结论 check 行之后自动清空；
+//                         const seqLineName = line[0]?.n;     //结论存储在第一个分项目开头的字段: omit情形也只有第一行才存储
+//                         if(resultName===undefined && seqLineName){
+//                             resultName= seqLineName;            //【约定】结论行必须是最少 这整个序号的。
+//                         }
+//                         const lcColumns=allowableV? (firstLn?.omit? 5 : 3) : (firstLn?.omit? 3 : 4);           //有些情形太紧凑！
+//
+//                         let preNodeObj: { outNode: JSX.Element|undefined; lcNode: JSX.Element; }[]=[];      //{lcNode,outNode}预备DOM的，可能插入不是适合<LineColumn内部拼凑载入的节点。需要提取到LineColumn外部。
+//                         line.forEach(({n,t,u,check,omit,save,c,d,x,sync}: EachMeasureItemConfig, k:number)=> {
+//                             // React.useEffect(() => {
+//                             //   setInp({...inp, sss: 'dfg'});
+//                             // }, []);
+//                             if(checkLine){
+//                                 const labelCheck=check??bigLabel;
+//                                 if(resultName===undefined)    throw new Error("没提供测seqLineName");
+//                                 let resulTag=sync??(resultName + 'r');
+//                                 let lcNode=<InputLine label={labelCheck+`-结果判定:`} key={i}>
+//                                     <SelectHookfork value={ inp?.[resulTag] ||''}
+//                                                     onChange={e => setInp({ ...inp, [resulTag]: e.currentTarget.value||undefined}) }/>
+//                                 </InputLine>;
+//                                 preNodeObj.push({ lcNode, outNode:undefined });
+//                                 resultName=undefined;
+//                             }
+//                             else{
+//                                 if(!t)    throw new Error("没提供测量子项");
+//                                 const tCopy=[...t];       //确保原始配置不会被这里修改了。后续其它代码浅层拷贝的，依赖旧的原始配置。
+//                                 //对于t:[undefined,undefined,undefined]那么前面几个标题会显示继承文字的，但是若t:[],就会忽略掉的。 若最后一个有配置的导致t不是[]的必然就复制默认，前面几个标题就都会显示出来。
+//                                 if(t[0]!==undefined)
+//                                     bigLabel=t[0];
+//                                 else if(t.length>=1)
+//                                     tCopy[0]=bigLabel;
+//                                 if(t[1]!==undefined)
+//                                     secoLabel=t[1];
+//                                 else if(t.length>=2)
+//                                     tCopy[1]=secoLabel;      //继承了默认值
+//                                 if(t[2]!==undefined)
+//                                     thirdLabel=t[2];
+//                                 else if(t.length>=3)
+//                                     tCopy[2]=thirdLabel;      //继承
+//                                 if(u!==undefined)
+//                                     unit=u;
+//                                 let resEdit: boolean =true;       //结果字段允许修改的。 自动转换的 可能无法修改的。
+//                                 let calculate;
+//                                 const oname=n+'o';
+//                                 const ovalue=inp?.[oname];
+//                                 //【未考虑】omit合并结果的同时还要转换结果同时生效的情形？
+//                                 if('四'===c){
+//                                     let digits =0===d? 0 : d? Number(d) : 1;
+//                                     calculate=floatInterception(ovalue,digits,);
+//                                 }
+//                                 else if('弃'===c){
+//                                     let digits =0===d? 0 : d? Number(d) : 1;
+//                                     calculate=floatInterception(ovalue,digits, 'floor');
+//                                 }
+//                                 //默认自动转换计算的 还是人工修改后的，在显示上差别处理
+//                                 if(undefined!==c){
+//                                     resEdit= (undefined===save)?  defaultSave : save;
+//                                 }
+//                                 let prepareN : { outNode: JSX.Element|undefined; lcNode: JSX.Element; };
+//                                 if(omit===true){
+//                                     let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
+//                                                                  resEdit={resEdit} only={true} resDeft={calculate} />
+//                                     prepareN={ lcNode, outNode:undefined };
+//                                 }
+//                                 else{
+//                                     if(omit===undefined || omit===false) {
+//                                         //【多数情形】
+//                                         let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
+//                                                                      resEdit={resEdit} only={false} resDeft={calculate} />
+//                                         prepareN={ lcNode, outNode:undefined };
+//                                     }
+//                                     else{
+//                                         //若有合并多行的特殊情况： 标题突出指代几个编辑器所属含义= omit 的文本。
+//                                         let lcNode=<MeasurementCline item={x!} labels={tCopy} nameH={n} unit={unit} inp={inp} setInp={setInp} allowableV={allowableV}
+//                                                                      resEdit={resEdit} only={false} resDeft={calculate} seqLineName={seqLineName} labelOmit={omit as string} />
+//                                         let descNodes=[];
+//                                         for(let l=0;l<tCopy.length;l++){
+//                                             descNodes.push(<Text key={l+1} css={{marginLeft: '1rem'}}>{tCopy[l]}</Text>);
+//                                         }
+//                                         if(x){
+//                                             descNodes.push(<Text key={0} css={{marginLeft: '1rem'}}>{x}</Text>);
+//                                         }
+//                                         let outNode=<div css={{marginLeft: '1rem'}}>{descNodes}{'>>'}</div>;
+//                                         prepareN={ lcNode, outNode:outNode };
+//                                     }
+//                                 }
+//                                 preNodeObj.push(prepareN);
+//                             }
+//                         });
+//                         let insertIdx=0;
+//                         let htmlNodes=[];          //考虑？肢解开：  key取值 报错
+//                         //往前探查方向，是否存在外部溢出元素？
+//                         let lcNodesNow=[];
+//                         for(; insertIdx<preNodeObj.length; insertIdx++){
+//                             for(; insertIdx<preNodeObj.length; insertIdx++){
+//                                 const {lcNode,outNode}=preNodeObj[insertIdx];
+//                                 if(outNode)  break;
+//                                 let modifyNode={...lcNode};
+//                                 Object.assign(modifyNode,{ key: 'L'+insertIdx });
+//                                 lcNodesNow.push(modifyNode);
+//                             }
+//                             //拆分段落模式：【假定】outNode必然在前面的，而lcNode只能位于底下顺序接着的。
+//                             if(lcNodesNow.length>=1){
+//                                 const lcHtml=<React.Fragment key={i+'_'+insertIdx}>
+//                                     <LineColumn  column={lcColumns} >
+//                                         { lcNodesNow }
+//                                     </LineColumn>
+//                                 </React.Fragment>;
+//                                 htmlNodes.push(lcHtml);
+//                                 lcNodesNow=[];         //局部
+//                             }
+//                             if(insertIdx<preNodeObj.length){
+//                                 if(preNodeObj[insertIdx]?.outNode){
+//                                     let modifyNode={ ...(preNodeObj[insertIdx]?.outNode) };
+//                                     Object.assign(modifyNode,{ key: 'W'+insertIdx });
+//                                     htmlNodes.push(modifyNode  as any);            //插入outNode 若不加 as any 类型报错。
+//                                 }
+//                                 if(preNodeObj[insertIdx]?.lcNode){
+//                                     let modifyNode={...(preNodeObj[insertIdx]?.lcNode)};
+//                                     Object.assign(modifyNode,{ key: 'Y'+insertIdx });
+//                                     lcNodesNow.push(modifyNode);               //给下一个区域去：被插入outNode了情形。
+//                                 }
+//                             }
+//                         }
+//                         //残留的一部分：
+//                         if(lcNodesNow.length>=1){
+//                             const lcHtml=<React.Fragment key={i+'T'}>
+//                                 <LineColumn  column={lcColumns} >
+//                                     { lcNodesNow }
+//                                 </LineColumn>
+//                             </React.Fragment>;
+//                             htmlNodes.push(lcHtml);
+//                         }
+//                         //这个序号结束： 一个序号对应多个内部小行的，多行就是多个 x: item多个的,可序号都是同一个的。htmlNodes对应同一序号全部几行
+//                         return <div key={i} css={{marginTop: '1rem',}}>
+//                             {htmlNodes}
+//                         </div>;
+//                     });
+//         }
+//         ,[config,inp,allowableV,defaultSave,setInp]);
+//
+//     //状态控制部分useItemInputControl({ref})等需要上一级组件一起公用的，所以拆分穿插掉。需要返回itemObservation给上级组件
+//     return { render };
+// }
 
 export interface MeasureCritMemProps extends InternalItemProps {
     label: string;
@@ -660,42 +657,42 @@ export interface MeasureCritMemProps extends InternalItemProps {
  * 可备注录入。
  *假如采用定义const defaultV = (par: any) => { };注入的，不友好。不能立刻同步更新啊。只能在本组件内部做变更，无法外部配置的形式注入。
  * */
-export const MeasureCritMem =
-    React.forwardRef((
-        {
-            children, show, alone = true, refWidth, label,
-            config, iAname, allowableV = false, defaultSave = false, mem,
-        }: MeasureCritMemProps, ref
-    ) => {
-        const {inp, setInp} = useItemInputControl({ref});
-        //【Hook死循环】不能使用const newconfig=typeof config ==='function'? config(inp) : config;
-        const newconfig = React.useMemo(() => {
-            return (typeof config === 'function' ? config(inp) : config);
-        }, [inp, config]);
-        const {itemObservation, itemObservationA,} = useMeasureItem(newconfig, allowableV);
-        //有可能这两个注入的 newconfig 不一样？
-        const {render} = useMeasureRow(inp, setInp, newconfig, allowableV, defaultSave);
-        const itemA备注: string[] = mem ? [`${mem}`] : [];
-        const itemA = React.useMemo(() => {
-            return [...itemObservationA, ...itemA备注, ...iAname ?? []];
-        }, [itemObservationA, iAname]);
-        const [getInpFilter] = useMeasureInpFilter(itemObservation, itemA, );
-        //死循环！
-        // React.useEffect(() => { setInp({ ...inp, 输线电压: voltage }); }, [voltage, inp, setInp] );
-
-        return (
-            <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show}
-                                 alone={alone} label={label}>
-                <Text variant="h5">{label}：</Text>
-                {render}
-                {mem && <>
-                    <hr/>
-                    备注：
-                    <TextArea value={inp?.[mem] || ''} rows={5}
-                              onChange={e => setInp({...inp, [mem]: e.currentTarget.value || undefined})}/>
-                </>
-                }
-                {children}
-            </InspectRecordLayout>
-        );
-});
+// export const MeasureCritMem =
+//     React.forwardRef((
+//         {
+//             children, show, alone = true, refWidth, label,
+//             config, iAname, allowableV = false, defaultSave = false, mem,
+//         }: MeasureCritMemProps, ref
+//     ) => {
+//         const {inp, setInp} = useItemInputControl({ref});
+//         //【Hook死循环】不能使用const newconfig=typeof config ==='function'? config(inp) : config;
+//         const newconfig = React.useMemo(() => {
+//             return (typeof config === 'function' ? config(inp) : config);
+//         }, [inp, config]);
+//         const {itemObservation, itemObservationA,} = useMeasureItem(newconfig, allowableV);
+//         //有可能这两个注入的 newconfig 不一样？
+//         const {render} = useMeasureRow(inp, setInp, newconfig, allowableV, defaultSave);
+//         const itemA备注: string[] = mem ? [`${mem}`] : [];
+//         const itemA = React.useMemo(() => {
+//             return [...itemObservationA, ...itemA备注, ...iAname ?? []];
+//         }, [itemObservationA, iAname]);
+//         const [getInpFilter] = useMeasureInpFilter(itemObservation, itemA, );
+//         //死循环！
+//         // React.useEffect(() => { setInp({ ...inp, 输线电压: voltage }); }, [voltage, inp, setInp] );
+//
+//         return (
+//             <InspectRecordLayout inp={inp} setInp={setInp} getInpFilter={getInpFilter} show={show}
+//                                  alone={alone} label={label}>
+//                 <Text variant="h5">{label}：</Text>
+//                 {render}
+//                 {mem && <>
+//                     <hr/>
+//                     备注：
+//                     <TextArea value={inp?.[mem] || ''} rows={5}
+//                               onChange={e => setInp({...inp, [mem]: e.currentTarget.value || undefined})}/>
+//                 </>
+//                 }
+//                 {children}
+//             </InspectRecordLayout>
+//         );
+// });

@@ -30,11 +30,11 @@ const config设备 = [
 const config设备上=config设备.slice(0, 10);
 const config设备下=config设备.slice(10);
 
-export const 报告设备详情= ( { orc, rep } : { orc: any,rep:any}
+export const RepDeviceDetail= ({ orc, rep } : { orc: any,rep:any}
 ) => {
   const renderUpper=usePrefixDataTable({config: config设备上, orc, rep, slash:true});
   const [firstPart,_s]=useThreeColumnView({orc, config:config设备下,slash:true,
-                embedCol: [ <CCell rowSpan={3}>设备技术参数</CCell> ] });
+                embedCol: [ <CCell key='1' rowSpan={3}>设备技术参数</CCell> ] });
   return <React.Fragment>
     <FlexibleTable id='Survey' columnWidths={["6.1%","6.8%","38%","12.8%","4%","%"]} className="text-sm border-collapse">
       <TableBody>

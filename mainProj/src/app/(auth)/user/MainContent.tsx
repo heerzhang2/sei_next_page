@@ -1,13 +1,12 @@
 // "use client";
 
-import { Suspense, lazy } from "react";
-import { graphql, useLazyLoadQuery } from "react-relay";
+// import { lazy } from "react";
 // import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { auth } from '@/app/auth';
 import Link from "next/link";
 
 
-const SlowContentLazy = lazy(() => import("@/app/(auth)/lazy/SlowContent"));
+// const SlowContentLazy = lazy(() => import("@/app/(auth)/lazy/SlowContent"));
 
 export async function MainContent() {
     const session = await auth();

@@ -2,16 +2,10 @@
 import * as React from "react";
 import {toast} from "sonner"
 import {
-    InspectRecordLayout,
     InternalItemProps,
-    SelectPair,
-    SelectValDescPair,
     useItemInputControl
 } from "../common/base";
-import {assertNamesUnique, PlainArConfigs} from "../common/eHelper";
-import {EditStorageContext} from "../StorageContext";
 import {useState} from "react";
-import {ItemOmniConfig} from "./omni";
 import {splitNosByLastDot, splitNosByLastDotPan} from "./helper";
 import useClipboard from "react-use-clipboard";
 import {CollapsibleFormSection, CommonSelect} from "@/components/chub";
@@ -141,9 +135,8 @@ function splitAndInsertEmptyLines(text: string) {
  *@param frameMod: 模型对象
  * 本地状态管理方式的，没有用useForm；
  * */
-export const GenCode =
-React.forwardRef((
-    {show, alone = true,type:defaultType,frameMod,defTitle,defDesc}: Props, ref
+export const GenCode =(
+    {show, alone = true,type:defaultType,frameMod,defTitle,defDesc}: Props
 ) => {
     const defaultFrameDyn= frameMod?? defaultFrameM;   //允许动态：配置决定列表
     const cust模型选= 生成模型选.filter(({value,label}) => defaultFrameDyn[value]!==undefined);      //缩小列表
@@ -186,7 +179,7 @@ React.forwardRef((
         else if('CmnTowerCrane'===type)   codes=genCmnTowerCrane(obj);
         setResult(codes);
         toast.success("完成", {description: "可复制到工程中",})
-    }, [type,title,setResult,desc, toast]);
+    }, [type,title,setResult,desc]);
     //每行标题 前面明显没用的字符剔除：
     const autoModifyTitle = React.useCallback((frame: string) => {
         let obj=JSON.parse(frame??'[]');
@@ -287,7 +280,7 @@ React.forwardRef((
             }>复制代码</Button>
         </CollapsibleFormSection>
     )
-});
+}
 
 /**生成源代码： 适用性= 机电项目表， 新常态， 原始记录只有两栏目的。
  * frame: 具体对象格式？ 生成函数自己负责。 frame输入的举例：sk部分[]：普通项目用0,0,来占位的,自拆分项目才是[1,3]等等的。

@@ -170,115 +170,115 @@ export const useFormatOmni = ({
 /**去掉big栏目的显示; 支持big栏目的colSpan=1情况{后面必须有sceo:?}；
  * 支持类别栏 {n:'ic',x:'类别',m:true},
  */
-export const useFormatNoBigCol= ({itRes, ItemArs, rep,config,rcc,dfsz }
-                                 :{itRes:any, ItemArs:RecordOmniArea[], rep:any,config: Column_Setting[],rcc?:boolean,dfsz?:string}
-) => {
-    const theme = useTheme();
-    const descStyle = React.useMemo(() => {
-        return css({
-            "& > span": {fontSize: `${dfsz??'0.85'}rem`},
-            "& > div > span": {fontSize: `${dfsz??'0.85'}rem`},
-            "& > div > div > table td": {fontSize: `${dfsz??'0.85'}rem`},
-            "& > span > div > table td": {fontSize: `${dfsz??'0.85'}rem`},
-        });
-    }, [dfsz,theme]);
-    const renderIspContent =React.useMemo(() => {
-        let seq = 0;
-        let htmlTxts =[] as React.ReactNode[];
-        ItemArs?.forEach((area, b) => {
-            //列跨 span X.y的X列这里就不要跨越area范围了；以一个tag对应的area.items最大搜索区域来决定各个列span;当前已经为x,y,z,t分配的具体行数多少。
-            //配置已经敲定了有几行， td跨越几行
-            let seqNotChange=false;
-            area && area.items.forEach((et:ItemOmniConfig, n:number) => {
-                if(et){
-                    if(!seqNotChange)   seq += 1;     //归并区域的，唯一一个结论对应同一个seq序号。
-                    if(et.nconcl)   seqNotChange=true;
-                    else    seqNotChange=false;
-                    let nosCc;      //可变的项目栏 栏目有几列， {big, bspan, seco, span, third, tspan, four, fspan};
-                    if(et.rec?.fspan) nosCc=4;
-                    else if(et.rec?.tspan) nosCc=3;
-                    else if(et.rec?.span) nosCc=2;
-                    else nosCc=1;
-                    let itemRowRender=[];
-                    // const {chendu, pinglv, fxclass}=itemFenXianClassTransform(itRes,et.name);
-
-                    let mergLastEt=et;    //归并区的最后一行
-                    if(et.offset){
-                        mergLastEt= area.items[n + et.offset];
-                    }
-                    if(!mergLastEt)  throw new Error(`或没最后一行配置`);
-                    const icname= mergLastEt.mergName??mergLastEt.name;      //拆分归并栏目的存储名
-                    if(!et.nconcl && !icname)  throw new Error(`或没最后一行配置名`);
-
-                    const result=resTranslCm(itRes?.[et.name!]);         //检验结果栏目的
-                    const conseq=itemResTransformRec(itRes, area, n);       //汇总的结论栏目的
-                    // console.log("检验设TableRowicnameS=",seq, icname,'et',et,mergLastEt);
-
-                    itemRowRender[0] =<TableRow id={n===0 ? area.tag:undefined} key={n}>
-                        <CCell key={1}>{seq}</CCell>
-                        {nosCc>=2 && (et.rec?.span!)>0 && <CCell split={true} key={3} rowSpan={et.rec?.span} colSpan={2===nosCc? 3: 1}
-                        >{et.rec?.seco}</CCell>
-                        }
-                        {nosCc>=3 && (et.rec?.tspan!)>0 && <CCell split={true} key={4} rowSpan={et.rec?.tspan} colSpan={3===nosCc? 2: 1}
-                        >{et.rec?.third}</CCell>
-                        }
-                        {nosCc>=4 && (et.rec?.fspan!)>0 && <CCell split={true} key={5} rowSpan={et.rec?.fspan}
-                        >{et.rec?.four}</CCell>
-                        }
-                        {/*新常态：单独把报告标题归为独立栏目的；一个拆分区块的 下面有三个嵌套的分区： 利用 mergLabel seco span 来辨识特殊点*/}
-                        {rcc && <>
-                            { (et.nconcl && et.rec?.span) ? <>
-                                    <CCell key={8} split={true} rowSpan={et.rec?.span??1}>{et.mergLabel ??mergLastEt.recap }</CCell>
-                                </>
-                                :
-                                <>
-                                    {et.fRSpan? <>
-                                            <CCell key={8} split={true} rowSpan={et.fRSpan??1}>{et.tips?? et.recap?? mergLastEt.recap }</CCell>
-                                        </>
-                                        :
-                                        null
-                                    }
-                                </>
-                            }
-                            { (!et.nconcl && et.rec?.span===1 && mergLastEt===et && et.mergLabel) &&
-                                <CCell key={8}>{et.mergLabel}</CCell>
-                            }
-                        </>
-                        }
-
-                        { et.name? <Cell key={6} css={descStyle}>{et.desc}</Cell>
-                            :
-                            <Cell key={6} colSpan={2} css={descStyle}>{et.desc}</Cell>
-                        }
-                        {       //结果等其它的栏目
-                            config.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
-                                if(n==='') return  et.name && <CCell key={7}>{result || '/'}</CCell>;
-                                else if(n===null) return et.fRSpan && <CCell key={8} split={true} rowSpan={et.fRSpan??1}>{conseq || '/'}</CCell>;
-                                //以上2个特殊，剩下是常规字段 {n:'iclas',x:'类别',m:true}
-                                if(!m){
-                                    if(et.name) return <CCell key={10}>{itRes?.[et.name+'_'+n] ?? ''}</CCell>;
-                                    else return <Cell key={10}></Cell>;
-                                }else{
-                                    if(et.fRSpan){
-                                        if(n==='ic') return <CCell key={13+'_'+i} split={true} rowSpan={et.fRSpan??1}>{mergLastEt?.iclas}</CCell>;
-                                        else return <CCell key={13+'_'+i} split={true} rowSpan={et.fRSpan??1}>{itRes?.[icname+'_'+n]}</CCell>;
-                                    }
-                                }
-                                return null;
-                            })
-                        }
-                    </TableRow>;
-                    const rowsBigArea=<React.Fragment key={seq+'_'+n}>
-                        <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${area.tag}?original=1#${area.tag}`}>
-                            {itemRowRender}
-                        </DirectLink>
-                    </React.Fragment>;
-                    htmlTxts.push(rowsBigArea);    //原先在htmlTxts.push(itemRowRender);bigItemRowCnt++;前面就处理的
-                }
-            });
-        });
-
-        return  htmlTxts;
-    }, [itRes,rep,ItemArs,config,rcc,descStyle]);
-    return { renderIspContent };
-};
+// export const useFormatNoBigCol= ({itRes, ItemArs, rep,config,rcc,dfsz }
+//                                  :{itRes:any, ItemArs:RecordOmniArea[], rep:any,config: Column_Setting[],rcc?:boolean,dfsz?:string}
+// ) => {
+//     const theme = useTheme();
+//     const descStyle = React.useMemo(() => {
+//         return css({
+//             "& > span": {fontSize: `${dfsz??'0.85'}rem`},
+//             "& > div > span": {fontSize: `${dfsz??'0.85'}rem`},
+//             "& > div > div > table td": {fontSize: `${dfsz??'0.85'}rem`},
+//             "& > span > div > table td": {fontSize: `${dfsz??'0.85'}rem`},
+//         });
+//     }, [dfsz,theme]);
+//     const renderIspContent =React.useMemo(() => {
+//         let seq = 0;
+//         let htmlTxts =[] as React.ReactNode[];
+//         ItemArs?.forEach((area, b) => {
+//             //列跨 span X.y的X列这里就不要跨越area范围了；以一个tag对应的area.items最大搜索区域来决定各个列span;当前已经为x,y,z,t分配的具体行数多少。
+//             //配置已经敲定了有几行， td跨越几行
+//             let seqNotChange=false;
+//             area && area.items.forEach((et:ItemOmniConfig, n:number) => {
+//                 if(et){
+//                     if(!seqNotChange)   seq += 1;     //归并区域的，唯一一个结论对应同一个seq序号。
+//                     if(et.nconcl)   seqNotChange=true;
+//                     else    seqNotChange=false;
+//                     let nosCc;      //可变的项目栏 栏目有几列， {big, bspan, seco, span, third, tspan, four, fspan};
+//                     if(et.rec?.fspan) nosCc=4;
+//                     else if(et.rec?.tspan) nosCc=3;
+//                     else if(et.rec?.span) nosCc=2;
+//                     else nosCc=1;
+//                     let itemRowRender=[];
+//                     // const {chendu, pinglv, fxclass}=itemFenXianClassTransform(itRes,et.name);
+//
+//                     let mergLastEt=et;    //归并区的最后一行
+//                     if(et.offset){
+//                         mergLastEt= area.items[n + et.offset];
+//                     }
+//                     if(!mergLastEt)  throw new Error(`或没最后一行配置`);
+//                     const icname= mergLastEt.mergName??mergLastEt.name;      //拆分归并栏目的存储名
+//                     if(!et.nconcl && !icname)  throw new Error(`或没最后一行配置名`);
+//
+//                     const result=resTranslCm(itRes?.[et.name!]);         //检验结果栏目的
+//                     const conseq=itemResTransformRec(itRes, area, n);       //汇总的结论栏目的
+//                     // console.log("检验设TableRowicnameS=",seq, icname,'et',et,mergLastEt);
+//
+//                     itemRowRender[0] =<TableRow id={n===0 ? area.tag:undefined} key={n}>
+//                         <CCell key={1}>{seq}</CCell>
+//                         {nosCc>=2 && (et.rec?.span!)>0 && <CCell split={true} key={3} rowSpan={et.rec?.span} colSpan={2===nosCc? 3: 1}
+//                         >{et.rec?.seco}</CCell>
+//                         }
+//                         {nosCc>=3 && (et.rec?.tspan!)>0 && <CCell split={true} key={4} rowSpan={et.rec?.tspan} colSpan={3===nosCc? 2: 1}
+//                         >{et.rec?.third}</CCell>
+//                         }
+//                         {nosCc>=4 && (et.rec?.fspan!)>0 && <CCell split={true} key={5} rowSpan={et.rec?.fspan}
+//                         >{et.rec?.four}</CCell>
+//                         }
+//                         {/*新常态：单独把报告标题归为独立栏目的；一个拆分区块的 下面有三个嵌套的分区： 利用 mergLabel seco span 来辨识特殊点*/}
+//                         {rcc && <>
+//                             { (et.nconcl && et.rec?.span) ? <>
+//                                     <CCell key={8} split={true} rowSpan={et.rec?.span??1}>{et.mergLabel ??mergLastEt.recap }</CCell>
+//                                 </>
+//                                 :
+//                                 <>
+//                                     {et.fRSpan? <>
+//                                             <CCell key={8} split={true} rowSpan={et.fRSpan??1}>{et.tips?? et.recap?? mergLastEt.recap }</CCell>
+//                                         </>
+//                                         :
+//                                         null
+//                                     }
+//                                 </>
+//                             }
+//                             { (!et.nconcl && et.rec?.span===1 && mergLastEt===et && et.mergLabel) &&
+//                                 <CCell key={8}>{et.mergLabel}</CCell>
+//                             }
+//                         </>
+//                         }
+//
+//                         { et.name? <Cell key={6} css={descStyle}>{et.desc}</Cell>
+//                             :
+//                             <Cell key={6} colSpan={2} css={descStyle}>{et.desc}</Cell>
+//                         }
+//                         {       //结果等其它的栏目
+//                             config.map(({n, x, m, t, l, z}: Column_Setting, i: number) => {
+//                                 if(n==='') return  et.name && <CCell key={7}>{result || '/'}</CCell>;
+//                                 else if(n===null) return et.fRSpan && <CCell key={8} split={true} rowSpan={et.fRSpan??1}>{conseq || '/'}</CCell>;
+//                                 //以上2个特殊，剩下是常规字段 {n:'iclas',x:'类别',m:true}
+//                                 if(!m){
+//                                     if(et.name) return <CCell key={10}>{itRes?.[et.name+'_'+n] ?? ''}</CCell>;
+//                                     else return <Cell key={10}></Cell>;
+//                                 }else{
+//                                     if(et.fRSpan){
+//                                         if(n==='ic') return <CCell key={13+'_'+i} split={true} rowSpan={et.fRSpan??1}>{mergLastEt?.iclas}</CCell>;
+//                                         else return <CCell key={13+'_'+i} split={true} rowSpan={et.fRSpan??1}>{itRes?.[icname+'_'+n]}</CCell>;
+//                                     }
+//                                 }
+//                                 return null;
+//                             })
+//                         }
+//                     </TableRow>;
+//                     const rowsBigArea=<React.Fragment key={seq+'_'+n}>
+//                         <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/${area.tag}?original=1#${area.tag}`}>
+//                             {itemRowRender}
+//                         </DirectLink>
+//                     </React.Fragment>;
+//                     htmlTxts.push(rowsBigArea);    //原先在htmlTxts.push(itemRowRender);bigItemRowCnt++;前面就处理的
+//                 }
+//             });
+//         });
+//
+//         return  htmlTxts;
+//     }, [itRes,rep,ItemArs,config,rcc,descStyle]);
+//     return { renderIspContent };
+// };

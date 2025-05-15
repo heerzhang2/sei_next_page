@@ -1,6 +1,6 @@
 import * as React from "react";
 import {eqpTypeAllMap} from "../../dict/eqpComm";
-import {MemoDatesInput} from "../../comp/base";
+// import {MemoDatesInput} from "../../comp/base";
 import {businessCatspMap} from "@/common/sei";
 
 //常用 特殊的转换：
@@ -45,16 +45,16 @@ export const renderBool有=(name: string)=>{
     }
 };
 //高阶函数
-export const input日期=(name:string,desc:string)=>{
-    return {
-        edit:(inp:any,setInp:(a:any)=>void,orc:any)=>{
-            return <InputLine  label={desc}>
-                        <MemoDatesInput value={inp?.[name] ||''}  rows={inp?.[name]?.length>22? 2:1}
-                                    onChange={v => setInp({...inp, [name]: v || undefined}) } />
-                </InputLine>;
-        },
-    };
-};
+// export const input日期=(name:string,desc:string)=>{
+//     return {
+//         edit:(inp:any,setInp:(a:any)=>void,orc:any)=>{
+//             return <InputLine  label={desc}>
+//                         <MemoDatesInput value={inp?.[name] ||''}  rows={inp?.[name]?.length>22? 2:1}
+//                                     onChange={v => setInp({...inp, [name]: v || undefined}) } />
+//                 </InputLine>;
+//         },
+//     };
+// };
 export const render检验时间 = {
     view: (orc: any) =>{
         return <>{orc?.检验日期1} 至 {orc?.检验日期}</>

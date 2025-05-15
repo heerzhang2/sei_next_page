@@ -1,13 +1,6 @@
-/** @jsxImportSource @emotion/react */
 "use client"
-import {useCallback, useContext, useState} from "react";
-import {AlertContent,Button, useToast} from "customize-easy-ui-component";
-import * as React from "react";
-import RoutingContext from "../routing/RoutingContext";
 import { gql, useMutation } from 'urql';
-import {OriginalDataMutation} from "@/report/common/base";
 import {toast} from "sonner";
-//原本.ts 加了toast组件丰富内容，改成tsx :报错
 
 /**删除minIO文件： 真的删掉 ’成功‘ 若不存在该文件返回： '不存在'；
 * */

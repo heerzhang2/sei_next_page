@@ -14,7 +14,7 @@ export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?:
                     return ovalue
                 });
                 const avHs = calcAverageArrObj(valuAr, (row) => row, resvDg);
-                return [true, <div css={{textAlign: 'center'}}>
+                return [true, <div key='1'>
                     <span className="font-semibold">{title}：</span>
                     <div>
                         <FormField
@@ -62,7 +62,7 @@ export const genCBoOmitAl = (name: string, unit: string, title?: any) => {
     return (orc: any, parOrc: any) => {
         return {
             edit: (form: UseFormReturn<any, any, any>) => {
-                return [true, <div className="flex flex-wrap items-center gap-1 justify-center">
+                return [true, <div key='1' className="flex flex-wrap items-center gap-1 justify-center">
                     <span className="font-semibold">{title}：</span>
                     <FormField
                         control={form.control}

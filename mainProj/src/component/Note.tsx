@@ -1,4 +1,4 @@
-import { ComponentProps, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import AnimateItems from './AnimateItems';
 import { IoInformationCircleOutline } from 'react-icons/io5';
 // import { clsx } from 'clsx/lite';

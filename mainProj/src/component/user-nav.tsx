@@ -1,13 +1,13 @@
 "use client"
 
-import Link from "next/link"
+// import Link from "next/link"
 // import {signOut} from "@/app/auth";
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 
 export function UserNav() {
 	const { data: session } = useSession();
     const handleSignOut = async () => {
-        const data =await signOut({
+        await signOut({
             redirect: true,
             redirectTo: '/login'        // Redirect to home after sign out
         });
