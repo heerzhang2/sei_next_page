@@ -17,7 +17,7 @@ interface UseFormFrameworkProps {
 
   // 接收外部传入的内容渲染函数工厂
   // 现在接收form和arrays作为参数，这样可以使用真实的form对象和数组字段控制
-  contentRendererFactory: (form: any, arrays?: Record<string, any>) => React.ReactNode
+  contentRendererFactory?: (form: any, arrays?: Record<string, any>) => React.ReactNode
 
   // 数组字段配置
   arrayFields?: {
@@ -120,13 +120,14 @@ export function useFormFramework({
   }
 
   // 使用contentRendererFactory创建内容渲染器
-  const contentRenderer = contentRendererFactory(form, arrayControls)
-  // 创建渲染函数
-  const render = () => (
+  const contentRenderer =contentRendererFactory && contentRendererFactory(form, arrayControls);
+  // 创建渲染函数 ，node：可直接替换contentRendererFactory的功能。实际两个部分编辑的页面能同时使用，布局前后关系。
+  const render = (node: any) => (
       <>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 @container">
             {contentRenderer}
+            {node}
             <CardFooter className="flex flex-col justify-between border-t p-6 space-y-4">
               {Object.keys(form.formState.errors || {}).length > 0 && (
                   <div className="bg-red-300 px-1 py-1 rounded-md text-sm break-all">
