@@ -401,7 +401,7 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     const { render,handleConfirm } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
 
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render()}
+        {render(null)}
     </CollapsibleFormSection>;
 };
 
@@ -547,7 +547,7 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
             return (
                 <>
                     <div>现场检验条件确认结果的记录:
-                        <Table css={{borderCollapse: 'collapse'}}>
+                        <Table >
                             <TableBody>
                                 <TableRow>
                                     <CCell>确认日期</CCell>
@@ -652,14 +652,21 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
         [selectedIndex, storage, config, children, setSelectedIndex]
     );
 
-    const {render, form, arrayControls} = useFormFramework({
+    const {render, form, arrayControls } = useFormFramework({
         schema,
         defaultValues,
-        contentRendererFactory,
+        // contentRendererFactory,
         arrayFields,
         rep
     })
+
+    const content = (
+        <>
+        { contentRendererFactory(form, arrayControls) }
+        </>
+    )
+
     return <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render()}
+        {render(content)}
     </CollapsibleFormSection>;
 }

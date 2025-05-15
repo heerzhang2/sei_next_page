@@ -357,7 +357,7 @@ export const Acceleration = ({ children, show, alone = true, redId, nestMd, labe
     const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory, arrayFields, rep})
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
-            {render()}
+            {render(null)}
         </CollapsibleFormSection>
     )
 }

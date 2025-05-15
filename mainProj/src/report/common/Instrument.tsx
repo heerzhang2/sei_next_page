@@ -77,7 +77,7 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
     )
     const { render,handleConfirm } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render()}
+        {render(null)}
     </CollapsibleFormSection>;
 };
 

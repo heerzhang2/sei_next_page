@@ -378,7 +378,7 @@ export const ObserveEdit = ({children, show, alone = true, label, memoF=false,
     const { render, } = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
-            {render()}
+            {render(null)}
             {children}
         </CollapsibleFormSection>
     )

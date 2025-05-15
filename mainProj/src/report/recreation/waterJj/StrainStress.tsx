@@ -212,7 +212,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         )
     const {render,handleConfirm} = useFormFramework({schema, defaultValues, contentRendererFactory, arrayFields, rep})
     return <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render()}
+        {render(null)}
     </CollapsibleFormSection>;
 };
 

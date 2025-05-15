@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button, CardFooter, Form } from "@/components/ui"
@@ -9,6 +9,7 @@ import { useMutation } from "@urql/next"
 import { OriginalDataMutation } from "../common/base"
 import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
+import { useFieldArrays } from "./useFieldArrays"
 
 interface UseFormFrameworkProps {
   // 接收外部传入的schema和默认值
@@ -16,7 +17,6 @@ interface UseFormFrameworkProps {
   defaultValues: Record<string, any>
 
   // 接收外部传入的内容渲染函数工厂
-  // 现在接收form和arrays作为参数，这样可以使用真实的form对象和数组字段控制
   contentRendererFactory?: (form: any, arrays?: Record<string, any>) => React.ReactNode
 
   // 数组字段配置
@@ -31,14 +31,14 @@ interface UseFormFrameworkProps {
 }
 
 export function useFormFramework({
-                                   schema,
-                                   defaultValues,
-                                   contentRendererFactory,
-                                   arrayFields = [],
-                                   rep,
-                                   onSubmit: customOnSubmit,
-                                 }: UseFormFrameworkProps) {
-  const { storage, setStorage, modified, setModified } = useStorage()
+                                     schema,
+                                     defaultValues,
+                                     contentRendererFactory,
+                                     arrayFields = [],
+                                     rep,
+                                     onSubmit: customOnSubmit,
+                                   }: UseFormFrameworkProps) {
+  const { storage, setStorage, setModified } = useStorage()
 
   // 创建表单
   const form = useForm<z.infer<typeof schema>>({
@@ -46,24 +46,8 @@ export function useFormFramework({
     defaultValues: defaultValues as any,
   })
 
-  // 创建数组字段控制器
-  const arrayControls: Record<string, any> = {}
-
-  arrayFields.forEach(({ name }) => {
-    // 为每个数组字段创建 useFieldArray 控制器  //注入：remove, move, insert append
-    const { fields, append, remove, move, insert } = useFieldArray({
-      control: form.control,
-      name,
-    })
-
-    arrayControls[name] = {
-      fields,
-      append,
-      remove,
-      move,
-      insert,
-    }
-  })
+  // 使用自定义 hook 处理数组字段
+  const arrayControls = useFieldArrays(form.control, arrayFields)
 
   //用URQL mutation来保存变更数据到后端数据库的
   const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
@@ -108,8 +92,8 @@ export function useFormFramework({
 
   // 处理确认按钮 - 临时保存到 storage
   const handleConfirm = () => {
-    // 获取当前表单值    :最早的有问题版本 const currentValues = form.getValues()  //const currentValues = { ...form.getValues() }     //浅拷贝
-    const currentValues =structuredClone(form.getValues())
+    // 获取当前表单值
+    const currentValues = structuredClone(form.getValues())
     // 更新 storage
     setStorage((prevStorage) => ({
       ...prevStorage,
@@ -120,8 +104,9 @@ export function useFormFramework({
   }
 
   // 使用contentRendererFactory创建内容渲染器
-  const contentRenderer =contentRendererFactory && contentRendererFactory(form, arrayControls);
-  // 创建渲染函数 ，node：可直接替换contentRendererFactory的功能。实际两个部分编辑的页面能同时使用，布局前后关系。
+  const contentRenderer = contentRendererFactory? contentRendererFactory(form, arrayControls) :null;
+
+  // 创建渲染函数
   const render = (node: any) => (
       <>
         <Form {...form}>
@@ -156,7 +141,7 @@ export function useFormFramework({
     render,
     handleSubmit,
     arrayControls,
-    handleConfirm
+    handleConfirm,
   }
 }
 
