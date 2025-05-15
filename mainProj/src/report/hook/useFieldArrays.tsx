@@ -13,6 +13,7 @@ interface ArrayField {
  * 这个 Hook 遵循 React Hooks 规则，在顶层调用所有需要的 useFieldArray
  */
 export function useFieldArrays(control: Control<any>, arrayFields: ArrayField[] = []) {
+  if(arrayFields.length>8)  throw new Error(`表数超限`);
   // 创建一个对象来存储所有数组控制器
   const arrayControls: Record<string, any> = {}
 
