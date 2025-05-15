@@ -655,17 +655,11 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
     const {render, form, arrayControls } = useFormFramework({
         schema,
         defaultValues,
-        // contentRendererFactory,
+        //contentRendererFactory,不用了
         arrayFields,
         rep
     })
-
-    const content = (
-        <>
-        { contentRendererFactory(form, arrayControls) }
-        </>
-    )
-
+    const content =contentRendererFactory(form, arrayControls)
     return <CollapsibleFormSection title={label!} defaultOpen={show}>
         {render(content)}
     </CollapsibleFormSection>;

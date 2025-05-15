@@ -54,13 +54,35 @@ export function useFormFramework({
 
     // 为每个可能的数组字段预先创建单独的 useFieldArray 调用
     // 这样可以确保 hooks 在组件顶层被调用
-    arrayFields.forEach((arrayField) => {
+    //for(let ap=0;ap<5 && ap<arrayFields.length;ap++)  多张表的
+    {
+        const arrayField=arrayFields[0]
         const { fields, append, remove, move, insert } = useFieldArray({
             control: form.control,
-            name: arrayField.name,
+            name: arrayField?.name,
         })
         arrayControls[arrayField.name] = { fields, append, remove, move, insert }
-    })
+    }
+    {
+        const arrayField=arrayFields[1]
+        const { fields, append, remove, move, insert } = useFieldArray({
+            control: form.control,
+            name: arrayField?.name || "",
+        })
+        arrayControls[arrayField?.name] = { fields, append, remove, move, insert }
+    }
+    {
+        const arrayField=arrayFields[2]
+        const { fields, append, remove, move, insert } = useFieldArray({
+            control: form.control,
+            name: arrayField?.name || "",
+        })
+        arrayControls[arrayField?.name] = { fields, append, remove, move, insert }
+    }
+
+    // arrayFields.forEach((arrayField) => {
+    //
+    // })
 
     // 处理表单提交
     const handleSubmit = async (values: any) => {
@@ -155,3 +177,15 @@ export function useFormFramework({
     }
 }
 
+// 创建一个修改指示器组件
+export const ModificationIndicator = () => {
+    const { modified } = useStorage()
+    if (!modified) return null
+    return (
+        <div className="fixed top-4 left-4 z-50 bg-yellow-500 border border-pink-900 text-black px-1 py-1 rounded-lg shadow-xl animate-pulse">
+            <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-red-400 rounded-full animate-spin-slow"></div>
+            </div>
+        </div>
+    )
+}

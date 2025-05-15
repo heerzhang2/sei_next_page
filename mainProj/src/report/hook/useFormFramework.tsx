@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button, CardFooter, Form } from "@/components/ui"
@@ -9,6 +9,7 @@ import { useMutation } from "@urql/next"
 import { OriginalDataMutation } from "../common/base"
 import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
+import { useFieldArrays } from "./useFieldArrays"
 
 interface UseFormFrameworkProps {
   // 接收外部传入的schema和默认值
@@ -16,7 +17,6 @@ interface UseFormFrameworkProps {
   defaultValues: Record<string, any>
 
   // 接收外部传入的内容渲染函数工厂
-  // 现在接收form和arrays作为参数，这样可以使用真实的form对象和数组字段控制
   contentRendererFactory?: (form: any, arrays?: Record<string, any>) => React.ReactNode
 
   // 数组字段配置
@@ -38,7 +38,7 @@ export function useFormFramework({
                                    rep,
                                    onSubmit: customOnSubmit,
                                  }: UseFormFrameworkProps) {
-  const { storage, setStorage, modified, setModified } = useStorage()
+  const { storage, setStorage, setModified } = useStorage()
 
   // 创建表单
   const form = useForm<z.infer<typeof schema>>({
@@ -46,21 +46,11 @@ export function useFormFramework({
     defaultValues: defaultValues as any,
   })
 
-  // 用URQL mutation来保存变更数据到后端数据库的
+  // 使用自定义 hook 处理数组字段
+  const arrayControls = useFieldArrays(form.control, arrayFields)
+
+  //用URQL mutation来保存变更数据到后端数据库的
   const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
-
-  // 创建数组字段控制器 - 修改这部分代码
-  const arrayControls: Record<string, any> = {}
-
-  // 为每个可能的数组字段预先创建单独的 useFieldArray 调用
-  // 这样可以确保 hooks 在组件顶层被调用
-  arrayFields.forEach((arrayField) => {
-    const { fields, append, remove, move, insert } = useFieldArray({
-      control: form.control,
-      name: arrayField.name,
-    })
-    arrayControls[arrayField.name] = { fields, append, remove, move, insert }
-  })
 
   // 处理表单提交
   const handleSubmit = async (values: any) => {
@@ -114,7 +104,7 @@ export function useFormFramework({
   }
 
   // 使用contentRendererFactory创建内容渲染器
-  const contentRenderer = contentRendererFactory && contentRendererFactory(form, arrayControls)
+  const contentRenderer = contentRendererFactory? contentRendererFactory(form, arrayControls) :null;
 
   // 创建渲染函数
   const render = (node: any) => (
