@@ -2,13 +2,12 @@ import type { Metadata } from "next";
 // import "./globals.css";
 // import { ServerRelayProvider } from "../relay/ServerRelayProvider";
 import {lazy, ReactNode, Suspense} from "react";
-import SwrConfigClient from "@/action/SwrConfigClient";
-import AppStateProvider from "@/action/AppStateProvider";
+import SwrConfigClient from "@/contexts/SwrConfigClient";
 import { ToastContainer, toast } from 'react-toastify';
 import { SessionProvider } from 'next-auth/react';
-import GlobalState from "@/action/GlobalState";
 import {connection} from "next/server";
 import {MainContent} from "@/app/(auth)/user/MainContent";
+import GlobalState from "@/contexts/GlobalState";
 // import FootBar from "@/component/footbar";
 
 export const metadata: Metadata = {
@@ -26,16 +25,14 @@ export default async function SPALayout({children}: { children: ReactNode }) {
     return (
         <>
             <GlobalState>
-                <AppStateProvider>
-                    <SwrConfigClient>
+                <SwrConfigClient>
 
-                        {children}
+                    {children}
 
-                        <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>
-                            <MainContent/>
-                        </Suspense>
-                    </SwrConfigClient>
-                </AppStateProvider>
+                    <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>
+                        <MainContent/>
+                    </Suspense>
+                </SwrConfigClient>
             </GlobalState>
             <ToastContainer/>
         </>

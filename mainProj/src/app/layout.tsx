@@ -2,12 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from 'next-auth/react';
 import {auth} from "@/app/auth";
-// import GlobalState from "@/[action]/GlobalState";
 // import {connection} from "next/server";
 import { Provider, atom, useAtom } from "jotai";
 import {GraphQLProvider} from "@/auth/graphql-component";
-// import PrintUsed from "@/common/PrintUsed";
-// import AuthStatus from "@/auth/auth-status";
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from "sonner"
 import "@/styles/print-styles.css" // 导入打印样式
@@ -43,7 +40,6 @@ export default async function RootLayout({
       >
       <ThemeProvider>
         <PrintSettingsProvider>
-          {/*<PrintUsed/>*/}
           <SessionProvider session={session}>
               <Provider>
                   <GraphQLProvider>
@@ -51,21 +47,6 @@ export default async function RootLayout({
                       <Toaster richColors position="top-right" />
                   </GraphQLProvider>
               </Provider>
-
-              {/*<GlobalState>*/}
-              {/*    <AppStateProvider>*/}
-              {/*        <SwrConfigClient>*/}
-
-              {/*            {children}*/}
-
-              {/*            <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>*/}
-              {/*                <MainContent/>*/}
-              {/*            </Suspense>*/}
-              {/*        </SwrConfigClient>*/}
-              {/*    </AppStateProvider>*/}
-              {/*</GlobalState>*/}
-              {/*<ToastContainer/>*/}
-
           </SessionProvider>
         </PrintSettingsProvider>
       </ThemeProvider>
@@ -73,42 +54,3 @@ export default async function RootLayout({
       </html>
   );
 }
-
-
-/*
-        <html suppressHydrationWarning>
-        <head>
-            <style>
-                {`
-            body {
-                padding: 0;
-                margin: 0;
-            }
-            @page portraitPg {
-                size: a4 portrait;
-                @top-middle {
-                    content: "Table of ntentsff3";
-                }
-            }
-            @page landscapePg {
-                size: a4 landscape;
-                @top-middle {
-                    content: "Chapte r5sdfg";
-                }
-            }
-            @media print {
-                .WideChapter {
-                    page: landscapePg;
-                }
-                .UsualChapter {
-                    page: portraitPg;
-                }
-                nextjs-portal,next-route-announcer {
-                    display: none;
-                }
-            }
-            `}
-            </style>
-        </head>
-        <body>
-* */

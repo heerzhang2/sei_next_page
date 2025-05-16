@@ -2,7 +2,6 @@
 
 import { Client, ssrExchange, cacheExchange, fetchExchange, createClient,} from '@urql/next';
 import {UrqlProvider,} from '@urql/next';
-// import { useUrqlClient } from './urql-client'
 import { useAccessToken } from './use-access-token'
 import {authExchange} from "@urql/exchange-auth";
 import {ReactNode, useMemo} from "react";
@@ -10,8 +9,6 @@ import { registerUrql } from '@urql/next/rsc';
 //离线保存支持的：
 import { offlineExchange } from '@urql/exchange-graphcache';
 import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
-import { auth } from '@/app/auth';
-// import { cookies } from 'next/headers'
 import schema from './urql-schema.json';
 import { Logger, SerializedRequest } from "@urql/exchange-graphcache";
 

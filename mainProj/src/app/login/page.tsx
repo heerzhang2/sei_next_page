@@ -1,7 +1,7 @@
 // import { getTranslations, setRequestLocale } from 'next-intl/server';
 import SignInForm from "@/app/login/SignInForm";
 import Link from "next/link";
-import LoginForm from "@/app/login/LoginForm";
+// import LoginForm from "@/app/login/LoginForm";
 
 
 type ISignInPageProps = {

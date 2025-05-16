@@ -1,26 +1,12 @@
 import { registerUrql } from '@urql/next/rsc';
 import {Client, ssrExchange, cacheExchange, fetchExchange, createClient } from '@urql/next';
-// import { Client } from '@urql/core';
 //离线保存支持的：
 import {offlineExchange, SerializedEntries} from '@urql/exchange-graphcache';
 import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
 import { authExchange } from '@urql/exchange-auth';
 import { auth } from '@/app/auth';
-// import { cookies } from 'next/headers'
-
 import schema from './urql-schema.json';
 
-
-// let session=null;
-// if (typeof window !== 'undefined') {
-//   (async () => {
-//     // const cookieStore = await cookies();
-//     // 异步操作，如等待一个 Promise 解析
-//     session = await auth();
-//   })();
-// } else {
-//   //服务端啊
-// }
 
 const epoint = process.env.NEXT_PUBLIC_BACK_END;
 const url=`${epoint}/graphql`;
