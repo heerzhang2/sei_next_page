@@ -8,8 +8,12 @@ export default function AuthStatus() {
     const { data: session } = useSession()
     const router = useRouter()
     console.log("AuthStatus: session=", session);
+    //interface DefaultSession {
+    //   user?: User
+    //   expires: ISODateString
+    // }        没有error字段？
     useEffect(() => {
-        if(!session || session?.error === "RefreshAccessTokenError") {
+        if(!session || (session as any)?.error === "RefreshAccessTokenError") {
            //SSR服务端报错之后，需要最终在客户端 重新登录
             router.push("/api/auth/signout")
         }

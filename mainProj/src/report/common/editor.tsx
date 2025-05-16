@@ -325,7 +325,7 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
         fields["unq"]= storage["unq"]
-        storage["unq"].forEach((row,index) => {
+        storage["unq"].forEach((row: any,index:number) => {
             config.forEach(([t,field,s,o,park]) => {
                 if(row[field]===undefined)  fields["unq"][index][field]=""
             })
@@ -480,7 +480,7 @@ export const WitnessSimple = ({
     )
     const {render} = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
     return <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render()}
+        {render(null)}
     </CollapsibleFormSection>;
 };
 
@@ -612,7 +612,7 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
                             <CardFooter className="flex justify-end space-x-4 border-t p-6">
                                 <Button className=""
                                         onClick={(e) => {
-                                            const template = {d: ""};
+                                            const template = {d: ""} as any;
                                             config.forEach(([_, {f: field}]) => {
                                                 template[field] = "";
                                             });

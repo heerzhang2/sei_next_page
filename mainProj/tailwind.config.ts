@@ -1,7 +1,9 @@
 import type { Config } from "tailwindcss";
 
+// type DarkModeStrategy = false | 'media' | 'class' | ['class', string] | 'selector' | ['selector', string] | ['variant', string | string[]];
+
 const config: Config = {
-    darkMode: ["class"],
+    darkMode: ["class",""],
     content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",

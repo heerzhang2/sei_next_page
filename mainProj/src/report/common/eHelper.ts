@@ -1,6 +1,6 @@
 import * as React from "react";
 import {ItemOmniConfig} from "./omni";
-import {itemA附页本体, items工作内容} from "../furnace/External/AttachInspectItem";
+// import {itemA附页本体, items工作内容} from "../furnace/External/AttachInspectItem";
 // import {string} from "prop-types";
 //通用处理函数。
 

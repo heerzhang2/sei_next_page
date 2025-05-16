@@ -212,8 +212,6 @@ export const GenCode =(
             setErrors(err.message);
         }
     }, [setDescSpld]);
-    const getInpFilter = React.useCallback((par: any) => par, []);
-    const {inp, setInp} = useItemInputControl({ref});
     const [isCopied, setCopied] = useClipboard(result || '');    //其它申请单关联了本申请单地情况。
     return (
         <CollapsibleFormSection title={'快组织代码的生成'} defaultOpen={show}>

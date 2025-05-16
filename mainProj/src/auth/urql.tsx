@@ -2,7 +2,7 @@ import { registerUrql } from '@urql/next/rsc';
 import {Client, ssrExchange, cacheExchange, fetchExchange, createClient } from '@urql/next';
 // import { Client } from '@urql/core';
 //离线保存支持的：
-import { offlineExchange } from '@urql/exchange-graphcache';
+import {offlineExchange, SerializedEntries} from '@urql/exchange-graphcache';
 import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
 import { authExchange } from '@urql/exchange-auth';
 import { auth } from '@/app/auth';
@@ -34,10 +34,11 @@ if (typeof window !== 'undefined') {
     maxAge: 7, // The maximum age of the persisted data in days
   });
 } else {          //[避免报错] 在SSR服务器端， 用 空存储或内存存储
+  const some: SerializedEntries={};
   storage = {
-    writeData: (data) => Promise.resolve(),
-    readData: () => Promise.resolve(null),
-    writeMetadata: (data) => Promise.resolve(),
+    writeData: (data:any) => Promise.resolve(),
+    readData: () => Promise.resolve(some),
+    writeMetadata: (data:any) => Promise.resolve(),
     readMetadata: () => Promise.resolve(null),
   };
 }
@@ -53,7 +54,7 @@ In a server component we registerUrql  import from @urql/next/rsc
    只考虑是在服务端SSR场合下的API请求：
 服务端的也用？ const cache = offlineExchange({schema,storage,}) ？不是客户端才有特性吗。
 * */
-export function urqlClient(accessToken:string) {
+export function urqlClient(accessToken:string|null) {
   const makeClient = () => {
     return createClient({
       url,

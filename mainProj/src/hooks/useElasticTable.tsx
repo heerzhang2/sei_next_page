@@ -1,176 +1,162 @@
-/** @jsxImportSource @emotion/react */
-import * as React from "react";
-import {useTheme,} from "customize-easy-ui-component";
-import {useMeasure} from "customize-easy-ui-component/esm/Hooks/use-measure";
-import {useWindowSize} from "customize-easy-ui-component/esm/Hooks/use-window-size";
-
+"use client"
+import React, { useRef, useState, useEffect } from "react"
+import { cn } from "@/lib/utils"
 import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 interface ElasticTableProps {
-    //表格数组内容
-    content: any[];
-    //表格的基本配置  多字段
-    config: Each_ZdSetting[];
-    /**水平轴X方向依据浏览器可用屏幕区域大小来进行拉伸，默认是小屏幕的，配置分别代表了两阶段拉伸[小屏幕,电脑屏|平板电脑, 台式机的超大屏幕]的拉伸系数；
-     * 缺省取值=[1, 1.35, 1.70];
-     * */
-    stretchF?: number[];
-    slash?: boolean;
-    //需要插入序号， 1，2，3。。
-    seqT?:any;
-    //序号列宽度px数
-    seqCw?:number;
+    // Table content array
+    content: any[]
+    // Table basic configuration with multiple fields
+    config: Each_ZdSetting[]
+    /**
+     * Horizontal axis X stretching based on browser available screen area size
+     * Default values = [1, 1.35, 1.70] representing stretching factors for
+     * [small screen, computer screen/tablet, large desktop screen]
+     */
+    stretchF?: number[]
+    slash?: boolean
+    // Need to insert sequence numbers 1, 2, 3...
+    seqT?: any
+    // Sequence column width in px
+    seqCw?: number
 }
 
-/**（表行折叠的）弹性表格， 类比useRepTableEditor； #局限性：普通线性表格，没有span概念/跨行融合的。
- * 管道特性表? 有额外的签名和备注，还要可点某一行击跳转功能的，可能采用这个模式还需考虑？ # 比横版打印好 @。
- *   <colgroup class="col-group-1" span="2"></colgroup> <colgroup class="col-group-2"></colgroup>
- *   使用<table>、<tr>和<td>元素可能会更容易实现这一点。然而，请注意，这种方法会牺牲一些可访问性和响应式设计的灵活性
- * 和Table表格的取值相同 const height=rheight? rheight : ( tableSectionType === "TableHead" ? (vtight? 25 : 31) : (vtight? 33 : 49) );
- * 若用display: grid; grid-template-columns: 也没办法啊。
- * */
-export function useElasticTable({content, config, stretchF = [1, 1.35, 1.7],slash,seqT,seqCw=20}: ElasticTableProps) {
-    const theme = useTheme();
-    const configNew =React.useMemo(()=>{
-        if(seqT)   return [[seqT, '_S', seqCw ], ...config];
-        else  return config;
-    },[config,seqT,seqCw]);
-    //表格的全字段名称所在栏目div:
-    const {innerHeight,} = useWindowSize();       //浏览器TAB内窗口全局大小; 两阶段拉伸[电脑屏|平板电脑, 台式机的超大屏幕]
-    const dytilRef = React.useRef<HTMLDivElement>(null);
-    const barRect = useMeasure(dytilRef as React.RefObject<HTMLElement>);
-    const hBarWidth = barRect?.width || 0;
-    //屏幕的类型 ：大中小屏的区分；
-    const screenTp = (innerHeight!) > 860 && hBarWidth > 1700 ? 2 : (innerHeight!) > 740 && hBarWidth > 1280 ? 1 : 0;
-    const linecnt = content?.length;        //最多抵达行的总个数；
+/**
+ * Elastic table with row folding, similar to useRepTableEditor
+ * Limitation: Regular linear table, no concept of span/row merging
+ */
+export function ElasticTable({
+                                 content,
+                                 config,
+                                 stretchF = [1, 1.35, 1.7],
+                                 slash,
+                                 seqT,
+                                 seqCw = 20,
+                             }: ElasticTableProps) {
+    // Create a ref for the table container
+    const dytilRef = useRef<HTMLDivElement>(null)
 
-    const thisTable = <table css={{width: '100%', borderCollapse: 'collapse'}}>
-        <thead
-            css={{
-                position: 'sticky',        //用'fixed'的更离奇；'sticky',   position: 'relative',
-                top: `0px`,
-                background: 'ghostwhite',
-                zIndex: theme.zIndices.sticky,
-                borderCollapse: 'collapse',
-                display: 'table-header-group',
-                "@media print": {position: 'relative',}
-            }}
-        >
-        <tr className="HBar"
-            css={{display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', alignItems: 'center'}}>
-            <th css={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                flexWrap: 'wrap',
-                width: '-webkit-fill-available',
-                justifyContent: 'space-between',
-                height: 'unset',
-                minHeight: '25px',
-                padding: 'unset !important',
-                textAlign: 'unset',
-                border: 'none',
-                borderBottom: '1px solid'
-            }}>
-                <div css={{
-                    display: 'flex',
-                    width: '-webkit-fill-available',
-                    flexWrap: 'wrap',
-                    justifyContent: 'flex-start',
-                    alignItems: 'stretch',
-                    minHeight: 'inherit',
-                    gap: 0,
-                }}>
-                    {configNew.map(([title, tag, width]: any, k: number) => {
-                        //数据行 不考虑加： whiteSpace: 'break-spaces', 若超长的 重叠显示的；
-                        return (
-                            <div key={k} css={{
-                                display: 'inline-flex',
-                                flexBasis: width * stretchF[screenTp],
-                                flexGrow: 1,
-                                flexShrink: 1,
-                                maxWidth: '100%',
-                                border: '1px dashed',
-                                boxSizing: 'border-box',
-                                overflowWrap: 'anywhere',
-                                whiteSpace: 'initial',
-                                minHeight: '25px',
-                            }}>
-                                <div css={{margin: 'auto'}}>
-                                    {title}
+    // State for window dimensions
+    const [windowSize, setWindowSize] = useState({
+        innerWidth: typeof window !== "undefined" ? window.innerWidth : 0,
+        innerHeight: typeof window !== "undefined" ? window.innerHeight : 0,
+    })
+
+    // State for container width
+    const [containerWidth, setContainerWidth] = useState(0)
+
+    // Update window size on resize
+    useEffect(() => {
+        function handleResize() {
+            setWindowSize({
+                innerWidth: window.innerWidth,
+                innerHeight: window.innerHeight,
+            })
+        }
+
+        window.addEventListener("resize", handleResize)
+        handleResize()
+
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
+
+    // Measure container width
+    useEffect(() => {
+        if (dytilRef.current) {
+            setContainerWidth(dytilRef.current.offsetWidth)
+        }
+
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                setContainerWidth(entry.contentRect.width)
+            }
+        })
+
+        if (dytilRef.current) {
+            resizeObserver.observe(dytilRef.current)
+        }
+
+        return () => {
+            if (dytilRef.current) {
+                resizeObserver.unobserve(dytilRef.current)
+            }
+        }
+    }, [dytilRef])
+
+    // Add sequence number column if needed
+    const configNew = React.useMemo(() => {
+        if (seqT) return [[seqT, "_S", seqCw], ...config]
+        else return config
+    }, [config, seqT, seqCw])
+
+    // Determine screen type based on dimensions
+    const screenTp =
+        windowSize.innerHeight > 860 && containerWidth > 1700
+            ? 2
+            : windowSize.innerHeight > 740 && containerWidth > 1280
+                ? 1
+                : 0
+
+    const linecnt = content?.length // Total number of rows
+
+    return (
+        <div ref={dytilRef} className="box-border">
+            <table className="w-full border-collapse">
+                <thead className="sticky top-0 bg-gray-50 z-10 border-collapse table-header-group print:relative">
+                <tr className="flex flex-wrap justify-around items-center">
+                    <th className="flex flex-col items-start flex-wrap w-full justify-between h-auto min-h-[25px] p-0 text-left border-none border-b border-solid">
+                        <div className="flex w-full flex-wrap justify-start items-stretch min-h-inherit gap-0">
+                            {configNew.map(([title, tag, width]: any, k: number) => (
+                                <div
+                                    key={k}
+                                    className={cn(
+                                        "inline-flex flex-grow flex-shrink max-w-full border border-dashed box-border break-words whitespace-normal min-h-[25px]",
+                                    )}
+                                    style={{
+                                        flexBasis: `${width * stretchF[screenTp]}px`,
+                                    }}
+                                >
+                                    <div className="m-auto">{title}</div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </th>
-        </tr>
-        </thead>
-        <tbody css={{borderCollapse: 'collapse',}}>
-        {isNaN(linecnt) && <tr css={{border: '1px solid'}}><td css={{textAlign: 'center'}}>空表</td></tr>}
-        {!isNaN(linecnt) && (new Array(linecnt)).fill(null).map((_, i: number) => {
-            const domRow = <tr
-                css={{display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', alignItems: 'center'}}>
-                <td css={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    flexWrap: 'wrap',
-                    width: '-webkit-fill-available',
-                    justifyContent: 'space-between',
-                    height: 'unset',
-                    minHeight: '33px',
-                    padding: 'unset !important',
-                    textAlign: 'unset',
-                    border: 'none',
-                    borderBottom: '1px solid'
-                }}>
-                    <div css={{
-                        display: 'flex',
-                        width: '-webkit-fill-available',
-                        flexWrap: 'wrap',
-                        justifyContent: 'flex-start',
-                        alignItems: 'stretch',
-                        minHeight: 'inherit',
-                        gap: 0,
-                    }}>
-                        {configNew.map(([title, tag, width]: any, k: number) => {
-                            //数据行 不考虑加： whiteSpace: 'break-spaces', 若超长的 重叠显示的；
-                            return (
-                                <div key={k} css={{
-                                    display: 'inline-flex',
-                                    flexBasis: width * stretchF[screenTp],
-                                    flexGrow: 1,
-                                    flexShrink: 1,
-                                    maxWidth: '100%',
-                                    border: '1px dotted',
-                                    boxSizing: 'border-box',
-                                    overflowWrap: 'anywhere',
-                                    whiteSpace: 'initial',
-                                    minHeight: '33px',
-                                }}>
-                                    <div css={{margin: 'auto'}}>
-                                     {'_S'===tag? (i+1) : (content[i]?.[tag] ?? (slash&&'／')) }
+                            ))}
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody className="border-collapse">
+                {isNaN(linecnt) && (
+                    <tr className="border border-solid">
+                        <td className="text-center">空表</td>
+                    </tr>
+                )}
+                {!isNaN(linecnt) &&
+                    Array(linecnt)
+                        .fill(null)
+                        .map((_, i: number) => (
+                            <tr key={i} className="flex flex-wrap justify-around items-center">
+                                <td className="flex flex-col items-start flex-wrap w-full justify-between h-auto min-h-[33px] p-0 text-left border-none border-b border-solid">
+                                    <div className="flex w-full flex-wrap justify-start items-stretch min-h-inherit gap-0">
+                                        {configNew.map(([title, tag, width]: any, k: number) => (
+                                            <div
+                                                key={k}
+                                                className={cn(
+                                                    "inline-flex flex-grow flex-shrink max-w-full border border-dotted box-border break-words whitespace-normal min-h-[33px]",
+                                                )}
+                                                style={{
+                                                    flexBasis: `${width * stretchF[screenTp]}px`,
+                                                }}
+                                            >
+                                                <div className="m-auto">{"_S" === tag ? i + 1 : (content[i]?.[tag] ?? (slash && "／"))}</div>
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </td>
-            </tr>;
-            return <React.Fragment key={i}>
-                {domRow}
-            </React.Fragment>;
-        })}
-        </tbody>
-    </table>;
-
-    const render = <>
-        <div ref={dytilRef} css={{boxSizing: 'border-box'}}>
-            {thisTable}
+                                </td>
+                            </tr>
+                        ))}
+                </tbody>
+            </table>
         </div>
-    </>
-    return [render];
+    )
 }
 
 /**转换配置

@@ -167,7 +167,7 @@ export function useThreeColumnView({orc, config, split, slash,embedCol}: ThreeCo
                         name.r? name.r :
                             name.t==='b'? (orc?.[name.n]? '是':'否') :
                                 name.t === 'm' ?
-                                    <div css={{textAlign: 'left', whiteSpace: 'pre-wrap'}}>{orc?.[name.n] ?? '／'}</div>
+                                    <div className="text-left whitespace-pre-wrap">{orc?.[name.n] ?? '／'}</div>
                                      :
                                     orc?.[name.n];
             const tailUnit2=!desc2? undefined :

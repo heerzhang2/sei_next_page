@@ -137,7 +137,7 @@ export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDef
                 g)绳股被挤出，这种状况通常伴随笼形畸变产生； h)局部直径严重增大或减小时；
                 i)局部弯折、扭结或被压扁时； j)受特殊热力的作用，外表出现可识别的颜色时；
                 k)超过设计及有关技术规程规定的使用寿命时。
-                <FlexibleTable columnWidths={ ["%","43%"] } css={{borderCollapse: 'collapse'}} ><TableBody>
+                <FlexibleTable columnWidths={ ["%","43%"] }><TableBody>
                     <TableRow><CCell>磨损状态</CCell><CCell>允许值</CCell></TableRow>
                     <TableRow><CCell>钢丝破断呈均匀分布状态</CCell><CCell>每股在一个捻距内破断数为3根</CCell></TableRow>
                     <TableRow><CCell>钢丝破断虽呈均匀分布状态，钢丝磨损后的剩余断面积为原断面积的80%以下或严重腐蚀</CCell><CCell>每股在一个捻距内破断数为2根</CCell></TableRow>

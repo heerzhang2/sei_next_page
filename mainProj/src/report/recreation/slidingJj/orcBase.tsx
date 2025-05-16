@@ -172,7 +172,7 @@ export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
         fields["_tblFixed"]= storage["_tblFixed"]
         return fields
     }, [storage])
-    const doCheckNames = React.useCallback((e,rep: any) => {
+    const doCheckNames = React.useCallback((e: React.MouseEvent,rep: any) => {
         const impressionismAs = setupItemAreaRoute({rep, noDefault: true});
         const result = assertNamesUnique([{value: rep?.tzFields}, {value: impressionismAs?.Item, type: 'impr'},
             {value: config设备概况, type:'esnt'}, {value:[...itemA结论,  ...itemA技术见证, ] },
@@ -206,6 +206,6 @@ export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
     }, [])
     const { render } = useFormFramework({schema,defaultValues, contentRendererFactory, rep})
     return  <CollapsibleFormSection title={'初始化本报告，默认值配置等'} defaultOpen={show}>
-        {render()}
+        {render(null)}
     </CollapsibleFormSection>;
 };

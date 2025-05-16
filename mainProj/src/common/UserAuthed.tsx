@@ -1,5 +1,3 @@
-/** @jsxImportSource @emotion/react */
-
 import {redirect, } from "next/navigation";
 import {auth} from "@/app/auth";
 

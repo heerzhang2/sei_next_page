@@ -11,7 +11,11 @@ interface ResponsiveTabsListProps extends React.ComponentPropsWithoutRef<typeof 
   scrollAmount?: number
   minTabWidth?: number
 }
-
+// Define a type for the props of the child elements
+interface TabChildProps {
+  className?: string
+  [key: string]: any
+}
 export function ResponsiveTabsList({
                                      children,
                                      className,
@@ -165,7 +169,7 @@ export function ResponsiveTabsList({
             {/* Apply minimum width to each tab trigger when using scroll layout */}
             {useScrollLayout
                 ? React.Children.map(children, (child) => {
-                  if (React.isValidElement(child)) {
+                  if (React.isValidElement<TabChildProps>(child)) {
                     return React.cloneElement(child, {
                       className: cn(child.props.className, `min-w-[${minTabWidth}px] whitespace-nowrap`),
                     })

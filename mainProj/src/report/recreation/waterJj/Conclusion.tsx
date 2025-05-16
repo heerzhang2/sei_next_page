@@ -107,6 +107,6 @@ export const ConclusionWaterJj = ({ children, show, alone = true, redId, nestMd,
     )
     const { render } = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render()}
+        {render(null)}
     </CollapsibleFormSection>;
 };

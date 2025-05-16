@@ -5,7 +5,7 @@ import {UrqlProvider,} from '@urql/next';
 // import { useUrqlClient } from './urql-client'
 import { useAccessToken } from './use-access-token'
 import {authExchange} from "@urql/exchange-auth";
-import {useMemo} from "react";
+import {ReactNode, useMemo} from "react";
 import { registerUrql } from '@urql/next/rsc';
 //离线保存支持的：
 import { offlineExchange } from '@urql/exchange-graphcache';
@@ -25,7 +25,7 @@ https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-renderi
 @urql/next and urql
 【测试阶段】手动清理indexedDB删除：为何遗留旧的？
 * */
-export function GraphQLProvider({ children }) {
+export function GraphQLProvider({children}: { children: ReactNode }) {
     // const client = useUrqlClient()
     const accessToken = useAccessToken();
     console.log("GraphQLProvider见到的token:{}", accessToken);         //【奇怪】强制刷新时在SSR服务器也会可能打印这个输出啊？我加了'use client'啊！！
@@ -40,9 +40,9 @@ export function GraphQLProvider({ children }) {
             });
         } else {      //[避免报错] 在SSR服务器端， 用 空存储或内存存储
             storage = {
-                writeData: (data) => Promise.resolve(),
+                writeData: (data:any) => Promise.resolve(),
                 readData: () => Promise.resolve(null),
-                writeMetadata: (data) => Promise.resolve(),
+                writeMetadata: (data:any) => Promise.resolve(),
                 readMetadata: () => Promise.resolve(null),
             };
         }
@@ -120,7 +120,6 @@ export function GraphQLProvider({ children }) {
                         async refreshAuth() {
                             // 如果需要，实现令牌刷新逻辑
                             console.warn("addAuthToOperation:未实现？的", accessToken);
-                            return null
                         }
                     }
                 }),
@@ -129,7 +128,7 @@ export function GraphQLProvider({ children }) {
             fetchOptions: () => {
                 return {
                     headers: {
-                        authorization: accessToken ? `Bearer ${accessToken}` : undefined,
+                        authorization: accessToken ? `Bearer ${accessToken}` : "",
                     },
                 };
             },

@@ -1,5 +1,5 @@
 import * as React from "react";
-import {useAreaFoldable} from "../common/helper";
+// import {useAreaFoldable} from "../common/helper";
 // import {VsProjects默认} from "../vessel/orcBase";
 
 /**【代码复用】从独立流转的分项返回主报告链接,
@@ -49,7 +49,7 @@ export function useSplitSubRepList(srepIds: any[], blockMax:number, viewALL:bool
     const { ...other}=all;
     // seeDefsFix[0]= true;            //【问题】全局变量被其他组件用useFoldForList时刻所修改了
     //【没法做动态增加的】seeDefsFix seeDefs；报错Rendered more hooks than during the previous render.
-    const btnBindUses =useAreaFoldable(viewALL, seeDefsFix1);
+    const btnBindUses ={}//useAreaFoldable(viewALL, seeDefsFix1);
     //seeDefs ？？抛弃，固定最大3组的seeDefsFix
     return { ...other, btnBindUses };
 }
@@ -87,7 +87,7 @@ export function useFoldForList(list: any[], blockMax:number, viewALL:boolean, hi
         return { sumArea, areaContent };
     }, [list, blockMax]);
     // seeDefsFix[0]= !hidden;
-    const btnBindUses =useAreaFoldable(viewALL, hidden? seeDefsFix2 : seeDefsFix1);
+    const btnBindUses ={}//useAreaFoldable(viewALL, hidden? seeDefsFix2 : seeDefsFix1);
     return { ...all, btnBindUses };
 }
 /**可折叠：只能支持一个项目的#。不是数组 多对象控制的。
@@ -108,7 +108,7 @@ export function useFoldFor(list: any[], blockMax:number, viewALL:boolean, hidden
         return { sumArea, areaContent };
     }, [list, blockMax]);
     // seeDefsFix[0]= !hidden;
-    const btnBindUses =useAreaFoldable(viewALL, hidden? seeDefsFix2 : seeDefsFix1);
+    const btnBindUses ={}//useAreaFoldable(viewALL, hidden? seeDefsFix2 : seeDefsFix1);
     return { ...all, btnBindUses };
 }
 /**报告目录菜单的链接构造,     #${VsProjects默认[5].ha}` VsProjects默认

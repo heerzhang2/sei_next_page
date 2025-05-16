@@ -1,5 +1,5 @@
-import type React from "react"
-import { Children, isValidElement, cloneElement, type ReactNode } from "react"
+import * as React from "react"
+import { Children, isValidElement, cloneElement, type ReactNode, ReactElement } from "react"
 
 interface FlexibleTableProps {
   children: ReactNode
@@ -37,7 +37,7 @@ function processColumnWidths(columnWidths: string[]): string[] {
 }
 
 // Helper function to process rows and apply widths to cells
-function processRows(rows: ReactNode, columnWidths: string[]): ReactNode {
+function processRows(rows: ReactNode|ReactNode[], columnWidths: string[]): ReactNode {
   // Calculate the processed widths
   const processedWidths = processColumnWidths(columnWidths)
 
@@ -47,11 +47,11 @@ function processRows(rows: ReactNode, columnWidths: string[]): ReactNode {
     // For custom row components, we need to pass the columnWidths as a prop
     // But we don't need to set width on cells since colgroup handles that
     return cloneElement(row, {
-      ...row.props,
+      ...(row.props || {}),
       columnWidths: processedWidths,
       // Flag to indicate we're using colgroup for widths
       usingColgroup: true,
-    })
+    } as any)
   })
 }
 
@@ -60,10 +60,10 @@ function processTableSection(section: ReactNode, columnWidths: string[]): ReactN
   if (!isValidElement(section)) return section
 
   // Process rows within the section
-  const processedRows = processRows(section.props.children, columnWidths)
+  const processedRows = processRows((section.props as any)?.children, columnWidths)
 
   // Return the section with processed rows
-  return cloneElement(section, section.props, processedRows)
+  return cloneElement(section, (section as any).props, processedRows)
 }
 
 //增加divClassName参数：应对特别情况
@@ -103,14 +103,19 @@ export function TableBody({ children }: { children: ReactNode }) {
   return <tbody>{children}</tbody>
 }
 
+// Define a proper interface for the table cell props
+interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
+  colSpan?: number
+}
+
 export function TableRow({
-  children,
-  className,
-  variant = "default",
-  columnWidths,
-  usingColgroup = false,
-  ...props
-}: React.HTMLAttributes<HTMLTableRowElement> & {
+                           children,
+                           className,
+                           variant = "default",
+                           columnWidths,
+                           usingColgroup = false,
+                           ...props
+                         }: React.HTMLAttributes<HTMLTableRowElement> & {
   variant?: "default" | "borderless" | "dashed"
   columnWidths?: string[]
   usingColgroup?: boolean
@@ -121,24 +126,25 @@ export function TableRow({
     dashed: "border-b border-dashed",
   }
 
-  // 如果使用 colgroup 来设置宽度，就不需要在单元格上设置宽度
   const processedChildren = usingColgroup
-    ? children
-    : columnWidths
-      ? Children.map(children, (cell, index) => {
-          if (!isValidElement(cell)) return cell
+      ? children
+      : columnWidths
+          ? Children.map(children, (cell): React.ReactNode => {
+            if (!isValidElement(cell)) return cell
 
-          // 考虑 colSpan 属性
-          const colSpan = cell.props.colSpan || 1
-          // 不再设置宽度，因为 colgroup 已经处理了
-          return cell
-        })
-      : children
+            // Now TypeScript will recognize colSpan
+            if (isValidElement<TableCellProps>(cell)) {
+              const colSpan = cell.props.colSpan || 1
+              return React.cloneElement(cell, { colSpan })
+            }
+            return cell
+          })
+          : children
 
   return (
-    <tr className={`${variantStyles[variant]} ${className || ""}`} {...props}>
-      {processedChildren}
-    </tr>
+      <tr className={`${variantStyles[variant]} ${className || ""}`} {...props}>
+        {processedChildren}
+      </tr>
   )
 }
 
@@ -158,7 +164,7 @@ export function TableCell({
   //默认：不加边线的。
   return (
     <td className={`px-0 py-0.5 @md:px-[0.1rem] @md:py-1 @lg:px-1 @lg:py-1 print:px-0.5 print:py-[0.2rem] ${className || ""}`}
-        style={{ ...style, ...splitStyle }}
+        style={{ ...style, ...splitStyle } as any}
         colSpan={colSpan} {...props}
     >
       {children}
@@ -180,7 +186,7 @@ export function CCell({
 
   return (
     <td className={`px-0 py-0.5 @md:px-[0.1rem] @md:py-1 @lg:px-1 @lg:py-1 print:px-0.5 print:py-[0.2rem] text-center border border-gray-700 ${className || ""}`}
-      style={{ ...style, ...splitStyle }}
+      style={{ ...style, ...splitStyle } as any}
       colSpan={colSpan} {...props}
     >
       {children}

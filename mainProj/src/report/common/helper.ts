@@ -122,7 +122,7 @@ export const itemResultTransform =(orc: any, inspectionContent:any[],
  * */
 export function useSubNestAcion(modAction :string) {
   //【未考虑承压的分项！】
-  return {  action: modAction };
+  return {  action: modAction, redId:'',nestMd:'' };
   // const { get:getRouteUrl } = useContext(RoutingContext);
   // const routeLevels=getRouteUrl().entries.length;      //3层次/report/:template ；原始记录的预览打印场景的是 2层次的/originalView/:template
   // const routePath =getRouteUrl().entries[routeLevels-1]?.routeData?.url;
@@ -144,41 +144,42 @@ export function useSubNestAcion(modAction :string) {
 
 //报告太大了：部分区域局部化可折叠形式；initArr数组可以支持多个状态变量一起封装生成的。
 //【关键原因】initArr的数组大小变动导致的：hook错误抛出！！
-export function useAreaFoldable(viewALL:boolean, initArr: any[]) {
-  const notSmallScr = useMedia('(min-width:800px),print');    //较大屏幕的或者正式打印机打印的两种；
-  const qs= queryString.parse(window.location.search);
-  const prPreview =qs && !!qs.print;      //打印预览，或者正式报告客户查阅。
-  //【严重问题！】；浏览器打印只能快照当前页面状态，不能依赖后续的useEffect继续变更状态来展开页面，浏览器打印只能提取第一次render，后续页面无法捕捉被浏览器打印出来了。
-  // const realPrint = useMedia('print');    //真实打印机打印，浏览器打印预览和转pdf的； 【没办法】只能依赖qs.print，打印需要特别添加URL参数?&print=*才能完全显示。
-  //【关键问题】能够返回多个状态管理器具；React？内部能够支持的。不会报hook错误？initArr的数组大小运行render前就能固定下来了,initArr.map。
-  function WrappedComp(init?: boolean) {
-    //默认的：打印机打印的就不隐藏。
-    const [redundance, setRedundance] =React.useState((init===undefined || init===null)? (notSmallScr||prPreview||viewALL) : (init||prPreview||viewALL));
-    React.useEffect(() => {
-      if(viewALL || prPreview)
-         setRedundance(true);
-      else{
-        if(init===undefined || init===null)
-          setRedundance(notSmallScr||prPreview);     //但是viewALL变更情况是没法保持旧的状态
-        else  setRedundance(init);        //恢复默认的，但是viewALL按钮切换的含义：只有放大才是真的，缩小是恢复默认取值的意思，而不是#最小化的意图@ ！
-      }
-    }, [init, viewALL, notSmallScr, prPreview] );
-     //【特别注意】不加依赖项notSmallScr, prPreview 有点问题；
+// export function useAreaFoldable(viewALL:boolean, initArr: any[]) {
+//   const notSmallScr = useMedia('(min-width:800px),print');    //较大屏幕的或者正式打印机打印的两种；
+//   const qs= queryString.parse(window.location.search);
+//   const prPreview =qs && !!qs.print;      //打印预览，或者正式报告客户查阅。
+//   //【严重问题！】；浏览器打印只能快照当前页面状态，不能依赖后续的useEffect继续变更状态来展开页面，浏览器打印只能提取第一次render，后续页面无法捕捉被浏览器打印出来了。
+//   // const realPrint = useMedia('print');    //真实打印机打印，浏览器打印预览和转pdf的； 【没办法】只能依赖qs.print，打印需要特别添加URL参数?&print=*才能完全显示。
+//   //【关键问题】能够返回多个状态管理器具；React？内部能够支持的。不会报hook错误？initArr的数组大小运行render前就能固定下来了,initArr.map。
+//   function WrappedComp(init?: boolean) {
+//     //默认的：打印机打印的就不隐藏。
+//     const [redundance, setRedundance] =React.useState((init===undefined || init===null)? (notSmallScr||prPreview||viewALL) : (init||prPreview||viewALL));
+//     React.useEffect(() => {
+//       if(viewALL || prPreview)
+//          setRedundance(true);
+//       else{
+//         if(init===undefined || init===null)
+//           setRedundance(notSmallScr||prPreview);     //但是viewALL变更情况是没法保持旧的状态
+//         else  setRedundance(init);        //恢复默认的，但是viewALL按钮切换的含义：只有放大才是真的，缩小是恢复默认取值的意思，而不是#最小化的意图@ ！
+//       }
+//     }, [init, viewALL, notSmallScr, prPreview] );
+//      //【特别注意】不加依赖项notSmallScr, prPreview 有点问题；
+//
+//     const onPress = useCallback(
+//         (e:any) => {
+//           setRedundance(!redundance);
+//           e.preventDefault();
+//         },
+//         [redundance, setRedundance]
+//     )
+//
+//     const {bind ,} =usePressable({ onPress,  behavior: "button", noHover:true});
+//     return [redundance, bind];
+//   }
+//   //这样的WrappedComp是 react 内部做法？hook规则不报错的；
+//   return initArr.map((init) => WrappedComp(init)  as [boolean,any]);
+// }
 
-    const onPress = useCallback(
-        (e:any) => {
-          setRedundance(!redundance);
-          e.preventDefault();
-        },
-        [redundance, setRedundance]
-    )
-
-    const {bind ,} =usePressable({ onPress,  behavior: "button", noHover:true});
-    return [redundance, bind];
-  }
-  //这样的WrappedComp是 react 内部做法？hook规则不报错的；
-  return initArr.map((init) => WrappedComp(init)  as [boolean,any]);
-}
 /**通用结果字段的转换
  * 【前提约束】 特殊情况要将测量数据转换给正式报告对应位置直接显示的场景，需要规避治理几个预定义的result[]的取值的！
  * */

@@ -22,14 +22,15 @@ import {
 import { FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput } from "@/components/chub"
 import type { UseFormReturn } from "react-hook-form"
 import { Check, X, Undo,EyeClosed } from "lucide-react"
+import {MouseEventHandler} from "react";
 
-export type Each_ZdSetting = [
+export interface Each_ZdSetting extends Array<any> {
   n1: string, //字段标题名
   f2: string, //数据库标签
   l3: number, //定长布局的像素宽度
   extend?: any, //扩充配置解析对象： 编辑器的: { t:编辑框类别, u:单位, l：预定的列表数组, s输入框行大小 }}
   park?: string, //对于比如svp{},pa{}的嵌套字段的编辑直接支持，直接保存为嵌套的对象字段；只能支持1层的嵌套对象： 对于Row.{m. sgm {name,username}}无法支持的。
-]
+}
 
 interface TableEditProps {
   config: Each_ZdSetting[]
@@ -280,7 +281,7 @@ export function useTableEdit({
   //原本放在useCallback内部的
   const { fields, append, remove, move, insert } = arrays?.[table] || {}
   // 修改取消编辑的函数，只重置当前行数据
-  const handleCancel = React.useCallback((e) => {
+  const handleCancel = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (form && seq !== null) {
       if (isEditingNewRow && remove) {
         // 如果是新增或插入的行，直接移除
@@ -309,8 +310,8 @@ export function useTableEdit({
                 shouldTouch: false,
               })
             }
-          } catch (e) {
-            console.error("Error resetting form value:", e)
+          } catch (err) {
+            console.error("Error resetting form value:", err)
           }
         })
       }
@@ -359,14 +360,14 @@ export function useTableEdit({
         }
 
         // 添加关闭编辑器的函数
-        const handleCloseEditor = (e) => {
+        const handleCloseEditor = (e: React.MouseEvent<HTMLButtonElement>) => {
           setShowEditorPortal(false)
           setSeq(null)
           setIsEditingNewRow(false)
           e.preventDefault()
         }
         // 添加确认编辑的函数
-        const handleConfirmEdit = (e) => {
+        const handleConfirmEdit =(e: React.MouseEvent<HTMLButtonElement>) => {
           if (form && onConfirm) {
             onConfirm(form)
           }
@@ -462,7 +463,7 @@ export function useTableEdit({
                                   return (
                                       <FormField
                                           key={i}
-                                          rol={form.control}
+                                          control={form.control}
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
@@ -862,7 +863,9 @@ export function useTableEdit({
                   return (
                       <table key={b} className="w-full border-collapse">
                         <thead
-                            ref={(el) => headerRefs.current.set(b, el)}
+                            ref={(el: HTMLTableSectionElement | null) => {
+                              headerRefs.current.set(b, el as HTMLTableSectionElement);
+                            }}
                             className={cn(
                                 `bg-ghostwhite z-[10] border-collapse table-header-group`,
                                 customClasses.headerWrapper,
@@ -919,7 +922,9 @@ export function useTableEdit({
                                                       ${isActive ? "bg-blue-50" : ""}`,
                                           customClasses.rowWrapper,
                                       )}
-                                      ref={(el) => rowRefs.current.set(rowId, el as HTMLDivElement)}
+                                      ref={(el: HTMLTableRowElement | null) => {
+                                        rowRefs.current.set(rowId, el as HTMLDivElement);
+                                      }}
                                       onClick={(e) => handleRowClick(e, i, b)}
                                   >
                                     <td className="flex flex-col flex-wrap items-start justify-between w-full h-auto min-h-[33px] p-0 text-left border-0 border-b">
@@ -1145,7 +1150,9 @@ export function useTableEdit({
               {/* 原始表头 - 保持不动 */}
               <div className={cn("bg-ghostwhite z-10", customClasses.headerWrapper)}>
                 <div
-                    ref={(el) => headerRefs.current.set(0, el)}
+                    ref={(el: HTMLTableSectionElement | null) => {
+                      headerRefs.current.set(0, el as HTMLTableSectionElement)
+                    }}
                     className={cn("flex justify-around items-center", tableSeparation)}
                 >
                   {new Array(raft).fill(null).map((_, b: number) => {
@@ -1191,7 +1198,9 @@ export function useTableEdit({
                                 customClasses.rowWrapper,
                                 tableSeparation,
                             )}
-                            ref={(el) => rowRefs.current.set(i, el as HTMLDivElement)}
+                            ref={(el: HTMLDivElement | null) => {
+                              rowRefs.current.set(i, el as HTMLDivElement)
+                            }}
                             onClick={(e) => {
                               // 如果点击的是菜单触发器，不执行任何操作
                               if ((e.target as HTMLElement).closest('[data-dropdown-trigger="true"]')) {
@@ -1388,7 +1397,7 @@ export function useTableEdit({
 
   // 修改 clearTable 函数，同时更新本地状态
   const clearTable = React.useCallback(
-      (e) => {
+      (e: React.MouseEvent<HTMLButtonElement>) => {
         form?.setValue(table, defaultV ?? [])
         // 更新本地状态
         handleTableOperation("clear", { defaultData: defaultV ?? [] })

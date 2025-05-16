@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 "use client"
 import {redirect, } from "next/navigation";
 import {useEffect, useState} from "react";
@@ -21,7 +20,7 @@ const ReportMakeable = () => {
     //文档错了 SessionProvider必须在父辈组件内； #类型不同了session?.status  session?.data?.user
     if(session?.status!=="loading") {
         //若在服务端调用useSession：就报错！
-        if(make && (!session?.data?.user?.accessToken || !session?.data?.user))   redirect('/login')
+        if(make && (!(session?.data?.user as any)?.accessToken || !session?.data?.user))   redirect('/login')
     }
     return null;
 }

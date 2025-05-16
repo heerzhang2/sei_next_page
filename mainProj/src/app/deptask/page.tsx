@@ -25,7 +25,7 @@ export default function DepTask() {
                                     中国政府采购</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://www.arrbid.com/bidquery/key_%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87?timetype=3&keywordtype=1&showtype=1">立达标讯</Link>
+                                <Link href="https://www.arrbid.com/bidquery/key_%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87?timetype=3&keywordtype=1&showtype=1">立达标讯(+金额)</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://deal.ggzy.gov.cn/ds/deal/dealList.jsp?HEADER_DEAL_TYPE=02">全国公共资源交易平台</Link>
@@ -37,15 +37,15 @@ export default function DepTask() {
                                 <Link href="https://www.zbytb.com/zb/search.php?kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">标与采 招标与采购网</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://search.vip.qianlima.com/index.html#?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&timeType=3&filtermode=2&sortType=1&keywordsFrom=0&isSearchWord=1&tab_index=0">
-                                    千里马 招标网（+系统 +平台）</Link>
+                                <Link href="https://search.vip.qianlima.com/index.html#?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%2B%E7%B3%BB%E7%BB%9F%2B%E5%B9%B3%E5%8F%B0&timeType=2&filtermode=2&relatedWord=%E7%B3%BB%E7%BB%9F%2C%E5%B9%B3%E5%8F%B0&sortType=1&keywordsFrom=0&isSearchWord=1&tab_index=0">
+                                    千里马（+系统 +平台）</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://search.bidcenter.com.cn/search?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&tag=1&mod=0">采 招 网（/招标公告）:太多</Link>
+                                <Link href="https://search.bidcenter.com.cn/search?keywords=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&tag=1&mod=0">采招网（/招标公告）+标题搜索</Link>
                             </li>
                         </ol>
                     </li>
-                    <li className="mb-2 break-inside-avoid-column">特种设备 各省市的招标网。
+                    <li className="mb-2 break-inside-avoid-column">特种设备 各省招标网。
                         <ol className="p-4 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
                             <li className="mb-2">
                                 <Link href="https://hljcg.hlj.gov.cn/maincms-web/fullSearchingHlj?searchKey=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">黑龙江政府采购</Link>
@@ -63,7 +63,7 @@ export default function DepTask() {
                                 <Link href="http://www.ccgp-jiangsu.gov.cn/jiangsu/cggg_search.html?lmid=cggg&qh=notic_c2">江苏政府采购网</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://jxsggzy.cn/jyxx/002006/002006001/trade.html">江西省公共资源交易网</Link>
+                                <Link href="https://jxsggzy.cn/jyxx/002006/002006001/trade.html">江西省公共资源交易网+近1月</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://ggzyjy.shandong.gov.cn/queryContent-jyxxgg.jspx">山东省公共资源交易网</Link>

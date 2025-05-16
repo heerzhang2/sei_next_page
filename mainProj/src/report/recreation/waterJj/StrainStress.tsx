@@ -5,7 +5,7 @@ import {useUppyUpload} from "@/report/hook/useUppyUpload";
 import {ClearableSelect, CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input, Textarea} from "@/components/ui";
-import {z} from "zod";
+import {undefined, z} from "zod";
 import { BlobInputList,SuffixInput,} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {ImageComponent} from "@/components/shub";
@@ -72,8 +72,11 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         const headview=<div>
             测试点:按照一行2字段录入： 应变值（με）, 应力值（MPa）;
         </div>;
+        const {render,handleConfirm,form,arrayControls} = useFormFramework({schema, defaultValues, arrayFields, rep})
         const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
-        const [nestRendererFactory]=useTableEdit({config: config测点表,onConfirm,table:'测点表',defFixedLay:true,externalData: storage,headview, });
+        const [nestRenderer]=useTableEdit({form,arrayControls,
+            config: config测点表,onConfirm,table:'测点表',defFixedLay:true,externalData: storage,headview
+        });
         const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
             setStorage({...storage, '_FILE_测点': upfile});
             !modified && setModified(true);
@@ -87,9 +90,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
             ['天气情况','应天气',undefined,35],['温度','应温度','℃'],['材料参数E','应料参E'],['材料参数GPa μ','应料参μ']
         ];
 
-        const contentRendererFactory = React.useCallback(
-            (form: any, arrays?: Record<string, any>) => {
-
+        const content = React.useMemo(() => {
                 return (
                     <>
                         <div className="flex flex-wrap justify-around items-center">
@@ -130,7 +131,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                         </FormItem>
                                     )}
                                 />
-                                {nestRendererFactory(form, arrays)}
+                                {nestRenderer}
                             </CardContent>
                         </Card>
                         <FormField control={form.control} name={'测点示意'}
@@ -208,11 +209,11 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                     </>
                 )
             },
-            [children, nestRendererFactory],
+            [children, nestRenderer],
         )
-    const {render,handleConfirm} = useFormFramework({schema, defaultValues, contentRendererFactory, arrayFields, rep})
+
     return <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render(null)}
+        {render(content)}
     </CollapsibleFormSection>;
 };
 

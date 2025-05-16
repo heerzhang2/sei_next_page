@@ -52,7 +52,7 @@ export default function NoPageBreak({
                     breakAfter: "avoid",
                     height: "auto",
                     printHeight: reserve,
-                }}
+                } as any}
             >
                 {title}
             </div>

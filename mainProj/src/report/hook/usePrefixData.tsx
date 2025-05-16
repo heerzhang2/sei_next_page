@@ -236,7 +236,7 @@ export const usePrefixDataTable= ({orc, config, rep, parentOrc:orgParOrc, slash,
             typeof name==='string'? (name?.startsWith('_$')? parentOrc?.[name.substring(2)] : orc?.[name]) :
                 name.r? name.r :
                     name.t==='b'? (orc?.[name.n]? '是':'否') :
-                        name.t === 'm' ? <div css={{textAlign: 'left', whiteSpace: 'pre-wrap'}}>{orc?.[name.n] ?? '／'}</div>
+                        name.t === 'm' ? <div className="text-left whitespace-pre-wrap">{orc?.[name.n] ?? '／'}</div>
                             :
                             name.n.startsWith('_$') ? parentOrc?.[name.n.substring(2)] :
                                 orc?.[name.n];

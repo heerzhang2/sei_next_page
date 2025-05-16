@@ -2,10 +2,14 @@ import NextAuth, { CredentialsSignin } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Google from "next-auth/providers/google"
 import { authConfig } from '@/app/auth.config';
-import sha256 from 'hash.js/lib/hash/sha/256';
+// import sha256 from 'hash.js/lib/hash/sha/256';
 import {urqlClient} from "@/auth/urql";
 import {gql} from "@urql/core";
+import { createHash } from 'node:crypto';
 
+export function sha256Sync(data: string): string {
+    return createHash('sha256').update(data).digest('hex');
+}
 
 const LOGIN_MUTATION = gql`
     mutation Login($username: String!, $password: String!) {
@@ -38,7 +42,8 @@ export const {
       async authorize({ username, email, password }: any,request: Request) {
             try {
                 // Hash the password
-                let encodedPass = sha256().update(password).digest('hex');
+                // let encodedPass = sha256().update(password).digest('hex');
+                const encodedPass = sha256Sync(password)
                 // const encodedPass = await sha256(password)
                 // Get current user session if needed for the client
                 // Don't call auth() here - that would create a circular reference； const { user } = await auth() || {user:null};

@@ -1,8 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
-import {CCell, TableRow,} from "customize-easy-ui-component";
 import {CCellUnit,} from "../common/base";
-import { JSX } from "@emotion/react/jsx-runtime";
 
 interface Props {
     orc: any;
@@ -37,67 +34,67 @@ interface Props {
  * 【约定】 模型可有可无的列：第一行必须配置=null不能undefined; 用来简单地判别是否存在这个列栏目！
  * @特殊化地 用户自定义录入标题模式： adddesc? orc?.[name]?.a 特定存储；
  * */
-export function useFixRowPrefUnt({orc, rep, config, tailRender, split, contc,unitCel,noNo}: Props
-) {
-    let inherSpan = 0;     //每一行配置可能继承上面的行配置受到前面span所影响：item宏观检验o 配置模型的
-    let oldunit = '';
-    let outnode = [];        //根据split[] 拆分多个的。默认一个
-    let morenode: JSX.Element[]=[];
-    let splitptr=0;
-    //let hasPref=config[0]?.[1]?.pr!==undefined;  # 前缀栏目作为必选Cell占位的 【计算】colSpan当中；
-    let hasUnit=config[0]?.[1]?.u!==undefined;          //直接依据第一行的配置的单位栏目: 没有Cell占位计算；
-    config.forEach(([name,conf,adddesc]: any, i:number) => {
-        //遇到了拆分哪一个输赢序号了：
-        if(split && i>split[splitptr]){
-            outnode.push(morenode);
-            morenode=[];
-            splitptr++;
-        }
-        const {t: title, pr: prefix, span, u:unit}=conf;     //【隐含模型定义字段】从模型提取参数
-        oldunit=unit===null? '' : unit? unit:oldunit;
-        if(span)  inherSpan=span;
-        else if(inherSpan>0)  inherSpan--;
-        morenode.push(<TableRow key={i}>
-            {!noNo && <CCell>{i+1}</CCell>}
-            {prefix && <CCell split={true} rowSpan={span??1}>{prefix}</CCell>}
-            {inherSpan>0?
-                <CCell>{adddesc? orc?.[name]?.a??'／' : title}</CCell>
-                :
-                <CCell colSpan={2}>{adddesc? orc?.[name]?.a??'／' : title}</CCell>
-            }
-
-            { (unitCel && contc)? <>
-                    {hasUnit && <>
-                        {oldunit ?
-                            <CCellUnit unit={oldunit}>{orc?.[name]?.[contc]??'／'}</CCellUnit>
-                              :
-                            <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-                        }
-                     </>
-                    }
-                </>
-                :
-                <>
-                    { contc &&
-                        <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-                    }
-                    {hasUnit && <>
-                        {oldunit ?
-                            <CCell>{oldunit}</CCell>
-                            :
-                            <CCell></CCell>
-                        }
-                     </>
-                    }
-                </>
-            }
-
-            {tailRender(orc, name)}
-        </TableRow>);
-    });
-    outnode.push(morenode);
-  return [ outnode ];
-}
+// export function useFixRowPrefUnt({orc, rep, config, tailRender, split, contc,unitCel,noNo}: Props
+// ) {
+//     let inherSpan = 0;     //每一行配置可能继承上面的行配置受到前面span所影响：item宏观检验o 配置模型的
+//     let oldunit = '';
+//     let outnode = [];        //根据split[] 拆分多个的。默认一个
+//     let morenode: JSX.Element[]=[];
+//     let splitptr=0;
+//     //let hasPref=config[0]?.[1]?.pr!==undefined;  # 前缀栏目作为必选Cell占位的 【计算】colSpan当中；
+//     let hasUnit=config[0]?.[1]?.u!==undefined;          //直接依据第一行的配置的单位栏目: 没有Cell占位计算；
+//     config.forEach(([name,conf,adddesc]: any, i:number) => {
+//         //遇到了拆分哪一个输赢序号了：
+//         if(split && i>split[splitptr]){
+//             outnode.push(morenode);
+//             morenode=[];
+//             splitptr++;
+//         }
+//         const {t: title, pr: prefix, span, u:unit}=conf;     //【隐含模型定义字段】从模型提取参数
+//         oldunit=unit===null? '' : unit? unit:oldunit;
+//         if(span)  inherSpan=span;
+//         else if(inherSpan>0)  inherSpan--;
+//         morenode.push(<TableRow key={i}>
+//             {!noNo && <CCell>{i+1}</CCell>}
+//             {prefix && <CCell split={true} rowSpan={span??1}>{prefix}</CCell>}
+//             {inherSpan>0?
+//                 <CCell>{adddesc? orc?.[name]?.a??'／' : title}</CCell>
+//                 :
+//                 <CCell colSpan={2}>{adddesc? orc?.[name]?.a??'／' : title}</CCell>
+//             }
+//
+//             { (unitCel && contc)? <>
+//                     {hasUnit && <>
+//                         {oldunit ?
+//                             <CCellUnit unit={oldunit}>{orc?.[name]?.[contc]??'／'}</CCellUnit>
+//                               :
+//                             <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//                         }
+//                      </>
+//                     }
+//                 </>
+//                 :
+//                 <>
+//                     { contc &&
+//                         <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//                     }
+//                     {hasUnit && <>
+//                         {oldunit ?
+//                             <CCell>{oldunit}</CCell>
+//                             :
+//                             <CCell></CCell>
+//                         }
+//                      </>
+//                     }
+//                 </>
+//             }
+//
+//             {tailRender(orc, name)}
+//         </TableRow>);
+//     });
+//     outnode.push(morenode);
+//   return [ outnode ];
+// }
 
 /**@Deprecated      用 useOmnipotentPref 可替代；useOmnipotentPrefCs可相应得配置也要改造！ 改造例子/gas/ldistanceJj/JobResponsibili.tsx
  * 【淘汰】做法；  useFixRowPrefUnt也淘汰了；
@@ -105,66 +102,66 @@ export function useFixRowPrefUnt({orc, rep, config, tailRender, split, contc,uni
  * 【事先约定】用户自定义的单位的存储字段：t; 底下<CCell>{orc?.[name]?.t}</CCell>
  * @property tspan: 标题主栏目对应实际列数，默认=1;
  * */
-export function useFixRowPrefUntChU({orc, rep, config, tailRender, split, contc,unitCel,noNo,tspan=1}: Props
-) {
-    let inherSpan = 0;     //每一行配置可能继承上面的行配置受到前面span所影响：item宏观检验o 配置模型的
-    let oldunit = '';
-    let outnode = [];        //根据split[] 拆分多个的。默认一个
-    let morenode: JSX.Element[]=[];
-    let splitptr=0;
-    //let hasPref=config[0]?.[1]?.pr!==undefined;  # 前缀栏目作为必选Cell占位的 【计算】colSpan当中；
-    let hasUnit=config[0]?.[1]?.u!==undefined;          //直接依据第一行的配置的单位栏目: 没有Cell占位计算；
-    config.forEach(([name,conf,adddesc]: any, i:number) => {
-        //遇到了拆分哪一个输赢序号了：
-        if(split && i>split[splitptr]){
-            outnode.push(morenode);
-            morenode=[];
-            splitptr++;
-        }
-        const {t: title, pr: prefix, span, u:unit}=conf;     //【隐含模型定义字段】从模型提取参数
-        oldunit=unit===null? null : unit? unit:oldunit;
-        if(span)  inherSpan=span;
-        else if(inherSpan>0)  inherSpan--;
-        morenode.push(<TableRow key={i}>
-            {!noNo && <CCell>{i+1}</CCell>}
-            {prefix && <CCell split={true} rowSpan={span??1}>{prefix}</CCell>}
-            {inherSpan>0?
-                <CCell colSpan={tspan}>{adddesc? orc?.[name]?.a??'／' : title}</CCell>
-                :
-                <CCell colSpan={1+tspan}>{adddesc? orc?.[name]?.a??'／' : title}</CCell>
-            }
-
-            { (unitCel && contc)? <>
-                    {hasUnit && <>
-                        {oldunit ?
-                            <CCellUnit unit={oldunit}>{orc?.[name]?.[contc]??'／'}</CCellUnit>
-                            :
-                            <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-                        }
-                    </>
-                    }
-                </>
-                :
-                <>
-                    { contc &&
-                        <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
-                    }
-                    {hasUnit && <>
-                        {oldunit ?
-                            <CCell>{oldunit}</CCell>
-                            : oldunit===null ?
-                                <CCell>{orc?.[name]?.t}</CCell>
-                                :
-                                <CCell></CCell>
-                        }
-                    </>
-                    }
-                </>
-            }
-
-            {tailRender(orc, name)}
-        </TableRow>);
-    });
-    outnode.push(morenode);
-    return [ outnode ];
-}
+// export function useFixRowPrefUntChU({orc, rep, config, tailRender, split, contc,unitCel,noNo,tspan=1}: Props
+// ) {
+//     let inherSpan = 0;     //每一行配置可能继承上面的行配置受到前面span所影响：item宏观检验o 配置模型的
+//     let oldunit = '';
+//     let outnode = [];        //根据split[] 拆分多个的。默认一个
+//     let morenode: JSX.Element[]=[];
+//     let splitptr=0;
+//     //let hasPref=config[0]?.[1]?.pr!==undefined;  # 前缀栏目作为必选Cell占位的 【计算】colSpan当中；
+//     let hasUnit=config[0]?.[1]?.u!==undefined;          //直接依据第一行的配置的单位栏目: 没有Cell占位计算；
+//     config.forEach(([name,conf,adddesc]: any, i:number) => {
+//         //遇到了拆分哪一个输赢序号了：
+//         if(split && i>split[splitptr]){
+//             outnode.push(morenode);
+//             morenode=[];
+//             splitptr++;
+//         }
+//         const {t: title, pr: prefix, span, u:unit}=conf;     //【隐含模型定义字段】从模型提取参数
+//         oldunit=unit===null? null : unit? unit:oldunit;
+//         if(span)  inherSpan=span;
+//         else if(inherSpan>0)  inherSpan--;
+//         morenode.push(<TableRow key={i}>
+//             {!noNo && <CCell>{i+1}</CCell>}
+//             {prefix && <CCell split={true} rowSpan={span??1}>{prefix}</CCell>}
+//             {inherSpan>0?
+//                 <CCell colSpan={tspan}>{adddesc? orc?.[name]?.a??'／' : title}</CCell>
+//                 :
+//                 <CCell colSpan={1+tspan}>{adddesc? orc?.[name]?.a??'／' : title}</CCell>
+//             }
+//
+//             { (unitCel && contc)? <>
+//                     {hasUnit && <>
+//                         {oldunit ?
+//                             <CCellUnit unit={oldunit}>{orc?.[name]?.[contc]??'／'}</CCellUnit>
+//                             :
+//                             <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//                         }
+//                     </>
+//                     }
+//                 </>
+//                 :
+//                 <>
+//                     { contc &&
+//                         <CCell>{orc?.[name]?.[contc]??'／'}</CCell>
+//                     }
+//                     {hasUnit && <>
+//                         {oldunit ?
+//                             <CCell>{oldunit}</CCell>
+//                             : oldunit===null ?
+//                                 <CCell>{orc?.[name]?.t}</CCell>
+//                                 :
+//                                 <CCell></CCell>
+//                         }
+//                     </>
+//                     }
+//                 </>
+//             }
+//
+//             {tailRender(orc, name)}
+//         </TableRow>);
+//     });
+//     outnode.push(morenode);
+//     return [ outnode ];
+// }

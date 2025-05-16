@@ -262,7 +262,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                 let lcNodesNow=[];
                 for(; insertIdx<preNodeObj.length; insertIdx++){
                     const {lcNode,}=preNodeObj[insertIdx];
-                    let modifyNode={...lcNode};
+                    let modifyNode={...(lcNode as any)};
                     Object.assign(modifyNode,{ key: 'L'+insertIdx });
                     lcNodesNow.push(modifyNode);
                 }

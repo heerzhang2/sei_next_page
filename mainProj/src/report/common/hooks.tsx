@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import * as React from "react";
 
 /**可复用代码: 观测数据表格编辑时用； 太多的 getInpFilter 重复了。

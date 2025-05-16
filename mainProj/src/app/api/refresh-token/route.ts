@@ -11,6 +11,6 @@ export async function POST() {
 
     // 返回当前有效的访问令牌
     return NextResponse.json({
-        accessToken: session.user?.accessToken
+        accessToken: (session.user as any)?.accessToken
     });
 }

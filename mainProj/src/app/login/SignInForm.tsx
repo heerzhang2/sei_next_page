@@ -23,19 +23,21 @@ export default function SignInForm() {
     const signInAction = async (_prevState: string | undefined, formData: FormData) => {
         const data = formData
         console.log("signInAction录入formData:{}", formData)
-        const response = await signIn("credentials", {
+        await signIn("credentials", {
             username: "herzhang",
             email: "herzhang@163.com", //data.email,
             password: "768768", //data.password,
             redirect: true,
         })
-        if (!response?.error) {
-            window.location.reload()
-            router.push("/user")
-            window.location.href = "/user"
-        } else {
-            window.location.href = "/"
-        }
+        console.log("signIn完成")
+        // if (!response?.error) {
+        //     window.location.reload()
+        //     router.push("/user")
+        //     window.location.href = "/user"
+        // } else {
+        //     window.location.href = "/"
+        // }
+        return "signOK"
     }
     const [response, action, isPending] = useActionState(signInAction, undefined)
 

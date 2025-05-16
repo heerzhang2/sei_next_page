@@ -5,7 +5,7 @@ import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
 import {InternalItemProps} from "./base";
 // import {useMeasureInpFilter} from "./hooks";
-import {z} from "zod";
+import {undefined, z} from "zod";
 import {useStorage} from "@/report/StorageContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
@@ -56,28 +56,28 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
         {tail测仪器}
     </>;
     const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
-    //也可考虑配上 onConfirm,
-    const [nestRendererFactory]=useTableEdit({config: config仪器表, table:'仪器表',externalData: storage,
+    const { render,handleConfirm,form,arrayControls } = useFormFramework({schema, defaultValues, arrayFields, rep})
+    const [nestRenderer]=useTableEdit({form,arrayControls, config: config仪器表, table:'仪器表',externalData: storage,
             defFixedLay:true, headview,tailview
     });
-    const contentRendererFactory = React.useCallback(
+    const content = React.useCallback(
         (form: any, arrays?: Record<string, any>) => {
             return (
                 <>
                     <Card className="py-1 gap-1">
                         <CardContent className="px-1">
-                            {nestRendererFactory(form, arrays)}
+                            {nestRenderer}
                         </CardContent>
                     </Card>
                     {children}
                 </>
             )
         },
-        [children,nestRendererFactory ],
+        [children,nestRenderer],
     )
-    const { render,handleConfirm } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
+
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render(null)}
+        {render(content)}
     </CollapsibleFormSection>;
 };
 

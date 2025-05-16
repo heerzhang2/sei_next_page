@@ -159,15 +159,8 @@ export  function getSortedModelVersions(typem: keyof typeof ModelTypeArr)
     : [string,[string,Date]][]
 {
     if(!typem)  return [];
-    let arv=Object.entries(ModelTypeArr[typem].vers || {});
-    /*  const MyObjects = {   key1: 'value 1',   key2: 'value 2', };
-        Object.entries(MyObjects);
-                 [ ['key1', 'value 1'], ['key2', 'value 2'] ]
-        const array = [  ['one', 1],   ['two', 2], ];
-        Object.fromEntries(array);
-                { one: 1, two: 2 }
-    * */
-    if(!ModelTypeArr[typem].vers)  return [];
+    let arv=Object.entries((ModelTypeArr[typem] as any).vers || {});
+    if(!(ModelTypeArr[typem] as any).vers)  return [];
     arv?.sort(function(a :any, b:any) {
         if (a[1][1] > b[1][1]) {         //定位到Date类型的? ：any问题？ 配置参数字段。#并不是字符串方式的比较大小！
             return  -1      //返回，a排列在b之前

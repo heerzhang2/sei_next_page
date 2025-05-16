@@ -20,11 +20,7 @@ export function useDeleteAddSub(nestMd: string, redId: string,verId: string,repI
     };
 
     const line=(
-         <div css={{
-             display: 'flex',
-             alignItems: 'center',
-             justifyContent: 'space-evenly',
-         }}>
+         <div       >
              {/*<Button key={1} onClick={async () => {*/}
              {/*    onDeleteSeq(Number(redId) );*/}
              {/*    history.push('/report/'+nestMd+'/ver/'+verId+'/'+repId+'/ALL', {time: Date()} );      //清理掉被删除内容*/}

@@ -95,7 +95,7 @@ export function useFormFramework({
     // 获取当前表单值
     const currentValues = structuredClone(form.getValues())
     // 更新 storage
-    setStorage((prevStorage) => ({
+    setStorage((prevStorage : any) => ({
       ...prevStorage,
       ...currentValues,
     }))

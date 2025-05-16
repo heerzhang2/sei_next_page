@@ -124,12 +124,11 @@ export function measureElementInPrintMedia(element: HTMLElement): {
   container.style.overflow = "visible" // 确保内容不会被裁剪
   document.body.appendChild(container)
 
+  // 保存原始媒体类型
+  const originalMedia: string | undefined = (document.documentElement.style as any).media
   try {
-    // 保存原始媒体类型
-    const originalMedia: string | undefined = document.documentElement.style.media
-
     // 切换到打印媒体类型
-    document.documentElement.style.media = "print"
+    (document.documentElement.style as any).media = "print"
 
     // 查找元素所在的表格层次结构
     const tableHierarchy = findTableHierarchy(element)
@@ -237,9 +236,9 @@ export function measureElementInPrintMedia(element: HTMLElement): {
 
     // 恢复原始媒体类型
     if (originalMedia) {
-      document.documentElement.style.media = originalMedia
+      (document.documentElement.style as any).media = originalMedia
     } else {
-      document.documentElement.style.media = ""
+      (document.documentElement.style as any).media = ""
     }
 
     // 再次强制重排以恢复原始样式
@@ -359,10 +358,10 @@ export function batchMeasureImportantCells(): Record<string, { height: number; c
   let originalMedia: string | undefined
 
   try {
-    originalMedia = document.documentElement.style.media
+    originalMedia = (document.documentElement.style as any).media
 
     // 切换到打印媒体类型
-    document.documentElement.style.media = "print"
+    (document.documentElement.style as any).media = "print"
 
     // 处理每个打印区域组
     sectionGroups.forEach((cells, rootElement) => {
@@ -448,7 +447,7 @@ export function batchMeasureImportantCells(): Record<string, { height: number; c
   } finally {
     // 恢复原始媒体类型
     if (originalMedia) {
-      document.documentElement.style.media = originalMedia
+      (document.documentElement.style as any).media= originalMedia
     }
 
     // 再次强制重排以恢复原始样式
@@ -639,7 +638,7 @@ export function findTableHierarchy(cell: HTMLElement): HTMLTableElement[] {
   let current: HTMLElement | null = cell
 
   while (current) {
-    const table = current.closest("table")
+    const table :any = current.closest("table")
     if (!table) break
 
     tables.unshift(table as HTMLTableElement) // 添加到数组开头
@@ -1193,10 +1192,10 @@ export function batchCalculateHeaderHeights(): Record<string, number> {
   // 保存原始媒体类型
   let originalMedia: string | undefined
   try {
-    originalMedia = document.documentElement.style.media
+    originalMedia = (document.documentElement.style as any).media
 
     // 切换到打印媒体类型
-    document.documentElement.style.media = "print"
+    (document.documentElement.style as any).media = "print"
 
     // 处理每个打印区域组
     sectionGroups.forEach((cells, printSection) => {
@@ -1268,7 +1267,7 @@ export function batchCalculateHeaderHeights(): Record<string, number> {
   } finally {
     // 恢复原始媒体类型
     if (originalMedia) {
-      document.documentElement.style.media = originalMedia
+      (document.documentElement.style as any).media = originalMedia
     }
 
     // 再次强制重排以恢复原始样式

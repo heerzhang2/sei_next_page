@@ -23,12 +23,6 @@ export async function generateMetadata(props: ISignInPageProps) {
 
 export default async function SignInPage(props: ISignInPageProps) {
   const { locale } = await props.params;
-  // setRequestLocale(locale);
-  const onLoginSuccess = auth => {
-    // saveAuthData(auth);
-    // setIsLoggedIn(true);
-  };
-
   //报错onLoginSuccess={onLoginSuccess：auth => {}} #跨越网络界限的# [ Server ] Error: Event handlers cannot be passed to Client Component props.
   return (
       <div>
