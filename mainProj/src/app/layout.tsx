@@ -4,7 +4,7 @@ import { SessionProvider } from 'next-auth/react';
 import {auth} from "@/app/auth";
 // import GlobalState from "@/[action]/GlobalState";
 // import {connection} from "next/server";
-import { Provider } from "jotai";
+import { Provider, atom, useAtom } from "jotai";
 import {GraphQLProvider} from "@/auth/graphql-component";
 // import PrintUsed from "@/common/PrintUsed";
 // import AuthStatus from "@/auth/auth-status";

@@ -1,38 +1,27 @@
-"use client"
-
-import { ErrorBoundary } from "react-error-boundary"
 import type { ReactNode } from "react"
 import ReportMakeable from "@/common/ReportMakeable"
 import ReportData from "@/component/rep/report-data"
 import { StorageProvider } from "@/report/StorageContext"
 import { ModificationIndicator } from "@/report/hook/useFormFramework"
 import { ReportMainbar } from "@/components/report-mainbar"
+import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
 
-// 错误回退组件
-function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
-    return (
-        <div className="p-4 border border-red-500 rounded bg-red-50 text-red-700">
-            <h2 className="text-lg font-bold">出错了</h2>
-            <p>{error.message}</p>
-            <button className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" onClick={resetErrorBoundary}>
-                重试
-            </button>
-        </div>
-    )
-}
-
-// 将 ReportRootLayout 转换为客户端组件
-export default function ReportRootLayout({
-                                             params,
-                                             children,
-                                         }: {
-    params: { repId: string }
+/*报告和编制都用到的部分：能支持不要用登录看报告。
+只提供静态化（保障SessionProvider不提供客户端user也能Build的情形），不考虑鉴别用户context认证才能使用的。
+水和报错：Avoid Hydration Mismatch: 舍弃{ ThemeProvider } from 'next-themes'的。
+next-auth:SessionProvider是服务器端内部可用的。 但是RelayEnvironmentProvider正常是只能用于客户端的(水和/SSR除外)。
+* */
+export default async function ReportRootLayout({
+                                                   params,
+                                                   children,
+                                               }: {
+    params: Promise<{ repId: string }>
     children: ReactNode
 }) {
-    const { repId } = params
+    const { repId } = await params
 
     return (
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <ErrorBoundaryWrapper>
             <ReportMakeable />
             <StorageProvider>
                 <ReportData repId={repId}>
@@ -41,6 +30,6 @@ export default function ReportRootLayout({
                     <div>{children}</div>
                 </ReportData>
             </StorageProvider>
-        </ErrorBoundary>
+        </ErrorBoundaryWrapper>
     )
 }
