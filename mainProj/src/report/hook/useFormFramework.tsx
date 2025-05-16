@@ -16,7 +16,7 @@ interface UseFormFrameworkProps {
   schema: z.ZodObject<any>
   defaultValues: Record<string, any>
 
-  // 接收外部传入的内容渲染函数工厂
+  //[可选方式之一] 接收外部传入的内容渲染函数工厂
   contentRendererFactory?: (form: any, arrays?: Record<string, any>) => React.ReactNode
 
   // 数组字段配置

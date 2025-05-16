@@ -74,11 +74,11 @@ export function ReportMainbar({ repId, items = [], children }: ReportSidebarProp
         <>
             {/* Trigger button - fixed in the top-left corner */}
             <Button ref={triggerRef} variant="ghost" size="icon"
-                className="fixed top-0 md:top-2 left-2 print:hidden z-50 hover:backdrop-blur-[1px] active:bg-white/50 mix-blend-multiply transition-all h-8 w-8"
+                className="fixed top-0 md:top-2 left-2 print:hidden z-50 hover:backdrop-blur-0 active:bg-white mix-blend-normal transition-all h-8 w-8 hover:bg-blue-500 hover:scale-110 hover:shadow-lg hover:opacity-100"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <Menu className="h-3.5 w-3.5 opacity-90" />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">打开报告主菜单</span>
             </Button>
             {/* Overlay - visible on all screen sizes when sidebar is open */}
             {isOpen && <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setIsOpen(false)} />}

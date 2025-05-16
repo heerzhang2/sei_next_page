@@ -68,8 +68,13 @@ interface TableEditProps {
       cellWrapper?: string
     }
   }
-  // 添加自定义确认回调
-  onConfirm?: (form: UseFormReturn<any, any, any>) => void
+  form: UseFormReturn<any, any, any>
+  arrayControls: Record<string, any>
+  externalData?: any | null
+  //自定义确认回调：用户弹出编辑窗口只做一次的，按钮触发的。
+  onConfirm?: ((form: UseFormReturn<any, any, any>) => void) | null
+  //删除也能触发：在form操作触发的
+  onExternalDataChange?: ((data: any) => void) | null
 }
 
 const TabSplChars = [
@@ -134,12 +139,10 @@ export function useTableEdit({
                                externalData = null, // 添加外部数据源参数
                                onExternalDataChange = null, // 添加外部数据变更回调，改成onConfirm
                                onConfirm, // 添加确认回调函数
-                             }: TableEditProps & {
-  externalData?: any | null
-  onExternalDataChange?: ((data: any) => void) | null
-  onConfirm?: ((form: UseFormReturn<any, any, any>) => void) | null
-}) {
-  //避免输入性能问题：引入 1. 在 useTableEditor 函数顶部添加一个新的状态来存储本地表格数据
+                               form,
+                               arrayControls: arrays,
+                             }: TableEditProps) {
+  //避免输入性能问题：引入 1. 添加一个新的状态来存储本地表格数据
   const [localTableData, setLocalTableData] = React.useState<any[]>([])
 
   // 添加一个状态来跟踪当前编辑的行是否是新插入的行
@@ -264,7 +267,6 @@ export function useTableEdit({
           const isEqual = JSON.stringify(newData) === JSON.stringify(localTableData)
           if (!isEqual) {
             setLocalTableData(newData)
-
             // 如果提供了外部数据变更回调，则调用它
             if (onExternalDataChange) {
               // 创建一个新对象，保持外部数据的其他部分不变
@@ -275,12 +277,54 @@ export function useTableEdit({
       },
       [localTableData, onExternalDataChange, table],
   )
-  //表格行数据编辑器的DOM
-  const editor = React.useCallback(
-      (form: UseFormReturn<any, any, any> | null, arrays?: Record<string, any>) => {
-        const { fields, append, remove, move, insert } = arrays?.[table] || {}
-        const index = seq ?? 0 // 表格第几行的
+  //原本放在useCallback内部的
+  const { fields, append, remove, move, insert } = arrays?.[table] || {}
+  // 修改取消编辑的函数，只重置当前行数据
+  const handleCancel = React.useCallback((e) => {
+    if (form && seq !== null) {
+      if (isEditingNewRow && remove) {
+        // 如果是新增或插入的行，直接移除
+        remove(seq)
+        handleTableOperation("remove", { index: seq })
+      } else {
+        let originalData: { [x: string]: any }
+        // 如果是编辑现有行，只重置当前行数据到原始状态
+        if (externalData && externalData[table]) {
+          const externalTableData = externalData[table] || []
+          originalData = externalTableData[seq] || {}
+        }
+        // 遍历配置，只重置当前行的字段
+        config.forEach(([_, tag, __, ___, park]) => {
+          try {
+            if (park) {
+              if (originalData[park]) {
+                form.setValue(`${table}.${seq}.${park}.${tag}`, originalData[park][tag] || "", {
+                  shouldDirty: false,
+                  shouldTouch: false,
+                })
+              }
+            } else {
+              form.setValue(`${table}.${seq}.${tag}`, originalData[tag] || "", {
+                shouldDirty: false,
+                shouldTouch: false,
+              })
+            }
+          } catch (e) {
+            console.error("Error resetting form value:", e)
+          }
+        })
+      }
+    }
+    // 关闭编辑器并重置状态
+    setShowEditorPortal(false)
+    setSeq(null)
+    setIsEditingNewRow(false) // 重置新行状态
+    e.preventDefault()
+  }, [form, seq, config, table, localTableData, remove, handleTableOperation, isEditingNewRow])
 
+  //表格行数据编辑器的DOM
+  const editor = React.useMemo(() =>{
+        const index = seq ?? 0 // 表格第几行的
         // 创建编辑处理函数，使用不依赖 form.watch 的方式
         const handleAddNewRecord = (e: React.MouseEvent) => {
           e.preventDefault()
@@ -331,48 +375,6 @@ export function useTableEdit({
           setSeq(null)
           setIsEditingNewRow(false) // 重置新行状态
         }
-        // 修改取消编辑的函数，只重置当前行数据
-        const handleCancel = React.useCallback((e) => {
-          if (form && seq !== null) {
-            if (isEditingNewRow && remove) {
-              // 如果是新增或插入的行，直接移除
-              remove(seq)
-              handleTableOperation("remove", { index: seq })
-            } else {
-              let originalData: { [x: string]: any }
-              // 如果是编辑现有行，只重置当前行数据到原始状态
-              if (externalData && externalData[table]) {
-                const externalTableData = externalData[table] || []
-                originalData = externalTableData[seq] || {}
-              }
-              // 遍历配置，只重置当前行的字段
-              config.forEach(([_, tag, __, ___, park]) => {
-                try {
-                  if (park) {
-                    if (originalData[park]) {
-                      form.setValue(`${table}.${seq}.${park}.${tag}`, originalData[park][tag] || "", {
-                        shouldDirty: false,
-                        shouldTouch: false,
-                      })
-                    }
-                  } else {
-                    form.setValue(`${table}.${seq}.${tag}`, originalData[tag] || "", {
-                      shouldDirty: false,
-                      shouldTouch: false,
-                    })
-                  }
-                } catch (e) {
-                  console.error("Error resetting form value:", e)
-                }
-              })
-            }
-          }
-          // 关闭编辑器并重置状态
-          setShowEditorPortal(false)
-          setSeq(null)
-          setIsEditingNewRow(false) // 重置新行状态
-          e.preventDefault()
-        }, [form, seq, config, table, localTableData, remove, handleTableOperation, isEditingNewRow])
 
         const isCenterMode = editorPosition?.position === "center"
         if (noDelAdd && seq === null) return null
@@ -388,20 +390,20 @@ export function useTableEdit({
                 <div className="flex justify-between items-center sticky top-0 bg-background z-10 p-2 border-b @md:pr-[5rem] @4xl:pr-[33rem]">
                   <div className="flex-nowrap">在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：</div>
                   <div className="flex gap-2 ml-auto">
-                        <>
-                          <Button variant="ghost" size="sm" onClick={handleCloseEditor}>
-                            <Check className="h-4 w-4 mr-2" />
-                            关闭
-                          </Button>
-                          <Button variant="default" size="sm" onClick={handleConfirmEdit}>
-                            <EyeClosed className="h-4 w-4 mr-2" />
-                            同步
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={handleCancel}>
-                            <Undo className="h-4 w-4 mr-2" />
-                            取消
-                          </Button>
-                        </>
+                    <>
+                      <Button variant="ghost" size="sm" onClick={handleCloseEditor}>
+                        <Check className="h-4 w-4 mr-2" />
+                        关闭
+                      </Button>
+                      <Button variant="default" size="sm" onClick={handleConfirmEdit}>
+                        <EyeClosed className="h-4 w-4 mr-2" />
+                        同步
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={handleCancel}>
+                        <Undo className="h-4 w-4 mr-2" />
+                        取消
+                      </Button>
+                    </>
                   </div>
                 </div>
                 <div className={cn("w-full", isCenterMode ? "flex-1 overflow-y-auto p-4" : "")}>
@@ -414,7 +416,7 @@ export function useTableEdit({
                               {config.map(([title, tag, _, extobj, park]: any, i: number) => {
                                 const { t: type, l: list, u: unit, s: size } = extobj || {}
                                 if ((fixColumn && i < fixColumn) || !(fields?.length > 0))
-                                          return <React.Fragment key={i}></React.Fragment>
+                                  return <React.Fragment key={i}></React.Fragment>
                                 if (type === "s")
                                   return (
                                       <FormField
@@ -647,7 +649,6 @@ export function useTableEdit({
         if ((e.target as HTMLElement).closest('[data-dropdown-trigger="true"]')) {
           return
         }
-
         // 移动表头
         handleHeaderPosition(rowIndex, tableIndex)
       },
@@ -661,7 +662,7 @@ export function useTableEdit({
           rowIndex: number,
           tableIndex: number,
           mode: "edit" | "insert" = "edit",
-          formInstance: UseFormReturn<any, any, any> | null,
+          form: UseFormReturn<any, any, any> | null,
       ) => {
         // 计算实际的数据索引
         const dataIndex = raft * rowIndex + tableIndex
@@ -673,7 +674,7 @@ export function useTableEdit({
         setIsEditingNewRow(mode === "insert")
 
         // 同步数据到编辑器 - 确保在打开编辑器前同步数据
-        if (mode === "edit" && formInstance && localTableData[dataIndex]) {
+        if (mode === "edit" && form && localTableData[dataIndex]) {
           // 获取当前行数据
           const rowData = localTableData[dataIndex]
 
@@ -684,13 +685,13 @@ export function useTableEdit({
               try {
                 if (park) {
                   if (rowData[park]) {
-                    formInstance.setValue(`${table}.${dataIndex}.${park}.${tag}`, rowData[park][tag] || "", {
+                    form.setValue(`${table}.${dataIndex}.${park}.${tag}`, rowData[park][tag] || "", {
                       shouldDirty: true,
                       shouldTouch: true,
                     })
                   }
                 } else {
-                  formInstance.setValue(`${table}.${dataIndex}.${tag}`, rowData[tag] || "", {
+                  form.setValue(`${table}.${dataIndex}.${tag}`, rowData[tag] || "", {
                     shouldDirty: true,
                     shouldTouch: true,
                   })
@@ -744,7 +745,6 @@ export function useTableEdit({
               })
             }
           }
-
           // 显示编辑器
           setShowEditorPortal(true)
         }
@@ -752,7 +752,7 @@ export function useTableEdit({
       [raft, fixedColWState, localTableData, config, table],
   )
 
-  // 2. 添加一个 useEffect 来初始化本地数据和在关键操作后更新它【没有用到？】实际用contentRendererFactory传递的(form)=>
+  // 2. 添加一个 useEffect 来初始化本地数据和在关键操作后更新它【没有用到？】
   // 修改这个 useEffect 钩子，添加一个 ref 来确保它只在初始化时运行一次
   const initializedRef = React.useRef(false)
 
@@ -781,58 +781,15 @@ export function useTableEdit({
     }
   }, [externalData, table, localTableData])
 
-  // 添加一个函数来更新本地数据状态，用于处理各种表格操作后的状态更新
-  const syncFormToLocalData = React.useCallback(() => {
-    // 使用 setTimeout 避免在渲染周期中修改状态
-  }, [table, onExternalDataChange])
-
-  // 为常用表格操作创建包装函数，这些函数会同时更新表单和本地状态
-  const wrapTableOperations = React.useCallback(
-      (arrays: Record<string, any>) => {
-        const { append, remove, move, insert } = arrays?.[table] || {}
-
-        const wrappedOperations = {
-          append: append
-              ? (data: any) => {
-                append(data)
-                syncFormToLocalData()
-              }
-              : undefined,
-
-          remove: remove
-              ? (index: number) => {
-                remove(index)
-                // syncFormToLocalData()
-              }
-              : undefined,
-
-          move: move
-              ? (from: number, to: number) => {
-                move(from, to)
-                syncFormToLocalData()
-              }
-              : undefined,
-
-          insert: insert
-              ? (index: number, data: any, options?: any) => {
-                insert(index, data, options)
-                syncFormToLocalData()
-              }
-              : undefined,
-        }
-
-        return wrappedOperations
-      },
-      [table, syncFormToLocalData],
-  )
+  // 计算行数使用本地数据
+  const linecnt = Math.ceil(localTableData.length / raft)
 
   // 在renderCollapsibleTable函数中添加浮动表头组件
-  const renderCollapsibleTable = React.useCallback(
-      (form: UseFormReturn<any, any, any> | null, arrays: Record<string, any>, linecnt: number) => {
+  const renderCollapsibleTable = React.useMemo(() => {
         // 4. 修改 renderCollapsibleTable 函数中获取数据的方式
         // 使用本地数据而不是 form.watch
         const membersum = localTableData.length
-        const { remove, move, insert } = arrays?.[table] || {}
+        // const { remove, move, insert } = arrays?.[table] || {}
         const excludeFix = fixColumn !== undefined && fixColumn > 0
         // 其余代码保持不变...
         // 但要确保所有使用 tabledArr[i] 的地方改为 localTableData[i]
@@ -956,10 +913,9 @@ export function useTableEdit({
                               const hasMenuItems = !noDelAdd
                               return (
                                   //行数据编辑器需要跟随这一个tr元素定位
-                                  <tr
-                                      key={i}
+                                  <tr key={i}
                                       className={cn(
-                                          `flex flex-wrap justify-around items-center cursor-pointer
+                                          `flex flex-wrap justify-around items-center cursor-pointer border-2 border-transparent transition-border-color duration-300 hover:border-yellow-500  
                                                       ${isActive ? "bg-blue-50" : ""}`,
                                           customClasses.rowWrapper,
                                       )}
@@ -1131,17 +1087,12 @@ export function useTableEdit({
       ],
   )
 
-  // 同样需要修改弹性布局模式下的表头处理
-  // 在contentRendererFactory函数中，修改弹性布局部分
-  // 将原来的移动表头代码替换为浮动表头
-
   // 在弹性布局模式下，添加浮动表头
-  const renderFlexibleTable = React.useCallback(
-      (form: UseFormReturn<any, any, any> | null, arrays: Record<string, any>, linecnt: number) => {
+  const renderFlexibleTable = React.useMemo(() => {
         // 5. 同样修改 renderFlexibleTable 函数
         // 使用本地数据而不是 form.watch
         const membersum = localTableData.length
-        const { remove, move, insert } = arrays?.[table] || {}
+        // const { remove, move, insert } = arrays?.[table] || {}
         const excludeFix = fixColumn !== undefined && fixColumn > 0
         // 但要确保所有使用 tabledArr[i] 的地方改为 localTableData[i]
         return (
@@ -1160,8 +1111,7 @@ export function useTableEdit({
                     <div className={cn("flex justify-around items-center", tableSeparation)}>
                       {new Array(raft).fill(null).map((_, b: number) => {
                         return (
-                            <div
-                                key={b}
+                            <div key={b}
                                 className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left font-bold"
                                 style={{ width: `calc(${100 / raft}%)` }}
                             >
@@ -1277,9 +1227,8 @@ export function useTableEdit({
                             const hasMenuItems = !noDelAdd
 
                             return (
-                                <div
-                                    key={b}
-                                    className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left"
+                                <div key={b}
+                                    className="flex flex-col items-start w-full justify-between h-auto min-h-[32px] p-0 text-left border-2 border-transparent transition-border-color duration-300 hover:border-yellow-500"
                                     style={{ width: `calc(${100 / raft}%)` }}
                                 >
                                   {raft * i + b < membersum && (
@@ -1429,52 +1378,27 @@ export function useTableEdit({
       ],
   )
 
-  // 修改 contentRendererFactory 函数，添加 portal 渲染
-  const contentRendererFactory = React.useCallback(
-      (form: UseFormReturn<any, any, any> | null, arrays?: Record<string, any>) => {
-        // 获取包装后的操作函数
-        const wrappedOps = arrays ? wrapTableOperations(arrays) : {}
+  // 使用 useCallback 包装 setFixedColW 函数，避免不必要的重新创建
+  const toggleFixedColW = React.useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setActiveHeaderIndex(null)
+    setSelectedRaft(null)
+    setFixedColWState((prev) => !prev)
+  }, [])
 
-        // 合并原始操作和包装后的操作
-        const enhancedArrays = { ...arrays }
-        if (enhancedArrays[table]) {
-          enhancedArrays[table] = {
-            ...enhancedArrays[table],
-            ...wrappedOps,
-          }
-        }
+  // 修改 clearTable 函数，同时更新本地状态
+  const clearTable = React.useCallback(
+      (e) => {
+        form?.setValue(table, defaultV ?? [])
+        // 更新本地状态
+        handleTableOperation("clear", { defaultData: defaultV ?? [] })
+        if (form && onConfirm) onConfirm(form)
+        e.preventDefault()
+      },
+      [defaultV, form, table, handleTableOperation],
+  )
 
-        // 计算行数使用本地数据
-        const linecnt = Math.ceil(localTableData.length / raft)
-
-        // 其余代码与之前类似，但传递 enhancedArrays 替代 arrays
-
-        const renderContent = () => {
-          return fixedColWState
-              ? renderCollapsibleTable(form, enhancedArrays!, linecnt)
-              : renderFlexibleTable(form, enhancedArrays!, linecnt)
-        }
-
-        // 使用 useCallback 包装 setFixedColW 函数，避免不必要的重新创建
-        const toggleFixedColW = React.useCallback((e: React.MouseEvent) => {
-          e.preventDefault()
-          setActiveHeaderIndex(null)
-          setSelectedRaft(null)
-          setFixedColWState((prev) => !prev)
-        }, [])
-
-        // 修改 clearTable 函数，同时更新本地状态
-        const clearTable = React.useCallback(
-            (e) => {
-              form?.setValue(table, defaultV ?? [])
-              // 更新本地状态
-              handleTableOperation("clear", { defaultData: defaultV ?? [] })
-              if (form && onConfirm) onConfirm(form)
-              e.preventDefault()
-            },
-            [defaultV, form, table, handleTableOperation],
-        )
-
+  const contentRenderer = React.useMemo(() => {
         return (
             <div>
               {headview}
@@ -1483,20 +1407,20 @@ export function useTableEdit({
                   {fixedColWState ? `弹性布局` : `定长折叠`}
                 </Button>
                 <span className="ml-2">
-              按每行{defaultV && fixColumn! >= 1 && noDelAdd ? config.length - fixColumn! : config.length}
+                          按每行{defaultV && fixColumn! >= 1 && noDelAdd ? config.length - fixColumn! : config.length}
                   列为一组录入
-            </span>
+                        </span>
                 <Button variant="outline" className="ml-auto" onClick={clearTable}>
                   清空全表至默认
                 </Button>
               </div>
               <hr className="my-2" />
-              <div ref={frameRef}>{renderContent()}</div>
+              <div ref={frameRef}>{fixedColWState ? renderCollapsibleTable : renderFlexibleTable}</div>
 
               {/* 只在不使用 portal 时渲染底部编辑器 */}
               {!showEditorPortal && (
                   <div className={cn("flex justify-center", "flex")} ref={editorRef}>
-                    {editor(form, enhancedArrays)}
+                    {editor}
                   </div>
               )}
 
@@ -1527,7 +1451,7 @@ export function useTableEdit({
                           }}
                           className={"@container"}
                       >
-                        {editor(form, enhancedArrays)}
+                        {editor}
                       </div>,
                       portalContainerRef.current,
                   )}
@@ -1538,7 +1462,6 @@ export function useTableEdit({
       },
       [
         localTableData,
-        wrapTableOperations,
         raft,
         fixedColWState,
         fixColumn,
@@ -1561,5 +1484,5 @@ export function useTableEdit({
       ],
   )
 
-  return [contentRendererFactory]
+  return [contentRenderer]
 }

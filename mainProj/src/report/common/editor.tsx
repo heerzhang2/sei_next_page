@@ -4,7 +4,7 @@ import {InternalItemProps} from "./base";
 import {useStorage} from "../StorageContext";
 import {RecordInputConfig} from "./config";
 import {itemResultUnqualifiedOmni, useItemsMapOmni} from "./omni";
-import {z} from "zod";
+import {undefined, z} from "zod";
 import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {BlobInputList, CollapsibleFormSection, CommonSelect, FormSelectField} from "@/components/chub";
@@ -377,31 +377,24 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         {label}
     </h2>;
 
-    const [nestRendererFactory]=useTableEdit({onConfirm, config, table:'unq',externalData: storage,
-        headview,defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,
+    const { render,handleConfirm,form,arrayControls } = useFormFramework({schema, defaultValues, arrayFields, rep})
+    const [nestRenderer]=useTableEdit({
+        form, arrayControls, onConfirm, config, table:'unq',externalData: storage,
+        headview,defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2
         // onExternalDataChange: handleExternalDataChange
     });
 
-    const contentRendererFactory = React.useCallback(
-        (form: any, arrays?: Record<string, any>) => {
-            return (
-                <>
+    const content =<>
                     <Card className="py-1 gap-1">
                         <CardContent className="px-1">
                             注意点击“清空全表至默认”会重新初始化！<hr/>
-                            {nestRendererFactory(form, arrays)}
+                            {nestRenderer}
                         </CardContent>
                     </Card>
                     {children}
                 </>
-            )
-        },
-        [children,nestRendererFactory ],
-    )
-    const { render,handleConfirm } = useFormFramework({schema, defaultValues, contentRendererFactory,arrayFields, rep})
-
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render(null)}
+        {render(content)}
     </CollapsibleFormSection>;
 };
 
