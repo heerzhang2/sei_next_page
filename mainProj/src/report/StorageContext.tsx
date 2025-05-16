@@ -38,14 +38,3 @@ export function useStorage() {
     }
     return context
 }
-
-
-
-//@deprecated
-type EditStorageContextType =
-    | (ReturnType<typeof useStorage>)
-    | null;
-/*@deprecated
-* */
-export const EditStorageContext =null// React.createContext<EditStorageContextType>(null);
-

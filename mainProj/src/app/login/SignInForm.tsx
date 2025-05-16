@@ -15,7 +15,7 @@ import { useAppState } from "@/action/AppState"
 // var sha256 = require('hash.js/lib/hash/sha/256');
 export default function SignInForm() {
     const router = useRouter()
-    const { setUserEmail } = useAppState()
+    // const { setUserEmail } = useAppState()
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [username, setUsername] = useState("")

@@ -1,3 +1,4 @@
+'use client';
 import { ReactNode } from 'react';
 import AnimateItems from './AnimateItems';
 import { IoInformationCircleOutline } from 'react-icons/io5';

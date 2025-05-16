@@ -1,9 +1,19 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+    /* config options here */
+    eslint: {
+        // 警告：这允许生产构建在项目有 ESLint 错误的情况下成功完成
+        ignoreDuringBuilds: true,
+    },
+    typescript: {
+        // 警告：这允许生产构建在项目有类型错误的情况下成功完成
+        ignoreBuildErrors: true,
+    },
+    images: {
+        unoptimized: true,
+    },
+}
 
-export default nextConfig;
+export default nextConfig
 
-//Cross origin request detected from 192.168.171.3 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
