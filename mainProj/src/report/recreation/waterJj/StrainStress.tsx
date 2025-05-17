@@ -94,10 +94,10 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                 return (
                     <>
                         <div className="flex flex-wrap justify-around items-center">
-                            {config.map(([title, field, unit, size]: any, i: number) => {
+                            {config.map(([title, fieldnm, unit, size]: any, i: number) => {
                                 return (
                                     <div key={i} className="flex items-center md:ml-4">
-                                        <FormField key={i} control={form.control} name={field}
+                                        <FormField key={i} control={form.control} name={fieldnm}
                                             render={({field}) => (
                                                 <FormItem className="pt-2 w-full break-inside-avoid">
                                                     <FormLabel>{title}</FormLabel>
@@ -154,11 +154,11 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                             <CardContent className="px-1">
                                 <div className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
                                     <FormField control={form.control} name={'危应第'}
-                                               render={({field: formField}) => (
+                                               render={({field}) => (
                                                    <FormItem>
                                                        <FormLabel>{(sensit ? '最大应力值测试点' : '最危险应力点') + '为测点：'}</FormLabel>
                                                        <FormControl>
-                                                           <Input {...formField} placeholder={`请输入测点`}/>
+                                                           <Input {...field} placeholder={`请输入测点`}/>
                                                        </FormControl>
                                                        <FormMessage/>
                                                    </FormItem>

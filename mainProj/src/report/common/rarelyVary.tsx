@@ -215,13 +215,16 @@ export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
     const pathname = usePathname()
     const { action } = useParams()
     const original = "1"===searchParams!.get("original")
+    const fixBtn= !action;
   return (
       <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
           <Link href="/" passHref
                 className="text-blue-600 hover:text-blue-800 block text-sm mb-4 md:mb-0 md:inline-block">
               -报告完毕,返回-
           </Link>
-          <div className="text-center space-y-3 md:space-y-0 md:space-x-4 md:flex md:justify-around md:flex-wrap">
+          <div className={cn("text-center space-y-3 md:space-y-0 md:space-x-4 md:flex md:justify-around md:flex-wrap",
+              fixBtn ? "mb-12" : "")}
+          >
               <div className="mx-auto">
                   <Link href={`http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/ALL`}
                         className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
@@ -247,12 +250,16 @@ export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
                   </Link>
               </div>
           </div>
-          <div className="m-2 flex justify-center gap-2 print:hidden">
+          <div className={cn("m-2 flex justify-around items-center gap-2 print:hidden",
+              fixBtn ? "fixed bottom-0 w-full" : "")}
+          >
               <Button variant="outline"
                       onClick={() => router.push(pathname + '?' + createQueryString('original', original ? '' : "1"))}>
                   {original ? "正式报告" : "原始记录"}
               </Button>
-              {!action && <>
+              {action? <div/>
+                  :
+                  <>
                   <Button variant="outline"
                           onClick={() => router.push(pathname + '?' + createQueryString('print', print ? '' : "1"))}>
                       {print ? "浏览模式" : "打印模式"}
@@ -261,7 +268,8 @@ export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
                       <Button variant="outline" onClick={() => window.print()}>打印预览</Button>
                       <Button variant="outline" onClick={toPDF}>转为PDF</Button>
                   </>}
-              </>}
+                </>
+              }
           </div>
       </div>
   );

@@ -47,11 +47,11 @@ export default function Home() {
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/5.1?make=1#5.1">编制态当前一1份报告试图的来</Link>
+                                    href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/T6-14?make=1#T6-14">编制态当前一1份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/5.1?make=1#5.1">编制态当前一2份报告试图的来</Link>
+                                    href="rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?make=1#T6-14">编制态当前一2份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
                                 <Link href="/edit/KQcbgDF9RO21DsI92H3tTVJlcG9ydA?make=1">⬅️ 修改 验证离线1 入口</Link>

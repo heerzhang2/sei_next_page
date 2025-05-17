@@ -83,22 +83,22 @@ export default function Skeleton({
     return (
         <div className="flex flex-col">
             {needScrollBtn &&
-                <div className="fixed top-4 right-4 flex flex-col gap-5 z-40">
+                <div className="fixed top-6 right-6 flex flex-col gap-7 z-40">
                     <Button
                         variant="outline"
                         className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
                         onClick={scrollToTop}
                     >
-                        <ChevronUp className="h-2 w-2" />
-                        <span className="sr-only">Scroll to top</span>
+                        <ChevronUp className="h-3 w-3" />
+                        <span className="sr-only">滚动到头</span>
                     </Button>
                     <Button
                         variant="outline"
                         className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
                         onClick={scrollToBottom}
                     >
-                        <ChevronDown className="h-2 w-2" />
-                        <span className="sr-only">Scroll to bottom</span>
+                        <ChevronDown className="h-3 w-3" />
+                        <span className="sr-only">滚动到底</span>
                     </Button>
                 </div>
             }

@@ -60,8 +60,7 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
     const [nestRenderer]=useTableEdit({form,arrayControls, config: config仪器表, table:'仪器表',externalData: storage,
             defFixedLay:true, headview,tailview
     });
-    const content = React.useCallback(
-        (form: any, arrays?: Record<string, any>) => {
+    const content = React.useMemo(() => {
             return (
                 <>
                     <Card className="py-1 gap-1">
@@ -75,7 +74,6 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
         },
         [children,nestRenderer],
     )
-
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
         {render(content)}
     </CollapsibleFormSection>;
