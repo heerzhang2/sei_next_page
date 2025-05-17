@@ -166,6 +166,73 @@
   }
 }
 
+/* 修复容器响应式样式 */
+.container {
+  width: 100%;
+}
+
+/* 使用正确的媒体查询语法 */
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
+}
+
+/* 高度相关的媒体查询 */
+@media (min-height: 410px) {
+  .h-sm-content {
+    /* 小高度屏幕的样式 */
+  }
+}
+
+@media (min-height: 610px) {
+  .h-md-content {
+    /* 中等高度屏幕的样式 */
+  }
+}
+
+@media (min-height: 900px) {
+  .h-lg-content {
+    /* 大高度屏幕的样式 */
+  }
+}
+
+@media (min-height: 1240px) {
+  .h-xl-content {
+    /* 超大高度屏幕的样式 */
+  }
+}
+
+@media (min-height: 1920px) {
+  .h-2xl-content {
+    /* 超超大高度屏幕的样式 */
+  }
+}
+
 /*原始记录跨越2页3页的行打印*/
 body {
   padding: 0;
@@ -324,10 +391,10 @@ body {
 }
 
 @media print {
-    .print-cell-m18 {
-      min-height: 18rem;
-      break-inside: avoid;
-      page-break-inside: avoid;
+  .print-cell-m18 {
+    min-height: 18rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 /*孤儿测试*/
@@ -339,7 +406,7 @@ body {
   .print-container-min-5h::before {
     content: "";
     display: block;
-    height: 4rem;         /* 创建5rem高度的占位空间 */
+    height: 4rem; /* 创建5rem高度的占位空间 */
     margin-bottom: -4rem; /* 负边距抵消占位高度 */
     pointer-events: none; /* 禁用鼠标交互 */
     page-break-after: avoid; /* 强制伪元素留在第一页 */

@@ -13,7 +13,47 @@ const nextConfig: NextConfig = {
     images: {
         unoptimized: true,
     },
+    // 添加缓存控制配置
+    headers: async () => {
+        return [
+            {
+                // 匹配所有 API 路由
+                source: "/api/:path*",
+                headers: [
+                    {
+                        key: "Cache-Control",
+                        value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+                    },
+                    {
+                        key: "Pragma",
+                        value: "no-cache",
+                    },
+                    {
+                        key: "Expires",
+                        value: "0",
+                    },
+                ],
+            },
+            {
+                // 匹配所有数据请求
+                source: "/_next/data/:path*",
+                headers: [
+                    {
+                        key: "Cache-Control",
+                        value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+                    },
+                    {
+                        key: "Pragma",
+                        value: "no-cache",
+                    },
+                    {
+                        key: "Expires",
+                        value: "0",
+                    },
+                ],
+            },
+        ]
+    },
 }
 
 export default nextConfig
-

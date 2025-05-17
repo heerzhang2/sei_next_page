@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>禁用缓存测试页面</title>
+  <script>
+    // 添加时间戳参数到所有 fetch 请求
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+      // 如果是字符串 URL，添加时间戳
+      if (typeof url === 'string') {
+        const separator = url.includes('?') ? '&' : '?';
+        url = `${url}${separator}_t=${Date.now()}`;
+      }
+      return originalFetch(url, options);
+    };
+    
+    // 页面加载时显示当前时间
+    document.addEventListener('DOMContentLoaded', () => {
+      const timeElement = document.getElementById('current-time');
+      if (timeElement) {
+        timeElement.textContent = new Date().toLocaleTimeString();
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>禁用缓存测试页面</h1>
+  <p>当前时间: <span id="current-time"></span></p>
+  <p>如果刷新页面后时间更新，说明页面没有被缓存。</p>
+  
+  <button onclick="location.reload()">刷新页面</button>
+  <button onclick="location.reload(true)">强制刷新页面</button>
+</body>
+</html>

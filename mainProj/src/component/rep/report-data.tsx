@@ -2,9 +2,12 @@
 
 import React, { Suspense } from 'react';
 import {useQuery, gql} from '@urql/next';
-// import {getSsr, urqlClient} from "@/auth/urql";
 import {useStorage} from "@/report/StorageContext";
 
+export interface ReportParams {
+    repId: string
+    action?: string
+}
 
 //片段不能像Relay那样的能做独立形式的定义了！必须每个请求都定义； "Validation error (UndefinedFragment@[getReport]) : Undefined fragment 'pageReportIsp'"
 // const RepIspQuery=gql` `;
@@ -46,22 +49,16 @@ export const ReportQuery = gql`
     }
 `;
 
-/*async/await is not yet supported in Client Components, only Server Components.
-params: Promise<{ repId: string }>      ; await params;
-* */
 function CommonReportData({ repId,children       }:
-         {  repId:  string, children: React.ReactNode}
+                          {  repId:  string, children: React.ReactNode}
 ) {
-    // KQcbgDF9RO21DsI92H3tTVJlcG9ydA
-
-    // const { repId } = React.use(params);  // await params
-    // const post = await getPost(repId)
-    // const data ={};
-    const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
-
-    // const router = useRouter();
-    // console.log("graphql->authUser", data);
-    const {getReport: report} = result?.data;
+    const [result] = useQuery({
+        query: ReportQuery,
+        variables: { id: repId },
+        requestPolicy: 'cache-and-network',
+    })
+    const { data, fetching, error } = result
+    const { getReport: report } = data || {}
     console.log("CommonReportData: report=",report);
     const {storage, setStorage} =useStorage();
     //特别注意：RecordEditorMain.tsx 也有初始化代码，需要俩个代码setStorage确保一致性。
@@ -74,71 +71,29 @@ function CommonReportData({ repId,children       }:
         else   setStorage({ ...snap, _version: report?.version});
         console.log("【id切换】才会执行的：左边页面的-Relay3query获取后进的-",dat,"snap",snap);        //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
     }, [report, setStorage]);
-    if(report && !report.snapshot) return (
-        <React.Fragment>
-            {
-                `该报告的基础信息未赋值`
-            }
-        </React.Fragment>
-    );
-    if(!report)  return null;
-
-    //【暂时】snapshot还未加入的;
+    if (fetching) return <div>加载中...</div>
+    if (error) return <div>错误: {error.message}</div>
+    if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>
+    if (!report) return null
     return (
         <Suspense>
-            {/*<p>数据的和 {report?.data}</p>*/}
-
             {children}
-            {/*<ReportView source={report?.data} verId={'1'} rep={report}/>*/}
         </Suspense>
     )
 }
 
-
-/*async/await is not yet supported in Client Components, only Server Components.
-params: Promise<{ repId: string }>      ; await params;
-【服务端SSR】？这个部分，影响client缓存? RSC必要性哪。
-* */
 export default function ReportData({
                                        repId,children
                                    }: {
     repId: string,
     children: React.ReactNode
 }) {
-    // const { repId } = React.use(params);  // await params   // params: Promise<{ repId: string }>
     console.log("ReportData: repId=",repId);
     return (
         <Suspense>
-          <CommonReportData repId={repId} >
-            {children}
-          </CommonReportData>
+            <CommonReportData repId={repId} >
+                {children}
+            </CommonReportData>
         </Suspense>
     )
 }
-
-// export function ReportDataOld({
-//                                   params,
-//                               }: {
-//     params: Promise<{ repId: string }>
-// }) {
-//     const { repId } = React.use(params);  // await params
-//
-//     return (
-//         <article>
-//             <Suspense>
-//                 <CommonReportData repId={repId as string} />
-//             </Suspense>
-//             {/*<PostList repId={repId}/>*/}
-//         </article>
-//     )
-// }
-
-export interface ReportParams {
-    repId: string
-    action?: string
-}
-
-/*
-最有可能的未来是，人工智能成为 Next.js 生态系统中的一个强大工具，而非完全取代它。开发者将使用人工智能来加速开发，同时依赖 Next.js 提供结构、优化和生产就绪的功能。
-包 @ai-sdk/react ；
-* */

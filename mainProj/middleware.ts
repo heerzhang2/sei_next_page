@@ -1,57 +1,56 @@
-import NextAuth from 'next-auth';
-import { authConfig } from '@/app/auth.config';
-// import { auth } from './auth';
-import { NextRequest, NextResponse } from 'next/server';
-import type { NextApiRequest, NextApiResponse } from 'next';
+import NextAuth from "next-auth"
+import { authConfig } from "@/app/auth.config"
+import { type NextRequest, NextResponse } from "next/server"
 
-export default NextAuth(authConfig).auth;
+// 应用 NextAuth 中间件
+const authMiddleware = NextAuth(authConfig).auth
 
+// 创建一个处理函数来添加缓存控制头
+export async function middleware(request: NextRequest) {
+  // 首先应用 NextAuth 中间件
+  const response = await authMiddleware(request)
 
-// const PUBLIC_ROUTES = ['/', '/login', '/signup', '/public']
-// function middleware_OLD(req: NextRequest, res:NextResponse) {
-//   const pathname = req.nextUrl.pathname;
-//   const token = req.cookies.get('token')?.value;
-//   console.log('Client auth update token:{},token={}', req.cookies,token);
-//   //【客户端没有输出】{"JSESSIONID":{"name":"JSESSIONID","value":"zkRuKMYuV"},"token":{"name":"token","value":"eUzUsFjA"}}
-//   if (
-//       PUBLIC_ROUTES.includes(pathname)
-//   ) {
-//     return NextResponse.next()
-//   }
-//   // Redirect unauthenticated users from protected routes
-//   if (!token) {
-//     return NextResponse.redirect(new URL('/login', req.url))
-//   }
-//   if (/^\/photos\/(.)+$/.test(pathname)) {
-//     // Accept /photos/* paths, but serve /p/*
-//     const matches = pathname.match(/^\/photos\/(.+)$/);
-//     return NextResponse.rewrite(new URL(
-//       `${PREFIX_PHOTO}/${matches?.[1]}`,
-//       req.url,
-//     ));
-//   } else if (/^\/t\/(.)+$/.test(pathname)) {
-//     // Accept /t/* paths, but serve /tag/*
-//     const matches = pathname.match(/^\/t\/(.+)$/);
-//     return NextResponse.rewrite(new URL(
-//       `${PREFIX_TAG}/${matches?.[1]}`,
-//       req.url,
-//     ));
-//   }
-//   return NextResponse.next()
-// }
+  if (!response) {
+    // 如果 authMiddleware 没有返回响应，创建一个新的响应
+    const newResponse = NextResponse.next()
 
+    // 添加缓存控制头
+    addNoCacheHeaders(newResponse.headers)
+
+    return newResponse
+  }
+
+  // 如果是 API 请求或数据请求，添加缓存控制头
+  const { pathname } = request.nextUrl
+  const isApiRequest = pathname.startsWith("/api/")
+  const isDataRequest = pathname.includes("/_next/data/")
+  const isGraphQLRequest = pathname.includes("/graphql")
+
+  if (isApiRequest || isDataRequest || isGraphQLRequest) {
+    // 复制原始响应并添加缓存控制头
+    const newHeaders = new Headers(response.headers)
+    addNoCacheHeaders(newHeaders)
+
+    // 创建一个新的响应对象，保留原始响应的状态和正文，但使用新的头
+    return new NextResponse(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders,
+    })
+  }
+
+  return response
+}
+
+// 辅助函数：添加禁用缓存的头
+function addNoCacheHeaders(headers: Headers) {
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+  headers.set("Pragma", "no-cache")
+  headers.set("Expires", "0")
+  headers.set("Surrogate-Control", "no-store")
+}
 
 export const config = {
-  // Excludes:
-  // - /api + /api/auth*
-  // - /_next/static*
-  // - /_next/image*
-  // - /favicon.ico + /favicons/*
-  // - /grid
-  // - / (root)
-  // eslint-disable-next-line max-len
-  matcher: ['/((?!api$|api/auth|_next/static|_next/image|favicon.ico$|favicons/|grid$|$).*)'],
-
-  // https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
-  // matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
-};
+  // 匹配所有路径，除了静态资源和一些特定路径
+  matcher: ["/((?!_next/static|_next/image|favicon.ico$|favicons/|grid$|$).*)", "/api/:path*", "/graphql"],
+}
