@@ -183,3 +183,80 @@ module.exports = { /* ... */ };
 import fs from 'fs';
 export const config = { /* ... */ };
 Node.js (CommonJS)	Next.js (ES Modules)
+Unirest 是一个轻量级的  HTTP 客户端工具库 ，支持多语言（Java/Python/Node.js 等）
+// pnpm-workspace.yaml
+packages:
+- 'packages/config/*'
+- 'apps/*'
+   ；pnpm publish --filter @core/config
+# Git 目录权限配置
+packages/config:
+    read: team-config-managers
+    write: team-config-owners
+维度《》	Monorepo 方案 定期清理 node_modules	  PK   多git仓库,维护多仓库方案
+
+基于 Yarn 的 Monorepo 实现方案完全可行，以下是针对 Yarn Workspaces 的完整解决方案，包含架构设计、配置要点和最佳实践：
+
+一、Yarn Workspaces 核心能力
+1. 架构优势对比
+   特性	Yarn Workspaces	pnpm Workspaces
+   ​​依赖提升策略​​	默认提升到根目录	强制嵌套结构
+   ​​磁盘空间​​	依赖共享但可能重复	硬链接全局唯一
+   ​​版本隔离​​	需手动配置 nohoist	自动严格隔离
+   ​​配置复杂度​​	低（原生支持）	中（需额外配置）
+   二、Yarn Monorepo 实施步骤
+1. 项目结构设计
+   monorepo-root/
+   ├── packages/
+   │   ├── config/            # 共享配置包
+   │   │   └── package.json
+   │   └── services/          # 业务服务
+   │       └── order-service/
+   │           └── package.json
+   ├── package.json
+   └── yarn.lock
+2. 根目录配置
+   // package.json
+   {
+   "private": true,
+   "workspaces": [
+   "packages/*"
+   ],
+   "scripts": {
+   "bootstrap": "yarn install",
+   "link": "yarn link && yarn workspace config link"
+   }
+   }
+3. 子包配置示例
+   // packages/config/package.json
+   {
+   "name": "@monorepo/config",
+   "version": "1.0.0",
+   "main": "dist/index.js",
+   "scripts": {
+   "build": "tsc"
+   }
+   }
+
+// packages/services/order-service/package.json
+{
+"name": "order-service",
+"version": "1.0.0",
+"dependencies": {
+"@monorepo/config": "workspace:*"
+}
+}
+// package.json
+{
+"workspaces": {
+"packages": ["packages/*"],
+"nohoist": [ "**/react", "**/react/**" ]
+}
+}
+"nohoist": ["/react-(native|dom)/", "/@types\/react/"]
+// 避免 webpack 配置冲突
+"nohoist": [ "**/webpack", "**/babel" ]
+"nohoist": [ "app1/react", "app2/react" ]
+最小化 nohoist 范围=仅对必须隔离的依赖启用
+启用实验性功能增强兼容性：
+yarn config set workspaces-experimental-true
