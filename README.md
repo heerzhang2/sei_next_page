@@ -138,3 +138,48 @@ Next.js的路由Link点击并没有提供独立的数据加载的纯函数，只
 <Link href={`/post/${post.id}`} prefetch={true} // 自动预取此链接
 https://commerce.nearform.com/open-source/urql/docs/advanced/authentication/
 Turbopack 用于 `dev` 环境是稳定的，而用于 `build` 的支持仍处于 alpha 阶段。
+@camunda8/sdk 纯粹后端的服务任务
+https://yuanbao.tencent.com/chat/naQivTmsDa/3d235ad7-ba2b-40cd-b253-6157314a5e48
+project-root/
+├── packages/
+│   ├── next-app/        # Next.js 工程
+│   │   ├── src/
+│   │   └── package.json
+│   └── camunda-worker/  # 后端服务
+│       ├── src/
+│       └── package.json
+├── shared/            # 共享代码
+│   ├── config/
+│   └── utils/
+└── package.json
+# 工程级 package.json 类似monorepo 结构
+{
+"private": true,
+"workspaces": ["packages/*"],
+"scripts": {
+"build": "npm run build --workspaces"
+}
+}
+project-root/
+├── packages/
+│   ├── next-app/  # 前端工程（ES Modules）
+│   └── backend/   # Node 后端（CommonJS）
+└── shared/      # 共享代码（通过 tsc 生成 .d.ts）
+// 正确方案：统一模块系统
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const path = require('path');
+三、解决方案与最佳实践
+1. Node.js 启用 ES Modules
+# 方案一：修改 package.json
+{
+"type": "module"
+}
+// CommonJS (Node.js 原生)
+const fs = require('fs');
+module.exports = { /* ... */ };
+
+// ES Modules (Next.js 默认)
+import fs from 'fs';
+export const config = { /* ... */ };
+Node.js (CommonJS)	Next.js (ES Modules)
