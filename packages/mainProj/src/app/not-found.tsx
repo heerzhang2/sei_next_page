@@ -10,7 +10,7 @@ export default function NotFound() {
       <h2 className="mt-4 text-2xl font-semibold text-gray-700 dark:text-gray-300">页面未找到</h2>
       <p className="mt-2 text-gray-600 dark:text-gray-400">抱歉，您请求的页面不存在或已被移除。</p>
       <Button asChild className="mt-8">
-        <Link href="/">返回首页</Link>
+        <Link href="/packages/mainProj/public">返回首页</Link>
       </Button>
     </div>
   )

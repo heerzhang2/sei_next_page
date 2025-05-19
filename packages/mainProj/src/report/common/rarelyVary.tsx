@@ -218,7 +218,7 @@ export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
     const fixBtn= !action;
   return (
       <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
-          <Link href="/" passHref
+          <Link href="/packages/mainProj/public" passHref
                 className="text-blue-600 hover:text-blue-800 block text-sm mb-4 md:mb-0 md:inline-block">
               -报告完毕,返回-
           </Link>
@@ -233,7 +233,7 @@ export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
               </div>
               <div className="mx-auto">
                   {print?
-                      <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
+                      <Link href="/packages/mainProj/public" className="text-blue-600 hover:text-blue-800 text-sm block px-4 py-2 rounded-lg hover:bg-gray-50">
                         回首页
                       </Link>
                       :

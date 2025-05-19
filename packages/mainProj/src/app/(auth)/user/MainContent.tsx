@@ -20,7 +20,7 @@ export async function MainContent() {
           <main className="text-xl text-green-500">登录后获取当前用户信息:
               用户id={session?.user.id}
               <div>用户名是： {session.user.name ?? session.user.email}</div>
-              <Link href="/">回首页</Link>
+              <Link href="/packages/mainProj/public">回首页</Link>
           </main>
       </>
   );

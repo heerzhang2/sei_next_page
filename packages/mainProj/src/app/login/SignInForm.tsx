@@ -112,7 +112,7 @@ export default function SignInForm() {
                 </div>
                 <div className="p-6 border-t border-gray-200">
                     <div className="mt-4">
-                        <Link href="/" className="text-blue-600 hover:underline">
+                        <Link href="/packages/mainProj/public" className="text-blue-600 hover:underline">
                            首页
                         </Link>
                     </div>

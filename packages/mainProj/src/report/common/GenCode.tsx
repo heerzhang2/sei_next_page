@@ -4,7 +4,7 @@ import {toast} from "sonner"
 import {
     InternalItemProps,
     useItemInputControl
-} from "../common/base";
+} from "./base";
 import {useState} from "react";
 import {splitNosByLastDot, splitNosByLastDotPan} from "./helper";
 import useClipboard from "react-use-clipboard";

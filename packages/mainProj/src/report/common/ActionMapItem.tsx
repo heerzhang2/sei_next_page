@@ -15,8 +15,8 @@ import {
 import {
     Form, FormControl, FormField, FormItem, FormLabel, FormMessage
 } from "@/components/ui/form";
-import { OriginalDataMutation } from "../common/base";
-import { RecordOmniArea } from "../common/omni";
+import { OriginalDataMutation } from "./base";
+import { RecordOmniArea } from "./omni";
 import { Column_Setting } from "./useFormatOmni";
 import {useForm} from "react-hook-form";
 
