@@ -9,8 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { useAppState } from "@/action/AppState"
-
 //密码hash 防止在服务后台泄密
 // var sha256 = require('hash.js/lib/hash/sha/256');
 export default function SignInForm() {
@@ -21,12 +19,12 @@ export default function SignInForm() {
     const [username, setUsername] = useState("")
 
     const signInAction = async (_prevState: string | undefined, formData: FormData) => {
-        const data = formData
+        const data = formData as any
         console.log("signInAction录入formData:{}", formData)
         await signIn("credentials", {
-            username: "herzhang",
+            username: data.username,
             email: "herzhang@163.com", //data.email,
-            password: "768768", //data.password,
+            password: "", //data.password,
             redirect: true,
         })
         console.log("signIn完成")
@@ -114,18 +112,18 @@ export default function SignInForm() {
                 </div>
                 <div className="p-6 border-t border-gray-200">
                     <div className="mt-4">
-                        <Link href="/mainProj/public" className="text-blue-600 hover:underline">
-                            ⬅️ Go back home
+                        <Link href="/" className="text-blue-600 hover:underline">
+                           首页
                         </Link>
                     </div>
                     <div className="mt-4">
                         <Link href="/user" className="text-blue-600 hover:underline">
-                            ⬅️ Go 不能尼克酸y用户
+                           用户
                         </Link>
                     </div>
                     <div className="mt-4">
                         <Link href="/profile" className="text-blue-600 hover:underline">
-                            ⬅️ Profile y用户
+                           ⬅ 用户信息
                         </Link>
                     </div>
                 </div>

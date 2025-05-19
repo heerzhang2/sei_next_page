@@ -139,7 +139,7 @@ Next.js的路由Link点击并没有提供独立的数据加载的纯函数，只
 https://commerce.nearform.com/open-source/urql/docs/advanced/authentication/
 Turbopack 用于 `dev` 环境是稳定的，而用于 `build` 的支持仍处于 alpha 阶段。
 @camunda8/sdk 纯粹后端的服务任务
-https://yuanbao.tencent.com/chat/naQivTmsDa/3d235ad7-ba2b-40cd-b253-6157314a5e48
+
 project-root/
 ├── packages/
 │   ├── next-app/        # Next.js 工程
