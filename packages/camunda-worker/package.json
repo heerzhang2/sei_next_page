@@ -9,11 +9,12 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "zeebe-node": "^8.2.5",
+    "@camunda8/sdk": "^8.7.8",
     "axios": "^1.6.2",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
+    "page2pdf_server": "^1.1.0",
     "@types/node": "^20.10.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
