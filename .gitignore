@@ -25,3 +25,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/.turbo/
+/packages/camunda-worker/node_modules/
+/packages/camunda-worker/.turbo/
+/packages/camunda-worker/dist/
+/packages/mainProj/.turbo/
