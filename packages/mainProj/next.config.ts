@@ -54,6 +54,18 @@ const nextConfig: NextConfig = {
             },
         ]
     },
+    webpack: (config, { isServer }) => {
+        // 排除所有 .node 二进制文件
+        config.module.rules.push({
+            test: /\.node$/,
+            use: "ignore-loader",
+        })
+
+        // 如果你需要使用这些模块，可以使用 node-loader 代替 ignore-loader
+        // 但这通常只在 Node.js 环境中有效，不适用于浏览器
+
+        return config
+    },
 }
 
 export default nextConfig

@@ -7,6 +7,16 @@ import dotenv from "dotenv"
 
 // 加载环境变量
 dotenv.config()
+// Camunda 8 连接配置
+const camundaConfig = {
+    CAMUNDA_AUTH_STRATEGY: process.env.CAMUNDA_AUTH_STRATEGY || "",
+    CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
+    CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
+    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_BASIC_AUTH_PASSWORD==="true",
+  // 如果使用自托管的Zeebe，则使用以下配置
+  // gatewayAddress: process.env.ZEEBE_GATEWAY_ADDRESS || 'localhost:26500',
+  // useTLS: false,
+}
 
 const original=false
 //rep?.isp?.no
@@ -44,30 +54,30 @@ const pdf_job = {
 // 创建Zeebe客户端  https://www.npmjs.com/package/@camunda8/sdk  需要Node服务端环境运行的；
 // const zbc = new ZBClient(zeebeConfig)
 // const c8 = new Camunda8()
+// {
+//   ZEEBE_ADDRESS: 'localhost:26500',
+//   ZEEBE_REST_ADDRESS: 'http://localhost:8080',
+//   ZEEBE_CLIENT_ID: 'demo',
+//   ZEEBE_CLIENT_SECRET: 'demo',
+//   CAMUNDA_AUTH_STRATEGY: "BASIC",
+//   // CAMUNDA_OAUTH_STRATEGY: 'NONE',
+//   // CAMUNDA_OAUTH_URL:'http://localhost:8080/oauth/token',
+//   // CAMUNDA_TASKLIST_BASE_URL: 'http://localhost:8082',
+//   // CAMUNDA_OPERATE_BASE_URL: 'http://localhost:8081',
+//   // CAMUNDA_OPTIMIZE_BASE_URL: 'http://localhost:8083',
+//   // CAMUNDA_MODELER_BASE_URL: 'http://localhost:8070/api',
+//   CAMUNDA_TENANT_ID: '', // We can override values in the env by passing an empty string value
+//   CAMUNDA_SECURE_CONNECTION: false,
+// }
 
-
-const c8 =new Camunda8({
-  ZEEBE_ADDRESS: 'localhost:26500',
-  ZEEBE_REST_ADDRESS: 'http://localhost:8080',
-  ZEEBE_CLIENT_ID: 'demo',
-  ZEEBE_CLIENT_SECRET: 'demo',
-  CAMUNDA_OAUTH_STRATEGY: 'NONE',
-  CAMUNDA_OAUTH_URL:
-      'http://localhost:8080/identity/',
-  CAMUNDA_TASKLIST_BASE_URL: 'http://localhost:8082',
-  CAMUNDA_OPERATE_BASE_URL: 'http://localhost:8081',
-  CAMUNDA_OPTIMIZE_BASE_URL: 'http://localhost:8083',
-  CAMUNDA_MODELER_BASE_URL: 'http://localhost:8070/api',
-  CAMUNDA_TENANT_ID: '', // We can override values in the env by passing an empty string value
-  CAMUNDA_SECURE_CONNECTION: false,
-})
-const restClient = c8.getCamundaRestClient() // New REST API
+const c8 =new Camunda8(camundaConfig)
+// const restClient = c8.getCamundaRestClient() // New REST API
 const zeebe = c8.getZeebeGrpcApiClient()
-const zeebeRest = c8.getZeebeRestClient() // Deprecated
-const operate = c8.getOperateApiClient()
-const optimize = c8.getOptimizeApiClient()
-const tasklist = c8.getTasklistApiClient()
-const modeler = c8.getModelerApiClient()
+// const zeebeRest = c8.getZeebeRestClient() // Deprecated
+// const operate = c8.getOperateApiClient()
+// const optimize = c8.getOptimizeApiClient()
+// const tasklist = c8.getTasklistApiClient()
+// const modeler = c8.getModelerApiClient()
 //这个报错的Error: Missing required configuration CAMUNDA_CONSOLE_BASE_URL.
 // const admin = c8.getAdminApiClient()
 
@@ -81,13 +91,11 @@ const WORKER_TASK_TYPE = "pdf-generation-task"
 async function startWorker() {
   console.log("Starting Camunda 8 Worker...")
 
-  // 创建一个Worker来处理特定类型的任务
+  // 创建一个Worker来处理特定类型的任务    不能加上tenantIds: ['<default>', 'green'],
   const zbWorker =zeebe.createWorker({
     taskHandler: myTaskHandler,
     taskType: 'multi-tenant-work',
-    tenantIds: ['<default>', 'green'],
   });
-
 
   async function myTaskHandler(job) {
     zbWorker.log('Task variables', job.variables)

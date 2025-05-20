@@ -34,3 +34,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+确保Server Action只返回必要的数据，不包含任何口令凭证;在Server Action中添加用户认证=限制哪些用户可以启动特定流程;
+使用`"use server"`指令的文件中的代码在构建时会被分离;客户端代码只能调用这些函数，但看不到其实现细节;
+
