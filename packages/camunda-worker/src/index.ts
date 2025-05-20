@@ -12,7 +12,7 @@ const camundaConfig = {
     CAMUNDA_AUTH_STRATEGY: process.env.CAMUNDA_AUTH_STRATEGY || "",
     CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
     CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
-    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_BASIC_AUTH_PASSWORD==="true",
+    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION==="true",
   // 如果使用自托管的Zeebe，则使用以下配置
   // gatewayAddress: process.env.ZEEBE_GATEWAY_ADDRESS || 'localhost:26500',
   // useTLS: false,

@@ -1,6 +1,7 @@
 "use server"
 
 import { Camunda8, Auth, Zeebe } from "@camunda8/sdk"
+import { zeebe } from "../../../config/camunda"
 
 // Camunda 8 连接配置
 const authConfig = {
@@ -14,9 +15,9 @@ const authConfig = {
 }
 
 // 创建Camunda 8客户端
-const auth = new Auth(authConfig)
-const camunda8 = new Camunda8(auth)
-const zeebeClient = new Zeebe(auth)
+// const auth = new Auth(authConfig)
+// const camunda8 = new Camunda8(auth)
+const zeebeClient = zeebe
 
 // 定义启动流程的参数类型
 type StartProcessParams = {
@@ -30,7 +31,7 @@ type StartProcessParams = {
  */
 export async function startProcess({ processId, variables, bpmnProcessId }: StartProcessParams) {
   try {
-    // 使用Zeebe客户端创建流程实例
+    // 使用Zeebe客户端创建流程实例 processId: "pdf_generation_process",
     const result = await zeebeClient.createProcessInstance({
       bpmnProcessId: bpmnProcessId || processId,
       variables: variables,
