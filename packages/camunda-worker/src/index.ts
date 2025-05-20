@@ -1,5 +1,5 @@
 // import { ZBClient } from "zeebe-node"
-import { Camunda8, Auth } from '@camunda8/sdk'
+import { Camunda8, Auth, CamundaRestClient,Zeebe  } from '@camunda8/sdk'
 import {ConfigRoot, FileTransform} from "page2pdf_server/src";
 import axios from "axios"
 import dotenv from "dotenv"
@@ -40,16 +40,36 @@ const pdf_job = {
 
 
 //[文档] https://camunda.github.io/camunda-8-js-sdk/#oauth
-// 创建Zeebe客户端
+// https://docs.camunda.io/docs/guides/getting-started-java-spring/
+// 创建Zeebe客户端  https://www.npmjs.com/package/@camunda8/sdk  需要Node服务端环境运行的；
 // const zbc = new ZBClient(zeebeConfig)
 // const c8 = new Camunda8()
 
-// const bearerAuth = new Auth.BearerAuthProvider()
-// const c8 = new Camunda8({ oauthProvider: bearerAuth }) // All clients and workers will use bearerAuth
-// // ... after obtaining a new token
-// bearerAuth.setToken('SOMETOKENVALUE....') // Dynamically update the bearer token value
-// // const restClient = c8.getCamundaRestClient() // New REST API
-// const zeebe = c8.getZeebeGrpcApiClient()
+
+const c8 =new Camunda8({
+  ZEEBE_ADDRESS: 'localhost:26500',
+  ZEEBE_REST_ADDRESS: 'http://localhost:8080',
+  ZEEBE_CLIENT_ID: 'demo',
+  ZEEBE_CLIENT_SECRET: 'demo',
+  CAMUNDA_OAUTH_STRATEGY: 'NONE',
+  CAMUNDA_OAUTH_URL:
+      'http://localhost:8080/identity/',
+  CAMUNDA_TASKLIST_BASE_URL: 'http://localhost:8082',
+  CAMUNDA_OPERATE_BASE_URL: 'http://localhost:8081',
+  CAMUNDA_OPTIMIZE_BASE_URL: 'http://localhost:8083',
+  CAMUNDA_MODELER_BASE_URL: 'http://localhost:8070/api',
+  CAMUNDA_TENANT_ID: '', // We can override values in the env by passing an empty string value
+  CAMUNDA_SECURE_CONNECTION: false,
+})
+const restClient = c8.getCamundaRestClient() // New REST API
+const zeebe = c8.getZeebeGrpcApiClient()
+const zeebeRest = c8.getZeebeRestClient() // Deprecated
+const operate = c8.getOperateApiClient()
+const optimize = c8.getOptimizeApiClient()
+const tasklist = c8.getTasklistApiClient()
+const modeler = c8.getModelerApiClient()
+//这个报错的Error: Missing required configuration CAMUNDA_CONSOLE_BASE_URL.
+// const admin = c8.getAdminApiClient()
 
 // PDF服务的URL
 const PDF_SERVICE_URL = "http://localhost:9389/api/pdf"
@@ -62,48 +82,72 @@ async function startWorker() {
   console.log("Starting Camunda 8 Worker...")
 
   // 创建一个Worker来处理特定类型的任务
-  // const zbWorker =zeebe.createWorker({
-  //   taskHandler: myTaskHandler,
-  //   taskType: 'multi-tenant-work',
-  //   tenantIds: ['<default>', 'green'],
-  // });
+  const zbWorker =zeebe.createWorker({
+    taskHandler: myTaskHandler,
+    taskType: 'multi-tenant-work',
+    tenantIds: ['<default>', 'green'],
+  });
 
 
-  try {
-    // 从job变量中获取数据【】模板。rep.id/ no 记录+报告/有这个模板的但是可能并不要求生成pdf的。
-    // const jobVariables = job.variables
-    // console.log("Job variables:", jobVariables)
+  async function myTaskHandler(job) {
+    zbWorker.log('Task variables', job.variables)
 
-    // 发送HTTP请求到PDF服务
-    console.log(`Sending request to ${PDF_SERVICE_URL}`)
-    const response = await axios.post(PDF_SERVICE_URL, {job: pdf_job})
+    // Task worker business logic goes here
+    const updateToBrokerVariables = {
+      updatedProperty: 'newValue',
+    }
 
-    // 处理响应
-    console.log("Response received:", response.data)
 
-    // 完成job并返回结果
-    // return job.complete({
-    //   result: response.data,
-    //   success: true,
-    //   processedAt: new Date().toISOString(),
-    // })
-  } catch (error) {
-    console.error("Error processing job:", error)
+    try {
+      // 从job变量中获取数据【】模板。rep.id/ no 记录+报告/有这个模板的但是可能并不要求生成pdf的。
+      // const jobVariables = job.variables
+      // console.log("Job variables:", jobVariables)
 
-    // 如果出错，标记job为失败
-    // return job.fail(`Error processing job: ${error.message}`, 0)
+      // 发送HTTP请求到PDF服务
+      console.log(`Sending request to ${PDF_SERVICE_URL}`)
+      const response = await axios.post(PDF_SERVICE_URL, {job: pdf_job})
+
+      // 处理响应
+      console.log("Response received:", response.data)
+
+      // 完成job并返回结果
+      // return job.complete({
+      //   result: response.data,
+      //   success: true,
+      //   processedAt: new Date().toISOString(),
+      // })
+    } catch (error) {
+      console.error("Error processing job:", error)
+
+      // 如果出错，标记job为失败
+      // return job.fail(`Error processing job: ${error.message}`, 0)
+    }
+    try {
+      // 从job变量中获取数据【】模板。rep.id/ no 记录+报告/有这个模板的但是可能并不要求生成pdf的。
+      // const jobVariables = job.variables
+      // console.log("Job variables:", jobVariables)
+
+      // 发送HTTP请求到PDF服务
+      console.log(`Sending request to ${PDF_SERVICE_URL}`)
+      const response = await axios.post(PDF_SERVICE_URL, {job: pdf_job})
+
+      // 处理响应
+      console.log("Response received:", response.data)
+
+      // 完成job并返回结果
+      return job.complete({
+        result: response.data,
+        success: true,
+        processedAt: new Date().toISOString(),
+      })
+    } catch (error) {
+      console.error("Error processing job:", error)
+
+      // 如果出错，标记job为失败
+      // return job.fail(`Error processing job: ${error.message}`, 0)
+    }
+    // const res = await callExternalSystem(job.variables)
   }
-
-  // async function myTaskHandler(job) {
-  //   zbWorker.log('Task variables', job.variables)
-  //
-  //   // Task worker business logic goes here
-  //   const updateToBrokerVariables = {
-  //     updatedProperty: 'newValue',
-  //   }
-  //
-  //   // const res = await callExternalSystem(job.variables)
-  // }
 
   console.log(`Worker started and listening for jobs of type: ${WORKER_TASK_TYPE}`)
 
@@ -114,7 +158,7 @@ async function startWorker() {
 // 处理进程退出
 process.on("SIGTERM", async () => {
   console.log("Shutting down...")
-  // await zeebe.close()
+  await zeebe.close()
   process.exit(0)
 })
 
