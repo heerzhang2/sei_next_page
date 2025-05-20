@@ -30,7 +30,7 @@ export default function ProcessStarter() {
 
     try {
       const response = await startProcess({
-        processId: "pdf_generation_process",
+        processId: "genRepPdf",
         variables: formData,
       })
 

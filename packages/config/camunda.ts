@@ -1,27 +1,40 @@
-// import { ZBClient } from "zeebe-node"
-import { Camunda8, Auth, CamundaRestClient,Zeebe  } from '@camunda8/sdk'
-import {ConfigRoot, FileTransform} from "page2pdf_server/src";
-import axios from "axios"
+import { Camunda8 } from "@camunda8/sdk"
 import dotenv from "dotenv"
 
 // 加载环境变量
 dotenv.config()
+
 // Camunda 8 连接配置
 const camundaConfig = {
     CAMUNDA_AUTH_STRATEGY: process.env.CAMUNDA_AUTH_STRATEGY || "",
     CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
     CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
-    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION==="true",
-    // 如果使用自托管的Zeebe，则使用以下配置
-    // gatewayAddress: process.env.ZEEBE_GATEWAY_ADDRESS || 'localhost:26500',
-    // useTLS: false,
+    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION === "true",
+    // 其他配置...
 }
 
-const c8 =new Camunda8(camundaConfig)
+const c8 = new Camunda8(camundaConfig)
 
+// 使用 REST API 客户端代替 gRPC 客户端
+export const restClient = c8.getCamundaRestClient() // REST API
+//export const zeebe = c8.getZeebeGrpcApiClient()  报错：无法找到必要的 Protocol Buffers 定义文件zeebe.proto，使用 gRPC 客户端
 
-// const restClient = c8.getCamundaRestClient() // New REST API
-export const zeebe = c8.getZeebeGrpcApiClient()
-
-// 定义Worker任务类型
+// 定义 Worker 任务类型
 export const WORKER_TASK_TYPE = "pdf-generation-task"
+
+// 使用 REST API 创建流程实例的辅助函数
+export async function createProcessInstanceRest(bpmnProcessId: string, variables: Record<string, any>) {
+    try {
+        // 使用 REST API 创建流程实例
+        const response = await restClient.createProcessInstance({
+            processDefinitionId: bpmnProcessId,
+            // bpmnProcessId,
+            variables,
+        })
+
+        return response
+    } catch (error) {
+        console.error("Error creating process instance via REST:", error)
+        throw error
+    }
+}
