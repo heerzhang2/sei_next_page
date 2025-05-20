@@ -2,7 +2,7 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/packages/mainProj/.env" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/packages/mainProj/.env.local" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/packages/mainProj/.env.local" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/public/images/cutting-board-knife.jpg" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/public/images/food.svg" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/public/images/reportNoQR.png" charset="GBK" />
