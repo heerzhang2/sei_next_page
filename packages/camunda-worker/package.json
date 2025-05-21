@@ -14,8 +14,11 @@
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "page2pdf_server": "^1.1.0",
+    "@types/connect-timeout": "^1.9.0",
+    "@types/express": "^4.17.22",
+    "@types/morgan": "^1.9.9",
     "@types/node": "^20.10.0",
+    "page2pdf_server": "^1.1.2",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.2"

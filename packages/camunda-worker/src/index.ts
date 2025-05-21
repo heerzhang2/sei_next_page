@@ -3,6 +3,7 @@ import { Camunda8, Auth, CamundaRestClient,Zeebe  } from '@camunda8/sdk'
 import {ConfigRoot, FileTransform} from "page2pdf_server/src";
 import axios from "axios"
 import dotenv from "dotenv"
+import {ZBWorkerTaskHandler, ZeebeJob} from "@camunda8/sdk/dist/zeebe/lib/interfaces-1.0";
 
 
 // 加载环境变量
@@ -93,12 +94,12 @@ async function startWorker() {
 
   // 创建一个Worker来处理特定类型的任务    不能加上tenantIds: ['<default>', 'green'],
   const zbWorker =zeebe.createWorker({
-    taskHandler: myTaskHandler,
+    taskHandler: myTaskHandler as ZBWorkerTaskHandler,
     taskType: 'multi-tenant-work',
   });
 
-  async function myTaskHandler(job) {
-    zbWorker.log('Task variables', job.variables)
+  async function myTaskHandler(job:ZeebeJob) {
+    zbWorker.log(job.variables)    //ZB.JSON
 
     // Task worker business logic goes here
     const updateToBrokerVariables = {

@@ -1,0 +1,44 @@
+虽然 URQL 有自己的缓存机制，但在 Next.js App Router 的 Server Components 中，添加 React 的 `cache` 函数仍然是有价值的，它们解决的是不同层面的缓存问题。
+// app/lib/graphql.ts
+import { cache } from 'react';
+import { createClient } from 'urql';
+
+const client = createClient({
+  url: 'https://your-java-backend/graphql',
+  // 配置...
+});
+
+export const getUserData = cache(async (userId: string) => {
+  const { data } = await client.query(`
+    query GetUser($id: ID!) {
+      user(id: $id) {
+        id
+        name
+        role
+        permissions
+      }
+    }
+  `, { id: userId }).toPromise();
+
+  return data?.user;
+});
+
+ 在 Server Components 中使用
+// app/dashboard/page.tsx
+import { getUserData } from '@/app/lib/graphql';
+import { redirect } from 'next/navigation';
+
+export default async function Dashboard() {
+  const user = await getUserData('current-user-id');
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  if (user.role === 'admin') {
+    return <AdminDashboard user={user} />;
+  } else {
+    return <UserDashboard user={user} />;
+  }
+}
+

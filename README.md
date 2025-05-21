@@ -56,3 +56,5 @@ Worker服务会连接到Camunda 8流程引擎，等待类型为`pdf-generation-t
 5. 继续等待下一个任务
 
 确保在Camunda 8中创建的服务任务使用`pdf-generation-task`作为任务类型。
+
+Monorepo + Turbo + Next.js 官方示例：GitHub - ivesfurtado/next-express-turborepo
