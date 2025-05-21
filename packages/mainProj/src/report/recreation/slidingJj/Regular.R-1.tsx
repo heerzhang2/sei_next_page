@@ -35,11 +35,8 @@ export const ReportView = ({ rep }: any) => {
     const Component = original ? FormatOriginal : OfficialReport
     const urlPrn=`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?print=1`+(original? "&original=1" : "");
     //组装正式报告：可能有多个子报告和目录及封面的，拼装一份pdf;       【全部展开显示的报告】?print=1
-    function newJob() {
-        const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn;
-        //报告No:',
-        //                     notext,      <span id=\"titlespan\" class=title>
-        const job = {
+    const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn;
+    const pdf_job= {
             name: (original ? "记录" : "报告") + rep?.isp?.no,
             singleTab: true,
             lay: {
@@ -60,19 +57,13 @@ export const ReportView = ({ rep }: any) => {
                     frNo: 3,
                 },
             ],
-        } as ConfigRoot<FileTransform>;
-        return job;
-    }
+    } as ConfigRoot<FileTransform>;
 
-    const [handleSubmit] = usePrintPdf(newJob);
-    const toPDF = () => {
-        handleSubmit!();
-    }
     return <>
         <div id='PHEAD'/>
         <RepTitleUpdate code={storage?.eqpcod} original={original}/>
         <Component source={storage} rep={rep}/>
-        {RepFootLink({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,toPDF})}
+        {RepFootLink({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,pdf_job})}
         <div id='PTAIL'/>
     </>
 }

@@ -5,6 +5,8 @@ import {Button} from "@/components/ui";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
 import {cn} from "@/lib/utils";
+import {startProcess} from "@/actions/camunda-actions";
+import {usePrintPdf} from "@/hooks/usePrintPdf";
 
 //【报告】复用相同的。
 //很多内容相对重复，这里是报告较高层范围复用的组件；专门报告类型的可以安排在下一层次分开目录去做。
@@ -201,12 +203,12 @@ export const 落款单位地址 = () => (
 // };
 
 //重复性代码抽象抽取参数化后可复用。
-export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
+export const RepFootLink = ({ template, verId, repId, rep, pdf_job }: {
   template: string,
   verId: string,
   repId: string,
   rep: any,
-  toPDF?: ()=>void;
+  pdf_job: any,
 }) => {
     const searchParams = useSearchParams()
     const print = "1"===searchParams!.get("print")
@@ -216,6 +218,21 @@ export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
     const { action } = useParams()
     const original = "1"===searchParams!.get("original")
     const fixBtn= !action;
+    const [handleSubmit] = usePrintPdf(pdf_job);
+    const toPDF = () => {
+        handleSubmit!();
+    }
+    const handlePdfFlow = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const response = await startProcess({
+            processId: "genRepPdf",
+            variables: {
+                documentType: pdf_job,
+                original,
+            },
+        })
+        // setResult(response)
+    }
   return (
       <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
           <Link href="/packages/mainProj/public" passHref
@@ -267,6 +284,7 @@ export const RepFootLink = ({ template, verId, repId, rep, toPDF }: {
                   {print && <>
                       <Button variant="outline" onClick={() => window.print()}>打印预览</Button>
                       <Button variant="outline" onClick={toPDF}>转为PDF</Button>
+                      <Button variant="outline" onClick={handlePdfFlow}>转Pdf流程</Button>
                   </>}
                 </>
               }

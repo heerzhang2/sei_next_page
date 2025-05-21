@@ -4,19 +4,48 @@ import type React from "react"
 
 import { useState } from "react"
 import { startProcess } from "@/actions/camunda-actions"
-
+import {ConfigRoot, FileTransform} from "page2pdf_server/src";
+/*@deprecated
+* */
 export default function ProcessStarter() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const original=false
+  const repNo="" //rep?.isp?.no;
+  const urlPrn=""// `/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?print=1`+(original? "&original=1" : "");
+  const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn;
+
+  const pdf_job = {
+    name: (original ? "记录" : "报告") + repNo,
+    singleTab: true,
+    lay: {
+      head: [
+        '<div style=\\"position: relative; width:100%; text-align:center; border-bottom: 1pt solid #eeeeee; margin: 3.5mm 0px 10px; font-size: 10pt\\">',
+        `<div style=\\"position: absolute; width:100%; text-align:left; bottom: 5px; left: 50px;\\">报告No: ${repNo}</div></div>`
+      ],
+      foot: [
+        '<div style=\\"position: relative; width: 100%; text-align: left; border-top: 1pt solid #eeeeee; margin:  10px 0px 1.5mm; font-size: 8pt;\\">',
+        '<div style=\\"position: absolute; width: 100%; text-align: center; top: 5px;\\">共<span>~pageNumber~</span>页 / 第<span>~totalPages~</span>页</div></div>'
+      ],
+    },
+    files: [
+      {
+        url,
+        out: `tmp-${repNo}` + (original ? "-O" : ""),
+        headFrom: 3,
+        frNo: 3,
+      },
+    ],
+  } as ConfigRoot<FileTransform>;
 
   // 表单数据
   const [formData, setFormData] = useState({
     customerId: "12345",
-    documentType: "invoice",
-    priority: "normal",
+    documentType: pdf_job,
+    original: false,
   })
-
+  //表单就没必要了，直接启动流程！
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -68,29 +97,27 @@ export default function ProcessStarter() {
 
           <div>
             <label htmlFor="documentType" className="block text-sm font-medium text-gray-700 mb-1">
-              文档类型
+              报告ID
             </label>
-            <select
-              id="documentType"
-              name="documentType"
-              value={formData.documentType}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="invoice">发票</option>
-              <option value="contract">合同</option>
-              <option value="report">报告</option>
-            </select>
+            <input
+                type="text"
+                id="documentType"
+                name="documentType"
+                value={formData.documentType}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
           </div>
 
           <div>
-            <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
-              优先级
+            <label htmlFor="original" className="block text-sm font-medium text-gray-700 mb-1">
+             原始记录吗
             </label>
             <select
-              id="priority"
-              name="priority"
-              value={formData.priority}
+              id="original"
+              name="original"
+              value={formData.original as any}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >

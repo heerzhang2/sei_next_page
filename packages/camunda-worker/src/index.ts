@@ -19,36 +19,6 @@ const camundaConfig = {
   // useTLS: false,
 }
 
-const original=false
-//rep?.isp?.no
-const repNo='sdfsdf222234'
-// const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn;
-const url="dfgdfg444444222222//uiiy"
-//报告No:',
-//                     notext,      <span id=\"titlespan\" class=title>
-const pdf_job = {
-  name: (original ? "记录" : "报告") + repNo,
-  singleTab: true,
-  lay: {
-    head: [
-      '<div style=\\"position: relative; width:100%; text-align:center; border-bottom: 1pt solid #eeeeee; margin: 3.5mm 0px 10px; font-size: 10pt\\">',
-      `<div style=\\"position: absolute; width:100%; text-align:left; bottom: 5px; left: 50px;\\">报告No: ${repNo}</div></div>`
-    ],
-    foot: [
-      '<div style=\\"position: relative; width: 100%; text-align: left; border-top: 1pt solid #eeeeee; margin:  10px 0px 1.5mm; font-size: 8pt;\\">',
-      '<div style=\\"position: absolute; width: 100%; text-align: center; top: 5px;\\">共<span>~pageNumber~</span>页 / 第<span>~totalPages~</span>页</div></div>'
-    ],
-  },
-  files: [
-    {
-      url,
-      out: `tmp-${repNo}` + (original ? "-O" : ""),
-      headFrom: 3,
-      frNo: 3,
-    },
-  ],
-} as ConfigRoot<FileTransform>;
-
 
 //[文档] https://camunda.github.io/camunda-8-js-sdk/#oauth
 // https://docs.camunda.io/docs/guides/getting-started-java-spring/
@@ -95,65 +65,37 @@ async function startWorker() {
   // 创建一个Worker来处理特定类型的任务    不能加上tenantIds: ['<default>', 'green'],
   const zbWorker =zeebe.createWorker({
     taskHandler: myTaskHandler as ZBWorkerTaskHandler,
-    taskType: 'multi-tenant-work',
+    taskType: WORKER_TASK_TYPE,
   });
 
   async function myTaskHandler(job:ZeebeJob) {
     zbWorker.log(job.variables)    //ZB.JSON
-
-    // Task worker business logic goes here
-    const updateToBrokerVariables = {
-      updatedProperty: 'newValue',
-    }
-
-
     try {
-      // 从job变量中获取数据【】模板。rep.id/ no 记录+报告/有这个模板的但是可能并不要求生成pdf的。
-      // const jobVariables = job.variables
-      // console.log("Job variables:", jobVariables)
-
       // 发送HTTP请求到PDF服务
       console.log(`Sending request to ${PDF_SERVICE_URL}`)
-      const response = await axios.post(PDF_SERVICE_URL, {job: pdf_job})
-
-      // 处理响应
+      // await axios.post(PDF_SERVICE_URL, {job: job.variables?.documentType})
+      const response = await axios.post(PDF_SERVICE_URL, job.variables?.documentType)
+      const {message: ack, data:desc} =response.data
+      //处理响应【考虑功能添加点】 转换pdf本地文件路径 +电子盖章 +然后上传到OSS 文件访问路径
       console.log("Response received:", response.data)
-
+      //成功response=: { status: 200, message: 'OK', data: { result: '成功！' } }    文件预先定义的==系统安装的路径：C:\page2pdf-server\pdfs +/files【0】.out/
+      const result= ack==="OK";
+      //步骤2： +电子盖章
+      //步骤3： 然后上传到OSS 文件访问路径
       // 完成job并返回结果
-      // return job.complete({
-      //   result: response.data,
-      //   success: true,
-      //   processedAt: new Date().toISOString(),
-      // })
+      if(result)
+        return job.complete({
+          result: true,
+          ossFile: "/dfMy-sd/pdf/2211.sdfdsfWWWd",
+          original: job.variables?.original,
+          processedAt: new Date().toISOString(),
+        })
+      else
+        return job.fail(`Error processing job: ${desc}`, 0)
     } catch (error) {
       console.error("Error processing job:", error)
-
       // 如果出错，标记job为失败
-      // return job.fail(`Error processing job: ${error.message}`, 0)
-    }
-    try {
-      // 从job变量中获取数据【】模板。rep.id/ no 记录+报告/有这个模板的但是可能并不要求生成pdf的。
-      // const jobVariables = job.variables
-      // console.log("Job variables:", jobVariables)
-
-      // 发送HTTP请求到PDF服务
-      console.log(`Sending request to ${PDF_SERVICE_URL}`)
-      const response = await axios.post(PDF_SERVICE_URL, {job: pdf_job})
-
-      // 处理响应
-      console.log("Response received:", response.data)
-
-      // 完成job并返回结果
-      return job.complete({
-        result: response.data,
-        success: true,
-        processedAt: new Date().toISOString(),
-      })
-    } catch (error) {
-      console.error("Error processing job:", error)
-
-      // 如果出错，标记job为失败
-      // return job.fail(`Error processing job: ${error.message}`, 0)
+      return job.fail(`Error processing job: ${error}`, 0)
     }
     // const res = await callExternalSystem(job.variables)
   }

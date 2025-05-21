@@ -12,7 +12,7 @@
     "baseUrl": ".",
     "esModuleInterop": true,
     "paths": {
-      "page2pdf-server/*": ["../../../page2pdf-server/src/*"] // 路径映射
+//      "page2pdf-server/*": ["../../../page2pdf-server/src/*"] // 路径映射
     }
   },
   "include": ["src/**/*"],
