@@ -59,11 +59,16 @@ export const ReportView = ({ rep }: any) => {
             ],
     } as ConfigRoot<FileTransform>;
 
+    const [handleSubmit] = usePrintPdf(pdf_job);
+    const toPDF = () => {
+        handleSubmit!();
+    }
+
     return <>
         <div id='PHEAD'/>
         <RepTitleUpdate code={storage?.eqpcod} original={original}/>
         <Component source={storage} rep={rep}/>
-        {RepFootLink({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,pdf_job})}
+        {RepFootLink({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,pdf_job,toPDF})}
         <div id='PTAIL'/>
     </>
 }

@@ -26,7 +26,7 @@ async function createPrintJob(url: string, { arg }: { arg: { job: ConfigRoot<Fil
 
 /**对接文书打印转换器，web打印构建起最终答应的pdf
  * */
-export function usePrintPdf(processFn: Function) {
+export function usePrintPdf(prjob: ConfigRoot<FileTransform>) {
     // 使用 useSWRMutation 代替 useMutation
     const { trigger, isMutating } = useSWRMutation("http://localhost:9389/api/pdf", createPrintJob, {
         onSuccess: (data) => {
@@ -38,12 +38,11 @@ export function usePrintPdf(processFn: Function) {
     })
     const handleSubmit = useCallback(
         function handleSubmit() {
-            if (!processFn || typeof processFn !== "function") return
-            const job = processFn()
-            trigger({ job })
+            if(!prjob) return
+            trigger({ job: prjob })
         },
-        [processFn, trigger],
+        [prjob, trigger],
     )
-    if (!processFn || typeof processFn !== "function") return [undefined]
+    if (!prjob) return [undefined]
     return [handleSubmit]
 }
