@@ -574,3 +574,10 @@ CommonReportData: report= {
 我要准备一个后端新工程，主要任务是从Camunda 8版本的流程引擎以Woker方式登录守候新的Job，接收一个流程Job任务就启动一个业务请求，发送一个请求包到http://localhost:9389/api/pdf网址，等待对方应答完成，
 这个Job处理才算结束，最后应答Camunda 8流程引擎完成当前Job的处理状态，整个程序功能就是如此，接着等待下一个新的Job。我的要求是新的Node后端服务形式，我的项目要求使用Yarn Workspaces的Monorepo 实现方案，作为一个目录packages底下的子目录工程形式出现和发布的，
 能给我一个实现的例子吗
+jilu: 12/90;
+123/896；
+
+rep:  75/248;
+75/243；
+48/244： 提前Drawtext,后面copyAddpage(i++);
+
