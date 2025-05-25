@@ -23,7 +23,7 @@ export default function Error({
       <div className="mt-8 space-x-4">
         <Button onClick={() => reset()}>重试</Button>
         <Button variant="outline" asChild>
-          <Link href="/packages/mainProj/public">返回首页</Link>
+          <Link href="/">返回首页</Link>
         </Button>
       </div>
     </div>
