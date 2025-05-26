@@ -1,0 +1,44 @@
+PS C:\page2pdf-server\pdfs> D:\soft\poppler-24.08.0\Library\bin\pdffonts.exe TEMP-Rep4.pdf
+Syntax Warning: Mismatch between font type and embedded font file
+name                                 type              encoding         emb sub uni object ID
+------------------------------------ ----------------- ---------------- --- --- --- ---------
+YBAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes     14  0
+XBAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes     54  0
+VBAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes     83  0
+UBAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes     91  0
+DAAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    113  0
+PCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    118  0
+OCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    124  0
+NCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    138  0
+IBAAAA+ArialMT                       CID TrueType      Identity-H       yes yes yes    143  0
+HBAAAA+Noto-Sans-SC-Thin             Type 3            Custom           yes yes yes    148  0
+HBAAAA+Noto-Sans-SC-Thin             Type 3            Custom           yes yes yes    153  0
+SCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    157  0
+RCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    164  0
+QCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    180  0
+SourceHanSansCN-Regular-5824         CID Type 0C (OT)  Identity-H       yes no  yes    189  0
+TBAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    194  0
+SBAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    229  0
+RBAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    242  0
+CAAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    295  0
+BAAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    387  0
+MCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    382  0
+LCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    509  0
+KCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    514  0
+JCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    519  0
+ICAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    524  0
+UCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    529  0
+TCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    534  0
+CCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    539  0
+BCAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    557  0
+ACAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    566  0
+ZBAAAA+Noto-Sans-SC-Thin-Thin        Type 3            Custom           yes yes yes    602  0
+PS C:\page2pdf-server\pdfs>
+
+
+
+
+
+
+
+

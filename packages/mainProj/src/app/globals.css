@@ -8,10 +8,54 @@
 */
 @config "../../tailwind.config.ts";
 
-@theme {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme inline {
+  /* 中文字体配置 - 优先使用思源字体 */
+  --font-sans: "Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "PingFang SC", "Hiragino Sans GB",
+  "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "SimSun", "Times New Roman",
+  serif;
+
+  --font-mono: "Noto Sans Mono", "Source Code Pro", "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Consolas",
+  monospace;
+
+  /* 字体渲染优化 */
+  --font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  --font-variant-ligatures: common-ligatures;
+
+  /* 行高配置 */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
 }
+
+/* 全局字体渲染优化 */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: var(--font-feature-settings);
+  font-variant-ligatures: var(--font-variant-ligatures);
+}
+
+/* 中文字体特殊优化 */
+html {
+  font-family: var(--font-sans);
+  line-height: var(--line-height-normal);
+}
+
+/* 确保中文字符正确显示 */
+:lang(zh-CN) {
+  font-family: var(--font-sans);
+  word-break: break-all;
+  word-wrap: break-word;
+}
+
+/* 英文字体优化 */
+:lang(en) {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
 
 /*试验首页面*/
 .custom-grid-rows {
