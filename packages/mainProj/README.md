@@ -36,4 +36,31 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 确保Server Action只返回必要的数据，不包含任何口令凭证;在Server Action中添加用户认证=限制哪些用户可以启动特定流程;
 使用`"use server"`指令的文件中的代码在构建时会被分离;客户端代码只能调用这些函数，但看不到其实现细节;
+如何配置思源字体系列并确保跨平台兼容性。核心配置要点：
+字体优先级设置：
 
+优先使用 Noto Sans SC (思源黑体)
+回退到系统内置中文字体
+避免商业字体如微软雅黑
+Tailwind CSS 4.1 配置：
+
+使用新的 @theme inline 语法
+配置 CSS 变量进行字体管理
+支持响应式字体大小
+跨平台兼容性：
+
+Windows: 自动下载 Google Fonts
+macOS: 回退到 PingFang SC
+Linux: 使用 Noto 字体
+移动设备: 系统内置字体
+性能优化：
+
+使用 next/font/google 优化加载
+字体预加载和 display: swap
+减少字体闪烁 (FOUT)
+渲染优化：
+
+抗锯齿和字体平滑
+合适的行高和字间距
+中英文混排优化
+这个配置确保了在所有主流操作系统上都能获得一致的显示效果，同时避免了商业字体的版权问题。
