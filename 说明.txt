@@ -644,6 +644,7 @@ fontforge -lang=ff -c 'Open("SourceHanSansCN-Regular.otf"); Generate("SourceHanS
 采用 otfccbuild 工具 https://github.com/caryll/otfcc/releases
 # 步骤 1：转储 OTF 为 JSON；       ./otfccdump.exe SourceHanSansCN-Regular.otf > font.json
 # 步骤 2：构建为 TTF；      ./otfccbuild.exe -o SourceHanSansCN-Regular.ttf font.json
-【解决乱码版本】win11自带NotoSansSC-VF.ttf有点模糊
+【解决乱码版本】win11自带NotoSansSC-VF.ttf有点模糊   NotoSerifSC-VF.ttf
 win11自带的dir C:\Windows\Fonts\NotoSansSC-VF.ttf
 gswin64c -o 报告123456-CMP.pdf -sDEVICE=pdfwrite -dEmbedAllFonts=false -dSubsetFonts=true -sFONTPATH="C:\Windows\Fonts" -dPDFSETTINGS=/prepress  TEMP-Rep4.pdf
+C:\Windows\Fonts\AlibabaPuHuiTi-3-55-Regular.ttf
