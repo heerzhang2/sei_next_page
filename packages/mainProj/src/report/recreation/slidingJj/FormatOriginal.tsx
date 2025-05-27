@@ -33,7 +33,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                     <div className="mx-auto md:m-2 text-right md:flex md:justify-end md:flex-wrap">
                         <span className="underline">FJJ/YB-1009-1-2024</span>
                     </div>
-                    <h1 className="text-center mt-8 text-3xl md:print:text-5xl">
+                    <h1 className="text-center mt-8 text-3xl print:text-4xl">
                       大型游乐设施监督检验原始记录
                     </h1>
                     <span className="block text-center text-xl mt-4">（适用于滑行车类、架空游览车类）</span>
