@@ -610,7 +610,7 @@ D:\soft\poppler-24.08.0\Library\bin\pdffonts.exe
 
 Ghostscript压缩工具
 gswin64c -o 报告123456-Out.pdf -sDEVICE=pdfwrite -dEmbedAllFonts=true -dSubsetFonts=false 报告123456.pdf
-D:\soft\poppler-24.08.0\Library\bin\pdffonts.exe 报告123456-Out.pdf
+
 gswin64c -o ASDF222-Out.pdf -sDEVICE=pdfwrite -dEmbedAllFonts=true -dSubsetFonts=false ASDF222.pdf
 pdffonts 确保 emb=yes 且 encoding=Identity-H。
 gswin64c -o ASDF222-Out.pdf -sDEVICE=pdfwrite -dEmbedAllFonts=true -dSubsetFonts=false -sFONTPATH="C:\Windows\Fonts" -dPDFSETTINGS=/prepress  ASDF222.pdf
@@ -646,5 +646,6 @@ fontforge -lang=ff -c 'Open("SourceHanSansCN-Regular.otf"); Generate("SourceHanS
 # 步骤 2：构建为 TTF；      ./otfccbuild.exe -o SourceHanSansCN-Regular.ttf font.json
 【解决乱码版本】win11自带NotoSansSC-VF.ttf有点模糊   NotoSerifSC-VF.ttf
 win11自带的dir C:\Windows\Fonts\NotoSansSC-VF.ttf
-gswin64c -o 报告123456-CMP.pdf -sDEVICE=pdfwrite -dEmbedAllFonts=false -dSubsetFonts=true -sFONTPATH="C:\Windows\Fonts" -dPDFSETTINGS=/prepress  TEMP-Rep4.pdf
+D:\soft\poppler-24.08.0\Library\bin\pdffonts.exe
+gswin64c -o 报告123456.pdf -sDEVICE=pdfwrite -dEmbedAllFonts=false -dSubsetFonts=true -sFONTPATH="C:\Windows\Fonts" -dPDFSETTINGS=/prepress  报告123456.pdf
 C:\Windows\Fonts\AlibabaPuHuiTi-3-55-Regular.ttf

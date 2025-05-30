@@ -25,6 +25,9 @@ export default function DepTask() {
                                     千里马（+平台）</Link>
                             </li>
                             <li className="mb-2">
+                                <Link href="https://www.zbytb.com/zb/search.php?kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">标与采 招标与采购网</Link>
+                            </li>
+                            <li className="mb-2">
                                 <Link href="https://www.chinabidding.cc/search/index.html?page=1&keyword=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&h_lx=9&h_province=0&vague=0&date=90&search_field=1">
                                     采购招标网</Link>
                             </li>
@@ -33,16 +36,10 @@ export default function DepTask() {
                                     中国政府采购</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://www.arrbid.com/bidquery/key_%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87?timetype=3&keywordtype=1&showtype=1">立达标讯(+金额)</Link>
-                            </li>
-                            <li className="mb-2">
                                 <Link href="https://deal.ggzy.gov.cn/ds/deal/dealList.jsp?HEADER_DEAL_TYPE=02">全国公共资源+特种设备+10天</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://zb.yfb.qianlima.com/yfbsemsite/mesinfo/zbpglist">乙 方 宝</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="https://www.zbytb.com/zb/search.php?kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">标与采 招标与采购网</Link>
+                                <Link href="https://www.arrbid.com/bidquery/key_%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87?timetype=3&keywordtype=1&showtype=1">立达标讯(+金额)</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://search.bidcenter.com.cn/search?keywords=%e7%89%b9%e7%a7%8d%e8%ae%be%e5%a4%87&type=1&mod=0&tag=1">采招网（/招标公告）+标题搜索</Link>
@@ -52,16 +49,13 @@ export default function DepTask() {
                     <li className="mb-2 break-inside-avoid-column">特种设备 各省招标网。
                         <ol className="p-4 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
                             <li className="mb-2">
-                                <Link href="https://www.ccgp-shaanxi.gov.cn/cms-sx/site/shanxi/xxgg/index.html?xxggType=123&noticeType=00101">陕西省政府采购网</Link>
+                                <Link href="https://www.ccgp-chongqing.gov.cn/search/%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">重庆市政府采购网</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://hljcg.hlj.gov.cn/maincms-web/fullSearchingHlj?searchKey=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">黑龙江政府采购</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="http://ggzy.hebei.gov.cn/hbggfwpt/search/fullsearch.html?wd=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C">河北省公共资源交易平台</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="http://www.ccgp-liaoning.gov.cn/portalindex?currentKey=pubAnnounce&tabKey=0">辽宁政府采购网</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="http://www.lnggzy.gov.cn/lnggzycs2/showinfo/jyxxsearch.aspx">公共资源交易平台（辽宁省）</Link>
@@ -83,9 +77,6 @@ export default function DepTask() {
                             </li>
                             <li className="mb-2">
                               <Link href="https://ggzyjy.fzggw.nx.gov.cn/dzjy/001001/001001002/trade_infomation.html">宁夏公共资源交易网</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="https://www.ccgp-chongqing.gov.cn/search/%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">重庆市政府采购网</Link>
                             </li>
                         </ol>
                     </li>
