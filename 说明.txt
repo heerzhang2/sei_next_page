@@ -2,6 +2,7 @@ dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | 
 CMD \sei_next_page\mainProj>  yarn sei_code_tools --help
 PowerShell 执行 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 生产部署 PS D:\home\sei_next_page\mainProj> npm start       光标导致运行暂停
+yarn切换 yarn config set registry https://r.cnpmjs.org/
 CSS不能直接添加/删除类名，
 grid布局对于配置要求很高，一点毛病导致不达到预期。默认1X1行列；@5xl:row-span-3元素其位置前已布局的水平对齐空白区还是会保留的，其后面空间才会紧凑地利用。
 ort { fetchQuery, commitMutation, graphql } from 'relay-runtime';
@@ -649,3 +650,14 @@ win11自带的dir C:\Windows\Fonts\NotoSansSC-VF.ttf
 D:\soft\poppler-24.08.0\Library\bin\pdffonts.exe
 gswin64c -o 报告123456.pdf -sDEVICE=pdfwrite -dEmbedAllFonts=false -dSubsetFonts=true -sFONTPATH="C:\Windows\Fonts" -dPDFSETTINGS=/prepress  报告123456.pdf
 C:\Windows\Fonts\AlibabaPuHuiTi-3-55-Regular.ttf
+        lay: {
+            head: [
+                '<div style="position: relative; width:100%; text-align:center; border-bottom: 1pt solid #eeeeee; margin: 3.5mm 0px 10px; font-size: 11pt">',
+                `<div style="position: absolute; width:100%; text-align:left; bottom: 5px; left: 50px;">报告No: ${rep?.isp?.no}</div></div>`
+            ],
+        },
+warning express-pino-logger@7.0.0: use pino-http instead
+warning fontmin > buffer-to-vinyl > uuid@2.0.3: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+error Package "page2pdf_server" refers to a non-existing file '"C:\\types"'.
+info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.
+PS C:\page2pdf-server>

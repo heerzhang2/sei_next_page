@@ -40,29 +40,35 @@ export const ReportView = ({ rep }: any) => {
         name: (original ? "记录" : "报告") + rep?.isp?.no,
         lay: {
             head: [
-                '<div style=\\"position: relative; width:100%; text-align:center; border-bottom: 1pt solid #eeeeee; margin: 3.5mm 0px 10px; font-size: 10pt\\">',
-                `<div style=\\"position: absolute; width:100%; text-align:left; bottom: 5px; left: 50px;\\">报告No: ${rep?.isp?.no}</div></div>`
-            ],
-            foot: [
-                '<div style=\\"position: relative; width: 100%; text-align: left; border-top: 1pt solid #eeeeee; margin:  10px 0px 1.5mm; font-size: 8pt;\\">',
-                '<div style=\\"position: absolute; width: 100%; text-align: center; top: 5px;\\">共<span>~pageNumber~</span>页 / 第<span>~totalPages~</span>页</div></div>'
-            ],
+`<div class="parent">
+  <div class="child">报告No: ${rep?.isp?.no}</div>
+</div>
+<style>
+  .parent {
+    position: relative;
+    width: 100%;
+    border-bottom: 1px solid #eeeeee;
+    margin: 8px 15px 0;
+    font-size: 12px;
+  }
+  .child {
+    position: absolute;
+    width: 100%;
+    text-align: left;
+    bottom: 0;
+    left: 30px;
+  }
+</style>` ],
         },
         files: [
             {
-                url: "https://www.bse.cn/disclosure/2025/2025-05-23/1747997538_165687.pdf",
-                type: "linkPdf",
-                out: "174799-Zaogus"
-            },
-            {
                 url,
                 out: `tmp-${rep?.isp?.no}` + (original ? "-O" : ""),
-                headFrom: 3,
                 frNo: 3,
-            },
+                cRange: "1-2"
+            }
         ],
-    } as unknown as ConfigRoot<FileTransform>;
-
+    } as ConfigRoot<FileTransform>;
     const [handleSubmit] = usePrintPdf(pdf_job);
     const toPDF = () => {
         handleSubmit!();

@@ -5941,6 +5941,11 @@ page2pdf_server@^1.1.3:
   resolved "https://registry.npmjs.org/page2pdf_server/-/page2pdf_server-1.1.3.tgz#f0f4459dff27cb3221746df8d809ef90bef01b16"
   integrity sha512-eaeCYZwea7Hx8KNjd8VczQrtqE4MrLKYYccDLd2kB2k/wKm3fjosJ4dTInSGyTumKp1jWxRwChYPgx//FyFDQw==
 
+page2pdf_server@^2.0.0:
+  version "2.0.0"
+  resolved "https://r.cnpmjs.org/page2pdf_server/-/page2pdf_server-2.0.0.tgz#2f045ce8a9785f2c94b23a9f45bf99cb90ba75e6"
+  integrity sha512-/ZFvr9wxjoqEC0l7RM81VpIS6fWTV+A8GNlNlttk/7twpW720qudLMYLaFspptt82gqruhVVnOeANGxasA0hNA==
+
 parent-module@^1.0.0:
   version "1.0.1"
   resolved "https://registry.npmjs.org/parent-module/-/parent-module-1.0.1.tgz"

@@ -30,6 +30,16 @@ To learn more about Next.js, take a look at the following resources:
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
 ## Deploy on Vercel
+打印 lay: {
+head: [
+'<div style="position: relative; width:100%; text-align:center; border-bottom: 1pt solid #eeeeee; margin: 3.5mm 0px 10px; font-size: 10pt">',
+`<div style="position: absolute; width:100%; text-align:left; bottom: 5px; left: 50px;">报告No: ${rep?.isp?.no}</div></div>`
+],
+foot: [
+'<div style="position: relative; width: 100%; text-align: left; border-top: 1pt solid #eeeeee; margin:  10px 0px 1.5mm; font-size: 8pt;">',
+'<div style="position: absolute; width: 100%; text-align: center; top: 5px;">共<span>~pageNumber~</span>页 / 第<span>~totalPages~</span>页</div></div>'
+],
+},
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 

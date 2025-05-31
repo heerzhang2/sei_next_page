@@ -31,7 +31,7 @@ export function usePrintPdf(prjob: ConfigRoot<FileTransform>) {
     const { trigger, isMutating } = useSWRMutation("http://localhost:9389/api/pdf", createPrintJob, {
         onSuccess: (data) => {
             toast.success("打印转换器应答", {description: "" + data?.data?.result+"\r\n生成pdf在"+
-                    (data?.data?.dir? "子目录\r\n"+data?.data?.dir : "工作目录")
+                     "子目录\r\n"+data?.data?.dir
             })
         },
         onError: (error) => {
