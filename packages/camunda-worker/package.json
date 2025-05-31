@@ -11,10 +11,18 @@
   },
   "dependencies": {
     "@camunda8/sdk": "^8.7.8",
+    "@types/minio": "^7.1.0",
     "axios": "^1.6.2",
-    "dotenv": "^16.3.1"
+    "crypto": "^1.0.1",
+    "dotenv": "^16.3.1",
+    "fs-extra": "^11.3.0",
+    "minio": "^8.0.5",
+    "path": "^0.12.7",
+    "uuid": "^7.0.3"
   },
   "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "@types/fs-extra": "^11.0.4",
     "@types/connect-timeout": "^1.9.0",
     "@types/express": "^4.17.22",
     "@types/morgan": "^1.9.9",

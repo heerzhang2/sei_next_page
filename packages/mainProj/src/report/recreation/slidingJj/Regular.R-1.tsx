@@ -63,7 +63,7 @@ export const ReportView = ({ rep }: any) => {
         files: [
             {
                 url,
-                out: `tmp-${rep?.isp?.no}` + (original ? "-O" : ""),
+                out: `tmp-${rep?.isp?.no}` + (original ? "-o" : ""),
                 frNo: 3,
                 cRange: "1-2"
             }

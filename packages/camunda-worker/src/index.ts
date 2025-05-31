@@ -76,22 +76,23 @@ async function startWorker() {
       // await axios.post(PDF_SERVICE_URL, {job: job.variables?.documentType})
       const response = await axios.post(PDF_SERVICE_URL, job.variables?.documentType)
       const {message: ack, data:desc} =response.data
+      const {result, dir} =desc
       //处理响应【考虑功能添加点】 转换pdf本地文件路径 +电子盖章 +然后上传到OSS 文件访问路径
       console.log("Response received:", response.data)
-      //成功response=: { status: 200, message: 'OK', data: { result: '成功！' } }    文件预先定义的==系统安装的路径：C:\page2pdf-server\pdfs +/files【0】.out/
-      const result= ack==="OK";
-      //步骤2： +电子盖章
-      //步骤3： 然后上传到OSS 文件访问路径
-      // 完成job并返回结果
-      if(result)
-        return job.complete({
+      //成功response=: { status: 200, message: 'OK', data: { result: 'Success',dir } }    文件预先定义的==系统安装的路径：C:\page2pdf-server\pdfs +/files【0】.out/
+      const finish= result==="Success";
+      if(!finish)  return job.fail(`转换失败`)
+      //可能+步骤2： +水印,电子盖章;
+      //可能+步骤3： 然后上传到OSS 文件访问路径;
+      //不经过java后端服务器代理传递，不需要再多一次复制了。直接联系OSS集群。
+
+      //完成job并返回结果：
+      return job.complete({
           result: true,
           ossFile: "/dfMy-sd/pdf/2211.sdfdsfWWWd",
           original: job.variables?.original,
           processedAt: new Date().toISOString(),
         })
-      else
-        return job.fail(`Error processing job: ${desc}`, 0)
     } catch (error) {
       console.error("Error processing job:", error)
       // 如果出错，标记job为失败

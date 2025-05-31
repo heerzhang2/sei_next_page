@@ -283,9 +283,9 @@ export const RepFootLink = ({ template, verId, repId, rep, pdf_job, toPDF }: {
                       {print ? "浏览模式" : "打印模式"}
                   </Button>
                   {print && <>
-                      <Button variant="outline" onClick={() => window.print()}>打印预览</Button>
-                      <Button variant="outline" onClick={toPDF}>转为PDF</Button>
-                      <Button variant="outline" onClick={handlePdfFlow}>转Pdf流程</Button>
+                      <Button variant="outline" onClick={() => window.print()}>预览</Button>
+                      <Button variant="outline" onClick={toPDF}>本机转pdf</Button>
+                      <Button variant="outline" onClick={handlePdfFlow}>后端转pdf</Button>
                   </>}
                 </>
               }
