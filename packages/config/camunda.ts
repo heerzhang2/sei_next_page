@@ -1,6 +1,8 @@
 import { Camunda8 } from "@camunda8/sdk"
 import dotenv from "dotenv"
 
+//文档： https://camunda.github.io/camunda-8-js-sdk/
+//https://docs.camunda.io/docs/apis-tools/working-with-apis-tools/
 // 加载环境变量
 dotenv.config()
 
@@ -14,6 +16,7 @@ const camundaConfig = {
 }
 
 const c8 = new Camunda8(camundaConfig)
+console.log(`当前camundaConfig:`,camundaConfig);
 
 // 使用 REST API 客户端代替 gRPC 客户端
 export const restClient = c8.getCamundaRestClient() // REST API

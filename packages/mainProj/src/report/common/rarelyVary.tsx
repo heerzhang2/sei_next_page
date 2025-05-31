@@ -7,6 +7,10 @@ import {useParams, usePathname, useRouter, useSearchParams} from "next/navigatio
 import {cn} from "@/lib/utils";
 import {startProcess} from "@/actions/camunda-actions";
 import {usePrintPdf} from "@/hooks/usePrintPdf";
+import {ErrorFallback} from "@/components/error-fallback";
+import {ErrorBoundary} from "react-error-boundary";
+import {createProcessInstanceRest} from "../../../../config/camunda";
+import {toast} from "sonner";
 
 //【报告】复用相同的。
 //很多内容相对重复，这里是报告较高层范围复用的组件；专门报告类型的可以安排在下一层次分开目录去做。
@@ -225,13 +229,15 @@ export const RepFootLink = ({ template, verId, repId, rep, pdf_job, toPDF }: {
     // }
     const handlePdfFlow = async (e: React.FormEvent) => {
         e.preventDefault()
-        const response = await startProcess({
+        const {success,error} = await startProcess({
             processId: "genRepPdf",
             variables: {
                 documentType: pdf_job,
                 original,
             },
         })
+        if(!success)
+            toast.error("申请失败了", {description: error,})
         // setResult(response)
     }
   return (

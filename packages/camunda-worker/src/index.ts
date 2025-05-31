@@ -4,6 +4,8 @@ import {ConfigRoot, FileTransform} from "page2pdf_server/src";
 import axios from "axios"
 import dotenv from "dotenv"
 import {ZBWorkerTaskHandler, ZeebeJob} from "@camunda8/sdk/dist/zeebe/lib/interfaces-1.0";
+import {FileUploader} from "./uploader";
+import {startProcess} from "main_proj/src/actions/camunda-actions";
 
 
 // 加载环境变量
@@ -41,7 +43,8 @@ const camundaConfig = {
 //   CAMUNDA_SECURE_CONNECTION: false,
 // }
 
-const c8 =new Camunda8(camundaConfig)
+const c8 =new Camunda8(camundaConfig as any)
+console.log(`当前camundaConfig:`,camundaConfig);
 // const restClient = c8.getCamundaRestClient() // New REST API
 const zeebe = c8.getZeebeGrpcApiClient()
 // const zeebeRest = c8.getZeebeRestClient() // Deprecated
@@ -81,11 +84,17 @@ async function startWorker() {
       console.log("Response received:", response.data)
       //成功response=: { status: 200, message: 'OK', data: { result: 'Success',dir } }    文件预先定义的==系统安装的路径：C:\page2pdf-server\pdfs +/files【0】.out/
       const finish= result==="Success";
-      if(!finish)  return job.fail(`转换失败`)
-      //可能+步骤2： +水印,电子盖章;
-      //可能+步骤3： 然后上传到OSS 文件访问路径;
-      //不经过java后端服务器代理传递，不需要再多一次复制了。直接联系OSS集群。
-
+      if(!finish)  { // @ts-ignore
+          job.fail(`Error processing job:`, 0).then(r => 0)
+                //可能+步骤2： +水印,电子盖章;
+                //可能+步骤3： 然后上传到OSS 文件访问路径;
+                //不经过java后端服务器代理传递，不需要再多一次复制了。直接联系OSS集群。
+                    // 执行流程
+                    (async () => {
+                        const uploader = new FileUploader();
+                        await uploader.batchUpload();
+                    })();
+      }
       //完成job并返回结果：
       return job.complete({
           result: true,
@@ -119,3 +128,23 @@ startWorker().catch((err) => {
   console.error("Failed to start worker:", err)
   process.exit(1)
 })
+
+const variables={
+    customerId: "12345",
+        documentType: {},
+        original: false,
+};
+
+(async () => {
+// @ts-ignore
+    try {
+        const response = await startProcess({
+            processId: "genRepPdf",
+            variables: variables,
+        })
+
+
+    } catch (err: any) {
+        console.error("启动流程实例失败:", err)
+    }
+})();

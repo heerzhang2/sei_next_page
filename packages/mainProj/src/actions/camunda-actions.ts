@@ -25,7 +25,10 @@ export async function startProcess({ processId, variables, bpmnProcessId }: Star
     }
   } catch (error: any) {
     console.error("启动流程实例失败:", error)
-    throw new Error(`启动流程实例失败: ${error.message}`)
+    return {
+      success: false,
+      error: error.message,
+    }
   }
 }
 
@@ -36,7 +39,8 @@ export async function getProcessInstanceStatus(processInstanceKey: string) {
   try {
     // 使用 REST API 获取流程实例状态
     // 注意: 根据 @camunda8/sdk 的 REST API 实际方法进行调整 CamundaRestClient
-    const status = await restClient.getProcessInstanceStatus(processInstanceKey)
+    // @ts-ignore
+    const status = await restClient.getProcessInstanceByKey(processInstanceKey)
 
     return {
       processInstanceKey,
@@ -45,6 +49,8 @@ export async function getProcessInstanceStatus(processInstanceKey: string) {
     }
   } catch (error: any) {
     console.error("获取流程实例状态失败:", error)
-    throw new Error(`获取流程实例状态失败: ${error.message}`)
+    return {
+      status: "ERROR",
+    }
   }
 }

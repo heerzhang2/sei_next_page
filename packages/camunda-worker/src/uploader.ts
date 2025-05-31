@@ -3,9 +3,13 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
+import { Readable } from 'stream';
 
 // 配置参数
 const config = {
+    // 使用相对路径 + 进程工作目录
+    localDir: path.join(process.cwd(), 'data/pdf_files'), // 自动解析为 ./data/pdf_files
+    // 其他配置保持不变
     minio: {
         endPoint: 'your-minio-server.com',
         port: 9000,
@@ -13,127 +17,52 @@ const config = {
         accessKey: 'YOUR_ACCESS_KEY',
         secretKey: 'YOUR_SECRET_KEY'
     },
-    localDir: '/path/to/local/pdf/files/',
     bucketName: 'pdf-storage',
-    chunkSize: 5 * 1024 * 1024, // 5MB 分片
-    concurrency: 3 // 并发分片数
+    chunkSize: 5 * 1024 * 1024,
+    concurrency: 3,
+    maxRetries: 5
 };
+
+// 验证目录存在
+const ensureDir = async (dirPath: string) => {
+    try {
+        await fs.ensureDir(dirPath);
+        console.log(`目录已准备: ${dirPath}`);
+    } catch (err) {
+        console.error(`创建目录失败: ${err}`);
+        process.exit(1);
+    }
+};
+
+// 初始化时调用
+ensureDir(config.localDir);
 
 // 初始化 MinIO 客户端
 const minioClient = new Minio.Client(config.minio);
 
-// 文件上传队列
-interface UploadTask {
-    localPath: string;
-    objectName: string;
-    fileId: string;
-    chunks: number[];
-    currentChunk: number;
-}
-const MAX_RETRY = 3;
-//整合批量上传和断点续传功能的完整 Node.js 实现方案，结合了 MinIO 分片上传 API 和进度追踪机制
-class FileUploader {
-    private tasks: UploadTask[] = [];
-    private progressMap = new Map<string, number>();
-    private completedFiles = new Set<string>();
-    private readonly retryConfig = {
-        maxRetries: 5,        // 最大重试次数
-        baseDelay: 1000,      // 基础延迟时间（毫秒）
-        maxDelay: 30000,      // 最大延迟时间（毫秒）
-        jitter: true,         // 是否启用抖动
-        backoffFactor: 2      // 退避倍数
-    };
+export class FileUploader {
+    private tasks: any[] = [];
+    private progressMap = new Map();
+    private completedFiles = new Set();
 
     constructor() {
         this.loadProgress();
     }
-
-    // 加载已上传进度
-    private loadProgress() {
-        if (fs.existsSync('upload.progress')) {
-            const data = fs.readFileSync('upload.progress', 'utf-8');
-            this.progressMap = new Map(JSON.parse(data));
-        }
-    }
-
-    // 保存上传进度
-    private saveProgress() {
-        fs.writeFileSync('upload.progress', JSON.stringify([...this.progressMap]));
-    }
-
-    // 扫描本地文件
-    async scanLocalFiles() {
-        const files = await fs.readdir(config.localDir);
-        return files.filter(file => path.extname(file).toLowerCase() === '.pdf');
-    }
-    // 修改后的重试逻辑
-    async uploadWithRetry(localPath: string, objectId: string) {
-        let retryCount = 0;
-        const maxAttempts = this.retryConfig.maxRetries + 1; // 包含首次尝试
-
-        while (retryCount < maxAttempts) {
-            try {
-                return await this.uploadFile(localPath, objectId);
-            } catch (err) {
-                retryCount++;
-
-                if (retryCount >= maxAttempts) {
-                    this.logRetryFailure(retryCount, err);
-                    throw new RetryError(err, objectId, retryCount);
-                }
-
-                const delay = this.calculateRetryDelay(retryCount);
-                this.logRetryAttempt(retryCount, delay);
-
-                await this.sleep(delay);
-            }
-        }
-    }
-// 指数退避算法实现
-    private calculateRetryDelay(retryCount: number): number {
-        let delay = this.retryConfig.baseDelay * Math.pow(
-            this.retryConfig.backoffFactor,
-            retryCount - 1
-        );
-
-        // 应用最大延迟限制
-        delay = Math.min(delay, this.retryConfig.maxDelay);
-
-        // 添加随机抖动（0-100%）
-        if (this.retryConfig.jitter) {
-            delay *= 0.5 + Math.random();
-        }
-
-        return delay;
-    }
-    // 生成文件唯一标识
-    private generateFileId(localPath: string) {
-        const fileHash = createHash('sha256');
+    // ...其他属性保持不变
+    // private generateFileStream(localPath: string): Readable;
+    // 实现文件流生成方法
+    private generateFileStream(localPath: string): Readable {
         const stream = fs.createReadStream(localPath);
-        return new Promise<string>((resolve) => {
-            stream.on('data', (chunk) => fileHash.update(chunk));
-            stream.on('end', () => resolve(fileHash.digest('hex')));
-        });
-    }
-// 辅助方法：延迟函数
-    private sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        // 手动设置类型（解决 TS 类型推断问题）
+        return stream as unknown as Readable;
     }
 
-// 日志记录方法（需自行实现）
-    private logRetryAttempt(attempt: number, delay: number) {
-        console.log(`[${objectId}] 尝试 ${attempt}/${this.retryConfig.maxRetries}，等待 ${delay.toFixed(0)}ms`);
-    }
 
-    private logRetryFailure(attempt: number, error: Error) {
-        console.error(`[${objectId}] 已达到最大重试次数 (${attempt}/${this.retryConfig.maxRetries})，错误: ${error.message}`);
-    }
     // 分片上传核心逻辑
-    async uploadFile(localPath: string, objectId: string) {
+    async uploadFileWithRetry(localPath: string, objectId: string) {
         const fileId = await this.generateFileId(localPath);
         const fileSize = (await fs.stat(localPath)).size;
         const totalChunks = Math.ceil(fileSize / config.chunkSize);
-        const chunks = Array.from({ length: totalChunks }, (_, i) => i);
 
         // 恢复上传进度
         const uploadedChunks = this.progressMap.get(fileId) || [];
@@ -144,25 +73,19 @@ class FileUploader {
             return;
         }
 
-        // 创建分片上传
-        const upload = minioClient.uploadObject({
-            Bucket: config.bucketName,
-            Object: objectId,
-            FilePath: localPath,
-            PartSize: config.chunkSize,
-            Concurrent: config.concurrency,
-            CheckpointDir: 'checkpoints', // 断点续传元数据目录
-            Progress: (p) => {
-                const uploaded = Math.floor((p.bytesTransferred / fileSize) * 100);
-                this.progressMap.set(fileId, uploaded);
-                this.saveProgress();
-                console.log(`[${objectId}] 进度: ${uploaded.toFixed(2)}%`);
-            }
+        // 创建分片上传流
+        const uploadStream = fs.createReadStream(localPath, {
+            start: currentChunk * config.chunkSize,
+            end: Math.min((currentChunk + 1) * config.chunkSize - 1, fileSize - 1)
         });
 
         try {
-            await upload.done();
-            console.log(`文件 ${objectId} 上传完成`);
+            await this.uploadStreamWithRetry(
+                uploadStream,
+                objectId,
+                currentChunk,
+                totalChunks
+            );
             this.completedFiles.add(fileId);
             this.progressMap.delete(fileId);
             this.saveProgress();
@@ -172,50 +95,145 @@ class FileUploader {
         }
     }
 
+    // 带重试的分片上传
+    private async uploadStreamWithRetry(
+        stream: NodeJS.ReadableStream,
+        objectId: string,
+        chunkIndex: number,
+        totalChunks: number
+    ) {
+        let retryCount = 0;
+        const maxAttempts = config.maxRetries + 1;
+
+        while (retryCount < maxAttempts) {
+            try {
+                // 修正参数类型
+                if (stream instanceof Readable) {
+                    await this.minioPutObject(
+                        objectId,
+                        stream,
+                        chunkIndex,
+                        totalChunks
+                    );
+                }
+                return;
+            } catch (err) {
+                retryCount++;
+                if (retryCount >= maxAttempts) {
+                    throw new Error(`分片 ${chunkIndex}/${totalChunks} 上传失败（尝试 ${retryCount} 次）`);
+                }
+                const delay = this.calculateRetryDelay(retryCount);
+                await this.sleep(delay);
+            }
+        }
+    }
+
+// 修正后的 MinIO 上传方法
+    private async minioPutObject(
+        objectId: string,
+        stream: Readable,
+        chunkIndex: number,
+        totalChunks: number
+    ) {
+        const fileSize = (await fs.stat(objectId)).size;
+        const metaData = {
+            'Content-Type': 'application/pdf',
+            'X-Amz-Meta-Chunk-Index': chunkIndex.toString(),
+            'X-Amz-Meta-Total-Chunks': totalChunks.toString()
+        };
+
+        // 使用 Buffer 作为替代方案（解决流类型问题）
+        const buffer = await this.streamToBuffer(stream);
+
+        await minioClient.putObject(
+            config.bucketName,
+            objectId,
+            buffer,
+            buffer.length,
+            metaData
+        );
+    }
+
+// 流转 Buffer 工具方法
+    private async streamToBuffer(stream: Readable): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+            const chunks: Buffer[] = [];
+            stream.on('data', (chunk) => chunks.push(chunk));
+            stream.on('end', () => resolve(Buffer.concat(chunks)));
+            stream.on('error', reject);
+        });
+    }
+
     // 批量上传入口
     async batchUpload() {
         try {
-            await minioClient.ping();
-            console.log('Connected to MinIO server');
+            await minioClient.bucketExists(config.bucketName) ||
+            minioClient.makeBucket(config.bucketName, 'us-east-1');
 
-            // 自动创建存储桶
-            const bucketExists = await minioClient.bucketExists(config.bucketName);
-            if (!bucketExists) {
-                await minioClient.makeBucket(config.bucketName, 'us-east-1');
-                console.log(`Bucket ${config.bucketName} created`);
-            }
+            const files = await fs.readdir(config.localDir);
+            const pdfFiles = files.filter(file => path.extname(file).toLowerCase() === '.pdf');
 
-            const files = await this.scanLocalFiles();
-            console.log(`发现 ${files.length} 个PDF文件待上传`);
+            console.log(`发现 ${pdfFiles.length} 个PDF文件待上传`);
 
-            // 并行处理上传任务
-            const uploadPromises = files.map(async (file) => {
+            const uploadPromises = pdfFiles.map(async (file) => {
                 const objectId = `${uuidv4()}-${path.basename(file)}`;
                 try {
-                    await this.uploadWithRetry(
+                    await this.uploadFileWithRetry(
                         path.join(config.localDir, file),
                         objectId
                     );
-                    return { success: true, file, objectId };
+                    return { status: 'success', file, objectId };
                 } catch (err) {
-                    console.error(`处理 ${file} 时出错:`, err);
-                    return { success: false, file, error: err.message };
+                    return { status: 'failed', file, objectId, error: err };
                 }
             });
 
             const results = await Promise.all(uploadPromises);
-            console.log('\n上传完成统计:');
-            results.forEach(({ success, file, objectId, error }) => {
-                console.log(`${file} [${success ? '✅ 成功' : '❌ 失败'}] ${objectId || ''} ${error || ''}`);
-            });
+            this.printSummary(results);
         } catch (err) {
             console.error('批量上传失败:', err);
         }
     }
-}
 
-// 执行流程
-(async () => {
-    const uploader = new FileUploader();
-    await uploader.batchUpload();
-})();
+    // 辅助方法
+    private generateFileId(localPath: string) {
+        const fileHash = createHash('sha256');
+        const stream = fs.createReadStream(localPath);
+        return new Promise((resolve) => {
+            stream.on('data', (chunk) => fileHash.update(chunk));
+            stream.on('end', () => resolve(fileHash.digest('hex')));
+        });
+    }
+
+    private calculateRetryDelay(retryCount: number): number {
+        const baseDelay = 1000;
+        const maxDelay = 30000;
+        const jitter = 0.5 + Math.random();
+        return Math.min(baseDelay * Math.pow(2, retryCount), maxDelay) * jitter;
+    }
+
+    private sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    private loadProgress() {
+        if (fs.existsSync('upload.progress')) {
+            // @ts-ignore
+            this.progressMap = new Map(JSON.parse(fs.readFileSync('upload.progress')));
+        }
+    }
+
+    private saveProgress() {
+        fs.writeFileSync('upload.progress', JSON.stringify([...this.progressMap]));
+    }
+
+    private printSummary(results: any[]) {
+        console.log('\n上传完成统计:');
+        results.forEach(({ status, file, objectId, error }) => {
+            console.log(`${file} [${status === 'success' ? '✅ 成功' : '❌ 失败'}] 
+` +
+                `对象ID: ${objectId || ''}\n` +
+                `错误信息: ${error || ''}\n`);
+        });
+    }
+}
