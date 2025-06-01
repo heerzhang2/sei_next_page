@@ -6,6 +6,10 @@ import dotenv from "dotenv"
 import {ZBWorkerTaskHandler, ZeebeJob} from "@camunda8/sdk/dist/zeebe/lib/interfaces-1.0";
 import {FileUploader} from "./uploader";
 import {startProcess} from "main_proj/src/actions/camunda-actions";
+import {excelToJsonConverter} from "./exceljob";
+import {excelsDat} from "./output";
+import path from "path";
+import fs from "fs";
 
 
 // 加载环境变量
@@ -23,6 +27,7 @@ const camundaConfig = {
 
 
 //[文档] https://camunda.github.io/camunda-8-js-sdk/#oauth
+//https://docs.camunda.io/docs/next/self-managed/setup/deploy/local/manual/
 // https://docs.camunda.io/docs/guides/getting-started-java-spring/
 // 创建Zeebe客户端  https://www.npmjs.com/package/@camunda8/sdk  需要Node服务端环境运行的；
 // const zbc = new ZBClient(zeebeConfig)
@@ -128,6 +133,14 @@ startWorker().catch((err) => {
   console.error("Failed to start worker:", err)
   process.exit(1)
 })
+
+
+
+
+
+
+
+
 
 const variables={
     customerId: "12345",
