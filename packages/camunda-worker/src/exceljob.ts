@@ -2,6 +2,7 @@ import XLSX from 'xlsx';
 import fs from 'fs';
 import path from 'path';
 
+//测试例子: excel 转换成 json:
 export  function excelToJsonConverter() {
     try {
         // 读取Excel文件（支持.xlsx和.xls格式）
@@ -19,8 +20,7 @@ export  function excelToJsonConverter() {
         });
 
         // 过滤空行（可选）
-        // @ts-ignore
-        const filteredData = jsonArray.filter(row =>
+        const filteredData = jsonArray.filter((row: any) =>
             row.squm!=='建筑面积(m²)'
         );
 
@@ -29,18 +29,11 @@ export  function excelToJsonConverter() {
         console.log('转换成功！JSON文件已生成：output.json');
 
     } catch (error) {
+        // @ts-ignore
         console.error('转换过程中发生错误:', error.message);
+        // @ts-ignore
         if(error.code === 'ENOENT') {
             console.error('请检查输入文件路径是否正确！');
         }
     }
 }
-
-
-%JAVACMD% %JAVA_OPTS% -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Xshare:auto -classpath %CLASSPATH% -Dapp.name="broker" -Dapp.repo="%REPO%" -Dapp.home="%BASEDIR%" -Dbasedir="%BASEDIR%" io.camunda.application.StandaloneBroker %CMD_LINE_ARGS%
-if %ERRORLEVEL% NEQ 0 goto error
-
-
-%JAVACMD% %JAVA_OPTS% -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Xshare:auto -classpath %CLASSPATH% -Dapp.name="camunda" -Dapp.repo="%REPO%" -Dapp.home="%BASEDIR%" -Dbasedir="%BASEDIR%" io.camunda.application.StandaloneCamunda %CMD_LINE_ARGS%
-if %ERRORLEVEL% NEQ 0 goto error
-goto end

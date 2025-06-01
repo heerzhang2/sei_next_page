@@ -474,19 +474,23 @@ export function SuffixInput({ fullWidth = true, className, style, value, onChang
   //确保unit不是函数
   const unitDisplay = typeof unit === "function" ? "" : unit
   return (
-    <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
-      <input
-        className={cn(
-          "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-          fullWidth ? "w-full" : "w-auto",
-          className,
-        )}
-        value={value}
-        onChange={onChange}
-        {...other}
-      />
-      {unitDisplay}
-    </div>
+      <div className={cn(
+          "text-left inline-flex items-center gap-0.5",
+          fullWidth ? "w-full" : "w-auto"
+      )}  style={style}>
+        <input
+            className={cn(
+                "rounded-md border border-input bg-background flex-1 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                className
+            )}
+            value={value}
+            onChange={onChange}
+            {...other}
+        />
+        <div className="whitespace-nowrap flex-shrink-0">
+          {unitDisplay}
+        </div>
+      </div>
   )
 }
 

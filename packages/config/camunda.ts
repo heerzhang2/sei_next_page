@@ -15,7 +15,9 @@ const camundaConfig = {
     // 其他配置...
 }
 
+// @ts-ignore
 const c8 = new Camunda8(camundaConfig)
+//公司的：配置  CAMUNDA_AUTH_STRATEGY: 'NONE',
 console.log(`当前camundaConfig:`,camundaConfig);
 
 // 使用 REST API 客户端代替 gRPC 客户端

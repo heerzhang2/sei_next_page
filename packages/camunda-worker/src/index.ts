@@ -1,15 +1,10 @@
 // import { ZBClient } from "zeebe-node"
-import { Camunda8, Auth, CamundaRestClient,Zeebe  } from '@camunda8/sdk'
-import {ConfigRoot, FileTransform} from "page2pdf_server/src";
+import { Camunda8,  } from '@camunda8/sdk'
 import axios from "axios"
 import dotenv from "dotenv"
-import {ZBWorkerTaskHandler, ZeebeJob} from "@camunda8/sdk/dist/zeebe/lib/interfaces-1.0";
+// import {ZBWorkerTaskHandler, ZeebeJob} from "@camunda8/sdk/dist/zeebe/lib/interfaces-1.0";
 import {FileUploader} from "./uploader";
-import {startProcess} from "main_proj/src/actions/camunda-actions";
-import {excelToJsonConverter} from "./exceljob";
-import {excelsDat} from "./output";
-import path from "path";
-import fs from "fs";
+import { JSON, JSONDoc } from '@camunda8/sdk/dist/zeebe/types';
 
 
 // 加载环境变量
@@ -19,10 +14,10 @@ const camundaConfig = {
     CAMUNDA_AUTH_STRATEGY: process.env.CAMUNDA_AUTH_STRATEGY || "",
     CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
     CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
-    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION==="true",
-  // 如果使用自托管的Zeebe，则使用以下配置
-  // gatewayAddress: process.env.ZEEBE_GATEWAY_ADDRESS || 'localhost:26500',
-  // useTLS: false,
+    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION === "true",
+    // 如果使用自托管的Zeebe，则使用以下配置
+    // gatewayAddress: process.env.ZEEBE_GATEWAY_ADDRESS || 'localhost:26500',
+    // useTLS: false,
 }
 
 
@@ -48,8 +43,8 @@ const camundaConfig = {
 //   CAMUNDA_SECURE_CONNECTION: false,
 // }
 
-const c8 =new Camunda8(camundaConfig as any)
-console.log(`当前camundaConfig:`,camundaConfig);
+const c8 = new Camunda8(camundaConfig as any)
+console.log(`当前camundaConfig:`, camundaConfig);
 // const restClient = c8.getCamundaRestClient() // New REST API
 const zeebe = c8.getZeebeGrpcApiClient()
 // const zeebeRest = c8.getZeebeRestClient() // Deprecated
@@ -68,15 +63,15 @@ const WORKER_TASK_TYPE = "pdf-generation-task"
 
 // 启动Worker
 async function startWorker() {
-  console.log("Starting Camunda 8 Worker...")
+    console.log("Starting Camunda 8 Worker...")
 
-  // 创建一个Worker来处理特定类型的任务    不能加上tenantIds: ['<default>', 'green'],
-  const zbWorker =zeebe.createWorker({
-    taskHandler: myTaskHandler as ZBWorkerTaskHandler,
-    taskType: WORKER_TASK_TYPE,
-  });
+    // 创建一个Worker来处理特定类型的任务    不能加上tenantIds: ['<default>', 'green'],
+    const zbWorker = zeebe.createWorker({
+        taskHandler: myTaskHandler,
+        taskType: WORKER_TASK_TYPE,
+    });
 
-  async function myTaskHandler(job:ZeebeJob) {
+    async function myTaskHandler(job: any) {
     zbWorker.log(job.variables)    //ZB.JSON
     try {
       // 发送HTTP请求到PDF服务
@@ -138,26 +133,22 @@ startWorker().catch((err) => {
 
 
 
-
-
-
-
-const variables={
-    customerId: "12345",
-        documentType: {},
-        original: false,
-};
-
-(async () => {
-// @ts-ignore
-    try {
-        const response = await startProcess({
-            processId: "genRepPdf",
-            variables: variables,
-        })
-
-
-    } catch (err: any) {
-        console.error("启动流程实例失败:", err)
-    }
-})();
+// const variables={
+//     customerId: "12345",
+//         documentType: {},
+//         original: false,
+// };
+//
+// (async () => {
+// // @ts-ignore
+//     try {
+//         const response = await startProcess({
+//             processId: "genRepPdf",
+//             variables: variables,
+//         })
+//
+//
+//     } catch (err: any) {
+//         console.error("启动流程实例失败:", err)
+//     }
+// })();

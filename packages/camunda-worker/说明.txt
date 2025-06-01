@@ -1,45 +1,11 @@
-虽然 URQL 有自己的缓存机制，但在 Next.js App Router 的 Server Components 中，添加 React 的 `cache` 函数仍然是有价值的，它们解决的是不同层面的缓存问题。
-// app/lib/graphql.ts
-import { cache } from 'react';
-import { createClient } from 'urql';
-
-const client = createClient({
-  url: 'https://your-java-backend/graphql',
-  // 配置...
-});
-
-export const getUserData = cache(async (userId: string) => {
-  const { data } = await client.query(`
-    query GetUser($id: ID!) {
-      user(id: $id) {
-        id
-        name
-        role
-        permissions
-      }
-    }
-  `, { id: userId }).toPromise();
-
-  return data?.user;
-});
-
- 在 Server Components 中使用
-// app/dashboard/page.tsx
-import { getUserData } from '@/app/lib/graphql';
-import { redirect } from 'next/navigation';
-
-export default async function Dashboard() {
-  const user = await getUserData('current-user-id');
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  if (user.role === 'admin') {
-    return <AdminDashboard user={user} />;
-  } else {
-    return <UserDashboard user={user} />;
-  }
-}
-
-Linux 服务守护方案（PM2）
+const c8 = new Camunda8(camundaConfig)
+公司电脑：配置  CAMUNDA_AUTH_STRATEGY: 'NONE',   //公司的 c8run8.8apha4版本的运行方式的。docker独立ES
+ CAMUNDA_AUTH_STRATEGY: 'BASIC',
+  CAMUNDA_BASIC_AUTH_USERNAME: 'demo',
+  CAMUNDA_BASIC_AUTH_PASSWORD: 'demo',
+  CAMUNDA_SECURE_CONNECTION: false
+管理网站 http://localhost:8080/operate
+ http://localhost:8080/tasklist
+家里电脑环境： manual local模式,
+-Dapp.name="broker"
+-Dapp.name="camunda"
