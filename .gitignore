@@ -30,3 +30,4 @@ next-env.d.ts
 /packages/camunda-worker/.turbo/
 /packages/camunda-worker/dist/
 /packages/mainProj/.turbo/
+/packages/camunda-worker/upload.progress

@@ -1,27 +1,34 @@
 import * as Minio from 'minio';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
 import { Readable } from 'stream';
+import dotenv from "dotenv";
+import {ItemBucketMetadata} from "minio";
+import moment from 'moment';
+import {v4 as uuidv4} from 'uuid';
 
+
+// 加载环境变量
+dotenv.config()
 // 配置参数
 const config = {
     // 使用相对路径 + 进程工作目录
-    localDir: path.join(process.cwd(), 'data/pdf_files'), // 自动解析为 ./data/pdf_files
+    localDir: path.join(process.cwd(), 'data'), // 自动解析为 ./data
     // 其他配置保持不变
     minio: {
-        endPoint: 'your-minio-server.com',
-        port: 9000,
+        endPoint: process.env.MINIO_ENDPOINT!,
+        port: process.env.MINIO_PORT as unknown as number,
         useSSL: false,
-        accessKey: 'YOUR_ACCESS_KEY',
-        secretKey: 'YOUR_SECRET_KEY'
+        accessKey: process.env.MINIO_ACCESSKEY,
+        secretKey: process.env.MINIO_SECRETKEY
     },
-    bucketName: 'pdf-storage',
+    bucketName: process.env.MINIO_BUCKETNAME,
     chunkSize: 5 * 1024 * 1024,
     concurrency: 3,
     maxRetries: 5
 };
+
 
 // 验证目录存在
 const ensureDir = async (dirPath: string) => {
@@ -34,7 +41,7 @@ const ensureDir = async (dirPath: string) => {
     }
 };
 
-// 初始化时调用
+// 初始化时调用 ： 目录未用到；
 ensureDir(config.localDir);
 
 // 初始化 MinIO 客户端
@@ -56,7 +63,6 @@ export class FileUploader {
         // 手动设置类型（解决 TS 类型推断问题）
         return stream as unknown as Readable;
     }
-
 
     // 分片上传核心逻辑
     async uploadFileWithRetry(localPath: string, objectId: string) {
@@ -116,6 +122,7 @@ export class FileUploader {
                         totalChunks
                     );
                 }
+                else throw new Error(`非可读流的`);
                 return;
             } catch (err) {
                 retryCount++;
@@ -128,25 +135,35 @@ export class FileUploader {
         }
     }
 
-// 修正后的 MinIO 上传方法
+/*有些是存储桶的默认配置的 比如 X-Amz-Object-Lock-Mode COMPLIANCE：
+X-Amz-Meta-Author herzhang
+X-Amz-Meta-Rep KQcbgDF9RO21DsI92H3tTVJlcG9ydA
+X-Amz-Object-Lock-Retain-Until-Date 2025-06-09T00:08:40.315Z
+* */
+    // 修正后的 MinIO 上传方法
     private async minioPutObject(
         objectId: string,
         stream: Readable,
         chunkIndex: number,
         totalChunks: number
     ) {
-        const fileSize = (await fs.stat(objectId)).size;
+        //X-Amz-Object-Lock-Mode  COMPLIANCE
+        //多出来的X-Amz-Meta-Chunk-Index X-Amz-Meta-Total-Chunks  而X-Amz-Meta-Filename缺席
+        //加上没生效 前缀不一样的！  X-Amz-Meta-Lock-Retain-Until-Date 2025-06-12T11:11:40.115Z      X-Amz-Object-Lock-Retain-Until-Date
         const metaData = {
             'Content-Type': 'application/pdf',
             'X-Amz-Meta-Chunk-Index': chunkIndex.toString(),
-            'X-Amz-Meta-Total-Chunks': totalChunks.toString()
-        };
+            'X-Amz-Meta-Total-Chunks': totalChunks.toString(),
+            'X-Amz-Meta-Author': 'herzhang',
+            'X-Amz-Meta-Rep': 'KQcbgDF9RO21DsI92H3tTVJlcG9ydA',
+            'Lock-Retain-Until-Date': '2025-06-12T11:11:40.115Z'
+        } as ItemBucketMetadata;
 
         // 使用 Buffer 作为替代方案（解决流类型问题）
         const buffer = await this.streamToBuffer(stream);
-
+        //分片的； 每个部分都要设置metaData
         await minioClient.putObject(
-            config.bucketName,
+            config.bucketName!,
             objectId,
             buffer,
             buffer.length,
@@ -165,23 +182,21 @@ export class FileUploader {
     }
 
     // 批量上传入口
-    async batchUpload() {
+    async ossUpload(filepath:string) {
         try {
-            await minioClient.bucketExists(config.bucketName) ||
-            minioClient.makeBucket(config.bucketName, 'us-east-1');
-
-            const files = await fs.readdir(config.localDir);
-            const pdfFiles = files.filter(file => path.extname(file).toLowerCase() === '.pdf');
-
+            await minioClient.bucketExists(config.bucketName!) ||
+                                                            minioClient.makeBucket(config.bucketName!);
+            const pdfFiles =[filepath];
             console.log(`发现 ${pdfFiles.length} 个PDF文件待上传`);
-
+            //直接从源头目录文件做上传的：
             const uploadPromises = pdfFiles.map(async (file) => {
-                const objectId = `${uuidv4()}-${path.basename(file)}`;
+                // 生成日期目录结构（格式：/yyyyMM/ddHH/）
+                const dateDir = moment().format('YYYYMM/DDHH/');
+                // 生成完整的 objectId（日期目录 + UUID）
+                const objectId = `${dateDir}${uuidv4()}`;
+
                 try {
-                    await this.uploadFileWithRetry(
-                        path.join(config.localDir, file),
-                        objectId
-                    );
+                    await this.uploadFileWithRetry(file, objectId);
                     return { status: 'success', file, objectId };
                 } catch (err) {
                     return { status: 'failed', file, objectId, error: err };
@@ -224,6 +239,7 @@ export class FileUploader {
     }
 
     private saveProgress() {
+        //写入文件保存磁盘的状态：
         fs.writeFileSync('upload.progress', JSON.stringify([...this.progressMap]));
     }
 
@@ -237,3 +253,5 @@ export class FileUploader {
         });
     }
 }
+
+//blob:http://192.168.171.3:13501/cbc8cb2b-58bb-417f-8278-24c0fff1592a

@@ -4,7 +4,17 @@ import axios from "axios"
 import dotenv from "dotenv"
 // import {ZBWorkerTaskHandler, ZeebeJob} from "@camunda8/sdk/dist/zeebe/lib/interfaces-1.0";
 import {FileUploader} from "./uploader";
-import { JSON, JSONDoc } from '@camunda8/sdk/dist/zeebe/types';
+import {
+    IProcessVariables,
+    JobCompletionInterfaceRest,
+    JSON,
+    JSONDoc,
+    MustReturnJobActionAcknowledgement
+} from '@camunda8/sdk/dist/zeebe/types';
+import {Ctor, RestJob} from "@camunda8/sdk/dist/c8/lib/C8Dto";
+import {Logger} from "@camunda8/sdk/dist/c8/lib/C8Logger";
+import {MaybeTimeDuration} from "typed-duration";
+import type {ConfigRoot, FileTransform} from "page2pdf_server/src";
 
 
 // 加载环境变量
@@ -45,8 +55,8 @@ const camundaConfig = {
 
 const c8 = new Camunda8(camundaConfig as any)
 console.log(`当前camundaConfig:`, camundaConfig);
-// const restClient = c8.getCamundaRestClient() // New REST API
-const zeebe = c8.getZeebeGrpcApiClient()
+const restClient = c8.getCamundaRestClient()     // 8.6.0 New REST API
+// const zeebe = c8.getZeebeGrpcApiClient()
 // const zeebeRest = c8.getZeebeRestClient() // Deprecated
 // const operate = c8.getOperateApiClient()
 // const optimize = c8.getOptimizeApiClient()
@@ -58,22 +68,31 @@ const zeebe = c8.getZeebeGrpcApiClient()
 // PDF服务的URL
 const PDF_SERVICE_URL = "http://localhost:9389/api/pdf"
 
-// 定义Worker任务类型
-const WORKER_TASK_TYPE = "pdf-generation-task"
 
 // 启动Worker
 async function startWorker() {
     console.log("Starting Camunda 8 Worker...")
-
     // 创建一个Worker来处理特定类型的任务    不能加上tenantIds: ['<default>', 'green'],
-    const zbWorker = zeebe.createWorker({
-        taskHandler: myTaskHandler,
-        taskType: WORKER_TASK_TYPE,
-    });
+//<
+//     Variables extends LosslessDto,
+//         CustomHeaders extends LosslessDto,
+// >   CamundaJobWorkerConfig<Variables, CustomHeaders>
+    //jobHandler: (job: RestJob<VariablesDto, CustomHeadersDto> & JobCompletionInterfaceRest<IProcessVariables>, log: Logger) => MustReturnJobActionAcknowledgement;
+    // inputVariableDto?: Ctor<VariablesDto>;
+    // customHeadersDto?: Ctor<CustomHeadersDto>;
+   const zbWorker= restClient.createJobWorker({
+        type: "pdf-generation-task",
+        worker: "test-camd8",
+        maxJobsToActivate: 1,
+        timeout: 60000,
+        jobHandler: myTaskHandler
+    })
+
 
     async function myTaskHandler(job: any) {
-    zbWorker.log(job.variables)    //ZB.JSON
+        console.log("myTaskHandler >>",job)
     try {
+      const prjob=job.variables?.documentType as  ConfigRoot<FileTransform>;
       // 发送HTTP请求到PDF服务
       console.log(`Sending request to ${PDF_SERVICE_URL}`)
       // await axios.post(PDF_SERVICE_URL, {job: job.variables?.documentType})
@@ -84,17 +103,15 @@ async function startWorker() {
       console.log("Response received:", response.data)
       //成功response=: { status: 200, message: 'OK', data: { result: 'Success',dir } }    文件预先定义的==系统安装的路径：C:\page2pdf-server\pdfs +/files【0】.out/
       const finish= result==="Success";
-      if(!finish)  { // @ts-ignore
-          job.fail(`Error processing job:`, 0).then(r => 0)
-                //可能+步骤2： +水印,电子盖章;
-                //可能+步骤3： 然后上传到OSS 文件访问路径;
-                //不经过java后端服务器代理传递，不需要再多一次复制了。直接联系OSS集群。
-                    // 执行流程
-                    (async () => {
-                        const uploader = new FileUploader();
-                        await uploader.batchUpload();
-                    })();
-      }
+      if(!finish || !dir)   return  job.fail(`转换pdf失败`, 0)
+      const filepath= dir+"/"+ prjob?.name +".pdf";
+        //可能+步骤2： +水印,电子盖章;
+        //步骤3： 然后上传到OSS 文件访问路径;
+      //不经过java后端服务器做代理上传的，那样要再多一次复制。直接上传到OSS集群。
+      const uploader = new FileUploader();
+      await uploader.ossUpload(filepath);
+      // (async () => {
+      // })();
       //完成job并返回结果：
       return job.complete({
           result: true,
@@ -110,7 +127,7 @@ async function startWorker() {
     // const res = await callExternalSystem(job.variables)
   }
 
-  console.log(`Worker started and listening for jobs of type: ${WORKER_TASK_TYPE}`)
+  console.log(`Worker启动: pdf-generation-task`)
 
   //job.complete({ 本地的文件OSS地址（rep /ori） ，下一个流程任务接收？。还是：这里仅仅提供配置信息，全部让Java节点机器处理打印的：或者盖章，上传OSS都需囊括一块做的，
   //【后续步骤】给java节点机：盖章，上传OSS，数据库流程保存关联数据。
@@ -119,7 +136,7 @@ async function startWorker() {
 // 处理进程退出
 process.on("SIGTERM", async () => {
   console.log("Shutting down...")
-  await zeebe.close()
+  // await restClient.close()
   process.exit(0)
 })
 
