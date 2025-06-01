@@ -4,10 +4,9 @@ import * as path from 'path';
 import { createHash } from 'crypto';
 import { Readable } from 'stream';
 import dotenv from "dotenv";
-import {ItemBucketMetadata} from "minio";
+import {ItemBucketMetadata, Retention, RETENTION_MODES} from "minio";
 import moment from 'moment';
 import {v4 as uuidv4} from 'uuid';
-
 
 // 加载环境变量
 dotenv.config()
@@ -125,6 +124,7 @@ export class FileUploader {
                 else throw new Error(`非可读流的`);
                 return;
             } catch (err) {
+                console.log('PutObject:',err)
                 retryCount++;
                 if (retryCount >= maxAttempts) {
                     throw new Error(`分片 ${chunkIndex}/${totalChunks} 上传失败（尝试 ${retryCount} 次）`);
@@ -142,6 +142,54 @@ X-Amz-Object-Lock-Retain-Until-Date 2025-06-09T00:08:40.315Z
 * */
     // 修正后的 MinIO 上传方法
     private async minioPutObject(
+        objectId: string,
+        stream: Readable,
+        chunkIndex: number,
+        totalChunks: number,
+        customRetainUntilDate: Date // 自定义保留截止日期
+    ) {
+        // 1. 上传文件对象（不包含保留策略）
+        const metaData = {
+            'Content-Type': 'application/pdf',
+            'X-Amz-Meta-Chunk-Index': chunkIndex.toString(),
+            'X-Amz-Meta-Total-Chunks': totalChunks.toString(),
+            'X-Amz-Meta-Author': 'herzhang',
+            'X-Amz-Meta-Rep': 'KQcbgDF9RO21DsI92H3tTVJlcG9ydA'
+        };
+
+        // 使用 Buffer 上传
+        const buffer = await this.streamToBuffer(stream);
+        await minioClient.putObject(
+            config.bucketName!,
+            objectId,
+            buffer,
+            buffer.length,
+            metaData // 仅传递元数据
+        );
+        //# 通过 mc 命令修改存储桶锁定模式（需集群管理员权限）
+        // mc lock myminio/testbucket governance 100d
+        const retention = await minioClient.getObjectRetention(
+            config.bucketName!,
+            objectId
+        );
+        console.log('Lock status:', retention);
+        // 2. 然后需设置对象保留期限的
+        const expirationDate = new Date()
+        expirationDate.setDate(expirationDate.getDate() + 2)
+        expirationDate.setUTCHours(0, 0, 0, 0)      //Should be start of the day.(midnight)
+        await minioClient.putObjectRetention(
+            config.bucketName!,
+            objectId,
+            {
+                governanceBypass: true,
+                mode: 'COMPLIANCE',
+                retainUntilDate: expirationDate.toISOString(),
+                // versionId: 'my-versionId22245', 内部关联的，并非外部配置的！
+            } as Retention
+        );
+    }
+
+    private async minioPutObject3(
         objectId: string,
         stream: Readable,
         chunkIndex: number,
