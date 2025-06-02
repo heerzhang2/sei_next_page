@@ -146,7 +146,7 @@ X-Amz-Object-Lock-Retain-Until-Date 2025-06-09T00:08:40.315Z
         stream: Readable,
         chunkIndex: number,
         totalChunks: number,
-        customRetainUntilDate: Date // 自定义保留截止日期
+        customRetainUntilDate?: Date // 自定义保留截止日期
     ) {
         // 1. 上传文件对象（不包含保留策略）
         const metaData = {
@@ -184,7 +184,6 @@ X-Amz-Object-Lock-Retain-Until-Date 2025-06-09T00:08:40.315Z
                 governanceBypass: true,
                 mode: 'COMPLIANCE',
                 retainUntilDate: expirationDate.toISOString(),
-                // versionId: 'my-versionId22245', 内部关联的，并非外部配置的！
             } as Retention
         );
     }
