@@ -36,6 +36,7 @@ export const ReportView = ({ rep }: any) => {
     const urlPrn=`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?print=1`+(original? "&original=1" : "");
     //组装正式报告：可能有多个子报告和目录及封面的，拼装一份pdf;       【全部展开显示的报告】?print=1
     const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn;
+    //报告，原始记录，其它的证书形式；
     const pdf_job= {
         name: (original ? "记录" : "报告") + rep?.isp?.no,
         lay: {

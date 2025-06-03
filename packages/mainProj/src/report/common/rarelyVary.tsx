@@ -9,7 +9,6 @@ import {startProcess} from "@/actions/camunda-actions";
 import {usePrintPdf} from "@/hooks/usePrintPdf";
 import {ErrorFallback} from "@/components/error-fallback";
 import {ErrorBoundary} from "react-error-boundary";
-import {createProcessInstanceRest} from "../../../../config/camunda";
 import {toast} from "sonner";
 
 //【报告】复用相同的。
@@ -227,18 +226,26 @@ export const RepFootLink = ({ template, verId, repId, rep, pdf_job, toPDF }: {
     // const toPDF = () => {
     //     handleSubmit!();
     // }
+    //对象保留期限:可多样选择的。临时1个月, 1年， 5年， 10年， 30年；
+    const retainDay=30;
+    const expiration = new Date()
+    expiration.setDate(expiration.getDate() + retainDay)
+    expiration.setUTCHours(0, 0, 0, 0)
+    const isoDate = expiration.toISOString()
     const handlePdfFlow = async (e: React.FormEvent) => {
         e.preventDefault()
+        //类型 ：报告，记录，其它的；
         const {success,error} = await startProcess({
             processId: "genRepPdf",
             variables: {
-                documentType: pdf_job,
-                original,
+                pdfJob: pdf_job,
+                pdfType: original? "ori":"rep",
+                repId,
+                expiration: isoDate,
             },
         })
         if(!success)
             toast.error("申请失败了", {description: error,})
-        // setResult(response)
     }
   return (
       <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">

@@ -1,21 +1,8 @@
-// import { ZBClient } from "zeebe-node"
 import { Camunda8,  } from '@camunda8/sdk'
 import axios from "axios"
 import dotenv from "dotenv"
-// import {ZBWorkerTaskHandler, ZeebeJob} from "@camunda8/sdk/dist/zeebe/lib/interfaces-1.0";
 import {FileUploader} from "./local-uploader";
-// import {
-//     IProcessVariables,
-//     JobCompletionInterfaceRest,
-//     JSON,
-//     JSONDoc,
-//     MustReturnJobActionAcknowledgement
-// } from '@camunda8/sdk/dist/zeebe/types';
-// import {Ctor, RestJob} from "@camunda8/sdk/dist/c8/lib/C8Dto";
-// import {Logger} from "@camunda8/sdk/dist/c8/lib/C8Logger";
-// import {MaybeTimeDuration} from "typed-duration";
 import type {ConfigRoot, FileTransform} from "page2pdf_server/src";
-
 
 // 加载环境变量
 dotenv.config()
@@ -39,97 +26,65 @@ const restClient = c8.getCamundaRestClient()     // 8.6.0 New REST API
 const PDF_SERVICE_URL = "http://localhost:9389/api/pdf"
 // 启动Worker
 async function startWorker() {
-    console.log("Starting Camunda 8 Worker...")
+   console.log("启动Camunda 8工作线程")
    const zbWorker= restClient.createJobWorker({
         type: "pdf-generation-task",
-        worker: "test-camd8",
+        worker: "urlToPdfTask",
         maxJobsToActivate: 1,
-        timeout: 60000,
-        jobHandler: myTaskHandler
+        timeout: 20*60*1000,
+        jobHandler: urlToPdfTask
     })
 
-    async function myTaskHandler(job: any) {
-        console.log("myTaskHandler >>",job)
+    async function urlToPdfTask(job: any) {
     try {
-      const prjob=job.variables?.documentType as  ConfigRoot<FileTransform>;
+      const prjob=job.variables?.pdfJob as  ConfigRoot<FileTransform>;
       // 发送HTTP请求到PDF服务
-      console.log(`Sending request to ${PDF_SERVICE_URL}`)
-      // await axios.post(PDF_SERVICE_URL, {job: job.variables?.documentType})
-      const response = await axios.post(PDF_SERVICE_URL, job.variables?.documentType)
+      console.log(`发起转换请求${PDF_SERVICE_URL}`)
+      const response = await axios.post(PDF_SERVICE_URL, prjob)
       const {message: ack, data:desc} =response.data
       const {result, dir} =desc
       //处理响应【考虑功能添加点】 转换pdf本地文件路径 +电子盖章 +然后上传到OSS 文件访问路径
-      console.log("Response received:", response.data)
+      console.log("转换应答:", response.data?.data?.dir)
       //成功response=: { status: 200, message: 'OK', data: { result: 'Success',dir } }    文件预先定义的==系统安装的路径：C:\page2pdf-server\pdfs +/files【0】.out/
       const finish= result==="Success";
       if(!finish || !dir)   return  job.fail(`转换pdf失败`, 0)
       const filepath= dir+"/"+ prjob?.name +".pdf";
         //可能+步骤2： +水印,电子盖章;
         //步骤3： 然后上传到OSS 文件访问路径;
-      // 设置大文件阈值 (5MB)
-      const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024
       //不经过java后端服务器做代理上传的，那样要再多一次复制。直接上传到OSS集群。
       const uploader = new FileUploader({
-          large_file_threshold: LARGE_FILE_THRESHOLD,
+          large_file_threshold: 10 * 1024 * 1024,            //设置大文件阈值 (10MB)，走分块上传模式
           bucketName: process.env.MINIO_BUCKETNAME!,
           lockMode: "COMPLIANCE",
       });
-        // let retainDate = null
-        // if (retainUntilDate) {
-        //     retainDate = new Date(retainUntilDate)
-        //     if (isNaN(retainDate.getTime())) {
-        //         return res.status(400).send("无效的保留日期格式")
-        //     }
-        // }
-
-        // Content-Type
-        // X-Amz-Meta-Author
-        // X-Amz-Meta-Rep
-        // X-Amz-Object-Lock-Mode
-        // X-Amz-Object-Lock-Retain-Until-Date
         // 设置元数据
         const metaData = {
             'Content-Type': 'application/pdf',
-            'X-Amz-Meta-Author': 'herzhang',
-            'X-Amz-Meta-Rep': 'KQcbgDF9RO21DsI92H3tTVJlcG9ydA'
+            'X-Amz-Meta-Author': job.variables?.Author,
+            'X-Amz-Meta-Rep': job.variables?.repId
         } as any;
-        // 2. 然后需设置对象保留期限的
-        const expirationDate = new Date()
-        expirationDate.setDate(expirationDate.getDate() + 60)
-        expirationDate.setUTCHours(0, 0, 0, 0)      //Should be start of the day.(midnight)
-            const isoDate = expirationDate.toISOString()
-        //【这里不能加的】 前缀会改成X-Amz-Meta-  等于无效啊。
-        //X-Amz-Meta-X-Amz-Object-Lock-Mode
-        //X-Amz-Meta-X-Amz-Object-Lock-Retain-Until-Date
-        metaData["X-Amz-Object-Lock-Retain-Until-Date"] = isoDate
-        //     metaData["X-Amz-Object-Lock-Mode"] = "COMPLIANCE"
-      await uploader.ossUpload(filepath, metaData);
-      // (async () => {
-      // })();
+        //【这里不能加的】 前缀会改成X-Amz-Meta-  等于无效啊。X-Amz-Meta-X-Amz-Object-Lock-Mode  X-Amz-Meta-X-Amz-Object-Lock-Retain-Until-Date
+        metaData["X-Amz-Object-Lock-Retain-Until-Date"] = job.variables?.expiration;
+      const ossObjId= await uploader.ossUpload(filepath, metaData);
+      //最可读的链接 http://127.0.0.1:9000/ywmast/ +ossObjId（202506/0315/xxx-）
       //完成job并返回结果：
       return job.complete({
           result: true,
-          ossFile: "/dfMy-sd/pdf/2211.sdfdsfWWWd",
-          original: job.variables?.original,
-          processedAt: new Date().toISOString(),
+          ossId: ossObjId,
+          // processedAt: new Date().toISOString(),
         })
     } catch (error) {
-      console.error("Error processing job:", error)
+      console.error("urlToPdfTask:", error)
       // 如果出错，标记job为失败
-      return job.fail(`Error processing job: ${error}`, 0)
+      return job.fail(`urlToPdfTask: ${error}`, 0)
     }
-    // const res = await callExternalSystem(job.variables)
   }
-
-  console.log(`Worker启动: pdf-generation-task`)
-  //job.complete({ 本地的文件OSS地址（rep /ori） ，下一个流程任务接收？。还是：这里仅仅提供配置信息，全部让Java节点机器处理打印的：或者盖章，上传OSS都需囊括一块做的，
-  //【后续步骤】给java节点机：数据库流程保存关联数据。
+  console.log(`启动Worker线程: pdf-generation-task`)
 }
 
 // 处理进程退出
 process.on("SIGTERM", async () => {
   console.log("Shutting down...")
-  // await restClient.close()
   process.exit(0)
 })
 
