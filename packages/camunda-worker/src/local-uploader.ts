@@ -46,12 +46,20 @@ ensureDir(config.localDir);
 // 初始化 MinIO 客户端
 const minioClient = new Minio.Client(config.minio);
 
+interface FileUploaderOptions {
+    large_file_threshold: number;
+    bucketName: string ;
+    lockMode: string;
+}
+
 export class FileUploader {
+    private options = {} as FileUploaderOptions;
     private tasks: any[] = [];
     private progressMap = new Map();
     private completedFiles = new Set();
 
-    constructor() {
+    constructor(options: FileUploaderOptions) {
+        this.options = options || {};
         this.loadProgress();
     }
     // ...其他属性保持不变
@@ -229,29 +237,31 @@ X-Amz-Object-Lock-Retain-Until-Date 2025-06-09T00:08:40.315Z
     }
 
     // 批量上传入口
-    async ossUpload(filepath:string) {
+    async ossUpload(filePath:string, metaData: any) {
         try {
             await minioClient.bucketExists(config.bucketName!) ||
                                                             minioClient.makeBucket(config.bucketName!);
-            const pdfFiles =[filepath];
+            const pdfFiles =[filePath];
             console.log(`发现 ${pdfFiles.length} 个PDF文件待上传`);
-            //直接从源头目录文件做上传的：
-            const uploadPromises = pdfFiles.map(async (file) => {
-                // 生成日期目录结构（格式：/yyyyMM/ddHH/）
-                const dateDir = moment().format('YYYYMM/DDHH/');
-                // 生成完整的 objectId（日期目录 + UUID）
-                const objectId = `${dateDir}${uuidv4()}`;
 
-                try {
-                    await this.uploadFileWithRetry(file, objectId);
-                    return { status: 'success', file, objectId };
-                } catch (err) {
-                    return { status: 'failed', file, objectId, error: err };
-                }
-            });
+            // 检查文件是否存在
+            if (!fs.existsSync(filePath)) {
+                return `文件不存在: ${filePath}`
+            }
+            // 生成日期目录结构（格式：/yyyyMM/ddHH/）
+            const dateDir = moment().format('YYYYMM/DDHH/');
+            // 生成完整的 objectId（日期目录 + UUID）
+            const objectId = `${dateDir}${uuidv4()}`;
 
-            const results = await Promise.all(uploadPromises);
-            this.printSummary(results);
+            // 上传文件
+            const result = await this.uploadFileToMinio({
+                objectName: objectId,
+                filePath,
+                metaData
+            })
+            //                 etag: result.etag,
+            //                 uploadMethod: result.method,
+            console.log(`${filePath} [${result ? '✅ 成功' : '❌ 失败'}]`, result)
         } catch (err) {
             console.error('批量上传失败:', err);
         }
@@ -299,6 +309,58 @@ X-Amz-Object-Lock-Retain-Until-Date 2025-06-09T00:08:40.315Z
                 `错误信息: ${error || ''}\n`);
         });
     }
+
+
+
+
+// 核心上传函数
+    async  uploadFileToMinio({ objectName, filePath, metaData } :any
+    ) {
+        const bucketName=this.options.bucketName;
+        // 确保 bucket 存在
+        const bucketExists = await minioClient.bucketExists(bucketName)
+        if (!bucketExists) {
+            await minioClient.makeBucket(bucketName, "us-east-1")
+            console.log(`创建了新的 bucket: ${bucketName}`)
+        }
+        const expirationDate=metaData["X-Amz-Object-Lock-Retain-Until-Date"];
+        metaData["X-Amz-Object-Lock-Retain-Until-Date"] =undefined;
+
+        const fileStats = fs.statSync(filePath)
+        const fileSize = fileStats.size
+        let etag
+        let method
+        // 根据文件大小选择上传方式
+        if (fileSize > this.options.large_file_threshold) {
+            // 大文件使用流式上传（MinIO 会自动分块）
+            const fileStream = fs.createReadStream(filePath)
+            etag = await minioClient.putObject(bucketName, objectName, fileStream, fileSize, metaData)
+            method = "chunked"
+        } else {
+            // 小文件直接上传
+            etag = await minioClient.fPutObject(bucketName, objectName, filePath, metaData)
+            method = "direct"
+        }
+
+        //【增加】
+        const retention = await minioClient.getObjectRetention(
+            bucketName,
+            objectName
+        );
+        console.log('Lock status:', retention);
+        //设置对象保留期限的
+        await minioClient.putObjectRetention(
+            bucketName,
+            objectName,
+            {
+                governanceBypass: true,
+                mode: 'COMPLIANCE',
+                retainUntilDate: expirationDate,
+            } as Retention
+        );
+        return { etag, method }
+    }
+
 }
 
 //blob:http://192.168.171.3:13501/cbc8cb2b-58bb-417f-8278-24c0fff1592a

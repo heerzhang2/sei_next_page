@@ -3,7 +3,7 @@ import { Camunda8,  } from '@camunda8/sdk'
 import axios from "axios"
 import dotenv from "dotenv"
 // import {ZBWorkerTaskHandler, ZeebeJob} from "@camunda8/sdk/dist/zeebe/lib/interfaces-1.0";
-import {FileUploader} from "./uploader";
+import {FileUploader} from "./local-uploader";
 // import {
 //     IProcessVariables,
 //     JobCompletionInterfaceRest,
@@ -66,9 +66,44 @@ async function startWorker() {
       const filepath= dir+"/"+ prjob?.name +".pdf";
         //可能+步骤2： +水印,电子盖章;
         //步骤3： 然后上传到OSS 文件访问路径;
+      // 设置大文件阈值 (5MB)
+      const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024
       //不经过java后端服务器做代理上传的，那样要再多一次复制。直接上传到OSS集群。
-      const uploader = new FileUploader();
-      await uploader.ossUpload(filepath);
+      const uploader = new FileUploader({
+          large_file_threshold: LARGE_FILE_THRESHOLD,
+          bucketName: process.env.MINIO_BUCKETNAME!,
+          lockMode: "COMPLIANCE",
+      });
+        // let retainDate = null
+        // if (retainUntilDate) {
+        //     retainDate = new Date(retainUntilDate)
+        //     if (isNaN(retainDate.getTime())) {
+        //         return res.status(400).send("无效的保留日期格式")
+        //     }
+        // }
+
+        // Content-Type
+        // X-Amz-Meta-Author
+        // X-Amz-Meta-Rep
+        // X-Amz-Object-Lock-Mode
+        // X-Amz-Object-Lock-Retain-Until-Date
+        // 设置元数据
+        const metaData = {
+            'Content-Type': 'application/pdf',
+            'X-Amz-Meta-Author': 'herzhang',
+            'X-Amz-Meta-Rep': 'KQcbgDF9RO21DsI92H3tTVJlcG9ydA'
+        } as any;
+        // 2. 然后需设置对象保留期限的
+        const expirationDate = new Date()
+        expirationDate.setDate(expirationDate.getDate() + 60)
+        expirationDate.setUTCHours(0, 0, 0, 0)      //Should be start of the day.(midnight)
+            const isoDate = expirationDate.toISOString()
+        //【这里不能加的】 前缀会改成X-Amz-Meta-  等于无效啊。
+        //X-Amz-Meta-X-Amz-Object-Lock-Mode
+        //X-Amz-Meta-X-Amz-Object-Lock-Retain-Until-Date
+        metaData["X-Amz-Object-Lock-Retain-Until-Date"] = isoDate
+        //     metaData["X-Amz-Object-Lock-Mode"] = "COMPLIANCE"
+      await uploader.ossUpload(filepath, metaData);
       // (async () => {
       // })();
       //完成job并返回结果：
