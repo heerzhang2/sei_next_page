@@ -3,6 +3,7 @@ import axios from "axios"
 import dotenv from "dotenv"
 import {deleteDirWithRm, FileUploader} from "./local-uploader";
 import type {ConfigRoot, FileTransform} from "page2pdf_server/src";
+import {MaybeTimeDuration} from "typed-duration";
 
 const { exec } = require('child_process');
 const os = require('os');
@@ -31,20 +32,20 @@ const restClient = c8.getCamundaRestClient()     // 8.6.0 New REST API
 const PDF_SERVICE_URL = "http://localhost:9389/api/pdf"
 // 启动Worker
 async function startWorker() {
-   console.log("启动Camunda 8工作线程")
    const zbWorker= restClient.createJobWorker({
         type: "pdf-generation-task",
         worker: "urlToPdfTask",
         maxJobsToActivate: 1,
+       //重启可能，设置太长了导致：接受新任务有延迟的。
         timeout: 20*60*1000,
         jobHandler: urlToPdfTask
-    })
+    });
 
     async function urlToPdfTask(job: any) {
     try {
       const prjob=job.variables?.pdfJob as  ConfigRoot<FileTransform>;
       // 发送HTTP请求到PDF服务
-      console.log(`发起转换请求${PDF_SERVICE_URL}`)
+      console.log(`[新的流程] 发起转换请求${PDF_SERVICE_URL}`)
       const response = await axios.post(PDF_SERVICE_URL, prjob)
       const {message: ack, data:desc} =response.data
       const {result, dir} =desc
@@ -99,7 +100,7 @@ process.on("SIGTERM", async () => {
 const lockFilePath = path.join(os.tmpdir(), 'camunda-worker-node-service.lock');
 
 // 检查 PID 是否存在的函数
-function checkPidValidity(pid) {
+function checkPidValidity(pid: number) {
     return new Promise((resolve, reject) => {
         let command;
         if (os.platform() === 'win32') {
@@ -110,7 +111,7 @@ function checkPidValidity(pid) {
             command = `ps -p ${pid} -o pid= 2>&1`;
         }
 
-        exec(command, (error, stdout, stderr) => {
+        exec(command, (error: any, stdout: string, stderr: any) => {
             if (error) {
                 // 命令执行出错（如权限不足）
                 resolve(false);
@@ -127,13 +128,13 @@ function checkPidValidity(pid) {
 // 示例：启动服务时检查锁文件
 const pid = process.pid;
 
-function getProcessInfo(pid) {
+function getProcessInfo(pid: number) {
     return new Promise((resolve) => {
         const command = os.platform() === 'win32'
             ? `wmic process where ProcessId=${pid} get Name,ExecutablePath`
             : `ps -p ${pid} -o comm=`;
 
-        exec(command, (error, stdout) => {
+        exec(command, (error: any, stdout: string) => {
             resolve(stdout.trim());
         });
     });

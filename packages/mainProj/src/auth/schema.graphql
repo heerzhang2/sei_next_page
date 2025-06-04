@@ -1771,6 +1771,11 @@ enum RegState_Enum {
   CANCEL
 }
 
+type RepLink {
+  ori: String
+  rep: String
+}
+
 type Report implements Node & SimpleReport {
   id: ID!
   version: Int!
@@ -1789,6 +1794,7 @@ type Report implements Node & SimpleReport {
   files: 可能被报告使用的后端台账业务字段 [File]
   """
   tzFields: [String!]
+  link: RepLink
 }
 
 type ReportConnection {

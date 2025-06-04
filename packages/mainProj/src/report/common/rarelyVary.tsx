@@ -239,7 +239,6 @@ export const RepFootLink = ({
         { value: "3650", label: "10年", days: 3650 },
         { value: "10950", label: "30年", days: 10950 },
     ]
-
     // 创建标签到天数的映射
     const labelToDaysMap = retentionOptions.reduce(
         (acc, option) => {
@@ -261,8 +260,8 @@ export const RepFootLink = ({
     // 新增状态管理
     const [retentionPeriod, setRetentionPeriod] = useState(30) // 存储实际天数
     const [displayValue, setDisplayValue] = useState("1个月") // 存储显示值
-    const [pdfStatus, setPdfStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
-    const [pdfUrl, setPdfUrl] = useState<string>("")
+    const [pdfStatus, setPdfStatus] = useState<"idle" | "loading" | "success" | "redo">("idle")
+    const pdfUri=original ? rep?.link?.ori : rep?.link?.rep;
     const [isProcessing, setIsProcessing] = useState(false)
 
     // 处理期限选择变化
@@ -290,12 +289,9 @@ export const RepFootLink = ({
 
     const handlePdfFlow = async (e: React.FormEvent) => {
         e.preventDefault()
-
         if (isProcessing) return
-
         setIsProcessing(true)
         setPdfStatus("loading")
-
         const isoDate = getExpirationDate(retentionPeriod)
         const selectedLabel = daysToLabelMap[retentionPeriod] || `${retentionPeriod}天`
 
@@ -312,16 +308,14 @@ export const RepFootLink = ({
 
             if (success && processInstanceKey) {
                 setPdfStatus("success")
-                // setPdfUrl(data.pdfUrl)
-                toast.success(`申请PDF转换成功！保留期限：${selectedLabel}`, {
-                    description: "在后端排队，等它完成后，再刷新才能看到下载链接",
-                })
+                toast.success(`申请PDF转换成功！保留期限：${selectedLabel}`,
+                    {description: <>在后端排队，等它完成后，再刷新才能看到下载链接<br/>请不要重复提交转换Pdf的申请单，后端页需要消耗时间处理的。</>})
             } else {
-                setPdfStatus("error")
+                setPdfStatus("redo")
                 toast.error("PDF转换失败", { description: error })
             }
         } catch (err) {
-            setPdfStatus("error")
+            setPdfStatus("redo")
             toast.error("PDF转换失败", { description: "错误"+err })
         } finally {
             setIsProcessing(false)
@@ -396,35 +390,30 @@ export const RepFootLink = ({
                             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                                 <div className="flex gap-2">
                                     <Button variant="outline" onClick={() => window.print()}>
-                                        预览
+                                      预览
                                     </Button>
                                     <Button variant="outline" onClick={toPDF}>
-                                        本机转pdf
+                                      本机转pdf
                                     </Button>
                                 </div>
 
                                 {/* PDF转换区域 */}
                                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                                    {pdfStatus === "success" && pdfUrl ? (
+                                    {pdfStatus === "idle" && pdfUri ? (
                                         // 显示PDF链接
                                         <div className="flex flex-col sm:flex-row items-center gap-2">
                                             <Link
-                                                href={pdfUrl}
+                                                href={`${process.env.NEXT_PUBLIC_OSS_ENDP}${pdfUri}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
                                             >
-                                                查看PDF文件
+                                            有pdf版
                                             </Link>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                    setPdfStatus("idle")
-                                                    setPdfUrl("")
-                                                }}
+                                            <Button variant="ghost" size="sm"
+                                                onClick={() => setPdfStatus("redo")}
                                             >
-                                                重新转换
+                                            后端再转
                                             </Button>
                                         </div>
                                     ) : (
@@ -438,7 +427,7 @@ export const RepFootLink = ({
                                                 className="w-[140px]"
                                             />
                                             <Button variant="outline" onClick={handlePdfFlow} disabled={isProcessing}>
-                                                {isProcessing ? "转换中..." : "后端转pdf"}
+                                                {isProcessing ? "发起申请中..." : "后端转pdf"}
                                             </Button>
                                         </div>
                                     )}
