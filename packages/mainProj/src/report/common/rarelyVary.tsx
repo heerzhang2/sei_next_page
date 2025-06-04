@@ -2,18 +2,15 @@
 import * as React from "react";
 import { useState } from "react"
 import Link from "next/link"
-import {Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui";
-
+import {Button} from "@/components/ui";
 import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
 import {cn} from "@/lib/utils";
-
 import {usePrintPdf} from "@/hooks/usePrintPdf";
-import {ErrorFallback} from "@/components/error-fallback";
-import {ErrorBoundary} from "react-error-boundary";
 import {toast} from "sonner";
+import {InputDatalist} from "@/components/chub";
+import {useCreateQueryString} from "@/hooks/useCreateQueryString";
+import {startProcess} from "@/actions/camunda-actions";
 
-// import {useCreateQueryString} from "@/hooks/useCreateQueryString";
-// import {startProcess} from "@/actions/camunda-actions";
 
 //【报告】复用相同的。
 //很多内容相对重复，这里是报告较高层范围复用的组件；专门报告类型的可以安排在下一层次分开目录去做。
@@ -210,33 +207,6 @@ export const 落款单位地址 = () => (
 // };
 
 
-
-// 临时mock函数，你需要替换为实际的实现
-const useCreateQueryString = () => {
-    const searchParams = useSearchParams()
-    return (name: string, value: string) => {
-        const params = new URLSearchParams(searchParams.toString())
-        if (value) {
-            params.set(name, value)
-        } else {
-            params.delete(name)
-        }
-        return params.toString()
-    }
-}
-
-const startProcess = async (config: any) => {
-    // Mock implementation
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                success: true,
-                data: { pdfUrl: "https://example.com/generated-report.pdf" },
-            })
-        }, 2000)
-    })
-}
-
 export const RepFootLink = ({
                                 template,
                                 verId,
@@ -261,12 +231,6 @@ export const RepFootLink = ({
     const original = "1" === searchParams!.get("original")
     const fixBtn = !action
 
-    // 新增状态管理
-    const [retentionPeriod, setRetentionPeriod] = useState("30") // 默认30天
-    const [pdfStatus, setPdfStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
-    const [pdfUrl, setPdfUrl] = useState<string>("")
-    const [isProcessing, setIsProcessing] = useState(false)
-
     // 保留期限选项
     const retentionOptions = [
         { value: "30", label: "1个月", days: 30 },
@@ -275,6 +239,47 @@ export const RepFootLink = ({
         { value: "3650", label: "10年", days: 3650 },
         { value: "10950", label: "30年", days: 10950 },
     ]
+
+    // 创建标签到天数的映射
+    const labelToDaysMap = retentionOptions.reduce(
+        (acc, option) => {
+            acc[option.label] = option.days
+            return acc
+        },
+        {} as Record<string, number>,
+    )
+
+    // 创建天数到标签的映射
+    const daysToLabelMap = retentionOptions.reduce(
+        (acc, option) => {
+            acc[option.days] = option.label
+            return acc
+        },
+        {} as Record<number, string>,
+    )
+
+    // 新增状态管理
+    const [retentionPeriod, setRetentionPeriod] = useState(30) // 存储实际天数
+    const [displayValue, setDisplayValue] = useState("1个月") // 存储显示值
+    const [pdfStatus, setPdfStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+    const [pdfUrl, setPdfUrl] = useState<string>("")
+    const [isProcessing, setIsProcessing] = useState(false)
+
+    // 处理期限选择变化
+    const handlePeriodChange = (selectedLabel: string) => {
+        const days = labelToDaysMap[selectedLabel]
+        if (days) {
+            setRetentionPeriod(days)
+            setDisplayValue(selectedLabel)
+        } else {
+            // 如果用户输入的是数字，直接使用
+            const numericValue = Number.parseInt(selectedLabel)
+            if (!isNaN(numericValue) && numericValue > 0) {
+                setRetentionPeriod(numericValue)
+                setDisplayValue(`${numericValue}天`)
+            }
+        }
+    }
 
     const getExpirationDate = (days: number) => {
         const expiration = new Date()
@@ -291,9 +296,8 @@ export const RepFootLink = ({
         setIsProcessing(true)
         setPdfStatus("loading")
 
-        const selectedOption = retentionOptions.find((opt) => opt.value === retentionPeriod)
-        const retainDays = selectedOption?.days || 30
-        const isoDate = getExpirationDate(retainDays)
+        const isoDate = getExpirationDate(retentionPeriod)
+        const selectedLabel = daysToLabelMap[retentionPeriod] || `${retentionPeriod}天`
 
         try {
             const { success, error, data } = (await startProcess({
@@ -309,7 +313,7 @@ export const RepFootLink = ({
             if (success && data?.pdfUrl) {
                 setPdfStatus("success")
                 setPdfUrl(data.pdfUrl)
-                toast.success(`PDF转换成功！保留期限：${selectedOption?.label}`, {
+                toast.success(`PDF转换成功！保留期限：${selectedLabel}`, {
                     description: "点击下方链接查看PDF文件",
                 })
             } else {
@@ -426,18 +430,13 @@ export const RepFootLink = ({
                                     ) : (
                                         // 显示转换控件
                                         <div className="flex flex-col sm:flex-row items-center gap-2">
-                                            <Select value={retentionPeriod} onValueChange={setRetentionPeriod}>
-                                                <SelectTrigger className="w-[120px]">
-                                                    <SelectValue placeholder="选择期限" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {retentionOptions.map((option) => (
-                                                        <SelectItem key={option.value} value={option.value}>
-                                                            {option.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <InputDatalist
+                                                placeholder="天数"
+                                                datalist={retentionOptions.map((a) => a.label)}
+                                                value={displayValue}
+                                                onListChange={handlePeriodChange}
+                                                className="w-[140px]"
+                                            />
                                             <Button variant="outline" onClick={handlePdfFlow} disabled={isProcessing}>
                                                 {isProcessing ? "转换中..." : "后端转pdf"}
                                             </Button>
@@ -452,13 +451,6 @@ export const RepFootLink = ({
         </div>
     )
 }
-
-
-
-
-
-
-
 
 /**因为击链接出现hook报错只好假如2个参数了：ALL printAll需要去掉，要求跳转迂回才能避免编辑器列表的动态增加的ref.独立流转报告切换主报告时刻的编辑器的个数变化引起的useXXX报错。
  * 还是有detected a change in the order of Hooks called by ReportView. 报错的？
