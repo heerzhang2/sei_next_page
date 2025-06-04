@@ -213,14 +213,12 @@ export const RepFootLink = ({
                                 repId,
                                 rep,
                                 pdf_job,
-                                toPDF,
                             }: {
     template: string
     verId: string
     repId: string
     rep: any
     pdf_job: any
-    toPDF: () => void
 }) => {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
@@ -230,7 +228,10 @@ export const RepFootLink = ({
     const { action } = useParams()
     const original = "1" === searchParams!.get("original")
     const fixBtn = !action
-
+    const [handleSubmit] = usePrintPdf(pdf_job)
+    const toPDF = () => {
+        handleSubmit!()
+    }
     // 保留期限选项
     const retentionOptions = [
         { value: "30", label: "1个月", days: 30 },
@@ -261,7 +262,7 @@ export const RepFootLink = ({
     const [retentionPeriod, setRetentionPeriod] = useState(30) // 存储实际天数
     const [displayValue, setDisplayValue] = useState("1个月") // 存储显示值
     const [pdfStatus, setPdfStatus] = useState<"idle" | "loading" | "success" | "redo">("idle")
-    const pdfUri=original ? rep?.link?.ori : rep?.link?.rep;
+    const pdfUri = original ? rep?.link?.ori : rep?.link?.rep
     const [isProcessing, setIsProcessing] = useState(false)
 
     // 处理期限选择变化
@@ -308,20 +309,26 @@ export const RepFootLink = ({
 
             if (success && processInstanceKey) {
                 setPdfStatus("success")
-                toast.success(`申请PDF转换成功！保留期限：${selectedLabel}`,
-                    {description: <>在后端排队，等它完成后，再刷新才能看到下载链接<br/>请不要重复提交转换Pdf的申请单，后端页需要消耗时间处理的。</>})
+                toast.success(`申请PDF转换成功！保留期限：${selectedLabel}`, {
+                    description: (
+                        <>
+                            在后端排队，等它完成后，再刷新才能看到下载链接
+                            <br />
+                            请不要重复提交转换Pdf的申请单，后端页需要消耗时间处理的。
+                        </>
+                    ),
+                })
             } else {
                 setPdfStatus("redo")
                 toast.error("PDF转换失败", { description: error })
             }
         } catch (err) {
             setPdfStatus("redo")
-            toast.error("PDF转换失败", { description: "错误"+err })
+            toast.error("PDF转换失败", { description: "错误" + err })
         } finally {
             setIsProcessing(false)
         }
     }
-
     return (
         <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
             <Link href="/" passHref className="text-blue-600 hover:text-blue-800 block text-sm mb-4 md:mb-0 md:inline-block">
@@ -390,10 +397,10 @@ export const RepFootLink = ({
                             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                                 <div className="flex gap-2">
                                     <Button variant="outline" onClick={() => window.print()}>
-                                      预览
+                                        预览
                                     </Button>
                                     <Button variant="outline" onClick={toPDF}>
-                                      本机转pdf
+                                        本机转pdf
                                     </Button>
                                 </div>
 
@@ -408,12 +415,12 @@ export const RepFootLink = ({
                                                 rel="noopener noreferrer"
                                                 className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
                                             >
-                                            有pdf版
+                                                有pdf版
                                             </Link>
                                             <Button variant="ghost" size="sm"
-                                                onClick={() => setPdfStatus("redo")}
+                                                    onClick={() => setPdfStatus("redo")}
                                             >
-                                            后端再转
+                                                后端再转
                                             </Button>
                                         </div>
                                     ) : (

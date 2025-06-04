@@ -30,18 +30,18 @@ import {usePrintPdf} from "@/hooks/usePrintPdf";
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
-    const original = "1"===searchParams!.get("original")
-    const {storage, } =useStorage();
+    const original = "1" === searchParams!.get("original")
+    const { storage } = useStorage()
     const Component = original ? FormatOriginal : OfficialReport
-    const urlPrn=`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?print=1`+(original? "&original=1" : "");
+    const urlPrn = `/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?print=1` + (original ? "&original=1" : "")
     //组装正式报告：可能有多个子报告和目录及封面的，拼装一份pdf;       【全部展开显示的报告】?print=1
-    const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn;
+    const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn
     //报告，原始记录，其它的证书形式；
-    const pdf_job= {
+    const pdf_job = {
         name: (original ? "记录" : "报告") + rep?.isp?.no,
         lay: {
             head: [
-`<div class="parent">
+                `<div class="parent">
   <div class="child">报告No: ${rep?.isp?.no}</div>
 </div>
 <style>
@@ -59,29 +59,28 @@ export const ReportView = ({ rep }: any) => {
     bottom: 0;
     left: 30px;
   }
-</style>` ],
+</style>`,
+            ],
         },
         files: [
             {
                 url,
                 out: `tmp-${rep?.isp?.no}` + (original ? "-o" : ""),
                 frNo: 3,
-                cRange: "1-2"
-            }
+                cRange: "1-2",
+            },
         ],
-    } as ConfigRoot<FileTransform>;
-    const [handleSubmit] = usePrintPdf(pdf_job);
-    const toPDF = () => {
-        handleSubmit!();
-    }
+    } as ConfigRoot<FileTransform>
 
-    return <>
-        <div id='PHEAD'/>
-        <RepTitleUpdate code={storage?.eqpcod} original={original}/>
-        <Component source={storage} rep={rep}/>
-        {RepFootLink({rep, template: rep?.modeltype, verId:rep?.modelversion, repId: rep?.id,pdf_job,toPDF})}
-        <div id='PTAIL'/>
-    </>
+    return (
+        <>
+            <div id="PHEAD" />
+            <RepTitleUpdate code={storage?.eqpcod} original={original} />
+            <Component source={storage} rep={rep} />
+            {RepFootLink({ rep, template: rep?.modeltype, verId: rep?.modelversion, repId: rep?.id, pdf_job })}
+            <div id="PTAIL" />
+        </>
+    )
 }
 
 const 检验结果替换 = (orc: { [x: string]: any }) => {
