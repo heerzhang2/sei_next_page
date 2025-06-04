@@ -10,6 +10,7 @@ import {toast} from "sonner";
 import {InputDatalist} from "@/components/chub";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 import {startProcess} from "@/actions/camunda-actions";
+import {ConfigRoot, FileTransform} from "page2pdf_server/src";
 
 
 //【报告】复用相同的。
@@ -218,7 +219,7 @@ export const RepFootLink = ({
     verId: string
     repId: string
     rep: any
-    pdf_job: any
+    pdf_job: ConfigRoot<FileTransform>
 }) => {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
@@ -314,7 +315,7 @@ export const RepFootLink = ({
                         <>
                             在后端排队，等它完成后，再刷新才能看到下载链接
                             <br />
-                            请不要重复提交转换Pdf的申请单，后端页需要消耗时间处理的。
+                            请不要重复提交转换Pdf的申请单，后端也需消耗时间处理。
                         </>
                     ),
                 })
@@ -447,6 +448,7 @@ export const RepFootLink = ({
         </div>
     )
 }
+
 
 /**因为击链接出现hook报错只好假如2个参数了：ALL printAll需要去掉，要求跳转迂回才能避免编辑器列表的动态增加的ref.独立流转报告切换主报告时刻的编辑器的个数变化引起的useXXX报错。
  * 还是有detected a change in the order of Hooks called by ReportView. 报错的？

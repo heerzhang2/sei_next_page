@@ -5,73 +5,28 @@ import {useSearchParams} from "next/navigation"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
-import {OriginalDataMutation, ReportViewProps, RepTitleUpdate} from "@/report/common/base"
+import {ReportViewProps, RepTitleUpdate} from "@/report/common/base"
 import { RepFootLink, 落款单位地址 } from "@/report/common/rarelyVary"
 import type { Column_Setting } from "@/report/common/useFormatOmni"
 import { useOfficialOmni } from "@/report/common/useOfficialOmni"
 import { UnqualifiedIspTable } from "@/report/common/general"
 import { useItemsMapOmni } from "@/report/common/omni"
-// import { ReportFirstPageHeadJd } from "@/report/park/rarelyVary"
-import { 检验核准WaterJj, 注意事项WaterJj, 首页概况WaterJj } from "@/report/recreation/waterJj/rarelyVary"
+import { 检验核准WaterJj, 注意事项WaterJj } from "@/report/recreation/waterJj/rarelyVary"
 import { RepDeviceDetail } from "./repView"
 import { setupItemAreaRoute } from "./orcIspConfig"
 import { FormatOriginal } from "./FormatOriginal"
 import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
 import {DirectLink} from "@/routing/Link";
-import {useFieldArray, useForm} from "react-hook-form";
-import type {z} from "zod";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {useMutation} from "@urql/next";
-import {toast} from "sonner";
-import {Button, CardFooter, Form} from "@/components/ui";
 import {ReportFirstPageHeadJd} from "@/report/common/head";
-import {ConfigRoot, FileTransform} from "page2pdf_server/src";
-import {usePrintPdf} from "@/hooks/usePrintPdf";
+import {createPdfJob} from "@/report/footer/job";
+
 
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
     const original = "1" === searchParams!.get("original")
     const { storage } = useStorage()
     const Component = original ? FormatOriginal : OfficialReport
-    const urlPrn = `/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?print=1` + (original ? "&original=1" : "")
-    //组装正式报告：可能有多个子报告和目录及封面的，拼装一份pdf;       【全部展开显示的报告】?print=1
-    const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn
-    //报告，原始记录，其它的证书形式；
-    const pdf_job = {
-        name: (original ? "记录" : "报告") + rep?.isp?.no,
-        lay: {
-            head: [
-                `<div class="parent">
-  <div class="child">报告No: ${rep?.isp?.no}</div>
-</div>
-<style>
-  .parent {
-    position: relative;
-    width: 100%;
-    border-bottom: 1px solid #eeeeee;
-    margin: 8px 15px 0;
-    font-size: 12px;
-  }
-  .child {
-    position: absolute;
-    width: 100%;
-    text-align: left;
-    bottom: 0;
-    left: 30px;
-  }
-</style>`,
-            ],
-        },
-        files: [
-            {
-                url,
-                out: `tmp-${rep?.isp?.no}` + (original ? "-o" : ""),
-                frNo: 3,
-                cRange: "1-2",
-            },
-        ],
-    } as ConfigRoot<FileTransform>
-
+    const pdf_job = createPdfJob(rep, original);
     return (
         <>
             <div id="PHEAD" />
