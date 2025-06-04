@@ -6,7 +6,7 @@
   "description": "特检院的前端--主要业务的部分",
   "packageManager": "yarn@4.0.1",
   "scripts": {
-    "yarnAdd": "yarn add react-error-boundary ",
+    "yarnAdd": "yarn add import-local --dev",
     "v0dev/Vercel自带组件添加": "npx shadcn@latest add --overwrite  sidebar",
     "AI胡诌的": "yarn upgrade @radix-ui/react-dialog @radix-ui/react-slot @radix-ui/react-tooltip",
     "dev": "next dev -p 3765",
@@ -110,6 +110,7 @@
     "eslint-config-next": "15.2.0",
     "get-graphql-schema": "^2.1.2",
     "ignore-loader": "^0.1.2",
+    "import-local": "^3.2.0",
     "page2pdf_server": "^2.0.0",
     "sei_code_tools": "^0.2.2",
     "tailwindcss": "^4.1.5",

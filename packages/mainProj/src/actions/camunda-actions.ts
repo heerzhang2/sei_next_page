@@ -25,7 +25,7 @@ export async function startProcess({ processId, variables, bpmnProcessId }: Star
   }
   //若用户有权的，继续执行： “后端转pdf”按钮：检验员才能用，其它的如企业用户不能用。
   try {
-    variables["Author"]=session?.user?.name;     //后端账户系统的 username;
+    variables["author"]=session?.user?.name;     //后端账户系统的 username;
     // 使用 REST API 创建流程实例
     const result = await createProcessInstanceRest(bpmnProcessId || processId, variables)
 

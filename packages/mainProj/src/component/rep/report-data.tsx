@@ -24,7 +24,7 @@ export const ReportQuery = gql`
     }
     fragment pageReportIsp on Report
     {
-        id, modeltype, modelversion, tzFields,
+        id, modeltype, modelversion, tzFields,link,
         isp {
             id, no, report{id},
             dev{id cod},bsType,

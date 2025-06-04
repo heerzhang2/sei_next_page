@@ -300,7 +300,7 @@ export const RepFootLink = ({
         const selectedLabel = daysToLabelMap[retentionPeriod] || `${retentionPeriod}天`
 
         try {
-            const { success, error, data } = (await startProcess({
+            const { success, error, processInstanceKey } = (await startProcess({
                 processId: "genRepPdf",
                 variables: {
                     pdfJob: pdf_job,
@@ -310,19 +310,19 @@ export const RepFootLink = ({
                 },
             })) as any
 
-            if (success && data?.pdfUrl) {
+            if (success && processInstanceKey) {
                 setPdfStatus("success")
-                setPdfUrl(data.pdfUrl)
-                toast.success(`PDF转换成功！保留期限：${selectedLabel}`, {
-                    description: "点击下方链接查看PDF文件",
+                // setPdfUrl(data.pdfUrl)
+                toast.success(`申请PDF转换成功！保留期限：${selectedLabel}`, {
+                    description: "在后端排队，等它完成后，再刷新才能看到下载链接",
                 })
             } else {
                 setPdfStatus("error")
-                toast.error("PDF转换失败", { description: error || "未知错误" })
+                toast.error("PDF转换失败", { description: error })
             }
         } catch (err) {
             setPdfStatus("error")
-            toast.error("PDF转换失败", { description: "网络错误或服务异常" })
+            toast.error("PDF转换失败", { description: "错误"+err })
         } finally {
             setIsProcessing(false)
         }

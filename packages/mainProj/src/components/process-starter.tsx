@@ -7,7 +7,7 @@ import { startProcess } from "@/actions/camunda-actions"
 import {ConfigRoot, FileTransform} from "page2pdf_server/src";
 
 /*@deprecated
-旧的测试页
+旧的测试页； 它需要用独立的app路由page路径的/独立路由页。而不是当前页面直接内嵌的元素模式。
 * */
 export default function ProcessStarter() {
   const [loading, setLoading] = useState(false)

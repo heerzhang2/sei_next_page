@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import {Retention} from "minio";
 import moment from 'moment';
 import {v4 as uuidv4} from 'uuid';
+const nodefs = require('fs');
+const path = require('path');
 
 // 加载环境变量
 dotenv.config()
@@ -109,5 +111,14 @@ export class FileUploader {
             } as Retention
         );
         return { etag, method }
+    }
+}
+
+export async function deleteDirWithRm(dirPath: string) {
+    try {
+        await nodefs.rm(dirPath, { recursive: true, force: true });
+        console.log(`目录 ${dirPath} 删除成功`);
+    } catch (err) {
+        console.error(`删除失败: ${err}`);
     }
 }
