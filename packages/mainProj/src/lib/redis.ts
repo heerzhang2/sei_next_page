@@ -12,69 +12,29 @@ class RedisClient {
         password: process.env.REDIS_PASSWORD,
         retryDelayOnFailover: 100,
         maxRetriesPerRequest: 3,
+        retryStrategy: (times) => {
+          if (times <= 3) {
+            return 3000; // 前3次失败后每3秒重试
+          }
+          return 20000;     //return NULL放弃重连
+        },
       })
     }
     return RedisClient.instance
   }
 }
 
+//实例。 连接池；
 export const redis = RedisClient.getInstance()
 
 
-//没用到！  Session 管理类 - 使用 Redis 存储 session
-export class SessionManager {
-  private static readonly SESSION_PREFIX = "session:"
-  private static readonly SESSION_TTL = 1800 // 30分钟
-
-  // 创建 session
-  static async createSession(userId: string, userInfo: any): Promise<string> {
-    const sessionToken = this.generateSessionToken()
-    const sessionData = {
-      userId,
-      userInfo,
-      createdAt: new Date().toISOString(),
-      lastAccessed: new Date().toISOString(),
-    }
-
-    await redis.setex(`${this.SESSION_PREFIX}${sessionToken}`, this.SESSION_TTL, JSON.stringify(sessionData))
-    return sessionToken
-  }
-
-  // 获取 session
-  static async getSession(sessionToken: string): Promise<any | null> {
-    try {
-      const sessionData = await redis.get(`${this.SESSION_PREFIX}${sessionToken}`)
-      if (!sessionData) return null
-
-      const session = JSON.parse(sessionData)
-
-      // 更新最后访问时间并延长过期时间
-      session.lastAccessed = new Date().toISOString()
-      await redis.setex(`${this.SESSION_PREFIX}${sessionToken}`, this.SESSION_TTL, JSON.stringify(session))
-
-      return session
-    } catch (error) {
-      console.error("Error getting session:", error)
-      return null
-    }
-  }
-
-  // 删除 session
-  static async deleteSession(sessionToken: string): Promise<void> {
-    await redis.del(`${this.SESSION_PREFIX}${sessionToken}`)
-  }
-
-  // 生成 session token
-  private static generateSessionToken(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}`
-  }
-}
-
-
-//用户信息的缓存管理类
-export class RoleCache {
+/**用户信息的缓存类 "user_info:${userId}" 作为redis的关键key;
+ 这个是nextjs服务器环境的代码才能使用的 全部用户数据的可缓存；
+ #似乎在浏览器环境是不能复用的，浏览器端需要单独自己再发起一个后端的api去查询 getUserinfoQuery 用户数据。
+* */
+export class UserInfoCache {
   private static readonly CACHE_PREFIX = "user_info:"
-  private static readonly CACHE_TTL = 600     //延迟10分钟,可忍受的。
+  private static readonly CACHE_TTL = 600     //延迟10分钟才能刷新,可忍受的。
 
   static async getUserRoles(userId: string,accessToken?:string): Promise<string[]> {
     const cacheKey = `${this.CACHE_PREFIX}${userId}`
@@ -101,26 +61,5 @@ export class RoleCache {
   static async clearUserRoles(userId: string): Promise<void> {
     const cacheKey = `${this.CACHE_PREFIX}${userId}`
     await redis.del(cacheKey)
-  }
-
-  private static async fetchRolesFromBackend(userId: string): Promise<string[]> {
-    try {
-      const response = await fetch(`${process.env.JAVA_BACKEND_URL}/api/users/${userId}/roles`, {
-        headers: {
-          Authorization: `Bearer ${process.env.JAVA_BACKEND_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      return data.roles || []
-    } catch (error) {
-      console.error("Error fetching user roles from Java backend:", error)
-      throw new Error(`鉴权失败: ${error}`)
-    }
   }
 }

@@ -109,6 +109,7 @@ async function refreshAccessToken(token: JWT) {
   }
 }
 
+//用户全部的信息
 export const getUserinfoQuery = gql`
   query getUserQuery($id: ID!) {
     getUser(id: $id) {
@@ -116,12 +117,15 @@ export const getUserinfoQuery = gql`
       dep{id name} office{id name} 
       unit{id name dvs{id name} }
       ispUnits{id,unit{id,name}}
-      authorities{name}
+      authorities{id,name}
     }
   }
 `;
 
-//在nextjs-RSC-node服务器环境中的，才能执行的，获取用户信息：
+/**应该是在nextjs-RSC-node服务器环境中的，才能执行的，获取用户信息：【不能】切记不要在浏览器执行本函数。
+ * @param accessToken  调用函数人的身份
+ * @param userId 不一定就是调用者自己的id
+ * */
 export async function getUserInfo(userId: string,accessToken?:string) {
     const result = await urqlClient(accessToken || null).query(getUserinfoQuery, {
           id: userId
@@ -131,6 +135,7 @@ export async function getUserInfo(userId: string,accessToken?:string) {
     }
     return result.data.getUser;
 }
+
 
 /*
 在这个模块声明的内部，你定义了一个名为 Session 的接口。这表明你想要扩展或修改 next-auth 库中现有的 Session 接口。

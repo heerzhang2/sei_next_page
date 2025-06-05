@@ -1,14 +1,16 @@
 import { auth } from "@/app/auth"
-import { RoleCache } from "@/lib/redis"
+import { UserInfoCache } from "@/lib/redis"
 import { redirect } from "next/navigation"
 
-//有任意一个角色的 都通过的：
+/**有任意一个角色的 都通过的： requireRole是服务器环境运行的。
+ * 里面的const userinfo = await getUserInfo(userId,accessToken) ；redis.get(cacheKey) 似乎在浏览器环境是不能复用的，浏览器需要另外发起后端的api做查询。
+* */
 export async function requireRole(requiredRoles: string[]) {
   const session = await auth()
   if (!session?.user?.id || !session?.user?.accessToken) {
     redirect("/login")
   }
-  const userRoles = await RoleCache.getUserRoles(session.user.id, session?.user?.accessToken) ?? []
+  const userRoles = await UserInfoCache.getUserRoles(session.user.id, session?.user?.accessToken) ?? []
 
   // 关键修改：将 every() 改为 some() 实现任意角色匹配
   const userRoleNames = new Set<string>(userRoles.map(role => role?.name));
@@ -24,7 +26,7 @@ export async function requireAllRole(requiredRoles: string[]) {
   if (!session?.user?.id || !session?.user?.accessToken) {
     redirect("/login")
   }
-  const userRoles = await RoleCache.getUserRoles(session.user.id, session?.user?.accessToken) ??[]
+  const userRoles = await UserInfoCache.getUserRoles(session.user.id, session?.user?.accessToken) ??[]
   // 方法2：使用 Set 优化性能
   const userRoleNames = new Set<string>(userRoles.map(role => role?.name));
   const hasRequiredRole = requiredRoles.every(roleName => userRoleNames.has(roleName));
@@ -32,25 +34,4 @@ export async function requireAllRole(requiredRoles: string[]) {
     throw new Error(`无法授权必须有角色: ${requiredRoles.join(", ")}`)
   }
   return { session, userRoles }
-}
-
-
-export async function getUserPermissionSummary() {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return null
-  }
-
-  const userRoles = await RoleCache.getUserRoles(session.user.id, )
-
-  return {
-    userId: session.user.id,
-    email: session.user.email,
-    name: session.user.name,
-    canStartProcess: userRoles.some((role) => ["PROCESS_STARTER", "ADMIN"].includes(role)),
-    canCancelProcess: userRoles.includes("ADMIN"),
-    canViewReports: userRoles.some((role) => ["REPORTER", "ADMIN"].includes(role)),
-    isAdmin: userRoles.includes("ADMIN"),
-    roleCount: userRoles.length,
-  }
 }
