@@ -70,6 +70,8 @@ const refreshToken_MUTATION = gql`
     { accessToken, user{id username} }
   }
 `;
+
+//从 Java 后端验证用户；等同verifyUserWithJavaBackend
 // Helper function to refresh token  由于refreshToken不直接发送给客户端，而是保存在服务器端
 async function refreshAccessToken(token: JWT) {
   try {

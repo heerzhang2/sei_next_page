@@ -20,6 +20,7 @@ const c8 = new Camunda8(camundaConfig)
 //公司的：配置  CAMUNDA_AUTH_STRATEGY: 'NONE',
 console.log(`当前camundaConfig:`,camundaConfig);
 
+
 //两个工程都能使用restClient的：一个单纯的流程worker服务。 一个前端nextjs工程的RSC。
 // 使用 REST API 客户端代替 gRPC 客户端
 export const restClient = c8.getCamundaRestClient() // REST API

@@ -1,7 +1,24 @@
 "use server"
-
-import { restClient, createProcessInstanceRest } from "../../../config/camunda"
+import { requireRole } from "@/lib/role-auth"
+import { RoleCache } from "@/lib/role-cache"
+import { restClient, createProcessInstanceRest } from "../lib/camunda"
 import {auth} from "@/app/auth";
+
+//清除角色的缓存。
+export async function refreshUserRolesCache(targetUserId?: string) {
+  const { userRoles } = await requireRole(["ADMIN"])
+
+  try {
+    if (targetUserId) {
+      await RoleCache.clearUserRoles(targetUserId)
+    }
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to refresh cache:", error)
+    throw new Error("Failed to refresh roles cache")
+  }
+}
+
 
 // 定义启动流程的参数类型
 type StartProcessParams = {
@@ -15,8 +32,9 @@ type StartProcessParams = {
  * 启动一个新的流程实例 (使用 REST API)
  */
 export async function startProcess({ processId, variables, bpmnProcessId }: StartProcessParams) {
+  const { session, userRoles } = await requireRole(["PROCESS_STARTER", "ADMIN"])
  //还【需要】在server component当中，对用户进行权限认证的：
-  const session = await auth();
+ //  const session = await auth();
   if (!session?.user) {
     return {
       success: false,
