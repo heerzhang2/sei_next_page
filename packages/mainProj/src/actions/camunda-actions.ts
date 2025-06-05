@@ -1,23 +1,6 @@
 "use server"
 import { requireRole } from "@/lib/role-auth"
-import { RoleCache } from "@/lib/role-cache"
 import { restClient, createProcessInstanceRest } from "../lib/camunda"
-import {auth} from "@/app/auth";
-
-//清除角色的缓存。
-export async function refreshUserRolesCache(targetUserId?: string) {
-  const { userRoles } = await requireRole(["Master"])
-
-  try {
-    if (targetUserId) {
-      await RoleCache.clearUserRoles(targetUserId)
-    }
-    return { success: true }
-  } catch (error) {
-    console.error("Failed to refresh cache:", error)
-    throw new Error("Failed to refresh roles cache")
-  }
-}
 
 
 // 定义启动流程的参数类型
