@@ -1,11 +1,12 @@
 import { redis } from "@/lib/redis"
+import {getUserInfo} from "@/app/auth.config";
 
 // 角色缓存管理类
 export class RoleCache {
-  private static readonly CACHE_PREFIX = "user_roles:"
+  private static readonly CACHE_PREFIX = "user_info:"
   private static readonly CACHE_TTL = 300 // 5分钟
 
-  static async getUserRoles(userId: string): Promise<string[]> {
+  static async getUserRoles(userId: string): Promise<any> {
     const cacheKey = `${this.CACHE_PREFIX}${userId}`
 
     try {
@@ -14,12 +15,12 @@ export class RoleCache {
         return JSON.parse(cached)
       }
 
-      const roles = await this.fetchRolesFromBackend(userId)
-      await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(roles))
-      return roles
+      const userinfo = await getUserInfo(userId)
+      await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(userinfo))
+      return userinfo
     } catch (error) {
       console.error(`Error getting roles for user ${userId}:`, error)
-      return await this.fetchRolesFromBackend(userId)
+      return await getUserInfo(userId)
     }
   }
 

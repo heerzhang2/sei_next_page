@@ -237,12 +237,6 @@ type Authority {
   name: String!
 }
 
-"""不支持中文的名字,似乎不需要定义 EnumValue不持中文。"""
-enum AuthorityName {
-  ROLE_Master
-  ROLE_JyUser
-}
-
 type Boiler implements Equipment & Node & EqpCommon {
   id: ID!
   version: Int!
@@ -1148,6 +1142,10 @@ input FeeItemInput {
   id: ID
 }
 
+"""
+不支持中文的名字,似乎不需要定义 EnumValue不持中文。
+enum AuthorityName { ROLE_Master,  ROLE_JyUser }
+"""
 enum Ifop_Enu {
   ADD
   UPD
@@ -1748,6 +1746,7 @@ type Query {
 
   """当前用户的基本信息"""
   authUser: User
+  getUser(id: ID!): User
   findUserLike(username: String): [User]!
   findUserLikeInterface(complex: ComplexInput): UserConnection
   userBasic(id: ID!): UserBase

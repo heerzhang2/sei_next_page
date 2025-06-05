@@ -14,7 +14,7 @@ const UserLogined = () => {
         setIsClient(true)
     }, [])
 
-    if(isClient && !session?.user)   redirect('/login')
+    if(isClient && !session?.user || !session?.user?.accessToken)   redirect('/login')
     return null;
 };
 

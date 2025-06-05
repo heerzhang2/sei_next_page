@@ -1,4 +1,5 @@
 import { Redis } from "ioredis"
+import {getUserInfo} from "@/app/auth.config";
 
 class RedisClient {
   private static instance: Redis | null = null
@@ -70,27 +71,30 @@ export class SessionManager {
 }
 
 
-//用户角色的缓存管理类
+//用户信息的缓存管理类
 export class RoleCache {
-  private static readonly CACHE_PREFIX = "user_roles:"
+  private static readonly CACHE_PREFIX = "user_info:"
   private static readonly CACHE_TTL = 600     //延迟10分钟,可忍受的。
 
-  static async getUserRoles(userId: string): Promise<string[]> {
+  static async getUserRoles(userId: string,accessToken?:string): Promise<string[]> {
     const cacheKey = `${this.CACHE_PREFIX}${userId}`
 
     try {
       const cached = await redis.get(cacheKey)
       if (cached) {
-        return JSON.parse(cached)
+        const userinfo =JSON.parse(cached)
+        return userinfo?.authorities
       }
 
-      const roles = await this.fetchRolesFromBackend(userId)
-      await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(roles))
+      const userinfo = await getUserInfo(userId,accessToken)
+      const roles =userinfo?.authorities
+      await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(userinfo))
       return roles
     } catch (error) {
       console.warn(`Error getting roles for user ${userId}:`, error)
+      const userinfo = await getUserInfo(userId,accessToken)
       //没开启缓存的：
-      return await this.fetchRolesFromBackend(userId)
+      return userinfo?.authorities
     }
   }
 

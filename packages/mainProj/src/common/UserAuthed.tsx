@@ -6,7 +6,7 @@ import {auth} from "@/app/auth";
 * */
 const UserAuthed = async () => {
     const session = await auth();
-    if (!session?.user) redirect('/login')
+    if (!session?.user || !session?.user?.accessToken) redirect('/login')
     return null;
 };
 

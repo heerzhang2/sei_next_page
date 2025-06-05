@@ -6,7 +6,7 @@ import {auth} from "@/app/auth";
 
 //清除角色的缓存。
 export async function refreshUserRolesCache(targetUserId?: string) {
-  const { userRoles } = await requireRole(["ADMIN"])
+  const { userRoles } = await requireRole(["Master"])
 
   try {
     if (targetUserId) {
@@ -32,7 +32,8 @@ type StartProcessParams = {
  * 启动一个新的流程实例 (使用 REST API)
  */
 export async function startProcess({ processId, variables, bpmnProcessId }: StartProcessParams) {
-  const { session, userRoles } = await requireRole(["PROCESS_STARTER", "ADMIN"])
+  //角色的名字必须和后端保证一致性啊。
+  const { session, userRoles } = await requireRole(["JyUser"])
  //还【需要】在server component当中，对用户进行权限认证的：
  //  const session = await auth();
   if (!session?.user) {
