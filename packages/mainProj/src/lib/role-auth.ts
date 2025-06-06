@@ -1,3 +1,5 @@
+"use server"
+//将 Node.js server端的代码严格限制在服务端（API 路由、服务端组件）
 import { auth } from "@/app/auth"
 import { UserInfoCache } from "@/lib/redis"
 import { redirect } from "next/navigation"

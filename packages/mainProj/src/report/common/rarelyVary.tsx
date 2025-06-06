@@ -11,6 +11,8 @@ import {InputDatalist} from "@/components/chub";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 import {startProcess} from "@/actions/camunda-actions";
 import {ConfigRoot, FileTransform} from "page2pdf_server/src";
+import {requireRole} from "@/lib/role-auth";
+import {restClient} from "@/lib/camunda";
 
 
 //【报告】复用相同的。
@@ -230,7 +232,22 @@ export const RepFootLink = ({
     const original = "1" === searchParams!.get("original")
     const fixBtn = !action
     const [handleSubmit] = usePrintPdf(pdf_job)
-    const toPDF = () => {
+    const toPDF = async () => {
+        try {
+            //这里浏览器端实际是会发一个请求到nexjs的服务器，服务器执行requireRole最后返回一个应答数据包（也就是requireRole函数执行结果）应答浏览器端的模式。
+            const {session, userRoles} = await requireRole(["JyUserSWDF"])
+            if (!session?.user) {
+                return {
+                    success: false,
+                    error: "用户未登录",
+                }
+            }
+            console.log("toPDF freshuserRoles后面的=", userRoles);
+        } catch (error) {
+            toast.error("toPDF失败,freshuserRoles后面的", {
+                description: ""+error,
+            })
+        }
         handleSubmit!()
     }
     // 保留期限选项

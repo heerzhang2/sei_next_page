@@ -501,3 +501,47 @@ touch-pan-y touch-pinch-zoom 手机横屏的
 这个Job处理才算结束，
 最后应答Camunda 8流程引擎完成当前Job的处理状态，整个程序功能就是如此，
 接着等待下一个新的Job。我的要求是新的Node后端服务形式，我的项目要求使用Yarn Workspaces的Monorepo 实现方案，作为一个目录packages底下的子目录工程形式出现和发布的，
+
+我的Next.js 15.3版本应用：  浏览器客户端的代码      const toPDF = async () => {
+        try {
+            //这里浏览器端实际是会发一个请求到nexjs的服务器，服务器执行requireRole最后返回一个应答数据包（也就是requireRole函数执行结果）应答浏览器端的模式。
+            const {session, userRoles} = await requireRole(["JyUserSWDF"])
+            if (!session?.user) {
+                return {
+                    success: false,
+                    error: "用户未登录",
+                }
+            }
+            console.log("toPDF freshuserRoles后面的=", userRoles);
+        } catch (error) {
+            toast.error("toPDF失败,freshuserRoles后面的", {
+                description: ""+error,
+            })
+        }
+        handleSubmit!()
+    }
+以及客户端页面                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={() => window.print()}>
+                                        预览
+                                    </Button>
+                                    <Button variant="outline" onClick={toPDF}>
+                                        本机转pdf
+                                    </Button>
+                                </div>
+我的服务器组件代码 "use server"
+import { auth } from "@/app/auth"
+import { UserInfoCache } from "@/lib/redis"
+import { redirect } from "next/navigation"
+export async function requireRole(requiredRoles: string[]) {
+  const session = await auth()
+  if (!session?.user?.id || !session?.user?.accessToken) {
+    redirect("/login")
+  }
+  const userRoles = await UserInfoCache.getUserRoles(session.user.id, session?.user?.accessToken) ?? []
+  const userRoleNames = new Set<string>(userRoles.map(role => role?.name));
+  const hasRequiredRole = requiredRoles.some(roleName => userRoleNames.has(roleName));
+  if(!hasRequiredRole)
+      throw new Error(`需要至少一个角色权限: ${requiredRoles.join(", ")}`)
+  return { session, userRoles }
+}
+           请问: 我这样子的跨越网络界面的函数调用方式 来使用requireRole() ，会出现什么问题？ 安全性有毛病吗？  性能有问题吗？

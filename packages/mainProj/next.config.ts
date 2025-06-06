@@ -66,6 +66,8 @@ const nextConfig: NextConfig = {
 
         return config
     },
+    // 允许特定开发来源;    但是生产环境推荐Nginx反向代理方案
+    allowedDevOrigins: ["192.168.171.3", "192.168.0.100"], // 多来源数组
 }
 
 export default nextConfig

@@ -24,7 +24,8 @@ export const ReportQuery = gql`
     }
     fragment pageReportIsp on Report
     {
-        id, modeltype, modelversion, tzFields,link{rep,ori},
+        id, modeltype, modelversion, tzFields,
+        link { rep ori },
         isp {
             id, no, report{id},
             dev{id cod},bsType,
@@ -59,7 +60,7 @@ function CommonReportData({ repId,children       }:
     })
     const { data, fetching, error } = result
     const { getReport: report } = data || {}
-    console.log("CommonReportData: report=",report);
+    // console.log("CommonReportData: report=",report);
     const {storage, setStorage} =useStorage();
     //特别注意：RecordEditorMain.tsx 也有初始化代码，需要俩个代码setStorage确保一致性。
     console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);

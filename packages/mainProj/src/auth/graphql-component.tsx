@@ -50,6 +50,9 @@ export function GraphQLProvider({children}: { children: ReactNode }) {
                 console.log("offlineExchange:",severity,"消息",message)
             },
             schema,
+            keys: {
+                RepLink: () => null     //不需要生成缓存键
+            },
             storage:{
                 ...storage,
                 // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，不需要做storage.readMetadata!().then(existing;
