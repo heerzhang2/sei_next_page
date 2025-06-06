@@ -1,3 +1,4 @@
+"use server"
 import { Camunda8 } from "@camunda8/sdk"
 import dotenv from "dotenv"
 
@@ -17,8 +18,8 @@ const camundaConfig = {
 
 // @ts-ignore
 const c8 = new Camunda8(camundaConfig)
-//公司的：配置  CAMUNDA_AUTH_STRATEGY: 'NONE',
-console.log(`当前camundaConfig:`,camundaConfig);
+//公司的：配置CAMUNDA_AUTH_STRATEGY: 'NONE',
+// console.log(`当前camundaConfig:`,camundaConfig);
 
 
 //两个工程都能使用restClient的：一个单纯的流程worker服务。 一个前端nextjs工程的RSC。
@@ -27,8 +28,9 @@ export const restClient = c8.getCamundaRestClient() // REST API
 //export const zeebe = c8.getZeebeGrpcApiClient()  报错：无法找到必要的 Protocol Buffers 定义文件zeebe.proto，使用 gRPC 客户端
 
 
-// 使用 REST API 创建流程实例的辅助函数
+//使用 REST API 创建流程实例的辅助函数 ；  加"use server"确保服务端环境执行。
 export async function createProcessInstanceRest(bpmnProcessId: string, variables: Record<string, any>) {
+    "use server"
     try {
         // 使用 REST API 创建流程实例
         const response = await restClient.createProcessInstance({

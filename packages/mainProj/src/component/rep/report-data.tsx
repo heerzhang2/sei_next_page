@@ -63,7 +63,7 @@ function CommonReportData({ repId,children       }:
     // console.log("CommonReportData: report=",report);
     const {storage, setStorage} =useStorage();
     //特别注意：RecordEditorMain.tsx 也有初始化代码，需要俩个代码setStorage确保一致性。
-    console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);
+    //服务器也运行的console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);
     React.useEffect(() => {
         const  dat =report&&report.data&&JSON.parse(report.data);
         const  snap =report&&report.snapshot&&JSON.parse(report.snapshot);
@@ -89,7 +89,7 @@ export default function ReportData({
     repId: string,
     children: React.ReactNode
 }) {
-    console.log("ReportData: repId=",repId);
+    // console.log("ReportData: repId=",repId);
     return (
         <Suspense>
             <CommonReportData repId={repId} >

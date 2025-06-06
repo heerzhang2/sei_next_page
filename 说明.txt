@@ -545,3 +545,6 @@ export async function requireRole(requiredRoles: string[]) {
   return { session, userRoles }
 }
            请问: 我这样子的跨越网络界面的函数调用方式 来使用requireRole() ，会出现什么问题？ 安全性有毛病吗？  性能有问题吗？
+
+
+

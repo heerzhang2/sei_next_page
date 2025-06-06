@@ -7,11 +7,12 @@ export const ReportFirstPageHeadJd = ({ rep, mbbm }: { rep: any; mbbm: string })
     return (
         <div className="flex justify-between items-center text-center h-[8.5rem] print:-mt-1">
             <div className="overflow-hidden">
-                {/*<Embed className="w-[155px] mx-auto -mt-[0.65rem]" width={78} height={35} />*/}
                 <span className="relative -mt-[1.1rem] text-[0.9rem]" />
             </div>
             <div>
-                <Image src="/images/reportNoQR.png" width={140} height={140} alt="二维码" />
+                <Image src="/images/reportNoQR.png" width={1} height={1} alt="二维码"
+                    style={{height: "8rem",width: "auto"}}
+                />
             </div>
             <div className="overflow-hidden flex flex-col justify-evenly">
           <span  className="text-[0.8rem]">

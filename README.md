@@ -57,4 +57,15 @@ Worker服务会连接到Camunda 8流程引擎，等待类型为`pdf-generation-t
 
 确保在Camunda 8中创建的服务任务使用`pdf-generation-task`作为任务类型。
 
-Monorepo + Turbo + Next.js 官方示例：GitHub - ivesfurtado/next-express-turborepo
+为Next.js配置HTTPS本地开发 + 使用自签名证书启动Next.js应用：；
+
+在本地Node服务器中显式声明允许私有网络访问：
+//改page2PdfServer -Node.js服务器的代码：
+const cors = require('cors');
+app.use(cors({
+origin: ['http://localhost:3000', 'https://localhost:3000'], // 允许HTTP和HTTPS
+methods: ['GET', 'POST'],
+credentials: true
+}));
+
+升级Next.js和Node服务到HTTPS

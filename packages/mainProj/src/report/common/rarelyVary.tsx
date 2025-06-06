@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { useState } from "react"
+import {useState, useTransition} from "react"
 import Link from "next/link"
 import {Button} from "@/components/ui";
 import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
@@ -11,8 +11,6 @@ import {InputDatalist} from "@/components/chub";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 import {startProcess} from "@/actions/camunda-actions";
 import {ConfigRoot, FileTransform} from "page2pdf_server/src";
-import {requireRole} from "@/lib/role-auth";
-import {restClient} from "@/lib/camunda";
 
 
 //【报告】复用相同的。
@@ -209,20 +207,19 @@ export const 落款单位地址 = () => (
 //   </React.Fragment>;
 // };
 
-
-export const RepFootLink = ({
-                                template,
-                                verId,
-                                repId,
-                                rep,
-                                pdf_job,
-                            }: {
+interface PDFControlsProps {
     template: string
     verId: string
     repId: string
     rep: any
     pdf_job: ConfigRoot<FileTransform>
-}) => {
+    onLocalCvtFin?: () => void
+}
+export function RepFootLink({ template,
+                                verId,
+                                repId,
+                                rep,
+                                pdf_job, onLocalCvtFin }: PDFControlsProps) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
     const createQueryString = useCreateQueryString()
@@ -231,24 +228,23 @@ export const RepFootLink = ({
     const { action } = useParams()
     const original = "1" === searchParams!.get("original")
     const fixBtn = !action
-    const [handleSubmit] = usePrintPdf(pdf_job)
-    const toPDF = async () => {
-        try {
-            //这里浏览器端实际是会发一个请求到nexjs的服务器，服务器执行requireRole最后返回一个应答数据包（也就是requireRole函数执行结果）应答浏览器端的模式。
-            const {session, userRoles} = await requireRole(["JyUserSWDF"])
-            if (!session?.user) {
-                return {
-                    success: false,
-                    error: "用户未登录",
+    const [isMutating, handleSubmit] = usePrintPdf(pdf_job)
+    const [isPending, startTransition] = useTransition()
+    //浏览器端实际是会发一个请求到nexjs的服务器，服务器执行requireRole最后返回一个应答数据包（函数执行结果）应答浏览器端的模式。const {session, userRoles} = await requireRole([""])
+    const handlePDFGeneration = () => {
+        startTransition(async () => {
+            try {
+                if(!handleSubmit)   throw new Error("空pdf_job")
+                else{
+                    const result =await handleSubmit()
+                    onLocalCvtFin?.()  //有结果了去通知
                 }
+            } catch (error) {
+                toast.error("操作失败", {
+                    description: "请稍后重试"+error,
+                })
             }
-            console.log("toPDF freshuserRoles后面的=", userRoles);
-        } catch (error) {
-            toast.error("toPDF失败,freshuserRoles后面的", {
-                description: ""+error,
-            })
-        }
-        handleSubmit!()
+        })
     }
     // 保留期限选项
     const retentionOptions = [
@@ -347,6 +343,7 @@ export const RepFootLink = ({
             setIsProcessing(false)
         }
     }
+
     return (
         <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
             <Link href="/" passHref className="text-blue-600 hover:text-blue-800 block text-sm mb-4 md:mb-0 md:inline-block">
@@ -417,8 +414,8 @@ export const RepFootLink = ({
                                     <Button variant="outline" onClick={() => window.print()}>
                                         预览
                                     </Button>
-                                    <Button variant="outline" onClick={toPDF}>
-                                        本机转pdf
+                                    <Button variant="outline" onClick={handlePDFGeneration}  disabled={isPending || isMutating}>
+                                      {isPending ? "生成中..." : "本机转pdf"}
                                     </Button>
                                 </div>
 

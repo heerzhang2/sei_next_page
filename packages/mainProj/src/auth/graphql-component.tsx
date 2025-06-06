@@ -27,7 +27,7 @@ https://commerce.nearform.com/open-source/urql/docs/advanced/server-side-renderi
 export function GraphQLProvider({children}: { children: ReactNode }) {
     // const client = useUrqlClient()
     const accessToken = useAccessToken();
-    console.log("GraphQLProvider见到的token:{}", accessToken);         //【奇怪】强制刷新时在SSR服务器也会可能打印这个输出啊？我加了'use client'啊！！
+    //console.log("GraphQLProvider见到的token:{}", accessToken);【奇怪】强制刷新时在SSR服务器也会可能打印这个输出啊？我加了'use client'啊！！
 
     const [client, ssr] = useMemo(() => {
         //离线保存支持的：只在客户端代码中使用 indexedDB。
@@ -107,7 +107,7 @@ export function GraphQLProvider({children}: { children: ReactNode }) {
                     return {
                         addAuthToOperation(operation) {
                             if (!accessToken){
-                                console.warn("addAuthToOperation:accessToken空的", accessToken);
+                                //console.warn("addAuthToOperation:accessToken空的", accessToken);居然是在服务端环境中运行的。
                                 return operation
                             }
                             return utils.appendHeaders(operation, {

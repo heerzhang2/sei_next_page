@@ -64,9 +64,9 @@ export const RepDeviceDetail= ({ orc, rep } : { orc: any,rep:any}
         <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
           <TableRow>
             <CCell>备注</CCell>
-            <TableCell split={true} colSpan={6}><div className="min-h-4 whitespace-pre-wrap">
-              {orc.大备注 ?? '／'}
-            </div></TableCell>
+            <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                {orc.大备注 ?? '／'}
+            </TableCell>
           </TableRow>
         </DirectLink>
         <TableRow>

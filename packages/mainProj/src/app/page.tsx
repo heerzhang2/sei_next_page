@@ -79,6 +79,7 @@ export default function Home() {
                             alt="Vercel logomark"
                             width={20}
                             height={20}
+                            style={{width: "auto", height: "1rem" }}
                         />
                         Deploy now
                     </a>
@@ -97,9 +98,10 @@ export default function Home() {
                     className="dark:invert"
                     src="/next.svg"
                     alt="Next.js logo"
-                    width={180}
-                    height={37}
+                    width={"1"}
+                    height={"1"}
                     priority
+                    style={{ width: "auto", height: "2.2rem", objectFit: "contain" }}
                 />
             </footer>
         </div>
