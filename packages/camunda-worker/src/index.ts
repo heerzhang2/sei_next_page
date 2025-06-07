@@ -55,7 +55,8 @@ async function startWorker() {
       console.log("转换应答:", response.data?.data?.dir)
       //成功response=: { status: 200, message: 'OK', data: { result: 'Success',dir } }    文件预先定义的==系统安装的路径：C:\page2pdf-server\pdfs +/files【0】.out/
       const finish= result==="Success";
-      if(!finish || !dir)   return  job.fail(`转换pdf失败`, 0)
+      if(!finish || !dir)
+          return job.fail({errorMessage:`转换pdf失败: ${result}`, retries: 0});
       const filepath= dir+"/"+ prjob?.name +".pdf";
         //可能+步骤2： +水印,电子盖章;
         //步骤3： 然后上传到OSS 文件访问路径;
