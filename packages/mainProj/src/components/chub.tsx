@@ -2,17 +2,7 @@
 import React, { useId, useState, useRef, useEffect, type ChangeEventHandler } from "react"
 import { ChevronDown, ChevronRight, ChevronUp, X, Calendar, Type } from "lucide-react"
 import type { ControllerRenderProps } from "react-hook-form"
-import {
-  autoUpdate,
-  size,
-  useDismiss,
-  useFloating,
-  useInteractions,
-  useListNavigation,
-  useRole,
-  FloatingFocusManager,
-  FloatingPortal,
-} from "@floating-ui/react"
+import {autoUpdate, size, useDismiss, useFloating, useInteractions, useListNavigation, useRole, FloatingFocusManager, FloatingPortal} from "@floating-ui/react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
@@ -21,6 +11,7 @@ import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 // 修改 CollapsibleFormSection 组件，添加触摸屏检测
 import { useTouchDevice } from "@/hooks/use-touch-device"
+
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
  * */
@@ -748,23 +739,55 @@ interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement>
   onListChange?: (value: string) => void
   unit?: any
 }
-
 //不要自行去设置id的，<FormItem会转换的。但是不是form底下嵌套使用的情况就必须加上id=’x‘;
 export function InputDatalist({
-  fullWidth = true,
-  datalist = [],
-  className,
-  style,
-  onListChange,
-  value,
-  onChange,
-  id,
-  unit,
-  ...other
-}: InputDatalistProps) {
+                                        fullWidth = true,
+                                        datalist = [],
+                                        className,
+                                        style,
+                                        onListChange,
+                                        value,
+                                        onChange,
+                                        id,
+                                        unit,
+                                        ...other
+                                      }: InputDatalistProps) {
   const [inputValue, setInputValue] = useState(value || "")
-  const uid = id //useId()避免不会记住用户输入文字
+  const [showClearButton, setShowClearButton] = useState(Boolean(value && String(value).length > 0))
+  const inputRef = useRef<HTMLInputElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const uid = id
   const listId = `list-${uid}`
+
+  // 清理 Chrome 添加的属性
+  useEffect(() => {
+    const input = inputRef.current
+    if (input) {
+      // 移除 Chrome 自动添加的属性
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === "attributes") {
+            const target = mutation.target as HTMLElement
+            if (target.hasAttribute("__gchrome_uniqueid")) {
+              target.removeAttribute("__gchrome_uniqueid")
+            }
+          }
+        })
+      })
+
+      observer.observe(input, {
+        attributes: true,
+        attributeFilter: ["__gchrome_uniqueid"],
+      })
+
+      return () => observer.disconnect()
+    }
+  }, [])
+
+  // 更新清除按钮显示状态
+  useEffect(() => {
+    setShowClearButton(inputValue!=="")
+  }, [inputValue])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
@@ -778,27 +801,78 @@ export function InputDatalist({
     }
   }
 
-  return (
-    <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
-      <datalist id={listId}>
-        {datalist.map((option, i) => (
-          <option key={i} value={option} />
-        ))}
-      </datalist>
+  const handleClear = () => {
+    setInputValue("")
+    if (onListChange) {
+      onListChange("")
+    }
+    if (onChange) {
+      // 创建一个合成事件来模拟输入变化
+      const event = {
+        target: {
+          value: "",
+        },
+      } as React.ChangeEvent<HTMLInputElement>
+      onChange(event)
+    }
+    // 聚焦回输入框
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }
 
-      <input
-        className={cn(
-          "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-          fullWidth ? "w-full" : "w-auto",
-          className,
-        )}
-        value={inputValue}
-        onChange={handleChange}
-        list={listId}
-        id={id}
-        {...other}
-      />
-      {unit}
-    </div>
+  return (
+      <div
+          ref={wrapperRef}
+          className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")}
+          style={style}
+      >
+        <datalist id={listId}>
+          {datalist.map((option, i) => (
+              <option key={i} value={option} />
+          ))}
+        </datalist>
+
+        <div className="relative flex-1">
+          <input
+              ref={inputRef}
+              className={cn(
+                  "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full",
+                  // 当有内容时，为清除按钮预留空间，避免与原生下拉按钮重叠
+                  showClearButton ? "pr-8" : "pr-4",
+                  className,
+              )}
+              value={inputValue}
+              onChange={handleChange}
+              list={listId}
+              id={id}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-form-type="other"
+              suppressHydrationWarning
+              {...other}
+          />
+
+          {/* 清除按钮 - 只在有内容时显示，位置避开原生下拉按钮 */}
+          {showClearButton && (
+              <button
+                  type="button"
+                  onClick={handleClear}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring z-10"
+                  aria-label="清除输入"
+                  style={{
+                    // 确保按钮不会被原生下拉按钮遮挡
+                    marginRight: "2px",
+                  }}
+              >
+                <X size={14} className="text-gray-500" />
+              </button>
+          )}
+        </div>
+
+        {unit}
+      </div>
   )
 }
