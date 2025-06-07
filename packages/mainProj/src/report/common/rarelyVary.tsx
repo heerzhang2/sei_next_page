@@ -229,22 +229,21 @@ export function RepFootLink({ template,
     const original = "1" === searchParams!.get("original")
     const fixBtn = !action
     const [isMutating, handleSubmit] = usePrintPdf(pdf_job)
-    const [isPending, startTransition] = useTransition()
+    // const [isPending, startTransition] = useTransition()
+    //[奇怪的效果] startTransition 会导致页面无法切换，只能滚动，点击跳转无法执行。
     //浏览器端实际是会发一个请求到nexjs的服务器，服务器执行requireRole最后返回一个应答数据包（函数执行结果）应答浏览器端的模式。const {session, userRoles} = await requireRole([""])
-    const handlePDFGeneration = () => {
-        startTransition(async () => {
-            try {
-                if(!handleSubmit)   throw new Error("空pdf_job")
-                else{
-                    const result =await handleSubmit()
-                    onLocalCvtFin?.()  //有结果了去通知
-                }
-            } catch (error) {
-                toast.error("操作失败", {
-                    description: "请稍后重试"+error,
-                })
+    const handlePDFGeneration = async () => {
+        try {
+            if(!handleSubmit)   throw new Error("空pdf_job")
+            else{
+                const result =await handleSubmit()
+                onLocalCvtFin?.()  //有结果了去通知
             }
-        })
+        } catch (error) {
+            toast.error("操作失败", {
+                description: "请确认文书打印转换器在运行"+error,
+            })
+        }
     }
     // 保留期限选项
     const retentionOptions = [
@@ -414,8 +413,8 @@ export function RepFootLink({ template,
                                     <Button variant="outline" onClick={() => window.print()}>
                                         预览
                                     </Button>
-                                    <Button variant="outline" onClick={handlePDFGeneration}  disabled={isPending || isMutating}>
-                                      {isPending ? "生成中..." : "本机转pdf"}
+                                    <Button variant="outline" onClick={handlePDFGeneration}  disabled={isMutating}>
+                                      {isMutating ? "生成中..." : "本机转pdf"}
                                     </Button>
                                 </div>
 

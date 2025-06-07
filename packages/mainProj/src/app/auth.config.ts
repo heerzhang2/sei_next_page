@@ -90,7 +90,7 @@ async function refreshAccessToken(token: JWT) {
     } catch (error) {
       console.error("doRefreshToken error:", error);
     }
-    console.log("refreshAccessToken: 前面的=", token);
+    // console.log("refreshAccessToken: 前面的=", token);
     let expNumber=Number(Date.now()) + Token_expiresInSec;
     const jwtret={
       ...token,
@@ -98,7 +98,7 @@ async function refreshAccessToken(token: JWT) {
       refreshToken: loginresp?.data?.refreshToken?.refreshToken ?? token.refreshToken,
       accessTokenExpires: expNumber,
     };
-    console.log("refreshAccessToken: 后面的=", jwtret);
+    // console.log("refreshAccessToken: 后面的=", jwtret);
     return jwtret;
   } catch (error) {
     console.log("报错RefreshAccessTokenError", error);

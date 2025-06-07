@@ -4,6 +4,8 @@ import dotenv from "dotenv"
 import {deleteDirWithRm, FileUploader} from "./local-uploader";
 import type {ConfigRoot, FileTransform} from "page2pdf_server/src";
 import {MaybeTimeDuration} from "typed-duration";
+import {RestJob} from "@camunda8/sdk/dist/c8/lib/C8Dto";
+import {IProcessVariables, JobCompletionInterfaceRest} from "@camunda8/sdk/dist/zeebe/types";
 
 const { exec } = require('child_process');
 const os = require('os');
@@ -41,9 +43,9 @@ async function startWorker() {
         jobHandler: urlToPdfTask
     });
 
-    async function urlToPdfTask(job: any) {
+    async function urlToPdfTask(job: RestJob & JobCompletionInterfaceRest<IProcessVariables>) {
     try {
-      const prjob=job.variables?.pdfJob as  ConfigRoot<FileTransform>;
+      const prjob= job.variables?.pdfJob as unknown as ConfigRoot<FileTransform>;
       // 发送HTTP请求到PDF服务
       console.log(`[新的流程] 发起转换请求${PDF_SERVICE_URL}`)
       const response = await axios.post(PDF_SERVICE_URL, prjob)
@@ -73,6 +75,9 @@ async function startWorker() {
         metaData["X-Amz-Object-Lock-Retain-Until-Date"] = job.variables?.expiration;
       const ossObjId= await uploader.ossUpload(filepath, metaData);
       //最可读的链接 http://127.0.0.1:9000/ywmast/ +ossObjId（202506/0315/xxx-）
+        if(!ossObjId){
+            throw new Error(`OSS上传失败,${filepath}`);
+        }
       await deleteDirWithRm(dir);
       //完成job并返回结果：
       return job.complete({
@@ -83,7 +88,7 @@ async function startWorker() {
     } catch (error) {
       console.error("urlToPdfTask:", error)
       // 如果出错，标记job为失败
-      return job.fail(`urlToPdfTask: ${error}`, 0)
+      return job.fail({errorMessage:`urlToPdfTask: ${error}`, retryBackOff: 5*60*1000});
     }
   }
   console.log(`启动Worker线程: pdf-generation-task`)

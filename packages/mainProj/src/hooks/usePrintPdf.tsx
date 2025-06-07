@@ -48,7 +48,7 @@ export function usePrintPdf(prjob: ConfigRoot<FileTransform>):[boolean, Function
             })
         },
         onError: (error) => {
-            toast.error("打印转换器应答", { description: "" + error })
+            toast.error("打印转换器应答", { description: "请确认文书打印转换器已经在本机安装并运行" + error })
         },
     })
 
