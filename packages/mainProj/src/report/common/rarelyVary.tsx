@@ -440,7 +440,7 @@ export function RepFootLink({ template,
                                     ) : (
                                         // 显示转换控件
                                         <div className="flex flex-col sm:flex-row items-center gap-2">
-                                            <InputDatalist
+                                            <InputDatalist id="ccts"
                                                 placeholder="天数"
                                                 datalist={retentionOptions.map((a) => a.label)}
                                                 value={displayValue}

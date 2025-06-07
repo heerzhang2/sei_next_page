@@ -749,7 +749,7 @@ interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement>
   unit?: any
 }
 
-//不要自行去设置id的，<FormItem会转换的。
+//不要自行去设置id的，<FormItem会转换的。但是不是form底下嵌套使用的情况就必须加上id=’x‘;
 export function InputDatalist({
   fullWidth = true,
   datalist = [],
