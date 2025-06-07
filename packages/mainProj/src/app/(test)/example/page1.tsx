@@ -6,7 +6,6 @@ import { InputDatalist } from "@/components/chub"
 import * as React from "react";
 import {cn} from "@/lib/utils";
 import Link from "next/link";
-import {RepFootLink} from "@/report/common/rarelyVary";
 
 export default function ExamplePage() {
   const [displayValue, setDisplayValue] = useState("")
@@ -110,9 +109,72 @@ export default function ExamplePage() {
                 </div>
               </div>
 
+              <div
+                  className={cn("m-2 flex justify-around items-center gap-2 print:hidden",  "fixed bottom-0 w-full")}
+              >
+                <Button
+                    variant="outline"
+                >
+                  原始记录
+                </Button>
+                    <>
+                      <Button
+                          variant="outline"
+                      >
+                        浏览模式
+                      </Button>
+                      {true && (
+                          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                            <div className="flex gap-2">
+                              <Button variant="outline" onClick={() => window.print()}>
+                                预览
+                              </Button>
+                              <Button variant="outline" >
+                               本机转pdf
+                              </Button>
+                            </div>
 
-              {RepFootLink({ rep: {} as any, template: '1', verId: '2', repId: '1', pdf_job:{} as any })}
+                            {/* PDF转换区域 */}
+                            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                              {false ? (
+                                  // 显示PDF链接
+                                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                                    <Link
+                                        href={`${process.env.NEXT_PUBLIC_OSS_ENDP}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                                    >
+                                      有pdfrr版
+                                    </Link>
+                                    <Button variant="ghost" size="sm"
+                                            onClick={() => void 0}
+                                    >
+                                      后端rr再转
+                                    </Button>
+                                  </div>
+                              ) : (
+                                  // 显示转换控件
+                                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                                    <InputDatalist id="ccts"
+                                                   placeholder="天数"
+                                                   datalist={retentionOptions.map((a) => a.label)}
+                                                   value={displayValue}
+                                                   onListChange={handlePeriodChange}
+                                                   className="w-[140px]"
+                                    />
+                                    <Button variant="outline" onClick={handlePdfFlow} disabled={isProcessing}>
+                                      {isProcessing ? "发起rr申请中..." : "后端rr转pdf"}
+                                    </Button>
+                                  </div>
+                              )}
+                            </div>
+                          </div>
+                      )}
+                    </>
 
+
+            </div>
           </div>
         </div>
 

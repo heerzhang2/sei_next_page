@@ -6,7 +6,7 @@ import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/componen
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
 import {ReportViewProps, RepTitleUpdate} from "@/report/common/base"
-import { RepFootLink, 落款单位地址 } from "@/report/common/rarelyVary"
+import { 落款单位地址 } from "@/report/common/rarelyVary"
 import type { Column_Setting } from "@/report/common/useFormatOmni"
 import { useOfficialOmni } from "@/report/common/useOfficialOmni"
 import { UnqualifiedIspTable } from "@/report/common/general"
@@ -19,6 +19,7 @@ import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
 import {DirectLink} from "@/routing/Link";
 import {ReportFirstPageHeadJd} from "@/report/common/head";
 import {createPdfJob} from "@/report/footer/job";
+import {RepFootLink} from "@/report/common/repFootLink";
 
 
 export const ReportView = ({ rep }: any) => {

@@ -2,6 +2,7 @@
 import * as React from "react";
 import {useState, useTransition} from "react"
 import Link from "next/link"
+// import { Link  } from "next/navigation"
 import {Button} from "@/components/ui";
 import {useParams, usePathname, useRouter, useSearchParams} from "next/navigation";
 import {cn} from "@/lib/utils";
@@ -11,7 +12,6 @@ import {InputDatalist} from "@/components/chub";
 import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 import {startProcess} from "@/actions/camunda-actions";
 import {ConfigRoot, FileTransform} from "page2pdf_server/src";
-
 
 //【报告】复用相同的。
 //很多内容相对重复，这里是报告较高层范围复用的组件；专门报告类型的可以安排在下一层次分开目录去做。
@@ -215,11 +215,7 @@ interface PDFControlsProps {
     pdf_job: ConfigRoot<FileTransform>
     onLocalCvtFin?: () => void
 }
-export function RepFootLink({ template,
-                                verId,
-                                repId,
-                                rep,
-                                pdf_job, onLocalCvtFin }: PDFControlsProps) {
+export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFin }: PDFControlsProps) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
     const createQueryString = useCreateQueryString()
@@ -234,14 +230,14 @@ export function RepFootLink({ template,
     //浏览器端实际是会发一个请求到nexjs的服务器，服务器执行requireRole最后返回一个应答数据包（函数执行结果）应答浏览器端的模式。const {session, userRoles} = await requireRole([""])
     const handlePDFGeneration = async () => {
         try {
-            if(!handleSubmit)   throw new Error("空pdf_job")
-            else{
-                const result =await handleSubmit()
-                onLocalCvtFin?.()  //有结果了去通知
+            if (!handleSubmit) throw new Error("空pdf_job")
+            else {
+                const result = await handleSubmit()
+                onLocalCvtFin?.() //有结果了去通知
             }
         } catch (error) {
             toast.error("操作失败", {
-                description: "请确认文书打印转换器在运行"+error,
+                description: "请确认文书打印转换器在运行" + error,
             })
         }
     }
@@ -389,7 +385,10 @@ export function RepFootLink({ template,
                 </div>
             </div>
             <div
-                className={cn("m-2 flex justify-around items-center gap-2 print:hidden", fixBtn ? "fixed bottom-0 w-full" : "")}
+                className={cn(
+                    "m-2 flex flex-col gap-3 print:hidden",
+                    fixBtn ? "fixed bottom-0 w-full bg-white/95 backdrop-blur-sm border-t border-gray-200 p-4" : "",
+                )}
             >
                 <Button
                     variant="outline"
@@ -401,25 +400,31 @@ export function RepFootLink({ template,
                     <div />
                 ) : (
                     <>
-                        <Button
-                            variant="outline"
-                            onClick={() => router.push(pathname + "?" + createQueryString("print", print ? "" : "1"))}
-                        >
-                            {print ? "浏览模式" : "打印模式"}
-                        </Button>
+                        {/* 第一行：浏览模式/打印模式按钮 */}
+                        <div className="flex justify-center">
+                            <Button
+                                variant="outline"
+                                onClick={() => router.push(pathname + "?" + createQueryString("print", print ? "" : "1"))}
+                            >
+                                {print ? "浏览模式" : "打印模式"}
+                            </Button>
+                        </div>
+
+                        {/* 第二行：打印相关控件 - 只在打印模式下显示 */}
                         {print && (
-                            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                                <div className="flex gap-2">
+                            <div className="flex flex-col gap-3 w-full">
+                                {/* 预览和本机转pdf按钮 */}
+                                <div className="flex justify-center gap-2">
                                     <Button variant="outline" onClick={() => window.print()}>
                                         预览
                                     </Button>
-                                    <Button variant="outline" onClick={handlePDFGeneration}  disabled={isMutating}>
-                                      {isMutating ? "生成中..." : "本机转pdf"}
+                                    <Button variant="outline" onClick={handlePDFGeneration} disabled={isMutating}>
+                                        {isMutating ? "生成中..." : "本机转pdf"}
                                     </Button>
                                 </div>
 
                                 {/* PDF转换区域 */}
-                                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                                <div className="flex justify-center">
                                     {pdfStatus === "idle" && pdfUri ? (
                                         // 显示PDF链接
                                         <div className="flex flex-col sm:flex-row items-center gap-2">
@@ -431,21 +436,20 @@ export function RepFootLink({ template,
                                             >
                                                 有pdf版
                                             </Link>
-                                            <Button variant="ghost" size="sm"
-                                                    onClick={() => setPdfStatus("redo")}
-                                            >
+                                            <Button variant="ghost" size="sm" onClick={() => setPdfStatus("redo")}>
                                                 后端再转
                                             </Button>
                                         </div>
                                     ) : (
-                                        // 显示转换控件
-                                        <div className="flex flex-col sm:flex-row items-center gap-2">
-                                            <InputDatalist id="ccts"
+                                        // 显示转换控件 - 添加背景遮罩让输入框更显眼
+                                        <div className="flex flex-col sm:flex-row items-center gap-2 p-3 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg shadow-sm">
+                                            <InputDatalist
+                                                id="ccts"
                                                 placeholder="天数"
                                                 datalist={retentionOptions.map((a) => a.label)}
                                                 value={displayValue}
                                                 onListChange={handlePeriodChange}
-                                                className="w-[140px]"
+                                                className="w-[140px] bg-white border-2 border-blue-200 focus:border-blue-400 shadow-sm"
                                             />
                                             <Button variant="outline" onClick={handlePdfFlow} disabled={isProcessing}>
                                                 {isProcessing ? "发起申请中..." : "后端转pdf"}
@@ -461,7 +465,6 @@ export function RepFootLink({ template,
         </div>
     )
 }
-
 
 /**因为击链接出现hook报错只好假如2个参数了：ALL printAll需要去掉，要求跳转迂回才能避免编辑器列表的动态增加的ref.独立流转报告切换主报告时刻的编辑器的个数变化引起的useXXX报错。
  * 还是有detected a change in the order of Hooks called by ReportView. 报错的？
