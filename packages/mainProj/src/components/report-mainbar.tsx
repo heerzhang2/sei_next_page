@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Menu, X, FileText, Home, Settings, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -16,10 +15,12 @@ interface ReportSidebarProps {
     }[]
     children?: React.ReactNode
 }
+
 /**主菜单区域的
  * */
 export function ReportMainbar({ repId, items = [], children }: ReportSidebarProps) {
     const pathname = usePathname()
+    const router = useRouter()
     const [isOpen, setIsOpen] = React.useState(false)
     const sidebarRef = React.useRef<HTMLDivElement>(null)
     const triggerRef = React.useRef<HTMLButtonElement>(null)
@@ -70,18 +71,40 @@ export function ReportMainbar({ repId, items = [], children }: ReportSidebarProp
         }
     }, [])
 
+    // 处理导航，禁用自动滚动
+    const handleNavigation = React.useCallback(
+        (url: string) => {
+            setIsOpen(false)
+            // 使用 scroll: false 禁用自动滚动行为
+            router.push(url, { scroll: false })
+        },
+        [router],
+    )
+
     return (
         <>
             {/* Trigger button - fixed in the top-left corner */}
-            <Button ref={triggerRef} variant="ghost" size="icon"
+            <Button
+                ref={triggerRef}
+                variant="ghost"
+                size="icon"
                 className="fixed top-0 md:top-2 left-2 print:hidden z-50 hover:backdrop-blur-0 active:bg-white mix-blend-normal transition-all h-8 w-8 hover:bg-blue-500 hover:scale-110 hover:shadow-lg hover:opacity-100"
                 onClick={() => setIsOpen(!isOpen)}
+                // 添加 data 属性来标识这是一个固定定位元素
+                data-scroll-ignore="true"
             >
                 <Menu className="h-3.5 w-3.5 opacity-90" />
                 <span className="sr-only">打开报告主菜单</span>
             </Button>
+
             {/* Overlay - visible on all screen sizes when sidebar is open */}
-            {isOpen && <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setIsOpen(false)} />}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                    onClick={() => setIsOpen(false)}
+                    data-scroll-ignore="true"
+                />
+            )}
 
             {/* Sidebar */}
             <div
@@ -90,6 +113,7 @@ export function ReportMainbar({ repId, items = [], children }: ReportSidebarProp
                     "fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-200 ease-in-out",
                     isOpen ? "translate-x-0" : "-translate-x-full",
                 )}
+                data-scroll-ignore="true"
             >
                 <div className="flex flex-col h-full">
                     {/* Header */}
@@ -111,15 +135,12 @@ export function ReportMainbar({ repId, items = [], children }: ReportSidebarProp
                                 return (
                                     <Button
                                         key={index}
-                                        asChild
                                         variant={isActive ? "secondary" : "ghost"}
                                         className={cn("w-full justify-start", isActive && "bg-muted font-medium")}
-                                        onClick={() => setIsOpen(false)}
+                                        onClick={() => handleNavigation(item.url)}
                                     >
-                                        <Link href={item.url}>
-                                            <Icon className="mr-2 h-4 w-4" />
-                                            {item.title}
-                                        </Link>
+                                        <Icon className="mr-2 h-4 w-4" />
+                                        {item.title}
                                     </Button>
                                 )
                             })}

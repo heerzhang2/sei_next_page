@@ -20,6 +20,7 @@ import {DirectLink} from "@/routing/Link";
 import {ReportFirstPageHeadJd} from "@/report/common/head";
 import {createPdfJob} from "@/report/footer/job";
 import {RepFootLink} from "@/report/common/repFootLink";
+import {RepHeadLink} from "@/report/common/repHeadLink";
 
 
 export const ReportView = ({ rep }: any) => {
@@ -31,6 +32,7 @@ export const ReportView = ({ rep }: any) => {
     return (
         <>
             <div id="PHEAD" />
+            {RepHeadLink({ rep, template: rep?.modeltype, verId: rep?.modelversion, repId: rep?.id })}
             <RepTitleUpdate code={storage?.eqpcod} original={original} />
             <Component source={storage} rep={rep} />
             {RepFootLink({ rep, template: rep?.modeltype, verId: rep?.modelversion, repId: rep?.id, pdf_job })}

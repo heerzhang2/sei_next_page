@@ -12,11 +12,12 @@ import { usePrintPdf } from "@/hooks/usePrintPdf"
 import { toast } from "sonner"
 import { useCreateQueryString } from "@/hooks/useCreateQueryString"
 import { startProcess } from "@/actions/camunda-actions"
-import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { useState, useRef, useCallback, useMemo } from "react"
 import type React from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
+import {useWindowSize} from "@/hooks/use-window-size";
 
-interface PDFControlsProps {
+interface RepFootLinkProps {
     template: string
     verId: string
     repId: string
@@ -27,7 +28,7 @@ interface PDFControlsProps {
 
 type TimeUnit = "day" | "month" | "year"
 
-export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFin }: PDFControlsProps) {
+export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFin }: RepFootLinkProps) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
     const createQueryString = useCreateQueryString()
@@ -35,7 +36,8 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     const pathname = usePathname()
     const { action } = useParams()
     const original = "1" === searchParams!.get("original")
-    const fixBtn =true || !action;
+    const { innerHeight, innerWidth:screenWidth } = useWindowSize()
+    const fixBtn =(innerHeight!)>900 || !action;     //屏幕高大或者不带编辑器模式的固定显示出：
     const [isMutating, handleSubmit] = usePrintPdf(pdf_job)
 
     // Popover 状态
@@ -55,23 +57,9 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     const pdfUri = original ? rep?.link?.ori : rep?.link?.rep
     const [isProcessing, setIsProcessing] = useState(false)
 
-    // 检测屏幕宽度
-    const [screenWidth, setScreenWidth] = useState(0)
-
-    useEffect(() => {
-        const updateScreenWidth = () => {
-            setScreenWidth(window.innerWidth)
-        }
-
-        updateScreenWidth()
-        window.addEventListener("resize", updateScreenWidth)
-
-        return () => window.removeEventListener("resize", updateScreenWidth)
-    }, [])
-
     // 根据屏幕宽度确定 Popover 宽度和布局
     const getPopoverConfig = useMemo(() => {
-        if (screenWidth >= 1024) {
+        if (screenWidth! >= 1024) {
             // 大屏幕：3列布局
             return {
                 width: "w-[600px]",
@@ -79,7 +67,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                 navCols: "grid-cols-2",
                 maxHeight: "max-h-[60vh]",
             }
-        } else if (screenWidth >= 768) {
+        } else if (screenWidth! >= 768) {
             // 中屏幕：2列布局
             return {
                 width: "w-[480px]",
@@ -104,6 +92,17 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
             setScrollPosition(viewportRef.current.scrollTop)
         }
     }, [])
+    // 处理导航，禁用自动滚动
+    const handleNavigation = useCallback(
+        (url: string, closePopover = true) => {
+            if (closePopover) {
+                setPopoverOpen(false)
+            }
+            // 使用 scroll: false 禁用自动滚动行为
+            router.push(url, { scroll: false })
+        },
+        [router],
+    )
 
     const handlePDFGeneration = async () => {
         try {
@@ -287,8 +286,8 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                 <Button
                                     variant="outline"
                                     onClick={() => {
-                                        router.push(pathname + "?" + createQueryString("original", original ? "" : "1"))
-                                        setPopoverOpen(false)
+                                        const newUrl = pathname + "?" + createQueryString("original", original ? "" : "1")
+                                        handleNavigation(newUrl, true)
                                     }}
                                     className="text-xs h-8"
                                     size="sm"
@@ -296,14 +295,22 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                     {original ? "正式报告" : "原始记录"}
                                 </Button>
 
-                                <Button variant="outline"
+                                <Button
+                                    variant="outline"
                                     onClick={() => {
-                                        router.push(`/rep/${repId}/${template}/${verId}/?${print? "":"print=1"}${original ? "&original=1" : ""}`)
+                                        const newUrl =`/rep/${repId}/${template}/${verId}/?${print? "":"print=1"}${original ? "&original=1" : ""}`
+                                        if (!print) {
+                                            // 切换到打印模式时保持 popover 打开
+                                            handleNavigation(newUrl,true)
+                                        } else {
+                                            // 切换到浏览模式时关闭 popover
+                                            handleNavigation(newUrl, false)
+                                        }
                                     }}
                                     className="text-xs h-8"
                                     size="sm"
                                 >
-                                  {print ? "浏览模式" : "准备打印"}
+                                    {print ? "浏览模式" : "准备打印"}
                                 </Button>
 
                                 {/* 打印功能按钮 - 只在打印模式下显示 */}
@@ -330,28 +337,28 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                         <div className="space-y-3 border-t pt-3">
                             <h4 className="text-xs font-medium text-gray-700 text-center">快速导航</h4>
                             <div className={cn("grid gap-2", getPopoverConfig.navCols)}>
-                                <Link
-                                    href={`http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/ALL`}
+                                <button
+                                    onClick={() =>
+                                        handleNavigation(`http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/ALL`)
+                                    }
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
-                                    onClick={() => setPopoverOpen(false)}
                                 >
                                     流转(流程)
-                                </Link>
+                                </button>
 
-                                <Link href="/"
+                                <button
+                                    onClick={() => handleNavigation("/")}
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
-                                    onClick={() => setPopoverOpen(false)}
                                 >
-                                 回首页
-                                </Link>
+                                    回首页
+                                </button>
 
-                                <Link
-                                    href={`/rep/${repId}/${template}/${verId}/ALL`}
+                                <button
+                                    onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`)}
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
-                                    onClick={() => setPopoverOpen(false)}
                                 >
                                     原始记录列表
-                                </Link>
+                                </button>
                             </div>
                             <div className="text-right border-b pb-4">
                                 <Link href="#PHEAD" className="text-blue-600 hover:text-blue-800 text-sm font-medium mr-4">
@@ -375,7 +382,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                             className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-1 w-full"
                                             onClick={() => setPopoverOpen(false)}
                                         >
-                                            有pdf版
+                                            有Pdf版
                                         </Link>
                                         <Button
                                             variant="ghost"
@@ -390,9 +397,9 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                     <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
                                         <div className="text-xs text-gray-600 text-center font-medium">设置保留期限</div>
                                         {/* 数值和单位输入组合 - 响应式布局 */}
-                                        <div className={cn("grid gap-2", screenWidth >= 768 ? "grid-cols-5" : "grid-cols-3")}>
-                                            <div className={cn(screenWidth >= 768 ? "col-span-3" : "col-span-2")}>{NumberInput}</div>
-                                            <div className={cn(screenWidth >= 768 ? "col-span-2" : "col-span-1")}>{UnitSelect}</div>
+                                        <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-5" : "grid-cols-3")}>
+                                            <div className={cn(screenWidth! >= 768 ? "col-span-3" : "col-span-2")}>{NumberInput}</div>
+                                            <div className={cn(screenWidth! >= 768 ? "col-span-2" : "col-span-1")}>{UnitSelect}</div>
                                         </div>
                                         <Button
                                             variant="outline"
@@ -416,9 +423,9 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
             handleScroll,
             original,
             print,
-            router,
             pathname,
             createQueryString,
+            handleNavigation,
             repId,
             template,
             verId,
@@ -461,11 +468,18 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                 "transition-all duration-200", // 新增：过渡动画
                                 "opacity-90" // 新增：基础透明度
                             )}
+                            data-scroll-ignore="true"
                         >
                             操作
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className={cn(getPopoverConfig.width, "print:hidden p-0")} align="center" side="top" sideOffset={5}>
+                    <PopoverContent
+                        className={cn(getPopoverConfig.width, "print:hidden p-0")}
+                        align="center"
+                        side="top"
+                        sideOffset={5}
+                        data-scroll-ignore="true"
+                    >
                         {PopoverContent_All}
                     </PopoverContent>
                 </Popover>

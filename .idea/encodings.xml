@@ -27,13 +27,14 @@
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/relay/clientSchema--.graphql" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/StorageContext.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/RepFootLink.tsx" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/RepFootLink (2).tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/config.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/omni.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/pipeline.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/pressure.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/rep-foot-link (1).tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/repFootLink.tsx" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/common/repHeadLink.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/crane" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/crane/bridge/i.E.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/crane/bridgeDJ/i.E.tsx" charset="UTF-8" />
