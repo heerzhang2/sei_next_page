@@ -1,7 +1,5 @@
 "use client"
-import * as React from "react";
 import Link from "next/link"
-import { useParams, usePathname, useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -9,13 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import type { ConfigRoot, FileTransform } from "page2pdf_server/src";
-import {usePrintPdf} from "@/hooks/usePrintPdf";
-import {toast} from "sonner";
-import {useCreateQueryString} from "@/hooks/useCreateQueryString";
-import {startProcess} from "@/actions/camunda-actions";
-import { useState, useRef, useEffect, useCallback } from "react"
-
+import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
+import { usePrintPdf } from "@/hooks/usePrintPdf"
+import { toast } from "sonner"
+import { useCreateQueryString } from "@/hooks/useCreateQueryString"
+import { startProcess } from "@/actions/camunda-actions"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import type React from "react"
+import { useParams, usePathname, useRouter } from "next/navigation"
 
 interface PDFControlsProps {
     template: string
@@ -36,7 +35,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     const pathname = usePathname()
     const { action } = useParams()
     const original = "1" === searchParams!.get("original")
-    const fixBtn = !action
+    const fixBtn =true || !action;
     const [isMutating, handleSubmit] = usePrintPdf(pdf_job)
 
     // Popover 状态
@@ -46,9 +45,8 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     const viewportRef = useRef<HTMLDivElement>(null)
     const [scrollPosition, setScrollPosition] = useState(0)
 
-    // 输入框引用 - 用于保持焦点
+    // 输入框引用
     const inputRef = useRef<HTMLInputElement>(null)
-    const [inputFocused, setInputFocused] = useState(false)
 
     // 状态管理
     const [retentionValue, setRetentionValue] = useState("1")
@@ -57,32 +55,55 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     const pdfUri = original ? rep?.link?.ori : rep?.link?.rep
     const [isProcessing, setIsProcessing] = useState(false)
 
+    // 检测屏幕宽度
+    const [screenWidth, setScreenWidth] = useState(0)
+
+    useEffect(() => {
+        const updateScreenWidth = () => {
+            setScreenWidth(window.innerWidth)
+        }
+
+        updateScreenWidth()
+        window.addEventListener("resize", updateScreenWidth)
+
+        return () => window.removeEventListener("resize", updateScreenWidth)
+    }, [])
+
+    // 根据屏幕宽度确定 Popover 宽度和布局
+    const getPopoverConfig = useMemo(() => {
+        if (screenWidth >= 1024) {
+            // 大屏幕：3列布局
+            return {
+                width: "w-[600px]",
+                buttonCols: "grid-cols-3",
+                navCols: "grid-cols-2",
+                maxHeight: "max-h-[60vh]",
+            }
+        } else if (screenWidth >= 768) {
+            // 中屏幕：2列布局
+            return {
+                width: "w-[480px]",
+                buttonCols: "grid-cols-2",
+                navCols: "grid-cols-2",
+                maxHeight: "max-h-[65vh]",
+            }
+        } else {
+            // 小屏幕：1列布局
+            return {
+                width: "w-72",
+                buttonCols: "grid-cols-1",
+                navCols: "grid-cols-1",
+                maxHeight: "max-h-[70vh]",
+            }
+        }
+    }, [screenWidth])
+
     // 监听滚动位置变化
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
         if (viewportRef.current) {
             setScrollPosition(viewportRef.current.scrollTop)
         }
-    }
-
-    // 恢复滚动位置和输入框焦点
-    useEffect(() => {
-        const viewport = viewportRef.current
-        if (viewport && scrollPosition > 0) {
-            requestAnimationFrame(() => {
-                viewport.scrollTop = scrollPosition
-            })
-        }
-
-        // 如果输入框之前有焦点，重新聚焦
-        if (inputFocused && inputRef.current) {
-            requestAnimationFrame(() => {
-                inputRef.current?.focus()
-                // 将光标移到末尾
-                const length = inputRef.current?.value.length || 0
-                inputRef.current?.setSelectionRange(length, length)
-            })
-        }
-    }, [retentionValue, scrollPosition, inputFocused])
+    }, [])
 
     const handlePDFGeneration = async () => {
         try {
@@ -99,7 +120,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     }
 
     // 根据单位和数值计算天数
-    const calculateDays = (value: string, unit: TimeUnit): number => {
+    const calculateDays = useCallback((value: string, unit: TimeUnit): number => {
         const numValue = Number.parseInt(value, 10) || 1
 
         switch (unit) {
@@ -112,49 +133,42 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
             default:
                 return numValue
         }
-    }
+    }, [])
 
     // 获取过期日期
-    const getExpirationDate = (value: string, unit: TimeUnit): string => {
-        const days = calculateDays(value, unit)
-        const expiration = new Date()
-        expiration.setDate(expiration.getDate() + days)
-        expiration.setUTCHours(0, 0, 0, 0)
-        return expiration.toISOString()
-    }
+    const getExpirationDate = useCallback(
+        (value: string, unit: TimeUnit): string => {
+            const days = calculateDays(value, unit)
+            const expiration = new Date()
+            expiration.setDate(expiration.getDate() + days)
+            expiration.setUTCHours(0, 0, 0, 0)
+            return expiration.toISOString()
+        },
+        [calculateDays],
+    )
 
-    // 处理数值变化 - 使用 useCallback 防止重新渲染
-    const handleValueChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        // 记录当前滚动位置
-        if (viewportRef.current) {
-            setScrollPosition(viewportRef.current.scrollTop)
-        }
+    // 处理数值变化
+    const handleValueChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            const newValue = e.target.value.replace(/[^\d]/g, "")
 
-        const value = e.target.value.replace(/[^\d]/g, "")
-        setRetentionValue(value)
-    }, [])
+            if (newValue !== retentionValue) {
+                setRetentionValue(newValue)
+            }
+        },
+        [retentionValue],
+    )
 
-    // 处理输入框焦点事件
-    const handleInputFocus = useCallback(() => {
-        setInputFocused(true)
-    }, [])
-
-    const handleInputBlur = useCallback(() => {
-        setInputFocused(false)
-    }, [])
-
-    // 处理单位变化 - 保持滚动位置
+    // 处理单位变化
     const handleUnitChange = useCallback((value: TimeUnit) => {
-        // 记录当前滚动位置
         if (viewportRef.current) {
             setScrollPosition(viewportRef.current.scrollTop)
         }
-
         setRetentionUnit(value)
     }, [])
 
     // 获取显示文本
-    const getDisplayText = (): string => {
+    const displayText = useMemo((): string => {
         const value = Number.parseInt(retentionValue, 10) || 1
 
         switch (retentionUnit) {
@@ -167,243 +181,292 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
             default:
                 return `${value}天`
         }
-    }
+    }, [retentionValue, retentionUnit])
 
-    const handlePdfFlow = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (isProcessing) return
-        setIsProcessing(true)
+    const handlePdfFlow = useCallback(
+        async (e: React.FormEvent) => {
+            e.preventDefault()
+            if (isProcessing) return
+            setIsProcessing(true)
 
-        const isoDate = getExpirationDate(retentionValue, retentionUnit)
-        const displayText = getDisplayText()
+            const isoDate = getExpirationDate(retentionValue, retentionUnit)
 
-        try {
-            const { success, error, processInstanceKey } = (await startProcess({
-                processId: "genRepPdf",
-                variables: {
-                    pdfJob: pdf_job,
-                    pdfType: original ? "ori" : "rep",
-                    repId,
-                    expiration: isoDate,
-                },
-            })) as any
+            try {
+                const { success, error, processInstanceKey } = (await startProcess({
+                    processId: "genRepPdf",
+                    variables: {
+                        pdfJob: pdf_job,
+                        pdfType: original ? "ori" : "rep",
+                        repId,
+                        expiration: isoDate,
+                    },
+                })) as any
 
-            if (success && processInstanceKey) {
-                toast.success(`申请PDF转换成功！保留期限：${displayText}`, {
-                    description: (
-                        <>
-                            在后端排队，等它完成后，再刷新才能看到下载链接
-                            <br />
-                            请不要重复提交转换Pdf的申请单，后端也需消耗时间处理。
-                        </>
-                    ),
-                })
-            } else {
-                toast.error("PDF转换失败", { description: error })
+                if (success && processInstanceKey) {
+                    toast.success(`申请PDF转换成功！保留期限：${displayText}`, {
+                        description: (
+                            <>
+                                在后端排队，等它完成后，再刷新才能看到下载链接
+                                <br />
+                                请不要重复提交转换Pdf的申请单，后端也需消耗时间处理。
+                            </>
+                        ),
+                    })
+                } else {
+                    toast.error("PDF转换失败", { description: error })
+                }
+            } catch (err) {
+                toast.error("PDF转换失败", { description: "错误" + err })
+            } finally {
+                setIsProcessing(false)
             }
-        } catch (err) {
-            toast.error("PDF转换失败", { description: "错误" + err })
-        } finally {
-            setIsProcessing(false)
-        }
-    }
+        },
+        [isProcessing, getExpirationDate, retentionValue, retentionUnit, displayText, pdf_job, original, repId],
+    )
 
-    // Popover 内容 - 使用 React.memo 优化渲染
-    const PopoverContent_All = React.memo(() => (
-        <ScrollArea className="h-full max-h-[70vh] overflow-auto" onScrollCapture={handleScroll} scrollHideDelay={0} type="always">
-            <div className="viewport" ref={viewportRef} style={{ scrollBehavior: "auto" }}>
-                <div className="space-y-4 p-1">
-                    {/* 返回首页链接 */}
-                    <div className="text-center border-b pb-3">
-                        <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm">
-                            -报告完毕,返回-
-                        </Link>
-                    </div>
+    // 数值输入组件
+    const NumberInput = useMemo(
+        () => (
+            <Input
+                ref={inputRef}
+                type="text"
+                value={retentionValue}
+                onChange={handleValueChange}
+                className="bg-white border-2 border-blue-200 focus:border-blue-400 shadow-sm text-sm"
+                placeholder="数值"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                style={{
+                    fontSize: "16px",
+                    WebkitAppearance: "none",
+                    WebkitUserSelect: "text",
+                }}
+                data-form-type="other"
+                data-lpignore="true"
+                key="retention-value-input"
+            />
+        ),
+        [retentionValue, handleValueChange],
+    )
 
-                    {/* 主要功能按钮 - 缩短文字 */}
-                    <div className="space-y-3">
-                        {/* 原始记录/正式报告切换 - 缩短按钮文字 */}
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                router.push(pathname + "?" + createQueryString("original", original ? "" : "1"))
-                                setPopoverOpen(false)
-                            }}
-                            className="w-full text-sm"
-                        >
-                            {original ? "正式报告" : "原始记录"}
-                        </Button>
+    // 单位选择组件
+    const UnitSelect = useMemo(
+        () => (
+            <Select value={retentionUnit} onValueChange={handleUnitChange}>
+                <SelectTrigger className="bg-white border-2 border-blue-200 focus:border-blue-400 shadow-sm text-sm">
+                    <SelectValue placeholder="单位" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="day">天</SelectItem>
+                    <SelectItem value="month">月</SelectItem>
+                    <SelectItem value="year">年</SelectItem>
+                </SelectContent>
+            </Select>
+        ),
+        [retentionUnit, handleUnitChange],
+    )
 
-                        {/* 浏览模式/打印模式切换 - 缩短按钮文字 */}
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                router.push(pathname + "?" + createQueryString("print", print ? "" : "1"))
-                                if (!print) {
-                                    // 切换到打印模式时保持 popover 打开
-                                    // setPopoverOpen(false)
-                                } else {
-                                    // 切换到浏览模式时关闭 popover
-                                    setPopoverOpen(false)
-                                }
-                            }}
-                            className="w-full text-sm"
-                        >
-                            {print ? "浏览模式" : "打印模式"}
-                        </Button>
-                    </div>
-
-                    {/* 导航链接 */}
-                    <div className="space-y-2 border-t pt-3">
-                        <h4 className="text-xs font-medium text-gray-700 text-center">快速导航</h4>
-                        <div className="space-y-2">
-                            <Link
-                                href={`http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/ALL`}
-                                className="text-blue-600 hover:text-blue-800 text-sm block px-3 py-2 rounded-lg hover:bg-gray-50 text-center"
-                                onClick={() => setPopoverOpen(false)}
-                            >
-                                流转(流程)
-                            </Link>
-                            {print ? (
-                                <Link
-                                    href="/"
-                                    className="text-blue-600 hover:text-blue-800 text-sm block px-3 py-2 rounded-lg hover:bg-gray-50 text-center"
-                                    onClick={() => setPopoverOpen(false)}
+    // Popover 内容 - 响应式布局
+    const PopoverContent_All = useMemo(
+        () => (
+            <ScrollArea
+                className={cn("h-full overflow-auto", getPopoverConfig.maxHeight)}
+                onScrollCapture={handleScroll}
+                scrollHideDelay={0}
+                type="always"
+            >
+                <div className="viewport" ref={viewportRef} style={{ scrollBehavior: "auto" }}>
+                    <div className="space-y-4 p-2 mb-4">
+                        {/* 主要功能按钮 - 响应式网格布局 */}
+                        <div className="space-y-3">
+                            <div className={cn("grid gap-2", getPopoverConfig.buttonCols)}>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        router.push(pathname + "?" + createQueryString("original", original ? "" : "1"))
+                                        setPopoverOpen(false)
+                                    }}
+                                    className="text-xs h-8"
+                                    size="sm"
                                 >
-                                    回首页
-                                </Link>
-                            ) : (
-                                <Link
-                                    href={`/rep/${repId}/${template}/${verId}/?print=1${original ? "&original=1" : ""}`}
-                                    className="text-blue-600 hover:text-blue-800 text-sm block px-3 py-2 rounded-lg hover:bg-gray-50 text-center"
-                                    onClick={() => setPopoverOpen(false)}
+                                    {original ? "正式报告" : "原始记录"}
+                                </Button>
+
+                                <Button variant="outline"
+                                    onClick={() => {
+                                        router.push(`/rep/${repId}/${template}/${verId}/?${print? "":"print=1"}${original ? "&original=1" : ""}`)
+                                    }}
+                                    className="text-xs h-8"
+                                    size="sm"
                                 >
-                                    预览打印
-                                </Link>
-                            )}
-                            <Link
-                                href={`/rep/${repId}/${template}/${verId}/ALL`}
-                                className="text-blue-600 hover:text-blue-800 text-sm block px-3 py-2 rounded-lg hover:bg-gray-50 text-center"
-                                onClick={() => setPopoverOpen(false)}
-                            >
-                                原始记录列表
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* 打印相关功能 - 只在打印模式下显示 */}
-                    {print && !action && (
-                        <div className="space-y-3 border-t pt-3">
-                            <h4 className="text-xs font-medium text-gray-700 text-center">打印功能</h4>
-
-                            {/* 预览和本机转pdf按钮 */}
-                            <div className="grid grid-cols-2 gap-2">
-                                <Button variant="outline" onClick={() => window.print()} className="text-sm">
-                                    预览
+                                  {print ? "浏览模式" : "准备打印"}
                                 </Button>
-                                <Button variant="outline" onClick={handlePDFGeneration} disabled={isMutating} className="text-sm">
-                                    {isMutating ? "生成中..." : "本机转pdf"}
-                                </Button>
+
+                                {/* 打印功能按钮 - 只在打印模式下显示 */}
+                                {print && !action && (
+                                    <>
+                                        <Button variant="outline" onClick={() => window.print()} className="text-xs h-8" size="sm">
+                                            预览
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={handlePDFGeneration}
+                                            disabled={isMutating}
+                                            className="text-xs h-8"
+                                            size="sm"
+                                        >
+                                            {isMutating ? "生成中..." : "本机转pdf"}
+                                        </Button>
+                                    </>
+                                )}
                             </div>
+                        </div>
 
-                            {/* PDF转换区域 */}
-                            <div>
+                        {/* 快速导航 - 响应式网格布局 */}
+                        <div className="space-y-3 border-t pt-3">
+                            <h4 className="text-xs font-medium text-gray-700 text-center">快速导航</h4>
+                            <div className={cn("grid gap-2", getPopoverConfig.navCols)}>
+                                <Link
+                                    href={`http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/ALL`}
+                                    className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
+                                    onClick={() => setPopoverOpen(false)}
+                                >
+                                    流转(流程)
+                                </Link>
+
+                                <Link href="/"
+                                    className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
+                                    onClick={() => setPopoverOpen(false)}
+                                >
+                                 回首页
+                                </Link>
+
+                                <Link
+                                    href={`/rep/${repId}/${template}/${verId}/ALL`}
+                                    className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
+                                    onClick={() => setPopoverOpen(false)}
+                                >
+                                    原始记录列表
+                                </Link>
+                            </div>
+                            <div className="text-right border-b pb-4">
+                                <Link href="#PHEAD" className="text-blue-600 hover:text-blue-800 text-sm font-medium mr-4">
+                                    -头部-
+                                </Link>
+                                <Link href="#PTAIL" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    -尾巴-
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* PDF转换区域 - 只在打印模式下显示 */}
+                        {print && !action && (
+                            <div className="space-y-3 border-t pt-3">
                                 {pdfStatus === "idle" && pdfUri ? (
                                     <div className="space-y-2">
                                         <Link
                                             href={`${process.env.NEXT_PUBLIC_OSS_ENDP}${pdfUri}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+                                            className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-1 w-full"
                                             onClick={() => setPopoverOpen(false)}
                                         >
                                             有pdf版
                                         </Link>
-                                        <Button variant="ghost" size="sm" onClick={() => setPdfStatus("redo")} className="w-full text-xs">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setPdfStatus("redo")}
+                                            className="w-full text-xs h-6"
+                                        >
                                             后端再转
                                         </Button>
                                     </div>
                                 ) : (
                                     <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
-                                        <div className="text-xs text-gray-600 text-center">设置保留期限</div>
-                                        {/* 数值和单位输入组合 */}
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <div className="col-span-2">
-                                                <Input
-                                                    ref={inputRef}
-                                                    type="text"
-                                                    value={retentionValue}
-                                                    onChange={handleValueChange}
-                                                    onFocus={handleInputFocus}
-                                                    onBlur={handleInputBlur}
-                                                    className="bg-white border-2 border-blue-200 focus:border-blue-400 shadow-sm text-sm"
-                                                    placeholder="数值"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    autoComplete="off"
-                                                    autoCorrect="off"
-                                                    autoCapitalize="off"
-                                                    spellCheck={false}
-                                                    // 关键：防止 iOS Safari 的自动缩放和键盘收起
-                                                    style={{
-                                                        fontSize: "16px",
-                                                        WebkitAppearance: "none",
-                                                        WebkitUserSelect: "text",
-                                                    }}
-                                                    // 添加这些属性来改善移动端体验
-                                                    data-form-type="other"
-                                                    data-lpignore="true"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Select value={retentionUnit} onValueChange={handleUnitChange}>
-                                                    <SelectTrigger className="bg-white border-2 border-blue-200 focus:border-blue-400 shadow-sm text-sm">
-                                                        <SelectValue placeholder="单位" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="day">天</SelectItem>
-                                                        <SelectItem value="month">月</SelectItem>
-                                                        <SelectItem value="year">年</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                        <div className="text-xs text-gray-600 text-center font-medium">设置保留期限</div>
+                                        {/* 数值和单位输入组合 - 响应式布局 */}
+                                        <div className={cn("grid gap-2", screenWidth >= 768 ? "grid-cols-5" : "grid-cols-3")}>
+                                            <div className={cn(screenWidth >= 768 ? "col-span-3" : "col-span-2")}>{NumberInput}</div>
+                                            <div className={cn(screenWidth >= 768 ? "col-span-2" : "col-span-1")}>{UnitSelect}</div>
                                         </div>
                                         <Button
                                             variant="outline"
                                             onClick={handlePdfFlow}
                                             disabled={isProcessing}
-                                            className="w-full text-sm"
+                                            className="w-full text-xs h-8"
+                                            size="sm"
                                         >
                                             {isProcessing ? "发起申请中..." : "后端转pdf"}
                                         </Button>
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
-        </ScrollArea>
-    ))
+            </ScrollArea>
+        ),
+        [
+            getPopoverConfig,
+            handleScroll,
+            original,
+            print,
+            router,
+            pathname,
+            createQueryString,
+            repId,
+            template,
+            verId,
+            action,
+            isMutating,
+            handlePDFGeneration,
+            pdfStatus,
+            pdfUri,
+            isProcessing,
+            handlePdfFlow,
+            NumberInput,
+            UnitSelect,
+            screenWidth,
+        ],
+    )
 
     return (
         <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
-            {/* 统一的 Popover 布局 */}
+            {/* 返回首页链接 */}
+            <div className="text-right border-b pb-4">
+                <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    -报告完毕,返回-
+                </Link>
+            </div>
             <div className={cn("flex justify-center", fixBtn ? "fixed bottom-4 left-1/2 -translate-x-1/2 z-50" : "m-2")}>
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
+                            size="sm" // 新增：缩小按钮尺寸
                             className={cn(
-                                "shadow-lg",
-                                fixBtn ? "bg-white/95 backdrop-blur-sm border-2 border-blue-200 hover:border-blue-400" : "",
+                                "shadow-sm", // 修改：减小阴影
+                                "px-2 py-1", // 修改：缩小内边距
+                                "text-[0.8rem]", // 修改：缩小文字
+                                "border-1", // 修改：减细边框
+                                fixBtn
+                                    ? "bg-white/50 backdrop-blur-sm border-blue-300 hover:border-blue-400" // 修改：半透明背景
+                                    : "bg-transparent", // 新增：非固定状态透明背景
+                                "hover:bg-slate-500/30", // 新增：半透明悬停效果
+                                "transition-all duration-200", // 新增：过渡动画
+                                "opacity-90" // 新增：基础透明度
                             )}
                         >
-                            报告操作
+                            操作
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-72 p-3" align="center" side="top" sideOffset={5}>
-                        <PopoverContent_All />
+                    <PopoverContent className={cn(getPopoverConfig.width, "print:hidden p-0")} align="center" side="top" sideOffset={5}>
+                        {PopoverContent_All}
                     </PopoverContent>
                 </Popover>
             </div>
