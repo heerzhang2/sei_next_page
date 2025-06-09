@@ -547,4 +547,14 @@ export async function requireRole(requiredRoles: string[]) {
            请问: 我这样子的跨越网络界面的函数调用方式 来使用requireRole() ，会出现什么问题？ 安全性有毛病吗？  性能有问题吗？
 
 
-
+【报错】Skipping auto-scroll behavior due to `position: sticky` or `position: fixed` on element: <button data-slot=​"button" class=​"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium disabled:​pointer-events-none disabled:​opacity-50 [&_svg]​:​pointer-events-none [&_svg:​not([class*='size-']​)​]​:​size-4 shrink-0 [&_svg]​:​shrink-0 outline-none focus-visible:​border-ring focus-visible:​ring-ring/​50 focus-visible:​ring-[3px]​ aria-invalid:​ring-destructive/​20 dark:​aria-invalid:​ring-destructive/​40 aria-invalid:​border-destructive hover:​text-accent-foreground dark:​hover:​bg-accent/​50 size-9 fixed top-0 md:​top-2 left-2 print:​hidden z-50 hover:​backdrop-blur-0 active:​bg-white mix-blend-normal transition-all h-8 w-8 hover:​bg-blue-500 hover:​scale-110 hover:​shadow-lg hover:​opacity-100" data-scroll-ignore=​"true" style>​…​</button>​flex
+const handleEditorNav = useCallback(
+        (url: string, toTab?: ReportPanelType) => {
+            // 使用 scroll: false 禁用自动滚动行为             router.push(url, { scroll: false })
+            router.push(url)  缺失必须加上{ scroll: false }才能杜绝上面警告的
+            if(setActiveTab!==null && toTab){
+                setActiveTab(toTab!);
+            }
+        },
+        [router],
+    )

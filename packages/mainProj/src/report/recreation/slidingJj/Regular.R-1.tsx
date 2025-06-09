@@ -1,7 +1,7 @@
 "use client"
 import * as React from "react"
 import Link from "next/link"
-import {useSearchParams} from "next/navigation"
+import {useRouter, useSearchParams} from "next/navigation"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
@@ -21,6 +21,8 @@ import {ReportFirstPageHeadJd} from "@/report/common/head";
 import {createPdfJob} from "@/report/footer/job";
 import {RepFootLink} from "@/report/common/repFootLink";
 import {RepHeadLink} from "@/report/common/repHeadLink";
+import {useCallback} from "react";
+import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
 
 
 export const ReportView = ({ rep }: any) => {
@@ -60,6 +62,22 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
     }, [rep, orc?._Oitems])
     const { renderIspContent } = useOfficialOmni({orc,rep, ItemArs: impressionismAs?.Item, config: config报告, itResCB: 检验结果替换,})
     const [mapNoTag] = useItemsMapOmni({ ItemArs: impressionismAs?.Item, notCheckNo: false })
+
+
+    const router = useRouter()
+    const {activeTab,setActiveTab } = useEditControlContext()
+    const handleEditorNav = useCallback(
+        (url: string, toTab?: ReportPanelType) => {
+            // 使用 scroll: false 禁用自动滚动行为             router.push(url, { scroll: false })
+            router.push(url)
+            if(setActiveTab!==null && toTab){
+                setActiveTab(toTab!);
+            }
+        },
+        [router],
+    )
+
+
     return (
         <React.Fragment>
             <div className="not-print:my-4">
@@ -73,7 +91,21 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
                 </div>
-                <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline">
+
+
+
+                <div
+                    onClick={() =>
+                        handleEditorNav(`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`,"editor")
+                    }
+                    className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
+                >
+                    转注意事项WaterJj流设施安全技<br/>术规程》（TSG 71-2023）制定，适用<br/>于大型游设施安全技术规程》（TSG 71-<br/>2023）制定，适用于大型游
+                </div>
+
+                <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline"
+                            scroll={false}
+                >
                     <div>
                         {注意事项WaterJj({
                             rep,
@@ -81,6 +113,8 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         })}
                     </div>
                 </DirectLink>
+
+
                 <h4 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
                     <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument`}
                           className="print:no-underline">

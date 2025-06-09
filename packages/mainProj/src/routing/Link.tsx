@@ -1,6 +1,7 @@
 "use client"
 import React, { useCallback } from "react"
 import { useRouter } from "next/navigation"
+import {ReportPanelType} from "@/component/rep/editControl-provider";
 
 /**儿子里面若是<></>包裹的需要改造替代，支持一层层次的替换。
  * 替换旧的 validChildrenMap ； 【来由】代码里面经常出现逻辑render { boolean && <> nodes </> }这样子的会导致以前普通办法失效。
@@ -41,8 +42,8 @@ function validChildrenFragmentSpread(children: any,assert:boolean=true) {
 interface DirectLinkProps extends React.HTMLAttributes<HTMLElement> {
     href: string
     children: React.ReactNode
-    state?: any
     className?: string
+    scroll?: boolean
 }
 
 /**
@@ -58,9 +59,10 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
         (event: any) => {
             event.preventDefault()
             event.stopPropagation() // 不想向祖辈组件传递点击事件。
-            router.push(props.href)
+            //加上scroll: false 杜绝报警 auto-scroll behavior due to `position: sticky` or `position: fixed` on element
+            router.push(props.href, { scroll: props.scroll })
         },
-        [props.href, router],
+        [props.href, router, props.scroll],
     )
     const preloadRouteCode = useCallback(() => {
         router.prefetch(props.href)
@@ -106,4 +108,20 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
         </React.Fragment>
     )
 }
+
+/**目的：避免代码重复性质的字符串的出现太多了：   通常报告表格的点击转编辑器
+ * @param ori 是原始记录页面的
+ * 注意DirectLink：主动把直接儿子的 div或span改成了 <a>标签。
+ */
+// export const editorNavigation= ( {rep, children, tag, ori} : {rep:any, children:React.ReactNode, tag:string,ori?:boolean}
+// ) => {
+//     if(ori)
+//         return <DirectLink  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1#${tag}`}>
+//             {children}
+//         </DirectLink>;
+//     else
+//         return <DirectLink  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}#${tag}`}>
+//             {children}
+//         </DirectLink>;
+// };
 
