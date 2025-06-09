@@ -83,7 +83,7 @@ export default function Skeleton({
     return (
         <div className="flex flex-col">
             {needScrollBtn && (
-                <div className="fixed top-6 right-6 flex flex-col gap-7 z-40">
+                <div className="fixed top-6 right-8 flex flex-col gap-7 z-40">
                     <Button
                         variant="outline"
                         className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
@@ -161,7 +161,7 @@ export default function Skeleton({
                                                     </div>
                                                 </div>
                                                 <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
-                                                    <div
+                                                    <div ref={mobileEditorRef}
                                                         id="tabEditor-boundary"
                                                         className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom"
                                                     >
