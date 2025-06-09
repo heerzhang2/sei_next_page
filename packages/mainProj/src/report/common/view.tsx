@@ -5,7 +5,10 @@ import {RepLink, twoForkSelectS} from "@/report/common/base";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {DirectLink} from "@/routing/Link";
 import {EachObserveConfig, useObserveTable} from "@/report/hook/useObserve";
-//在原始记录使用的：
+
+/**设备概况表,在原始记录使用的：
+这里并没有设置字体大小的。 =浏览器默认字体的大小的。
+* */
 export const DeviceServeyView = ({orc, rep, config, fixed = ["4.2%", "12.1%", "39%", "9%", "11.1%", "%"], fromHead, label}
                            : { orc: any, rep: any, config: any[], fixed?: string[], fromHead?: boolean, label: any }
 ) => {

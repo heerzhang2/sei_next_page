@@ -118,3 +118,10 @@
     scroll-margin-top: 16px;
   }
 }
+
+/* 手机端优化 */
+@media (max-width: 768px) {
+  .vertical-tab-trigger {
+    min-height: 70px;
+  }
+}

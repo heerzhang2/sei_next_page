@@ -9,7 +9,8 @@ interface RepHeadLinkProps {
     repId: string
     rep: any
 }
-//报告的头部功能区
+/**报告的头部功能区
+* */
 export function RepHeadLink({ template, verId, repId, rep }: RepHeadLinkProps) {
     const searchParams = useSearchParams()
     const original = "1" === searchParams!.get("original")

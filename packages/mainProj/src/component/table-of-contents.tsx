@@ -10,6 +10,9 @@ interface TableOfContentsProps {
   }[]
 }
 
+/**辅助列表的显示；同步#hash路由的标签的位置突出显示。
+ * 源自v0dev的；
+* */
 export function TableOfContents({ items }: TableOfContentsProps) {
   const [activeItem, setActiveItem] = useState<string>("")
 
@@ -59,8 +62,8 @@ export function TableOfContents({ items }: TableOfContentsProps) {
               <a
                 href={item.url}
                 className={cn(
-                  "block text-muted-foreground hover:text-foreground transition-colors",
-                  activeItem === item.url && "font-bold text-foreground",
+                    "block text-foreground hover:text-foreground transition-colors", // 直接使用默认深色
+                    activeItem === item.url && "font-bold text-foreground" // 激活状态保持一致
                 )}
                 onClick={(e) => {
                   e.preventDefault()
@@ -78,4 +81,3 @@ export function TableOfContents({ items }: TableOfContentsProps) {
     </div>
   )
 }
-

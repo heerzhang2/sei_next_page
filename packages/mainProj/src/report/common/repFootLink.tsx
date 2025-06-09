@@ -11,7 +11,7 @@ import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
 import { usePrintPdf } from "@/hooks/usePrintPdf"
 import { toast } from "sonner"
 import { useCreateQueryString } from "@/hooks/useCreateQueryString"
-import { startProcess } from "@/actions/camunda-actions"
+import { startPdfCvtProcess } from "@/actions/camunda-actions"
 import { useState, useRef, useCallback, useMemo } from "react"
 import type React from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
@@ -27,7 +27,9 @@ interface RepFootLinkProps {
 }
 
 type TimeUnit = "day" | "month" | "year"
-
+/**报告底部的功能区：
+ * v0dev帮忙解决fiexed元素scroll的告警问题
+ * */
 export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFin }: RepFootLinkProps) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
@@ -39,17 +41,10 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     const { innerHeight, innerWidth:screenWidth } = useWindowSize()
     const fixBtn =(innerHeight!)>900 || !action;     //屏幕高大或者不带编辑器模式的固定显示出：
     const [isMutating, handleSubmit] = usePrintPdf(pdf_job)
-
     // Popover 状态
     const [popoverOpen, setPopoverOpen] = useState(false)
-
-    // 滚动位置状态
-    const viewportRef = useRef<HTMLDivElement>(null)
-    const [scrollPosition, setScrollPosition] = useState(0)
-
     // 输入框引用
     const inputRef = useRef<HTMLInputElement>(null)
-
     // 状态管理
     const [retentionValue, setRetentionValue] = useState("1")
     const [retentionUnit, setRetentionUnit] = useState<TimeUnit>("month")
@@ -86,12 +81,6 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
         }
     }, [screenWidth])
 
-    // 监听滚动位置变化
-    const handleScroll = useCallback(() => {
-        if (viewportRef.current) {
-            setScrollPosition(viewportRef.current.scrollTop)
-        }
-    }, [])
     // 处理导航，禁用自动滚动
     const handleNavigation = useCallback(
         (url: string, closePopover = true) => {
@@ -160,9 +149,6 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
 
     // 处理单位变化
     const handleUnitChange = useCallback((value: TimeUnit) => {
-        if (viewportRef.current) {
-            setScrollPosition(viewportRef.current.scrollTop)
-        }
         setRetentionUnit(value)
     }, [])
 
@@ -191,7 +177,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
             const isoDate = getExpirationDate(retentionValue, retentionUnit)
 
             try {
-                const { success, error, processInstanceKey } = (await startProcess({
+                const { success, error, processInstanceKey } = (await startPdfCvtProcess({
                     processId: "genRepPdf",
                     variables: {
                         pdfJob: pdf_job,
@@ -274,11 +260,10 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
         () => (
             <ScrollArea
                 className={cn("h-full overflow-auto", getPopoverConfig.maxHeight)}
-                onScrollCapture={handleScroll}
                 scrollHideDelay={0}
                 type="always"
             >
-                <div className="viewport" ref={viewportRef} style={{ scrollBehavior: "auto" }}>
+                <div className="viewport"  style={{ scrollBehavior: "auto" }}>
                     <div className="space-y-4 p-2 mb-4">
                         {/* 主要功能按钮 - 响应式网格布局 */}
                         <div className="space-y-3">
@@ -335,7 +320,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
 
                         {/* 快速导航 - 响应式网格布局 */}
                         <div className="space-y-3 border-t pt-3">
-                            <h4 className="text-xs font-medium text-gray-700 text-center">快速导航</h4>
+                            <h4 className="text-xs font-medium text-gray-700 text-center">导航</h4>
                             <div className={cn("grid gap-2", getPopoverConfig.navCols)}>
                                 <button
                                     onClick={() =>
@@ -361,7 +346,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                 </button>
                             </div>
                             <div className="text-right border-b pb-4">
-                                <Link href="#PHEAD" className="text-blue-600 hover:text-blue-800 text-sm font-medium mr-4">
+                                <Link href="#PHEAD" className="text-blue-600 hover:text-blue-800 text-sm font-medium mr-6">
                                     -头部-
                                 </Link>
                                 <Link href="#PTAIL" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
@@ -395,7 +380,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                     </div>
                                 ) : (
                                     <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
-                                        <div className="text-xs text-gray-600 text-center font-medium">设置保留期限</div>
+                                        <div className="text-xs text-gray-600 text-center font-medium">设置Pdf保留期</div>
                                         {/* 数值和单位输入组合 - 响应式布局 */}
                                         <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-5" : "grid-cols-3")}>
                                             <div className={cn(screenWidth! >= 768 ? "col-span-3" : "col-span-2")}>{NumberInput}</div>
@@ -420,7 +405,6 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
         ),
         [
             getPopoverConfig,
-            handleScroll,
             original,
             print,
             pathname,

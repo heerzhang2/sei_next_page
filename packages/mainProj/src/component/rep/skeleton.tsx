@@ -106,40 +106,58 @@ export default function Skeleton({
             {isSmallScreen ? (
                 <>
                     {isLandscape ? (
-                        <div className="flex h-full">
-                            {/*手机横屏的 Vertical tabs layout for landscape */}
+                        <div className="flex h-screen bg-background">
                             <div className="flex flex-col w-full h-full">
                                 <Tabs value={activeTab}>
                                     <div className="flex flex-row h-screen relative">
-                                        {/* Sticky Vertical TabsList with vertical text */}
+                                        {/* Enhanced Sticky Vertical TabsList */}
                                         <div className="sticky top-0 h-full flex items-center pt-10">
-                                            <TabsList className="flex flex-col h-auto py-4 space-y-6 bg-muted/30 vertical-tabs-list">
+                                            <TabsList className="flex flex-col h-auto py-4 space-y-4 bg-muted/30 vertical-tabs-list border-r">
                                                 <TabsTrigger
                                                     value="preview"
-                                                    className="vertical-tab-trigger px-2 py-6"
+                                                    className={`
+                                                        vertical-tab-trigger px-3 py-6 relative transition-all duration-200
+                                                        ${activeTab === "preview"
+                                                                ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
+                                                                : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
+                                                        }
+                                                      `}
                                                     onClick={() => handleTabChange("preview")}
                                                 >
-                                                    <span className="vertical-text">报告</span>
+                                                    <span className="vertical-text font-medium">报告</span>
+                                                    {/* 激活指示器 */}
+                                                    {activeTab === "preview" && (
+                                                        <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
+                                                    )}
                                                 </TabsTrigger>
+
                                                 <TabsTrigger
                                                     value="editor"
-                                                    className="vertical-tab-trigger px-2 py-6"
+                                                    className={`
+                                                        vertical-tab-trigger px-3 py-6 relative transition-all duration-200
+                                                        ${activeTab === "editor"
+                                                                ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
+                                                                : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
+                                                        }
+                                                      `}
                                                     onClick={() => handleTabChange("editor")}
                                                 >
-                                                    <span className="vertical-text">编制</span>
+                                                    <span className="vertical-text font-medium">编制</span>
+                                                    {/* 激活指示器 */}
+                                                    {activeTab === "editor" && (
+                                                        <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
+                                                    )}
                                                 </TabsTrigger>
                                             </TabsList>
                                         </div>
+
                                         <div className="flex-1">
                                             <div className="h-screen">
                                                 <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
-                                                    <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto ">
-                                                        {repPanel}
-                                                    </div>
+                                                    <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto">{repPanel}</div>
                                                 </div>
                                                 <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
                                                     <div
-                                                        ref={mobileEditorRef}
                                                         id="tabEditor-boundary"
                                                         className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom"
                                                     >

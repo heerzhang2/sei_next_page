@@ -4,9 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { InputDatalist } from "@/components/chub"
 import * as React from "react";
-import {cn} from "@/lib/utils";
-import Link from "next/link";
-import {RepFootLink} from "@/report/common/rarelyVary";
 
 export default function ExamplePage() {
   const [displayValue, setDisplayValue] = useState("")
@@ -110,8 +107,6 @@ export default function ExamplePage() {
                 </div>
               </div>
 
-
-              {RepFootLink({ rep: {} as any, template: '1', verId: '2', repId: '1', pdf_job:{} as any })}
 
           </div>
         </div>

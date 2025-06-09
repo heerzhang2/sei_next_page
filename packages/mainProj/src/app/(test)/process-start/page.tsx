@@ -1,4 +1,4 @@
-import ProcessStarter from "@/components/process-starter"
+// import ProcessStarter from "@/components/process-starter"
 
 export default function Home() {
     return (
@@ -7,7 +7,7 @@ export default function Home() {
                 <h1 className="text-4xl font-bold mb-8 text-center">Camunda 8 流程启动器</h1>
 
                 <div className="bg-white p-8 rounded-lg shadow-lg">
-                    <ProcessStarter />
+                    {/*<ProcessStarter />*/}
                 </div>
             </div>
         </main>

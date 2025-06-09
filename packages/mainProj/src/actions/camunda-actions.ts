@@ -10,11 +10,20 @@ type StartProcessParams = {
   bpmnProcessId?: string
 }
 
-
+const MAX_PDF_YEAR =30
 /**
  * 启动一个新的流程实例 (使用 REST API)
  */
-export async function startProcess({ processId, variables, bpmnProcessId }: StartProcessParams) {
+export async function startPdfCvtProcess({ processId, variables, bpmnProcessId }: StartProcessParams) {
+  const expirationDate = new Date(variables?.expiration);
+  const currentDate = new Date();
+  const thirtyYearsLater = new Date(currentDate);
+  thirtyYearsLater.setFullYear(currentDate.getFullYear() + MAX_PDF_YEAR);
+  const isOver30Years = expirationDate > thirtyYearsLater;
+  if(isOver30Years) return {
+    success: false,
+    error: `保存期最多${MAX_PDF_YEAR}年`
+  }
   //角色的名字必须和后端保证一致性啊。
   const { session, userRoles } = await requireRole(["JyUser"])
  //还【需要】在server component当中，对用户进行权限认证的：
