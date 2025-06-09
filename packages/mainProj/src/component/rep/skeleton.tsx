@@ -79,10 +79,10 @@ export default function Skeleton({
             }
         }
     }
-    const needScrollBtn=!isSmallScreen || (isSmallScreen && activeTab==="editor");
+    const needScrollBtn = !isSmallScreen || (isSmallScreen && activeTab === "editor")
     return (
         <div className="flex flex-col">
-            {needScrollBtn &&
+            {needScrollBtn && (
                 <div className="fixed top-6 right-6 flex flex-col gap-7 z-40">
                     <Button
                         variant="outline"
@@ -101,7 +101,7 @@ export default function Skeleton({
                         <span className="sr-only">滚动到底</span>
                     </Button>
                 </div>
-            }
+            )}
 
             {isSmallScreen ? (
                 <>
@@ -117,10 +117,11 @@ export default function Skeleton({
                                                     value="preview"
                                                     className={`
                                                         vertical-tab-trigger px-3 py-6 relative transition-all duration-200
-                                                        ${activeTab === "preview"
-                                                                ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
-                                                                : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                                        }
+                                                        ${
+                                                        activeTab === "preview"
+                                                            ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
+                                                            : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
+                                                    }
                                                       `}
                                                     onClick={() => handleTabChange("preview")}
                                                 >
@@ -135,10 +136,11 @@ export default function Skeleton({
                                                     value="editor"
                                                     className={`
                                                         vertical-tab-trigger px-3 py-6 relative transition-all duration-200
-                                                        ${activeTab === "editor"
-                                                                ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
-                                                                : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                                        }
+                                                        ${
+                                                        activeTab === "editor"
+                                                            ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
+                                                            : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
+                                                    }
                                                       `}
                                                     onClick={() => handleTabChange("editor")}
                                                 >
@@ -154,7 +156,9 @@ export default function Skeleton({
                                         <div className="flex-1">
                                             <div className="h-screen">
                                                 <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
-                                                    <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto">{repPanel}</div>
+                                                    <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto">
+                                                        {repPanel}
+                                                    </div>
                                                 </div>
                                                 <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
                                                     <div
@@ -171,25 +175,57 @@ export default function Skeleton({
                             </div>
                         </div>
                     ) : (
-                        /*手机竖屏的 Portrait mode with sticky tabs */
+                        // 手机竖屏的 Portrait mode with enhanced sticky tabs
                         <Tabs value={activeTab}>
                             <div className="flex flex-col h-screen">
-                                <div className="sticky top-0  bg-white border-b">
+                                <div className="sticky top-0 bg-white border-b shadow-sm z-10">
                                     <div className="flex items-center justify-between p-0 pl-10">
-                                        <TabsList className="grid w-full grid-cols-2 h-6 pt-0">
-                                            <TabsTrigger value="preview" className="h-6" onClick={() => handleTabChange("preview")}>
+                                        <TabsList className="grid w-full grid-cols-2 h-6 pt-0 bg-transparent p-0 gap-1">
+                                            <TabsTrigger
+                                                value="preview"
+                                                className={`
+                            h-6 relative transition-all duration-300 font-medium overflow-visible
+                            ${
+                                                    activeTab === "preview"
+                                                        ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20"
+                                                        : "bg-muted/30 hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
+                                                }
+                          `}
+                                                onClick={() => handleTabChange("preview")}
+                                            >
                                                 报告
+                                                {/* 底部激活指示器 */}
+                                                {activeTab === "preview" && (
+                                                    <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-primary-foreground rounded-full z-20 bg-red-600" />
+                                                )}
                                             </TabsTrigger>
-                                            <TabsTrigger value="editor" className="h-6" onClick={() => handleTabChange("editor")}>
+
+                                            <TabsTrigger
+                                                value="editor"
+                                                className={`
+                            h-6 relative transition-all duration-300 font-medium overflow-visible
+                            ${
+                                                    activeTab === "editor"
+                                                        ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20"
+                                                        : "bg-muted/30 hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
+                                                }
+                          `}
+                                                onClick={() => handleTabChange("editor")}
+                                            >
                                                 编制
+                                                {/* 底部激活指示器 */}
+                                                {activeTab === "editor" && (
+                                                    <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-primary-foreground rounded-full z-20 bg-red-600" />
+                                                )}
                                             </TabsTrigger>
                                         </TabsList>
                                     </div>
                                 </div>
+
                                 <div className="flex-1">
                                     <div className="h-[calc(100vh-33px)]">
                                         <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
-                                            <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto ">
+                                            <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto">
                                                 {repPanel}
                                             </div>
                                         </div>
@@ -197,7 +233,7 @@ export default function Skeleton({
                                             <div
                                                 ref={mobileEditorRef}
                                                 id="tabEditor-boundary"
-                                                className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto "
+                                                className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom"
                                             >
                                                 {children}
                                             </div>

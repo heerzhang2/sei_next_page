@@ -32,10 +32,11 @@ export const ReportView = ({ rep }: any) => {
     return (
         <>
             <div id="PHEAD" />
-            {RepHeadLink({ rep, template: rep?.modeltype, verId: rep?.modelversion, repId: rep?.id })}
+            <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} />
             <RepTitleUpdate code={storage?.eqpcod} original={original} />
             <Component source={storage} rep={rep} />
-            {RepFootLink({ rep, template: rep?.modeltype, verId: rep?.modelversion, repId: rep?.id, pdf_job })}
+            <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
+                         pdf_job={pdf_job} />
             <div id="PTAIL" />
         </>
     )

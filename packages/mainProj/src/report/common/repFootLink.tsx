@@ -264,7 +264,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                 type="always"
             >
                 <div className="viewport"  style={{ scrollBehavior: "auto" }}>
-                    <div className="space-y-4 p-2 mb-4">
+                    <div className="space-y-4 p-2 mb-1">
                         {/* 主要功能按钮 - 响应式网格布局 */}
                         <div className="space-y-3">
                             <div className={cn("grid gap-2", getPopoverConfig.buttonCols)}>
@@ -359,25 +359,29 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                         {print && !action && (
                             <div className="space-y-3 border-t pt-3">
                                 {pdfStatus === "idle" && pdfUri ? (
-                                    <div className="space-y-2">
-                                        <Link
-                                            href={`${process.env.NEXT_PUBLIC_OSS_ENDP}${pdfUri}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-1 w-full"
-                                            onClick={() => setPopoverOpen(false)}
-                                        >
-                                            有Pdf版
-                                        </Link>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setPdfStatus("redo")}
-                                            className="w-full text-xs h-6"
-                                        >
-                                            后端再转
-                                        </Button>
-                                    </div>
+                                        <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-5" : "grid-cols-3")}>
+                                            <div className={cn(screenWidth! >= 768 ? "col-span-3" : "col-span-2")}>
+                                                <Link
+                                                    href={`${process.env.NEXT_PUBLIC_OSS_ENDP}${pdfUri}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-1 w-full"
+                                                    onClick={() => setPopoverOpen(false)}
+                                                >
+                                                    有Pdf版
+                                                </Link>
+                                            </div>
+                                            <div className={cn(screenWidth! >= 768 ? "col-span-2" : "col-span-1")}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setPdfStatus("redo")}
+                                                    className="w-full text-xs h-6"
+                                                >
+                                                    后端再转
+                                                </Button>
+                                            </div>
+                                        </div>
                                 ) : (
                                     <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
                                         <div className="text-xs text-gray-600 text-center font-medium">设置Pdf保留期</div>

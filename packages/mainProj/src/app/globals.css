@@ -474,3 +474,33 @@ a:visited {
   }
 }
 
+/* 水平标签页增强样式 */
+.horizontal-tab-trigger {
+  position: relative;
+  overflow: hidden;
+}
+/* 激活指示器动画 */
+.horizontal-tab-trigger::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 32px;
+  height: 4px;
+  background-color: currentColor;
+  border-radius: 2px;
+  transition: transform 0.3s ease;
+}
+
+.horizontal-tab-trigger[data-state="active"]::after {
+  transform: translateX(-50%) scaleX(1);
+}
+/* 手机端优化 */
+@media (max-width: 768px) {
+  .horizontal-tab-trigger {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+}
+
