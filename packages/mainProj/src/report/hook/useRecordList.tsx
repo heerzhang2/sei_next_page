@@ -165,7 +165,7 @@ export function useRecordList(rep: any, recordPrintList: EditorAreaConfig[],
         ,[action, rep, SubRepIds,nestMdConfig,redId, verId,recordPrintList,view]);
 
     const list=(
-     <div id="allOrgEdt">
+     <div id="allOrgEdt" className={"mb-8"}>
          {recordList}
      </div>
   );

@@ -16,6 +16,7 @@ import { useState, useRef, useCallback, useMemo } from "react"
 import type React from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import {useWindowSize} from "@/hooks/use-window-size";
+import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
 
 interface RepFootLinkProps {
     template: string
@@ -51,6 +52,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     const [pdfStatus, setPdfStatus] = useState<"idle" | "loading" | "success" | "redo">("idle")
     const pdfUri = original ? rep?.link?.ori : rep?.link?.rep
     const [isProcessing, setIsProcessing] = useState(false)
+    const {activeTab,setActiveTab } = useEditControlContext()
 
     // 根据屏幕宽度确定 Popover 宽度和布局
     const getPopoverConfig = useMemo(() => {
@@ -83,12 +85,15 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
 
     // 处理导航，禁用自动滚动
     const handleNavigation = useCallback(
-        (url: string, closePopover = true) => {
+        (url: string, closePopover = true,toTab?: ReportPanelType) => {
             if (closePopover) {
                 setPopoverOpen(false)
             }
             // 使用 scroll: false 禁用自动滚动行为
             router.push(url, { scroll: false })
+            if(setActiveTab!==null && toTab){
+                setActiveTab(toTab!);
+            }
         },
         [router],
     )
@@ -271,18 +276,6 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                 <Button
                                     variant="outline"
                                     onClick={() => {
-                                        const newUrl = pathname + "?" + createQueryString("original", original ? "" : "1")
-                                        handleNavigation(newUrl, true)
-                                    }}
-                                    className="text-xs h-8"
-                                    size="sm"
-                                >
-                                    {original ? "正式报告" : "原始记录"}
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
                                         const newUrl =`/rep/${repId}/${template}/${verId}/?${print? "":"print=1"}${original ? "&original=1" : ""}`
                                         if (!print) {
                                             // 切换到打印模式时保持 popover 打开
@@ -339,19 +332,11 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                 </button>
 
                                 <button
-                                    onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`)}
+                                    onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`,true,"editor")}
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
                                 >
                                     原始记录列表
                                 </button>
-                            </div>
-                            <div className="text-right border-b pb-4">
-                                <Link href="#PHEAD" className="text-blue-600 hover:text-blue-800 text-sm font-medium mr-6">
-                                    -头部-
-                                </Link>
-                                <Link href="#PTAIL" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                    -尾巴-
-                                </Link>
                             </div>
                         </div>
 
@@ -386,19 +371,21 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                     <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
                                         <div className="text-xs text-gray-600 text-center font-medium">设置Pdf保留期</div>
                                         {/* 数值和单位输入组合 - 响应式布局 */}
-                                        <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-5" : "grid-cols-3")}>
+                                        <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-7" : "grid-cols-3")}>
                                             <div className={cn(screenWidth! >= 768 ? "col-span-3" : "col-span-2")}>{NumberInput}</div>
                                             <div className={cn(screenWidth! >= 768 ? "col-span-2" : "col-span-1")}>{UnitSelect}</div>
+                                            <div className={cn(screenWidth! >= 768 ? "col-span-2" : "col-span-1")}>
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={handlePdfFlow}
+                                                    disabled={isProcessing}
+                                                    className="w-full text-xs h-8"
+                                                    size="sm"
+                                                >
+                                                    {isProcessing ? "发起申请中..." : "后端转pdf"}
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <Button
-                                            variant="outline"
-                                            onClick={handlePdfFlow}
-                                            disabled={isProcessing}
-                                            className="w-full text-xs h-8"
-                                            size="sm"
-                                        >
-                                            {isProcessing ? "发起申请中..." : "后端转pdf"}
-                                        </Button>
                                     </div>
                                 )}
                             </div>
@@ -433,7 +420,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     return (
         <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
             {/* 返回首页链接 */}
-            <div className="text-right border-b pb-4">
+            <div className="text-right border-b pb-4 mb-8">
                 <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                     -报告完毕,返回-
                 </Link>
@@ -469,6 +456,27 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                         data-scroll-ignore="true"
                     >
                         {PopoverContent_All}
+                        <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-7" : "grid-cols-5")}>
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    const newUrl = pathname + "?" + createQueryString("original", original ? "" : "1")
+                                    handleNavigation(newUrl, true)
+                                }}
+                                className={cn("text-xs h-8",screenWidth! >= 768 ? "col-span-2 col-end-4" : "col-span-2")}
+                                size="sm"
+                            >
+                                {original ? "正式报告" : "原始记录"}
+                            </Button>
+                            <div className={cn("text-center border-b",screenWidth! >= 768 ? "col-span-3 col-end-8" : "col-span-3")}>
+                                <Link href="#PHEAD" className="text-blue-600 hover:text-blue-800 text-sm font-medium mr-6">
+                                    -头部-
+                                </Link>
+                                <Link href="#PTAIL" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    -尾巴-
+                                </Link>
+                            </div>
+                        </div>
                     </PopoverContent>
                 </Popover>
             </div>
