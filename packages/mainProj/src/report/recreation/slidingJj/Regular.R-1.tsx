@@ -96,15 +96,26 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
 
                 <div
                     onClick={() =>
-                        handleEditorNav(`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`,"editor")
+                        handleEditorNav(`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness` ,"editor")
                     }
                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
                 >
                     转注意事项WaterJj流设施安全技<br/>术规程》（TSG 71-2023）制定，适用<br/>于大型游设施安全技术规程》（TSG 71-<br/>2023）制定，适用于大型游
                 </div>
+                <div className="mt-10">
+                    <Link
+                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>试验跳转HASH标签的位置1 </Link>
+                    <DirectLink  href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/Witness#Witness" className="no-underline hover:underline"
+                                scroll={true}
+                    >
+                        <div> 试验跳转HASH标签的位置2</div>
+                    </DirectLink>
+                </div>
+
+
 
                 <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline"
-                            scroll={false}
+                            scroll={true}
                 >
                     <div>
                         {注意事项WaterJj({
@@ -153,7 +164,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument?original=1#Instrument`}>
                     <h3 id='Instrument' className="print:hidden">主要测量设备性能检查</h3>
                 </Link>
-                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
+                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`} scroll={true}>
                     <h3 id="Witness" className="print:hidden">记事 、 备注</h3>
                 </Link>
                 <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition#SiteCondition`}>

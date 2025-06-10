@@ -166,7 +166,7 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                         if(!tagSetted)   tagSetted=true;
                         //【注意】 et.sub?? 假如 sub='' 逻辑成立，需改undefined; React.Fragment key={seq+'-'+n}
                         const rowsBigArea=
-                            <DirectLink key={seq+'-'+n} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}#${area.tag}`}>
+                            <DirectLink key={seq+'-'+n} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}#${area.tag}`} scroll={true}>
                                 {itemRowRender}
                             </DirectLink>;
 
