@@ -17,7 +17,7 @@ export function RepHeadLink({ template, verId, repId, rep }: RepHeadLinkProps) {
     const pdfUri = original ? rep?.link?.ori : rep?.link?.rep
 
     return (
-        <div id="BeginOfRep" className="print:hidden text-center mb-4 md:mb-0">
+        <div id="BeginOfRep" className="print:hidden text-center mt-4 mb-4 md:mb-0">
             <div className="space-y-3 border-b">
                 {pdfUri ? (
                     <div className="space-y-2">
