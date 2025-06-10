@@ -64,7 +64,7 @@ if(process.env.NEXT_PUBLIC_APP_TEST==='true')  recordPrintList.splice(0,0,create
 //repId传递无效： 实际最后还用rep动态克隆配置的。
 export const OriginalView=({ action,  verId, repId='', rep}:OriginalViewProps)=>{
     const {storage, setStorage} =useStorage();
-    console.log("OriginalViewaction=", action);
+    // console.log("OriginalViewaction=", action);
     const recordPrintListNow =React.useMemo(() => {
       let routeAreas=[] as any[];
       const impressionismAs =setupItemAreaRoute({rep, orc:storage});

@@ -3,7 +3,6 @@ import ReportMakeable from "@/common/ReportMakeable"
 import ReportData from "@/component/rep/report-data"
 import { StorageProvider } from "@/report/StorageContext"
 import { ModificationIndicator } from "@/report/hook/useFormFramework"
-import { ReportMainbar } from "@/components/report-mainbar"
 import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
 
 /*报告和编制都用到的部分：能支持不要用登录看报告。
@@ -19,14 +18,14 @@ export default async function ReportRootLayout({
     children: ReactNode
 }) {
     const { repId } = await params
-
+    //假如把SiteMainbar<ReportMainbar repId={repId} />放这,会出现告警Skipping auto-scroll behavior due to `position: sticky` or `position: fixed` on element;
+    //最后只能下沉app\rep\[repId]\SLIDING_JJ\1\layout.tsx里面做的或直接上浮了。
     return (
         <ErrorBoundaryWrapper>
             <ReportMakeable />
             <StorageProvider>
                 <ReportData repId={repId}>
                     <ModificationIndicator />
-                    <ReportMainbar repId={repId} />
                     <div>{children}</div>
                 </ReportData>
             </StorageProvider>

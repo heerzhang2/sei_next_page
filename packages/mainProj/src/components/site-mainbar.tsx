@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 interface ReportSidebarProps {
-    repId: string
     items?: {
         title: string
         url: string
@@ -17,8 +16,9 @@ interface ReportSidebarProps {
 }
 
 /**主菜单区域的
+ * 没法添加repId参数了：若需要repId的都放入更底下层次的子路由中的独立菜单去做了。
  * */
-export function ReportMainbar({ repId, items = [], children }: ReportSidebarProps) {
+export function SiteMainbar({ items = [], children }: ReportSidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
     const [isOpen, setIsOpen] = React.useState(false)
@@ -32,12 +32,12 @@ export function ReportMainbar({ repId, items = [], children }: ReportSidebarProp
             : [
                 {
                     title: "报告概览",
-                    url: `/rep/${repId}`,
+                    url: `/rep/`,
                     icon: Home,
                 },
                 {
                     title: "报告详情",
-                    url: `/rep/${repId}/SLIDING_JJ/1`,
+                    url: `/rep/SLIDING_JJ/1`,
                     icon: FileText,
                 },
                 {

@@ -4,7 +4,7 @@ import {useQuery} from "@urql/next";
 import ReportLayout from "@/component/rep/reportLayout";
 import {ReportParams, ReportQuery} from "@/component/rep/report-data";
 import PageSectionOrientation from "@/components/page-section-orientation";
-import Report from "@/component/rep/report";
+import BrowsingPattern from "@/component/rep/browsingPattern";
 import {useParams, useSearchParams} from "next/navigation";
 import {EditControlProvider} from "@/component/rep/editControl-provider";
 import {ReportView, useCatalog} from "@/report/recreation/slidingJj/Regular.R-1";
@@ -31,9 +31,9 @@ export default function Layout({children}: Readonly<{children: React.ReactNode}>
                        :
                         <div className="flex h-screen print:h-auto">
                             {children}
-                            <Report items={catItems}>
+                            <BrowsingPattern items={catItems}>
                                 <ReportView rep={report}/>
-                            </Report>
+                            </BrowsingPattern>
                         </div>
                 }
             </PageSectionOrientation>

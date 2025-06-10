@@ -11,6 +11,7 @@ import {PrintSettingsProvider} from "@/contexts/print-settings-context";
 import type React from "react"
 import { notoSans, notoSerif } from '@/styles/fonts';
 import "./globals.css"
+import {SiteMainbar} from "@/components/site-mainbar";
 
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default async function RootLayout({
                 <SessionProvider session={session}>
                     <Provider>
                         <GraphQLProvider>
+                            <SiteMainbar/>
                             {children}
                             <Toaster richColors position="top-right" />
                         </GraphQLProvider>
