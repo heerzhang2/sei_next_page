@@ -8,6 +8,7 @@ import {useContext} from "react";
 import { useRouter } from 'next/navigation';
 // import Link from 'next/link'
 import {cn} from "@/lib/utils";
+import {JumpTab} from "@/report/common/JumpTab";
 
 /**不合格表
  * @param rep 报告relay对象
@@ -168,9 +169,9 @@ export const UnqualifiedIspTable = ({
     return <>
         {orc?.unq ? (
             <div className="space-y-6 break-before-page">
-                <DirectLink  href={urlhead+`/ReCheck#ReCheck`}>
+                <JumpTab  href={urlhead+`/ReCheck#ReCheck`}>
                   {tbLabel}
-                </DirectLink>
+                </JumpTab>
                 <FlexibleTable columnWidths={fixed} className="text-sm">
                     <TableHeader>
                         <TableRow>
@@ -186,16 +187,16 @@ export const UnqualifiedIspTable = ({
                         {orc.unq?.map((bug: any, i: number) => {
                             const mapn = mapNoTag!.get(bug.no);
                             return <TableRow key={i}>
-                                        <DirectLink href={`${urlhead}/${mapn?.tag}`}>
+                                        <JumpTab href={`${urlhead}/${mapn?.tag}`}>
                                             <CCell className="px-0">{i + 1}</CCell>
                                             <CCell className="px-0">{`${mapn?.pre ?? ''}${mapn?.iclas ?? ''}${bug.no}`}</CCell>
                                             <CCell className="px-0">{bug.b}</CCell>
-                                        </DirectLink>
+                                        </JumpTab>
                                         {/* 复检行 */}
-                                        <DirectLink href={`${urlhead}/ReCheck?from=${bug.no}`}>
+                                        <JumpTab href={`${urlhead}/ReCheck?from=${bug.no}`}>
                                             <CCell className="text-base px-0">{bug.rs}</CCell>
                                             <CCell className="px-0">{bug.d}</CCell>
-                                        </DirectLink>
+                                        </JumpTab>
                              </TableRow>
                         })}
                     </TableBody>
@@ -293,22 +294,25 @@ type JumpMeasureProps = {
 * */
 export const JumpMeasure = ({ children, rep, tag }: JumpMeasureProps) => {
     return (
-       <DirectLink
+       <JumpTab
             href={`/rep/${rep.id}/${rep.modeltype}/${rep.modelversion}/${tag}?original=1#${tag}`}
             className="no-underline hover:no-underline group relative cursor-pointer print:hidden"
         >
           <span className="text-h4 font-semibold transition-colors group-hover:text-primary-600 print:text-foreground print:hidden">
             {children}
           </span>
-       </DirectLink>
+       </JumpTab>
     )
 }
+
 
 type JumpOrgMemoProps = {
   children: React.ReactNode
   tag: string
   //醒目的按钮形态
   big?: boolean;
+    //针对左右两半框架页面封装的页面形式：是在右边的页面吗
+    right?: boolean;
 }
 /**跳往： 格式化的“原始记录”页面 之内 的备注。
  * */

@@ -1,7 +1,6 @@
 "use client"
 import * as React from "react";
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
-import {DirectLink} from "@/routing/Link";
 import PageSectionOrientation from "@/components/page-section-orientation";
 import {RepLink, ReportViewProps} from "@/report/common/base";
 import {useItemsMapOmni} from "@/report/common/omni";
@@ -15,6 +14,7 @@ import {setupItemAreaRoute} from "./orcIspConfig";
 import {config主技术, tail主技} from "./MainTechnical";
 import {tItems现场} from "./Regular.O-1";
 import {config观测数据, config观测数据2, config设备概况, tail观测} from "./orcBase";
+import {JumpTab} from "@/report/common/JumpTab";
 
 
 export const config记录: Column_Setting[]=[{n:'',x:'检验结果',},{n:null,x:'结论'},{n:'M',x:'备注',t:'B',m:true},{n:'D',x:'不合格内容',t:'B'}];
@@ -76,17 +76,17 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             <UnqualifiedIspTable rep={rep} orc={orc} mapNoTag={mapNoTag} titles={['序号','项目编号','不合格内容描述','复检结果','复检日期']}
                     label={<h2 id='ReCheck' className="text-left text-xl mb-2">四、检测不合格记录及复检结果</h2>}
             />
-            <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
+            <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
                 <div>
                     <h2 id='Conclusion' className="mt-4 print:mt-0 text-2xl break-before-page">五、现场检验意见</h2>
                     <div className={`text-center ${orc?.检验结论?.length > 12 ? 'text-2xl' : 'text-4xl'} w-full border-1 border-solid border-black rounded-lg p-4`}>
                         {orc?.检验结论}
                     </div>
                 </div>
-            </DirectLink>
+            </JumpTab>
             <FlexibleTable columnWidths={["15%", "%", "15%", "20%"]}>
                 <TableBody>
-                    <DirectLink href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/ALL`}>
+                    <JumpTab href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/ALL`}>
                         <TableRow>
                             <CCell className="border-none">检验</CCell>
                             <CCell className="border-none"></CCell>
@@ -99,7 +99,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                             <CCell className="border-none">日期</CCell>
                             <CCell className="border-none"></CCell>
                         </TableRow>
-                    </DirectLink>
+                    </JumpTab>
                 </TableBody>
             </FlexibleTable>
             <RepLink ori rep={rep} tag={'Witness'}>

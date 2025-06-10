@@ -1,7 +1,6 @@
 "use client"
 import * as React from "react"
-import Link from "next/link"
-import {useRouter, useSearchParams} from "next/navigation"
+import {useSearchParams} from "next/navigation"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
@@ -16,13 +15,11 @@ import { RepDeviceDetail } from "./repView"
 import { setupItemAreaRoute } from "./orcIspConfig"
 import { FormatOriginal } from "./FormatOriginal"
 import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
-import {DirectLink} from "@/routing/Link";
 import {ReportFirstPageHeadJd} from "@/report/common/head";
 import {createPdfJob} from "@/report/footer/job";
 import {RepFootLink} from "@/report/common/repFootLink";
 import {RepHeadLink} from "@/report/common/repHeadLink";
-import {useCallback} from "react";
-import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
+import {JumpTab} from "@/report/common/JumpTab";
 
 
 export const ReportView = ({ rep }: any) => {
@@ -62,22 +59,6 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
     }, [rep, orc?._Oitems])
     const { renderIspContent } = useOfficialOmni({orc,rep, ItemArs: impressionismAs?.Item, config: config报告, itResCB: 检验结果替换,})
     const [mapNoTag] = useItemsMapOmni({ ItemArs: impressionismAs?.Item, notCheckNo: false })
-
-
-    const router = useRouter()
-    const {activeTab,setActiveTab } = useEditControlContext()
-    const handleEditorNav = useCallback(
-        (url: string, toTab?: ReportPanelType) => {
-            // 使用 scroll: false 禁用自动滚动行为             router.push(url, { scroll: false })
-            router.push(url)
-            if(setActiveTab!==null && toTab){
-                setActiveTab(toTab!);
-            }
-        },
-        [router],
-    )
-
-
     return (
         <React.Fragment>
             <div className="not-print:my-4">
@@ -91,46 +72,16 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
                 </div>
-
-
-
-                <div
-                    onClick={() =>
-                        handleEditorNav(`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness` ,"editor")
-                    }
-                    className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
-                >
-                    转注意事项WaterJj流设施安全技<br/>术规程》（TSG 71-2023）制定，适用<br/>于大型游设施安全技术规程》（TSG 71-<br/>2023）制定，适用于大型游
-                </div>
-                <div className="mt-10">
-                    <Link
-                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>试验跳转HASH标签的位置1 </Link>
-                    <DirectLink  href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/Witness#Witness" className="no-underline hover:underline"
-                                scroll={true}
-                    >
-                        <div> 试验跳转HASH标签的位置2</div>
-                    </DirectLink>
-                </div>
-
-
-
-                <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline"
-                            scroll={true}
-                >
-                    <div>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline">
+                    <div className="text-blue-600 hover:text-blue-800">
                         {注意事项WaterJj({
                             rep,
                             comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
                         })}
                     </div>
-                </DirectLink>
-
-
+                </JumpTab>
                 <h4 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
-                    <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument`}
-                          className="print:no-underline">
-                        大型游乐设施监督检验报告
-                    </Link>
+                   大型游乐设施监督检验报告
                 </h4>
                 {RepDeviceDetail({orc, rep})}
                 {检验核准WaterJj({orc, rep})}
@@ -160,16 +111,16 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                     label={<h2 id='ReCheck' className="text-center text-2xl mb-2 mt-4 print:mt-0">检验不合格项目内容及复检结果</h2>}
                 />
             </div>
-            <div>
-                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument?original=1#Instrument`}>
-                    <h3 id='Instrument' className="print:hidden">主要测量设备性能检查</h3>
-                </Link>
-                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`} scroll={true}>
-                    <h3 id="Witness" className="print:hidden">记事 、 备注</h3>
-                </Link>
-                <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition#SiteCondition`}>
-                    <h3 id="SiteCondition" className="print:hidden">附录：现场检验条件确认</h3>
-                </Link>
+            <div className="print:hidden">
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument?original=1#Instrument`} tab="preview">
+                    <div className="block">主要测量设备性能检查</div>
+                </JumpTab>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
+                    <span className="block">记事 、 备注</span>
+                </JumpTab>
+                <JumpTab id="SiteCondition" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition?original=1#SiteCondition`} tab="preview">
+                    <span className="block">附录：现场检验条件确认</span>
+                </JumpTab>
             </div>
         </React.Fragment>
     )

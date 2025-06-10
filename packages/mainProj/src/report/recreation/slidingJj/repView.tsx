@@ -6,6 +6,7 @@ import {RepLink} from "@/report/common/base";
 import {usePrefixDataTable} from "@/report/hook/usePrefixData";
 import {useThreeColumnView} from "@/report/hook/useThreeColumnSubr";
 import {render施工单位} from "@/report/common/render";
+import {JumpTab} from "@/report/common/JumpTab";
 
 //仅正式报告用
 const config设备 = [
@@ -38,21 +39,21 @@ export const RepDeviceDetail= ({ orc, rep } : { orc: any,rep:any}
   return <React.Fragment>
     <FlexibleTable id='Survey' columnWidths={["6.1%","6.8%","38%","12.8%","4%","%"]} className="text-sm border-collapse">
       <TableBody>
-        <RepLink rep={rep} tag={'Survey'}>
+        <RepLink ori rep={rep} tag={'Survey'}>
           {renderUpper}
         </RepLink>
       </TableBody>
     </FlexibleTable>
     <FlexibleTable columnWidths={ ["4.8%","13%","23%","15%","10%","18.6%","%"] }  className="text-sm">
       <TableBody>
-        <RepLink rep={rep} tag={'Survey'}>
+        <RepLink ori rep={rep} tag={'Survey'}>
           {firstPart}
         </RepLink>
         <TableRow>
           <CCell colSpan={2}>检验依据</CCell>
           <CCell colSpan={5}>《大型游乐设施安全技术规程》（TSG 71-2023）</CCell>
         </TableRow>
-        <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion#Conclusion`}>
+        <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion#Conclusion`}>
           <TableRow id='Conclusion'>
             <CCell>检验结论</CCell>
             <CCell colSpan={6}>
@@ -60,15 +61,15 @@ export const RepDeviceDetail= ({ orc, rep } : { orc: any,rep:any}
               {orc?.检验结论}</span>
             </CCell>
           </TableRow>
-        </DirectLink>
-        <DirectLink href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
+        </JumpTab>
+        <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
           <TableRow>
             <CCell>备注</CCell>
             <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
                 {orc.大备注 ?? '／'}
             </TableCell>
           </TableRow>
-        </DirectLink>
+        </JumpTab>
         <TableRow>
           <CCell colSpan={2}>下次定期检验日期</CCell>
           <CCell colSpan={5}>{orc.新下检日 ?? '／'}</CCell>

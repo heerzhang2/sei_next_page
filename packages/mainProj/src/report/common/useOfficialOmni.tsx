@@ -4,6 +4,7 @@ import {DirectLink} from "@/routing/Link";
 import {RecordOmniArea, ItemOmniConfig, resTranslOmni, itemResTransformRpo,} from "./omni";
 import {resTranslCm} from "./helper";
 import {Column_Setting} from "./useFormatOmni";
+import {JumpTab} from "@/report/common/JumpTab";
 
 interface Props {
     //记录data存储
@@ -166,9 +167,9 @@ export const useOfficialOmni= ({orc, ItemArs, itResCB, rep,config,bOmt,secN} : P
                         if(!tagSetted)   tagSetted=true;
                         //【注意】 et.sub?? 假如 sub='' 逻辑成立，需改undefined; React.Fragment key={seq+'-'+n}
                         const rowsBigArea=
-                            <DirectLink key={seq+'-'+n} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}#${area.tag}`} scroll={true}>
+                            <JumpTab key={seq+'-'+n} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}#${area.tag}`} scroll={true}>
                                 {itemRowRender}
-                            </DirectLink>;
+                            </JumpTab>;
 
                         htmlTxts.push(rowsBigArea);    //原先在htmlTxts.push(itemRowRender);bigItemRowCnt++;前面就处理的
 

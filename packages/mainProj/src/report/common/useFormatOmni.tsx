@@ -4,6 +4,7 @@ import {DirectLink} from "../../routing/Link";
 import {ItemOmniConfig, itemResTransformRec, RecordOmniArea} from "./omni";
 import {resTranslCm} from "./helper";
 import {cn} from "@/lib/utils";
+import {JumpTab} from "@/report/common/JumpTab";
 
 //后面可变动字段的安排设置 ： 其中两个特别字段：{n:'',x:'检验结果',},{n:null,x:'结论'}
 export type Column_Setting ={
@@ -150,9 +151,9 @@ export const useFormatOmni = ({
                         }
                     </TableRow>;
                     //报错Invalid prop `columnWidths` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.
-                    const rowsBigArea= <DirectLink key={seq+'_'+n} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}?original=1#${area.tag}`}>
+                    const rowsBigArea= <JumpTab key={seq+'_'+n} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${area.tag}?original=1#${area.tag}`}>
                             {itemRowRender}
-                        </DirectLink>;
+                        </JumpTab>;
                     htmlTxts.push(rowsBigArea);    //原先在htmlTxts.push(itemRowRender);bigItemRowCnt++;前面就处理的
                     if(rtspanArea){
                         rtspanLeft--;

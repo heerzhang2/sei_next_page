@@ -421,7 +421,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
             {/* 返回首页链接 */}
             <div className="text-right border-b pb-4 mb-8">
                 <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    -报告完毕,返回-
+                    -{original? '原始记录':'报告'}完毕,返回-
                 </Link>
             </div>
             <div className={cn("flex justify-center", "fixed bottom-4 -translate-x-1/2 z-50",

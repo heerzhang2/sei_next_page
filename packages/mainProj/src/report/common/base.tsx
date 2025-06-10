@@ -4,6 +4,7 @@ import { Dispatch, SetStateAction } from "react";
 import { MutableRefObject } from "react";
 import {DirectLink} from "../../routing/Link";
 import {gql, } from '@urql/next';
+import {JumpTab} from "@/report/common/JumpTab";
 
 //公共的复用性好的组件。
 //各个检验单项子组件暴露给父组件的接口数据。
@@ -302,13 +303,13 @@ export const CCellUnit = ({
 export const RepLink= ( {rep, children, tag, ori} : {rep:any, children:React.ReactNode, tag:string,ori?:boolean}
 ) => {
     if(ori)
-        return <DirectLink  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1#${tag}`}>
+        return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1#${tag}`}>
             {children}
-        </DirectLink>;
+        </JumpTab>;
     else
-        return <DirectLink  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}#${tag}`}>
+        return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}#${tag}`}>
             {children}
-        </DirectLink>;
+        </JumpTab>;
 };
 /*修改打印的默认文件名
 * */

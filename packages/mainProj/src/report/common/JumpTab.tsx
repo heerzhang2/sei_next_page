@@ -1,68 +1,37 @@
 "use client"
 import React, { useCallback } from "react"
 import { useRouter } from "next/navigation"
+import {validChildrenFragmentSpread} from "@/routing/Link";
+import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
 
-/**儿子里面若是<></>包裹的需要改造替代，支持一层层次的替换。
- * 替换旧的 validChildrenMap ； 【来由】代码里面经常出现逻辑render { boolean && <> nodes </> }这样子的会导致以前普通办法失效。
- * 可支持把被<></>包裹下的组件直接合并给上一级的级别来作为并列的儿子，只支持第一层的非嵌套的<></>标签。
- * 避免相同的key就报错，但是有副作用后果：把全部儿子的key 统一再做个修改。 "_N**"作为排他性的key;
- * */
-export function validChildrenFragmentSpread(children: any,assert:boolean=true) {
-    let idseq=1;
-    let outs: React.ReactElement<unknown, string | React.JSXElementConstructor<any>>[]=[];
-    let sons=React.Children.toArray(children);
-    sons.forEach((son: any, index:number, array: any) =>{
-        if(React.isValidElement(son)){
-            const descriptor=Object.getOwnPropertyDescriptor(son, 'type');
-            if(( descriptor?.value === Symbol.for('react.fragment') )  &&  son.props  &&  son.props.hasOwnProperty("children")){
-                const subChildren=Object.getOwnPropertyDescriptor(son.props, 'children');
-                let nestSubNodes=React.Children.toArray(subChildren?.value);
-                nestSubNodes.forEach((subnode: any, index:number, array: any) => {
-                    //if( !(subnode.hasOwnProperty("key")) ||  subnode.key===`.0` ...?等 ? )
-                    //Cannot assign to read only property 'key' of object '#<Object>' Object.assign(subnode,{ key: '_'+idseq });
-                    //避免相同的key 就报错的情况。?和上一级的兄弟节点相同的id。
-                    let modifyNode={...subnode};
-                    Object.assign(modifyNode,{ key: '_N'+idseq });
-                    outs.push( modifyNode );
-                    idseq++;
-                });
-            }
-            else{
-                outs.push(son);       //前提假设： son该不会出现"_N**"作为key;
-            }
-        }else if(assert){
-            throw new Error("literal text must be wrapped in <></> tag or Components");     //不合法的文字？
-        }
-    } );
-    return outs;
-}
-
-
-interface DirectLinkProps extends React.HTMLAttributes<HTMLElement> {
+interface JumpTabProps extends React.HTMLAttributes<HTMLElement> {
     href: string
     children: React.ReactNode
-    className?: string
+    className?: string      //没有用到？
     //默认设置为=true的；
     scroll?: boolean
+    tab?: ReportPanelType
 }
-
-/**
- * 任意都能做Link的；
- * 直接用next.js Link 导致报错In HTML, <tr> cannot be a child of <a>.
- * In HTML, <a> cannot be a child of <tbody>. This will cause a hydration error.
- * 表头不能加上<DirectLink >传递各列宽度？
+/**替代DirectLink：报告编辑器的Context底下的，附带Tabs跳转能力； div span :被替换为<a>; 剥离一层嵌套标签的;
+ * 类似上一代的 JumpOrgTag
  */
-export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: DirectLinkProps) => {
+export const JumpTab: React.FunctionComponent<JumpTabProps> = (props: JumpTabProps) => {
     const router = useRouter()
+    const { setActiveTab } = useEditControlContext()
     const valChilds = validChildrenFragmentSpread(props.children)
+    //除了push跟随的跳转，其余功能的类似/routing/Link.tsx；
     const changeRoute = useCallback(
         (event: any) => {
             event.preventDefault()
             event.stopPropagation() // 不想向祖辈组件传递点击事件。
             //加上scroll: false 杜绝报警 auto-scroll behavior due to `position: sticky` or `position: fixed` on element
             router.push(props.href, { scroll: props.scroll===undefined? true : props.scroll })
+            if(setActiveTab!==null){
+                //这里运行实际更早，tab内容还未加载完成的。 push(props.href若有hash标签如#Instrument但是目标Tab没有的hash就无法滚动到正常标签位置。
+                setActiveTab(props.tab ?? "editor");
+            }
         },
-        [props.href, router, props.scroll],
+        [props.href,props.tab,props.scroll,router,setActiveTab],
     )
     const preloadRouteCode = useCallback(() => {
         router.prefetch(props.href)
@@ -109,4 +78,3 @@ export const DirectLink: React.FunctionComponent<DirectLinkProps> = (props: Dire
         </React.Fragment>
     )
 }
-

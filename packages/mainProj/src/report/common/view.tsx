@@ -5,6 +5,7 @@ import {RepLink, twoForkSelectS} from "@/report/common/base";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {DirectLink} from "@/routing/Link";
 import {EachObserveConfig, useObserveTable} from "@/report/hook/useObserve";
+import {JumpTab} from "@/report/common/JumpTab";
 
 /**设备概况表,在原始记录使用的：
 这里并没有设置字体大小的。 =浏览器默认字体的大小的。
@@ -82,7 +83,7 @@ export const 常用现场条件 = ({orc, rep, config, label = '附录B：现场�
                         }
                     });
 
-                    return <DirectLink key={b}
+                    return <JumpTab key={b}
                                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition#SiteCondition`}>
                         {config.map(([title, {f: field, N: descnode}]: any, i: number) => {
                             return <TableRow key={i}>
@@ -94,7 +95,7 @@ export const 常用现场条件 = ({orc, rep, config, label = '附录B：现场�
                             <CCell>确认时间</CCell>
                             {dates}
                         </TableRow>
-                    </DirectLink>;
+                    </JumpTab>;
                 })}
             </TableBody>
         </FlexibleTable>
@@ -105,6 +106,7 @@ export const 常用现场条件 = ({orc, rep, config, label = '附录B：现场�
         }
     </>;
 };
+
 /*@param fromHead :打印时需要断开页的也就是页首打印。
 * */
 export const tail测仪器 = <div className="text-xs">

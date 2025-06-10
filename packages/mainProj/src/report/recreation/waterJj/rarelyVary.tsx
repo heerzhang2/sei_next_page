@@ -6,6 +6,7 @@ import {eqpTypeAllMap} from "../../../dict/eqpComm";
 import SurveyRow from "@/component/SurveyRow";
 import {businessCatspMap} from "@/common/sei";
 import {RepLink} from "@/report/common/base";
+import {JumpTab} from "@/report/common/JumpTab";
 
 interface InspectionApprovalProps {
   orc: any
@@ -18,52 +19,52 @@ export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprov
       <div className="w-full">
         <FlexibleTable className="text-sm w-full border-collapse" columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]}>
           <TableBody>
-            <RepLink rep={rep} ori tag="Conclusion">
-              <TableRow>
-                <CCell>{jyt}</CCell>
-                <CCell colSpan={2}>
-                  {orc.检验人IDs}
-                </CCell>
-                <CCell className="text-xs">日期</CCell>
-                <CCell>{orc.检验日期 || "／"}</CCell>
-                <CCell className="!p-0 relative h-full" rowSpan={3}>
-                  <div className="h-full flex flex-col">
-                    <div className="print:hidden absolute inset-0 opacity-30 bg-no-repeat bg-center"
-                         style={{ backgroundImage: `url(/images/seal.png)` }}></div>
-                    <FlexibleTable className="text-sm w-full h-full flex-grow border-none" columnWidths={["50%", "%"]}>
-                      <TableBody>
-                        <TableRow className="border-none">
-                          <TableCell className="w-1/2">检验机构核准证号：</TableCell>
-                          <TableCell>{rep?.isp?.ispu?.agency?.apno}</TableCell>
-                        </TableRow>
-                        <TableRow className="border-none">
-                          <CCell className="border-none h-12" colSpan={2}>
-                            （机构公章或者检验专用章）
-                          </CCell>
-                        </TableRow>
-                        <TableRow className="border-none">
-                          <CCell className="border-none" colSpan={2}>
-                            {orc?.检验日期}
-                          </CCell>
-                        </TableRow>
-                      </TableBody>
-                    </FlexibleTable>
-                  </div>
-                </CCell>
-              </TableRow>
-            </RepLink>
-          <TableRow>
-            <CCell>审核</CCell>
-            <CCell colSpan={2}></CCell>
-            <CCell className="text-xs">日期</CCell>
-            <CCell></CCell>
-          </TableRow>
-          <TableRow>
-            <CCell>批准</CCell>
-            <CCell colSpan={2}></CCell>
-            <CCell className="text-xs">日期</CCell>
-            <CCell></CCell>
-          </TableRow>
+              <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion#Conclusion`}>
+                <TableRow>
+                  <CCell>{jyt}</CCell>
+                  <CCell colSpan={2}>
+                    {orc.检验人IDs}
+                  </CCell>
+                  <CCell className="text-xs">日期</CCell>
+                  <CCell>{orc.检验日期 || "／"}</CCell>
+                  <CCell className="!p-0 relative h-full" rowSpan={3}>
+                    <div className="h-full flex flex-col">
+                      <div className="print:hidden absolute inset-0 opacity-30 bg-no-repeat bg-center"
+                           style={{ backgroundImage: `url(/images/seal.png)` }}></div>
+                      <FlexibleTable className="text-sm w-full h-full flex-grow border-none" columnWidths={["50%", "%"]}>
+                        <TableBody>
+                          <TableRow className="border-none">
+                            <TableCell className="w-1/2">检验机构核准证号：</TableCell>
+                            <TableCell>{rep?.isp?.ispu?.agency?.apno}</TableCell>
+                          </TableRow>
+                          <TableRow className="border-none">
+                            <CCell className="border-none h-12" colSpan={2}>
+                              （机构公章或者检验专用章）
+                            </CCell>
+                          </TableRow>
+                          <TableRow className="border-none">
+                            <CCell className="border-none" colSpan={2}>
+                              {orc?.检验日期}
+                            </CCell>
+                          </TableRow>
+                        </TableBody>
+                      </FlexibleTable>
+                    </div>
+                  </CCell>
+                </TableRow>
+                <TableRow>
+                  <CCell>审核</CCell>
+                  <CCell colSpan={2}></CCell>
+                  <CCell className="text-xs">日期</CCell>
+                  <CCell></CCell>
+                </TableRow>
+                <TableRow>
+                  <CCell>批准</CCell>
+                  <CCell colSpan={2}></CCell>
+                  <CCell className="text-xs">日期</CCell>
+                  <CCell></CCell>
+                </TableRow>
+              </JumpTab>
           </TableBody>
         </FlexibleTable>
       </div>
