@@ -52,11 +52,12 @@ export function TableOfContents({ items }: TableOfContentsProps) {
     }
   }, [items])
 
+  //CSS需要在相对窗口添加的"@container", 设置容器查询@3xs:columns-2的位置最靠近的上下文；
   return (
-    <div className="w-full">
+    <div className="w-full @container">
       <div className="mb-4 text-sm font-medium">快捷入口</div>
       <nav>
-        <ul className="space-y-2 text-sm">
+        <ul className="@3xs:columns-2 space-y-2 text-sm">
           {items.map((item) => (
             <li key={item.url}>
               <a

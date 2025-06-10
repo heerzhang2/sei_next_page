@@ -39,8 +39,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     const pathname = usePathname()
     const { action } = useParams()
     const original = "1" === searchParams!.get("original")
-    const { innerHeight, innerWidth:screenWidth } = useWindowSize()
-    const fixBtn =(innerHeight!)>900 || !action;     //屏幕高大或者不带编辑器模式的固定显示出：
+    const { screenHeight, screenWidth } = useWindowSize()
     const [isMutating, handleSubmit] = usePrintPdf(pdf_job)
     // Popover 状态
     const [popoverOpen, setPopoverOpen] = useState(false)
@@ -425,23 +424,24 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                     -报告完毕,返回-
                 </Link>
             </div>
-            <div className={cn("flex justify-center", fixBtn ? "fixed bottom-4 left-1/2 -translate-x-1/2 z-50" : "m-2")}>
+            <div className={cn("flex justify-center", "fixed bottom-4 -translate-x-1/2 z-50",
+                screenHeight!<500? "left-20": screenWidth!<500? "left-8 bottom-8":"left-1/2" )
+            }>
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
-                            size="sm" // 新增：缩小按钮尺寸
+                            size="sm"   // 新增：缩小按钮尺寸
                             className={cn(
                                 "shadow-sm", // 修改：减小阴影
                                 "px-2 py-1", // 修改：缩小内边距
                                 "text-[0.8rem]", // 修改：缩小文字
                                 "border-1", // 修改：减细边框
-                                fixBtn
-                                    ? "bg-white/50 backdrop-blur-sm border-blue-300 hover:border-blue-400" // 修改：半透明背景
-                                    : "bg-transparent", // 新增：非固定状态透明背景
+                                "bg-white/50 backdrop-blur-sm border-blue-300 hover:border-blue-400",
                                 "hover:bg-slate-500/30", // 新增：半透明悬停效果
                                 "transition-all duration-200", // 新增：过渡动画
-                                "opacity-90" // 新增：基础透明度
+                                "opacity-90", // 新增：基础透明度
+                                screenHeight!<500? "h-4 w-10 rounded-xs gap-1 px-1 has-[>svg]:px-1.5": screenWidth!<500? "h-6 w-6 rounded-xs gap-1 px-1 has-[>svg]:px-1.5":"",
                             )}
                             data-scroll-ignore="true"
                         >

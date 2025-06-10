@@ -168,11 +168,11 @@ export function useTableEdit({
   //定长折叠形态才需要区分表格raft的位置；
   const [activeHeaderIndex, setActiveHeaderIndex] = React.useState<number | null>(null)
   const [openMenuId, setOpenMenuId] = React.useState<string | null>(null)
-  const { innerHeight } = useWindowSize()
+  const { screenHeight } = useWindowSize()
   const frameRef = React.useRef<HTMLDivElement>(null)
   const barRect = useMeasure(frameRef as React.RefObject<HTMLElement>)
   const hBarWidth = barRect?.width || 0
-  const screenTp = innerHeight! > 860 && hBarWidth > 1700 ? 2 : innerHeight! > 740 && hBarWidth > 1280 ? 1 : 0
+  const screenTp = screenHeight! > 860 && hBarWidth > 1700 ? 2 : screenHeight! > 740 && hBarWidth > 1280 ? 1 : 0
   //最多几个分区表可以并排的:默认raft=1
   const raft = React.useMemo(() => {
     // Calculate total width needed for all columns

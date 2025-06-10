@@ -4,14 +4,14 @@ import { useState, useEffect } from "react"
 import { debounce } from "lodash-es"
 
 interface WindowSize {
-  innerWidth: number | undefined
-  innerHeight: number | undefined
+  screenWidth: number | undefined
+  screenHeight: number | undefined
 }
 
 export function useWindowSize(debounceMs = 100): WindowSize {
   const [windowSize, setWindowSize] = useState<WindowSize>({
-    innerWidth: undefined,
-    innerHeight: undefined,
+    screenWidth: undefined,
+    screenHeight: undefined,
   })
 
   useEffect(() => {
@@ -21,8 +21,8 @@ export function useWindowSize(debounceMs = 100): WindowSize {
     // 创建防抖的 resize 处理函数
     const handleResize = debounce(() => {
       setWindowSize({
-        innerWidth: window.innerWidth,
-        innerHeight: window.innerHeight,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
       })
     }, debounceMs)
 
