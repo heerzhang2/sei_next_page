@@ -442,7 +442,7 @@ export const WitnessSimple = ({
                             <FormField control={form.control} name="资料编号"
                                        render={({field}) => (
                                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                               <FormLabel>资料及编号:</FormLabel>
+                                               <FormLabel className="select-text">资料及编号:</FormLabel>
                                                <FormControl className="w-full">
                                                    <BlobInputList rows={6} datalist={witlist}  {...field}  />
                                                </FormControl>
@@ -462,7 +462,7 @@ export const WitnessSimple = ({
                             <FormField control={form.control} name="大备注"
                                        render={({field}) => (
                                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                               <FormLabel>备注:</FormLabel>
+                                               <FormLabel className="select-text">备注:</FormLabel>
                                                <FormControl className="w-full">
                                                    <BlobInputList rows={6} datalist={memolist}  {...field}  />
                                                </FormControl>
@@ -583,7 +583,7 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
                                                 name={`检验条件.${selectedIndex}.d`}
                                                 render={({field}) => (
                                                     <FormItem className="w-full @md:w-[20rem]">
-                                                        <FormLabel>确认日期</FormLabel>
+                                                        <FormLabel className="select-text">确认日期</FormLabel>
                                                         <FormControl>
                                                             <Input type="date"{...field} placeholder="选择日期"
                                                                    value={tabledArr[index] ? tabledArr[index].d : ""}

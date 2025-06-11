@@ -193,7 +193,7 @@ export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
                     <FormField control={form.control} name={"_tblFixed"}
                         render={({ field }) => (
                             <FormItem className="pt-2 w-full break-inside-avoid">
-                                <FormLabel>设置待测试表格的各列宽度：</FormLabel>
+                                <FormLabel className="select-text">设置待测试表格的各列宽度：</FormLabel>
                                 <FormControl className="w-full">
                                     <BlobInputList rows={2} {...field} datalist={["[\"4%\",\"5%\",\"4%\",\"6%\",\"%\",\"23%\"]"]}/>
                                 </FormControl>

@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import {useQuery, gql} from '@urql/next';
 import {useStorage} from "@/report/StorageContext";
+import Link from "next/link";
 
 export interface ReportParams {
     repId: string
@@ -75,7 +76,9 @@ function CommonReportData({ repId,children       }:
     if (fetching) return <div>加载中...</div>
     if (error) return <div>错误: {error.message}</div>
     if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>
-    if (!report) return null
+    if (!report) return  <div className="content-center text-center h-screen w-screen">
+            <Link href="/">没有找到该份报告，返回首页</Link>
+        </div>;
     return (
         <Suspense>
             {children}

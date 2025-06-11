@@ -435,7 +435,7 @@ export function useTableEdit({
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid">
-                                                <FormLabel>{title}</FormLabel>
+                                                <FormLabel className="select-text">{title}</FormLabel>
                                                 <FormControl className="w-full">
                                                   <Input type="date" {...field} />
                                                 </FormControl>
@@ -452,7 +452,7 @@ export function useTableEdit({
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid">
-                                                <FormLabel>{title}</FormLabel>
+                                                <FormLabel className="select-text">{title}</FormLabel>
                                                 <FormControl className="w-full">{/*<Switch   {...field}  />*/}</FormControl>
                                                 <FormMessage />
                                               </FormItem>
@@ -467,7 +467,7 @@ export function useTableEdit({
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
-                                                <FormLabel>{title}</FormLabel>
+                                                <FormLabel className="select-text">{title}</FormLabel>
                                                 <FormControl className="w-full">
                                                   {/*<BlobInputList datalist={list} unit={unit}  {...field}  />*/}
                                                 </FormControl>
@@ -484,7 +484,7 @@ export function useTableEdit({
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                                <FormLabel>{title}</FormLabel>
+                                                <FormLabel className="select-text">{title}</FormLabel>
                                                 <FormControl className="w-full">{/*<Textarea rows={4}  {...field} />*/}</FormControl>
                                                 <FormMessage />
                                               </FormItem>
@@ -499,7 +499,7 @@ export function useTableEdit({
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid">
-                                                <FormLabel>{title}</FormLabel>
+                                                <FormLabel className="select-text">{title}</FormLabel>
                                                 <FormControl className="w-full">
                                                   <MemoDatesInput {...field} rows={2} />
                                                 </FormControl>
@@ -516,7 +516,7 @@ export function useTableEdit({
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid">
-                                                <FormLabel>{title}</FormLabel>
+                                                <FormLabel className="select-text">{title}</FormLabel>
                                                 <FormControl className="w-full">
                                                   <MemoDateInput {...field} />
                                                 </FormControl>
@@ -533,7 +533,7 @@ export function useTableEdit({
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid">
-                                                <FormLabel>{title}</FormLabel>
+                                                <FormLabel className="select-text">{title}</FormLabel>
                                                 <FormControl className="w-full">
                                                   <SuffixInput unit={unit} {...field} />
                                                 </FormControl>
@@ -550,7 +550,7 @@ export function useTableEdit({
                                           name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                           render={({ field }) => (
                                               <FormItem className="w-full break-inside-avoid">
-                                                <FormLabel>{title}</FormLabel>
+                                                <FormLabel className="select-text">{title}</FormLabel>
                                                 <FormControl className="w-full">
                                                   <Input type={type === "n" ? "number" : undefined} {...field} />
                                                 </FormControl>

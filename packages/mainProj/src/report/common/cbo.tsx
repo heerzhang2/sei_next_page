@@ -22,7 +22,7 @@ export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?:
                             name={nmar[0] + 'o'}
                             render={({field}) => (
                                 <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
-                                    <FormLabel>观测数据</FormLabel>
+                                    <FormLabel className="select-text">观测数据</FormLabel>
                                     <FormControl>
                                         <SuffixInput unit={unit}  {...field}  />
                                     </FormControl>
@@ -33,7 +33,7 @@ export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?:
                         <FormField control={form.control} name={nmar[0] + 'a'}
                                    render={({field}) => (
                                        <FormItem>
-                                           <FormLabel>设计值</FormLabel>
+                                           <FormLabel className="select-text">设计值</FormLabel>
                                            <FormControl>
                                                <Input  {...field}/>
                                            </FormControl>
@@ -69,7 +69,7 @@ export const genCBoOmitAl = (name: string, unit: string, title?: any) => {
                         name={name + 'o'}
                         render={({field}) => (
                             <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
-                                <FormLabel>观测数据</FormLabel>
+                                <FormLabel className="select-text">观测数据</FormLabel>
                                 <FormControl>
                                     <SuffixInput unit={unit}  {...field}  />
                                 </FormControl>

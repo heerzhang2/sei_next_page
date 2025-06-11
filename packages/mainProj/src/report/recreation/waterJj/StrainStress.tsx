@@ -100,7 +100,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                         <FormField key={i} control={form.control} name={fieldnm}
                                             render={({field}) => (
                                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                                    <FormLabel>{title}</FormLabel>
+                                                    <FormLabel className="select-text">{title}</FormLabel>
                                                     <FormControl className="w-full">
                                                         <SuffixInput unit={unit}{...field} size={size!}/>
                                                     </FormControl>
@@ -123,7 +123,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                     render={({field}) => (
                                         <FormItem
                                             className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                            <FormLabel>测试工况</FormLabel>
+                                            <FormLabel className="select-text">测试工况</FormLabel>
                                             <FormControl className="w-full h-24">
                                                 <Textarea rows={2} {...field} />
                                             </FormControl>
@@ -137,7 +137,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                         <FormField control={form.control} name={'测点示意'}
                                    render={({field}) => (
                                        <FormItem>
-                                           <FormLabel>测点示意图-说明</FormLabel>
+                                           <FormLabel className="select-text">测点示意图-说明</FormLabel>
                                            <FormControl className="w-full h-40 @md:h-20">
                                                <Textarea rows={2} {...field} placeholder={`测点示意图`}/>
                                            </FormControl>
@@ -156,7 +156,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                     <FormField control={form.control} name={'危应第'}
                                                render={({field}) => (
                                                    <FormItem>
-                                                       <FormLabel>{(sensit ? '最大应力值测试点' : '最危险应力点') + '为测点：'}</FormLabel>
+                                                       <FormLabel className="select-text">{(sensit ? '最大应力值测试点' : '最危险应力点') + '为测点：'}</FormLabel>
                                                        <FormControl>
                                                            <Input {...field} placeholder={`请输入测点`}/>
                                                        </FormControl>
@@ -167,7 +167,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                     <FormField control={form.control} name={"应变设计"}
                                                render={({field}) => (
                                                    <FormItem className="pt-2 w-full break-inside-avoid">
-                                                       <FormLabel>设计值=</FormLabel>
+                                                       <FormLabel className="select-text">设计值=</FormLabel>
                                                        <FormControl className="w-full">
                                                            <BlobInputList rows={2}  {...field}  />
                                                        </FormControl>
@@ -178,7 +178,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                                     <FormField control={form.control} name={"应变结论"}
                                                render={({field}) => (
                                                    <FormItem className="pt-2 w-full break-inside-avoid">
-                                                       <FormLabel>结果判定</FormLabel>
+                                                       <FormLabel className="select-text">结果判定</FormLabel>
                                                        <FormControl>
                                                            <ClearableSelect field={field} options={clcOptions}
                                                                             onClear={() => {
@@ -197,7 +197,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
                             name="应变备注"
                             render={({field}) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                    <FormLabel>备注：</FormLabel>
+                                    <FormLabel className="select-text">备注：</FormLabel>
                                     <FormControl className="w-full h-24">
                                         <Textarea rows={3} {...field} />
                                     </FormControl>

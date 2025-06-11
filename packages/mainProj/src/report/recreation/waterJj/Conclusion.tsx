@@ -65,7 +65,7 @@ export const ConclusionWaterJj = ({ children, show, alone = true, redId, nestMd,
                             <FormField control={form.control} name="检验日期"
                                        render={({ field }) => (
                                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                               <FormLabel>{`设置${nxtstyp}日期`}</FormLabel>
+                                               <FormLabel className="select-text">{`设置${nxtstyp}日期`}</FormLabel>
                                                <FormControl className="w-full">
                                                    <Input type="date"  {...field}  />
                                                </FormControl>
@@ -77,7 +77,7 @@ export const ConclusionWaterJj = ({ children, show, alone = true, redId, nestMd,
                                 <FormField control={form.control} name="检验日期1"
                                            render={({ field }) => (
                                                <FormItem className="pt-2 w-full break-inside-avoid">
-                                                   <FormLabel>检验起始日期</FormLabel>
+                                                   <FormLabel className="select-text">检验起始日期</FormLabel>
                                                    <FormControl className="w-full">
                                                        <Input type="date"  {...field}  />
                                                    </FormControl>
@@ -89,7 +89,7 @@ export const ConclusionWaterJj = ({ children, show, alone = true, redId, nestMd,
                             <FormField control={form.control} name="新下检日"
                                        render={({ field }) => (
                                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                               <FormLabel>下次检验日期</FormLabel>
+                                               <FormLabel className="select-text">下次检验日期</FormLabel>
                                                <FormControl className="w-full">
                                                    <Input type="date"  {...field}  />
                                                </FormControl>

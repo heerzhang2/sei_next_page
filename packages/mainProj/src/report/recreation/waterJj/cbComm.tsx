@@ -17,7 +17,7 @@ export const cbK2_4 =(orc:any,parOrc:any)=> {
                            name={"抽查构件"}
                            render={({ field }) => (
                                <FormItem>
-                                   <FormLabel>抽查</FormLabel>
+                                   <FormLabel className="select-text">抽查</FormLabel>
                                    <FormControl>
                                        <Input  {...field}/>
                                    </FormControl>
@@ -133,7 +133,7 @@ export const cbK4_6 =(orc:any,parOrc:any)=> {
             name={`工电机`}
             render={({ field }) => (
                 <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
-                    <FormLabel>电机</FormLabel>
+                    <FormLabel className="select-text">电机</FormLabel>
                     <FormControl>
                         <Input {...field} />
                     </FormControl>
@@ -145,7 +145,7 @@ export const cbK4_6 =(orc:any,parOrc:any)=> {
       <FormField control={form.control} name={"机额电流"}
                  render={({ field }) => (
                      <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
-                       <FormLabel>电流</FormLabel>
+                       <FormLabel className="select-text">电流</FormLabel>
                        <FormControl className=" ">
                          <SuffixInput  unit={'A'}  {...field}  />
                        </FormControl>
@@ -167,7 +167,7 @@ export const cbK5_21 =(orc:any,parOrc:any)=> {
       <FormField control={form.control} name="座席高"
                  render={({ field }) => (
                      <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">
-                       <FormLabel>高度</FormLabel>
+                       <FormLabel className="select-text">高度</FormLabel>
                        <FormControl className="w-full">
                          <SuffixInput  unit={'m'}  {...field}  />
                        </FormControl>

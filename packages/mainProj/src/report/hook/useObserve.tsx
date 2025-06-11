@@ -193,7 +193,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                             lcNode=<div><FormField key={i} control={form.control} name={memoTag}
                                                    render={({field}) => (
                                                        <FormItem className="pt-2 w-full break-inside-avoid">
-                                                           <FormLabel>{labelCheck + `-备注:`}</FormLabel>
+                                                           <FormLabel className="select-text">{labelCheck + `-备注:`}</FormLabel>
                                                            <FormControl className="w-full">
                                                                <BlobInputList rows={2} datalist={[]}  {...field}  />
                                                            </FormControl>
@@ -300,7 +300,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         name={mem}
                         render={({ field }) => (
                             <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                <FormLabel>备注：</FormLabel>
+                                <FormLabel className="select-text">备注：</FormLabel>
                                 <FormControl className="w-full h-24">
                                     <Textarea rows={4} {...field} />
                                 </FormControl>

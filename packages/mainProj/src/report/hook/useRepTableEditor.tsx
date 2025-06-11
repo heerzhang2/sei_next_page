@@ -538,7 +538,7 @@ interface RaftTableViewerXProps {
 //         return <FormField  control={form.control} name={`${park}.${tag}`}
 //                           render={({ field }) => (
 //                               <FormItem className="pt-2 w-full break-inside-avoid">
-//                                   <FormLabel>{title}</FormLabel>
+//                                   <FormLabel className="select-text">{title}</FormLabel>
 //                                   <FormControl className="w-full">
 //                                       <SuffixInput  unit={unit}  {...field} />
 //                                   </FormControl>

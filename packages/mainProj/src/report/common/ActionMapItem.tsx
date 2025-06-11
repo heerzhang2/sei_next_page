@@ -207,7 +207,7 @@ export const ActionMapItem = ({
                 name={`${namepr}_`+n  as any}
                 render={({ field }) => (
                     <FormItem className="pt-2 w-full break-inside-avoid">
-                        <FormLabel>{label??x}</FormLabel>
+                        <FormLabel className="select-text">{label??x}</FormLabel>
                         <FormControl  className="w-full">
                             <Input type='date'   {...field}  />
                         </FormControl>
@@ -222,7 +222,7 @@ export const ActionMapItem = ({
                 name={`${namepr}_`+n  as any}
                 render={({ field }) => (
                     <FormItem className="pt-2 w-full break-inside-avoid">
-                        <FormLabel>{label??x}</FormLabel>
+                        <FormLabel className="select-text">{label??x}</FormLabel>
                         <FormControl className="w-full">
                             <BlobInputList  datalist={l} rows={z ?? 2}  {...field}  />
                         </FormControl>
@@ -237,7 +237,7 @@ export const ActionMapItem = ({
                 name={`${namepr}_`+n  as any}
                 render={({ field }) => (
                     <FormItem className="pt-2 w-full break-inside-avoid">
-                        <FormLabel>{label??x}</FormLabel>
+                        <FormLabel className="select-text">{label??x}</FormLabel>
                         <FormControl className="w-full">
                             <InputDatalist  datalist={l}  {...field}  />
                         </FormControl>
@@ -252,7 +252,7 @@ export const ActionMapItem = ({
                 name={`${namepr}_`+n  as any}
                 render={({ field }) => (
                     <FormItem className="pt-2 w-full break-inside-avoid">
-                        <FormLabel>{label??x}</FormLabel>
+                        <FormLabel className="select-text">{label??x}</FormLabel>
                         <FormControl>
                             <MemoDateInput   {...field}  width="14rem" rows={z??2}
                             />
@@ -268,7 +268,7 @@ export const ActionMapItem = ({
                 name={`${namepr}_`+n  as any}
                 render={({ field }) => (
                     <FormItem className="pt-2 w-full break-inside-avoid">
-                        <FormLabel>{label??x}</FormLabel>
+                        <FormLabel className="select-text">{label??x}</FormLabel>
                         <FormControl>
                             <MemoDatesInput   {...field}  rows={z??2}
                             />
@@ -284,7 +284,7 @@ export const ActionMapItem = ({
                 name={`${namepr}_`+n  as any}
                 render={({ field }) => (
                     <FormItem className="pt-2 w-full break-inside-avoid">
-                        <FormLabel>{label??x}</FormLabel>
+                        <FormLabel className="select-text">{label??x}</FormLabel>
                         <FormControl  className="w-full">
                             <Input type='text'   {...field}  />
                         </FormControl>
@@ -359,7 +359,7 @@ export const ActionMapItem = ({
                                             name={tago.name! as any}
                                             render={({ field }) => (
                                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                                    <FormLabel>{labelStr}</FormLabel>
+                                                    <FormLabel className="select-text">{labelStr}</FormLabel>
                                                     <FormControl>
                                                         <Select onValueChange={field.onChange} defaultValue={field.value} >
                                                             <SelectTrigger  className="w-full">
@@ -383,7 +383,7 @@ export const ActionMapItem = ({
                                         name={tago.name! as any}
                                         render={({ field }) => (
                                             <FormItem className="pt-2 w-full break-inside-avoid">
-                                                <FormLabel>{labelStr}</FormLabel>
+                                                <FormLabel className="select-text">{labelStr}</FormLabel>
                                                 <FormControl>
                                                     <ClearableSelect
                                                         field={field}

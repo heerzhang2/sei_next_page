@@ -77,7 +77,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                          name={name  as any}
                                          render={({ field }) => (
                                              <FormItem className="pt-2 w-full break-inside-avoid">
-                                                 <FormLabel>{desc}</FormLabel>
+                                                 <FormLabel className="select-text">{desc}</FormLabel>
                                                  <FormControl className="w-full">
                                                      <InputDatalist  datalist={list} unit={unit}  {...field}  />
                                                  </FormControl>
@@ -91,7 +91,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                              name={name  as any}
                                              render={({ field }) => (
                                                  <FormItem className="pt-2 w-full break-inside-avoid">
-                                                     <FormLabel>{desc}</FormLabel>
+                                                     <FormLabel className="select-text">{desc}</FormLabel>
                                                      <FormControl  className="w-full">
                                                          <Input type='date'   {...field}  />
                                                      </FormControl>
@@ -105,7 +105,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                          name={name  as any}
                                          render={({ field }) => (
                                              <FormItem className="pt-2 w-full break-inside-avoid">
-                                                 <FormLabel>{desc}</FormLabel>
+                                                 <FormLabel className="select-text">{desc}</FormLabel>
                                                  <FormControl  className="w-full">
                                                      <Switch   {...field}  />
                                                  </FormControl>
@@ -119,7 +119,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                          name={name  as any}
                                          render={({ field }) => (
                                              <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2">
-                                                 <FormLabel>{desc}</FormLabel>
+                                                 <FormLabel className="select-text">{desc}</FormLabel>
                                                  <FormControl className="w-full">
                                                      <BlobInputList datalist={list} unit={unit}  {...field}  />
                                                  </FormControl>
@@ -133,7 +133,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                              name={name  as any}
                                              render={({ field }) => (
                                                  <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                                     <FormLabel>{desc}:</FormLabel>
+                                                     <FormLabel className="select-text">{desc}:</FormLabel>
                                                      <FormControl  className="w-full">
                                                          <Textarea rows={4}  {...field} />
                                                      </FormControl>
@@ -147,7 +147,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                          name={name  as any}
                                          render={({ field }) => (
                                              <FormItem className="pt-2 w-full break-inside-avoid">
-                                                 <FormLabel>{desc}：</FormLabel>
+                                                 <FormLabel className="select-text">{desc}：</FormLabel>
                                                  <FormControl className="w-full">
                                                      <SuffixInput  unit={unit}  {...field}  />
                                                  </FormControl>
@@ -161,7 +161,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                                  name={name  as any}
                                  render={({ field }) => (
                                      <FormItem className="pt-2 w-full break-inside-avoid">
-                                         <FormLabel>{desc + `:`}</FormLabel>
+                                         <FormLabel className="select-text">{desc + `:`}</FormLabel>
                                          <FormControl  className="w-full">
                                              <Input type={type === 'n' ? "number" : undefined}   {...field}  />
                                          </FormControl>
@@ -181,7 +181,7 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
                      name={lastAiObj.name  as any}
                      render={({ field }) => (
                          <FormItem className="pt-2 w-full break-inside-avoid">
-                             <FormLabel></FormLabel>
+                             <FormLabel className="select-text"></FormLabel>
                              <FormControl  className="w-full">
                                  <Textarea rows={5}  {...field} />
                              </FormControl>
