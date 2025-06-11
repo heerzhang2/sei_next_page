@@ -85,29 +85,29 @@ export function LineColumn({ width = 300, className, children }: LineColumnProps
   }, [childCount, width])
 
   return (
-    <div
-      ref={containerRef}
-      className={cn("w-full h-full", isSingleRow ? "flex flex-row items-center justify-between" : "grid", className)}
-      style={
-        isSingleRow
-          ? { gap: "1rem" }
-          : {
-              gap: "1rem",
-              gridTemplateColumns: `repeat(auto-fill, minmax(${width}px, 1fr))`,
-              alignContent: "space-between",
-            }
-      }
-    >
-      {childrenArray.map((child, index) => (
-        <div
-          key={index}
-          className={cn("flex-grow flex items-center justify-center", isSingleRow ? "flex-1" : "")}
-          style={isSingleRow ? { minWidth: `${width}px` } : {}}
-        >
-          {child}
-        </div>
-      ))}
-    </div>
+      <div
+          ref={containerRef}
+          className={cn("w-full h-full", isSingleRow ? "flex flex-row items-center justify-between" : "grid", className)}
+          style={
+            isSingleRow
+                ? { gap: "1rem" }
+                : {
+                  gap: "1rem",
+                  gridTemplateColumns: `repeat(auto-fill, minmax(${width}px, 1fr))`,
+                  alignContent: "space-between",
+                }
+          }
+      >
+        {childrenArray.map((child, index) => (
+            <div
+                key={index}
+                className={cn("flex-grow flex items-center justify-center", isSingleRow ? "flex-1" : "")}
+                style={isSingleRow ? { minWidth: `${width}px` } : {}}
+            >
+              {child}
+            </div>
+        ))}
+      </div>
   )
 }
 
@@ -122,13 +122,13 @@ interface CollapsibleFormSectionProps {
 
 // 在 CollapsibleFormSection 函数内部添加
 export function CollapsibleFormSection({
-  title,
-  defaultOpen = false,
-  className,
-  titleClassName,
-  contentClassName,
-  children,
-}: CollapsibleFormSectionProps) {
+                                         title,
+                                         defaultOpen = false,
+                                         className,
+                                         titleClassName,
+                                         contentClassName,
+                                         children,
+                                       }: CollapsibleFormSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const isTouchDevice = useTouchDevice()
 
@@ -136,60 +136,60 @@ export function CollapsibleFormSection({
 
   // 根据触摸设备和屏幕宽度设置不同的 padding 值
   const contentPadding = isTouchDevice
-    ? "px-1 py-2 @md:pr-3 @md:py-4" // 触摸设备使用更大的右侧 padding
-    : "px-1 py-2 @md:px-2 @md:py-4" // 非触摸设备使用标准 padding
+      ? "px-1 py-2 @md:pr-3 @md:py-4" // 触摸设备使用更大的右侧 padding
+      : "px-1 py-2 @md:px-2 @md:py-4" // 非触摸设备使用标准 padding
 
   return (
-    <div className={cn("border rounded-md overflow-hidden", className)}>
-      <button
-        type="button"
-        onClick={toggleOpen}
-        className={cn(
-          "flex w-full items-center justify-between px-4 py-3 text-left font-medium bg-muted/50 hover:bg-muted transition-colors select-text",
-          titleClassName,
-        )}
-        aria-expanded={isOpen}
-        aria-controls={`content-${title.replace(/\s+/g, "-").toLowerCase()}`}
-      >
-        <span>{title}</span>
-        {isOpen ? (
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-        )}
-      </button>
-      <div
-        id={`content-${title.replace(/\s+/g, "-").toLowerCase()}`}
-        className={cn(
-          "transition-all duration-300 ease-in-out",
-          isOpen ? "opacity-100" : "max-h-0 opacity-0",
-          contentClassName,
-        )}
-      >
-        <div className={contentPadding}>
-          {children}
-
-          {/* 底部折叠按钮 - 仅在展开状态显示 */}
-          {isOpen && (
-            <div className="flex justify-end mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={toggleOpen}
-                className={cn(
-                  "flex items-center gap-1",
-                  isTouchDevice ? "mr-10" : "mr-8", // 触摸设备使用更大的右侧 margin
-                )}
-              >
-                <ChevronUp className="h-4 w-4" />
-                <span>收起</span>
-              </Button>
-            </div>
+      <div className={cn("border rounded-md overflow-hidden", className)}>
+        <button
+            type="button"
+            onClick={toggleOpen}
+            className={cn(
+                "flex w-full items-center justify-between px-4 py-3 text-left font-medium bg-muted/50 hover:bg-muted transition-colors select-text",
+                titleClassName,
+            )}
+            aria-expanded={isOpen}
+            aria-controls={`content-${title.replace(/\s+/g, "-").toLowerCase()}`}
+        >
+          <span>{title}</span>
+          {isOpen ? (
+              <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          ) : (
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
           )}
+        </button>
+        <div
+            id={`content-${title.replace(/\s+/g, "-").toLowerCase()}`}
+            className={cn(
+                "transition-all duration-300 ease-in-out",
+                isOpen ? "opacity-100" : "max-h-0 opacity-0",
+                contentClassName,
+            )}
+        >
+          <div className={contentPadding}>
+            {children}
+
+            {/* 底部折叠按钮 - 仅在展开状态显示 */}
+            {isOpen && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleOpen}
+                      className={cn(
+                          "flex items-center gap-1",
+                          isTouchDevice ? "mr-10" : "mr-8", // 触摸设备使用更大的右侧 margin
+                      )}
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                    <span>收起</span>
+                  </Button>
+                </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
   )
 }
 
@@ -206,16 +206,16 @@ interface MemoDatesInputProps {
 
 //随意日期录入最大情形:包含 `onChange` 事件处理器，这些是客户端交互功能。只有当组件完全是静态的或只执行服务器端逻辑时，才可不用use client;
 export function MemoDatesInput({
-  id,
-  value = "",
-  onChange,
-  rows = 1,
-  className,
-  required,
-  placeholder,
-  dateInputWidth = "10rem",
-  ...other
-}: MemoDatesInputProps) {
+                                 id,
+                                 value = "",
+                                 onChange,
+                                 rows = 1,
+                                 className,
+                                 required,
+                                 placeholder,
+                                 dateInputWidth = "10rem",
+                                 ...other
+                               }: MemoDatesInputProps) {
   // Handle text input change
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value || undefined)
@@ -235,37 +235,37 @@ export function MemoDatesInput({
   const dateWidth = typeof dateInputWidth === "number" ? `${dateInputWidth}px` : dateInputWidth
 
   return (
-    <div
-      className={cn(
-        "@container w-full", // 设置容器查询上下文
-        className,
-      )}
-      {...other}
-    >
-      <div className="flex flex-col @[500px]:flex-row gap-2 w-full">
-        <Textarea
-          value={value}
-          onChange={handleTextChange}
-          rows={rows}
-          placeholder={placeholder}
-          required={required}
-          className={cn("min-w-0 w-full @[500px]:flex-1", "@[500px]:max-w-[calc(100%-var(--date-input-width)-0.5rem)]")}
-          style={
-            {
-              resize: "vertical",
-              "--date-input-width": dateWidth,
-            } as React.CSSProperties
-          }
-        />
-        <Input
-          type="date"
-          className="w-full @[500px]:w-auto @[500px]:flex-shrink-0"
-          style={{ width: dateWidth }}
-          onChange={handleDateChange}
-          aria-label="选择日期"
-        />
+      <div
+          className={cn(
+              "@container w-full", // 设置容器查询上下文
+              className,
+          )}
+          {...other}
+      >
+        <div className="flex flex-col @[500px]:flex-row gap-2 w-full">
+          <Textarea
+              value={value}
+              onChange={handleTextChange}
+              rows={rows}
+              placeholder={placeholder}
+              required={required}
+              className={cn("min-w-0 w-full @[500px]:flex-1", "@[500px]:max-w-[calc(100%-var(--date-input-width)-0.5rem)]")}
+              style={
+                {
+                  resize: "vertical",
+                  "--date-input-width": dateWidth,
+                } as React.CSSProperties
+              }
+          />
+          <Input
+              type="date"
+              className="w-full @[500px]:w-auto @[500px]:flex-shrink-0"
+              style={{ width: dateWidth }}
+              onChange={handleDateChange}
+              aria-label="选择日期"
+          />
+        </div>
       </div>
-    </div>
   )
 }
 
@@ -278,24 +278,24 @@ interface ItemProps {
 
 //不能声明为 : ItemProps & Omit<React.HTMLProps<HTMLDivElement>, "onClick"> & { ref?: React.Ref<HTMLDivElement> })
 function Item({
-  children,
-  active,
-  index,
-  ref,
-  ...rest
-}: ItemProps & React.HTMLProps<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> }) {
+                children,
+                active,
+                index,
+                ref,
+                ...rest
+              }: ItemProps & React.HTMLProps<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> }) {
   const id = useId()
   return (
-    <div
-      ref={ref}
-      role="option"
-      id={id}
-      aria-selected={active}
-      {...rest}
-      className={cn("cursor-default p-2", active ? "bg-blue-200" : index % 2 === 0 ? "" : "bg-slate-100")}
-    >
-      {children}
-    </div>
+      <div
+          ref={ref}
+          role="option"
+          id={id}
+          aria-selected={active}
+          {...rest}
+          className={cn("cursor-default p-2", active ? "bg-blue-200" : index % 2 === 0 ? "" : "bg-slate-100")}
+      >
+        {children}
+      </div>
   )
 }
 
@@ -316,16 +316,16 @@ interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
  * 若是放入FormItem底下的情况：不要自行去设置id的，不一致；<FormItem会转换的。
  */
 export function BlobInputList({
-  value,
-  className,
-  datalist = [],
-  placeholder,
-  onListChange,
-  onChange,
-  listClassName,
-  unit,
-  ...other
-}: BlobInputListProps) {
+                                value,
+                                className,
+                                datalist = [],
+                                placeholder,
+                                onListChange,
+                                onChange,
+                                listClassName,
+                                unit,
+                                ...other
+                              }: BlobInputListProps) {
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState(value)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -391,76 +391,76 @@ export function BlobInputList({
   const items = inputValue ? datalist.filter((item) => item.toLowerCase().includes(inputValue.toLowerCase())) : datalist
 
   return (
-    <div className="inline-flex items-center">
+      <div className="inline-flex items-center">
       <textarea
-        className={cn(
-          "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-          className,
-        )}
-        {...other}
-        {...getReferenceProps({
-          ref: refs.setReference,
-          onChange: handleInputChange,
-          value: inputValue,
-          placeholder: placeholder,
-          "aria-autocomplete": "list",
-          onKeyDown(event) {
-            if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
-              event.preventDefault()
-              setInputValue(items[activeIndex])
-              if (onListChange) {
-                onListChange(items[activeIndex])
+          className={cn(
+              "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+              className,
+          )}
+          {...other}
+          {...getReferenceProps({
+            ref: refs.setReference,
+            onChange: handleInputChange,
+            value: inputValue,
+            placeholder: placeholder,
+            "aria-autocomplete": "list",
+            onKeyDown(event) {
+              if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
+                event.preventDefault()
+                setInputValue(items[activeIndex])
+                if (onListChange) {
+                  onListChange(items[activeIndex])
+                }
+                setActiveIndex(null)
+                setOpen(false)
               }
-              setActiveIndex(null)
-              setOpen(false)
-            }
-          },
-          onPointerDown() {
-            setOpen(true)
-          },
-        })}
+            },
+            onPointerDown() {
+              setOpen(true)
+            },
+          })}
       />
-      {unit}
-      <FloatingPortal>
-        {open && items.length > 0 && (
-          <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
-            <div
-              {...getFloatingProps({
-                ref: refs.setFloating,
-                className: cn(
-                  "z-50 bg-white border border-slate-200 shadow-md rounded-md overflow-y-auto",
-                  listClassName,
-                ),
-                style: {
-                  position: strategy,
-                  left: x ?? 0,
-                  top: y ?? 0,
-                },
-              })}
-            >
-              {items.map((item, index) => (
-                <Item
-                  key={item}
-                  index={index}
-                  {...getItemProps({
-                    ref(node) {
-                      listRef.current[index] = node
-                    },
-                    onClick() {
-                      handleSelectItem(item)
-                      setOpen(false)
-                    },
-                  })}
-                  active={activeIndex === index}
+        {unit}
+        <FloatingPortal>
+          {open && items.length > 0 && (
+              <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
+                <div
+                    {...getFloatingProps({
+                      ref: refs.setFloating,
+                      className: cn(
+                          "z-50 bg-white border border-slate-200 shadow-md rounded-md overflow-y-auto",
+                          listClassName,
+                      ),
+                      style: {
+                        position: strategy,
+                        left: x ?? 0,
+                        top: y ?? 0,
+                      },
+                    })}
                 >
-                  {item}
-                </Item>
-              ))}
-            </div>
-          </FloatingFocusManager>
-        )}
-      </FloatingPortal>
-    </div>
+                  {items.map((item, index) => (
+                      <Item
+                          key={item}
+                          index={index}
+                          {...getItemProps({
+                            ref(node) {
+                              listRef.current[index] = node
+                            },
+                            onClick() {
+                              handleSelectItem(item)
+                              setOpen(false)
+                            },
+                          })}
+                          active={activeIndex === index}
+                      >
+                        {item}
+                      </Item>
+                  ))}
+                </div>
+              </FloatingFocusManager>
+          )}
+        </FloatingPortal>
+      </div>
   )
 }
 
@@ -474,18 +474,18 @@ export function SuffixInput({ fullWidth = true, className, style, value, onChang
   //确保unit不是函数
   const unitDisplay = typeof unit === "function" ? "" : unit
   return (
-    <div className={cn("text-left inline-flex items-center gap-0.5", fullWidth ? "w-full" : "w-auto")} style={style}>
-      <input
-        className={cn(
-          "rounded-md border border-input bg-background flex-1 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-          className,
-        )}
-        value={value}
-        onChange={onChange}
-        {...other}
-      />
-      <div className="whitespace-nowrap flex-shrink-0">{unitDisplay}</div>
-    </div>
+      <div className={cn("text-left inline-flex items-center gap-0.5", fullWidth ? "w-full" : "w-auto")} style={style}>
+        <input
+            className={cn(
+                "rounded-md border border-input bg-background flex-1 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                className,
+            )}
+            value={value}
+            onChange={onChange}
+            {...other}
+        />
+        <div className="whitespace-nowrap flex-shrink-0">{unitDisplay}</div>
+      </div>
   )
 }
 
@@ -504,15 +504,15 @@ interface MemoDateInputProps extends Omit<React.TextareaHTMLAttributes<HTMLTextA
  * A component that allows switching between text input and date picker for dates
  */
 export function MemoDateInput({
-  id,
-  className,
-  style,
-  onChange,
-  value = "",
-  width = "10.7rem",
-  rows = 1,
-  ...other
-}: MemoDateInputProps) {
+                                id,
+                                className,
+                                style,
+                                onChange,
+                                value = "",
+                                width = "10.7rem",
+                                rows = 1,
+                                ...other
+                              }: MemoDateInputProps) {
   const [textValue, setTextValue] = useState(value)
   // 日期验证函数
   const isValidDate = (dateStr: string): boolean => {
@@ -548,42 +548,42 @@ export function MemoDateInput({
   }
 
   return (
-    <div className={cn("flex flex-wrap items-start relative", className)} style={style}>
-      {/* 根据当前模式显示不同的输入框 */}
-      {isDateMode ? (
-        // 日期输入模式
-        <input
-          id={id ? `${id}-date` : undefined}
-          type="date"
-          value={value}
-          onChange={handleDateChange}
-          className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
-          style={{ width }}
-          aria-label="Date picker"
-        />
-      ) : (
-        // 文本输入模式
-        <textarea
-          id={id}
-          value={textValue}
-          onChange={handleTextChange}
-          rows={rows}
-          className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
-          style={{ width }}
-          {...other}
-        />
-      )}
+      <div className={cn("flex flex-wrap items-start relative", className)} style={style}>
+        {/* 根据当前模式显示不同的输入框 */}
+        {isDateMode ? (
+            // 日期输入模式
+            <input
+                id={id ? `${id}-date` : undefined}
+                type="date"
+                value={value}
+                onChange={handleDateChange}
+                className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+                style={{ width }}
+                aria-label="Date picker"
+            />
+        ) : (
+            // 文本输入模式
+            <textarea
+                id={id}
+                value={textValue}
+                onChange={handleTextChange}
+                rows={rows}
+                className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
+                style={{ width }}
+                {...other}
+            />
+        )}
 
-      {/* 模式切换按钮 */}
-      <button
-        type="button"
-        onClick={toggleInputMode}
-        className="flex items-center justify-center border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
-        aria-label={isDateMode ? "Switch to text input" : "Switch to date picker"}
-      >
-        {isDateMode ? <Type size={16} /> : <Calendar size={16} />}
-      </button>
-    </div>
+        {/* 模式切换按钮 */}
+        <button
+            type="button"
+            onClick={toggleInputMode}
+            className="flex items-center justify-center border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+            aria-label={isDateMode ? "Switch to text input" : "Switch to date picker"}
+        >
+          {isDateMode ? <Type size={16} /> : <Calendar size={16} />}
+        </button>
+      </div>
   )
 }
 
@@ -591,14 +591,14 @@ export function MemoDateInput({
 /*必须配套useForm使用的;
  * */
 export function ClearableSelect({
-  field,
-  options,
-  placeholder = "",
-  onClear,
-  id,
-  className,
-  value,
-}: {
+                                  field,
+                                  options,
+                                  placeholder = "",
+                                  onClear,
+                                  id,
+                                  className,
+                                  value,
+                                }: {
   field: any
   options: { value: string; label?: any }[]
   placeholder?: string
@@ -612,41 +612,41 @@ export function ClearableSelect({
   const newValue = value === undefined ? field.value || "" : value
   const hasValue = !!field.value
   return (
-    <div className={`relative w-full ${className || ""}`}>
-      <Select {...field} onValueChange={field.onChange} value={newValue}>
-        <SelectTrigger
-          id={id}
-          className="w-full pr-8"
-          style={{
-            fontSize: "inherit",
-          }}
-        >
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label ?? option.value}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className={`relative w-full ${className || ""}`}>
+        <Select {...field} onValueChange={field.onChange} value={newValue}>
+          <SelectTrigger
+              id={id}
+              className="w-full pr-8"
+              style={{
+                fontSize: "inherit",
+              }}
+          >
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label ?? option.value}
+                </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      {/* 清除按钮 - 仅在有值时显示 */}
-      {hasValue && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation() // 阻止事件冒泡到 SelectTrigger
-            onClear()
-          }}
-          className="absolute right-8 top-0 h-full flex items-center pr-2"
-          aria-label="清除选择"
-        >
-          <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-        </button>
-      )}
-    </div>
+        {/* 清除按钮 - 仅在有值时显示 */}
+        {hasValue && (
+            <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation() // 阻止事件冒泡到 SelectTrigger
+                  onClear()
+                }}
+                className="absolute right-8 top-0 h-full flex items-center pr-2"
+                aria-label="清除选择"
+            >
+              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </button>
+        )}
+      </div>
   )
 }
 
@@ -663,20 +663,20 @@ interface FormSelectFieldProps {
 export function FormSelectField({ field, label, options, className, selectClass, value }: FormSelectFieldProps) {
   const id = useId() + "-" + field.name // 使用 field.name 生成唯一ID
   return (
-    <FormItem className={`pt-2 w-full break-inside-avoid ${className || ""}`}>
-      <FormLabel htmlFor={id}>{label}</FormLabel>
-      <FormControl>
-        <ClearableSelect
-          id={id}
-          field={field}
-          value={value}
-          options={options}
-          onClear={() => field.onChange("")}
-          className={`${selectClass || ""}`}
-        />
-      </FormControl>
-      <FormMessage />
-    </FormItem>
+      <FormItem className={`pt-2 w-full break-inside-avoid ${className || ""}`}>
+        <FormLabel htmlFor={id}>{label}</FormLabel>
+        <FormControl>
+          <ClearableSelect
+              id={id}
+              field={field}
+              value={value}
+              options={options}
+              onClear={() => field.onChange("")}
+              className={`${selectClass || ""}`}
+          />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
   )
 }
 
@@ -684,14 +684,14 @@ export function FormSelectField({ field, label, options, className, selectClass,
  * 不在局限于form绑定的情况的： 因为嵌套在form组件底下的，需要加id;
  * */
 export function CommonSelect({
-  options,
-  placeholder = "",
-  onClear,
-  id,
-  className,
-  value,
-  onValueChange,
-}: {
+                               options,
+                               placeholder = "",
+                               onClear,
+                               id,
+                               className,
+                               value,
+                               onValueChange,
+                             }: {
   options: { value: string; label?: any }[]
   placeholder?: string
   onClear: () => void
@@ -704,33 +704,33 @@ export function CommonSelect({
   // const uId = useId()    防止报错，加 name={id}
   const hasValue = !!value
   return (
-    <div className={`relative w-full ${className || ""}`}>
-      <Select onValueChange={onValueChange} name={id} value={hasValue ? value : ""}>
-        <SelectTrigger className="w-full pr-8" style={{ fontSize: "inherit" }}>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label ?? option.value}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {hasValue && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onClear()
-          }}
-          className="absolute right-8 top-0 h-full flex items-center pr-2"
-          aria-label="清除选择"
-        >
-          <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-        </button>
-      )}
-    </div>
+      <div className={`relative w-full ${className || ""}`}>
+        <Select onValueChange={onValueChange} name={id} value={hasValue ? value : ""}>
+          <SelectTrigger className="w-full pr-8" style={{ fontSize: "inherit" }}>
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label ?? option.value}
+                </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {hasValue && (
+            <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onClear()
+                }}
+                className="absolute right-8 top-0 h-full flex items-center pr-2"
+                aria-label="清除选择"
+            >
+              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </button>
+        )}
+      </div>
   )
 }
 
@@ -745,22 +745,23 @@ interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement>
 }
 
 export function InputDatalist({
-  fullWidth = true,
-  datalist = [],
-  className,
-  style,
-  onListChange,
-  value,
-  onChange,
-  id,
-  unit,
-  ...other
-}: InputDatalistProps) {
+                                fullWidth = true,
+                                datalist = [],
+                                className,
+                                style,
+                                onListChange,
+                                value,
+                                onChange,
+                                id,
+                                unit,
+                                ...other
+                              }: InputDatalistProps) {
   const [inputValue, setInputValue] = useState(value || "")
   const [showClearButton, setShowClearButton] = useState(Boolean(value && String(value).length > 0))
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [showAllOptions, setShowAllOptions] = useState(false) // 新增：控制是否显示全部选项
 
   const inputRef = useRef<HTMLInputElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -810,10 +811,12 @@ export function InputDatalist({
     }),
   ])
 
-  // 过滤选项
-  const filteredOptions = inputValue
-    ? datalist.filter((option) => option.toLowerCase().includes(inputValue.toLowerCase()))
-    : datalist
+  // 修改过滤选项逻辑
+  const filteredOptions = showAllOptions
+      ? datalist
+      : inputValue
+          ? datalist.filter((option) => option.toLowerCase().includes(inputValue.toLowerCase()))
+          : datalist
 
   // 清理 Chrome 添加的属性
   useEffect(() => {
@@ -847,6 +850,7 @@ export function InputDatalist({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
     setInputValue(newValue)
+    setShowAllOptions(false) // 输入时重置为过滤模式
 
     if (onChange) {
       onChange(e)
@@ -864,6 +868,7 @@ export function InputDatalist({
   const handleClear = () => {
     setInputValue("")
     setIsOpen(false)
+    setShowAllOptions(false)
     if (onListChange) {
       onListChange("")
     }
@@ -880,10 +885,21 @@ export function InputDatalist({
     }
   }
 
+  // 新增：处理下拉按钮点击
+  const handleDropdownClick = () => {
+    setShowAllOptions(true)
+    setIsOpen(true)
+    setActiveIndex(null)
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }
+
   const handleSelectOption = (option: string) => {
     setInputValue(option)
     setIsOpen(false)
     setActiveIndex(null)
+    setShowAllOptions(false)
 
     if (onListChange) {
       onListChange(option)
@@ -906,6 +922,7 @@ export function InputDatalist({
       } else if (e.key === "Escape") {
         setIsOpen(false)
         setActiveIndex(null)
+        setShowAllOptions(false)
       }
     }
   }
@@ -921,110 +938,122 @@ export function InputDatalist({
     setTimeout(() => {
       if (isMobile) {
         setIsOpen(false)
+        setShowAllOptions(false)
       }
     }, 150)
   }
 
   return (
-    <div
-      ref={wrapperRef}
-      className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")}
-      style={style}
-    >
-      {/* 桌面端使用原生 datalist */}
-      {!isMobile && (
-        <datalist id={listId}>
-          {datalist.map((option, i) => (
-            <option key={i} value={option} />
-          ))}
-        </datalist>
-      )}
-
-      <div className="relative flex-1">
-        <input
-          ref={isMobile ? refs.setReference : inputRef}
-          className={cn(
-            "min-h-8 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full",
-            showClearButton ? "pr-8" : "pr-4",
-            className,
-          )}
-          value={inputValue}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          list={!isMobile ? listId : undefined}
-          id={id}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          data-form-type="other"
-          suppressHydrationWarning
-          {...(isMobile ? getReferenceProps() : {})}
-          {...other}
-        />
-
-        {/* 清除按钮 */}
-        {showClearButton && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring z-10"
-            aria-label="清除输入"
-            style={{
-              marginRight: "2px",
-            }}
-          >
-            <X size={14} className="text-gray-500" />
-          </button>
+      <div
+          ref={wrapperRef}
+          className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")}
+          style={style}
+      >
+        {/* 桌面端使用原生 datalist */}
+        {!isMobile && (
+            <datalist id={listId}>
+              {datalist.map((option, i) => (
+                  <option key={i} value={option} />
+              ))}
+            </datalist>
         )}
+
+        <div className="relative flex-1">
+          <input
+              ref={isMobile ? refs.setReference : inputRef}
+              className={cn(
+                  "min-h-8 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full",
+                  // 调整右侧padding以容纳按钮
+                  showClearButton ? "pr-16" : "pr-10",
+                  className,
+              )}
+              value={inputValue}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              list={!isMobile ? listId : undefined}
+              id={id}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-form-type="other"
+              suppressHydrationWarning
+              {...(isMobile ? getReferenceProps() : {})}
+              {...other}
+          />
+
+          {/* 按钮容器 */}
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {/* 清除按钮 */}
+            {showClearButton && (
+                <button
+                    type="button"
+                    onClick={handleClear}
+                    className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring z-10"
+                    aria-label="清除输入"
+                >
+                  <X size={14} className="text-gray-500" />
+                </button>
+            )}
+
+            {/* 下拉箭头按钮 */}
+            <button
+                type="button"
+                onClick={handleDropdownClick}
+                className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring z-10"
+                aria-label="显示选项列表"
+            >
+              <ChevronDown size={14} className="text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        {/* 移动端自定义下拉列表 */}
+        {isMobile && (
+            <FloatingPortal>
+              {isOpen && filteredOptions.length > 0 && (
+                  <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
+                    <div
+                        {...getFloatingProps({
+                          ref: refs.setFloating,
+                          className: "z-50 bg-white border border-slate-200 shadow-lg rounded-md overflow-y-auto",
+                          style: {
+                            position: strategy,
+                            left: x ?? 0,
+                            top: y ?? 0,
+                          },
+                        })}
+                    >
+                      {filteredOptions.map((option, index) => (
+                          <div
+                              key={option}
+                              {...getItemProps({
+                                ref(node) {
+                                  listRef.current[index] = node
+                                },
+                                onClick() {
+                                  handleSelectOption(option)
+                                },
+                              })}
+                              className={cn(
+                                  "cursor-pointer p-3 text-sm border-b border-gray-100 last:border-b-0",
+                                  activeIndex === index ? "bg-blue-50 text-blue-700" : "hover:bg-gray-50",
+                              )}
+                              role="option"
+                              aria-selected={activeIndex === index}
+                          >
+                            {option}
+                          </div>
+                      ))}
+                    </div>
+                  </FloatingFocusManager>
+              )}
+            </FloatingPortal>
+        )}
+
+        {unit}
       </div>
-
-      {/* 移动端自定义下拉列表 */}
-      {isMobile && (
-        <FloatingPortal>
-          {isOpen && filteredOptions.length > 0 && (
-            <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
-              <div
-                {...getFloatingProps({
-                  ref: refs.setFloating,
-                  className: "z-50 bg-white border border-slate-200 shadow-lg rounded-md overflow-y-auto",
-                  style: {
-                    position: strategy,
-                    left: x ?? 0,
-                    top: y ?? 0,
-                  },
-                })}
-              >
-                {filteredOptions.map((option, index) => (
-                  <div
-                    key={option}
-                    {...getItemProps({
-                      ref(node) {
-                        listRef.current[index] = node
-                      },
-                      onClick() {
-                        handleSelectOption(option)
-                      },
-                    })}
-                    className={cn(
-                      "cursor-pointer p-3 text-sm border-b border-gray-100 last:border-b-0",
-                      activeIndex === index ? "bg-blue-50 text-blue-700" : "hover:bg-gray-50",
-                    )}
-                    role="option"
-                    aria-selected={activeIndex === index}
-                  >
-                    {option}
-                  </div>
-                ))}
-              </div>
-            </FloatingFocusManager>
-          )}
-        </FloatingPortal>
-      )}
-
-      {unit}
-    </div>
   )
 }

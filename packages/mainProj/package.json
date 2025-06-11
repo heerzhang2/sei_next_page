@@ -7,7 +7,7 @@
   "description": "特检院的前端--主要业务的部分",
   "packageManager": "yarn@4.0.1",
   "scripts": {
-    "yarnAdd": "yarn add import-local --dev",
+    "yarnAdd": "yarn add @radix-ui/react-combobox",
     "v0dev/Vercel自带组件添加": "npx shadcn@latest add --overwrite  scroll-area",
     "AI胡诌的": "yarn upgrade @radix-ui/react-dialog @radix-ui/react-slot @radix-ui/react-tooltip",
     "dev": "next dev -p 3765",
