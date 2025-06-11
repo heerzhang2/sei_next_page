@@ -22,7 +22,7 @@ import {
 import { FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput } from "@/components/chub"
 import type { UseFormReturn } from "react-hook-form"
 import { Check, Undo, EyeIcon as EyeClosed, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
-import {useEffect} from "react";
+import { useEffect } from "react"
 
 export interface Each_ZdSetting extends Array<any> {
   n1: string //字段标题名
@@ -150,8 +150,8 @@ export function useTableEdit({
                                arrayControls: arrays,
                                pageSize = 0, // 新增：每页行数，0表示不分页
                                showPagination = true, // 新增：是否显示分页控件
-                               pageSizeOptions = [5,10, 20, 30, 50,100], // 新增：页面大小选项
-                               toPage=0,
+                               pageSizeOptions = [5, 10, 20, 30, 50, 100], // 新增：页面大小选项
+                               toPage = 0,
                              }: TableEditProps) {
   //避免输入性能问题：引入 1. 添加一个新的状态来存储本地表格数据
   const [localTableData, setLocalTableData] = React.useState<any[]>([])
@@ -162,7 +162,7 @@ export function useTableEdit({
   // 新增分页相关状态
   const [currentPage, setCurrentPage] = React.useState(toPage)
   // 新增：用户选择的页面大小状态
-  const [userPageSize, setUserPageSize] = React.useState<number>(pageSize>0? pageSize : pageSizeOptions[0])
+  const [userPageSize, setUserPageSize] = React.useState<number>(pageSize > 0 ? pageSize : pageSizeOptions[0])
 
   // 修改：使用用户选择的页面大小
   const isPaginationEnabled = userPageSize > 0 // 是否启用分页
@@ -186,6 +186,8 @@ export function useTableEdit({
 
   // 添加一个 ref 来引用编辑器区域
   const editorRef = React.useRef<HTMLDivElement>(null)
+  // 添加一个 ref 来引用编辑器内容区域，用于测量高度
+  const editorContentRef = React.useRef<HTMLDivElement>(null)
 
   //这个excludeFix仅仅对弹性布局生效的excludeFix && k < fixColumn!； 定长折叠布局模式没启用过滤字段。
   const [seq, setSeq] = React.useState<number | null>(null)
@@ -263,7 +265,7 @@ export function useTableEdit({
   useEffect(() => {
     setUserPageSize(pageSize)
     setCurrentPage(toPage)
-  }, [toPage,pageSize])
+  }, [toPage, pageSize])
 
   // 在 useEffect 中创建 portal 容器
   React.useEffect(() => {
@@ -284,6 +286,66 @@ export function useTableEdit({
       }
     }
   }, [])
+
+  // 添加动态调整编辑器高度的 useEffect
+  React.useEffect(() => {
+    if (showEditorPortal && editorContentRef.current && editorPosition) {
+      const adjustEditorHeight = () => {
+        const contentElement = editorContentRef.current
+        if (!contentElement) return
+
+        const viewportHeight = window.innerHeight
+        const viewportWidth = window.innerWidth
+        const phoneLandscape = viewportWidth > viewportHeight && viewportHeight < 500
+        const isMobile = viewportWidth < 768
+
+        // 测量内容的实际高度
+        const contentHeight = contentElement.scrollHeight
+        const headerHeight = 80 // 编辑器头部高度（估算）
+        const padding = 32 // 内边距
+        const totalContentHeight = contentHeight + headerHeight + padding
+
+        let newHeight: number
+        let newTop: number
+
+        if (isMobile || phoneLandscape) {
+          // 移动设备：限制最大高度，但允许内容自适应
+          const maxHeight = viewportHeight * (phoneLandscape ? 0.96 : 0.9)
+          const minHeight = Math.min(300, viewportHeight * 0.4)
+          newHeight = Math.max(minHeight, Math.min(totalContentHeight, maxHeight))
+          newTop = Math.max(5, (viewportHeight - newHeight) / 2)
+        } else {
+          // 桌面设备：根据内容调整高度
+          const maxHeight = Math.min(viewportHeight * 0.85, 900) // 增加最大高度
+          const minHeight = 400 // 最小高度
+          newHeight = Math.max(minHeight, Math.min(totalContentHeight, maxHeight))
+          newTop = Math.max(20, (viewportHeight - newHeight) / 2)
+        }
+
+        // 更新编辑器位置
+        setEditorPosition((prev) =>
+            prev
+                ? {
+                  ...prev,
+                  height: newHeight,
+                  top: newTop,
+                }
+                : null,
+        )
+      }
+
+      // 延迟执行，确保内容已渲染
+      const timer = setTimeout(adjustEditorHeight, 100)
+
+      // 监听窗口大小变化
+      window.addEventListener("resize", adjustEditorHeight)
+
+      return () => {
+        clearTimeout(timer)
+        window.removeEventListener("resize", adjustEditorHeight)
+      }
+    }
+  }, [showEditorPortal, seq, editorPosition?.width, editorPosition]) // 依赖 seq 变化来重新计算高度
 
   function spliteor(i: number) {
     return TabSplChars[i % TabSplChars.length]
@@ -397,6 +459,50 @@ export function useTableEdit({
   //表格行数据编辑器的DOM
   const editor = React.useMemo(() => {
     const index = seq ?? 0 // 表格第几行的
+
+    // 添加跳转到下一条记录的函数
+    const handleNextRecord = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      if (seq !== null && seq < localTableData.length - 1) {
+        const nextIndex = seq + 1
+        setSeq(nextIndex)
+
+        // 同步下一条记录的数据到表单
+        const nextRowData = localTableData[nextIndex]
+        if (nextRowData) {
+          setTimeout(() => {
+            config.forEach(([_, tag, __, ___, park]) => {
+              try {
+                if (park) {
+                  if (nextRowData[park]) {
+                    form.setValue(`${table}.${nextIndex}.${park}.${tag}`, nextRowData[park][tag] || "", {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
+                } else {
+                  form.setValue(`${table}.${nextIndex}.${tag}`, nextRowData[tag] || "", {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                  })
+                }
+              } catch (e) {
+                console.error("Error setting form value:", e)
+              }
+            })
+          }, 0)
+        }
+
+        // 如果下一条记录在不同页面，需要跳转页面
+        if (isPaginationEnabled) {
+          const nextPage = Math.floor(nextIndex / userPageSize)
+          if (nextPage !== currentPage) {
+            setCurrentPage(nextPage)
+          }
+        }
+      }
+    }
+
     // 创建编辑处理函数，使用不依赖 form.watch 的方式
     const handleAddNewRecord = (e: React.MouseEvent) => {
       e.preventDefault()
@@ -434,7 +540,6 @@ export function useTableEdit({
             setCurrentPage(lastPage)
           }
         }
-
         setSeq(localTableData.length) // 设置为新添加的行
         setIsEditingNewRow(true) // 标记为编辑新行
         setShowEditorPortal(false) // 新增行时不使用 portal
@@ -460,6 +565,7 @@ export function useTableEdit({
     }
 
     const isCenterMode = editorPosition?.position === "center"
+    const isLastRecord = seq !== null && seq >= localTableData.length - 1
     if (noDelAdd && seq === null) return null
     else
       return (
@@ -470,7 +576,7 @@ export function useTableEdit({
               )}
               ref={editorRef}
           >
-            <div className="flex justify-between items-center sticky top-0 bg-background z-10 p-2 border-b @md:pr-[5rem] @4xl:pr-[33rem]">
+            <div className="flex justify-between items-center sticky top-0 bg-background z-10 p-2 border-b @3xl:pr-[5rem] @4xl:pr-[33rem]">
               <div className="flex-nowrap">
                 在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：
                 {isPaginationEnabled && seq !== null && (
@@ -478,23 +584,27 @@ export function useTableEdit({
                 )}
               </div>
               <div className="flex gap-2 ml-auto">
-                <>
-                  <Button variant="ghost" size="sm" onClick={handleCloseEditor}>
-                    <Check className="h-4 w-4 mr-2" />
-                    关闭
-                  </Button>
-                  <Button variant="default" size="sm" onClick={handleConfirmEdit}>
-                    <EyeClosed className="h-4 w-4 mr-2" />
-                    同步
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleCancel}>
-                    <Undo className="h-4 w-4 mr-2" />
-                    取消
-                  </Button>
-                </>
+                {/* 下一条按钮 */}
+                {seq !== null && (
+                    <Button variant="outline" size="sm" onClick={handleNextRecord} disabled={isLastRecord}>
+                      下一条
+                    </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={handleCloseEditor}>
+                  <Check className="h-4 w-4 mr-2" />
+                  关闭
+                </Button>
+                <Button variant="default" size="sm" onClick={handleConfirmEdit}>
+                  <EyeClosed className="h-4 w-4 mr-2" />
+                  同步
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleCancel}>
+                  <Undo className="h-4 w-4 mr-2" />
+                  取消
+                </Button>
               </div>
             </div>
-            <div className={cn("w-full", isCenterMode ? "flex-1 overflow-y-auto p-4" : "")}>
+            <div ref={editorContentRef} className={cn("w-full", isCenterMode ? "flex-1 overflow-y-auto p-4" : "")}>
               {seq !== null && (
                   <>
                     {editAs ? (
@@ -675,6 +785,7 @@ export function useTableEdit({
     isPaginationEnabled,
     userPageSize,
     currentPage,
+    form,
   ])
 
   // 添加一个新的状态来跟踪浮动表头的位置和可见性
@@ -800,53 +911,41 @@ export function useTableEdit({
           }, 0)
         }
 
-        // 获取对应的行元素
-        const rowKey = fixedColWState ? `${tableIndex}-${rowIndex}` : rowIndex
-        const rowElement = rowRefs.current.get(rowKey)
-
-        if (rowElement && portalContainerRef.current) {
-          const rowRect = rowElement.getBoundingClientRect()
+        // 固定编辑器位置在屏幕中央，增加宽度
+        if (portalContainerRef.current) {
           const viewportHeight = window.innerHeight
           const viewportWidth = window.innerWidth
-          const isMobileOrLandscape = viewportWidth < 768 || (viewportWidth > viewportHeight && viewportHeight < 500)
+          const phoneLandscape = viewportWidth > viewportHeight && viewportHeight < 500
+          const isMobile = viewportWidth < 768
 
-          if (isMobileOrLandscape) {
-            // 移动设备或横屏模式下，使用居中模式
+          // 统一使用居中模式，根据设备类型调整大小
+          if (isMobile || phoneLandscape) {
+            // 移动设备：几乎全屏
             setEditorPosition({
-              top: Math.max(10, viewportHeight * 0.1),
-              left: Math.max(10, viewportWidth * 0.05),
+              top: Math.max(5, viewportHeight * (phoneLandscape ? 0.02 : 0.05)),
+              left: Math.max(5, viewportWidth * 0.02),
               position: "center",
-              width: Math.min(viewportWidth * 0.9, 1200),
-              height: viewportHeight * 0.8,
+              width: viewportWidth * 0.96,
+              height: viewportHeight * (phoneLandscape ? 0.96 : 0.9), // 初始高度，会被动态调整
             })
           } else {
-            // 计算行上方和下方的可用空间
-            const spaceAbove = rowRect.top
-            const spaceBelow = viewportHeight - rowRect.bottom
-
-            // 决定编辑器应该放在行的上方还是下方
-            const placeAbove = spaceBelow < 300 && spaceAbove > spaceBelow
-
-            // 设置编辑器的位置
-            if (placeAbove) {
-              setEditorPosition({
-                top: rowRect.top - 20, // 给一点空间
-                left: 0,
-                position: "above",
-              })
-            } else {
-              setEditorPosition({
-                top: rowRect.bottom + 10, // 给一点空间
-                left: 0,
-                position: "below",
-              })
-            }
+            // 桌面设备：居中弹窗，增加宽度
+            const editorWidth = Math.min(viewportWidth * 0.9, 1400) // 增加宽度从0.8到0.9，最大宽度从1200到1400
+            const editorHeight = Math.min(viewportHeight * 0.85, 900) // 增加高度比例和最大高度
+            setEditorPosition({
+              top: (viewportHeight - editorHeight) / 2,
+              left: (viewportWidth - editorWidth) / 2,
+              position: "center",
+              width: editorWidth,
+              height: editorHeight, // 初始高度，会被动态调整
+            })
           }
+
           // 显示编辑器
           setShowEditorPortal(true)
         }
       },
-      [pageIndexToGlobalIndex, fixedColWState, localTableData, config, table],
+      [pageIndexToGlobalIndex, localTableData, config, table],
   )
 
   // 2. 添加一个 useEffect 来初始化本地数据和在关键操作后更新它【没有用到？】
@@ -938,6 +1037,7 @@ export function useTableEdit({
                   </option>
               ))}
             </select>
+            <span className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}>条</span>
           </div>
 
           {/* 分页信息 - 响应式显示 */}
@@ -948,7 +1048,7 @@ export function useTableEdit({
             </span>
             ) : (
                 <span>
-              显示第 {startIndex + 1} - {endIndex} 条，共 {totalItems} 条记录
+              第 {startIndex + 1} - {endIndex} 条，共 {totalItems} 条
               <span className="ml-4">
                 第 {currentPage + 1} 页，共 {totalPages} 页
               </span>
@@ -957,7 +1057,7 @@ export function useTableEdit({
           </div>
 
           {/* 分页按钮 - 增大触摸区域 */}
-          <div className="flex items-center space-x-1 sm:space-x-2">
+          <div className="flex flex-wrap items-center space-x-1 sm:space-x-2">
             <Button
                 variant="outline"
                 size="sm"
@@ -1776,12 +1876,8 @@ export function useTableEdit({
             <Button variant="outline" className={onlyLay ? "hidden" : ""} onClick={toggleFixedColW}>
               {fixedColWState ? `弹性布局` : `定长折叠`}
             </Button>
-            <span className="ml-2">
-            按每行{defaultV && fixColumn! >= 1 && noDelAdd ? config.length - fixColumn! : config.length}
-              列为一组录入
-              {isPaginationEnabled && (
-                  <span className="ml-2 text-sm text-muted-foreground">(每页 {userPageSize} 条记录)</span>
-              )}
+            <span className="ml-2 text-sm">
+            按每行{defaultV && fixColumn! >= 1 && noDelAdd ? config.length - fixColumn! : config.length}列为一组录入
           </span>
             <Button variant="outline" className="ml-auto" onClick={clearTable}>
               清空全表至默认

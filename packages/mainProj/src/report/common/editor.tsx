@@ -309,8 +309,18 @@ export function getRepUnqIndexByNo(array: RepUnqItem[], targetNo: string): numbe
 
 export const config检测复检表=[['类别','c',30],['项目编号','no',84],['检测不符合内容','b',150],
     ['整改情况','rs',50,{t:'s',l:clcOptions}],['确认日期','d',65,{t:'D'}]] as Each_ZdSetting[];
-export const config检验复检表=[['类别','c',30],['项目编号','no',84],['检验不符合内容','b',150],
-    ['复检结果','rs',50, {t:'s',l:clcOptions}],['确认日期','d',65,{t:'D'}]] as Each_ZdSetting[];
+// export const config检验复检表=[['类别','c',30],['项目编号','no',84],['检验不符合内容','b',150],
+//     ['复检结果','rs',50, {t:'s',l:clcOptions}],['确认日期','d',65,{t:'D'}]] as Each_ZdSetting[];
+
+export const config检验复检表=[
+    ['类别','c',30],['项目编1号','no',84],['检验不符合内容','b',150],
+    ['复检结果','rs',50, {t:'s',l:clcOptions}],['确认1日期','d',65,{t:'D'}],
+    ['类别','c2',30],['项目编2号','no2',84],['检验不符合内容','b2',150],
+    ['复检结果','rs2',50, {t:'s',l:clcOptions}],['确认2日期','d2',65,{t:'D'}],
+    ['类别','c3',30],['项目编3号','no3',84],['检验不符合内容','b3',150],
+    ['复检结果','rs3',50, {t:'s',l:clcOptions}],['确认3日期','d3',65,{t:'D'}]
+] as Each_ZdSetting[];
+
 
 export interface RecheckEditorProps  extends ItemRecheckOmniRProps{
     config?: Each_ZdSetting[];
@@ -341,11 +351,6 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         // 深拷贝并初始化空对象
         const unqData =structuredClone(storage?.unq || []);
         // const unqData = JSON.parse(JSON.stringify(storage?.["unq"] || []));
-        // unqData.forEach((row: any) => {
-        //     if (typeof row !== "object" || row === null) {
-        //         row = {}; // 修复非对象行
-        //     }
-        // });
         let fields = { unq: unqData };
         // 遍历并填充缺失字段
         unqData.forEach((row: any, index: number) => {
@@ -379,7 +384,6 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     //     },
     //     [],
     // )
-
     const onConfirm = useCallback(
         (form: UseFormReturn<any, any, any>) => {
             //保存更新externalData的操作
@@ -387,7 +391,6 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         },
         []
     )
-
     const 默认复检表 =React.useMemo(()=>{
             let falts=itemResultUnqualifiedOmni(storage, impressionismAs?.Item);
             falts.forEach((row,index) => {

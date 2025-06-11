@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider"
+import {cn} from "@/lib/utils";
 
 /**报告记录结合显示的框架
  * */
@@ -80,10 +81,11 @@ export default function Skeleton({
         }
     }
     const needScrollBtn = !isSmallScreen || (isSmallScreen && activeTab === "editor")
+    const scrollBtnCls=isSmallScreen && isLandscape ? "flex-row" : "flex-col";
     return (
         <div className="flex flex-col">
             {needScrollBtn && (
-                <div className="fixed top-6 right-8 flex flex-col gap-7 z-40">
+                <div className={cn("fixed top-6 right-8 gap-7 flex z-40", scrollBtnCls)}>
                     <Button
                         variant="outline"
                         className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
