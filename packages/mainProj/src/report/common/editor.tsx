@@ -13,6 +13,7 @@ import {Each_ZdSetting, useTableEdit} from "@/report/hook/use-table-edit";
 import type {UseFormReturn} from "react-hook-form";
 import {Table} from "@/components/ui/table";
 import {CCell, TableBody, TableRow} from "@/components/flexible-table";
+import {useSearchParams} from "next/navigation";
 
 // import {特殊项目编码} from "../elevator/Supervision/FormatOriginal";
 
@@ -294,6 +295,18 @@ export interface ItemRecheckOmniRProps  extends InternalItemProps{
 //         );
 //     } );
 
+
+interface RepUnqItem {
+    b: string;
+    d?: string;  // 可选属性（根据数据中的空值推断）
+    no: string;  // 必须包含的属性
+    rs?: string; // 可选属性
+}
+
+export function getRepUnqIndexByNo(array: RepUnqItem[], targetNo: string): number | undefined {
+    return array.findIndex(item => item.no === targetNo);
+}
+
 export const config检测复检表=[['类别','c',30],['项目编号','no',84],['检测不符合内容','b',150],
     ['整改情况','rs',50,{t:'s',l:clcOptions}],['确认日期','d',65,{t:'D'}]] as Each_ZdSetting[];
 export const config检验复检表=[['类别','c',30],['项目编号','no',84],['检验不符合内容','b',150],
@@ -307,6 +320,8 @@ export interface RecheckEditorProps  extends ItemRecheckOmniRProps{
  * */
 export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, label, rep
                                   ,config=config复检表 ,setup}: RecheckEditorProps) => {
+    const searchParams = useSearchParams()
+    const erItemNo =searchParams!.get("from")
     const {storage,setStorage,modified,setModified} =useStorage();
     const impressionismAs =React.useMemo(() => {
         return setup({rep,orc:storage});
@@ -323,15 +338,26 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         return z.object(schemaFields)
     }, [])
     const defaultValues = React.useMemo(() => {
-        const fields = {} as any
-        fields["unq"]= storage["unq"]
-        storage["unq"].forEach((row: any,index:number) => {
-            config.forEach(([t,field,s,o,park]) => {
-                if(row[field]===undefined)  fields["unq"][index][field]=""
-            })
-        })
-        return fields
-    }, [storage])
+        // 深拷贝并初始化空对象
+        const unqData =structuredClone(storage?.unq || []);
+        // const unqData = JSON.parse(JSON.stringify(storage?.["unq"] || []));
+        // unqData.forEach((row: any) => {
+        //     if (typeof row !== "object" || row === null) {
+        //         row = {}; // 修复非对象行
+        //     }
+        // });
+        let fields = { unq: unqData };
+        // 遍历并填充缺失字段
+        unqData.forEach((row: any, index: number) => {
+            config.forEach(([t, field]: Each_ZdSetting) => {
+                if (row[field] == null) { // 宽泛检查 null/undefined
+                    if (!fields.unq[index]) fields.unq[index] = {};
+                    fields.unq[index][field] = "";
+                }
+            });
+        });
+        return { unq: unqData };
+    }, [storage]);
     const arrayFields =React.useMemo(() => {
         const itemTemplate = {} as any
         config.forEach(([t,field,s,o,park]) => {
@@ -378,10 +404,16 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     </h2>;
 
     const { render,handleConfirm,form,arrayControls } = useFormFramework({schema, defaultValues, arrayFields, rep})
+    const toPage = React.useMemo(() => {
+        if(!erItemNo)   return 0
+        const index = getRepUnqIndexByNo(storage["unq"], erItemNo);
+        const page=Math.floor((index??0)/5);
+        return page??0
+    }, [erItemNo,storage])
     const [nestRenderer]=useTableEdit({
         form, arrayControls, onConfirm, config, table:'unq',externalData: storage,
         headview,defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,
-        pageSize:20
+        pageSize: erItemNo? 5:20, toPage,
         // onExternalDataChange: handleExternalDataChange
     });
 

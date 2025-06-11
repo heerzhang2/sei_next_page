@@ -22,6 +22,7 @@ import {
 import { FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput } from "@/components/chub"
 import type { UseFormReturn } from "react-hook-form"
 import { Check, Undo, EyeIcon as EyeClosed, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import {useEffect} from "react";
 
 export interface Each_ZdSetting extends Array<any> {
   n1: string //字段标题名
@@ -79,7 +80,7 @@ interface TableEditProps {
   pageSize?: number // 每页显示的行数，默认为0表示不分页
   showPagination?: boolean // 是否显示分页控件，默认true
   pageSizeOptions?: number[] // 新增：页面大小选项
-  toPage?: number //加载时刻直接定位第几页
+  toPage?: number //加载时刻直接定位第几页 是0based的；配合外部关键字去定位当前显示行。
 }
 
 const TabSplChars = [
@@ -258,6 +259,11 @@ export function useTableEdit({
   const goToLastPage = React.useCallback(() => goToPage(totalPages - 1), [goToPage, totalPages])
   const goToPrevPage = React.useCallback(() => goToPage(currentPage - 1), [goToPage, currentPage])
   const goToNextPage = React.useCallback(() => goToPage(currentPage + 1), [goToPage, currentPage])
+
+  useEffect(() => {
+    setUserPageSize(pageSize)
+    setCurrentPage(toPage)
+  }, [toPage,pageSize])
 
   // 在 useEffect 中创建 portal 容器
   React.useEffect(() => {
