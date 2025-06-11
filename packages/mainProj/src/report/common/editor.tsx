@@ -380,7 +380,8 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
     const { render,handleConfirm,form,arrayControls } = useFormFramework({schema, defaultValues, arrayFields, rep})
     const [nestRenderer]=useTableEdit({
         form, arrayControls, onConfirm, config, table:'unq',externalData: storage,
-        headview,defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2
+        headview,defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,
+        pageSize:20
         // onExternalDataChange: handleExternalDataChange
     });
 
