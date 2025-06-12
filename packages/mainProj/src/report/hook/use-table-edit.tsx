@@ -204,7 +204,7 @@ export function useTableEdit({
   //定长折叠形态才需要区分表格raft的位置；
   const [activeHeaderIndex, setActiveHeaderIndex] = React.useState<number | null>(null)
   const [openMenuId, setOpenMenuId] = React.useState<string | null>(null)
-  const { screenHeight } = useWindowSize()
+  const { screenHeight, screenWidth } = useWindowSize()
   const frameRef = React.useRef<HTMLDivElement>(null)
   const barRect = useMeasure(frameRef as React.RefObject<HTMLElement>)
   const hBarWidth = barRect?.width || 0
@@ -296,9 +296,10 @@ export function useTableEdit({
     }
   }, [])
 
-  // 添加动态调整编辑器高度的 useEffect
+  // 添加动态调整编辑器高度的 useEffect 没法修正？
   React.useEffect(() => {
-    if (showEditorPortal && editorContentRef.current && editorPosition) {
+    //editorPosition已经再点击修改按钮后初始化了:初始hidden不显示的；然后这里重新设置窗口height。
+    if(editorContentRef.current && showEditorPortal && editorPosition?.visibility==="hidden") {
       const adjustEditorHeight = () => {
         const contentElement = editorContentRef.current
         if (!contentElement) return
@@ -326,7 +327,7 @@ export function useTableEdit({
         } else {
           // 桌面设备：根据内容调整高度
           const maxHeight = Math.min(viewportHeight * 0.85, 900) // 增加最大高度
-          const minHeight = 400 // 最小高度
+          const minHeight = 160 // 电脑屏最小高度
           newHeight = Math.max(minHeight, Math.min(totalContentHeight, maxHeight))
           newTop = Math.max(20, (viewportHeight - newHeight) / 2)
         }
@@ -342,20 +343,18 @@ export function useTableEdit({
                 : null,
         )
       }
-
       // 延迟执行，确保内容已渲染
       const timer = setTimeout(adjustEditorHeight, 100)
-
-      // 监听窗口大小变化
+      //监听窗口大小变化，编辑器宽度变化导致高度也需要改变的。浏览器大小若变：就只能让用户手动关闭弹出的编辑器了。
       window.addEventListener("resize", adjustEditorHeight)
-
       return () => {
         clearTimeout(timer)
+        //实际马上就移除掉resize监听的：就没意义啊！
         window.removeEventListener("resize", adjustEditorHeight)
       }
     }
     //绝不能加上依赖 editorPosition 会导致死循环的；
-  }, [showEditorPortal, editorPosition?.width])
+  }, [editorContentRef.current, showEditorPortal])
 
   function spliteor(i: number) {
     return TabSplChars[i % TabSplChars.length]
@@ -611,7 +610,7 @@ export function useTableEdit({
                 </Button>
               </div>
             </div>
-            <div className={cn("w-full", "flex-1 overflow-y-auto p-4")}>
+            <div className={cn("w-full", "flex-1 overflow-y-auto p-2")}>
               <div ref={editorContentRef}>
                 {seq !== null && (
                     <>
@@ -919,38 +918,38 @@ export function useTableEdit({
             })
           }, 0)
         }
-
         // 固定编辑器位置在屏幕中央，增加宽度
         if (portalContainerRef.current) {
-          const viewportHeight = window.innerHeight
-          const viewportWidth = window.innerWidth
-          const phoneLandscape = viewportWidth > viewportHeight && viewportHeight < 500
-          const isMobile = viewportWidth < 768
+          if(!showEditorPortal){    //有必要调整窗口
+            const viewportHeight = window.innerHeight
+            const viewportWidth = window.innerWidth
+            const phoneLandscape = viewportWidth > viewportHeight && viewportHeight < 500
+            const isMobile = viewportWidth < 768
 
-          // 统一使用居中模式，根据设备类型调整大小
-          if (isMobile || phoneLandscape) {
-            // 移动设备：几乎全屏
-            setEditorPosition({
-              top: Math.max(5, viewportHeight * (phoneLandscape ? 0.02 : 0.05)),
-              left: Math.max(5, viewportWidth * 0.02),
-              width: viewportWidth * 0.96,
-              height: viewportHeight * (phoneLandscape ? 0.96 : 0.9), // 初始高度，会被动态调整
-              visibility: editorPosition?.visibility ?? "hidden"
-            })
-          } else {
-            // 桌面设备：居中弹窗，增加宽度
-            const editorWidth = Math.min(viewportWidth * 0.9, 1400) // 增加宽度从0.8到0.9，最大宽度从1200到1400
-            const editorHeight = Math.min(viewportHeight * 0.85, 900) // 增加高度比例和最大高度
-            setEditorPosition({
-              top: (viewportHeight - editorHeight) / 2,
-              left: (viewportWidth - editorWidth) / 2,
-              width: editorWidth,
-              height: editorHeight, // 初始高度，会被动态调整
-              visibility: editorPosition?.visibility ?? "hidden"
-            })
+            // 统一使用居中模式，根据设备类型调整大小
+            if (isMobile || phoneLandscape) {
+              // 移动设备：几乎全屏
+              setEditorPosition({
+                top: Math.max(5, viewportHeight * (phoneLandscape ? 0.02 : 0.05)),
+                left: Math.max(5, viewportWidth * 0.02),
+                width: viewportWidth * 0.96,
+                height: viewportHeight * (phoneLandscape ? 0.96 : 0.9), // 初始高度，会被动态调整
+                visibility: editorPosition?.visibility ?? "hidden"
+              })
+            } else {
+              // 桌面设备：居中弹窗，增加宽度
+              const editorWidth = Math.min(viewportWidth * 0.9, 1400) // 增加宽度从0.8到0.9，最大宽度从1200到1400
+              const editorHeight = Math.min(viewportHeight * 0.85, 900) // 增加高度比例和最大高度
+              setEditorPosition({
+                top: (viewportHeight - editorHeight) / 2,
+                left: (viewportWidth - editorWidth) / 2,
+                width: editorWidth,
+                height: editorHeight, // 初始高度，会被动态调整
+                visibility: editorPosition?.visibility ?? "hidden"
+              })
+            }
           }
-
-          // 显示编辑器
+          //重新显示编辑器
           setShowEditorPortal(true)
         }
       },
@@ -1167,7 +1166,7 @@ export function useTableEdit({
             {/* 新增: 跳转到指定页码 - 桌面版 */}
             <div className="hidden sm:flex items-center ml-2 space-x-1">
               <span className="text-xs text-gray-600">跳至</span>
-              <input
+              <input name="_tzymz"
                   type="text"
                   value={jumpToPage}
                   onChange={(e) => setJumpToPage(e.target.value)}
@@ -1193,7 +1192,7 @@ export function useTableEdit({
 
             {/* 移动端紧凑版跳转 */}
             <div className="flex sm:hidden items-center ml-1">
-              <input
+              <input name="_tzymp"
                   type="text"
                   value={jumpToPage}
                   onChange={(e) => setJumpToPage(e.target.value)}
