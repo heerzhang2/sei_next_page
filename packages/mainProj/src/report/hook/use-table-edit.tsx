@@ -1019,19 +1019,21 @@ export function useTableEdit({
   // 修改 PaginationControls 组件，添加页码跳转功能
   const PaginationControls = React.useMemo(() => {
     if (!isPaginationEnabled || !showPagination) return null
-
     // 检测是否为小屏幕
     const isSmallScreen = typeof window !== "undefined" ? hBarWidth < 640 : false
-
-    return (
+    // 创建一个函数来生成唯一的 ID
+    const getUniqueId = (baseId: string, position: "top" | "bottom") => `${baseId}-${position}`
+    // 创建一个渲染函数，接受位置参数
+    const renderPaginationControls = (position: "top" | "bottom") => (
         <div className="flex flex-wrap items-center justify-between px-2 py-2 bg-white border-t border-gray-200">
           {/* 页面大小选择器 */}
           <div className="flex items-center space-x-2 mb-2 sm:mb-0">
-            <label htmlFor="page-size-select" className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}>
+            <label htmlFor={getUniqueId("page-size-select", position)}
+                   className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}>
               {isSmallScreen ? "每页:" : "每页显示:"}
             </label>
             <select
-                id="page-size-select"
+                id={getUniqueId("page-size-select", position)}
                 value={userPageSize}
                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                 className="h-8 px-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
@@ -1219,6 +1221,11 @@ export function useTableEdit({
           </div>
         </div>
     )
+    // 返回一个对象，包含顶部和底部的分页控件
+    return {
+      top: renderPaginationControls("top"),
+      bottom: renderPaginationControls("bottom"),
+    }
   }, [
     isPaginationEnabled,
     showPagination,
@@ -1890,15 +1897,11 @@ export function useTableEdit({
             </Button>
           </div>
           <hr className="my-2" />
-
           {/* 分页控件 - 顶部 */}
-          {PaginationControls}
-
+          {PaginationControls?.top}
           <div ref={frameRef}>{fixedColWState ? renderCollapsibleTable : renderFlexibleTable}</div>
-
           {/* 分页控件 - 底部 */}
-          {PaginationControls}
-
+          {PaginationControls?.bottom}
           {/* 只在不使用 portal 时渲染底部编辑器 */}
           {!showEditorPortal && (
               <div className={cn("flex justify-center", "flex")} ref={editorRef}>
