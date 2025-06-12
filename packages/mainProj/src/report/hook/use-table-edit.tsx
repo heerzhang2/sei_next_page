@@ -321,13 +321,13 @@ export function useTableEdit({
         if (isMobile || phoneLandscape) {
           // 移动设备：限制最大高度，但允许内容自适应
           const maxHeight = viewportHeight * (phoneLandscape ? 0.96 : 0.9)
-          const minHeight = Math.min(300, viewportHeight * 0.4)
+          const minHeight =phoneLandscape? Math.min(200, viewportHeight * 0.4) : Math.min(300, viewportHeight * 0.3)
           newHeight = Math.max(minHeight, Math.min(totalContentHeight, maxHeight))
           newTop = Math.max(5, (viewportHeight - newHeight) / 2)
         } else {
           // 桌面设备：根据内容调整高度
           const maxHeight = Math.min(viewportHeight * 0.85, 900) // 增加最大高度
-          const minHeight = 160 // 电脑屏最小高度
+          const minHeight = 150 // 电脑屏最小高度
           newHeight = Math.max(minHeight, Math.min(totalContentHeight, maxHeight))
           newTop = Math.max(20, (viewportHeight - newHeight) / 2)
         }
@@ -353,8 +353,13 @@ export function useTableEdit({
         window.removeEventListener("resize", adjustEditorHeight)
       }
     }
+    else if(!showEditorPortal){
+        setEditorPosition((prev) =>
+            prev ? {...prev, visibility: "hidden"} : null
+        )
+    }
     //绝不能加上依赖 editorPosition 会导致死循环的；
-  }, [editorContentRef.current, showEditorPortal])
+  }, [editorContentRef.current, showEditorPortal,screenHeight, screenWidth])
 
   function spliteor(i: number) {
     return TabSplChars[i % TabSplChars.length]
