@@ -21,7 +21,16 @@ import {
 } from "@/components/ui"
 import { FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput } from "@/components/chub"
 import type { UseFormReturn } from "react-hook-form"
-import { Check, Undo, EyeIcon as EyeClosed, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import {
+  Check,
+  Undo,
+  EyeIcon as EyeClosed,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ArrowRight
+} from "lucide-react"
 import { useEffect } from "react"
 
 export interface Each_ZdSetting extends Array<any> {
@@ -227,9 +236,9 @@ export function useTableEdit({
   const [editorPosition, setEditorPosition] = React.useState<{
     top: number
     left: number
-    position?: "above" | "below" | "center"
     width?: number
     height?: number
+    visibility?: any
   } | null>(null)
   const [showEditorPortal, setShowEditorPortal] = React.useState(false)
   const portalContainerRef = React.useRef<HTMLDivElement | null>(null)
@@ -301,8 +310,8 @@ export function useTableEdit({
 
         // 测量内容的实际高度
         const contentHeight = contentElement.scrollHeight
-        const headerHeight = 80 // 编辑器头部高度（估算）
-        const padding = 32 // 内边距
+        const headerHeight = 48 // 编辑器头部高度（估算）
+        const padding = 24 // 内边距
         const totalContentHeight = contentHeight + headerHeight + padding
 
         let newHeight: number
@@ -321,7 +330,6 @@ export function useTableEdit({
           newHeight = Math.max(minHeight, Math.min(totalContentHeight, maxHeight))
           newTop = Math.max(20, (viewportHeight - newHeight) / 2)
         }
-
         // 更新编辑器位置
         setEditorPosition((prev) =>
             prev
@@ -329,6 +337,7 @@ export function useTableEdit({
                   ...prev,
                   height: newHeight,
                   top: newTop,
+                  visibility: "unset"
                 }
                 : null,
         )
@@ -345,7 +354,8 @@ export function useTableEdit({
         window.removeEventListener("resize", adjustEditorHeight)
       }
     }
-  }, [showEditorPortal, seq, editorPosition?.width, editorPosition]) // 依赖 seq 变化来重新计算高度
+    //绝不能加上依赖 editorPosition 会导致死循环的；
+  }, [showEditorPortal, editorPosition?.width])
 
   function spliteor(i: number) {
     return TabSplChars[i % TabSplChars.length]
@@ -564,208 +574,207 @@ export function useTableEdit({
       setIsEditingNewRow(false) // 重置新行状态
     }
 
-    const isCenterMode = editorPosition?.position === "center"
     const isLastRecord = seq !== null && seq >= localTableData.length - 1
+    //编辑器的头部按钮区域不做滚动的，编辑项目的区域才是可滚动的区域。
     if (noDelAdd && seq === null) return null
     else
       return (
           <Card
               className={cn(
                   "flex justify-center w-full flex-col md:p-1 gap-1",
-                  showEditorPortal && (isCenterMode ? "h-full flex flex-col" : "max-h-[70vh] overflow-y-auto"), // 添加滚动支持
+                  showEditorPortal && ("h-full flex flex-col py-0"), // 添加滚动支持
               )}
               ref={editorRef}
           >
-            <div className="flex justify-between items-center sticky top-0 bg-background z-10 p-2 border-b @3xl:pr-[5rem] @4xl:pr-[33rem]">
-              <div className="flex-nowrap">
-                在{seq === null ? "新增一" : `编辑第 ${seq! + 1} `}条：
-                {isPaginationEnabled && seq !== null && (
-                    <span className="text-sm text-muted-foreground ml-2">(第 {Math.floor(seq / userPageSize) + 1} 页)</span>
-                )}
-              </div>
-              <div className="flex gap-2 ml-auto">
-                {/* 下一条按钮 */}
+            <div className="flex justify-between items-center sticky top-0 bg-background z-10 px-1 py-0 border-b @4xl:pr-[24rem]">
+              <div className="flex gap-2">
                 {seq !== null && (
                     <Button variant="outline" size="sm" onClick={handleNextRecord} disabled={isLastRecord}>
-                      下一条
+                      <ArrowRight className="h-4 w-4 @md:mr-2" />
+                      <span className="hidden @md:block">下一条</span>
                     </Button>
                 )}
                 <Button variant="ghost" size="sm" onClick={handleCloseEditor}>
-                  <Check className="h-4 w-4 mr-2" />
+                  <Check className="h-4 w-4 @md:mr-2" />
                   关闭
                 </Button>
+              </div>
+              <div className="flex-nowrap text-sm @md:text-base m-auto">{seq === null ? "新增一" : `第${seq! + 1}`}条：</div>
+              <div className="flex gap-2 ml-auto">
                 <Button variant="default" size="sm" onClick={handleConfirmEdit}>
-                  <EyeClosed className="h-4 w-4 mr-2" />
+                  <EyeClosed className="h-4 w-4 @md:mr-2" />
                   同步
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleCancel}>
-                  <Undo className="h-4 w-4 mr-2" />
+                  <Undo className="h-4 w-4 @md:mr-2" />
                   取消
                 </Button>
               </div>
             </div>
-            <div ref={editorContentRef} className={cn("w-full", isCenterMode ? "flex-1 overflow-y-auto p-4" : "")}>
-              {seq !== null && (
-                  <>
-                    {editAs ? (
-                        editAs(form, seq)
-                    ) : (
-                        <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2 p-2">
-                          {config.map(([title, tag, _, extobj, park]: any, i: number) => {
-                            const { t: type, l: list, u: unit, s: size } = extobj || {}
-                            if ((fixColumn && i < fixColumn) || !(fields?.length > 0))
-                              return <React.Fragment key={i}></React.Fragment>
-                            if (type === "s")
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => <FormSelectField field={field} label={title} options={list} />}
-                                  />
-                              )
-                            else if (type === "d")
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => (
-                                          <FormItem className="w-full break-inside-avoid">
-                                            <FormLabel className="select-text">{title}</FormLabel>
-                                            <FormControl className="w-full">
-                                              <Input type="date" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
-                              )
-                            else if (type === "b")
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => (
-                                          <FormItem className="w-full break-inside-avoid">
-                                            <FormLabel className="select-text">{title}</FormLabel>
-                                            <FormControl className="w-full">{/*<Switch   {...field}  />*/}</FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
-                              )
-                            else if (type === "B")
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => (
-                                          <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
-                                            <FormLabel className="select-text">{title}</FormLabel>
-                                            <FormControl className="w-full">
-                                              {/*<BlobInputList datalist={list} unit={unit}  {...field}  />*/}
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
-                              )
-                            else if (type === "m")
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => (
-                                          <FormItem className="w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                            <FormLabel className="select-text">{title}</FormLabel>
-                                            <FormControl className="w-full">{/*<Textarea rows={4}  {...field} />*/}</FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
-                              )
-                            else if (type === "M")
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => (
-                                          <FormItem className="w-full break-inside-avoid">
-                                            <FormLabel className="select-text">{title}</FormLabel>
-                                            <FormControl className="w-full">
-                                              <MemoDatesInput {...field} rows={2} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
-                              )
-                            else if (type === "D")
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => (
-                                          <FormItem className="w-full break-inside-avoid">
-                                            <FormLabel className="select-text">{title}</FormLabel>
-                                            <FormControl className="w-full">
-                                              <MemoDateInput {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
-                              )
-                            else if (unit)
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => (
-                                          <FormItem className="w-full break-inside-avoid">
-                                            <FormLabel className="select-text">{title}</FormLabel>
-                                            <FormControl className="w-full">
-                                              <SuffixInput unit={unit} {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
-                              )
-                            else
-                              return (
-                                  <FormField
-                                      key={i}
-                                      control={form.control}
-                                      name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
-                                      render={({ field }) => (
-                                          <FormItem className="w-full break-inside-avoid">
-                                            <FormLabel className="select-text">{title}</FormLabel>
-                                            <FormControl className="w-full">
-                                              <Input type={type === "n" ? "number" : undefined} {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
-                              )
-                          })}
-                        </div>
-                    )}
-                  </>
-              )}
-              {!noDelAdd && !showEditorPortal && (
-                  <Button className="mt-1" onClick={handleAddNewRecord}>
-                    新增一条
-                  </Button>
-              )}
+            <div className={cn("w-full", "flex-1 overflow-y-auto p-4")}>
+              <div ref={editorContentRef}>
+                {seq !== null && (
+                    <>
+                      {editAs ? (
+                          editAs(form, seq)
+                      ) : (
+                          <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2 p-2">
+                            {config.map(([title, tag, _, extobj, park]: any, i: number) => {
+                              const { t: type, l: list, u: unit, s: size } = extobj || {}
+                              if ((fixColumn && i < fixColumn) || !(fields?.length > 0))
+                                return <React.Fragment key={i}></React.Fragment>
+                              if (type === "s")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => <FormSelectField field={field} label={title} options={list} />}
+                                    />
+                                )
+                              else if (type === "d")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <Input type="date" {...field} />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "b")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">{/*<Switch   {...field}  />*/}</FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "B")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
+                                              <FormLabel className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                {/*<BlobInputList datalist={list} unit={unit}  {...field}  />*/}
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "m")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                              <FormLabel className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">{/*<Textarea rows={4}  {...field} />*/}</FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "M")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <MemoDatesInput {...field} rows={2} />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (type === "D")
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <MemoDateInput {...field} />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else if (unit)
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <SuffixInput unit={unit} {...field} />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                              else
+                                return (
+                                    <FormField
+                                        key={i}
+                                        control={form.control}
+                                        name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full break-inside-avoid">
+                                              <FormLabel className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <Input type={type === "n" ? "number" : undefined} {...field} />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                            })}
+                          </div>
+                      )}
+                    </>
+                )}
+                {!noDelAdd && !showEditorPortal && (
+                    <Button className="mt-1" onClick={handleAddNewRecord}>
+                      新增一条
+                    </Button>
+                )}
+              </div>
             </div>
           </Card>
       )
@@ -924,9 +933,9 @@ export function useTableEdit({
             setEditorPosition({
               top: Math.max(5, viewportHeight * (phoneLandscape ? 0.02 : 0.05)),
               left: Math.max(5, viewportWidth * 0.02),
-              position: "center",
               width: viewportWidth * 0.96,
               height: viewportHeight * (phoneLandscape ? 0.96 : 0.9), // 初始高度，会被动态调整
+              visibility: editorPosition?.visibility ?? "hidden"
             })
           } else {
             // 桌面设备：居中弹窗，增加宽度
@@ -935,9 +944,9 @@ export function useTableEdit({
             setEditorPosition({
               top: (viewportHeight - editorHeight) / 2,
               left: (viewportWidth - editorWidth) / 2,
-              position: "center",
               width: editorWidth,
               height: editorHeight, // 初始高度，会被动态调整
+              visibility: editorPosition?.visibility ?? "hidden"
             })
           }
 
@@ -945,7 +954,7 @@ export function useTableEdit({
           setShowEditorPortal(true)
         }
       },
-      [pageIndexToGlobalIndex, localTableData, config, table],
+      [pageIndexToGlobalIndex, localTableData, config, table,editorPosition?.visibility],
   )
 
   // 2. 添加一个 useEffect 来初始化本地数据和在关键操作后更新它【没有用到？】
@@ -1240,8 +1249,6 @@ export function useTableEdit({
     const membersum = currentPageItemCount
     // const { remove, move, insert } = arrays?.[table] || {}
     const excludeFix = fixColumn !== undefined && fixColumn > 0
-    // 其余代码保持不变...
-    // 但要确保所有使用 tabledArr[i] 的地方改为 currentPageData[i]
     return (
         <div className="relative">
           {/* 浮动表头 */}
@@ -1908,22 +1915,18 @@ export function useTableEdit({
                   <div
                       style={{
                         position: "fixed",
-                        top:
-                            editorPosition.position === "above"
-                                ? `${editorPosition.top - (editorRef.current?.offsetHeight || 0)}px`
-                                : editorPosition.position === "center"
-                                    ? `${editorPosition.top}px`
-                                    : `${editorPosition.top}px`,
-                        left: editorPosition.position === "center" ? `${editorPosition.left}px` : "0",
-                        width: editorPosition.position === "center" ? `${editorPosition.width}px` : "100%",
-                        maxWidth: editorPosition.position === "center" ? `${editorPosition.width}px` : "100%",
-                        height: editorPosition.position === "center" ? `${editorPosition.height}px` : "auto",
-                        maxHeight: editorPosition.position === "center" ? `${editorPosition.height}px` : "70vh",
+                        top: `${editorPosition.top}px`,
+                        left: `${editorPosition.left}px`,
+                        width: `${editorPosition.width}px`,
+                        maxWidth: `${editorPosition.width}px`,
+                        height: `${editorPosition.height}px`,
+                        maxHeight: `${editorPosition.height}px`,
                         zIndex: 100,
                         backgroundColor: "white",
                         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
                         borderRadius: "8px",
                         overflow: "hidden",
+                        visibility:  editorPosition.visibility,
                       }}
                       className={"@container"}
                   >
