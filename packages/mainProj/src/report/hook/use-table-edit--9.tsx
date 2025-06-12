@@ -29,9 +29,9 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  ArrowRight,
+  ArrowRight
 } from "lucide-react"
-import { useEffect, useId } from "react"
+import { useEffect } from "react"
 
 export interface Each_ZdSetting extends Array<any> {
   n1: string //字段标题名
@@ -162,8 +162,6 @@ export function useTableEdit({
                                pageSizeOptions = [5, 10, 20, 30, 50, 100], // 新增：页面大小选项
                                toPage = 0,
                              }: TableEditProps) {
-  // 生成唯一的表格实例ID，避免多个表格实例之间的ID冲突
-  const tableInstanceId = useId()
   //避免输入性能问题：引入 1. 添加一个新的状态来存储本地表格数据
   const [localTableData, setLocalTableData] = React.useState<any[]>([])
 
@@ -1021,206 +1019,205 @@ export function useTableEdit({
   // 修改 PaginationControls 组件，添加页码跳转功能
   const PaginationControls = React.useMemo(() => {
     if (!isPaginationEnabled || !showPagination) return null
+
     // 检测是否为小屏幕
     const isSmallScreen = typeof window !== "undefined" ? hBarWidth < 640 : false
-    
-    return (
-      <div className="flex flex-wrap items-center justify-between px-2 py-2 bg-white border-t border-gray-200">
-        {/* 页面大小选择器 */}
-        <div className="flex items-center space-x-2 mb-2 sm:mb-0">
-          <label htmlFor={`${tableInstanceId}-page-size-select`} className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}>
-            {isSmallScreen ? "每页:" : "每页显示:"}
-          </label>
-          <select
-            id={`${tableInstanceId}-page-size-select`}
-            value={userPageSize}
-            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-            className="h-8 px-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="选择每页显示记录数"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-          <span className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}>条</span>
-        </div>
 
-        {/* 分页信息 - 响应式显示 */}
-        <div className={isSmallScreen ? "text-xs w-full mb-2" : "flex items-center text-sm text-gray-700"}>
-          {isSmallScreen ? (
-            <span>
+    return (
+        <div className="flex flex-wrap items-center justify-between px-2 py-2 bg-white border-t border-gray-200">
+          {/* 页面大小选择器 */}
+          <div className="flex items-center space-x-2 mb-2 sm:mb-0">
+            <label htmlFor="page-size-select" className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}>
+              {isSmallScreen ? "每页:" : "每页显示:"}
+            </label>
+            <select
+                id="page-size-select"
+                value={userPageSize}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                className="h-8 px-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                aria-label="选择每页显示记录数"
+                // 防止表单提交
+                onClick={(e) => e.stopPropagation()}
+            >
+              {pageSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+              ))}
+            </select>
+            <span className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}>条</span>
+          </div>
+
+          {/* 分页信息 - 响应式显示 */}
+          <div className={isSmallScreen ? "text-xs w-full mb-2" : "flex items-center text-sm text-gray-700"}>
+            {isSmallScreen ? (
+                <span>
               {startIndex + 1}-{endIndex}/{totalItems} · 第{currentPage + 1}/{totalPages}页
             </span>
-          ) : (
-            <span>
+            ) : (
+                <span>
               第 {startIndex + 1} - {endIndex} 条，共 {totalItems} 条
               <span className="ml-4">
                 第 {currentPage + 1} 页，共 {totalPages} 页
               </span>
             </span>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* 分页按钮 - 增大触摸区域 */}
-        <div className="flex flex-wrap items-center space-x-1 sm:space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault()
-              goToFirstPage()
-            }}
-            disabled={currentPage === 0}
-            className="h-9 w-9 p-0 sm:h-8 sm:w-8"
-            type="button"
-            aria-label="首页"
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault()
-              goToPrevPage()
-            }}
-            disabled={currentPage === 0}
-            className="h-9 w-9 p-0 sm:h-8 sm:w-8"
-            type="button"
-            aria-label="上一页"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-        {/* 在小屏幕上减少显示的页码数量 */}
-        <div className="hidden sm:flex items-center space-x-1">
-          {Array.from({ length: Math.min(isSmallScreen ? 3 : 5, totalPages) }, (_, i) => {
-            let pageNum: number
-            if (totalPages <= (isSmallScreen ? 3 : 5)) {
-              pageNum = i
-            } else if (currentPage < (isSmallScreen ? 1 : 3)) {
-              pageNum = i
-            } else if (currentPage > totalPages - (isSmallScreen ? 2 : 4)) {
-              pageNum = totalPages - (isSmallScreen ? 3 : 5) + i
-            } else {
-              pageNum = currentPage - (isSmallScreen ? 1 : 2) + i
-            }
-
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
+          {/* 分页按钮 - 增大触摸区域 */}
+          <div className="flex flex-wrap items-center space-x-1 sm:space-x-2">
+            <Button
+                variant="outline"
                 size="sm"
                 onClick={(e) => {
-                  e.preventDefault()
-                  goToPage(pageNum)
+                  e.preventDefault() // 防止表单提交
+                  goToFirstPage()
                 }}
+                disabled={currentPage === 0}
+                className="h-9 w-9 p-0 sm:h-8 sm:w-8"
+                type="button" // 明确指定按钮类型
+                aria-label="首页"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault() // 防止表单提交
+                  goToPrevPage()
+                }}
+                disabled={currentPage === 0}
                 className="h-9 w-9 p-0 sm:h-8 sm:w-8"
                 type="button"
+                aria-label="上一页"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {/* 在小屏幕上减少显示的页码数量 */}
+            <div className="hidden sm:flex items-center space-x-1">
+              {Array.from({ length: Math.min(isSmallScreen ? 3 : 5, totalPages) }, (_, i) => {
+                let pageNum: number
+                if (totalPages <= (isSmallScreen ? 3 : 5)) {
+                  pageNum = i
+                } else if (currentPage < (isSmallScreen ? 1 : 3)) {
+                  pageNum = i
+                } else if (currentPage > totalPages - (isSmallScreen ? 2 : 4)) {
+                  pageNum = totalPages - (isSmallScreen ? 3 : 5) + i
+                } else {
+                  pageNum = currentPage - (isSmallScreen ? 1 : 2) + i
+                }
+
+                return (
+                    <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault() // 防止表单提交
+                          goToPage(pageNum)
+                        }}
+                        className="h-9 w-9 p-0 sm:h-8 sm:w-8"
+                        type="button"
+                    >
+                      {pageNum + 1}
+                    </Button>
+                )
+              })}
+            </div>
+
+            {/* 小屏幕上显示当前页/总页数 */}
+            <div className="flex sm:hidden items-center">
+              <span className="text-xs font-medium">{currentPage + 1}</span>
+            </div>
+
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault() // 防止表单提交
+                  goToNextPage()
+                }}
+                disabled={currentPage === totalPages - 1}
+                className="h-9 w-9 p-0 sm:h-8 sm:w-8"
+                type="button"
+                aria-label="下一页"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault() // 防止表单提交
+                  goToLastPage()
+                }}
+                disabled={currentPage === totalPages - 1}
+                className="h-9 w-9 p-0 sm:h-8 sm:w-8"
+                type="button"
+                aria-label="末页"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+
+            {/* 新增: 跳转到指定页码 - 桌面版 */}
+            <div className="hidden sm:flex items-center ml-2 space-x-1">
+              <span className="text-xs text-gray-600">跳至</span>
+              <input name="_tzymz"
+                  type="text"
+                  value={jumpToPage}
+                  onChange={(e) => setJumpToPage(e.target.value)}
+                  onKeyDown={handleJumpInputKeyDown}
+                  className="h-8 w-12 px-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="跳转到页码"
+                  onClick={(e) => e.stopPropagation()}
+              />
+              <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 text-xs"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleJumpToPageDirect()
+                  }}
               >
-                {pageNum + 1}
+                跳转
               </Button>
-            )
-          })}
+            </div>
+
+            {/* 移动端紧凑版跳转 */}
+            <div className="flex sm:hidden items-center ml-1">
+              <input name="_tzymp"
+                  type="text"
+                  value={jumpToPage}
+                  onChange={(e) => setJumpToPage(e.target.value)}
+                  onKeyDown={handleJumpInputKeyDown}
+                  placeholder="页码"
+                  className="h-9 w-10 px-1 text-xs border rounded-l-md focus:outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="跳转到页码"
+                  onClick={(e) => e.stopPropagation()}
+              />
+              <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-1 text-xs rounded-l-none border-l-0"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleJumpToPageDirect()
+                  }}
+              >
+                跳转
+              </Button>
+            </div>
+          </div>
         </div>
-
-        {/* 小屏幕上显示当前页/总页数 */}
-        <div className="flex sm:hidden items-center">
-          <span className="text-xs font-medium">{currentPage + 1}</span>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.preventDefault()
-            goToNextPage()
-          }}
-          disabled={currentPage === totalPages - 1}
-          className="h-9 w-9 p-0 sm:h-8 sm:w-8"
-          type="button"
-          aria-label="下一页"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.preventDefault()
-            goToLastPage()
-          }}
-          disabled={currentPage === totalPages - 1}
-          className="h-9 w-9 p-0 sm:h-8 sm:w-8"
-          type="button"
-          aria-label="末页"
-        >
-          <ChevronsRight className="h-4 w-4" />
-        </Button>
-
-        {/* 新增: 跳转到指定页码 - 桌面版 */}
-        <div className="hidden sm:flex items-center ml-2 space-x-1">
-          <span className="text-xs text-gray-600">跳至</span>
-          <input
-            id={`${tableInstanceId}-jump-input-desktop`}
-            name={`${tableInstanceId}-jump-desktop`}
-            type="text"
-            value={jumpToPage}
-            onChange={(e) => setJumpToPage(e.target.value)}
-            onKeyDown={handleJumpInputKeyDown}
-            className="h-8 w-12 px-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="跳转到页码"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 px-2 text-xs"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              handleJumpToPageDirect()
-            }}
-          >
-            跳转
-          </Button>
-        </div>
-
-        {/* 移动端紧凑版跳转 */}
-        <div className="flex sm:hidden items-center ml-1">
-          <input
-            id={`${tableInstanceId}-jump-input-mobile`}
-            name={`${tableInstanceId}-jump-mobile`}
-            type="text"
-            value={jumpToPage}
-            onChange={(e) => setJumpToPage(e.target.value)}
-            onKeyDown={handleJumpInputKeyDown}
-            placeholder="页码"
-            className="h-9 w-10 px-1 text-xs border rounded-l-md focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="跳转到页码"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 px-1 text-xs rounded-l-none border-l-0"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              handleJumpToPageDirect()
-            }}
-          >
-            跳转
-          </Button>
-        </div>
-      </div>
     )
   }, [
     isPaginationEnabled,
@@ -1239,10 +1236,8 @@ export function useTableEdit({
     handlePageSizeChange,
     pageSizeOptions,
     jumpToPage,
-    handleJumpToPageDirect,
-    handleJumpInputKeyDown,
-    tableInstanceId, // 添加到依赖项
-    hBarWidth, // 添加到依赖项
+    handleJumpToPageDirect, // 更新依赖项
+    handleJumpInputKeyDown, // 添加新的依赖项
   ])
 
   // 以及在 contentRenderer 的依赖项列表中
@@ -1330,7 +1325,7 @@ export function useTableEdit({
                     <tr className="flex flex-wrap justify-around items-center">
                       <th className="flex flex-col flex-wrap items-start justify-between w-full h-auto min-h-[33px] p-0 text-left border-0 border-b">
                         <div className="flex flex-col items-start w-full justify-between h-auto p-0 text-left">
-                          <span className="text-sm">{b + 1}</span>
+                          <span className={"text-sm"}>{b + 1}</span>
                           <div className="flex flex-wrap justify-start items-stretch w-full min-h-[inherit] gap-0">
                             {config.map(([title, tag, width]: any, k: number) => {
                               return (
@@ -1853,8 +1848,6 @@ export function useTableEdit({
     showEditorAtRowFn,
     noDelAdd,
     pageIndexToGlobalIndex,
-    form,
-    seq,
   ])
 
   // 使用 useCallback 包装 setFixedColW 函数，避免不必要的重新创建
@@ -1878,7 +1871,7 @@ export function useTableEdit({
         if (form && onConfirm) onConfirm(form)
         e.preventDefault()
       },
-      [defaultV, form, table, handleTableOperation, isPaginationEnabled, onConfirm],
+      [defaultV, form, table, handleTableOperation, isPaginationEnabled],
   )
 
   const contentRenderer = React.useMemo(() => {
@@ -1968,8 +1961,6 @@ export function useTableEdit({
     PaginationControls,
     isPaginationEnabled,
     userPageSize,
-    clearTable,
-    toggleFixedColW,
   ])
 
   return [contentRenderer]
