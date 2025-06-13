@@ -230,7 +230,7 @@ export const itemResultUnqualifiedOmni =(orc: any, ItemArs:RecordOmniArea[]
                             const name=cLineEt?.name;
                             if(name){       //汇总是不合格，来自多个独立的字段做的判别。
                                 const jilu= orc[name];
-                                if(!jilu || jilu==='' || jilu==='△' || jilu==='×'){
+                                if(!jilu || jilu==='' || jilu==='△' || jilu==="✘"){
                                         if(cLineEt?.nos){
                                             failure.push({no:cLineEt?.nos, b: orc[name+'_D']});
                                         }
@@ -589,10 +589,10 @@ export const itemResTransformRec = (itRes: any, area: RecordOmniArea, index:numb
                     const name=area.items[index+i]?.name;
                     if(name){
                         const jilu= itRes[name];
-                        if(!jilu || jilu==='' || jilu==='△' || jilu==='×'){
+                        if(!jilu || jilu==='' || jilu==='△' || jilu==="✘"){
                             if(result!=='不合格')  result='不合格';
                         }
-                        else if(jilu==='√' || jilu==='▽'){
+                        else if(jilu==="✔" || jilu==='▽'){
                             if(result==='／')   result='合格';
                         }
                         else if(jilu==='／'){
@@ -606,10 +606,10 @@ export const itemResTransformRec = (itRes: any, area: RecordOmniArea, index:numb
                 //一对一的情况 项目栏目
                 const name=etFrom.name;
                 const jilu= itRes[name!];
-                if(!jilu || jilu==='' || jilu==='×' || jilu==='△' ){
+                if(!jilu || jilu==='' || jilu==="✘" || jilu==='△' ){
                     result='不合格';
                 }
-                else if(jilu==='√' || jilu==='▽'){
+                else if(jilu==="✔" || jilu==='▽'){
                     result='合格';
                 }
                 else if(jilu==='／'){
@@ -649,10 +649,10 @@ export const itemResTransformRpo = (itRes: any,area: RecordOmniArea,index:number
                     // console.log("喝茶-etFrom=",etFrom, "index==",index,i,name);
                     if(name){
                         const jilu= itRes[name];
-                        if(!jilu || jilu==='' || jilu==='△' || jilu==='×'){
+                        if(!jilu || jilu==='' || jilu==='△' || jilu==="✘"){
                             if(result!=='不合格')  result='不合格';
                         }
-                        else if(jilu==='√' || jilu==='▽'){
+                        else if(jilu==="✔" || jilu==='▽'){
                             if(result==='／')   result='合格';
                         }
                         else if(jilu==='／'){
@@ -666,10 +666,10 @@ export const itemResTransformRpo = (itRes: any,area: RecordOmniArea,index:number
                 //一对一的情况 项目栏目
                 const name=etFrom.name;
                 const jilu= itRes[name!];
-                if(!jilu || jilu==='' || jilu==='×' || jilu==='△' ){
+                if(!jilu || jilu==='' || jilu==="✘" || jilu==='△' ){
                     result='不合格';
                 }
-                else if(jilu==='√' || jilu==='▽'){
+                else if(jilu==="✔" || jilu==='▽'){
                     result='合格';
                 }
                 else if(jilu==='／'){
@@ -709,10 +709,10 @@ export const resTranslOmni = (et:ItemOmniConfig, orc:any, itRes:any, conseq?:str
         if(!result || result==='' || result==='△'){
             return '未检测';
         }
-        else if(result==='×'){
+        else if(result==="✘"){
             return '不符合';
         }
-        else if(result==='√'){
+        else if(result==="✔"){
             return '符合';
         }
         else if(result==='／'){

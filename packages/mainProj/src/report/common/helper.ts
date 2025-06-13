@@ -18,11 +18,11 @@ export const aItemTransform = (orc: any, iClass:string,  ...ns:any[]) => {
       amazing[i]='未检测';
       if(result!=='不合格')  result='不合格';
     }
-    else if(orc[ns[i]]==='×'){
+    else if(orc[ns[i]]==="✘"){
       amazing[i]='不符合';
       if(result!=='不合格')  result='不合格';
     }
-    else if(orc[ns[i]]==='√'){
+    else if(orc[ns[i]]==="✔"){
       amazing[i]='符合';
     }
     else if(orc[ns[i]]==='／'){
@@ -34,14 +34,14 @@ export const aItemTransform = (orc: any, iClass:string,  ...ns:any[]) => {
     }
     else
       throw new Error(`非法结果${orc[ns[i]]}`);
-    if(orc[ns[i]]==='×' || orc[ns[i]]==='△'){
+    if(orc[ns[i]]==="✘" || orc[ns[i]]==='△'){
       let objKey = ns[i]+'_D';
       if(orc[objKey])  bugs.push(orc[objKey]);
     }
   }
   if(result==='／'){
     for(i=0; i<size; i++){
-      if(orc[ns[i]]==='√')   result='合格';
+      if(orc[ns[i]]==="✔")   result='合格';
     }
   }
   let fdesc='';
@@ -187,10 +187,10 @@ export const resTranslCm = (result:string) => {
   if(!result || result==='' || result==='△'){
     return '未检测';
   }
-  else if(result==='×'){
+  else if(result==="✘"){
     return '不符合';
   }
-  else if(result==='√'){
+  else if(result==="✔"){
     return '符合';
   }
   else if(result==='／'){
@@ -202,10 +202,10 @@ export const resTranslCm = (result:string) => {
   else return result;
 }
 export const resTranslJd = (result:string) => {
-  if(result==='×'){
+  if(result==="✘"){
     return '不合格';
   }
-  else if(result==='√'){
+  else if(result==="✔"){
     return '合格';
   }
   else if(result==='／'){
@@ -219,10 +219,10 @@ export const resTranslCheck = (result:string) => {
   if(!result || result==='' || result==='△'){
     return '未检测';
   }
-  else if(result==='×'){
+  else if(result==="✘"){
     return '不符合要求';
   }
-  else if(result==='√'){
+  else if(result==="✔"){
     return '符合要求';
   }
   else if(result==='／'){

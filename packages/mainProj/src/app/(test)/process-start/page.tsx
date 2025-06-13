@@ -63,20 +63,6 @@ export default function ChromeGuidePage() {
                         <CardFooter>
                             <p className="text-sm text-muted-foreground">
                                 注意：此方法每次都需要使用命令行启动Chrome，但不需要管理员权限；
-                                Ensure private network requests are only made to resources that allow them
-                                A site requested a resource from a network that it could only access because of its users' privileged network position. These requests expose devices and servers to the internet, increasing the risk of a cross-site request forgery (CSRF) attack, and/or information leakage.
-
-                                To mitigate these risks, Chrome will require non-public subresources to opt-into being accessed with a preflight request and will start blocking them in Chrome 130 (October 2024).
-
-                                To fix this issue, ensure that response to the preflight request for the private network resource has the Access-Control-Allow-Private-Network header set to true.
-
-                                Administrators can make use of the InsecurePrivateNetworkRequestsAllowed and InsecurePrivateNetworkRequestsAllowedForUrls enterprise policies to temporarily disable this restriction on all or certain websites.
-
-                                1 项请求
-                                请求	状态	预检请求	无效值（若有）	启动器地址	启动器上下文
-
-                                pdf	警告
-                                pdf
                             </p>
                         </CardFooter>
                     </Card>

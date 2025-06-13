@@ -17,8 +17,8 @@ import type {UseFormReturn} from "react-hook-form";
 
 
 export const instrumentOption = [
-    { label: "正常", value: "√" },
-    { label: "不正常", value: "×" },
+    { label: "正常", value: "✔" },
+    { label: "不正常", value: "✘" },
 ]
 //【注意】回调函数局限：若加<React.Fragment > 会导致<InputLine 内勤套render时刻无法穿透提供 props 给输入组件的：层次层级不配套，造成样式不一致问题！
 const config仪器表=[['测量设备名称','n',140],['规格型号','t',120],['测量设备编号','i',142],

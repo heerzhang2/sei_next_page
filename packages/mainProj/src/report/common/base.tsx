@@ -252,12 +252,12 @@ export function useProjectListAs({count} :{count:number}) {
 
 
 export const 现场结果选=["符合要求","不符合要求"];
-export const 现场条件选=[['√',"符合"],['×',"不符合"]] as SelectValDescPair[];
+export const 现场条件选=[["✔","符合"],["✘","不符合"]] as SelectValDescPair[];
 export function twoForkSelect(res: string) {
-    return '√'===res? "符合要求" : '×'===res? "不符合要求" : res;
+    return "✔"===res? "符合要求" : "✘"===res? "不符合要求" : res;
 }
 export function twoForkSelectS(res: string) {
-    return '√'===res? "符合" : '×'===res? "不符合" : res;
+    return "✔"===res? "符合" : "✘"===res? "不符合" : res;
 }
 
 export type CCellUnitProps = {

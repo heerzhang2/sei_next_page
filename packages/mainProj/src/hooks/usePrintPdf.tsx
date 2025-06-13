@@ -8,6 +8,13 @@ import * as React from "react";
 
 
 /**对接的打印转换器 客户机上的本地 node js server 服务
+ * Chrome 访问localhost【安全告警】的消除办法：
+ 临时方案：Chrome启动的Command = `chrome.exe --unsafely-treat-insecure-origin-as-secure="${origin}" --user-data-dir=~/chrome-dev-profile`
+ 配置 Chrome 企业策略（Windows 环境）打开注册表编辑器名称: InsecurePrivateNetworkRequestsAllowed策略生效
+ 终极方案： 将本地PDF服务迁移到HTTPS**：- 使用自签名证书为本地服务配置HTTPS
+ 推荐使用Let's Encrypt免费证书： 安装Certbot;
+ choco install mkcert # Windows 本地证书工具mkcert： 自定义域名
+ 生产环境 "dev": "next dev --https-key=key.pem --https-cert=cert.pem --hostname localhost"
  * */
 const headers = {
     Accept: "application/json",
@@ -30,9 +37,7 @@ async function createPrintJob(url: string, { arg }: { arg: { job: ConfigRoot<Fil
  * 本文件名结尾不能使用*.ts 否则toast.success({description: 无法使用正常的组件DOM的。
  * */
 export function usePrintPdf(prjob: ConfigRoot<FileTransform>):[boolean, Function?] {
-    // 使用 useSWRMutation 代替 useMutation
-    //(1)方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
-    //(2) Next.js代理方案： 通过API路由代理请求避免跨域：/api/proxy/pdf.js + 前端改为请求/api/proxy/pdf;
+    //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
     const { trigger, isMutating } = useSWRMutation("http://localhost:9389/api/pdf", createPrintJob, {
         onSuccess: (data) => {
             toast.success(`打印转换器应答`, {

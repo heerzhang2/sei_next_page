@@ -237,10 +237,10 @@ export const itemResTransform = (itRes: any,config: RecordInputConfig) => {
         config.rss?.forEach(({name}:RecordSelfSplit, n:number) => {
             if(name){
                 const jilu= itRes[name];
-                if(!jilu || jilu==='' || jilu==='△' || jilu==='×'){
+                if(!jilu || jilu==='' || jilu==='△' || jilu==="✘"){
                     if(result!=='不合格')  result='不合格';
                 }
-                else if(jilu==='√' || jilu==='▽'){
+                else if(jilu==="✔" || jilu==='▽'){
                     if(result==='／')   result='合格';
                 }
                 else if(jilu==='／'){
@@ -253,10 +253,10 @@ export const itemResTransform = (itRes: any,config: RecordInputConfig) => {
     else{
         //一对一的情况 项目栏目的x .y .z 都是单独区分的话；
         const jilu= itRes[config.name];
-        if(!jilu || jilu==='' || jilu==='×' || jilu==='△' ){
+        if(!jilu || jilu==='' || jilu==="✘" || jilu==='△' ){
             result='不合格';
         }
-        else if(jilu==='√' || jilu==='▽'){
+        else if(jilu==="✔" || jilu==='▽'){
             result='合格';
         }
         else if(jilu==='／'){
@@ -285,10 +285,10 @@ export const itemResTransformAL = (itRes: any, area:RecordIspArea, index:number,
         config.rss?.forEach(({name}:RecordSelfSplit, n:number) => {
             if(name){
                 const jilu= itRes[name];
-                if(!jilu || jilu==='' || jilu==='△' || jilu==='×'){
+                if(!jilu || jilu==='' || jilu==='△' || jilu==="✘"){
                     if(result!=='不合格')  result='不合格';
                 }
-                else if(jilu==='√' || jilu==='▽'){
+                else if(jilu==="✔" || jilu==='▽'){
                     if(result==='／')   result='合格';
                 }
                 else if(jilu==='／'){
@@ -304,10 +304,10 @@ export const itemResTransformAL = (itRes: any, area:RecordIspArea, index:number,
         if(alikec<=1){
             //一对一的情况 项目栏目的x .y .z 都是单独区分的话；
             const jilu= itRes[config.name];
-            if(!jilu || jilu==='' || jilu==='×' || jilu==='△' ){
+            if(!jilu || jilu==='' || jilu==="✘" || jilu==='△' ){
                 result='不合格';
             }
-            else if(jilu==='√' || jilu==='▽'){
+            else if(jilu==="✔" || jilu==='▽'){
                 result='合格';
             }
             else if(jilu==='／'){
@@ -321,10 +321,10 @@ export const itemResTransformAL = (itRes: any, area:RecordIspArea, index:number,
                 const {name}:RecordInputConfig =config;
                 if(config && name){
                     const jilu= itRes[name];
-                    if(!jilu || jilu==='' || jilu==='△' || jilu==='×'){
+                    if(!jilu || jilu==='' || jilu==='△' || jilu==="✘"){
                         if(result!=='不合格')  result='不合格';
                     }
-                    else if(jilu==='√' || jilu==='▽'){
+                    else if(jilu==="✔" || jilu==='▽'){
                         if(result==='／')   result='合格';
                     }
                     else if(jilu==='／'){
@@ -440,7 +440,7 @@ export const itemResultUnqualifiedSsm =(orc: any, ItemArs:RecordIspArea[], optio
                         et.rss?.forEach(({name}:RecordSelfSplit, n:number) => {
                             if(name){
                                 const jilu= orc[name];
-                                if(!jilu || jilu==='' || jilu==='△' || jilu==='×'){
+                                if(!jilu || jilu==='' || jilu==='△' || jilu==="✘"){
                                     if( orc[name+'_D'] ){
                                         if(!because)  because=orc[name+'_D'];
                                         else because+='；'+orc[name+'_D'];

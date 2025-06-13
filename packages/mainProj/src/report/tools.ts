@@ -128,11 +128,11 @@ export const scopeRowSp =(sumseq: number,splitor: number, rowSpan?: number) => {
   return false;
 }
 
-export const 检查结论选 = ['√', '×', '—'];
+export const 检查结论选 = ["✔", "✘", '—'];
 /**转换： 检查结论选
  * */
 export const concluF3Tran =(ch: string) => {
-  return '√'===ch? '合格' : '×'===ch? '不合格' : '—';
+  return "✔"===ch? '合格' : "✘"===ch? '不合格' : '—';
 }
 //定义一个函数来找到Table特定字段的最大值:数字的；
 export function findMaxByField(arr:any[], field:string) {

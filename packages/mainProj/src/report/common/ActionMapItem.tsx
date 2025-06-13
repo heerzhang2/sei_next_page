@@ -20,12 +20,17 @@ import { RecordOmniArea } from "./omni";
 import { Column_Setting } from "./useFormatOmni";
 import {useForm} from "react-hook-form";
 
-
+/**字体显示问题，改变"合格""不合格"的存储字节：不兼容了； 结论非法√
+    第一代版本的{ label: "合格", value: "√" },
+    修改成 value: "✔" },  "\u2714" },
+    第一版的{ label: "不合格", value: "×" },
+    修改成 value: "✘" }, "\u2718" },
+ */
 export const clcOptions = [
-    { label: "合格", value: "√" },
+    { label: "合格", value: "\u2714" },
     { label: "见证确认", value: "▽" },
     { label: "无此项", value: "／" },
-    { label: "不合格", value: "×" },
+    { label: "不合格", value: "\u2718" },
     { label: "无法检测", value: "△" },
 ]
 
