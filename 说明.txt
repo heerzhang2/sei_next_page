@@ -495,59 +495,21 @@ http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/5.1
 3. 如果遇到特定的 iOS 滚动问题，可能需要结合其他技术，如自定义滚动处理或使用专门的滚动库
 touch-pan-y touch-pinch-zoom 手机横屏的
 
-我要准备一个后端新工程，主要任务是从Camunda 8版本的流程引擎以Woker方式登录守候新的Job，
-接收一个流程Job任务就启动一个业务请求，
-发送一个请求包到http://localhost:9389/api/pdf网址，等待对方应答完成，
-这个Job处理才算结束，
-最后应答Camunda 8流程引擎完成当前Job的处理状态，整个程序功能就是如此，
-接着等待下一个新的Job。我的要求是新的Node后端服务形式，我的项目要求使用Yarn Workspaces的Monorepo 实现方案，作为一个目录packages底下的子目录工程形式出现和发布的，
+仍然遇到 Chrome 安全限制，可以尝试以下方法：
 
-我的Next.js 15.3版本应用：  浏览器客户端的代码      const toPDF = async () => {
-        try {
-            //这里浏览器端实际是会发一个请求到nexjs的服务器，服务器执行requireRole最后返回一个应答数据包（也就是requireRole函数执行结果）应答浏览器端的模式。
-            const {session, userRoles} = await requireRole(["JyUserSWDF"])
-            if (!session?.user) {
-                return {
-                    success: false,
-                    error: "用户未登录",
-                }
-            }
-            console.log("toPDF freshuserRoles后面的=", userRoles);
-        } catch (error) {
-            toast.error("toPDF失败,freshuserRoles后面的", {
-                description: ""+error,
-            })
-        }
-        handleSubmit!()
-    }
-以及客户端页面                                <div className="flex gap-2">
-                                    <Button variant="outline" onClick={() => window.print()}>
-                                        预览
-                                    </Button>
-                                    <Button variant="outline" onClick={toPDF}>
-                                        本机转pdf
-                                    </Button>
-                                </div>
-我的服务器组件代码 "use server"
-import { auth } from "@/app/auth"
-import { UserInfoCache } from "@/lib/redis"
-import { redirect } from "next/navigation"
-export async function requireRole(requiredRoles: string[]) {
-  const session = await auth()
-  if (!session?.user?.id || !session?.user?.accessToken) {
-    redirect("/login")
-  }
-  const userRoles = await UserInfoCache.getUserRoles(session.user.id, session?.user?.accessToken) ?? []
-  const userRoleNames = new Set<string>(userRoles.map(role => role?.name));
-  const hasRequiredRole = requiredRoles.some(roleName => userRoleNames.has(roleName));
-  if(!hasRequiredRole)
-      throw new Error(`需要至少一个角色权限: ${requiredRoles.join(", ")}`)
-  return { session, userRoles }
-}
-           请问: 我这样子的跨越网络界面的函数调用方式 来使用requireRole() ，会出现什么问题？ 安全性有毛病吗？  性能有问题吗？
+1. **禁用 Chrome 安全限制**（仅开发环境）：
+
+1. 在 Chrome 地址栏输入：`chrome://flags/#block-insecure-private-network-requests`
+2. 将该选项设置为 "Disabled"
+3. 重启浏览器
 
 
-[1] 第二页 打印颜色》
-2， unq的 存储？
-3，unq 日期 模式
+2. **使用企业策略**（适用于企业环境）：
 
+1. 配置 `InsecurePrivateNetworkRequestsAllowed` 策略
+
+
+3. **考虑使用 HTTPS**：
+
+1. 为你的应用配置 HTTPS 开发环境
+2. 同时将本地 PDF 服务也配置为使用 HTTPS

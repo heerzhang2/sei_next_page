@@ -38,12 +38,6 @@ export default function DepTask() {
                             <li className="mb-2">
                                 <Link href="https://deal.ggzy.gov.cn/ds/deal/dealList.jsp?HEADER_DEAL_TYPE=02">全国公共资源+特种设备+10天</Link>
                             </li>
-                            <li className="mb-2">
-                                <Link href="https://www.arrbid.com/bidquery/key_%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87?timetype=3&keywordtype=1&showtype=1">立达标讯(+金额)</Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="https://search.bidcenter.com.cn/search?keywords=%e7%89%b9%e7%a7%8d%e8%ae%be%e5%a4%87&type=1&mod=0&tag=1">采招网（/招标公告）+标题搜索</Link>
-                            </li>
                         </ol>
                     </li>
                     <li className="mb-2 break-inside-avoid-column">特种设备 各省招标网。

@@ -468,7 +468,7 @@ a:visited {
 }
 /* Add print styles to ensure normal colors when printing */
 @media print {
-  a:visited,
+  a, a:visited,
   .visited-link {
     color: inherit !important; /* Use normal text color when printing */
   }

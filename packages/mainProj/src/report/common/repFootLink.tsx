@@ -216,7 +216,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
     // 数值输入组件
     const NumberInput = useMemo(
         () => (
-            <Input
+            <Input name="_retds"
                 ref={inputRef}
                 type="text"
                 value={retentionValue}
@@ -349,7 +349,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                                     href={`${process.env.NEXT_PUBLIC_OSS_ENDP}${pdfUri}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-1 w-full"
+                                                    className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gray-200 text-gray-700 hover:bg-gray-200 h-8 px-3 py-1 w-full"
                                                     onClick={() => setPopoverOpen(false)}
                                                 >
                                                     有Pdf版
