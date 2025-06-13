@@ -513,3 +513,49 @@ touch-pan-y touch-pinch-zoom 手机横屏的
 
 1. 为你的应用配置 HTTPS 开发环境
 2. 同时将本地 PDF 服务也配置为使用 HTTPS
+本机Chrome浏览器改了 chrome://flags/#local-network-access-check 改成disabled;
+taskkill /f /im chrome.exe && start chrome.exe
+​​2. 策略作用说明​​
+策略名称	作用
+InsecurePrivateNetworkRequestsAllowed	允许非安全上下文（HTTP）访问私有网络资源（临时绕过安全限制）
+InsecurePrivateNetworkRequestsAllowedForUrls	指定允许访问的私有网络地址白名单
+​​3. 验证策略是否生效​​
+​​访问 Chrome 管理页面​​
+输入 chrome://policy/，检查策略是否显示为 ​​已启用​​。
+
+
+
+
+1. 配置 Chrome 企业策略（Windows 环境）​​
+​​(1) 创建或修改注册表项​​
+​​打开注册表编辑器​​
+按下 Win + R，输入 regedit 并回车。
+​​导航到 Chrome 策略路径​​
+HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome
+​​创建或修改策略值​​
+​​策略名称​​: InsecurePrivateNetworkRequestsAllowed
+类型: DWORD
+值: 1（启用策略）
+​​策略名称​​: InsecurePrivateNetworkRequestsAllowedForUrls
+类型: Multi-String Value
+值: http://192.168.171.3:3765（允许的私有网络地址）
+​​示例截图​​：
+https://example.com/registry-example.png
+​​(2) 重启 Chrome 浏览器​​
+策略生效需重启浏览器，可通过命令行强制重启：
+
+taskkill /f /im chrome.exe && start chrome.exe
+​​2. 策略作用说明​​
+策略名称	作用
+InsecurePrivateNetworkRequestsAllowed	允许非安全上下文（HTTP）访问私有网络资源（临时绕过安全限制）
+InsecurePrivateNetworkRequestsAllowedForUrls	指定允许访问的私有网络地址白名单
+​​3. 验证策略是否生效​​
+​​访问 Chrome 管理页面​​
+输入 chrome://policy/，检查策略是否显示为 ​​已启用​​。
+**将本地PDF服务迁移到HTTPS**：
+
+- 使用自签名证书为本地服务配置HTTPS
+- 这是Chrome推荐的解决方案
+推荐使用Let's Encrypt免费证书： 安装Certbot;
+choco install mkcert # Windows 本地证书工具mkcert： 自定义域名
+"dev": "next dev --https-key=key.pem --https-cert=cert.pem --hostname localhost"
