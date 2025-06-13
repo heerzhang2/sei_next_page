@@ -354,6 +354,7 @@ export function useTableEdit({
       }
     }
     else if(!showEditorPortal){
+      //设置"hidden"，变成等待初始化的状态。
         setEditorPosition((prev) =>
             prev ? {...prev, visibility: "hidden"} : null
         )

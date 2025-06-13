@@ -499,92 +499,83 @@ interface MemoDateInputProps extends Omit<React.TextareaHTMLAttributes<HTMLTextA
   /** Number of rows for the text input */
   rows?: number
 }
-
-/**
- * A component that allows switching between text input and date picker for dates
+/**日期输入： 支持日期，文本切换的模式。
  */
 export function MemoDateInput({
-                                id,
-                                className,
-                                style,
-                                onChange,
-                                value = "",
-                                width = "10.7rem",
-                                rows = 1,
-                                ...other
+                                  id,
+                                  className,
+                                  style,
+                                  onChange,
+                                  value = "",
+                                  width = "10.7rem",
+                                  rows = 1,
+                                  ...other
                               }: MemoDateInputProps) {
-  const [textValue, setTextValue] = useState(value)
-  // 日期验证函数
-  const isValidDate = (dateStr: string): boolean => {
-    const date = new Date(dateStr)
-    return !isNaN(date.getTime()) && dateStr !== "Invalid Date"
-  }
-  const [isDateMode, setIsDateMode] = useState(() => {
-    if (!value) return true // 空值时默认启用日期模式
-    return isValidDate(value)
-  })
-  // 同步外部value变化到内部状态
-  useEffect(() => {
-    setTextValue(value)
-  }, [value])
+    // 日期验证函数（增强版）
+    const isValidDate = (dateStr: string): boolean => {
+        if (!dateStr) return false;
+        const date = new Date(dateStr);
+        return !isNaN(date.getTime()) && dateStr === date.toISOString().split("T")[0];
+    };
+    const [textValue, setTextValue] = useState(value);
+    const [isDateMode, setIsDateMode] = useState(() => !value || isValidDate(value));
+    // 同步外部 value 变化
+    useEffect(() => {
+        const isValueValid = isValidDate(value);
+        setIsDateMode(!value || isValueValid);
+        setTextValue(value);
+    }, [value]);
+    // 文本输入变化处理
+    const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newValue = e.target.value
+        setTextValue(newValue)
+        onChange(newValue || undefined)
+    }
 
-  // 文本输入变化处理
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value
-    setTextValue(newValue)
-    onChange(newValue || undefined)
-  }
+    // 日期输入变化处理
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value
+        setTextValue(newValue)
+        onChange(newValue || undefined)
+    }
+    // 切换模式时重置文本输入框
+    const toggleInputMode = () => {
+        setIsDateMode(!isDateMode);
+        setTextValue(value); // 切换时同步最新值
+    };
 
-  // 日期输入变化处理
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value
-    setTextValue(newValue)
-    onChange(newValue || undefined)
-  }
+    return (
+        <div className={cn("flex flex-wrap items-start relative", className)} style={style}>
+            {isDateMode ? (
+                <input id={id}
+                    type="date"
+                    value={isDateMode && isValidDate(value) ? value : ""} // 关键修改：过滤非法值
+                    onChange={handleDateChange}
+                    className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+                    style={{ width }}
+                    aria-label="Date picker"
+                />
+            ) : (
+                <textarea id={id}
+                    value={textValue}
+                    onChange={handleTextChange}
+                    rows={rows}
+                    className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
+                    style={{ width }}
+                    {...other}
+                />
+            )}
 
-  // 切换输入模式
-  const toggleInputMode = () => {
-    setIsDateMode(!isDateMode)
-  }
-
-  return (
-      <div className={cn("flex flex-wrap items-start relative", className)} style={style}>
-        {/* 根据当前模式显示不同的输入框 */}
-        {isDateMode ? (
-            // 日期输入模式
-            <input
-                id={id ? `${id}-date` : undefined}
-                type="date"
-                value={value}
-                onChange={handleDateChange}
-                className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
-                style={{ width }}
-                aria-label="Date picker"
-            />
-        ) : (
-            // 文本输入模式
-            <textarea
-                id={id}
-                value={textValue}
-                onChange={handleTextChange}
-                rows={rows}
-                className="rounded-l-md border border-r-0 border-input bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input resize-none"
-                style={{ width }}
-                {...other}
-            />
-        )}
-
-        {/* 模式切换按钮 */}
-        <button
-            type="button"
-            onClick={toggleInputMode}
-            className="flex items-center justify-center border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
-            aria-label={isDateMode ? "Switch to text input" : "Switch to date picker"}
-        >
-          {isDateMode ? <Type size={16} /> : <Calendar size={16} />}
-        </button>
-      </div>
-  )
+            <button
+                type="button"
+                onClick={toggleInputMode}
+                className="flex items-center justify-center border border-input bg-background h-full min-h-[38px] w-10 px-1 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+                aria-label={isDateMode ? "Switch to text input" : "Switch to date picker"}
+            >
+                {isDateMode ? <Type size={16} /> : <Calendar size={16} />}
+            </button>
+        </div>
+    );
 }
 
 // 创建一个可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。

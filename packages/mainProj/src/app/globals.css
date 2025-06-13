@@ -460,11 +460,11 @@ body {
 
 /*点击测量跳转 Add this to your globals.css file */
 a:visited {
-  color: rgb(21, 175, 53) !important; /* Darker gray for better visibility */
+  color: rgb(16, 136, 41) !important; /* Darker gray for better visibility */
 }
 /* Make sure the visited-link class has a darker color too */
 .visited-link {
-  color: rgb(21, 175, 53); /* Darker gray to match a:visited */
+  color: rgb(16, 136, 41); /* Darker gray to match a:visited */
 }
 /* Add print styles to ensure normal colors when printing */
 @media print {
