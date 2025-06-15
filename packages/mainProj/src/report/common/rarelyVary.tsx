@@ -310,7 +310,10 @@ export const AttentionPoint = ({ rep, children, comply, telurl,btClass}: Attenti
                         {children}
                         {telurl && (
                             <span className="print:text-base">
-                                报检电话：{rep?.isp?.ispu?.agency?.bjtel}，网址：{rep?.isp?.ispu?.agency?.bjurl}。
+                               报检电话：{rep?.isp?.ispu?.agency?.bjtel}，
+                               网址：<a href={rep?.isp?.ispu?.agency?.bjurl} className="hover:underline">
+                                 {rep?.isp?.ispu?.agency?.bjurl}
+                               </a>。
                             </span>
                         )}
                     </div>

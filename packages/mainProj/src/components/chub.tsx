@@ -465,28 +465,29 @@ export function BlobInputList({
 }
 
 interface SuffixInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** Whether the input should take full width */
-  fullWidth?: boolean
-  unit: any
+    /** 是否全宽 */
+    fullWidth?: boolean;
+    /** 单位显示内容 */
+    unit: any;
 }
-
 export function SuffixInput({ fullWidth = true, className, style, value, onChange, unit, ...other }: SuffixInputProps) {
-  //确保unit不是函数
-  const unitDisplay = typeof unit === "function" ? "" : unit
-  return (
-      <div className={cn("text-left inline-flex items-center gap-0.5", fullWidth ? "w-full" : "w-auto")} style={style}>
-        <input
-            className={cn(
-                "rounded-md border border-input bg-background flex-1 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-                className,
-            )}
-            value={value}
-            onChange={onChange}
-            {...other}
-        />
-        <div className="whitespace-nowrap flex-shrink-0">{unitDisplay}</div>
-      </div>
-  )
+    //确保unit不是函数
+    const unitDisplay = typeof unit === "function" ? "" : unit
+    return (
+        <div className={cn("text-left inline-flex items-center gap-0.5", fullWidth ? "w-full" : "w-auto")}
+             style={style}>
+            <input
+                className={cn(
+                    "rounded-md border border-input bg-background flex-1 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                    className,
+                )}
+                value={value}
+                onChange={onChange}
+                {...other}
+            />
+            <div className="whitespace-nowrap flex-shrink-0">{unitDisplay}</div>
+        </div>
+    )
 }
 
 interface MemoDateInputProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange"> {

@@ -71,7 +71,7 @@ export const DeviceSurveyD = ({ children, show, label, config, itemA, rep }: Dev
     const { render, form } = useFormFramework({
         schema: fullSchema,
         defaultValues,
-        // contentRendererFactory: // 不再使用回调函数
+        //contentRendererFactory :不再使用回调函数
         rep,
     })
 

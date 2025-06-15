@@ -12,7 +12,7 @@ import type React from "react"
 import { notoSans, notoSerif } from '@/styles/fonts';
 import "./globals.css"
 import {SiteMainbar} from "@/components/site-mainbar";
-
+import HeaderWrapper from "@/component/header-wrapper"
 
 export const metadata: Metadata = {
     title: "Create Next App",
@@ -38,7 +38,7 @@ export default async function RootLayout({
                 <SessionProvider session={session}>
                     <Provider>
                         <GraphQLProvider>
-                            <SiteMainbar/>
+                            <HeaderWrapper />
                             {children}
                             <Toaster richColors position="top-right" />
                         </GraphQLProvider>

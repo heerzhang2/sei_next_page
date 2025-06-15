@@ -45,7 +45,7 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
     }, [storage])
     const arrayFields =React.useMemo(() => {
         const itemTemplate = {} as any
-        config仪器表.forEach(([t,field,s,o,park]) => {
+        config仪器表.forEach(([t,field,s]) => {
             itemTemplate[field] = ""
         })
         return [ {name:"仪器表", itemTemplate,} ]
@@ -57,8 +57,8 @@ export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestM
     </>;
     const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
     const { render,handleConfirm,form,arrayControls } = useFormFramework({schema, defaultValues, arrayFields, rep})
-    const [nestRenderer]=useTableEdit({form,arrayControls, config: config仪器表, table:'仪器表',externalData: storage,
-            defFixedLay:true, headview,tailview
+    const [nestRenderer]=useTableEdit({form,arrayControls, config: config仪器表, table:'仪器表',onConfirm,
+        externalData: storage,defFixedLay:true, headview,tailview, pageSize:10
     });
     const content = React.useMemo(() => {
             return (

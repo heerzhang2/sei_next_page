@@ -1,8 +1,6 @@
 "use client"
 
-// import Link from "next/link"
-// import {signOut} from "@/app/auth";
-import { useSession, signOut } from "next-auth/react"
+import { useSession, signOut, signIn } from "next-auth/react"
 
 export function UserNav() {
 	const { data: session } = useSession();
@@ -13,14 +11,12 @@ export function UserNav() {
         });
         //useRouter().push(data.url)
     }
-
-console.log(session);
+    console.log(session);
   return (
       <div>
-          <button onClick={() => signOut()}>DO=Sign@##out</button>
+          <button onClick={() => signIn()}>登录</button>
           <button onClick={handleSignOut}>
-              Log out 登 出 =注销吧
-              <div>⇧⌘Q</div>
+            注销
           </button>
       </div>
   )

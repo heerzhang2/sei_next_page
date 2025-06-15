@@ -403,8 +403,8 @@ export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, lab
         const page=Math.floor((index??0)/5);
         return page??0
     }, [erItemNo,storage])
-    const [nestRenderer]=useTableEdit({
-        form, arrayControls, onConfirm, config, table:'unq',externalData: storage,
+    const [nestRenderer]=useTableEdit({form, arrayControls,
+        config, table:'unq',onConfirm, externalData: storage,
         headview,defFixedLay:true, defaultV:默认复检表, noDelAdd:true, fixColumn:2,maxRf:2,
         pageSize: erItemNo? 5:20, toPage,
         // onExternalDataChange: handleExternalDataChange

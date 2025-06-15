@@ -21,10 +21,11 @@ import { Column_Setting } from "./useFormatOmni";
 import {useForm} from "react-hook-form";
 
 /**字体显示问题，改变"合格""不合格"的存储字节：不兼容了； 结论非法√
-    第一代版本的{ label: "合格", value: "√" },
-    修改成 value: "✔" },  "\u2714" },
+    第一代版本的{ label: "合格", value: "√" },     但在web开源字体显示像平方根符号的。
+    修改成 value: "✔" },   "\u2714" },
     第一版的{ label: "不合格", value: "×" },
-    修改成 value: "✘" }, "\u2718" },
+    修改成 value: "✘" },   "\u2718" },
+    设备台账后端存储多数还是"/"而不是"／"的 应该来自用户输入的，并非代码生成的。  标记为"／"打印显示更好看点。
  */
 export const clcOptions = [
     { label: "合格", value: "\u2714" },
@@ -172,7 +173,7 @@ export const ActionMapItem = ({
         const jsonData = JSON.stringify(values, null, 2)
         console.log("表单值:", jsonData)
 
-        const { _version, ...RepData } = {...storage, ...values }
+        const { _version, "":_omit, ...RepData } = {...storage, ...values }
 
         updateOriginal({
             id: repId,

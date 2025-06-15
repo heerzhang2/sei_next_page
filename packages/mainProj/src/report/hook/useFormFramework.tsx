@@ -52,7 +52,7 @@ export function useFormFramework({
   //用URQL mutation来保存变更数据到后端数据库的
   const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
 
-  // 处理表单提交
+  //保存：处理表单提交
   const handleSubmit = async (values: any) => {
     if (customOnSubmit) {
       await customOnSubmit(values)
@@ -61,7 +61,7 @@ export function useFormFramework({
 
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
-    const { _version, ...RepData } = { ...storage, ...values }
+    const { _version, "":_omit, ...RepData } = { ...storage, ...values }
 
     // 直接定义更新函数，不使用 useCallback
     const update = async () => {
@@ -90,7 +90,7 @@ export function useFormFramework({
     })
   }
 
-  // 处理确认按钮 - 临时保存到 storage
+  //同步或确认操作：处理确认按钮 - 临时保存到 storage
   const handleConfirm = () => {
     // 获取当前表单值
     const currentValues = structuredClone(form.getValues())
@@ -150,7 +150,7 @@ export const ModificationIndicator = () => {
   const { modified } = useStorage()
   if (!modified) return null
   return (
-      <div className="fixed top-4 left-4 z-50 bg-yellow-500 border border-pink-900 text-black px-1 py-1 rounded-lg shadow-xl animate-pulse">
+      <div className="fixed top-4 left-10 z-50 bg-yellow-500 border border-pink-900 text-black px-1 py-1 rounded-lg shadow-xl animate-pulse">
         <div className="flex items-center space-x-1">
           <div className="w-3 h-3 bg-red-400 rounded-full animate-spin-slow"></div>
         </div>

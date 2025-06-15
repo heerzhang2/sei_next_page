@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import {ClientHeader} from "@/component/header";
 
 export default function DepTask() {
     return (
         <div className="grid @apply custom-grid-rows items-center justify-items-center min-h-screen p-8 pb-16 gap-12 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+            <ClientHeader />
             <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start  ">
                 <ol className="columns-2 list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
                     <li className="mb-2">政策-信息化安全领域的。

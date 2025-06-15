@@ -110,7 +110,7 @@ export const 常用现场条件 = ({orc, rep, config, label = '附录B：现场�
 /*@param fromHead :打印时需要断开页的也就是页首打印。
 * */
 export const tail测仪器 = <div className="text-xs">
-    注：1、性能状态一栏中用“√”表示正常，用“×”表示不正常。
+    注：1、性能状态一栏中用“✔”表示正常，用“✘”表示不正常。
     <p className="text-xs ml-6">
         2、若仪器设备性能状态不正常，应更换为性能状态正常的仪器设备，并填写在预留栏中。<br/>
         3、新增使用的仪器设备应填写在预留栏中。<br/>
@@ -132,16 +132,18 @@ export const InstrumentVw = ({orc, rep, label, fromHead}: {
                                }>
                 <FlexibleTable id="Instrument" columnWidths={["%", "24%", "22%", "8%", "8%"]}>
                     <TableHeader>
-                        <TableRow>
-                            <CCell className="text-sm" rowSpan={2}>测量设备名称</CCell>
-                            <CCell className="text-sm" rowSpan={2}>规格型号</CCell>
-                            <CCell className="text-sm" rowSpan={2}>仪器设备编号</CCell>
-                            <CCell className="text-sm" colSpan={2}>仪器设备状态</CCell>
-                        </TableRow>
-                        <TableRow>
-                            <CCell className="text-sm">开机后</CCell>
-                            <CCell className="text-sm">关机前</CCell>
-                        </TableRow>
+                        <RepLink rep={rep} ori tag="Instrument">
+                            <TableRow>
+                                <CCell className="text-sm" rowSpan={2}>测量设备名称</CCell>
+                                <CCell className="text-sm" rowSpan={2}>规格型号</CCell>
+                                <CCell className="text-sm" rowSpan={2}>仪器设备编号</CCell>
+                                <CCell className="text-sm" colSpan={2}>仪器设备状态</CCell>
+                            </TableRow>
+                            <TableRow>
+                                <CCell className="text-sm">开机后</CCell>
+                                <CCell className="text-sm">关机前</CCell>
+                            </TableRow>
+                        </RepLink>
                     </TableHeader>
                     <TableBody>
                         <RepLink rep={rep} ori tag="Instrument">

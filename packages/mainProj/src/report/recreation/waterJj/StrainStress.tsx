@@ -75,7 +75,7 @@ export const StrainStress = ({ children, show, alone = true, redId, nestMd, labe
         const {render,handleConfirm,form,arrayControls} = useFormFramework({schema, defaultValues, arrayFields, rep})
         const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
         const [nestRenderer]=useTableEdit({form,arrayControls,
-            config: config测点表,onConfirm,table:'测点表',defFixedLay:true,externalData: storage,headview
+            config: config测点表,table:'测点表',onConfirm,externalData: storage,defFixedLay:true,headview,pageSize:20
         });
         const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
             setStorage({...storage, '_FILE_测点': upfile});

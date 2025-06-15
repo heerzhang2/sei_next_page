@@ -65,21 +65,16 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 <div className="print:h-screen">
                     {ReportFirstPageHeadJd({rep, mbbm: "FJB/YB-1002-1-2024"})}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
-                        <h1 className="text-3xl text-center print:mt-6">
-                            滑行车类游乐设施监督检验报告
-                        </h1>
+                        <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
+                          <h1 className="text-3xl text-center print:mt-6">滑行车类游乐设施监督检验报告</h1>
+                        </JumpTab>
                         {首页概况recr(orc,rep,)}
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
                 </div>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline">
-                    <div className="text-blue-600 hover:text-blue-800">
-                        {注意事项WaterJj({
-                            rep,
-                            comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
-                        })}
-                    </div>
-                </JumpTab>
+                {注意事项WaterJj({ rep,
+                  comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
+                })}
                 <h4 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
                    大型游乐设施监督检验报告
                 </h4>

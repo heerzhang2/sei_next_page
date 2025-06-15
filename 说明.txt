@@ -495,3 +495,14 @@ http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/5.1
 3. 如果遇到特定的 iOS 滚动问题，可能需要结合其他技术，如自定义滚动处理或使用专门的滚动库
 touch-pan-y touch-pinch-zoom 手机横屏的
 
+                    <a href="https://www.fjtj.com" className="block hover:underline">
+                        www.fjtj.com
+                    </a>
+                                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline">
+                                        <div className="text-blue-600 hover:text-blue-800">
+                                            {注意事项WaterJj({
+                                                rep,
+                                                comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
+                                            })}
+                                        </div>
+                                    </JumpTab>

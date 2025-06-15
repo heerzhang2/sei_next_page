@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { Menu, X, FileText, Home, Settings, User } from "lucide-react"
+import { Menu, X, FileText, Home, Settings, User,LogIn, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useSession, signOut, signIn } from "next-auth/react"
 
 interface ReportSidebarProps {
     items?: {
@@ -13,12 +14,15 @@ interface ReportSidebarProps {
         icon?: React.ComponentType<{ className?: string }>
     }[]
     children?: React.ReactNode
+    userInfo?: {
+        name?: string | null
+    }
 }
 
 /**主菜单区域的
  * 没法添加repId参数了：若需要repId的都放入更底下层次的子路由中的独立菜单去做了。
  * */
-export function SiteMainbar({ items = [], children }: ReportSidebarProps) {
+export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
     const [isOpen, setIsOpen] = React.useState(false)
@@ -116,9 +120,21 @@ export function SiteMainbar({ items = [], children }: ReportSidebarProps) {
                 data-scroll-ignore="true"
             >
                 <div className="flex flex-col h-full">
-                    {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b">
-                        <h2 className="text-lg font-semibold">报告菜单</h2>
+                        {/* 客户端 Header 组件 */}
+                        <div className="flex items-center">
+                            { userInfo?.name?? ''}
+                            {userInfo?.name ? <Button variant="ghost" size="icon" onClick={() => signOut()}>
+                                    <LogOut className="h-4 w-4" />
+                                    <span className="sr-only">注销</span>
+                                </Button>
+                                :
+                                <Button variant="ghost" size="icon" onClick={() => signIn()}>
+                                    <LogIn className="h-4 w-4" />
+                                    <span className="sr-only">登录</span>
+                                </Button>
+                            }
+                        </div>
                         <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
                             <X className="h-4 w-4" />
                             <span className="sr-only">Close menu</span>

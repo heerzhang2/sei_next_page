@@ -40,10 +40,10 @@ export default function Home() {
                                     href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1">查阅当前一2份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
-                                <Link href="/rep/SLIDING_JJ">⬅ u r q l home</Link>
+                                <Link href="/login">⬅ 登录home</Link>
                             </div>
                             <div className="mt-10">
-                                <Link href="/test3">⬅️ 验证登录入口</Link>
+                                <Link href="/process-start">⬅️ 验证rr登录</Link>
                             </div>
                             <div className="mt-10">
                                 <Link
@@ -54,13 +54,7 @@ export default function Home() {
                                     href="rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?make=1#T6-14">编制态当前一2份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
-                                <Link href="/edit/KQcbgDF9RO21DsI92H3tTVJlcG9ydA?make=1">⬅️ 修改 验证离线1 入口</Link>
-                            </div>
-                            <div className="mt-10">
-                                <Link href="/edit/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA?make=1">⬅️ 修改 验证离线2 入口</Link>
-                            </div>
-                            <div className="mt-10">
-                                <Link href="/example">例子的 入口</Link>
+                                <Link href="/process-start">例子的 入口</Link>
                             </div>
                     </li>
                     <li>Save and see your changes instantly.</li>

@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useActionState, useEffect, useRef, useState } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import {redirect, useRouter} from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,7 +36,8 @@ export default function SignInForm() {
                 username: username,
                 email: email || "herzhang@163.com", // 使用实际的 email 或默认值
                 password: password,
-                redirect: false, // 设置为 false 以便处理错误
+                redirect: true,     // 设置为 false 以便处理错误
+                redirectTo: "/"
             })
 
             console.log("signIn完成", result)
@@ -46,6 +47,7 @@ export default function SignInForm() {
             } else {
                 // 登录成功，重定向到用户页面
                 router.push("/user")
+                redirect("/user")
                 return "登录成功"
             }
         } catch (error) {
@@ -97,18 +99,18 @@ export default function SignInForm() {
                                 className="mt-1"
                             />
                         </div>
-                        <div className="mb-4">
+{/*                        <div className="mb-4">
                             <Label htmlFor="email">邮箱</Label>
                             <Input
                                 id="email"
-                                name="email" // 重要：添加 name 属性
+                                name="email"
                                 onChange={(e) => setEmail(e.currentTarget.value)}
                                 value={email}
                                 type="email"
                                 placeholder="邮箱地址"
                                 className="mt-1"
                             />
-                        </div>
+                        </div>*/}
                         <div className="mt-4">
                             <Label htmlFor="password">密码</Label>
                             <Input
