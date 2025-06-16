@@ -33,11 +33,11 @@ export default function Home() {
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1">查阅当前一1份报告试图的来</Link>
+                                    href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/POWER_AJ/1">查阅当前一1份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1">查阅当前一2份报告试图的来</Link>
+                                    href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/POWER_AJ/1">查阅当前一2份报告试图的来</Link>
                             </div>
                             <div className="mt-10">
                                 <Link href="/login">⬅ 登录home</Link>

@@ -1,0 +1,105 @@
+import * as React from "react";
+import {z} from "zod";
+import {toast} from "sonner"
+import {Button, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
+import {useFormFramework} from "@/report/hook/useFormFramework";
+import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
+import {InternalItemProps} from "@/report/common/base";
+import {assertNamesUnique} from "@/report/common/eHelper";
+import {useStorage} from "@/report/StorageContext";
+import {EachObserveConfig} from "@/report/hook/useObserve";
+import {itemA技术见证} from "@/report/common/editor";
+
+
+export const config设备概况 = [
+    [['使用单位统一社会信用代码', '_$使用单位信用码'], ['设备所在区域', '_$使用地区域']],
+    [['使用登记证编号', '_$使用证号'], ['注册代码', '_$注册代码'], ],
+    [['使用单位名称', '_$使用单位'],  ],
+    [['使用单位地址', '_$使用单位地址'],  ],
+    [['分支机构名称', '_$分支机构'] ],
+    [['分支机构地址', '_$分支机构地址'] ],
+    [['使用地点', '_$设备使用地点'], ],
+    [['安全管理人员', '安全员'], ['联系电话', '安全员电'] ],
+    [['设备联系人','_$设备联系人'],['联系人电话','_$设备联系手机'] ],
+    [['产品名称', '_$设备名称'], ['设备级别', '_$设备等级']],
+    [['产品型号', '_$型号'], ['设备型式', '设型式'], ],
+    [['制造完成日期', '_$制造日期'], ['产品编号', '_$出厂编号']  ],
+    [['投入使用时间', '_$投用日期'], ['每车承载人数', '_$额定乘客数','人'],  ],
+    [['车辆数', '_$车船数量','个'], ['运行速度','_$额定速度','km/h'], ],
+    [['轨距', '_$车道轨距','m'], ['轨道长度','_$轨道长度','m'], ],
+    [['整机设计使用期限','_$设计年限', '年'], ['最近一次延长使用期限',{n:'延长年',u:'年'}] ],
+    [['使用期限到期时间','_$使用到期时' ], ['设计加速度区域','设加速域'], ],
+    [['制造单位名称', '_$制造单位'] , ],
+    //监检情形的：
+    [['施工-安装单位名称',{n:'安装单',t:'B'}] ],
+    [['施工-改造单位名称',{n:'改造单',t:'B'}] ],
+    [['施工-重大修理单位',{n:'大修单',t:'B'}] ],
+    [['改造（或重大修理）内容',{n:'改造内容',t:'m'}] ],
+    [['安全评估单位名称',{n:'安评单位',t:'B'}] ],
+    [['安全评估时间', {n:'安评估时',t:'d'}], ['现场检验条件',{r:'见附录D'}]],
+    [['下次检验日期', '_$新下检日'], ],
+    [['检验依据',{r:'《大型游乐设施安全技术规程》（TSG 71-2023）'}]],
+];
+
+export const tail观测= <div className={"text-[0.75rem]"}>
+    注：
+    <div className={"ml-8 print:ml-6 mt-[-1rem]"}>
+        1、K2.4、K2.6、K2.12.3、K2.12.4、K2.12.5、K3.5.2、K3.5.5、K3.8、K5.2、K6.2（5）、K6.20、K6.22、仅在不符合时，才需填观测数据和测量结果等数值。<br/>
+        2、结果判定栏都需填；<br/>
+        3、其他需记录的测量值和结果值填在备注栏中。
+    </div>
+</div>;
+
+
+export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
+    const {storage,} =useStorage();
+    const schema = React.useMemo(() => {
+        const schemaFields = {} as any;
+        schemaFields["_tblFixed"] = z.string().optional().refine(
+            (value) => {
+                if (!value) return true;
+                try { JSON.parse(value);return true; } catch { return false;}
+            }, {message: "字段必须为有效的 JSON 字符串"}
+        );
+        return z.object(schemaFields);
+    }, []);
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        fields["_tblFixed"]= storage["_tblFixed"]
+        return fields
+    }, [storage])
+    const doCheckNames = React.useCallback((e: React.MouseEvent,rep: any) => {
+        const result = assertNamesUnique([{value: rep?.tzFields},
+            // {value: config设备概况, type:'esnt'}, {value:[...itemA结论,  ...itemA技术见证, ] },
+            // {value: config主技术, type:'mesB'},
+            // {value:[ ...itemA应变应力, ...itemA加速, ] },
+            {value:['unq','仪器表','检验条件','观备注', '主技备注' ]} ]);
+            if(result) toast.success("完成", {description: "没冲突",})
+            else toast.error("完成", {description: "冲突",})
+        e.preventDefault()
+    }, [toast]);
+    const contentRendererFactory = React.useCallback(
+        (form: any) => {
+        return <CardContent>
+                {process.env.NEXT_PUBLIC_APP_TEST==='true' && <div>
+                    <h5>构建开发模板时的工具：校验模板的存储name冲突；</h5>
+                    <Button onClick={(e) => doCheckNames(e,rep)}>校验模板name唯一性</Button>
+                    <FormField control={form.control} name={"_tblFixed"}
+                        render={({ field }) => (
+                            <FormItem className="pt-2 w-full break-inside-avoid">
+                                <FormLabel className="select-text">设置待测试表格的各列宽度：</FormLabel>
+                                <FormControl className="w-full">
+                                    <BlobInputList rows={2} {...field} datalist={["[\"4%\",\"5%\",\"4%\",\"6%\",\"%\",\"23%\"]"]}/>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                    )}/>
+                 </div>
+                }
+             </CardContent>
+    }, [])
+    const { render } = useFormFramework({schema,defaultValues, contentRendererFactory, rep})
+    return  <CollapsibleFormSection title={'初始化本报告，默认值配置等'} defaultOpen={show}>
+        {render(null)}
+    </CollapsibleFormSection>;
+};
