@@ -4,7 +4,7 @@ import {useSearchParams} from "next/navigation"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
-import {ReportViewProps, RepTitleUpdate} from "@/report/common/base"
+import {RepLink, ReportViewProps, RepTitleUpdate} from "@/report/common/base"
 import { 落款单位地址 } from "@/report/common/rarelyVary"
 import type { Column_Setting } from "@/report/common/useFormatOmni"
 import { useOfficialOmni } from "@/report/common/useOfficialOmni"
@@ -98,6 +98,9 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 </PrintReserveLeast>
             </div>
             <div className="print:hidden">
+                <RepLink ori rep={rep} tag={'ProjectList'}>
+                    <div>目录列表编辑器</div>
+                </RepLink>
                 <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument?original=1#Instrument`} tab="preview">
                     <div className="block">主要测量设备性能检查</div>
                 </JumpTab>

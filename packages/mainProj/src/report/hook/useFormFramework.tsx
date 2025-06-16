@@ -157,3 +157,87 @@ export const ModificationIndicator = () => {
       </div>
   )
 }
+
+interface UseEditorBarProps {
+  defaultValues?: Record<string, any>
+  // 其他参数
+  rep?: any
+  values: any
+}
+
+export function useEditorBar({
+                                   defaultValues,
+                                   rep, values
+                                 }: UseEditorBarProps) {
+  const { storage, setStorage, setModified } = useStorage()
+  //用URQL mutation来保存变更数据到后端数据库的
+  const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
+  //保存：处理表单提交
+  const handleSubmit = async () => {
+    // 默认提交处理
+    console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
+    const { _version, "":_omit, ...RepData } = { ...storage, ...values }
+
+    // 直接定义更新函数，不使用 useCallback
+    const update = async () => {
+      return await updateOriginal({
+        id: rep?.id,
+        operationType: 1,
+        version: _version,
+        data: JSON.stringify(RepData),
+      })
+    }
+
+    update().then((result) => {
+      console.log("updateOriginalResult=应答=", result)
+      if (result.error) {
+        toast.error("保存失败,若断网会自动重新发送的", {
+          description: result.error.toString(),
+        })
+        console.log("Oh no!", result.error)
+      } else {
+        toast.success("保存成功", {
+          description: "数据已成功保存到服务器",
+        })
+        // 保存成功后，设置 modified 为 false
+        setModified(false)
+      }
+    })
+  }
+
+  //同步或确认操作：处理确认按钮 - 临时保存到 storage
+  const handleConfirm = () => {
+    // 获取当前表单值
+    const currentValues =values
+    // 更新 storage
+    setStorage((prevStorage : any) => ({
+      ...prevStorage,
+      ...currentValues,
+    }))
+    // 设置已修改标志
+    setModified(true)
+  }
+
+
+  // 创建渲染函数
+  const render = () => (
+      <>
+          {/*<form onSubmit={handleSubmit} className="space-y-6 @container">*/}
+            <div className="flex gap-4 justify-end">
+              <Button type="button" variant="outline" onClick={() => 0}>
+                重置
+              </Button>
+              <Button type="button" variant="outline" onClick={handleConfirm}>
+                确认
+              </Button>
+              <Button type="submit" disabled={false} onClick={handleSubmit} >
+                {false ? "保存到后端..." : "保存"}
+              </Button>
+            </div>
+      </>
+  )
+
+  return {
+    render,
+  }
+}

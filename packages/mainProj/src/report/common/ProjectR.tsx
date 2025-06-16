@@ -1,18 +1,21 @@
-import * as React from "react";
+"use client"
+import React from "react"
 import {useCallback} from "react";
 import {useItemInputControl,InternalItemProps} from "@/report/common/base";
 import {RecordInputConfig} from "./config";
 import {itemResultUnqualifiedOmni, useItemsMapOmni} from "./omni";
 import {undefined, z} from "zod";
-import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
-import {useFormFramework} from "@/report/hook/useFormFramework";
+import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage,
+    Input,Badge,Label,Checkbox} from "@/components/ui";
+import {useEditorBar, useFormFramework} from "@/report/hook/useFormFramework";
 import {BlobInputList, CollapsibleFormSection, CommonSelect, FormSelectField} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
 import {Each_ZdSetting, useTableEdit} from "@/report/hook/use-table-edit";
 import type {UseFormReturn} from "react-hook-form";
 import { useStorage } from "@/report/StorageContext";
 import queryString from "query-string";
-
+import { Edit, Trash2, Plus, Save, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 
 //原始记录用的 项目列表： 可兼容报告俩种的目录
@@ -188,11 +191,24 @@ export const ProjectR4=
 export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode;
 
 interface ProjectRProps  extends InternalItemProps{
-    defaultProj: any[];      //有注入分项目详细列表；
+    defaultProj: ProjectItem[];      //有注入分项目详细列表；
     inpCB?: InputMoreCallback;
     //没有原始记录目录录入
     nrec?: boolean;
+    onSave?: (projects: ProjectItem[]) => void
 }
+// 模拟数据类型
+interface ProjectItem {
+    name: string
+    ha?: string
+    na?: boolean
+    ml?: string
+    do?: boolean
+    om?: boolean
+    dd?: boolean
+    zs?: boolean
+}
+
 /**检验条件：表格一样。
  * 表单useForm毛病【特别注意】form.setValue(`.${fields.length-1}.`,)name={`.${fields.length-1}.`}的索引序号需有效序号,新增按钮{ fields.length>0 &&隐藏编辑器，否则自动乱加空行导致后续报错。append前直接编辑导致空行。
  * */
@@ -210,147 +226,324 @@ interface ProjectRProps  extends InternalItemProps{
  * 原平台testlogcfg.ses的 "contlist" :[ {"contname":}, ]列出全部分项。  而"mainpage":[ ]扣除"addpage":[]后的是固定的必须展示。 nosavepage无关的；
  const VsProjects默认2=[];
  正式报告的目录"repcontlist"	"allreportpage"， 记录打印的目录是=旧的 contlist， allpage。
+ 不用useFormFramework contentRendererFactory的模式的编辑器。
  * */
 export const ProjectR = ({children, show, alone = true, defaultProj, label, rep}: ProjectRProps) => {
     const {storage} = useStorage()
-    const schema = React.useMemo(() => {
-        const schemaFields = {} as any
-        const schemaTab = {} as any
-        schemaTab.name = z.string()
-        schemaTab.ml = z.string().optional()
-        schemaTab.do = z.boolean().optional()
-        schemaFields["Projects"] = z.array(z.object(schemaTab))
-        return z.object(schemaFields)
-    }, [])
-    const defaultValues = React.useMemo(() => {
-        const fields = {} as any
-        fields.Projects = defaultProj || []
-        return fields
-    }, [storage])
-    const arrayFields = React.useMemo(() => {
-        const itemTemplate = {name: "", } as any
-        return [{name: "Projects", itemTemplate,}]
-    }, [])
-    const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
-    const contentRendererFactory = React.useCallback(
-        (form: any, arrays?: Record<string, any>) => {
-            const {fields, append, remove} = arrays?.["Projects"] || {};
-            //底下编辑项目不能直接用storage的存储数据。需要用表单自带的临时状态取值。
-            const tabledArr = form.watch("Projects") || [];
-            const index = selectedIndex ?? 0 // 表格第几行的
-            //空行导致tabledArr可能比fields.length更多，form.watch是内部未校验的，fields.length是合法的稳定版本。append新增一条前直接编辑导致空行。
-            if (tabledArr[index] === undefined) return null
-            const seqOptions = fields?.map((row: any, index: number) => (
-                {
-                    value: index.toString(),
-                    label: <div className={"w-full flex flex-row justify-between"}><span>({index + 1}) {row.name || '未设置'}</span>
-                        <span>{row.do && '有做'}</span>
-                    </div>
-                }
-            ));
-            return (
-                <>
-                    <div>目录表的记录列表:
+    const [projects, setProjects] = React.useState<ProjectItem[]>(storage?.Projects ?? defaultProj)
+    const [editingIndex, setEditingIndex] = React.useState<number | null>(null)
+    const [isAddingNew, setIsAddingNew] = React.useState(false)
+    const [editForm, setEditForm] = React.useState<ProjectItem>({
+        name: "",
+        ha: "",
+        ml: "",
+        na: false,
+        do: false,
+        om: false,
+        dd: false,
+        zs: false,
+    })
 
-                    </div>
-                    <div className="w-full flex justify-center mb-1 items-center gap-1">
-                        <h4>选择编辑行</h4>
-                        <CommonSelect id={"selectedIndex"} value={selectedIndex?.toString()} options={seqOptions}
-                                      onValueChange={(v) => {
-                                          const index = v ? Number(v) : null;
-                                          if (index !== null) setSelectedIndex(index);
-                                      }}
-                                      onClear={() => setSelectedIndex(null)}
-                                      className={"w-full @md:w-[20rem]"}
+    // 开始编辑
+    const startEdit = (index: number) => {
+        setEditingIndex(index)
+        setEditForm({ ...projects[index] })
+        setIsAddingNew(false)
+    }
+
+    // 开始新增
+    const startAdd = () => {
+        setIsAddingNew(true)
+        setEditingIndex(null)
+        setEditForm({
+            name: "",
+            ha: "",
+            ml: "",
+            na: false,
+            do: false,
+            om: false,
+            dd: false,
+            zs: false,
+        })
+    }
+
+    // 保存编辑
+    const saveEdit = () => {
+        if (editingIndex !== null) {
+            const newProjects = [...projects]
+            newProjects[editingIndex] = { ...editForm }
+            setProjects(newProjects)
+            setEditingIndex(null)
+        }
+    }
+
+    // 保存新增
+    const saveAdd = () => {
+        setProjects([...projects, { ...editForm }])
+        setIsAddingNew(false)
+    }
+
+    // 取消编辑
+    const cancelEdit = () => {
+        setEditingIndex(null)
+        setIsAddingNew(false)
+    }
+
+    // 删除项目
+    const deleteProject = (index: number) => {
+        const newProjects = projects.filter((_, i) => i !== index)
+        setProjects(newProjects)
+    }
+
+    // 更新表单字段
+    const updateFormField = (field: keyof ProjectItem, value: any) => {
+        setEditForm((prev) => ({ ...prev, [field]: value }))
+    }
+
+    // 渲染编辑表单
+    const renderEditForm = (item: ProjectItem, isNew = false) => (
+        <Card className="mt-2 border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-lg">{isNew ? "新增目录项" : "编辑目录项"}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="name">显示名称 *</Label>
+                        <Input
+                            id="name"
+                            value={item.name}
+                            onChange={(e) => updateFormField("name", e.target.value)}
+                            placeholder="输入显示名称"
                         />
                     </div>
-                    <div className="h-md:@md:max-w-[80rem] m-auto">
-                        <Card className="py-1 gap-2">
-                            <CardHeader>
-                                <CardTitle>{selectedIndex === null ? '新增' : '修改'}一条</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0 space-y-1">
-                                {/* 新增选择器和编辑区 */}
-                                <div className="mt-4 space-y-4">
-                                    {selectedIndex !== null && (
-                                        <>
-                                            <FormField
-                                                control={form.control}
-                                                name={`Projects.${selectedIndex}.d`}
-                                                render={({field}) => (
-                                                    <FormItem className="w-full @md:w-[20rem]">
-                                                        <FormLabel className="select-text">确认日期</FormLabel>
-                                                        <FormControl>
-                                                            <Input type="date"{...field} placeholder="选择日期"
-                                                                   value={tabledArr[index] ? tabledArr[index].d : ""}
-                                                            />
-                                                        </FormControl>
-                                                        <FormMessage/>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                            <FormField key='name' control={form.control}
-                                                       name={`Projects.${selectedIndex}.name`}
-                                                       render={({field}) => (
-                                                           <FormSelectField field={field} label={'ddd]]dd'}
-                                                                            options={[]}
-                                                                            selectClass="w-full @md:w-[20rem]"
-                                                                            value={tabledArr[index] ? tabledArr[index].name : ""}
-                                                           />
-                                                       )}
-                                            />
-                                        </>
-                                    )}
-                                </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-end space-x-4 border-t p-6">
-                                <Button className=""
-                                        onClick={(e) => {
-                                            const template = {name: "", } as any;
-                                            append(template);
-                                            setSelectedIndex(fields.length)
-                                            e.preventDefault();
-                                        }}
-                                >
-                                    新增一条
-                                </Button>
-                                <Button variant="destructive" disabled={selectedIndex === null}
-                                        onClick={() => {
-                                            if (selectedIndex !== null && arrays?.['检验条件']) {
-                                                remove(selectedIndex);
-                                                setSelectedIndex(null);
-                                            }
-                                        }}
-                                >
-                                    删除该行
-                                </Button>
-                            </CardFooter>
-                        </Card>
+                    <div className="space-y-2">
+                        <Label htmlFor="ha">Hash路由标签</Label>
+                        <Input
+                            id="ha"
+                            value={item.ha || ""}
+                            onChange={(e) => updateFormField("ha", e.target.value)}
+                            placeholder="输入路由标签"
+                        />
                     </div>
-                    <span>
-                        有些是不在附页中体现的但却在目录中有的其页号需设定。
-                    </span>
-                    想清空所有项目（分项）和目录的配置（谨慎使用！）：
-                    <Button  onClick={() => {
-                        // clearProjectCatalog();
-                    }}>重新初始化</Button>
-                    {children ? children :
-                        <>注：每次到现场后，在检验前应对检验条件进行确认，只有确认所有与检验相关的条件满足检验要求时，才能开始开展检验工作。</>
-                    }
-                </>
-            );
-        },
-        [selectedIndex, storage, defaultProj, children, setSelectedIndex]
-    );
+                </div>
 
-    const {render, form, arrayControls } = useFormFramework({
-        schema,
-        defaultValues,
-        arrayFields,
-        rep
-    })
-    const content =contentRendererFactory(form, arrayControls)
-    return <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render(content)}
-    </CollapsibleFormSection>;
+                <div className="space-y-2">
+                    <Label htmlFor="ml">目录显示题目</Label>
+                    <Input
+                        id="ml"
+                        value={item.ml || ""}
+                        onChange={(e) => updateFormField("ml", e.target.value)}
+                        placeholder="输入在报告目录中的显示题目"
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="do"
+                            checked={item.do || false}
+                            onCheckedChange={(checked) => updateFormField("do", checked)}
+                        />
+                        <Label htmlFor="do" className="text-sm">
+                            默认有做
+                        </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="na"
+                            checked={item.na || false}
+                            onCheckedChange={(checked) => updateFormField("na", checked)}
+                        />
+                        <Label htmlFor="na" className="text-sm">
+                            不在附页
+                        </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="om"
+                            checked={item.om || false}
+                            onCheckedChange={(checked) => updateFormField("om", checked)}
+                        />
+                        <Label htmlFor="om" className="text-sm">
+                            仅记录目录
+                        </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="zs"
+                            checked={item.zs || false}
+                            onCheckedChange={(checked) => updateFormField("zs", checked)}
+                        />
+                        <Label htmlFor="zs" className="text-sm">
+                            证书类型
+                        </Label>
+                    </div>
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4 border-t">
+                    <Button variant="outline" onClick={cancelEdit}>
+                        <X className="w-4 h-4 mr-2" />
+                        取消
+                    </Button>
+                    <Button onClick={isNew ? saveAdd : saveEdit}>
+                        <Save className="w-4 h-4 mr-2" />
+                        保存
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    )
+    const { render } = useEditorBar({rep, values: {Projects: projects}})
+    return (
+        <CollapsibleFormSection title={label!} defaultOpen={show}>
+         <div className="h-md:@md:max-w-[80rem] m-auto">
+             <Card className="py-1 gap-2">
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        目录列表编辑器
+                        <Badge variant="secondary">{projects.length} 项</Badge>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 space-y-1">
+                    <div className="space-y-2">
+                        {projects.map((project, index) => (
+                            <div key={index}>
+                                {/* 项目展示行 */}
+                                <div
+                                    className={cn(
+                                        "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                                        editingIndex === index ? "bg-blue-50 border-blue-200" : "hover:bg-gray-50",
+                                    )}
+                                >
+                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
+                                        <div className="font-medium text-sm">
+                                            <span className="text-gray-500 mr-2">#{index + 1}</span>
+                                            {project.name}
+                                        </div>
+                                        <div className="text-sm text-gray-600 truncate">
+                                            {project.ml && <span className="bg-gray-100 px-2 py-1 rounded text-xs">{project.ml}</span>}
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {project.do && (
+                                                <Badge variant="default" className="text-xs">
+                                                    有做
+                                                </Badge>
+                                            )}
+                                            {project.na && (
+                                                <Badge variant="secondary" className="text-xs">
+                                                    不在附页
+                                                </Badge>
+                                            )}
+                                            {project.om && (
+                                                <Badge variant="outline" className="text-xs">
+                                                    仅记录
+                                                </Badge>
+                                            )}
+                                            {project.zs && (
+                                                <Badge variant="destructive" className="text-xs">
+                                                    证书
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-gray-500">{project.ha && `路由: ${project.ha}`}</div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2 ml-4">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => startEdit(index)}
+                                            disabled={editingIndex !== null || isAddingNew}
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            修改
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => deleteProject(index)}
+                                            disabled={editingIndex !== null || isAddingNew}
+                                            className="text-red-600 hover:text-red-700"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                            删除
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* 编辑表单 */}
+                                {editingIndex === index && renderEditForm(editForm)}
+                            </div>
+                        ))}
+
+                        {/* 新增按钮和表单 */}
+                        <div className="pt-4 border-t">
+                            {!isAddingNew ? (
+                                <Button onClick={startAdd} disabled={editingIndex !== null} className="w-full" variant="dashed">
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    新增目录项
+                                </Button>
+                            ) : (
+                                renderEditForm(editForm, true)
+                            )}
+                        </div>
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-1">
+                        <p>
+                            <strong>字段说明：</strong>
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 ml-4">
+                            <li>
+                                <strong>显示名称：</strong>附录显示名称，需与页面逻辑开关代码保持一致
+                            </li>
+                            <li>
+                                <strong>Hash路由标签：</strong>页面路由标识
+                            </li>
+                            <li>
+                                <strong>目录显示题目：</strong>该分项在报告目录中的文本显示题目
+                            </li>
+                            <li>
+                                <strong>默认有做：</strong>默认包含的分项报告
+                            </li>
+                            <li>
+                                <strong>不在附页：</strong>不在结论报告附页中出现，但出现在目录中
+                            </li>
+                            <li>
+                                <strong>仅记录目录：</strong>仅出现在原始记录目录中
+                            </li>
+                            <li>
+                                <strong>证书类型：</strong>证书类型项目
+                            </li>
+                        </ul>
+                    </div>
+                </CardContent>
+                 <CardFooter className="flex justify-end space-x-4 border-t p-6">
+                     <div>
+                        <span>
+                            有些是不在附页中体现的但却在目录中有的其页号需设定。
+                        </span>
+                             想清空所有项目（分项）和目录的配置（谨慎使用！）：
+                             <Button  onClick={() => {
+                                 // clearProjectCatalog();
+                             }}>重新初始化</Button>
+                     </div>
+                     <div className="flex gap-4 justify-end">
+                         {/*<Button type="button" variant="outline" onClick={() => form.reset()}>*/}
+                         {/*    重置*/}
+                         {/*</Button>*/}
+                         {/*<Button type="button" variant="outline" onClick={handleConfirm}>*/}
+                         {/*    确认*/}
+                         {/*</Button>*/}
+                         {/*<Button type="submit" disabled={form.formState.isSubmitting}>*/}
+                         {/*    {form.formState.isSubmitting ? "保存到后端..." : "保存"}*/}
+                         {/*</Button>*/}
+                     </div>
+                     {render(null)}
+                 </CardFooter>
+            </Card>
+             {children}
+        </div>
+    </CollapsibleFormSection>
+    )
 }
