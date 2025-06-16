@@ -62,7 +62,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                     {ReportFirstPageHeadJd({rep, mbbm: "FJB/YB-1002-1-2024"})}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
                         <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
-                          <h1 className="text-3xl text-center print:mt-6">滑行车类游乐设施监督检验报告</h1>
+                          <h1 className="text-3xl text-center print:mt-6">电站锅炉安装监检报告</h1>
                         </JumpTab>
                         {首页概况recr(orc,rep,)}
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
@@ -71,9 +71,9 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 {注意事项WaterJj({ rep,
                   comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
                 })}
-                <h1 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
+                <h2 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
                     电站锅炉安装监检报告
-                </h1>
+                </h2>
                 {RepDeviceDetail({orc, rep})}
                 {检验核准WaterJj({orc, rep})}
                 <PrintReserveLeast reserve="13rem"
