@@ -17,7 +17,7 @@ import {setupItemAreaRoute} from "./orcIspConfig";
 import {EntranceSetup, config设备概况,} from "./orcBase";
 import {ConclusionWaterJj} from "@/report/recreation/waterJj/Conclusion";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
-import {ProjectR} from "@/report/common/ProjectR";
+import {ProjectR} from "@/report/common/ProjectR---4";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -77,7 +77,7 @@ const 记事选=["检验过程共开出《特种设备检验意见通知书》xx
 
 const recordPrintList =[
     createItem('Entrance', <EntranceSetup/>),
-    createItem('ProjectList', <ProjectR nrec defaultProj={Projects记录} label={'记录目录页'}/>),
+    createItem('ProjectList', <ProjectR nrec defaultProj={Projects记录} label={'记录的目录页'}/>),
     createItem('Instrument', <ItemInstrumentTable label={'一、主要测量设备性能检查'} />),
     createItem('Survey', <DeviceSurveyD config={config设备概况} label={'二、设备概况'}/>),
     createItem('Conclusion', <ConclusionWaterJj startd label={'五、现场检验意见'}/>),

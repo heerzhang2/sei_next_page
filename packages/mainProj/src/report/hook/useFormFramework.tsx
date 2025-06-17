@@ -10,6 +10,8 @@ import { OriginalDataMutation } from "../common/base"
 import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
+import {useState} from "react";
+import {Save} from "lucide-react";
 
 interface UseFormFrameworkProps {
   // 接收外部传入的schema和默认值
@@ -29,7 +31,8 @@ interface UseFormFrameworkProps {
   rep?: any
   onSubmit?: (values: any) => Promise<void>
 }
-
+/**报告的编辑器表单框架
+ * */
 export function useFormFramework({
                                    schema,
                                    defaultValues,
@@ -106,11 +109,11 @@ export function useFormFramework({
   // 使用contentRendererFactory创建内容渲染器
   const contentRenderer = contentRendererFactory? contentRendererFactory(form, arrayControls) :null;
 
-  // 创建渲染函数
+  // 创建渲染函数 把@container上移给CollapsibleFormSection
   const render = (node: any) => (
       <>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 @container">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {contentRenderer}
             {node}
             <CardFooter className="flex flex-col justify-between border-t p-6 space-y-4">
@@ -157,23 +160,24 @@ export const ModificationIndicator = () => {
       </div>
   )
 }
-
-interface UseEditorBarProps {
-  defaultValues?: Record<string, any>
-  // 其他参数
+/**报告的编辑器表单-工具条
+*/
+interface UseFrameEditorBarProps {
   rep?: any
-  values: any
+  values: Record<string, any>
+  onVerify?: (values: any) =>boolean
+  onReset?: () =>void
 }
 
-export function useEditorBar({
-                                   defaultValues,
-                                   rep, values
-                                 }: UseEditorBarProps) {
+export function useFrameEditorBar({rep, values,onReset,onVerify}: UseFrameEditorBarProps) {
+  const [isSaving, setIsSaving] = useState(false)
   const { storage, setStorage, setModified } = useStorage()
   //用URQL mutation来保存变更数据到后端数据库的
   const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
   //保存：处理表单提交
   const handleSubmit = async () => {
+    if(onVerify && !onVerify(values))
+      return
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
     const { _version, "":_omit, ...RepData } = { ...storage, ...values }
@@ -187,7 +191,7 @@ export function useEditorBar({
         data: JSON.stringify(RepData),
       })
     }
-
+    setIsSaving(true)
     update().then((result) => {
       console.log("updateOriginalResult=应答=", result)
       if (result.error) {
@@ -202,11 +206,14 @@ export function useEditorBar({
         // 保存成功后，设置 modified 为 false
         setModified(false)
       }
+      setIsSaving(false)
     })
   }
 
   //同步或确认操作：处理确认按钮 - 临时保存到 storage
   const handleConfirm = () => {
+    if(onVerify && !onVerify(values))
+      return
     // 获取当前表单值
     const currentValues =values
     // 更新 storage
@@ -221,23 +228,18 @@ export function useEditorBar({
 
   // 创建渲染函数
   const render = () => (
-      <>
-          {/*<form onSubmit={handleSubmit} className="space-y-6 @container">*/}
-            <div className="flex gap-4 justify-end">
-              <Button type="button" variant="outline" onClick={() => 0}>
-                重置
-              </Button>
-              <Button type="button" variant="outline" onClick={handleConfirm}>
-                确认
-              </Button>
-              <Button type="submit" disabled={false} onClick={handleSubmit} >
-                {false ? "保存到后端..." : "保存"}
-              </Button>
-            </div>
-      </>
+      <div className="flex gap-4 justify-end">
+        <Button type="button" variant="outline" onClick={onReset}>
+          重置
+        </Button>
+        <Button type="button" variant="outline" onClick={handleConfirm}>
+          确认
+        </Button>
+        <Button type="submit" disabled={isSaving} onClick={handleSubmit} >
+          <Save className="w-4 h-4 mr-2" />
+          {isSaving ? "保存到后端..." : "保存"}
+        </Button>
+      </div>
   )
-
-  return {
-    render,
-  }
+  return [ render ]
 }

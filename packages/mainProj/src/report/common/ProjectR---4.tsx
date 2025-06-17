@@ -475,17 +475,15 @@ export const ProjectR = ({children, show, alone = true, defaultProj, label, rep}
                                         <div className="text-xs text-gray-500">{project.ha && `路由: ${project.ha}`}</div>
                                     </div>
 
-                                    <div className="flex items-center space-x-0 ml-0 @md:ml-2 flex-col gap-4 @md:gap-0">
+                                    <div className="flex items-center space-x-0 ml-0 flex-col gap-4 @md:gap-0">
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => startEdit(index)}
                                             disabled={editingIndex !== null || isAddingNew}
-                                            className="px-1 has-[>svg]:px-1"
-                                            aria-label="修改"
+                                            className="@md:size-9 px-1 has-[>svg]:px-1"
                                         >
                                             <Edit className="w-4 h-4" />
-                                            <span className="sr-only">修改</span>
                                         </Button>
                                         {index>=fixItemLen &&
                                             <Button
@@ -493,10 +491,9 @@ export const ProjectR = ({children, show, alone = true, defaultProj, label, rep}
                                                 size="sm"
                                                 onClick={() => deleteProject(index)}
                                                 disabled={editingIndex !== null || isAddingNew}
-                                                className="px-1 has-[>svg]:px-1 text-red-600 hover:text-red-700"
+                                                className="@md:size-9 px-1 has-[>svg]:px-1 text-red-600 hover:text-red-700"
                                             >
                                                 <Trash2 className="w-4 h-4" />
-                                                <span className="sr-only">删除</span>
                                             </Button>
                                         }
                                     </div>

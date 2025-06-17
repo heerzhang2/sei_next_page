@@ -140,7 +140,7 @@ export function CollapsibleFormSection({
       : "px-1 py-2 @md:px-2 @md:py-4" // 非触摸设备使用标准 padding
 
   return (
-      <div className={cn("border rounded-md overflow-hidden", className)}>
+      <div className={cn("border rounded-md overflow-hidden @container", className)}>
         <button
             type="button"
             onClick={toggleOpen}

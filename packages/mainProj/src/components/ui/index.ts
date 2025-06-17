@@ -49,5 +49,6 @@ export {
 
 // 添加您使用的其他组件...
 export { Switch } from "./switch"
-
 export { Badge } from "./badge"
+export { Alert, AlertDescription, AlertTitle } from "./alert"
+
