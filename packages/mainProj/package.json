@@ -8,7 +8,7 @@
   "packageManager": "yarn@4.0.1",
   "scripts": {
     "yarnAdd": "yarn add @radix-ui/react-combobox",
-    "v0dev/Vercel自带组件添加": "npx shadcn@latest add --overwrite  badge",
+    "v0dev/Vercel自带组件添加": "npx shadcn@latest add --overwrite  tooltip",
     "AI胡诌的": "yarn upgrade @radix-ui/react-dialog @radix-ui/react-slot @radix-ui/react-tooltip",
     "dev": "next dev -p 3765",
     "build": "next build",
@@ -54,7 +54,7 @@
     "@radix-ui/react-toast": "^1.2.4",
     "@radix-ui/react-toggle": "^1.1.1",
     "@radix-ui/react-toggle-group": "^1.1.1",
-    "@radix-ui/react-tooltip": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.2.7",
     "@radix-ui/react-visually-hidden": "^1.2.2",
     "@uppy/core": "^4.4.4",
     "@uppy/dashboard": "^4.3.3",

@@ -51,4 +51,6 @@ export {
 export { Switch } from "./switch"
 export { Badge } from "./badge"
 export { Alert, AlertDescription, AlertTitle } from "./alert"
-
+export {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
+} from "./tooltip"
