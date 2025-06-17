@@ -30,7 +30,7 @@ const getFontFamily = (): string => {
 export const SmartTruncatedText: React.FC<SmartTruncatedTextProps> = ({
                                                                         text,
                                                                         className,
-                                                                        maxLines = 2,
+                                                                        maxLines = 1,
                                                                         containerClassName,
                                                                         uniqueKey,
                                                                       }) => {
