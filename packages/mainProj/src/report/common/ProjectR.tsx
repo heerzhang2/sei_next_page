@@ -200,6 +200,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                         <Switch id="do"
                                 checked={item.do || false}
                                 onCheckedChange={(checked) => updateFormField("do", checked)}
+                                className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
                         />
                         <Label htmlFor="do" className="text-sm">
                           有做该项目吗
@@ -209,6 +210,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                         <Switch id="na"
                                 checked={item.na || false}
                                 onCheckedChange={(checked) => updateFormField("na", checked)}
+                                className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
                         />
                         <Label htmlFor="na" className="text-sm">
                           不在目录中显示该项目
