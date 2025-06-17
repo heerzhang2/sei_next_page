@@ -17,7 +17,7 @@ import {setupItemAreaRoute} from "./orcIspConfig";
 import {EntranceSetup, config设备概况,} from "./orcBase";
 import {ConclusionWaterJj} from "@/report/recreation/waterJj/Conclusion";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
-import {ProjectR} from "@/report/common/ProjectR---4";
+import {ProjectR} from "@/report/common/ProjectR";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -55,7 +55,7 @@ export const Projects记录 = [
     {name: '三、锅炉安装监检见证资料', ha: ''},
     {name: '安全性能监督检验证', ml: '3.1锅炉产品安全性能监督检验证书', ha: ''},
     {name: '3.2锅炉产品合格证', ha: ''},
-    {name: '3.3锅炉安装许可证', ha: ''},
+    {name: '3.3锅炉安装许可证', ml:"报告无检验、审核、批准人员的签字以及检验机构的乐设施安全技术规程》（TSG 71-2023）制定，适用于大核准证号和检验专用章(或者公章)无效", ha: ''},
     {name: '3.4锅炉安装质量证明书', ha: ''},
     {name: '3.5特种设备监督检验工作联络单', ha: ''},
     {name: '检验工作意见通知书', ml: '3.6特种设备监督检验工作意见通知书', ha: ''},
