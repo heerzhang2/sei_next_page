@@ -11,7 +11,7 @@ import {
     Input,
     Badge,
     Label,
-    Checkbox,
+    Checkbox, Switch,
 } from "@/components/ui"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import { CollapsibleFormSection } from "@/components/chub"
@@ -24,7 +24,8 @@ import { SmartTruncatedText } from "@/components/smart-truncated-text"
 export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
 interface ProjectRProps extends InternalItemProps {
     defaultProj: ProjectItem[]
-    nrec?: boolean
+    nRec?: boolean
+    nApx?: boolean
 }
 
 interface ProjectItem {
@@ -38,7 +39,7 @@ interface ProjectItem {
     zs?: boolean
 }
 
-export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep }: ProjectRProps) => {
+export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep,nApx,nRec}: ProjectRProps) => {
     const { storage } = useStorage()
     const [projects, setProjects] = React.useState<ProjectItem[]>(storage?.Projects ?? defaultProj)
     const fixItemLen = defaultProj.length
@@ -131,76 +132,86 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {isNew && (
+                        <div className="space-y-2">
+                            <Label htmlFor="name">检验项目名称 *</Label>
+                            <Input
+                                id="name"
+                                value={item.name}
+                                onChange={(e) => updateFormField("name", e.target.value)}
+                                placeholder="输入关键名称"
+                                autoComplete="name"
+                            />
+                        </div>
+                    )}
                     <div className="space-y-2">
-                        <Label htmlFor="name">显示名称 *</Label>
+                        <Label htmlFor="page">页号</Label>
                         <Input
-                            id="name"
-                            value={item.name}
-                            onChange={(e) => updateFormField("name", e.target.value)}
-                            placeholder="输入显示名称"
-                            autoComplete="name"
+                            id="page"
+                            value={item.page || ""}
+                            onChange={(e) => updateFormField("page", e.target.value)}
+                            placeholder="输入页号"
                         />
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="ha">Hash路由标签</Label>
-                        <Input
-                            id="ha"
-                            value={item.ha || ""}
-                            onChange={(e) => updateFormField("ha", e.target.value)}
-                            placeholder="输入路由标签"
-                        />
-                    </div>
+                    {!nApx && <div className="space-y-2">
+                            <Label htmlFor="apx">附页、附图</Label>
+                            <Input
+                                id="apx"
+                                value={item.apx || ""}
+                                onChange={(e) => updateFormField("apx", e.target.value)}
+                                placeholder="输入附页、附图"
+                            />
+                        </div>
+                    }
+                    {!nRec && <>
+                        <div className="space-y-2">
+                            <Label htmlFor="op">记录-页号</Label>
+                            <Input
+                                id="op"
+                                value={item.op || ""}
+                                onChange={(e) => updateFormField("op", e.target.value)}
+                                placeholder="输入记录-页号"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="oa">记录-附图附页</Label>
+                            <Input
+                                id="oa"
+                                value={item.oa || ""}
+                                onChange={(e) => updateFormField("oa", e.target.value)}
+                                placeholder="输入记录-附图附页"
+                            />
+                        </div>
+                    </>}
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="ml">目录显示题目</Label>
+                    <Label htmlFor="ml">目录显示标题</Label>
                     <Input
                         id="ml"
                         value={item.ml || ""}
                         onChange={(e) => updateFormField("ml", e.target.value)}
-                        placeholder="输入在报告目录中的显示题目"
+                        placeholder="输入在报告目录中的显示"
                     />
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="do"
-                            checked={item.do || false}
-                            onCheckedChange={(checked) => updateFormField("do", checked)}
+                        <Switch id="do"
+                                checked={item.do || false}
+                                onCheckedChange={(checked) => updateFormField("do", checked)}
                         />
                         <Label htmlFor="do" className="text-sm">
-                            默认有做
+                          有做该项目吗
                         </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="na"
-                            checked={item.na || false}
-                            onCheckedChange={(checked) => updateFormField("na", checked)}
+                        <Switch id="na"
+                                checked={item.na || false}
+                                onCheckedChange={(checked) => updateFormField("na", checked)}
                         />
                         <Label htmlFor="na" className="text-sm">
-                            不在附页
-                        </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="om"
-                            checked={item.om || false}
-                            onCheckedChange={(checked) => updateFormField("om", checked)}
-                        />
-                        <Label htmlFor="om" className="text-sm">
-                            仅记录目录
-                        </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="zs"
-                            checked={item.zs || false}
-                            onCheckedChange={(checked) => updateFormField("zs", checked)}
-                        />
-                        <Label htmlFor="zs" className="text-sm">
-                            证书类型
+                          不在目录中显示该项目
                         </Label>
                     </div>
                 </div>
@@ -254,7 +265,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                             editingIndex === index ? "bg-blue-50 border-blue-200" : "hover:bg-gray-50",
                                         )}
                                     >
-                                        <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
+                                        <div className="flex-1 grid grid-cols-1 @md:grid-cols-3 gap-2 items-center">
                                             <div className="font-medium text-sm">
                                                 <span className="text-gray-500 mr-2">#{index + 1}</span>
                                                 {project.name}
@@ -266,9 +277,6 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                                         uniqueKey={`project-${index}-ml`}
                                                         maxLines={2}
                                                         containerClassName="w-full"
-                                                        onToggle={(expanded) => {
-                                                            console.log(`项目 ${index + 1} 文本${expanded ? "展开" : "收起"}`)
-                                                        }}
                                                     />
                                                 )}
                                             </div>
@@ -280,7 +288,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                                 )}
                                                 {project.na && (
                                                     <Badge variant="secondary" className="text-xs">
-                                                        不在附页
+                                                        不在目录
                                                     </Badge>
                                                 )}
                                                 {project.om && (
@@ -294,7 +302,16 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <div className="text-xs text-gray-500">{project.ha && `路由: ${project.ha}`}</div>
+
+                                            <div className="text-xs text-gray-500">{project.page && `页: ${project.page}`}</div>
+
+                                            {!nApx && <div className="text-xs text-gray-500">{project.apx && `附图: ${project.apx}`}</div>}
+
+                                            {!nRec && <>
+                                                <div className="text-xs text-gray-500">{project.op && `记录页: ${project.op}`}</div>
+                                                <div className="text-xs text-gray-500">{project.oa && `记录附图: ${project.oa}`}</div>
+                                            </>}
+
                                         </div>
 
                                         <div className="flex items-center space-x-0 ml-0 flex-col gap-4 @md:gap-0">

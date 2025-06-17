@@ -9,7 +9,7 @@ interface SmartTruncatedTextProps {
   maxLines?: number
   className?: string
   containerClassName?: string
-  onToggle?: (isExpanded: boolean) => void
+  // onToggle?: (isExpanded: boolean) => void
 }
 
 // 全局状态管理： ？uniqueKey 唯一性冲突了:
@@ -32,7 +32,6 @@ export const SmartTruncatedText: React.FC<SmartTruncatedTextProps> = ({
                                                                         className,
                                                                         maxLines = 2,
                                                                         containerClassName,
-                                                                        onToggle,
                                                                         uniqueKey,
                                                                       }) => {
   const textRef = React.useRef<HTMLDivElement>(null)
@@ -109,10 +108,10 @@ export const SmartTruncatedText: React.FC<SmartTruncatedTextProps> = ({
     const newExpanded = !isExpanded
     expandedTextsGlobal.set(textKey, newExpanded)
     setIsExpanded(newExpanded)
-    onToggle?.(newExpanded)
+    // onToggle?.(newExpanded)
   }
 
-  if (!text) return null
+  if (!text)  return null
 
   return (
       <TooltipProvider>
@@ -129,7 +128,7 @@ export const SmartTruncatedText: React.FC<SmartTruncatedTextProps> = ({
                       isOverflowing && "cursor-pointer hover:bg-gray-200",
                       className,
                   )}
-                  onClick={isOverflowing ? toggleExpanded : undefined}
+                  onClick={toggleExpanded}
                   style={{
                     fontFamily: getFontFamily(),
                     lineHeight: "var(--line-height-normal, 1.5)",
@@ -152,11 +151,13 @@ export const SmartTruncatedText: React.FC<SmartTruncatedTextProps> = ({
               )}*/}
             </div>
           </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-md">
-            <p className="whitespace-pre-wrap text-sm" style={{ fontFamily: getFontFamily() }}>
-              {text}
-            </p>
-          </TooltipContent>
+          {isOverflowing &&
+              <TooltipContent side="top" className="max-w-md">
+                <p className="whitespace-pre-wrap text-sm" style={{ fontFamily: getFontFamily() }}>
+                  {text}
+                </p>
+              </TooltipContent>
+          }
         </Tooltip>
       </TooltipProvider>
   )
