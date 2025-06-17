@@ -264,9 +264,11 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                                     <SmartTruncatedText
                                                         text={project.ml}
                                                         uniqueKey={`project-${index}-ml`}
-                                                        fontSize={12}
                                                         maxLines={2}
                                                         containerClassName="w-full"
+                                                        onToggle={(expanded) => {
+                                                            console.log(`项目 ${index + 1} 文本${expanded ? "展开" : "收起"}`)
+                                                        }}
                                                     />
                                                 )}
                                             </div>
