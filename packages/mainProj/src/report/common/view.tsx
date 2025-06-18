@@ -268,3 +268,105 @@ export const MeasureMemoTwoRaft = ({
         }
     </>;
 };
+
+export const FootMenRow = ({
+                               children,
+                               href,
+                               cap,
+                               scap,
+                               jm,
+                               jd,
+                               cm,
+                               cd
+                           }: {
+    children?: React.ReactNode;
+    href?: string;
+    cap?: string;
+    scap?: string;
+    jm?: any[] | any;
+    cm?: any;
+    jd?: string;
+    cd?: string;
+}) => {
+    // 处理检验人显示逻辑
+    const jmRender = jm && (
+        <>
+            {Array.isArray(jm) ? (
+                <>
+                    {jm.map((m: any, k: number) => (
+                        <React.Fragment key={k}>
+                            {k !== 0 && ','}&nbsp;{m}
+                        </React.Fragment>
+                    ))}
+                </>
+            ) : (
+                jm
+            )}
+        </>
+    );
+    const jymens = jmRender || '检验人';
+    return (
+        <FlexibleTable className="text-sm" columnWidths={["62%", "%"]}>
+            <TableBody>
+                {children}
+                {href ? (
+                    <DirectLink href={href}>
+                        <TableRow className="hover:bg-gray-50">
+                            <CCell className="h-full">
+                                <div className="flex justify-between items-start space-y-2">
+                                    <div>
+                                        <span className="font-medium">{cap ?? '检验'}：</span>
+                                        <span className="flex items-center">{jymens}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="font-medium">日期</span>
+                                        <span>{jd || '2024-12-31'}</span>
+                                    </div>
+                                </div>
+                            </CCell>
+                            <CCell className="h-full">
+                                <div className="flex justify-between items-start space-y-2">
+                                    <div>
+                                        <span className="font-medium">{scap ?? '审核'}：</span>
+                                        <span className="flex items-center">{cm || '审核人'}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="font-medium">日期</span>
+                                        <span>{cd || '2025-01-31'}</span>
+                                    </div>
+                                </div>
+                            </CCell>
+                        </TableRow>
+                    </DirectLink>
+                ) : (
+                    <TableRow className="hover:bg-gray-50">
+                        <CCell className="h-full">
+                            <div className="flex justify-between items-start space-y-2">
+                                <div>
+                                    <span className="font-medium">{cap ?? '检验'}：</span>
+                                    <span className="flex items-center">{jymens}</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="font-medium">日期</span>
+                                    <span>{jd || '2024-12-31'}</span>
+                                </div>
+                            </div>
+                        </CCell>
+                        <CCell className="h-full">
+                            <div className="flex justify-between items-start space-y-2">
+                                <div>
+                                    <span className="font-medium">{scap ?? '审核'}：</span>
+                                    <span className="flex items-center">{cm || '审核人'}</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="font-medium">日期</span>
+                                    <span>{cd || '2025-01-31'}</span>
+                                </div>
+                            </div>
+                        </CCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </FlexibleTable>
+    );
+};

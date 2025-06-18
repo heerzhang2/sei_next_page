@@ -538,7 +538,27 @@ touch-pan-y touch-pinch-zoom 手机横屏的
 
 
 
+                        { (new Array(9)).fill(null).map((_, i:number) => {
+                            return <>
 
+                                {orc?.Projects?.map((prj: any, i: number) => {
+                                    if(prj?.na || prj?.om)   return null;       //na:表示不在目录中显示的分项目分页。 om：只在记录显示；
+                                    if(prj?.zs || prj?.dd) return null;       //特性表跟着zs证书走到前面去的，不用显示在目录；dd表示用户自定义项目不显示在目录中
+                                    return prj?.do && (
+                                        <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList?from=${i}#ProjectList`}>
+                                            <TableRow>
+                                                <CCell>{muluSn++}</CCell>
+                                                <TableCell className="text-sm border border-gray-700">{prj?.ml ? prj?.ml : suffix? (prj?.name + '报告') : prj?.name}</TableCell>
+                                                <CCell>{prj?.page}</CCell>
+                                                <CCell>{prj?.apx??'／'}</CCell>
+                                            </TableRow>
+                                        </JumpTab>
+                                    );
+                                })
+                                }
+
+                            </>
+                        }) }
 
 
 

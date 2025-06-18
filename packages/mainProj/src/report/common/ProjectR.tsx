@@ -1,5 +1,5 @@
 "use client"
-import React from "react"
+import React, {useEffect} from "react"
 import type { InternalItemProps } from "@/report/common/base"
 import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Badge, Label, Switch,} from "@/components/ui"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
@@ -9,6 +9,7 @@ import { Edit, Trash2, Plus, X, AlertCircleIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertTitle } from "@/components/ui"
 import { SmartTruncatedText } from "@/components/smart-truncated-text"
+import {useSearchParams} from "next/navigation";
 
 // export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
 interface ProjectItem {
@@ -34,6 +35,8 @@ interface ProjectRProps extends InternalItemProps {
 这里表格布局类似于手机上原生的APP用的图片Card方块布局有点类似的，都是无法通用的做法，只能为特定表格做特殊布局，Grid配置也不通用，屏幕适应性差。
 * */
 export const ProjectR = ({ children, show, alone = true, defaultProj:defPrj, label, rep,nApx,nRec}: ProjectRProps) => {
+    const searchParams = useSearchParams()
+    const jumpProjIdx =searchParams!.get("from")
     const { storage } = useStorage()
     const defaultProj = React.useMemo(() => {
         //仅仅页面上用的路由hash字段 "ha": 不需要存储数据库给报告的。
@@ -60,7 +63,9 @@ export const ProjectR = ({ children, show, alone = true, defaultProj:defPrj, lab
         setEditForm({ ...projects[index] })
         setIsAddingNew(false)
     }
-
+    useEffect(() => {
+        jumpProjIdx && startEdit(Number(jumpProjIdx))
+    }, [jumpProjIdx])
     // 开始新增
     const startAdd = () => {
         setIsAddingNew(true)
