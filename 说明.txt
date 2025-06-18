@@ -506,3 +506,40 @@ touch-pan-y touch-pinch-zoom 手机横屏的
                                             })}
                                         </div>
                                     </JumpTab>
+
+
+<div css={{
+      "@media print": {
+        //【特殊】布局流如何定位到中间某一张纸张的末尾打印；纸张高度上 剪掉 上面的一行 “目录” 并没有被本div所都囊括的元素高度：推定剪掉高度是2rem。A4纸张竖版大约可接受高度大小=775pt再换算=273.4mm；A4纸297mm-2*(11.7=边距+页眉页脚)；
+        //【有问题】目标div必须小于一张纸高度？这里若稍微超出了当前定位纸张区域，@@就可能被切分两页的！！，变成后续尾随空白页面的。所以尽量考虑有余量“- 10pt”:A4纸张竖版。
+        height: `calc(100vh - 3rem)`,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',   //'flex-end', 吸附本页纸张的底部区域打印，还是在本张纸张中间打印的？
+      },
+    }}>
+      <div css={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+      }}>
+        <Text css={{
+          [theme.mediaQueries.md]: {
+            marginRight: '2rem',
+          }
+        }}>报告编号：{rep.isp.no}
+        </Text>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+

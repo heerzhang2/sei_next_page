@@ -1,18 +1,7 @@
 "use client"
 import React from "react"
 import type { InternalItemProps } from "@/report/common/base"
-import {
-    Button,
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-    Input,
-    Badge,
-    Label,
-    Checkbox, Switch,
-} from "@/components/ui"
+import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Badge, Label, Switch,} from "@/components/ui"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import { CollapsibleFormSection } from "@/components/chub"
 import { useStorage } from "@/report/StorageContext"
@@ -21,13 +10,7 @@ import { cn } from "@/lib/utils"
 import { Alert, AlertTitle } from "@/components/ui"
 import { SmartTruncatedText } from "@/components/smart-truncated-text"
 
-export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
-interface ProjectRProps extends InternalItemProps {
-    defaultProj: ProjectItem[]
-    nRec?: boolean
-    nApx?: boolean
-}
-
+// export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
 interface ProjectItem {
     name: string
     ha?: string
@@ -37,10 +20,30 @@ interface ProjectItem {
     om?: boolean
     dd?: boolean
     zs?: boolean
+    page?: string
+    apx?: string
+    op?: string
+    oa?: string
 }
-
-export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep,nApx,nRec}: ProjectRProps) => {
+interface ProjectRProps extends InternalItemProps {
+    defaultProj: ProjectItem[]
+    nRec?: boolean
+    nApx?: boolean
+}
+/*
+这里表格布局类似于手机上原生的APP用的图片Card方块布局有点类似的，都是无法通用的做法，只能为特定表格做特殊布局，Grid配置也不通用，屏幕适应性差。
+* */
+export const ProjectR = ({ children, show, alone = true, defaultProj:defPrj, label, rep,nApx,nRec}: ProjectRProps) => {
     const { storage } = useStorage()
+    const defaultProj = React.useMemo(() => {
+        //仅仅页面上用的路由hash字段 "ha": 不需要存储数据库给报告的。
+        return defPrj.map(
+            one=>{
+                const { ha, ...other}=one;
+                return {...other}
+            }
+        );
+    }, [defPrj]);
     const [projects, setProjects] = React.useState<ProjectItem[]>(storage?.Projects ?? defaultProj)
     const fixItemLen = defaultProj.length
     if (fixItemLen <= 0) throw new Error("目录表非法")
@@ -48,13 +51,6 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
     const [isAddingNew, setIsAddingNew] = React.useState(false)
     const [editForm, setEditForm] = React.useState<ProjectItem>({
         name: "",
-        ha: "",
-        ml: "",
-        na: false,
-        do: false,
-        om: false,
-        dd: false,
-        zs: false,
     })
     const [editErr, setEditErr] = React.useState<string>()
 
@@ -71,16 +67,8 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
         setEditingIndex(null)
         setEditForm({
             name: "",
-            ha: "",
-            ml: "",
-            na: false,
-            do: false,
-            om: false,
-            dd: false,
-            zs: false,
         })
     }
-
     // 保存编辑
     const saveEdit = () => {
         if (editingIndex !== null) {
@@ -126,13 +114,13 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
 
     // 渲染编辑表单
     const renderEditForm = (item: ProjectItem, isNew = false) => (
-        <Card className="mt-1 border-l-4 border-l-blue-500">
+        <Card className="mt-1 border-l-4 border-l-blue-500 gap-1 py-1">
             {isNew && <CardHeader className="pb-0">
                     <CardTitle>新增目录项</CardTitle>
                 </CardHeader>
             }
             <CardContent className="space-y-1 px-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 @md:grid-cols-2 @5xl:grid-cols-3 gap-1">
                     {isNew && (
                         <div className="space-y-2">
                             <Label htmlFor="name" className="select-text">检验项目名称 *</Label>
@@ -196,7 +184,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-2 @5xl:grid-cols-4 gap-1">
                     <div className="flex items-center space-x-2">
                         <Switch id="do"
                                 checked={item.do || false}
@@ -261,7 +249,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                         <div className="space-y-0.5">
                             {projects.map((project, index) => (
                                 <div key={index}>
-                                    {/* 项目展示行 */}
+                                    {/* 项目展示行，使用grird做表格的模式，局限性很大的，不通用适应性差 */}
                                     <div
                                         className={cn(
                                             "flex items-center justify-between py-1 @md:px-3 rounded-lg border transition-colors",
@@ -391,9 +379,9 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                     </CardContent>
                     <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2">
                         <div>
-              <span className="text-sm">
-                有些是不在附页中体现的但却在目录中有的其页号需设定。想清空所有项目（分项）和目录的配置（谨慎使用！）
-              </span>
+                          <span className="text-sm">
+                            有些是不在附页中体现的但却在目录中有的其页号需设定。想清空所有项目（分项）和目录的配置（谨慎使用！）
+                          </span>
                             <Button size="sm" onClick={clearProjectCatalog}>
                                 重新初始化
                             </Button>

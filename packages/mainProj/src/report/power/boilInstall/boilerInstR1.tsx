@@ -21,6 +21,8 @@ import {RepFootLink} from "@/report/common/repFootLink";
 import {RepHeadLink} from "@/report/common/repHeadLink";
 import {JumpTab} from "@/report/common/JumpTab";
 import {RepDeviceDetail} from "@/report/recreation/slidingJj/repView";
+import {useItemsMapPressure} from "@/report/common/pressure";
+import {DirectoryPagePress} from "@/report/common/directory";
 
 
 export const ReportView = ({ rep }: any) => {
@@ -55,6 +57,7 @@ const config报告: Column_Setting[] = [
 /*有些内容放页眉页脚：<span>报告编号：{rep.isp.no}</span>页号安排放入页眉页脚。
 * */
 const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, rep}) => {
+    const [mapFxian]=useItemsMapPressure({ projects:orc.Projects });
     return (
         <React.Fragment>
             <div className="not-print:my-4">
@@ -71,6 +74,9 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 {注意事项WaterJj({ rep,
                   comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
                 })}
+
+                {mapFxian.get('目录')?.do && <DirectoryPagePress orc={orc} rep={rep}></DirectoryPagePress>}
+
                 <h2 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
                     电站锅炉安装监检报告
                 </h2>

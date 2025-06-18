@@ -55,11 +55,11 @@ export const Projects记录 = [
     {name: '三、锅炉安装监检见证资料', ha: ''},
     {name: '安全性能监督检验证', ml: '3.1锅炉产品安全性能监督检验证书', ha: ''},
     {name: '3.2锅炉产品合格证', ha: ''},
-    {name: '3.3锅炉安装许可证', ml:"报告无检验、审核、批准人员的签字以及检验机构的乐设施安全技术规程》（TSG 71-2023）制定，适用于大核准证号和检验专用章(或者公章)无效", ha: ''},
+    {name: '3.3锅炉安装许可证', ha: ''},
     {name: '3.4锅炉安装质量证明书', ha: ''},
     {name: '3.5特种设备监督检验工作联络单', ha: ''},
     {name: '检验工作意见通知书', ml: '3.6特种设备监督检验工作意见通知书', ha: ''},
-    {name: '检验证书', ha: 'Certificate', do: true, na: true,       om:true, zs:true},
+    {name: '检验证书', ha: 'Certificate', do: true, na: true},
 ];
 
 
@@ -77,7 +77,7 @@ const 记事选=["检验过程共开出《特种设备检验意见通知书》xx
 
 const recordPrintList =[
     createItem('Entrance', <EntranceSetup/>),
-    createItem('ProjectList', <ProjectR nrec defaultProj={Projects记录} label={'记录的目录页'}/>),
+    createItem('ProjectList', <ProjectR nRec defaultProj={Projects记录} label={'记录的目录页'}/>),
     createItem('Instrument', <ItemInstrumentTable label={'一、主要测量设备性能检查'} />),
     createItem('Survey', <DeviceSurveyD config={config设备概况} label={'二、设备概况'}/>),
     createItem('Conclusion', <ConclusionWaterJj startd label={'五、现场检验意见'}/>),
