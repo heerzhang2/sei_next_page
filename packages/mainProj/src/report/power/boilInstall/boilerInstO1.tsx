@@ -59,7 +59,7 @@ export const Projects记录 = [
     {name: '3.4锅炉安装质量证明书', ha: ''},
     {name: '3.5特种设备监督检验工作联络单', ha: ''},
     {name: '检验工作意见通知书', ml: '3.6特种设备监督检验工作意见通知书', ha: ''},
-    {name: '检验证书', ha: 'Certificate', do: true, na: true},
+    {name: '检验证书', ha: 'Certificate', do: true, na: true,       om:true, zs:true},
 ];
 
 

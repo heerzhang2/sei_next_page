@@ -121,11 +121,11 @@ export const SmartTruncatedText: React.FC<SmartTruncatedTextProps> = ({
               <div
                   ref={textRef}
                   className={cn(
-                      "bg-gray-100 px-2 py-1 rounded text-xs transition-all duration-200 select-text relative",
+                      "bg-gray-50 px-2 py-1 rounded text-xs font-medium transition-all duration-200 select-text relative",
                       // 使用 CSS line-clamp 来限制行数
                       !isExpanded && `line-clamp-${maxLines}`,
                       isExpanded && "line-clamp-none",
-                      isOverflowing && "cursor-pointer hover:bg-gray-200",
+                      isOverflowing && "cursor-pointer hover:bg-gray-50",
                       className,
                   )}
                   onClick={toggleExpanded}

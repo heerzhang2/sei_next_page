@@ -126,15 +126,16 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
 
     // 渲染编辑表单
     const renderEditForm = (item: ProjectItem, isNew = false) => (
-        <Card className="mt-2 border-l-4 border-l-blue-500">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-lg">{isNew ? "新增目录项" : "编辑目录项"}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="mt-1 border-l-4 border-l-blue-500">
+            {isNew && <CardHeader className="pb-0">
+                    <CardTitle>新增目录项</CardTitle>
+                </CardHeader>
+            }
+            <CardContent className="space-y-1 px-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                     {isNew && (
                         <div className="space-y-2">
-                            <Label htmlFor="name">检验项目名称 *</Label>
+                            <Label htmlFor="name" className="select-text">检验项目名称 *</Label>
                             <Input
                                 id="name"
                                 value={item.name}
@@ -145,7 +146,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                         </div>
                     )}
                     <div className="space-y-2">
-                        <Label htmlFor="page">页号</Label>
+                        <Label htmlFor="page" className="select-text">页号</Label>
                         <Input
                             id="page"
                             value={item.page || ""}
@@ -154,7 +155,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                         />
                     </div>
                     {!nApx && <div className="space-y-2">
-                            <Label htmlFor="apx">附页、附图</Label>
+                            <Label htmlFor="apx" className="select-text">附页、附图</Label>
                             <Input
                                 id="apx"
                                 value={item.apx || ""}
@@ -165,7 +166,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                     }
                     {!nRec && <>
                         <div className="space-y-2">
-                            <Label htmlFor="op">记录-页号</Label>
+                            <Label htmlFor="op" className="select-text">记录-页号</Label>
                             <Input
                                 id="op"
                                 value={item.op || ""}
@@ -174,7 +175,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="oa">记录-附图附页</Label>
+                            <Label htmlFor="oa" className="select-text">记录-附图附页</Label>
                             <Input
                                 id="oa"
                                 value={item.oa || ""}
@@ -185,8 +186,8 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                     </>}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="ml">目录显示标题</Label>
+                <div className="space-y-1">
+                    <Label htmlFor="ml" className="select-text">目录显示标题</Label>
                     <Input
                         id="ml"
                         value={item.ml || ""}
@@ -195,15 +196,15 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-1">
                     <div className="flex items-center space-x-2">
                         <Switch id="do"
                                 checked={item.do || false}
                                 onCheckedChange={(checked) => updateFormField("do", checked)}
                                 className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
                         />
-                        <Label htmlFor="do" className="text-sm">
-                          有做该项目吗
+                        <Label htmlFor="do" className="text-sm select-text">
+                          有做该项目
                         </Label>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -212,8 +213,8 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                 onCheckedChange={(checked) => updateFormField("na", checked)}
                                 className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
                         />
-                        <Label htmlFor="na" className="text-sm">
-                          不在目录中显示该项目
+                        <Label htmlFor="na" className="text-sm select-text">
+                          不在目录中显示
                         </Label>
                     </div>
                 </div>
@@ -245,10 +246,10 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
     const clearProjectCatalog = React.useCallback(() => {
         setProjects(defaultProj)
     }, [])
-
+    //原来设置 className="h-md:@md:max-w-[98%] m-auto"
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
-            <div className="h-md:@md:max-w-[80rem] m-auto">
+            <div className="w-full m-auto">
                 <Card className="py-1 gap-2">
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
@@ -257,7 +258,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0 space-y-1">
-                        <div className="space-y-2">
+                        <div className="space-y-0.5">
                             {projects.map((project, index) => (
                                 <div key={index}>
                                     {/* 项目展示行 */}
@@ -269,7 +270,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                     >
                                         <div className="flex-1 grid grid-cols-2 @md:grid-cols-4 @5xl:grid-cols-7 gap-2 items-center">
                                             <div className="col-span-2 font-medium text-sm">
-                                                <span className="text-gray-500 mr-2">#{index + 1}</span>
+                                                <span className="text-gray-600 mr-2 text-sm">#{index + 1}</span>
                                                 {project.name}
                                             </div>
                                             <div className="col-span-2 text-sm text-black min-w-0">
@@ -283,40 +284,38 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                             </div>
                                             <div className="flex flex-wrap gap-1">
                                                 {project.do && (
-                                                    <Badge variant="default" className="text-xs">
+                                                    <Badge variant="default" className="text-xs px-1 py-0">
                                                         有做
                                                     </Badge>
                                                 )}
                                                 {project.na && (
-                                                    <Badge variant="secondary" className="text-xs">
+                                                    <Badge variant="secondary" className="text-xs px-1 py-0">
                                                         不在目录
                                                     </Badge>
                                                 )}
                                                 {project.om && (
-                                                    <Badge variant="outline" className="text-xs">
+                                                    <Badge variant="outline" className="text-xs px-1 py-0">
                                                         仅记录
                                                     </Badge>
                                                 )}
                                                 {project.zs && (
-                                                    <Badge variant="destructive" className="text-xs">
+                                                    <Badge variant="destructive" className="text-xs px-1 py-0">
                                                         证书
                                                     </Badge>
                                                 )}
                                             </div>
                                             <div className="col-span-2 flex-1 grid grid-cols-4 gap-2 items-center">
-                                                <div className="text-xs text-gray-500">{project.page && `页: ${project.page}`}</div>
+                                                <div className="text-xs font-medium border-transparent bg-white text-gray-900">{project.page && `页: ${project.page}`}</div>
 
-                                                {!nApx && <div className="text-xs text-gray-500">{project.apx && `附图: ${project.apx}`}</div>}
+                                                {!nApx && <div className="text-xs font-medium border-transparent bg-gray-50 text-secondary-foreground">{project.apx && `附图: ${project.apx}`}</div>}
 
                                                 {!nRec && <>
-                                                    <div className="text-xs text-gray-500">{project.op && `记录页: ${project.op}`}</div>
-                                                    <div className="text-xs border-transparent bg-white text-secondary-foreground">
-                                                        啥打个电话个
+                                                    <div className="text-xs font-medium border-transparent bg-white text-gray-900">
+                                                        {project.op && `记录页: ${project.op}`}
                                                     </div>
-                                                    <div className="text-xs border-transparent bg-secondary text-secondary-foreground">
-                                                        证叶绿体书
+                                                    <div className="text-xs font-medium border-transparent bg-gray-50 text-secondary-foreground">
+                                                        {project.oa && `记录附图: ${project.oa}`}
                                                     </div>
-                                                    <div className="text-xs text-gray-500">{project.oa && `记录附图: ${project.oa}`}</div>
                                                 </>}
                                             </div>
                                         </div>
@@ -368,18 +367,15 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                             <p>
                                 <strong>字段说明：</strong>
                             </p>
-                            <ul className="list-disc list-inside space-y-1 ml-4">
+                            <ul className="@md:columns-2 list-disc list-inside space-y-1 ml-4">
                                 <li>
-                                    <strong>显示名称：</strong>附录显示名称，需与页面逻辑开关代码保持一致
-                                </li>
-                                <li>
-                                    <strong>Hash路由标签：</strong>页面路由标识
+                                    <strong>显示名称：</strong>附录显示名称
                                 </li>
                                 <li>
                                     <strong>目录显示题目：</strong>该分项在报告目录中的文本显示题目
                                 </li>
                                 <li>
-                                    <strong>默认有做：</strong>默认包含的分项报告
+                                    <strong>有做吗：</strong>默认包含的分项报告
                                 </li>
                                 <li>
                                     <strong>不在附页：</strong>不在结论报告附页中出现，但出现在目录中
@@ -388,7 +384,7 @@ export const ProjectR = ({ children, show, alone = true, defaultProj, label, rep
                                     <strong>仅记录目录：</strong>仅出现在原始记录目录中
                                 </li>
                                 <li>
-                                    <strong>证书类型：</strong>证书类型项目
+                                    <strong>证书类型：</strong>证书类型的项目
                                 </li>
                             </ul>
                         </div>
