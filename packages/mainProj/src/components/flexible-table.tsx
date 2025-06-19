@@ -99,7 +99,8 @@ export function FlexibleTable({ children, columnWidths, className, variant = "de
 export function TableHeader({ children }: { children: ReactNode }) {
   return <thead className="bg-muted/50">{children}</thead>
 }
-
+/**【注意】打印情形非常不友好@  避免用tfoot。
+ * */
 export function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
       <tfoot

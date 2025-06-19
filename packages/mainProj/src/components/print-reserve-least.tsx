@@ -41,7 +41,8 @@ interface PrintReserveLeastProps {
  * 使用动态生成的类名和内联样式的组合方式
  * 防止命名冲突 "--reserve-height":。仅作用于 .relative div 及其子元素。:root {--reserve-height:;全局默认值}; 内联样式优先级最高.
  * 【没必要】mainProj/src/styles/print-styles.css 自带h1 h2 h3等的特别打印处理
- * 若children是一个带有footer的table:很可能分页效果无效，没法保证不会拆分（导致table被打印到下一页了）。
+ * 【机制失效情况】若children是一个带有footer的table:很可能分页效果无效，没法保证不会拆分（导致table被打印到下一页了）。
+ * 规避 tfoot 因为出现TableFooter的<tfoot>元素导致异常，表格内容被强制分页到下一页，出现title和children分割两页和打印空白太多的问题！
  * */
 export function PrintReserveLeast({
                                     reserve,
@@ -90,13 +91,16 @@ export function PrintReserveLeast({
         </div>
   )
   else return (
-      <div className={`relative ${className}`} style={{"--reserve-height": reserve} as React.CSSProperties}>
+      /*这一个div绝对不能加上pageBreakInside: "avoid",breakInside: "avoid"会导致更多强制分页的*/
+      <div className={`relative ${className}`}
+               style={{"--reserve-height": reserve} as React.CSSProperties}
+      >
         {/* 标题部分 */}
         <div className={`print-title-reserve ${titleClassName}`}>{title}</div>
-
         {/* 正文部分 */}
-        <div className={`print-content-offset ${contentClassName}`}>{children}</div>
+        <div className={`print-content-offset ${contentClassName}`}>
+            {children}
+        </div>
       </div>
   )
 }
-

@@ -367,16 +367,8 @@ export const ExplanatoryVw= ({ orc, rep, title,desc,hash,stname='长文字页'}:
                             </TableRow>
                         </RepLink>
                     </TableBody>
-
-
-                    <TableFooter>
-                        <TableRow><TableCell colSpan={2}>weiba 测绘师带回去 :</TableCell></TableRow>
-                    </TableFooter>
-
-
-
                 </FlexibleTable>
-                {/*<FootMensLine cap='监检' href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/ProjectList#ProjectList`}/>*/}
+                <FootMensLine cap='监检' href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/ProjectList#ProjectList`}/>
             </PrintReserveLeast>
         </>
     )
