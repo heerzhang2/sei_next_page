@@ -269,7 +269,7 @@ export const MeasureMemoTwoRaft = ({
     </>;
 };
 
-export const FootMenRow = ({
+export const FootMensLine = ({
                                children,
                                href,
                                cap,

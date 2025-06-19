@@ -1,5 +1,6 @@
 import * as React from "react"
 import { Children, isValidElement, cloneElement, type ReactNode, ReactElement } from "react"
+import {cn} from "@/lib/utils";
 
 interface FlexibleTableProps {
   children: ReactNode
@@ -97,6 +98,19 @@ export function FlexibleTable({ children, columnWidths, className, variant = "de
 //改成和shadcn.ui的一样名字和含义，更容易替换，避免混淆。
 export function TableHeader({ children }: { children: ReactNode }) {
   return <thead className="bg-muted/50">{children}</thead>
+}
+
+export function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
+  return (
+      <tfoot
+          data-slot="table-footer"
+          className={cn(
+              "bg-muted/50 border-t font-medium [&>tr]:last:border-b-0",
+              className
+          )}
+          {...props}
+      />
+  )
 }
 
 export function TableBody({ children }: { children: ReactNode }) {

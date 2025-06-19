@@ -3,8 +3,6 @@
 import { useState, useCallback, useEffect } from "react"
 import { usePrintSettings } from "../contexts/print-settings-context"
 import { getPrintPreparation, measureAllCellsWithPrintMedia, measureCellHeightWithPrintMedia } from "../lib/print-utils"
-import {usePathname, useRouter} from "next/navigation";
-import {useCreateQueryString} from "@/hooks/useCreateQueryString";
 
 // 修改 useMediaPrint hook，使用新的准确测量方法
 export function useMediaPrint(

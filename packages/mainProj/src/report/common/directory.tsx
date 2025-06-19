@@ -1,10 +1,5 @@
 import * as React from "react";
-import Link from "next/link"
 import {FlexibleTable, TableBody, TableCell, TableRow, CCell, TableHeader} from "@/components/flexible-table";
-import {AttentionPoint} from "../../common/rarelyVary";
-import {eqpTypeAllMap} from "../../../dict/eqpComm";
-import SurveyRow from "@/component/SurveyRow";
-import {businessCatspMap} from "@/common/sei";
 import {RepLink} from "@/report/common/base";
 import {JumpTab} from "@/report/common/JumpTab";
 

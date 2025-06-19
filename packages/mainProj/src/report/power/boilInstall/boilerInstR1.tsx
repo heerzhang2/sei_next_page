@@ -77,6 +77,11 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 })}
 
                 {mapFxian.get('目录')?.do && <DirectoryPagePress orc={orc} rep={rep}/>}
+                <div className="h-[13.8rem]">dfgfdcxvxc</div>
+
+
+
+
                 {mapFxian.get('检验过程概述')?.do &&
                     <ExplanatoryVw orc={orc} rep={rep} title='1.3锅炉安装施工过程概述' />
                 }
