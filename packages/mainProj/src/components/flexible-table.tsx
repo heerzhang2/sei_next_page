@@ -67,7 +67,9 @@ function processTableSection(section: ReactNode, columnWidths: string[]): ReactN
   return cloneElement(section, (section as any).props, processedRows)
 }
 
-//增加divClassName参数：应对特别情况
+/**
+  两个表紧挨着的的使用border-collapse并没有效果。
+* */
 export function FlexibleTable({ children, columnWidths, className, variant = "default", id }: FlexibleTableProps) {
   const variantStyles = {
     default: "border rounded-md",

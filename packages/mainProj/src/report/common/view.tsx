@@ -268,7 +268,8 @@ export const MeasureMemoTwoRaft = ({
         }
     </>;
 };
-
+/**测压多使用的 人员：
+* */
 export const FootMensLine = ({
                                children,
                                href,
@@ -306,17 +307,17 @@ export const FootMensLine = ({
     );
     const jymens = jmRender || '检验人';
     return (
-        <FlexibleTable className="text-sm" columnWidths={["62%", "%"]}>
+        <FlexibleTable className="text-sm " columnWidths={["62%", "%"]}>
             <TableBody>
                 {children}
                 {href ? (
                     <DirectLink href={href}>
-                        <TableRow className="hover:bg-gray-50 break-inside-avoid-page">
+                        <TableRow className="hover:bg-gray-50 break-inside-avoid-page ">
                             <CCell className="h-full">
-                                <div className="flex justify-between items-start space-y-2">
+                                <div className="flex justify-between items-start ">
                                     <div>
                                         <span className="font-medium">{cap ?? '检验'}：</span>
-                                        <span className="flex items-center">{jymens}</span>
+                                        <span className="inline-flex items-center">{jymens}</span>
                                     </div>
                                     <div className="text-right">
                                         <span className="font-medium">日期</span>
@@ -325,10 +326,10 @@ export const FootMensLine = ({
                                 </div>
                             </CCell>
                             <CCell className="h-full">
-                                <div className="flex justify-between items-start space-y-2">
+                                <div className="flex justify-between items-start ">
                                     <div>
                                         <span className="font-medium">{scap ?? '审核'}：</span>
-                                        <span className="flex items-center">{cm || '审核人'}</span>
+                                        <span className="inline-flex items-center">{cm || '审核人'}</span>
                                     </div>
                                     <div className="text-right">
                                         <span className="font-medium">日期</span>
@@ -339,12 +340,12 @@ export const FootMensLine = ({
                         </TableRow>
                     </DirectLink>
                 ) : (
-                    <TableRow className="hover:bg-gray-50 break-inside-avoid-page">
+                    <TableRow className="hover:bg-gray-50 break-inside-avoid-page ">
                         <CCell className="h-full">
-                            <div className="flex justify-between items-start space-y-2">
+                            <div className="flex justify-between items-start ">
                                 <div>
                                     <span className="font-medium">{cap ?? '检验'}：</span>
-                                    <span className="flex items-center">{jymens}</span>
+                                    <span className="inline-flex items-center">{jymens}</span>
                                 </div>
                                 <div className="text-right">
                                     <span className="font-medium">日期</span>
@@ -353,10 +354,10 @@ export const FootMensLine = ({
                             </div>
                         </CCell>
                         <CCell className="h-full">
-                            <div className="flex justify-between items-start space-y-2">
+                            <div className="flex justify-between items-start ">
                                 <div>
                                     <span className="font-medium">{scap ?? '审核'}：</span>
-                                    <span className="flex items-center">{cm || '审核人'}</span>
+                                    <span className="inline-flex items-center">{cm || '审核人'}</span>
                                 </div>
                                 <div className="text-right">
                                     <span className="font-medium">日期</span>

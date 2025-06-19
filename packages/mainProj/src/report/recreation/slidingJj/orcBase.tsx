@@ -154,7 +154,7 @@ export const tail观测= <div className={"text-[0.75rem]"}>
     </div>
 </div>;
 
-
+//【表格打印调整】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
 export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
     const {storage,} =useStorage();
     const schema = React.useMemo(() => {

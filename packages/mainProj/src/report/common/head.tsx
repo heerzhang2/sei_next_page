@@ -28,3 +28,24 @@ export const ReportFirstPageHeadJd = ({ rep, mbbm }: { rep: any; mbbm: string })
         </div>
     )
 }
+
+/**没有 mbbm
+ * */
+export const ReportFirstPageHeadCyCert = ({ rep }: { rep: any }) => {
+    return (
+        <div className="h-[2.5rem] w-full"> {/* 添加w-full确保父容器宽度 */}
+            <div className="relative h-full"> {/* 保持相对定位容器 */}
+                <div className="absolute -top-[10px] right-0"> {/* 改为right-0定位 */}
+                    <Image
+                        src="/images/FBPI.png"
+                        width={1}
+                        height={1}
+                        alt="二维码"
+                        className="w-auto h-auto"
+                        style={{ height: "3rem" }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};

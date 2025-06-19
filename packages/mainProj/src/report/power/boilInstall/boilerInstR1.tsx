@@ -24,6 +24,7 @@ import {RepDeviceDetail} from "@/report/recreation/slidingJj/repView";
 import {useItemsMapPressure} from "@/report/common/pressure";
 import {DirectoryPagePress} from "@/report/common/directory";
 import {ExplanatoryVw} from "@/report/power/boilInstall/Explanatory";
+import {CertificatePage} from "@/report/power/boilInstall/CertificatePage";
 
 
 export const ReportView = ({ rep }: any) => {
@@ -62,6 +63,8 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
     return (
         <React.Fragment>
             <div className="not-print:my-4">
+                <CertificatePage orc={orc} rep={rep}/>
+
                 <div className="print:h-screen">
                     {ReportFirstPageHeadJd({rep, mbbm: "FJB/YB-1002-1-2024"})}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
@@ -75,16 +78,11 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 {注意事项WaterJj({ rep,
                   comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
                 })}
-
                 {mapFxian.get('目录')?.do && <DirectoryPagePress orc={orc} rep={rep}/>}
-                <div className="h-[25.1rem]">dfgfdcxvxc</div>
-
-
-
-
                 {mapFxian.get('检验过程概述')?.do &&
                     <ExplanatoryVw orc={orc} rep={rep} title='1.3锅炉安装施工过程概述' />
                 }
+
                 <h2 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
                     电站锅炉安装监检报告
                 </h2>

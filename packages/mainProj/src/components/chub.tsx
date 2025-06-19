@@ -656,7 +656,7 @@ export function FormSelectField({ field, label, options, className, selectClass,
   const id = useId() + "-" + field.name // 使用 field.name 生成唯一ID
   return (
       <FormItem className={`pt-2 w-full break-inside-avoid ${className || ""}`}>
-        <FormLabel htmlFor={id}>{label}</FormLabel>
+        <FormLabel htmlFor={id} className="select-text">{label}</FormLabel>
         <FormControl>
           <ClearableSelect
               id={id}

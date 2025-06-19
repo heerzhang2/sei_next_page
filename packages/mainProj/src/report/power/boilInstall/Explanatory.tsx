@@ -328,48 +328,44 @@ export interface ExplanatoryVwProps{
  * */
 export const ExplanatoryVw= ({ orc, rep, title,desc,hash,stname='长文字页'}: ExplanatoryVwProps
 ) => {
-    return(
-        <>
-            <PrintReserveLeast reserve="6rem"
-                   title={
-                       <><h2 id={hash ?? "Explanatory"} className="text-2xl mt-4">{title}</h2>
-                           <div className="flex justify-end">
-                               <span>工程名称：{orc?.工程名称}</span>
-                               <span
-                                   className="text-sm mr-4 text-right md:text-right">报告编号：{rep.isp.no}</span>
-                           </div>
-                       </>
-            }>
-                <FlexibleTable columnWidths={["62%", "%"]} className="text-sm">
-                    {desc && <TableHeader>
-                        <TableRow><TableCell colSpan={2}>{desc}:</TableCell></TableRow>
-                    </TableHeader>}
-                    <TableBody>
-                        <RepLink ori rep={rep} tag={hash ?? 'Explanatory'}>
-                            <TableRow>
-                                <TableCell colSpan={2}>
-                                    <div className="text-sm min-h-8 whitespace-pre-wrap">
-                                        {orc?.[stname] ? <>
-                                                {orc?.[stname]?.map((part: any, i: number) => {
-                                                    return part && (
-                                                        <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Explanatory?from=${i}#Explanatory`}>
-                                                            <div className="block">
-                                                                {part}
-                                                            </div>
-                                                        </JumpTab>
-                                                    );
-                                                })
-                                                }
-                                            </>
-                                            : '／'}
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        </RepLink>
-                    </TableBody>
-                </FlexibleTable>
-                <FootMensLine cap='监检' href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/ProjectList#ProjectList`}/>
-            </PrintReserveLeast>
-        </>
-    )
+    return (<>
+        <PrintReserveLeast reserve="6rem"
+               title={<>
+                      <h2 id={hash ?? "Explanatory"} className="text-2xl text-center mt-4">{title}</h2>
+                      <div className="flex justify-between">
+                           <span className="text-sm">工程名称：{orc?.工程名称}</span>
+                           <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
+                      </div>
+                   </>}>
+            <FlexibleTable columnWidths={["62%", "%"]} className="text-sm">
+                {desc && <TableHeader>
+                    <TableRow><TableCell colSpan={2}>{desc}:</TableCell></TableRow>
+                </TableHeader>}
+                <TableBody>
+                    <RepLink ori rep={rep} tag={hash ?? 'Explanatory'}>
+                        <TableRow>
+                            <TableCell colSpan={2} className="border border-gray-700">
+                                <div className="text-sm min-h-8 whitespace-pre-wrap">
+                                    {orc?.[stname]?.length>0 ? <>
+                                            {orc?.[stname]?.map((part: any, i: number) => {
+                                                return part && (
+                                                    <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Explanatory?from=${i}#Explanatory`}>
+                                                        <div className="block">
+                                                            {part}
+                                                        </div>
+                                                    </JumpTab>
+                                                );
+                                            })
+                                            }
+                                        </>
+                                        : '／'}
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </RepLink>
+                </TableBody>
+            </FlexibleTable>
+            <FootMensLine cap='监检' href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}/>
+        </PrintReserveLeast>
+    </>)
 };

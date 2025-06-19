@@ -9,6 +9,8 @@ import {assertNamesUnique} from "@/report/common/eHelper";
 import {useStorage} from "@/report/StorageContext";
 import {EachObserveConfig} from "@/report/hook/useObserve";
 import {itemA技术见证} from "@/report/common/editor";
+import {render设备类别} from "@/report/common/render";
+import {input额定是} from "@/report/boiler/rarelyVary";
 
 
 export const config设备概况 = [
@@ -39,6 +41,25 @@ export const config设备概况 = [
     [['安全评估时间', {n:'安评估时',t:'d'}], ['现场检验条件',{r:'见附录D'}]],
     [['下次检验日期', '_$新下检日'], ],
     [['检验依据',{r:'《大型游乐设施安全技术规程》（TSG 71-2023）'}]],
+];
+export const 许可级别选=['A级','B级'];
+export const config证书概要 = [
+    //施工==安装单位，在结论概况页面录入的；
+    [['施工单位', '_$安装单'], ],
+    [['许可级别', {n:'许可级',t:'l',l:许可级别选}], ['许可证编号', '_$安许可号'], ],
+    [['使用单位', '_$使用单位'], ['制造单位', '_$制造单位'] ],
+    //台账必须录入:设备名称？
+    [['设备类别', '_$设备类别',render设备类别], ['设备品种(名称)','_$设备名称']],
+    [['产品型号', '_$型号'], ['产品编号', '_$出厂编号'] ],
+    [['设备代码', '_$设备代码'], ['制造日期', '_$制造日期'] ],
+    [['使用地点', '_$设备使用地点']],
+    [['使用单位内部编号','_$单位内部编号'], ['使用登记证编号', '_$使用证号'] ],
+    //orc?.额定蒸发量  .是功率
+    [['额定蒸发量(功率)', '_$额定蒸发量', input额定是], ['额定出口压力', '_$设计出口压力','MPa'] ],
+    //设计出口温度 svp?.设出口温);     这不是用台账的:额定工作压力  ['额定温度', '_$额定温度','℃']
+    [['额定出口温度', '_$出口温度','℃'], ['允许工作压力', '许工压','MPa'] ],
+    //允许工作温度=额定温度；    台账3字段：耐压试验压力、水压试验压力、液压试验压力；
+    [['允许工作温度', '_$额定温度','℃'], ['水(耐)压试验压力', '试验压','MPa'] ],
 ];
 
 export const tail观测= <div className={"text-[0.75rem]"}>
