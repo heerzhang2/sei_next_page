@@ -20,6 +20,7 @@ import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
 import {Explanatory} from "@/report/power/boilInstall/Explanatory";
 import {ConclusionBoiler} from "@/report/power/boilInstall/Conclusion";
+import {CertMemo} from "@/report/power/boilInstall/CertMemo";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -84,6 +85,7 @@ const recordPrintList =[
     createItem('Survey', <DeviceSurveyD config={config设备概况} label={'二、设备概况'}/>),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
     createItem('Explanatory', <Explanatory label={'1.3锅炉安装施工过程概述'} />),
+    createItem('CertMemo', <CertMemo label={'证书-说明'} />),
     // createItem('MainTechnical', <ObserveEdit config={config主技术} allowableV mem={'主技备注'} label={'附录A K7.5 主要技术参数测试'}>{tail主技}</ObserveEdit>),
     // createItem('StrainStress', <StrainStress sensit label='附录B K7.6应力测试记录'/>),
     // createItem('Acceleration', <Acceleration sseq={4} stnum={3} label={'附录C K7.7加速度（A）检测记录'}/>),
