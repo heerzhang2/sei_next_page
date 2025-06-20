@@ -7,14 +7,9 @@ import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import { useStorage } from "@/report/StorageContext"
 import { SmartTruncatedText } from "@/components/smart-truncated-text"
 import { Edit, X, } from "lucide-react"
+import {InternalItemProps} from "@/report/common/base";
 
-interface CertMemoProps {
-    rep?: any
-    children?: React.ReactNode
-    show?: boolean
-    alone?: boolean
-    label?: string
-}
+
 //const itemA = ['证书说明' ];
 /**保留 编辑常见的范式；
 * */
@@ -24,9 +19,8 @@ export const CertMemo =
             rep,
             children,
             show = true,
-            alone = true,
             label,
-        }:CertMemoProps
+        }:InternalItemProps
     ) => {
     const { storage } = useStorage()
     const [content, setContent] = React.useState<string>(storage?.['证书说明'] ?? "")

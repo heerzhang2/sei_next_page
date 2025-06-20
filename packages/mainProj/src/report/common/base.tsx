@@ -8,18 +8,19 @@ import {JumpTab} from "@/report/common/JumpTab";
 
 //公共的复用性好的组件。
 //各个检验单项子组件暴露给父组件的接口数据。
-export interface InternalItemHandResult {
-    inp: any;
-    doConfirm: ()=>{};
-}
+// export interface InternalItemHandResult {
+//     inp: any;
+//     doConfirm: ()=>{};
+// }
+
 //各个检验单项
-export interface InternalItemProps  extends React.HTMLAttributes<HTMLDivElement>{
-    show?: boolean;
-    alone?: boolean;
-    ref?: any;
+export interface InternalItemProps{
     /**还是需要报告对象传递下来; 只有repId还不够的。 主报告的
      * */
     rep?: any;
+    label?: string;
+    show?: boolean;
+    children?: React.ReactNode
     //报告ID号；以及verId： 正常需直接用rep?.; 可独立流转分项报告的模板例外
     repId?: string;
     verId?: string;
@@ -27,9 +28,11 @@ export interface InternalItemProps  extends React.HTMLAttributes<HTMLDivElement>
     redId?: string;
     //嵌入分项报告的模板号,
     nestMd?: string;
-    refWidth?: number;
-    label?: string;
+    // refWidth?: number;
+    // alone?: boolean;
+    ref?: any;
 }
+
 
 //动态载入的类似原始记录编辑区域模板组件, 所有参数都必须？可选的，否则报错。#若要打印原始记录需求的？：可能需要单独组织类似报告printView专门打印的组件来组织编辑器汇总输出。
 export interface OriginalViewProps {

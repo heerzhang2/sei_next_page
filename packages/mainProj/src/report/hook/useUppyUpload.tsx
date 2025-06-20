@@ -75,6 +75,7 @@ export function useUppyUpload({
                                   liveDays = 2,
                                   maxSize = 3,
                                   onFinish,
+                                  hash
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -82,6 +83,7 @@ export function useUppyUpload({
     liveDays?: number
     maxSize?: number
     onFinish?: (file: any, del: boolean) => void
+    hash?: string
 }) {
     const [openUppy, setOpenUppy] = React.useState(false)
     //实际本次发起上传的活动允许的可上传文件数还会更少：扣除已经有的数量。
@@ -197,7 +199,7 @@ export function useUppyUpload({
                                           </div>
                                       </div>*/
                 }
-                <div className="text-center">
+                <div id={hash ?? '_pf'} className="text-center">
                     {storeObj1?.url ? (
                         <Button
                             size="sm"
@@ -233,12 +235,12 @@ export function useUppyUpload({
                         return (
                             <div key={i}>
                                 {i > 0 && <hr />}
-                                <div className="flex justify-around items-center">
+                                <div id={(hash ?? '_pf')+`${i}`} className="flex justify-around items-center">
                                     {url && (
                                         <img
                                             src={process.env.NEXT_PUBLIC_OSS_ENDP + url || "/placeholder.svg"}
                                             alt={url}
-                                            className="max-h-[14cm] w-full print:max-h-[26cm] print:max-w-[705px] lg:max-h-[18cm] lg:w-auto"
+                                            className="max-h-[14cm] w-full print:max-h-[26cm] print:max-w-[705px] @lg:max-h-[18cm] @lg:w-auto"
                                         />
                                     )}
                                 </div>
@@ -256,7 +258,7 @@ export function useUppyUpload({
                         )
                     })}
                 </div>
-                <div className="text-center">
+                <div className="text-center mt-4">
                     {openUppy && <Dashboard uppy={uppy} plugins={["Webcam"]} />}
                     <Button
                         size="sm"

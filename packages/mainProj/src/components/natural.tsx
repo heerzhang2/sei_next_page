@@ -7,9 +7,10 @@ import Image from "next/image"
 interface ImageProps {
   src: string
   alt?: string
+  id?: string
 }
 
-export const ImageComponentNatural: React.FC<ImageProps> = ({ src, alt = "图片" }) => {
+export const ImageComponentNatural: React.FC<ImageProps> = ({ src, alt = "图片",id }) => {
   const [dimensions, setDimensions] = useState({ width: 300, height: 200 })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -37,7 +38,7 @@ export const ImageComponentNatural: React.FC<ImageProps> = ({ src, alt = "图片
   }, [src])
 
   return (
-    <div className="flex justify-around items-center mb-2">
+    <div id={id} className="flex justify-around items-center mb-2">
       {isLoading ? (
         <div className="animate-pulse bg-gray-200 rounded" style={{ width: 300, height: 200 }}></div>
       ) : (
@@ -47,7 +48,7 @@ export const ImageComponentNatural: React.FC<ImageProps> = ({ src, alt = "图片
             alt={alt}
             width={dimensions.width}
             height={dimensions.height}
-            className="object-contain max-h-[14cm] print:max-h-[26cm] print:max-w-[705px] lg:max-h-[18cm]"
+            className="object-contain max-h-[14cm] print:max-h-[26cm] print:max-w-[705px] @lg:max-h-[18cm]"
             unoptimized
             style={{
               width: "auto", // 让图片保持其自然宽度

@@ -25,6 +25,7 @@ import {useItemsMapPressure} from "@/report/common/pressure";
 import {DirectoryPagePress} from "@/report/common/directory";
 import {ExplanatoryVw} from "@/report/power/boilInstall/Explanatory";
 import {CertificatePage} from "@/report/power/boilInstall/CertificatePage";
+import {BoilerDiagramVw} from "@/report/power/boilInstall/BoilerDiagram";
 
 
 export const ReportView = ({ rep }: any) => {
@@ -79,6 +80,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                   comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
                 })}
                 {mapFxian.get('目录')?.do && <DirectoryPagePress orc={orc} rep={rep}/>}
+                {mapFxian.get('锅炉简图')?.do && <BoilerDiagramVw orc={orc} rep={rep}/>}
                 {mapFxian.get('检验过程概述')?.do &&
                     <ExplanatoryVw orc={orc} rep={rep} title='1.3锅炉安装施工过程概述' />
                 }

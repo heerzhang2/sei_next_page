@@ -62,3 +62,11 @@ export default function PageSectionOrientation({
   )
 }
 
+// Create a custom hook to use the context
+export function usePageSectionOrientation() {
+  const context = useContext(OrientationContext)
+  if (context === undefined) {
+    throw new Error("useStorage must be used within a PageSectionOrientation")
+  }
+  return context
+}

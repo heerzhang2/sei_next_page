@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import {useStorage} from "@/report/StorageContext";
+import {usePageSectionOrientation} from "@/components/page-section-orientation";
 
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
@@ -52,27 +54,32 @@ interface ImageProps {
     className?: string  // 新增 className 属性
 }
 /**报告打印专用的：
+ * css中的数值：默认针对设置是，打印纸张=A4竖着答应的版本；
+ * 横着A4打印情况？
  * */
 export const ImageComponent: React.FC<ImageProps> = ({
                                                          src,
                                                          alt = "图片",
                                                          className  // 解构 className
                                                      }) => {
+    const {parentOrientation} =usePageSectionOrientation();
+    const landscape="landscape"===parentOrientation
     return (
         <div className={`flex justify-around items-center ${className || ''}`}>
             <div>
                 <img
                     src={src || "/placeholder.svg"}
                     alt={alt}
-                    className={`object-contain max-h-[14cm] print:max-h-[26cm] print:max-w-[705px] lg:max-h-[18cm] ${className || ''}`}
+                    className={cn("object-contain max-h-[15cm] @md:5xl:max-h-[19cm]",
+                                landscape? "print:max-h-[705px] print:max-w-[26.5cm]" : "print:max-h-[26.5cm] print:max-w-[705px]",
+                                className)}
                     style={{
                         width: "auto",
                         height: "auto",
                         maxWidth: "100%",
                     }}
-                />
-            </div>
+            />
         </div>
+    </div>
     )
 }
-

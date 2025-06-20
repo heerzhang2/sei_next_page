@@ -310,8 +310,6 @@ export const Explanatory =
     )
 }
 
-
-
 export interface ExplanatoryVwProps{
     orc: any;
     rep: any;
