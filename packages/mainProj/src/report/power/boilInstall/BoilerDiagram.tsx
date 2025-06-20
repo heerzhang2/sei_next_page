@@ -105,7 +105,7 @@ export const BoilerDiagram =
 interface BoilerDiagramVwProps{
     orc: any;
     rep: any;
-    title: string;
+    title?: string;
     children?: React.ReactNode
 }
 /**锅炉结构简图

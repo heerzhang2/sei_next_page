@@ -5,6 +5,7 @@ import * as React from "react";
 // import Img_Fbpi from "../../images/FBPI.png";
 // import Img_ReportNoQR from "../../images/reportNoQR.png";
 import {AttentionPoint} from "../common/rarelyVary";
+import {CCell, FlexibleTable, TableBody, TableCell, TableFooter, TableHeader, TableRow} from "@/components/flexible-table";
 
 /**报告封面的头部区域： 紧凑型
  * 有Ma 但是mbbm不显示

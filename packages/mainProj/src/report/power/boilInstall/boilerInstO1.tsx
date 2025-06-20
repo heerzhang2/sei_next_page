@@ -14,7 +14,7 @@ import {Acceleration} from "../waterJj/Acceleration";
 import {config记录} from "./FormatOriginal";
 import {config主技术, tail主技} from "./MainTechnical";
 import {setupItemAreaRoute} from "./orcIspConfig";
-import {EntranceSetup, config设备概况,} from "./orcBase";
+import {EntranceSetup, config设备概况, config证书概要,} from "./orcBase";
 import {ConclusionWaterJj} from "@/report/recreation/waterJj/Conclusion";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
@@ -83,7 +83,8 @@ const recordPrintList =[
     createItem('Entrance', <EntranceSetup/>),
     createItem('ProjectList', <ProjectR nRec defaultProj={Projects记录} label={'记录的目录页'}/>),
     createItem('Instrument', <ItemInstrumentTable label={'一、主要测量设备性能检查'} />),
-    createItem('Survey', <DeviceSurveyD config={config设备概况} label={'二、设备概况'}/>),
+    createItem('Survey', <DeviceSurveyD config={config设备概况} label={'检验结论报告-概况'}/>),
+    createItem('CertificateSummary', <DeviceSurveyD config={config证书概要} label={'证书的设备概况部分'}/>),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
     createItem('BoilerDiagram', <BoilerDiagram label="1.2锅炉结构简图"/>),
     createItem('Explanatory', <Explanatory label={'1.3锅炉安装施工过程概述'} />),

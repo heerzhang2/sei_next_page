@@ -26,6 +26,9 @@ import {DirectoryPagePress} from "@/report/common/directory";
 import {ExplanatoryVw} from "@/report/power/boilInstall/Explanatory";
 import {CertificatePage} from "@/report/power/boilInstall/CertificatePage";
 import {BoilerDiagramVw} from "@/report/power/boilInstall/BoilerDiagram";
+import {注意事项GasC} from "@/report/gas/rarelyVary";
+import {首页设备概况BoilI} from "@/report/power/boilInstall/rarelyVary";
+import {ConclusionVw} from "@/report/power/boilInstall/Conclusion";
 
 
 export const ReportView = ({ rep }: any) => {
@@ -72,57 +75,29 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                         <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
                           <h1 className="text-3xl text-center print:mt-6">电站锅炉安装监检报告</h1>
                         </JumpTab>
-                        {首页概况recr(orc,rep,)}
+                        {首页设备概况BoilI(orc,rep,)}
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
                 </div>
-                {注意事项WaterJj({ rep,
-                  comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
+                {注意事项GasC({rep,
+                    comply: '书为依据《锅炉安全技术规程》制定，适用于电站锅炉安装监督检验的结论报告'
                 })}
                 {mapFxian.get('目录')?.do && <DirectoryPagePress orc={orc} rep={rep}/>}
+
+                <ConclusionVw orc={orc} rep={rep}/>
+                {检验核准WaterJj({orc, rep, jyt:'编制'})}
+
                 {mapFxian.get('锅炉简图')?.do && <BoilerDiagramVw orc={orc} rep={rep}/>}
                 {mapFxian.get('检验过程概述')?.do &&
                     <ExplanatoryVw orc={orc} rep={rep} title='1.3锅炉安装施工过程概述' />
                 }
-
-                <h2 className="text-xl text-center mt-4 print:mt-0 print:break-before-page">
-                    电站锅炉安装监检报告
-                </h2>
-                {RepDeviceDetail({orc, rep})}
-                {检验核准WaterJj({orc, rep})}
-                <PrintReserveLeast reserve="13rem"
-                       title={<h2 className="text-xl text-center mt-4 print:mt-24">
-                           大型游乐设施监督检验报告附页
-                       </h2>}
-                >
-                    <FlexibleTable className="text-sm"
-                                   columnWidths={["3.5%", "6.3%", "6.3%", "5%", "5%", "%", "12.6%", "7.1%", "11.5%"]}>
-                        <TableHeader>
-                            <TableRow>
-                                <CCell className="text-[0.7rem] !p-0">序号</CCell>
-                                <CCell colSpan={5}>检验项目及内容</CCell>
-                                <CCell>
-                                    <span className="text-[0.8rem]">检验结果</span>
-                                </CCell>
-                                <CCell>结论</CCell>
-                                <CCell>备注</CCell>
-                            </TableRow>
-                        </TableHeader>
-                    </FlexibleTable>
-                </PrintReserveLeast>
             </div>
             <div className="print:hidden">
                 <RepLink ori rep={rep} tag={'ProjectList'}>
                     <div>目录列表编辑器</div>
                 </RepLink>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Instrument?original=1#Instrument`} tab="preview">
-                    <div className="block">主要测量设备性能检查</div>
-                </JumpTab>
                 <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
                     <span className="block">记事 、 备注</span>
-                </JumpTab>
-                <JumpTab id="SiteCondition" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/SiteCondition?original=1#SiteCondition`} tab="preview">
-                    <span className="block">附录：现场检验条件确认</span>
                 </JumpTab>
             </div>
         </React.Fragment>

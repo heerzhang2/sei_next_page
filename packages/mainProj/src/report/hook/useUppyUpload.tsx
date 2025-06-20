@@ -237,10 +237,9 @@ export function useUppyUpload({
                                 {i > 0 && <hr />}
                                 <div id={(hash ?? '_pf')+`${i}`} className="flex justify-around items-center">
                                     {url && (
-                                        <img
+                                        <ImageComponentNatural
                                             src={process.env.NEXT_PUBLIC_OSS_ENDP + url || "/placeholder.svg"}
                                             alt={url}
-                                            className="max-h-[14cm] w-full print:max-h-[26cm] print:max-w-[705px] @lg:max-h-[18cm] @lg:w-auto"
                                         />
                                     )}
                                 </div>

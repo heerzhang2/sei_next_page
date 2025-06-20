@@ -69,3 +69,4 @@ credentials: true
 }));
 
 升级Next.js和Node服务到HTTPS
+【表格打印调整】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；

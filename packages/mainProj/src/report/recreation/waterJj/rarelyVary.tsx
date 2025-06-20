@@ -16,7 +16,8 @@ interface InspectionApprovalProps {
 export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprovalProps) => {
   //内嵌的表格高度无法自适应撑开：另一个办法设置内嵌表格固定height: 9rem;
   return (
-      <div className="w-full">
+        //打印需要尾巴预留空白
+      <div className="w-full print:mb-20">
         <FlexibleTable className="text-sm w-full border-collapse" columnWidths={["4.2%", "27%", "27%", "4.2%", "12%", "%"]}>
           <TableBody>
               <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Conclusion#Conclusion`}>
@@ -27,7 +28,7 @@ export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprov
                   </CCell>
                   <CCell className="text-xs">日期</CCell>
                   <CCell>{orc.检验日期 || "／"}</CCell>
-                  <CCell className="!p-0 relative h-full" rowSpan={3}>
+                  <CCell split={false} className="!p-0 relative h-full" rowSpan={3}>
                     <div className="h-full flex flex-col">
                       <div className="print:hidden absolute inset-0 opacity-30 bg-no-repeat bg-center"
                            style={{ backgroundImage: `url(/images/seal.png)` }}></div>

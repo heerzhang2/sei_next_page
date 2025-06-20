@@ -1,5 +1,5 @@
 import * as React from "react";
-import { InternalItemProps } from "../../common/base";
+import {InternalItemProps, RepLink} from "../../common/base";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import {
@@ -15,6 +15,10 @@ import {
 } from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
+import {config设备概况} from "@/report/power/boilInstall/orcBase";
+import {useThreeColumnView} from "@/report/hook/useThreeColumnSubr";
+import {CCell, FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexible-table";
+import {PrintReserveLeast} from "@/components/print-reserve-least";
 
 interface ConclusionProps  extends InternalItemProps{
     startd?: boolean;
@@ -122,4 +126,66 @@ export const ConclusionBoiler = ({ children, show, alone = true, redId, nestMd, 
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
         {render(null)}
     </CollapsibleFormSection>;
+};
+
+//结论转换函数
+export const mapBoilerResult = (input: "符合要求" | "基本符合要求" | "不符合要求"): "符合" | "不符合" => {
+    switch (input) {
+        case "符合要求":
+        case "基本符合要求":
+            return "符合";
+        case "不符合要求":
+        default:
+            return "不符合";
+    }
+};
+
+export const ConclusionVw= ({ orc, rep } : { orc: any,rep:any}
+) => {
+    const [_,renderUpper,render2]=useThreeColumnView({orc, config:config设备概况,slash:true,split:[1,9]});
+    const result1=mapBoilerResult(orc?.检验结论)
+    return <React.Fragment>
+        <PrintReserveLeast reserve="10rem"
+                           title={<>
+                               <h2  className="text-xl text-center mt-4">一、锅炉安装监督检验综合报告<br/>
+                                   1.1锅炉安装监督检验结论报告</h2>
+                               <div className="flex justify-between">
+                                   <span className="text-sm">工程名称：{orc?.工程名称}</span>
+                                   <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
+                               </div>
+                           </>}>
+            <FlexibleTable id='Survey' columnWidths={ ["14.1%", "19%", "%", "10.1%","10%","8%"] } className="text-sm border-collapse">
+                <TableBody>
+                    <RepLink ori rep={rep} tag={'Survey'}>
+                        {renderUpper}
+                    </RepLink>
+                </TableBody>
+            </FlexibleTable>
+        </PrintReserveLeast>
+        <FlexibleTable columnWidths={ ["16.7%", "11%", "%", "16.7%","16%","16%"] }  className="text-sm">
+            <TableBody>
+                <RepLink ori rep={rep} tag={'Survey'}>
+                    {render2}
+                </RepLink>
+                <RepLink rep={rep} tag={'Conclusion'}>
+                    <TableRow>
+                        <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                            <span className="block tracking-[0.7rem] font-bold text-center">
+                              监督检验结论
+                            </span>
+                            <span className="block indent-[2rem] text-left">
+                              按照《中华人民共和国特种设备全法》、《特种设备安全监察条例》的规定，该台锅炉的安装，经我机构监督检验，&nbsp;
+                                <span className="font-bold text-xl tracking-[0.5rem]">{result1}</span>
+                                《锅炉安全技术规程》规定的基本安全要求。
+                            </span>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <CCell>参检人员</CCell>
+                        <CCell colSpan={5}>{orc.参检人员 ?? '／' }</CCell>
+                    </TableRow>
+                </RepLink>
+            </TableBody>
+        </FlexibleTable>
+    </React.Fragment>;
 };
