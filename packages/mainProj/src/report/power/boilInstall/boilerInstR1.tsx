@@ -15,7 +15,7 @@ import { 检验核准WaterJj, 注意事项WaterJj } from "@/report/recreation/wa
 // import { setupItemAreaRoute } from "./orcIspConfig"
 // import { FormatOriginal } from "./FormatOriginal"
 import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
-import {ReportFirstPageHeadJd} from "@/report/common/head";
+import {ReportFirstPageHeadJd, ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
 import {createPdfJob} from "@/report/footer/job";
 import {RepFootLink} from "@/report/common/repFootLink";
 import {RepHeadLink} from "@/report/common/repHeadLink";
@@ -30,7 +30,8 @@ import {注意事项GasC} from "@/report/gas/rarelyVary";
 import {首页设备概况BoilI} from "@/report/power/boilInstall/rarelyVary";
 import {ConclusionVw} from "@/report/power/boilInstall/Conclusion";
 
-
+/**缺失原始记录，可能是*.doc补充的附件。
+* */
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
     const original = "1" === searchParams!.get("original")
@@ -70,7 +71,7 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 <CertificatePage orc={orc} rep={rep}/>
 
                 <div className="print:h-screen">
-                    {ReportFirstPageHeadJd({rep, mbbm: "FJB/YB-1002-1-2024"})}
+                    {ReportFirstPageHeadNmaNmbm({rep })}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
                         <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
                           <h1 className="text-3xl text-center print:mt-6">电站锅炉安装监检报告</h1>
@@ -134,5 +135,3 @@ export function useCatalog() {
     }, [storage])
     return dirs
 }
-
-//【表格工具】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
