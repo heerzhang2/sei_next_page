@@ -2,17 +2,7 @@ import * as React from "react";
 import {InternalItemProps, RepLink} from "../../common/base";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage, Input
-} from "@/components/ui";
+import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {config设备概况} from "@/report/power/boilInstall/orcBase";
@@ -33,7 +23,7 @@ const 结论选 = [
 ]
 export const itemA结论 = ['检验结论', '新下检日','检验日期','检验日期1','参检人员' ];
 //下结论页面：
-export const ConclusionBoiler = ({ children, show, alone = true, redId, nestMd, label, rep,
+export const ConclusionBoiler = ({ children, show,  redId, nestMd, label, rep,
                                       startd=false,nxtstyp='检验',rslist=结论选,cjry}: ConclusionProps) => {
     const {storage,} =useStorage();
     const schema = React.useMemo(() => {
@@ -147,7 +137,7 @@ export const ConclusionVw= ({ orc, rep } : { orc: any,rep:any}
     return <React.Fragment>
         <PrintReserveLeast reserve="10rem"
                            title={<>
-                               <h2  className="text-xl text-center mt-4">一、锅炉安装监督检验综合报告<br/>
+                               <h2 id={"Conclusion"} className="text-xl text-center mt-4">一、锅炉安装监督检验综合报告<br/>
                                    1.1锅炉安装监督检验结论报告</h2>
                                <div className="flex justify-between">
                                    <span className="text-sm">工程名称：{orc?.工程名称}</span>

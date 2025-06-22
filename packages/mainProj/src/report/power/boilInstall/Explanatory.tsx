@@ -1,16 +1,8 @@
 "use client"
 import * as React from "react";
-import {InternalItemProps, RepLink, } from "../../common/base";
+import {RepLink} from "../../common/base";
 import {FootMensLine} from "@/report/common/view";
-import {
-    CCell,
-    FlexibleTable,
-    TableBody,
-    TableCell,
-    TableFooter,
-    TableHeader,
-    TableRow
-} from "@/components/flexible-table";
+import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {CollapsibleFormSection} from "@/components/chub";
 import {Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle,Label,Textarea} from "@/components/ui";
 import {cn} from "@/lib/utils";
@@ -27,26 +19,20 @@ interface ExplanatoryProps {
     rep?: any
     children?: React.ReactNode
     show?: boolean
-    alone?: boolean
     redId?: string
     nestMd?: string
-    refWidth?: string
-    desc?: string
     label?: string
     stname?: string
 }
-
+//const itemA=["长文字页",];
 export const Explanatory =
     (
         {
             rep,
             children,
             show = true,
-            alone = true,
             redId,
             nestMd,
-            refWidth,
-            desc = "说明叙述",
             label = "长文本编辑器",
             stname = "长文字页",
         }:ExplanatoryProps,
@@ -321,6 +307,7 @@ export interface ExplanatoryVwProps{
 /**最简单的办法 :空白 文字
  * FootMenRowIspCheck 要求2列表格；
  *框架引进的useMediaPrint(true,true)只能确保hx+div 不会被断开打印纸张页的，但是这里是三个元素 h2+div+table没法子确保的？
+ *因为长文本 string 改成数组类型 string[]的。可能报错 _orc_stname1.map is not a function；
  * */
 export const ExplanatoryVw= ({ orc, rep, title,desc,hash,stname='长文字页'}: ExplanatoryVwProps
 ) => {

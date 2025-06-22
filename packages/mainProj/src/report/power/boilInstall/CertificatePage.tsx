@@ -1,8 +1,6 @@
 "use client"
-// import * as React from "react";
 import type React from "react"
-import {cn} from "@/lib/utils";
-import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
+import {FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexible-table";
 import {ReportFirstPageHeadCyCert} from "@/report/common/head";
 import {JumpTab} from "@/report/common/JumpTab";
 import {usePrefixDataTable} from "@/report/hook/usePrefixData";
@@ -14,27 +12,24 @@ interface CertificatePageProps {
     rep: any
     children?: React.ReactNode
 }
-//必须给第一层的Table加上"@media print": {height:'82vh',} } }，而不是其父div加高度vh的，才能确保第二层Table撑开可用区域。 依赖自动调节
-
 
 export const CertificatePage = ({ orc, rep, children }: CertificatePageProps) => {
     const renderUpper=usePrefixDataTable({config: config证书概要, orc, rep, slash:true});
-
     const callback = () => {
         return (
             <div className="print:h-screen print:overflow-y-hidden">
                 <ReportFirstPageHeadCyCert rep={rep} />
                 <div className="print:flex print:flex-col print:justify-around print:h-[calc(100vh-3rem)]">
-                    <h2 className="block text-center leading-[0.9] mb-1 text-3xl font-normal">特种设备安装监督检验证书</h2>
+                    <h2 className="block text-center leading-[0.9] text-3xl font-normal">特种设备安装监督检验证书</h2>
                     <span className="text-center mb-0 block text-xl">（锅炉）</span>
                     <div>
                         <div className="flex justify-between">
                             &nbsp;
                             <span className="flex flex-row-reverse mr-8 text-base">证书编号：{rep.isp?.no}</span>
                         </div>
-                        <FlexibleTable id='Survey' columnWidths={["9.9%","6.8%","37%","12.1%","4%","%"]} className="text-sm border-collapse">
+                        <FlexibleTable  columnWidths={["9.9%","6.8%","37%","12.1%","4%","%"]} className="text-sm border-collapse">
                             <TableBody>
-                                <RepLink ori rep={rep} tag={'Survey'}>
+                                <RepLink ori rep={rep} tag={'CertificateSummary'}>
                                     {renderUpper}
                                 </RepLink>
                                 <RepLink rep={rep} tag='CertMemo'>
@@ -121,20 +116,8 @@ export const CertificatePage = ({ orc, rep, children }: CertificatePageProps) =>
         )
     }
 
-    return (
-        <>
-            <div id="Certificate" />
-            {callback()}
-        </>
-    )
+    return (<>
+        <div id="Certificate" />
+        {callback()}
+    </>)
 }
-
-/*
-<Table fixed={ ["16.1%", "36%", "15.3%", "%"] }  css={ {borderCollapse: 'collapse',
-    "@media print": {height:'82vh',} } } tight  miniw={800}>
-    <TableBody>
-        <RepLink rep={rep} tag='Conclusion'>
-
-        </RepLink>
-    </TableBody>
-</Table>*/

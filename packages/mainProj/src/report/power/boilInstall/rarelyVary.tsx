@@ -1,10 +1,6 @@
 import * as React from "react";
 import {FlexibleTable, TableBody} from "@/components/flexible-table";
 import SurveyRow from "@/component/SurveyRow";
-import {businessCatspMap} from "@/common/sei";
-import {eqpTypeAllMap} from "@/dict/eqpComm";
-// import {FadeImage} from "../../../comp/FadeImage";
-// import Img_Fbpi from "../../../images/FBPI.png";
 
 //建设单位 =使用单位；   安装单位：不是台账的
 export const 首页设备概况BoilI= (orc:any, rep:any, original?:boolean
@@ -20,19 +16,4 @@ export const 首页设备概况BoilI= (orc:any, rep:any, original?:boolean
       <SurveyRow label="监察识别码" value={orc.监察识别码 ??'／'}/>
     </TableBody>
   </FlexibleTable>;
-};
-
-/**没有 mbbm
-* */
-export const ReportFirstPageHeadCyCert= ({theme , rep,} :{theme: any, rep:any}
-) => {
-  return <div css={{direction: 'rtl', height: '2.5rem',overflow: 'hidden'}}>
-    <div css={{width: 'fit-content' }}>
-      <Embed css={{
-        position: 'relative',top: '-0.6rem',right:0, width: "120px",margin: "auto",
-      }} width={78} height={35}>
-        <FadeImage src={Img_Fbpi}/>
-      </Embed>
-    </div>
-  </div>;
 };

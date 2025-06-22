@@ -48,7 +48,7 @@ export const ReportFirstPageHeadNmaNmbm = ({ rep }: { rep: any }) => {
                     style={{ height: "8rem", width: "auto" }}
                 />
             </div>
-            <div className="relative h-full flex flex-col items-end justify-start">
+            <div className="h-full flex flex-col items-end justify-start">
                 {/* FBPI图片 - 右上角 */}
                 <div className="mb-2">
                     <Image
@@ -70,7 +70,6 @@ export const ReportFirstPageHeadNmaNmbm = ({ rep }: { rep: any }) => {
         </div>
     )
 }
-
 
 export const ReportFirstPageHeadNmaNmbm4= ({theme , rep, mbbm,nofbp,op } :{theme: any, rep:any, mbbm?:string,nofbp?:boolean,op?:boolean}
 ) => {
@@ -110,12 +109,13 @@ export const ReportFirstPageHeadNmaNmbm4= ({theme , rep, mbbm,nofbp,op } :{theme
 
 
 /**没有 mbbm
+ * 打印dom不能超出，在纸张margin区域做输出的。
  * */
 export const ReportFirstPageHeadCyCert = ({ rep }: { rep: any }) => {
     return (
         <div className="h-[2.5rem] w-full"> {/* 添加w-full确保父容器宽度 */}
             <div className="relative h-full"> {/* 保持相对定位容器 */}
-                <div className="absolute -top-[10px] right-0"> {/* 改为right-0定位 */}
+                <div className="absolute  right-0"> {/* 改为right-0定位 -top-[10px] */}
                     <Image
                         src="/images/FBPI.png"
                         width={1}

@@ -11,6 +11,7 @@ import {FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexib
 import {JumpTab} from "@/report/common/JumpTab";
 import {FootMensLine} from "@/report/common/view";
 import {ImageComponent} from "@/components/shub";
+import {cn} from "@/lib/utils";
 
 
 interface ProjectItem {
@@ -123,7 +124,7 @@ export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', childr
                            </>}>
             <FlexibleTable columnWidths={["62%", "%"]} className="text-sm">
                 <TableBody>
-                    <TableRow>
+                    <TableRow className="border border-gray-700">
                         <TableCell colSpan={2} className="border border-gray-700">
                             <RepLink ori rep={rep} tag={'BoilerDiagram'}>
                               <div>
@@ -133,11 +134,11 @@ export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', childr
                                     </span>
                                 }
 
-                                {!(orc?._FILE_S简图?.length>0) && !orc.简图说明 && <span className="text-center">空的，进入上传吧</span>}
+                                {!(orc?._FILE_S简图?.length>0) && !orc.简图说明 && <span className="block m-4 text-xl text-center">空的，进入上传吧</span>}
                               </div>
                             </RepLink>
                             {orc?._FILE_S简图?.map(({name, url}: any, i: number) => {
-                                return <div key={i} className="break-inside-avoid-page">
+                                return <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
                                     {i>0 && <hr/>}
                                     <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/BoilerDiagram?#BoilerDiagram_pf${i}`}>
                                         <div className="flex justify-around items-center my-0.5">
@@ -145,7 +146,10 @@ export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', childr
                                                 <ImageComponent
                                                     src={`${process.env.NEXT_PUBLIC_OSS_ENDP}${url}`}
                                                     alt={url || "图片"}
-                                                    className="w-auto h-auto"
+                                                    className={cn(
+                                                        "w-auto h-auto",
+                                                        i>0 ? "print:max-h-[calc(100vh-2.5rem)]" : "print:max-h-[calc(100vh-5.9rem)]",
+                                                    )}
                                                 />
                                             )}
                                         </div>

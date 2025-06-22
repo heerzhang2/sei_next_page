@@ -312,7 +312,7 @@ export const FootMensLine = ({
                 {children}
                 {href ? (
                     <DirectLink href={href}>
-                        <TableRow className="hover:bg-gray-50 break-inside-avoid-page ">
+                        <TableRow className="hover:bg-gray-50 break-inside-avoid-page">
                             <CCell className="h-full">
                                 <div className="flex justify-between items-start ">
                                     <div>
@@ -340,7 +340,7 @@ export const FootMensLine = ({
                         </TableRow>
                     </DirectLink>
                 ) : (
-                    <TableRow className="hover:bg-gray-50 break-inside-avoid-page ">
+                    <TableRow className="hover:bg-gray-50 break-inside-avoid-page">
                         <CCell className="h-full">
                             <div className="flex justify-between items-start ">
                                 <div>

@@ -1,26 +1,15 @@
 "use client"
 import * as React from "react"
 import {useSearchParams} from "next/navigation"
-import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
-import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
 import {RepLink, ReportViewProps, RepTitleUpdate} from "@/report/common/base"
 import { 落款单位地址 } from "@/report/common/rarelyVary"
-import type { Column_Setting } from "@/report/common/useFormatOmni"
-import { useOfficialOmni } from "@/report/common/useOfficialOmni"
-import { UnqualifiedIspTable } from "@/report/common/general"
-import { useItemsMapOmni } from "@/report/common/omni"
-import { 检验核准WaterJj, 注意事项WaterJj } from "@/report/recreation/waterJj/rarelyVary"
-// import { RepDeviceDetail } from "./repView"
-// import { setupItemAreaRoute } from "./orcIspConfig"
-// import { FormatOriginal } from "./FormatOriginal"
-import {首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
-import {ReportFirstPageHeadJd, ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
+import { 检验核准WaterJj } from "@/report/recreation/waterJj/rarelyVary"
+import {ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
 import {createPdfJob} from "@/report/footer/job";
 import {RepFootLink} from "@/report/common/repFootLink";
 import {RepHeadLink} from "@/report/common/repHeadLink";
 import {JumpTab} from "@/report/common/JumpTab";
-import {RepDeviceDetail} from "@/report/recreation/slidingJj/repView";
 import {useItemsMapPressure} from "@/report/common/pressure";
 import {DirectoryPagePress} from "@/report/common/directory";
 import {ExplanatoryVw} from "@/report/power/boilInstall/Explanatory";
@@ -30,7 +19,7 @@ import {注意事项GasC} from "@/report/gas/rarelyVary";
 import {首页设备概况BoilI} from "@/report/power/boilInstall/rarelyVary";
 import {ConclusionVw} from "@/report/power/boilInstall/Conclusion";
 
-/**缺失原始记录，可能是*.doc补充的附件。
+/**原始记录 模板缺失，可能是*.doc补充的附件。
 * */
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
@@ -51,31 +40,24 @@ export const ReportView = ({ rep }: any) => {
     )
 }
 
-const 检验结果替换 = (orc: { [x: string]: any }) => {
-    const out = {...orc}
-    // if(undefined!==orc?.绝缘阻o)  out.绝缘阻检=<div>电阻值{floatInterception(orc?.绝缘阻o,1)}MΩ</div>;
-    return out
-}
-const config报告: Column_Setting[] = [
-    {n: "", x: "检验结果"},
-    {n: null, x: "结论"},
-    {n: "M", x: "备注", m: true},
-]
 /*有些内容放页眉页脚：<span>报告编号：{rep.isp.no}</span>页号安排放入页眉页脚。
 * */
 const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, rep}) => {
     const [mapFxian]=useItemsMapPressure({ projects:orc.Projects });
     return (
-        <React.Fragment>
+        <>
             <div className="not-print:my-4">
                 <CertificatePage orc={orc} rep={rep}/>
 
                 <div className="print:h-screen">
                     {ReportFirstPageHeadNmaNmbm({rep })}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
-                        <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
-                          <h1 className="text-3xl text-center print:mt-6">电站锅炉安装监检报告</h1>
-                        </JumpTab>
+                        <div>
+                            <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
+                              <h1 className="text-3xl text-center print:mt-6">电站锅炉安装监检报告</h1>
+                            </JumpTab>
+                            <span className="block text-center text-sm print:mt-4"> （ FJB/GB 10082-0-2021 ）</span>
+                        </div>
                         {首页设备概况BoilI(orc,rep,)}
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
@@ -92,16 +74,15 @@ const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, 
                 {mapFxian.get('检验过程概述')?.do &&
                     <ExplanatoryVw orc={orc} rep={rep} title='1.3锅炉安装施工过程概述' />
                 }
+                {/*可能有很多的记录页，但还没有看到模板*/}
+
             </div>
             <div className="print:hidden">
                 <RepLink ori rep={rep} tag={'ProjectList'}>
                     <div>目录列表编辑器</div>
                 </RepLink>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Witness#Witness`}>
-                    <span className="block">记事 、 备注</span>
-                </JumpTab>
             </div>
-        </React.Fragment>
+        </>
     )
 }
 
@@ -112,24 +93,12 @@ export function useCatalog() {
         let list =[
             {title: "页面头部", url: "#PHEAD"},
             {title: "页面尾巴", url: "#PTAIL"},
+            {title: "检验证书", url: "#Certificate"},
+            {title: "目录", url: "#ProjectList"},
             {title: "设备概况", url: "#Survey"},
-            {title: "检验结论", url: "#Conclusion"},
-            {title: "K1资料审查", url: "#T1-1"},
-            {title: 'K2机械与结构检验', url: "#T2-1"},
-            {title: 'K3传动系统检验', url: "#T3-1"},
-            {title: 'K4电气及控制系统检验', url: "#T4-1"},
-            {title: "K5乘载系统检验", url: "#T5-1"},
-            {title: 'K6安全保护装置和防护措施检验', url: "#T6-1"},
-            {title: "K6.14安全网或者其他措施", url: "#T6-14"},
-            {title: 'K7载荷试验与测试', url: "#T7-1"},
-            {title: '检验不合格项目内容及复检结果', url: "#ReCheck"},
-            {title: "附录D：现场检验条件", url: "#SiteCondition"},
-            {title: "记事 备注", url: "#Witness"},
-            {title: "主要测量设备性能检查", url: "#Instrument"},
-            {title: "观测数据及测量结果记录", url: "#Measure"},
-            {title: "附录A主要技术参数测试", url: "#MainTechnical"},
-            {title: "附录B应力测试记录", url: "#StrainStress"},
-            {title: "附录C加速度检测记录", url: "#Acceleration"},
+            {title: "1.1锅炉安装监督检验结论报告", url: "#Conclusion"},
+            {title: "1.2锅炉结构简图", url: "#BoilerDiagram"},
+            {title: '1.3锅炉安装施工及监督检验过程概述', url: "#Explanatory"},
         ]
         return list
     }, [storage])

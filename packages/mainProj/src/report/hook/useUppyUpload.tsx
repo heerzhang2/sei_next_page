@@ -13,6 +13,7 @@ import "./uppy-fixes.css"
 import { getAuthToken, refreshAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
+import { useCallback } from 'react';
 
 /**【uppy复用】
  *官方文档  https://uppy.io/docs/uppy/
@@ -52,6 +53,22 @@ export type FileStore = {
     name: string
     url: string
 }
+
+export const useScrollHandler = (targetSelector: string) => {
+    return useCallback((stateSetter: (arg0: boolean) => void, currentState: any) => (e: { preventDefault: () => void }) => {
+        e.preventDefault();
+        stateSetter(!currentState);
+
+        // 使用requestAnimationFrame优化滚动时机
+        requestAnimationFrame(() => {
+            const target = document.querySelector(targetSelector);
+            target?.scrollIntoView?.({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        });
+    }, [targetSelector]);
+};
 
 //【注意】必须用uppy.getState()来做配合; 而不能用React.useState<any[]>( storeObj as any[]);且下面handleUpSuccess回调无法提取外部的storeObj等状态变量取值都是空的。
 //加限制 restrictions:{maxFileSize: 6000,maxNumberOfFiles: 1, allowedFileTypes:['image/*', '.jpg', '.jpeg', '.png', '.gif']}
@@ -171,6 +188,7 @@ export function useUppyUpload({
     //     delOssFileFunc(url, i, 'rep', repId)
     // }
     // Images with "fill" always use position absolute - it cannot be modified.
+    const scrollHandler = useScrollHandler('.uppy-Dashboard-browse')(setOpenUppy, openUppy);
     //单一文件情况的：
     if (1 === maxFile) {
         const onlyOne = (
@@ -211,13 +229,7 @@ export function useUppyUpload({
                             旧的先刪除
                         </Button>
                     ) : (
-                        <Button
-                            size="sm"
-                            onClick={(e) => {
-                                setOpenUppy(!openUppy)
-                                e.preventDefault()
-                            }}
-                        >
+                        <Button size="sm" onClick={scrollHandler}>
                             {openUppy ? "关闭上传" : "开启上传"}
                         </Button>
                     )}
@@ -259,13 +271,9 @@ export function useUppyUpload({
                 </div>
                 <div className="text-center mt-4">
                     {openUppy && <Dashboard uppy={uppy} plugins={["Webcam"]} />}
-                    <Button
-                        size="sm"
+                    <Button size="sm"
                         disabled={!openUppy && thisMaxFiles <= 0}
-                        onClick={(e) => {
-                            setOpenUppy(!openUppy)
-                            e.preventDefault()
-                        }}
+                        onClick={scrollHandler}
                     >
                         {openUppy ? "关闭上传" : "开启上传"}
                     </Button>

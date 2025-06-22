@@ -9,7 +9,6 @@ import { SmartTruncatedText } from "@/components/smart-truncated-text"
 import { Edit, X, } from "lucide-react"
 import {InternalItemProps} from "@/report/common/base";
 
-
 //const itemA = ['证书说明' ];
 /**保留 编辑常见的范式；
 * */

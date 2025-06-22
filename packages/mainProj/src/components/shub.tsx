@@ -53,7 +53,7 @@ interface ImageProps {
     alt?: string
     className?: string  // 新增 className 属性
 }
-/**报告打印专用的：
+/**报告打印专用的： #不支持打印：宽度上 多于一个纸张宽的。 高度上 也不支持超出一个纸张高的。
  * css中的数值：默认针对设置是，打印纸张=A4竖着答应的版本；
  * 横着A4打印情况？
  * */
@@ -64,22 +64,25 @@ export const ImageComponent: React.FC<ImageProps> = ({
                                                      }) => {
     const {parentOrientation} =usePageSectionOrientation();
     const landscape="landscape"===parentOrientation
-    return (
+    //landscape:外部上一级组件，应该自己知晓的。打印高度自己决定的。
+  return (
         <div className={`flex justify-around items-center ${className || ''}`}>
-            <div>
-                <img
-                    src={src || "/placeholder.svg"}
-                    alt={alt}
-                    className={cn("object-contain max-h-[15cm] @md:5xl:max-h-[19cm]",
-                                landscape? "print:max-h-[705px] print:max-w-[26.5cm]" : "print:max-h-[26.5cm] print:max-w-[705px]",
-                                className)}
-                    style={{
-                        width: "auto",
-                        height: "auto",
-                        maxWidth: "100%",
-                    }}
-            />
+              <img
+                  src={src || "/placeholder.svg"}
+                  alt={alt}
+                  className={cn("object-contain max-h-[15cm] @md:5xl:max-h-[19cm]",
+                      landscape? "print:max-w-[26.5cm]" : "print:max-w-[705px]",
+                      className)}
+                  style={{
+                      width: "auto",
+                      height: "auto",
+                      maxWidth: "100%",
+                  }}
+              />
         </div>
-    </div>
-    )
+  )
 }
+
+/*原本的 className={cn("object-contain max-h-[15cm] @md:5xl:max-h-[19cm]",
+         landscape? "print:max-h-[705px] print:max-w-[26.5cm]" : "print:max-h-[26.5cm] print:max-w-[705px]", className)}
+* */

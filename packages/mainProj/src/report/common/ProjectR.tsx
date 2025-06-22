@@ -34,7 +34,7 @@ interface ProjectRProps extends InternalItemProps {
 /*
 这里表格布局类似于手机上原生的APP用的图片Card方块布局有点类似的，都是无法通用的做法，只能为特定表格做特殊布局，Grid配置也不通用，屏幕适应性差。
 * */
-export const ProjectR = ({ children, show, alone = true, defaultProj:defPrj, label, rep,nApx,nRec}: ProjectRProps) => {
+export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,nRec}: ProjectRProps) => {
     const searchParams = useSearchParams()
     const jumpProjIdx =searchParams!.get("from")
     const { storage } = useStorage()

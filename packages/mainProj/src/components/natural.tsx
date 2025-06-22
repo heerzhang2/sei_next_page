@@ -14,7 +14,7 @@ export const ImageComponentNatural: React.FC<ImageProps> = ({ src, alt = "图片
   const [dimensions, setDimensions] = useState({ width: 300, height: 200 })
   const [isLoading, setIsLoading] = useState(true)
 
-  // 获取图片的自然尺寸
+  // 获取图片的自然尺寸 对非首屏图片使用 loading="lazy"： <Image loading="lazy" // 非首屏图片使用懒加载  />
   useEffect(() => {
     if (typeof window === 'undefined' || !src) return
     const img = new window.Image() // 改用原生 Image 构造函数
@@ -46,6 +46,7 @@ export const ImageComponentNatural: React.FC<ImageProps> = ({ src, alt = "图片
           <Image
             src={src || "/placeholder.svg"}
             alt={alt}
+            priority
             width={dimensions.width}
             height={dimensions.height}
             className="object-contain max-h-[14cm] print:max-h-[26cm] print:max-w-[705px] @lg:max-h-[18cm]"
