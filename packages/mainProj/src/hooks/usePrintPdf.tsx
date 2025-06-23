@@ -1,10 +1,11 @@
 "use client"
-import { useCallback } from "react"
+import {useCallback, useState} from "react"
 import useSWRMutation from "swr/mutation"
 import {toast} from "sonner";
 //直接把本地打印转换服务器的包提取数据类型：
 import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
 import * as React from "react";
+import {OutlineItem} from "@/components/pdf-outline-analyzer";
 
 
 /**对接的打印转换器 客户机上的本地 node js server 服务
@@ -69,4 +70,45 @@ export function usePrintPdf(prjob: ConfigRoot<FileTransform>):[boolean, Function
 
     if (!prjob) return [isMutating, undefined]
     return [isMutating, handleSubmit]
+}
+
+/**对后端代理转发给打印服务，提取书签信息
+ * */
+export function usePageMarkinfo(prjob: ConfigRoot<FileTransform>)
+    :[boolean, Function, OutlineItem[]]
+{
+    const [outlineData, setOutlineData] = useState<OutlineItem[]>([])
+    //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
+    const { trigger, isMutating } = useSWRMutation("http://localhost:9389/api/pageSeq", createPrintJob, {
+        onSuccess: (data) => {
+            setOutlineData([])
+            toast.success(`提取书签应答`, {
+                description: (
+                    <>
+                        {data?.data?.result ?? ""}
+                        <br />
+                        {data?.data?.dir ?? ""}
+                    </>
+                ),
+            })
+        },
+        onError: (error) => {
+            toast.error("提取书签应答", { description: "文书打印转换器运行" + error })
+        },
+    })
+
+    // 修改为返回一个可以await的异步函数
+    const handleSubmit = useCallback(
+        async function handleSubmit() {
+            if (!prjob) return null
+            // 返回trigger的结果，这样外部可以await
+            return await trigger({ job: prjob })
+        },
+        [prjob, trigger],
+    )
+
+    if (!prjob) { // @ts-ignore
+        return [isMutating, null, []]
+    }
+    return [isMutating, handleSubmit, outlineData]
 }

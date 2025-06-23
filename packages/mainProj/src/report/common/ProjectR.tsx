@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { Alert, AlertTitle } from "@/components/ui"
 import { SmartTruncatedText } from "@/components/smart-truncated-text"
 import {useSearchParams} from "next/navigation";
+import PdfOutlineAnalyzer from "@/components/pdf-outline-analyzer";
 
 // export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
 interface ProjectItem {
@@ -395,6 +396,7 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                     </CardFooter>
                 </Card>
                 {children}
+                <PdfOutlineAnalyzer rep={rep} original={false}/>
             </div>
         </CollapsibleFormSection>
     )
