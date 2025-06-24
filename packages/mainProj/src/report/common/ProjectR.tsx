@@ -357,6 +357,7 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                 )}
                             </div>
                         </div>
+                        <PdfOutlineAnalyzer rep={rep}/>
                         <div className="text-sm text-gray-600 space-y-1">
                             <p>
                                 <strong>字段说明：</strong>
@@ -396,7 +397,6 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                     </CardFooter>
                 </Card>
                 {children}
-                <PdfOutlineAnalyzer rep={rep} original={false}/>
             </div>
         </CollapsibleFormSection>
     )
