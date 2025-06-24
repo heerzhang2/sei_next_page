@@ -5,7 +5,7 @@ import {toast} from "sonner";
 //直接把本地打印转换服务器的包提取数据类型：
 import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
 import * as React from "react";
-import {OutlineItem} from "@/components/pdf-outline-analyzer";
+import {OutlineData} from "@/components/pdf-outline-analyzer";
 
 
 /**对接的打印转换器 客户机上的本地 node js server 服务
@@ -75,22 +75,23 @@ export function usePrintPdf(prjob: ConfigRoot<FileTransform>):[boolean, Function
 /**对后端代理转发给打印服务，提取书签信息
  * */
 export function usePageMarkinfo(prjob: ConfigRoot<FileTransform>)
-    :[boolean, Function, OutlineItem[]]
+    :[boolean, () => Promise<any>, OutlineData | null]
 {
-    const [outlineData, setOutlineData] = useState<OutlineItem[]>([])
+    const [outlineData, setOutlineData] = useState<OutlineData|null>(null)
     //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
     const { trigger, isMutating } = useSWRMutation("http://localhost:9389/api/pageSeq", createPrintJob, {
         onSuccess: (data) => {
-            setOutlineData([])
+            const result =data?.data as any
             toast.success(`提取书签应答`, {
-                description: (
-                    <>
-                        {data?.data?.result ?? ""}
-                        <br />
-                        {data?.data?.dir ?? ""}
-                    </>
-                ),
+                description: (<>
+                    {result?.result}
+                </>),
             })
+            if(result?.result==="Success") {
+                setOutlineData(result.outlineData)
+            } else {
+                console.error("大纲提取失败:", result.result)
+            }
         },
         onError: (error) => {
             toast.error("提取书签应答", { description: "文书打印转换器运行" + error })

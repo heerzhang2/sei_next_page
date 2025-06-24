@@ -13,13 +13,15 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {usePageMarkinfo, usePrintPdf} from "@/hooks/usePrintPdf";
 import {createPdfJob} from "@/report/footer/job";
 
-export interface OutlineItem {
+interface OutlineItem {
     title: string
     page: number
     level: number
-    elementId?: string
-    hasChildren?: boolean
-    isOpen?: boolean
+}
+export interface OutlineData {
+    outline: OutlineItem[]
+    totalPages: number
+    title: string
 }
 
 interface PdfOutlineAnalyzerProps {
@@ -31,8 +33,7 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
     const pdf_job = createPdfJob(rep, original);
     const [htmlContent, setHtmlContent] = useState(`
   `)
-
-    const [outlineData, setOutlineData] = useState<OutlineItem[]>([])
+    // const [outlineData, setOutlineData] = useState<OutlineData|null>(null)
     const [pdfInfo, setPdfInfo] = useState<any>(null)
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [pdfFile, setPdfFile] = useState<File | null>(null)
@@ -49,55 +50,11 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
                     "Authorization": "Basic YWRtaW46Q2VyNmpzJGt3OWUwV2E=",
                 },
                 body: JSON.stringify({
-                    html: htmlContent,
-                    headerTemplate: `
-            <div style="font-size: 10px; padding: 5px; width: 100%; text-align: center; color: #666;">
-              <span>PDF大纲分析演示 - 第 <span class="pageNumber"></span> 页</span>
-            </div>
-          `,
-                    footerTemplate: `
-            <div style="font-size: 10px; padding: 5px; width: 100%; text-align: center; color: #666;">
-              <span>生成时间: <span class="date"></span></span>
-            </div>
-          `,
-                    fontcssHead: `<style>body { font-family: Arial, sans-serif; }</style>`,
-                    pdfOptions: {
-                        printBackground: true,
-                        margin: {
-                            top: "25mm",
-                            right: "20mm",
-                            bottom: "25mm",
-                            left: "20mm",
-                        },
-                    },
                     extractElementIds: true,
                 }),
             })
 
             const result = await response.json()
-
-            if (result.success) {
-                setOutlineData(result.outline)
-                setPdfInfo(result.pdfInfo)
-
-                // 下载生成的PDF
-                if (result.pdfBase64) {
-                    const pdfBlob = new Blob([Uint8Array.from(atob(result.pdfBase64), (c) => c.charCodeAt(0))], {
-                        type: "application/pdf",
-                    })
-
-                    const url = window.URL.createObjectURL(pdfBlob)
-                    const a = document.createElement("a")
-                    a.href = url
-                    a.download = "outline-analysis-demo.pdf"
-                    document.body.appendChild(a)
-                    a.click()
-                    window.URL.revokeObjectURL(url)
-                    document.body.removeChild(a)
-                }
-            } else {
-                console.error("大纲提取失败:", result.error)
-            }
         } catch (error) {
             console.error("请求失败:", error)
         } finally {
@@ -117,17 +74,12 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
                     <Badge variant="secondary" className="ml-auto">
                         第 {item.page} 页
                     </Badge>
-                    {item.elementId && (
-                        <Badge variant="outline" className="text-xs">
-                            #{item.elementId}
-                        </Badge>
-                    )}
                 </div>
             </div>
         ))
     }
 
-    const [isMutating, handleSubmit, outlineData2] = usePageMarkinfo(pdf_job)
+    const [isGetMarking, handleSubmit, outlineData] = usePageMarkinfo(pdf_job)
 
     return (
         <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -170,9 +122,9 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
                                 />
                             </div>
 
-                            <Button onClick={handleSubmit} disabled={isAnalyzing || !pdfFile}
+                            <Button onClick={handleSubmit} disabled={isGetMarking}
                                     className="w-full">
-                                {isAnalyzing ? "分析中..." : "📄 分析PDFhandleSubmit大纲"}
+                                {isGetMarking ? "分析中..." : "📄 分析PDF==handleSubmit==大纲"}
                             </Button>
                         </TabsContent>
                     </Tabs>
@@ -180,7 +132,7 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
             </Card>
 
             {/* PDF信息 */}
-            {pdfInfo && (
+            {outlineData && (
                 <Card>
                     <CardHeader>
                         <CardTitle>PDF信息</CardTitle>
@@ -188,27 +140,19 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
                     <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
-                                <strong>文件大小:</strong> {Math.round((pdfInfo.size || 0) / 1024)}KB
-                            </div>
-                            <div>
-                                <strong>总页数:</strong> {pdfInfo.totalPages || "未知"}
+                                <strong>总页数:</strong> {outlineData.totalPages || "未知"}
                             </div>
                             <div>
                                 <strong>包含大纲:</strong>{" "}
-                                {pdfInfo.hasOutline ? <Badge variant="default">是</Badge> :
+                                {outlineData.title ? <Badge variant="default">是</Badge> :
                                     <Badge variant="secondary">否</Badge>}
                             </div>
                             <div>
-                                <strong>标题数量:</strong> {outlineData.length}
+                                <strong>标题数量:</strong> {outlineData?.outline?.length}
                             </div>
-                            {pdfInfo.title && (
+                            {outlineData.title && (
                                 <div className="col-span-2">
-                                    <strong>文档标题:</strong> {pdfInfo.title}
-                                </div>
-                            )}
-                            {pdfInfo.author && (
-                                <div className="col-span-2">
-                                    <strong>作者:</strong> {pdfInfo.author}
+                                    <strong>文档标题:</strong> {outlineData.title}
                                 </div>
                             )}
                         </div>
@@ -217,8 +161,8 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
             )}
 
             {/* 大纲分析结果 */}
-            {outlineData.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {outlineData?.outline?.length! > 0 && (
+                <div className="grid grid-cols-1 gap-6">
                     {/* 表格视图 */}
                     <Card>
                         <CardHeader>
@@ -231,11 +175,10 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
                                         <TableHead>标题</TableHead>
                                         <TableHead>层级</TableHead>
                                         <TableHead>页码</TableHead>
-                                        <TableHead>元素ID</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {outlineData.map((item, index) => (
+                                    {outlineData?.outline?.map((item, index) => (
                                         <TableRow key={index}>
                                             <TableCell className="font-medium">{item.title}</TableCell>
                                             <TableCell>
@@ -243,15 +186,6 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="default">第 {item.page} 页</Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                {item.elementId ? (
-                                                    <Badge variant="secondary" className="font-mono text-xs">
-                                                        #{item.elementId}
-                                                    </Badge>
-                                                ) : (
-                                                    <span className="text-muted-foreground">-</span>
-                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -266,7 +200,7 @@ export default function PdfOutlineAnalyzer({rep, original}: PdfOutlineAnalyzerPr
                             <CardTitle>大纲树形视图</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-1 max-h-96 overflow-y-auto">{renderOutlineTree(outlineData)}</div>
+                            <div className="space-y-1 max-h-96 overflow-y-auto">{renderOutlineTree(outlineData?.outline)}</div>
                         </CardContent>
                     </Card>
                 </div>
