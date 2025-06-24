@@ -78,7 +78,7 @@ export function usePageMarkinfo(prjob: ConfigRoot<FileTransform>)
     :[boolean, () => Promise<any>, OutlineData | null]
 {
     const [outlineData, setOutlineData] = useState<OutlineData|null>(null)
-    //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
+    //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）； const { data, size, setSize, error, isLoading } = useSWRInfinite(
     const { trigger, isMutating } = useSWRMutation("http://localhost:9389/api/pageSeq", createPrintJob, {
         onSuccess: (data) => {
             const result =data?.data as any
