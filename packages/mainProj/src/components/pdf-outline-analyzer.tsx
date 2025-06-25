@@ -22,10 +22,12 @@ export interface OutlineData {
 
 interface PdfOutlineAnalyzerProps {
     rep?: any
+    //报告或原始记录区分的标记
+    slug: string
 }
 
-export default function PdfOutlineAnalyzer({ rep }: PdfOutlineAnalyzerProps) {
-    const dbkvId = "current-pdf-job"
+export default function PdfOutlineAnalyzer({ rep,slug }: PdfOutlineAnalyzerProps) {
+    const dbkvId = rep?.id+"-"+slug;        //唯一性保证
     const pdf_job = createPdfJob(rep, true)
 
     // 初始化缓存管理器
@@ -48,10 +50,10 @@ export default function PdfOutlineAnalyzer({ rep }: PdfOutlineAnalyzerProps) {
     const [initialized, setInitialized] = useState(false)
 
     // 缓存成功回调函数
-    const handleCacheSuccess = async (outlineData: OutlineData, jobId: string) => {
+    const handleCacheSuccess = async (outlineData: OutlineData) => {
         try {
-            await cacheManager.addOutlineData(jobId, outlineData, outlineData.title, outlineData.totalPages)
-            console.log("书签数据已缓存:", jobId)
+            await cacheManager.addOutlineData(dbkvId, outlineData, outlineData.title, outlineData.totalPages)
+            console.log("书签数据已缓存:", dbkvId)
             await refreshCachedData()
         } catch (error) {
             console.error("缓存书签数据失败:", error)
@@ -83,7 +85,6 @@ export default function PdfOutlineAnalyzer({ rep }: PdfOutlineAnalyzerProps) {
         try {
             console.log(`正在从缓存加载数据: ${dbkvId}`)
             const cachedData = await cacheManager.getOutlineData(dbkvId)
-
             if (cachedData) {
                 console.log(`缓存命中: ${dbkvId}`)
                 setCurrentOutline(cachedData)

@@ -6,7 +6,7 @@ import {toast} from "sonner";
 import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
 import * as React from "react";
 import type { OutlineData } from "@/components/pdf-outline-analyzer"
-import { createPrintJobAction, extractPageMarkAction } from "@/actions/pdf-actions"
+import { extractPageMarkAction } from "@/actions/pdf-actions"
 
 
 /**对接的打印转换器 客户机上的本地 node js server 服务
@@ -74,97 +74,6 @@ export function usePrintPdf(prjob: ConfigRoot<FileTransform>):[boolean, Function
     return [isMutating, handleSubmit]
 }
 
-
-/**
- * 对接的打印转换器 - 使用 Server Action 避免暴露认证信息
- */
-export function usePrintPdf(prjob: ConfigRoot<FileTransform>): [boolean, Function?] {
-    const [isMutating, setIsMutating] = useState(false)
-
-    const handleSubmit = useCallback(
-        async function handleSubmit() {
-            if (!prjob) return null
-
-            setIsMutating(true)
-            try {
-                const result = await createPrintJobAction(prjob)
-
-                if (result.success) {
-                    toast.success(`打印转换器应答`, {
-                        description: (
-                            <>
-                                {result.data?.data?.result ?? ""}
-                                <br />
-                                生成Pdf在自己电脑的文书转换器目录的子目录:
-                                <br />
-                                {result.data?.data?.dir ?? ""}
-                            </>
-                        ),
-                    })
-                    return result.data
-                } else {
-                    throw new Error(result.error)
-                }
-            } catch (error) {
-                toast.error("打印转换器应答", {
-                    description: "请确认文书打印转换器已经在本机安装并运行: " + error,
-                })
-                throw error
-            } finally {
-                setIsMutating(false)
-            }
-        },
-        [prjob],
-    )
-
-    if (!prjob) return [isMutating, undefined]
-    return [isMutating, handleSubmit]
-}
-
-/**对后端代理转发给打印服务，提取书签信息
- * */
-export function usePageMarkinfo(prjob: ConfigRoot<FileTransform>)
-    :[boolean, () => Promise<any>, OutlineData | null]
-{
-    const [outlineData, setOutlineData] = useState<OutlineData|null>(null)
-    //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）； const { data, size, setSize, error, isLoading } = useSWRInfinite(
-    const { trigger, isMutating } = useSWRMutation("http://localhost:9389/api/pageSeq", createPrintJob, {
-        onSuccess: (data) => {
-            const result =data?.data as any
-            toast.success(`提取书签应答`, {
-                description: (<>
-                    {result?.result}
-                </>),
-            })
-            if(result?.result==="Success") {
-                setOutlineData(result.outlineData)
-            } else {
-                console.error("大纲提取失败:", result.result)
-            }
-        },
-        onError: (error) => {
-            toast.error("提取书签应答", { description: "文书打印转换器运行" + error })
-        },
-    })
-
-    // 修改为返回一个可以await的异步函数
-    const handleSubmit = useCallback(
-        async function handleSubmit() {
-            if (!prjob) return null
-            // 返回trigger的结果，这样外部可以await
-            return await trigger({ job: prjob })
-        },
-        [prjob, trigger],
-    )
-
-    if (!prjob) { // @ts-ignore
-        return [isMutating, null, []]
-    }
-    return [isMutating, handleSubmit, outlineData]
-}
-
-
-
 /**
  * 对后端代理转发给打印服务，提取书签信息
  * @param prjob PDF 任务配置
@@ -172,7 +81,7 @@ export function usePageMarkinfo(prjob: ConfigRoot<FileTransform>)
  */
 export function usePageMarkinfo(
     prjob: ConfigRoot<FileTransform>,
-    onSuccess?: (outlineData: OutlineData, jobId: string) => Promise<void>,
+    onSuccess?: (outlineData: OutlineData) => Promise<void>,
 ): [boolean, () => Promise<any>, OutlineData | null] {
     const [outlineData, setOutlineData] = useState<OutlineData | null>(null)
     const [isMutating, setIsMutating] = useState(false)
@@ -199,9 +108,7 @@ export function usePageMarkinfo(
                         // 调用成功回调函数进行缓存
                         if (onSuccess && newOutlineData) {
                             try {
-                                // 生成一个基于任务内容的唯一ID
-                                const jobId = generateJobId(prjob)
-                                await onSuccess(newOutlineData, jobId)
+                                await onSuccess(newOutlineData)
                             } catch (cacheError) {
                                 console.error("缓存数据失败:", cacheError)
                                 // 不影响主流程，只记录错误
@@ -232,12 +139,4 @@ export function usePageMarkinfo(
         return [isMutating, async () => null, null]
     }
     return [isMutating, handleSubmit, outlineData]
-}
-
-// 生成基于任务内容的唯一ID
-function generateJobId(prjob: ConfigRoot<FileTransform>): string {
-    // 这里可以根据你的业务逻辑生成唯一ID
-    // 例如基于文件路径、配置等生成哈希
-    const content = JSON.stringify(prjob)
-    return btoa(content).slice(0, 16) // 简单的base64编码取前16位
 }

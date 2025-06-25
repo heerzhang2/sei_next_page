@@ -366,10 +366,10 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                     <TabsTrigger value="analyze">原始记录的书签</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="generate" className="space-y-4">
-                                    <PdfOutlineAnalyzer rep={rep}/>
+                                    <PdfOutlineAnalyzer rep={rep} slug='R'/>
                                 </TabsContent>
                                 <TabsContent value="analyze" className="space-y-4">
-                                    <PdfOutlineAnalyzer rep={rep}/>
+                                    <PdfOutlineAnalyzer rep={rep} slug='O'/>
                                 </TabsContent>
                             </Tabs>
                         </div>
