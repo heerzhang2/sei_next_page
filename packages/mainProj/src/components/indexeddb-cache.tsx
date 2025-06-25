@@ -28,13 +28,29 @@ interface ComponentProps {
     userId: string // 外部注入的用户ID
 }
 
-// IndexedDB 缓存管理类
-class IndexedDBCache {
-    private dbName = "appCache"
-    private storeName = "pdfMarkPage"
-    private version = 1
-    private maxItems = 6
+// IndexedDB缓存配置接口
+interface IndexedDBCacheConfig {
+    dbName: string
+    storeName: string
+    version: number
+}
+
+/**
+ * 通用的IndexedDB缓存管理类
+ * 支持FIFO + LRU混合缓存策略
+ * 对比Cookie导致每次请求的头过大影响网络网页加载；而LocalStorage太小：总容量5MB，用于持久化用户偏好设置。
+ */
+class IndexedDBCache<T extends { id: string; timestamp: number }> {
+    private dbName: string
+    private storeName: string
+    private version: number
     private db: IDBDatabase | null = null
+
+    constructor(config: IndexedDBCacheConfig) {
+        this.dbName = config.dbName
+        this.storeName = config.storeName
+        this.version = config.version
+    }
 
     // 初始化数据库
     async init(): Promise<void> {
@@ -59,7 +75,7 @@ class IndexedDBCache {
     }
 
     // 从缓存获取特定ID的数据（读取时更新时间戳）
-    async getFromCache(id: string): Promise<CacheItem | null> {
+    async getFromCache(id: string): Promise<T | null> {
         if (!this.db) throw new Error("Database not initialized")
 
         return new Promise((resolve, reject) => {
@@ -94,6 +110,158 @@ class IndexedDBCache {
             getRequest.onerror = () => reject(getRequest.error)
             transaction.onerror = () => reject(transaction.error)
         })
+    }
+
+    // 添加数据到缓存（FIFO机制，支持自定义maxItems）
+    async addItem(item: T, maxItems = 10): Promise<void> {
+        if (!this.db) throw new Error("Database not initialized")
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db!.transaction([this.storeName], "readwrite")
+            const store = transaction.objectStore(this.storeName)
+
+            // 首先检查是否已存在相同ID的项目
+            const getRequest = store.get(item.id)
+
+            getRequest.onsuccess = () => {
+                const existingItem = getRequest.result
+
+                if (existingItem) {
+                    // 如果存在，更新数据和时间戳
+                    const putRequest = store.put(item)
+                    putRequest.onsuccess = () => {
+                        console.log(`缓存已更新: ${item.id}, maxItems: ${maxItems}`)
+                        resolve()
+                    }
+                    putRequest.onerror = () => reject(putRequest.error)
+                } else {
+                    // 如果不存在，检查是否超过最大数量
+                    const getAllRequest = store.getAll()
+
+                    getAllRequest.onsuccess = () => {
+                        const allItems = getAllRequest.result
+
+                        if (allItems.length >= maxItems) {
+                            // 删除最旧的项目（时间戳最小的）
+                            const oldestItem = allItems.sort((a: T, b: T) => a.timestamp - b.timestamp)[0]
+                            const deleteRequest = store.delete(oldestItem.id)
+
+                            deleteRequest.onsuccess = () => {
+                                // 删除成功后添加新项目
+                                const addRequest = store.add(item)
+                                addRequest.onsuccess = () => {
+                                    console.log(`缓存已添加（删除旧项目）: ${item.id}, maxItems: ${maxItems}`)
+                                    resolve()
+                                }
+                                addRequest.onerror = () => reject(addRequest.error)
+                            }
+                            deleteRequest.onerror = () => reject(deleteRequest.error)
+                        } else {
+                            // 直接添加新项目
+                            const addRequest = store.add(item)
+                            addRequest.onsuccess = () => {
+                                console.log(`缓存已添加: ${item.id}, maxItems: ${maxItems}`)
+                                resolve()
+                            }
+                            addRequest.onerror = () => reject(addRequest.error)
+                        }
+                    }
+                    getAllRequest.onerror = () => reject(getAllRequest.error)
+                }
+            }
+            getRequest.onerror = () => reject(getRequest.error)
+
+            transaction.onerror = () => reject(transaction.error)
+        })
+    }
+
+    // 获取所有缓存数据
+    async getAllCached(): Promise<T[]> {
+        if (!this.db) throw new Error("Database not initialized")
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db!.transaction([this.storeName], "readonly")
+            const store = transaction.objectStore(this.storeName)
+            const request = store.getAll()
+
+            request.onsuccess = () => {
+                const items = request.result.sort((a: T, b: T) => b.timestamp - a.timestamp)
+                resolve(items)
+            }
+            request.onerror = () => reject(request.error)
+        })
+    }
+
+    // 删除特定缓存
+    async deleteCache(id: string): Promise<void> {
+        if (!this.db) throw new Error("Database not initialized")
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db!.transaction([this.storeName], "readwrite")
+            const store = transaction.objectStore(this.storeName)
+            const request = store.delete(id)
+
+            request.onsuccess = () => resolve()
+            request.onerror = () => reject(request.error)
+        })
+    }
+
+    // 清空所有缓存
+    async clearAll(): Promise<void> {
+        if (!this.db) throw new Error("Database not initialized")
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db!.transaction([this.storeName], "readwrite")
+            const store = transaction.objectStore(this.storeName)
+            const request = store.clear()
+
+            request.onsuccess = () => resolve()
+            request.onerror = () => reject(request.error)
+        })
+    }
+
+    // 获取缓存统计信息
+    async getStats(maxItems = 10): Promise<{ count: number; maxItems: number }> {
+        const items = await this.getAllCached()
+        return {
+            count: items.length,
+            maxItems: maxItems,
+        }
+    }
+}
+
+// 用户缓存管理类（继承通用缓存类）
+class UserCacheManager {
+    private cache: IndexedDBCache<CacheItem>
+    private maxItems: number
+
+    constructor(config: IndexedDBCacheConfig, maxItems = 10) {
+        this.cache = new IndexedDBCache<CacheItem>(config)
+        this.maxItems = maxItems
+    }
+
+    async init(): Promise<void> {
+        return this.cache.init()
+    }
+
+    async getUser(id: string): Promise<CacheItem | null> {
+        return this.cache.getFromCache(id)
+    }
+
+    async getAllUsers(): Promise<CacheItem[]> {
+        return this.cache.getAllCached()
+    }
+
+    async deleteUser(id: string): Promise<void> {
+        return this.cache.deleteCache(id)
+    }
+
+    async clearAll(): Promise<void> {
+        return this.cache.clearAll()
+    }
+
+    async getStats(): Promise<{ count: number; maxItems: number }> {
+        return this.cache.getStats(this.maxItems)
     }
 
     // 模拟后端API请求
@@ -176,14 +344,14 @@ class IndexedDBCache {
         }
     }
 
-    // 从API获取数据并更新缓存（带FIFO机制）
+    // 从API获取数据并更新缓存
     async fetchAndCache(id: string): Promise<{ data: CacheItem | null; error?: string }> {
         try {
             console.log(`正在从API获取用户: ${id}`)
             const apiResponse = await this.fetchFromAPI(id)
 
             if (apiResponse.success && apiResponse.data) {
-                await this.addItem(apiResponse.data)
+                await this.cache.addItem(apiResponse.data, this.maxItems)
                 console.log(`数据已缓存: ${id}`)
                 return { data: apiResponse.data }
             } else {
@@ -194,121 +362,35 @@ class IndexedDBCache {
             return { data: null, error: "API请求失败" }
         }
     }
-
-    // 添加数据到缓存（FIFO机制）
-    private async addItem(item: CacheItem): Promise<void> {
-        if (!this.db) throw new Error("Database not initialized")
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], "readwrite")
-            const store = transaction.objectStore(this.storeName)
-
-            // 首先检查是否已存在相同ID的项目
-            const getRequest = store.get(item.id)
-
-            getRequest.onsuccess = () => {
-                const existingItem = getRequest.result
-
-                if (existingItem) {
-                    // 如果存在，更新数据和时间戳
-                    const putRequest = store.put(item)
-                    putRequest.onsuccess = () => resolve()
-                    putRequest.onerror = () => reject(putRequest.error)
-                } else {
-                    // 如果不存在，检查是否超过最大数量
-                    const getAllRequest = store.getAll()
-
-                    getAllRequest.onsuccess = () => {
-                        const allItems = getAllRequest.result
-
-                        if (allItems.length >= this.maxItems) {
-                            // 删除最旧的项目（时间戳最小的）
-                            const oldestItem = allItems.sort((a: CacheItem, b: CacheItem) => a.timestamp - b.timestamp)[0]
-                            const deleteRequest = store.delete(oldestItem.id)
-
-                            deleteRequest.onsuccess = () => {
-                                // 删除成功后添加新项目
-                                const addRequest = store.add(item)
-                                addRequest.onsuccess = () => resolve()
-                                addRequest.onerror = () => reject(addRequest.error)
-                            }
-                            deleteRequest.onerror = () => reject(deleteRequest.error)
-                        } else {
-                            // 直接添加新项目
-                            const addRequest = store.add(item)
-                            addRequest.onsuccess = () => resolve()
-                            addRequest.onerror = () => reject(addRequest.error)
-                        }
-                    }
-                    getAllRequest.onerror = () => reject(getAllRequest.error)
-                }
-            }
-            getRequest.onerror = () => reject(getRequest.error)
-
-            transaction.onerror = () => reject(transaction.error)
-        })
-    }
-
-    // 获取所有缓存数据
-    async getAllCached(): Promise<CacheItem[]> {
-        if (!this.db) throw new Error("Database not initialized")
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], "readonly")
-            const store = transaction.objectStore(this.storeName)
-            const request = store.getAll()
-
-            request.onsuccess = () => {
-                const items = request.result.sort((a: CacheItem, b: CacheItem) => b.timestamp - a.timestamp)
-                resolve(items)
-            }
-            request.onerror = () => reject(request.error)
-        })
-    }
-
-    // 删除特定缓存
-    async deleteCache(id: string): Promise<void> {
-        if (!this.db) throw new Error("Database not initialized")
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], "readwrite")
-            const store = transaction.objectStore(this.storeName)
-            const request = store.delete(id)
-
-            request.onsuccess = () => resolve()
-            request.onerror = () => reject(request.error)
-        })
-    }
-
-    // 清空所有缓存
-    async clearAll(): Promise<void> {
-        if (!this.db) throw new Error("Database not initialized")
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], "readwrite")
-            const store = transaction.objectStore(this.storeName)
-            const request = store.clear()
-
-            request.onsuccess = () => resolve()
-            request.onerror = () => reject(request.error)
-        })
-    }
 }
 
 // React 组件
 export default function Component({ userId }: ComponentProps) {
-    const [cache] = useState(() => new IndexedDBCache())
+    // 使用通用缓存类，传入配置参数
+    const [userCache] = useState(
+        () =>
+            new UserCacheManager(
+                {
+                    dbName: "appCache",
+                    storeName: "pdfMarkPage",
+                    version: 1,
+                },
+                6, // maxItems
+            ),
+    )
+
     const [currentUser, setCurrentUser] = useState<CacheItem | null>(null)
     const [cachedUsers, setCachedUsers] = useState<CacheItem[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [initialized, setInitialized] = useState(false)
+    const [stats, setStats] = useState({ count: 0, maxItems: 6 })
 
     // 初始化数据库并自动加载指定用户数据
     useEffect(() => {
         const initDB = async () => {
             try {
-                await cache.init()
+                await userCache.init()
                 await loadUserData()
                 await refreshCachedData()
                 setInitialized(true)
@@ -325,7 +407,7 @@ export default function Component({ userId }: ComponentProps) {
     const loadUserData = async () => {
         try {
             console.log(`正在从缓存加载用户: ${userId}`)
-            const cachedData = await cache.getFromCache(userId)
+            const cachedData = await userCache.getUser(userId)
 
             if (cachedData) {
                 console.log(`缓存命中: ${userId}`)
@@ -345,8 +427,9 @@ export default function Component({ userId }: ComponentProps) {
     // 刷新缓存数据列表
     const refreshCachedData = async () => {
         try {
-            const cached = await cache.getAllCached()
+            const [cached, cacheStats] = await Promise.all([userCache.getAllUsers(), userCache.getStats()])
             setCachedUsers(cached)
+            setStats(cacheStats)
         } catch (error) {
             console.error("Failed to refresh cached data:", error)
         }
@@ -358,7 +441,7 @@ export default function Component({ userId }: ComponentProps) {
         setError("")
 
         try {
-            const result = await cache.fetchAndCache(userId)
+            const result = await userCache.fetchAndCache(userId)
 
             if (result.data) {
                 setCurrentUser(result.data)
@@ -382,7 +465,7 @@ export default function Component({ userId }: ComponentProps) {
     // 删除缓存
     const handleDeleteCache = async (id: string) => {
         try {
-            await cache.deleteCache(id)
+            await userCache.deleteUser(id)
             await refreshCachedData()
             if (currentUser?.id === id) {
                 setCurrentUser(null)
@@ -397,7 +480,7 @@ export default function Component({ userId }: ComponentProps) {
         if (!confirm("确定要清空所有缓存吗？")) return
 
         try {
-            await cache.clearAll()
+            await userCache.clearAll()
             await refreshCachedData()
             setCurrentUser(null)
         } catch (error) {
@@ -419,11 +502,13 @@ export default function Component({ userId }: ComponentProps) {
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-6">
             <div className="text-center">
-                <h1 className="text-3xl font-bold">IndexedDB 缓存示例</h1>
+                <h1 className="text-3xl font-bold">通用 IndexedDB 缓存示例</h1>
                 <p className="text-muted-foreground mt-2">
                     当前用户ID: <Badge variant="outline">{userId}</Badge>
                 </p>
-                <p className="text-muted-foreground text-sm">初始化时自动从缓存加载数据，支持手动从API获取更新</p>
+                <p className="text-muted-foreground text-sm">
+                    数据库: appCache | 存储: pdfMarkPage | 版本: 1 | 最大缓存: {stats.maxItems} 条
+                </p>
             </div>
 
             {/* 当前用户信息 */}
@@ -484,7 +569,9 @@ export default function Component({ userId }: ComponentProps) {
                     <div className="flex items-center justify-between">
                         <div>
                             <CardTitle>缓存管理</CardTitle>
-                            <CardDescription>当前缓存 {cachedUsers.length}/6 条数据，超出时自动删除最旧的数据</CardDescription>
+                            <CardDescription>
+                                当前缓存 {stats.count}/{stats.maxItems} 条数据，超出时自动删除最旧的数据
+                            </CardDescription>
                         </div>
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={refreshCachedData}>
@@ -547,26 +634,33 @@ export default function Component({ userId }: ComponentProps) {
             {/* 使用说明 */}
             <Card>
                 <CardHeader>
-                    <CardTitle>功能说明</CardTitle>
+                    <CardTitle>通用缓存类特性</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                     <div>
-                        • <strong>自动加载：</strong>组件初始化时自动从IndexedDB加载指定ID的用户数据
+                        • <strong>可配置参数：</strong>支持自定义 dbName、storeName、version 和 maxItems
                     </div>
                     <div>
-                        • <strong>外部注入：</strong>用户ID通过props参数从外部传入
+                        • <strong>泛型支持：</strong>IndexedDBCache{"<T>"} 支持任意数据类型，只需包含 id 和 timestamp 字段
                     </div>
                     <div>
-                        • <strong>手动获取：</strong>缓存不存在时，用户可手动点击按钮从API获取数据
+                        • <strong>FIFO + LRU：</strong>读取时更新时间戳，结合容量限制实现智能缓存
                     </div>
                     <div>
-                        • <strong>FIFO缓存：</strong>最多缓存6条数据，超出时自动删除最旧的数据
+                        • <strong>类型安全：</strong>完整的 TypeScript 类型支持
                     </div>
                     <div>
-                        • <strong>缓存管理：</strong>支持查看所有缓存、删除单个缓存或清空所有缓存
+                        • <strong>易于扩展：</strong>可以继承基础类实现特定业务逻辑
                     </div>
                     <div>
-                        • <strong>预设数据：</strong>可以测试 user001-user007, admin 等预设用户ID
+                        • <strong>使用示例：</strong>
+                        <code className="block mt-2 p-2 bg-muted rounded text-xs">
+                            {`new UserCacheManager({
+  dbName: "appCache",
+  storeName: "pdfMarkPage", 
+  version: 1
+}, 6)`}
+                        </code>
                     </div>
                 </CardContent>
             </Card>
