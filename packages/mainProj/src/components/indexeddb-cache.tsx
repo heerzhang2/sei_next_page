@@ -231,7 +231,7 @@ class IndexedDBCache<T extends { id: string; timestamp: number }> {
 }
 
 // 用户缓存管理类（继承通用缓存类）
-class UserCacheManager {
+export class UserCacheManager {
     private cache: IndexedDBCache<CacheItem>
     private maxItems: number
 
@@ -265,84 +265,84 @@ class UserCacheManager {
     }
 
     // 模拟后端API请求
-    private async fetchFromAPI(id: string): Promise<ApiResponse> {
-        // 模拟网络延迟
-        await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000))
-
-        // 模拟一些预设的用户数据
-        const mockUsers: Record<string, Omit<CacheItem, "timestamp">> = {
-            user001: {
-                id: "user001",
-                name: "张三",
-                email: "zhangsan@example.com",
-                avatar: "/placeholder.svg?height=40&width=40",
-                department: "技术部",
-            },
-            user002: {
-                id: "user002",
-                name: "李四",
-                email: "lisi@example.com",
-                avatar: "/placeholder.svg?height=40&width=40",
-                department: "产品部",
-            },
-            user003: {
-                id: "user003",
-                name: "王五",
-                email: "wangwu@example.com",
-                avatar: "/placeholder.svg?height=40&width=40",
-                department: "设计部",
-            },
-            user004: {
-                id: "user004",
-                name: "赵六",
-                email: "zhaoliu@example.com",
-                avatar: "/placeholder.svg?height=40&width=40",
-                department: "运营部",
-            },
-            user005: {
-                id: "user005",
-                name: "钱七",
-                email: "qianqi@example.com",
-                avatar: "/placeholder.svg?height=40&width=40",
-                department: "市场部",
-            },
-            user006: {
-                id: "user006",
-                name: "孙八",
-                email: "sunba@example.com",
-                avatar: "/placeholder.svg?height=40&width=40",
-                department: "财务部",
-            },
-            user007: {
-                id: "user007",
-                name: "周九",
-                email: "zhoujiu@example.com",
-                avatar: "/placeholder.svg?height=40&width=40",
-                department: "人事部",
-            },
-            admin: {
-                id: "admin",
-                name: "管理员",
-                email: "admin@example.com",
-                avatar: "/placeholder.svg?height=40&width=40",
-                department: "管理部",
-            },
-        }
-
-        const userData = mockUsers[id]
-
-        if (userData) {
-            return {
-                success: true,
-                data: { ...userData, timestamp: Date.now() },
-            }
-        } else {
-            return {
-                success: false,
-                message: `用户 ${id} 不存在`,
-            }
-        }
-    }
+    // private async fetchFromAPI(id: string): Promise<ApiResponse> {
+    //     // 模拟网络延迟
+    //     await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000))
+    //
+    //     // 模拟一些预设的用户数据
+    //     const mockUsers: Record<string, Omit<CacheItem, "timestamp">> = {
+    //         user001: {
+    //             id: "user001",
+    //             name: "张三",
+    //             email: "zhangsan@example.com",
+    //             avatar: "/placeholder.svg?height=40&width=40",
+    //             department: "技术部",
+    //         },
+    //         user002: {
+    //             id: "user002",
+    //             name: "李四",
+    //             email: "lisi@example.com",
+    //             avatar: "/placeholder.svg?height=40&width=40",
+    //             department: "产品部",
+    //         },
+    //         user003: {
+    //             id: "user003",
+    //             name: "王五",
+    //             email: "wangwu@example.com",
+    //             avatar: "/placeholder.svg?height=40&width=40",
+    //             department: "设计部",
+    //         },
+    //         user004: {
+    //             id: "user004",
+    //             name: "赵六",
+    //             email: "zhaoliu@example.com",
+    //             avatar: "/placeholder.svg?height=40&width=40",
+    //             department: "运营部",
+    //         },
+    //         user005: {
+    //             id: "user005",
+    //             name: "钱七",
+    //             email: "qianqi@example.com",
+    //             avatar: "/placeholder.svg?height=40&width=40",
+    //             department: "市场部",
+    //         },
+    //         user006: {
+    //             id: "user006",
+    //             name: "孙八",
+    //             email: "sunba@example.com",
+    //             avatar: "/placeholder.svg?height=40&width=40",
+    //             department: "财务部",
+    //         },
+    //         user007: {
+    //             id: "user007",
+    //             name: "周九",
+    //             email: "zhoujiu@example.com",
+    //             avatar: "/placeholder.svg?height=40&width=40",
+    //             department: "人事部",
+    //         },
+    //         admin: {
+    //             id: "admin",
+    //             name: "管理员",
+    //             email: "admin@example.com",
+    //             avatar: "/placeholder.svg?height=40&width=40",
+    //             department: "管理部",
+    //         },
+    //     }
+    //
+    //     const userData = mockUsers[id]
+    //
+    //     if (userData) {
+    //         return {
+    //             success: true,
+    //             data: { ...userData, timestamp: Date.now() },
+    //         }
+    //     } else {
+    //         return {
+    //             success: false,
+    //             message: `用户 ${id} 不存在`,
+    //         }
+    //     }
+    // }
 
     // 从API获取数据并更新缓存
     async fetchAndCache(id: string): Promise<{ data: CacheItem | null; error?: string }> {

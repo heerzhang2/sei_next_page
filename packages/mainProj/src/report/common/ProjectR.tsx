@@ -11,6 +11,7 @@ import { Alert, AlertTitle } from "@/components/ui"
 import { SmartTruncatedText } from "@/components/smart-truncated-text"
 import {useSearchParams} from "next/navigation";
 import PdfOutlineAnalyzer from "@/components/pdf-outline-analyzer";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 
 // export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
 interface ProjectItem {
@@ -357,7 +358,22 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                 )}
                             </div>
                         </div>
-                        <PdfOutlineAnalyzer rep={rep}/>
+
+                        <div className="max-w-6xl mx-auto p-6 space-y-6">
+                            <Tabs defaultValue="generate" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="generate">报告的书签</TabsTrigger>
+                                    <TabsTrigger value="analyze">原始记录的书签</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="generate" className="space-y-4">
+                                    <PdfOutlineAnalyzer rep={rep}/>
+                                </TabsContent>
+                                <TabsContent value="analyze" className="space-y-4">
+                                    <PdfOutlineAnalyzer rep={rep}/>
+                                </TabsContent>
+                            </Tabs>
+                        </div>
+
                         <div className="text-sm text-gray-600 space-y-1">
                             <p>
                                 <strong>字段说明：</strong>
