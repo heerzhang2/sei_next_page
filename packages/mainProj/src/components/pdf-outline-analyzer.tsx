@@ -1,25 +1,19 @@
 "use client"
-import {useState, useRef, useEffect, useCallback } from 'react';
-import {Button} from "@/components/ui/button"
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
-import {Badge} from "@/components/ui/badge"
-import {Textarea} from "@/components/ui/textarea"
-import {Input} from "@/components/ui/input"
-import {Label} from "@/components/ui/label"
-import {Alert, AlertDescription} from "@/components/ui/alert"
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
-import {usePageMarkinfo, usePrintPdf} from "@/hooks/usePrintPdf";
-import {createPdfJob} from "@/report/footer/job";
-import { v4 as uuidv4 } from 'uuid';
-import { Loader2, RefreshCw, Trash2, Download } from "lucide-react"
-import {UserCacheManager} from "@/components/indexeddb-cache";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Loader2, RefreshCw, Trash2 } from "lucide-react"
+import { usePageMarkinfo } from "@/hooks/usePrintPdf"
+import { createPdfJob } from "@/report/footer/job"
+import { PdfOutlineCacheManager, type PdfOutlineCacheItem } from "@/lib/indexeddb-cache"
 
 interface OutlineItem {
     title: string
     page: number
     level: number
 }
+
 export interface OutlineData {
     outline: OutlineItem[]
     totalPages: number
@@ -27,27 +21,17 @@ export interface OutlineData {
 }
 
 interface PdfOutlineAnalyzerProps {
-    rep?: any,
+    rep?: any
 }
 
-interface CacheItem {
-    //必须有一个唯一性标识串的： 采用对象模型内置id做法的。
-    id: string;
-    data: any;
-    createdAt: number;
-}
+export default function PdfOutlineAnalyzer({ rep }: PdfOutlineAnalyzerProps) {
+    const dbkvId = "current-pdf-job"
+    const pdf_job = createPdfJob(rep, true)
 
-
-export default function PdfOutlineAnalyzer({rep}: PdfOutlineAnalyzerProps) {
-    const dbkvId="sdfdsf";
-    const [items, setItems] = useState<CacheItem[]>([]);
-    // const [error, setError] = useState<string | null>(null);
-    const pdf_job = createPdfJob(rep, true);
-    const [isAnalyzing, setIsAnalyzing] = useState(false)
-    // const [pdfFile, setPdfFile] = useState<File | null>(null) 文件上传的管理；
-    const [userCache] = useState(
+    // 初始化缓存管理器
+    const [cacheManager] = useState(
         () =>
-            new UserCacheManager(
+            new PdfOutlineCacheManager(
                 {
                     dbName: "appCache",
                     storeName: "pdfMarkPage",
@@ -57,19 +41,32 @@ export default function PdfOutlineAnalyzer({rep}: PdfOutlineAnalyzerProps) {
             ),
     )
 
-    const [currentRep, setCurrentRep] = useState<CacheItem | null>(null)
-    const [cachedUsers, setCachedUsers] = useState<CacheItem[]>([])
+    const [currentOutline, setCurrentOutline] = useState<PdfOutlineCacheItem | null>(null)
+    const [cachedOutlines, setCachedOutlines] = useState<PdfOutlineCacheItem[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [initialized, setInitialized] = useState(false)
-    const [stats, setStats] = useState({ count: 0, maxItems: 6 })
 
-    // 初始化数据库并自动加载指定用户数据
+    // 缓存成功回调函数
+    const handleCacheSuccess = async (outlineData: OutlineData, jobId: string) => {
+        try {
+            await cacheManager.addOutlineData(jobId, outlineData, outlineData.title, outlineData.totalPages)
+            console.log("书签数据已缓存:", jobId)
+            await refreshCachedData()
+        } catch (error) {
+            console.error("缓存书签数据失败:", error)
+        }
+    }
+
+    // 使用带缓存回调的 hook
+    const [isGetMarking, handleSubmit, outlineData] = usePageMarkinfo(pdf_job, handleCacheSuccess)
+
+    // 初始化数据库并自动加载数据
     useEffect(() => {
         const initDB = async () => {
             try {
-                await userCache.init()
-                await loadUserData()
+                await cacheManager.init()
+                await loadCurrentData()
                 await refreshCachedData()
                 setInitialized(true)
             } catch (error) {
@@ -81,72 +78,44 @@ export default function PdfOutlineAnalyzer({rep}: PdfOutlineAnalyzerProps) {
         initDB()
     }, [dbkvId])
 
-    // 加载指定用户数据（仅从缓存）
-    const loadUserData = async () => {
+    // 加载当前数据（仅从缓存）
+    const loadCurrentData = async () => {
         try {
-            console.log(`正在从缓存加载用户: ${dbkvId}`)
-            const cachedData = await userCache.getUser(dbkvId)
+            console.log(`正在从缓存加载数据: ${dbkvId}`)
+            const cachedData = await cacheManager.getOutlineData(dbkvId)
 
             if (cachedData) {
                 console.log(`缓存命中: ${dbkvId}`)
-                setCurrentRep(cachedData)
+                setCurrentOutline(cachedData)
                 setError("")
             } else {
                 console.log(`缓存未命中: ${dbkvId}`)
-                setCurrentRep(null)
+                setCurrentOutline(null)
                 setError("")
             }
         } catch (error) {
-            console.error("Failed to load user data:", error)
-            setError("加载用户数据失败")
+            console.error("Failed to load data:", error)
+            setError("加载数据失败")
         }
     }
 
     // 刷新缓存数据列表
     const refreshCachedData = async () => {
         try {
-            const [cached, cacheStats] = await Promise.all([userCache.getAllUsers(), userCache.getStats()])
-            setCachedUsers(cached)
-            setStats(cacheStats)
+            const cached = await cacheManager.getAllOutlineData()
+            setCachedOutlines(cached)
         } catch (error) {
             console.error("Failed to refresh cached data:", error)
         }
     }
 
-    // 手动从API获取数据
-    const handleFetchFromAPI = async () => {
-        setLoading(true)
-        setError("")
-
-        try {
-            const result = await userCache.fetchAndCache(dbkvId)
-
-            if (result.data) {
-                setCurrentRep(result.data)
-                await refreshCachedData()
-            } else {
-                setError(result.error || "获取数据失败")
-            }
-        } catch (error) {
-            console.error("Fetch failed:", error)
-            setError("获取数据失败")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // 刷新当前用户数据（从缓存）
-    const handleRefreshCache = async () => {
-        await loadUserData()
-    }
-
     // 删除缓存
     const handleDeleteCache = async (id: string) => {
         try {
-            await userCache.deleteUser(id)
+            await cacheManager.deleteCache(id)
             await refreshCachedData()
-            if (currentRep?.id === id) {
-                setCurrentRep(null)
+            if (currentOutline?.id === id) {
+                setCurrentOutline(null)
             }
         } catch (error) {
             console.error("Failed to delete cache:", error)
@@ -158,9 +127,9 @@ export default function PdfOutlineAnalyzer({rep}: PdfOutlineAnalyzerProps) {
         if (!confirm("确定要清空所有缓存吗？")) return
 
         try {
-            await userCache.clearAll()
+            await cacheManager.clearAll()
             await refreshCachedData()
-            setCurrentRep(null)
+            setCurrentOutline(null)
         } catch (error) {
             console.error("Failed to clear all cache:", error)
         }
@@ -180,7 +149,7 @@ export default function PdfOutlineAnalyzer({rep}: PdfOutlineAnalyzerProps) {
     // 渲染大纲树结构
     const renderOutlineTree = (items: OutlineItem[]) => {
         return items.map((item, index) => (
-            <div key={index} className={`ml-${(item.level - 1) * 4} `}>
+            <div key={index} className={`ml-${(item.level - 1) * 4}`}>
                 <div className="flex items-center gap-0">
                     <span className="text-sm font-medium">{item.title}</span>
                     <Badge variant="secondary" className="ml-auto text-xs px-1 py-0">
@@ -190,54 +159,107 @@ export default function PdfOutlineAnalyzer({rep}: PdfOutlineAnalyzerProps) {
             </div>
         ))
     }
-    const [isGetMarking, handleSubmit, outlineData] = usePageMarkinfo(pdf_job)
 
-    return (<>
-        {error && (
-            <div className="bg-red-100 p-3 rounded mb-4">
-                <p className="text-red-700">{error}</p>
-            </div>
-        )}
-        <h2 className="text-xl font-semibold mb-2">当前缓存项 ({items.length})</h2>
-        {items.map((item) => (
-            <div key={item.id} className="mb-2 p-2 border rounded">
-                <p>ID: {item.id}</p>
-                <p>创建时间: {new Date(item.createdAt).toLocaleString()}</p>
-            </div>
-        ))}
+    return (
+        <>
+            {error && (
+                <div className="bg-red-100 p-3 rounded mb-4">
+                    <p className="text-red-700">{error}</p>
+                </div>
+            )}
 
-        {outlineData?.outline?.length! > 0 && (
-            <div className="grid grid-cols-1 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>书签视图</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+            {/* 当前书签数据显示 */}
+            {(outlineData?.outline?.length! > 0 || currentOutline?.outlineData?.outline?.length > 0) && (
+                <div className="grid grid-cols-1 gap-6 mb-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>书签视图</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {outlineData ? (
+                                <>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                                        <div>
+                                            <strong>总页数:</strong> {outlineData.totalPages || ""}
+                                        </div>
+                                        <div className="col-span-2">
+                                            <strong>标题:</strong> {outlineData.title}
+                                        </div>
+                                        <Badge variant="default">最新数据</Badge>
+                                    </div>
+                                    <div className="space-y-0 max-h-96 overflow-y-auto">{renderOutlineTree(outlineData.outline)}</div>
+                                </>
+                            ) : currentOutline ? (
+                                <>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                                        <div>
+                                            <strong>总页数:</strong> {currentOutline.totalPages || ""}
+                                        </div>
+                                        <div className="col-span-2">
+                                            <strong>标题:</strong> {currentOutline.title}
+                                        </div>
+                                        <Badge variant="secondary">来自缓存</Badge>
+                                    </div>
+                                    <div className="space-y-0 max-h-96 overflow-y-auto">
+                                        {renderOutlineTree(currentOutline.outlineData.outline)}
+                                    </div>
+                                </>
+                            ) : null}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                                <strong>总页数:</strong> {outlineData!.totalPages || ""}
-                            </div>
-                            <div className="col-span-2">
-                                <strong>标题:</strong> {outlineData!.title}
-                            </div>
+            {/* 操作按钮 */}
+            <Button onClick={handleSubmit} disabled={isGetMarking} className="w-full mb-6">
+                {isGetMarking ? "分析中..." : "🎯 提取书签信息"}
+            </Button>
+
+            {/* 缓存管理 */}
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>缓存管理</CardTitle>
+                            <p className="text-sm text-muted-foreground">当前缓存 {cachedOutlines.length}/10 条书签数据</p>
                         </div>
-                        <div className="space-y-0 max-h-96 overflow-y-auto">{renderOutlineTree(outlineData!.outline)}</div>
-
-
-                    </CardContent>
-                </Card>
-            </div>
-        )}
-        <Button onClick={handleSubmit} disabled={isAnalyzing} className="w-full">
-            {isAnalyzing ? "分析中..." : "🎯 提取书签信息"}
-        </Button>
-        {/* 添加测试按钮 */}
-        <button
-            onClick={() => addItem(`demo-las可kbk8`, { name: `新数据-${Date.now()}` })}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-            添加测试数据
-        </button>
-    </>)
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={refreshCachedData}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                刷新
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={handleClearAll} disabled={cachedOutlines.length === 0}>
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                清空缓存
+                            </Button>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {cachedOutlines.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">暂无缓存数据</div>
+                    ) : (
+                        <div className="space-y-3">
+                            {cachedOutlines.map((item, index) => (
+                                <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex-1">
+                                        <div className="font-medium">{item.title}</div>
+                                        <div className="text-sm text-muted-foreground">
+                                            ID: {item.id} | 总页数: {item.totalPages}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            缓存时间: {new Date(item.timestamp).toLocaleString()}
+                                        </div>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteCache(item.id)}>
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </>
+    )
 }

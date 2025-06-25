@@ -564,3 +564,5 @@ touch-pan-y touch-pinch-zoom 手机横屏的
 <div class="uppy-Dashboard-AddFiles-title">Drop files here or
 <button type="button" class="uppy-u-reset uppy-c-btn uppy-Dashboard-browse" data-uppy-super-focusable="true">browse files</button>
 </div>
+PDF_SERVICE_URL=http://localhost:9389
+PDF_SERVICE_TOKEN=your-secret-bearer-token
