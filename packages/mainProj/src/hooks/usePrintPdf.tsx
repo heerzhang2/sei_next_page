@@ -93,7 +93,7 @@ export function usePageMarkinfo(
                 const result = await extractPageMarkAction(prjob)
                 if (result.success) {
                     const responseData = result.data?.data as any
-                    toast.success(`提取书签应答`, {
+                    toast.success(`服务端提取书签应答`, {
                         description: <>{responseData?.result}</>,
                     })
                     if (responseData?.result === "Success") {
@@ -114,7 +114,7 @@ export function usePageMarkinfo(
                     throw new Error(result.error)
                 }
             } catch (error) {
-                toast.error("提取书签应答", {
+                toast.error("服务端提取书签应答", {
                     description: "文书打印转换器运行错误: " + error,
                 })
                 throw error
@@ -132,15 +132,18 @@ export function usePageMarkinfo(
 }
 
 /**提取书签信息 :但是使用浏览器的本机电脑的打印服务程序的；
+ *确保同步做刷新页面内容的，因为onSuccess异步的不能立刻更新网页。  setCurrentOutline: React.Dispatch<React.SetStateAction<any>>
+ * @param prjob  打印任务
+ * @param onSuccess 回调
  * */
-export function usePageMarkLocal(prjob: ConfigRoot<FileTransform>, onSuccess: (outlineData: OutlineData) => Promise<void>)
-    :[boolean, Function?]
+export function usePageMarkLocal(prjob: ConfigRoot<FileTransform>, onSuccess: (outlineData: OutlineData) => Promise<void>
+): [boolean, Function?]
 {
     //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
     const { trigger, isMutating } = useSWRMutation(`${process.env.NEXT_PUBLIC_PAGE2PDF_URL}/api/pageSeq`, createPrintJob, {
         onSuccess: async (data) => {
             const responseData = data?.data as any
-            if(responseData?.result === "Success") {
+            if (responseData?.result === "Success") {
                 const newOutlineData = {outline: responseData.outline, totalPages: responseData.totalPages}
                 // 调用成功回调函数进行缓存
                 try {
@@ -149,7 +152,7 @@ export function usePageMarkLocal(prjob: ConfigRoot<FileTransform>, onSuccess: (o
                     console.error("缓存数据失败:", cacheError)
                 }
             }
-            toast.success(`提取书签应答`, {
+            toast.success(`本机提取书签应答`, {
                 description: (
                     <>
                         {responseData?.result ?? ""}<br/>
@@ -160,7 +163,7 @@ export function usePageMarkLocal(prjob: ConfigRoot<FileTransform>, onSuccess: (o
             })
         },
         onError: (error) => {
-            toast.error("提取书签应答", { description: "请确认文书打印转换器已经在本机安装并运行" + error })
+            toast.error("本机提取书签应答", { description: "请确认文书打印转换器已经在本机安装并运行" + error })
         },
     })
 

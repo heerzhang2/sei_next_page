@@ -137,8 +137,8 @@ export const ConclusionVw= ({ orc, rep } : { orc: any,rep:any}
     return <React.Fragment>
         <PrintReserveLeast reserve="10rem"
                            title={<>
-                               <h2 id={"Conclusion"} className="text-xl text-center mt-4">一、锅炉安装监督检验综合报告<br/>
-                                   1.1锅炉安装监督检验结论报告</h2>
+                               <h2 className="text-xl text-center mt-4">一、锅炉安装监督检验综合报告</h2>
+                               <h3 id={"Conclusion"} className="text-xl text-center">1.1锅炉安装监督检验结论报告</h3>
                                <div className="flex justify-between">
                                    <span className="text-sm">工程名称：{orc?.工程名称}</span>
                                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>

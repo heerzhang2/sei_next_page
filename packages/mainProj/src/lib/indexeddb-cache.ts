@@ -69,7 +69,6 @@ export class IndexedDBCache<T extends BaseCacheItem> {
           const putRequest = store.put(updatedItem)
 
           putRequest.onsuccess = () => {
-            console.log(`缓存读取并更新时间戳: ${id}`)
             resolve(updatedItem)
           }
 

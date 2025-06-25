@@ -8,6 +8,7 @@ import {usePageMarkinfo, usePageMarkLocal} from "@/hooks/usePrintPdf"
 import { createPdfJob } from "@/report/footer/job"
 import { PdfOutlineCacheManager, type PdfOutlineCacheItem } from "@/lib/indexeddb-cache"
 import {toast} from "sonner";
+import {cn} from "@/lib/utils";
 
 interface OutlineItem {
     title: string
@@ -25,12 +26,15 @@ interface PdfOutlineAnalyzerProps {
     rep?: any
     //报告或原始记录区分的标记
     slug: string
+    inline?: boolean
 }
 
-export default function PdfOutlineAnalyzer({ rep,slug }: PdfOutlineAnalyzerProps) {
+/**提取web转换成的 pdf书签；
+ * 仅仅适合单一个URL的生成Pdf情况：
+* */
+export default function PdfOutlineAnalyzer({ rep,slug,inline }: PdfOutlineAnalyzerProps) {
     const dbkvId = rep?.id+"-"+slug;        //唯一性保证
     const pdf_job = createPdfJob(rep, true)
-
     // 初始化缓存管理器
     const [cacheManager] = useState(
         () =>
@@ -54,14 +58,16 @@ export default function PdfOutlineAnalyzer({ rep,slug }: PdfOutlineAnalyzerProps
     const handleCacheSuccess = async (outlineData: OutlineData) => {
         try {
             await cacheManager.addOutlineData(dbkvId, outlineData.outline, outlineData.totalPages)
-            console.log("书签数据已缓存:", dbkvId)
+            // console.log("书签数据已缓存:", dbkvId)
             await refreshCachedData()
+            await loadCurrentData()
         } catch (error) {
             console.error("缓存书签数据失败:", error)
         }
     }
-    //服务端提取的hook
+    //请服务端去提取的hook
     const [isGetMarking, handleSubmit] = usePageMarkinfo(pdf_job, handleCacheSuccess)
+    //本机提取办法的
     const [localGetMarking, handleSubmitLocal] = usePageMarkLocal(pdf_job, handleCacheSuccess)
     const handleMarkGeneration = async () => {
         if(!handleSubmitLocal)
@@ -92,14 +98,11 @@ export default function PdfOutlineAnalyzer({ rep,slug }: PdfOutlineAnalyzerProps
     // 加载当前数据（仅从缓存）
     const loadCurrentData = async () => {
         try {
-            console.log(`正在从缓存加载数据: ${dbkvId}`)
             const cachedData = await cacheManager.getOutlineData(dbkvId)
             if (cachedData) {
-                console.log(`缓存命中: ${dbkvId}`)
                 setCurrentOutline(cachedData)
                 setError("")
             } else {
-                console.log(`缓存未命中: ${dbkvId}`)
                 setCurrentOutline(null)
                 setError("")
             }
@@ -168,31 +171,33 @@ export default function PdfOutlineAnalyzer({ rep,slug }: PdfOutlineAnalyzerProps
             )}
             {/* 当前书签数据显示 */}
             {currentOutline ? (
-                <div className="grid grid-cols-1 gap-6 mb-6">
-                    <Card>
+                <div className={cn("grid grid-cols-1 gap-0 mb-2", inline && "max-h-60 overflow-y-auto")}>
+                    <Card className="py-0.5">
                         <CardContent>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-0 text-sm mb-0">
                                 <div>
                                     <strong>总页数:</strong> {currentOutline.totalPages || ""}
                                 </div>
                             </div>
                             { (currentOutline?.outline?.length! > 0) &&
-                                <div className="space-y-0 max-h-96 overflow-y-auto">{renderOutlineTree(currentOutline.outline)}</div>
+                                <div className="space-y-0">{renderOutlineTree(currentOutline.outline)}</div>
                             }
                         </CardContent>
                     </Card>
                 </div>
                 ) :
-                <div className="text-center">还没有数据!</div>
+                <div className="w-full max-w-[35rem] min-w-screen">还没有数据!</div>
             }
-            <div className="text-center">
-                <Button onClick={handleMarkGeneration} disabled={isGetMarking || localGetMarking} className="mb-6">
-                    {isGetMarking ? "本地目录生成..." : "🎯 本机提取书签"}
-                </Button>
-                <Button onClick={handleSubmit} disabled={isGetMarking || localGetMarking} className="ml-4 mb-6">
-                    {isGetMarking ? "分析中..." : "服务端提取书签"}
-                </Button>
-            </div>
+            {!inline &&
+                <div className="text-center">
+                    <Button onClick={handleMarkGeneration} disabled={isGetMarking || localGetMarking} className="mb-6">
+                        {isGetMarking ? "本地目录生成..." : "🎯 本机提取书签"}
+                    </Button>
+                    <Button onClick={handleSubmit} disabled={isGetMarking || localGetMarking} className="ml-4 mb-6">
+                        {isGetMarking ? "分析中..." : "服务端提取书签"}
+                    </Button>
+                </div>
+            }
         </>
     )
 }

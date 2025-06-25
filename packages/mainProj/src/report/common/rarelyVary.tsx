@@ -34,10 +34,10 @@ export const 落款单位地址 = () => (
     <React.Fragment>
         {/* 标题部分 */}
         <div className="text-center space-y-1">
-            <h4 className="text-2xl font-bold">福建省特种设备检验研究院</h4>
-            <h6 className="text-base">
+            <div className="text-2xl font-bold">福建省特种设备检验研究院</div>
+            <div className="text-base">
                 FUJIAN SPECIAL EQUIPMENT INSPECTION AND RESEARCH INSTITUTE
-            </h6>
+            </div>
             <div className="border-t-2 border-gray-600 w-full mx-auto"></div>
             <p className="mt-1 text-left">地址（Add.）：福建省福州市仓山区卢滨路370号</p>
             <div className="flex flex-wrap gap-1 mt-1">

@@ -54,3 +54,9 @@ export { Alert, AlertDescription, AlertTitle } from "./alert"
 export {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
 } from "./tooltip"
+
+export {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./collapsible"

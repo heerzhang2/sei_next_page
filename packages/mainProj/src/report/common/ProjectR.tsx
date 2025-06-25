@@ -1,17 +1,19 @@
 "use client"
 import React, {useEffect} from "react"
 import type { InternalItemProps } from "@/report/common/base"
-import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Badge, Label, Switch,} from "@/components/ui"
+import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Badge, Label, Switch,Collapsible, CollapsibleContent, CollapsibleTrigger,} from "@/components/ui"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import { CollapsibleFormSection } from "@/components/chub"
 import { useStorage } from "@/report/StorageContext"
-import { Edit, Trash2, Plus, X, AlertCircleIcon } from "lucide-react"
+import {Edit, Trash2, Plus, X, AlertCircleIcon, ChevronUp, ChevronDown} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertTitle } from "@/components/ui"
 import { SmartTruncatedText } from "@/components/smart-truncated-text"
 import {useSearchParams} from "next/navigation";
 import PdfOutlineAnalyzer from "@/components/pdf-outline-analyzer";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import { ChevronsUpDown } from "lucide-react"
+import {VisuallyHidden} from "@radix-ui/react-visually-hidden";
 
 // export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
 interface ProjectItem {
@@ -226,6 +228,7 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                     </Button>
                     <Button onClick={isNew ? saveAdd : saveEdit}>确认当前项</Button>
                 </div>
+                {item.do && <CollapsibleMarkTabs rep={rep} inline/>}
             </CardContent>
         </Card>
     )
@@ -358,22 +361,7 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                 )}
                             </div>
                         </div>
-
-                        <div className="max-w-6xl mx-auto p-6 space-y-6">
-                            <Tabs defaultValue="generate" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="generate">报告的书签</TabsTrigger>
-                                    <TabsTrigger value="analyze">原始记录的书签</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="generate" className="space-y-4">
-                                    <PdfOutlineAnalyzer rep={rep} slug='R'/>
-                                </TabsContent>
-                                <TabsContent value="analyze" className="space-y-4">
-                                    <PdfOutlineAnalyzer rep={rep} slug='O'/>
-                                </TabsContent>
-                            </Tabs>
-                        </div>
-
+                        <CollapsibleMarkTabs rep={rep} />
                         <div className="text-sm text-gray-600 space-y-1">
                             <p>
                                 <strong>字段说明：</strong>
@@ -415,5 +403,42 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                 {children}
             </div>
         </CollapsibleFormSection>
+    )
+}
+/*书签复用部分
+* */
+function CollapsibleMarkTabs({rep ,inline }:{rep:any,inline?:boolean }) {
+    const [isOpen, setIsOpen] = React.useState(false)
+    return (
+        <Collapsible
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            className={cn("flex w-full flex-col gap-0", inline? "@md:relative @md:-top-8 pointer-events-none":"")}
+        >
+            <div className={cn("flex gap-4 px-4", inline? "":"mx-auto items-center")}>
+                <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="font-semibold pointer-events-auto" aria-label="展开切换">
+                        <span>打印在第几页</span>
+                        { isOpen? <ChevronUp /> : <ChevronDown />}
+                    </Button>
+                </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent className="flex flex-col gap-0">
+                <div className="w-full max-w-[35rem] mx-auto @md:px-6 py-0 space-y-0">
+                    <Tabs defaultValue="generate" className="w-full pointer-events-auto">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="generate">报告的书签</TabsTrigger>
+                            <TabsTrigger value="analyze">原始记录的书签</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="generate" className="space-y-0">
+                            <PdfOutlineAnalyzer inline={inline} rep={rep} slug='R'/>
+                        </TabsContent>
+                        <TabsContent value="analyze" className="space-y-0">
+                            <PdfOutlineAnalyzer inline={inline} rep={rep} slug='O'/>
+                        </TabsContent>
+                    </Tabs>
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
     )
 }
