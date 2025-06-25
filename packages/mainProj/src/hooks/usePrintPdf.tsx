@@ -41,7 +41,7 @@ async function createPrintJob(url: string, { arg }: { arg: { job: ConfigRoot<Fil
  * */
 export function usePrintPdf(prjob: ConfigRoot<FileTransform>):[boolean, Function?] {
     //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
-    const { trigger, isMutating } = useSWRMutation("http://localhost:9389/api/pdf", createPrintJob, {
+    const { trigger, isMutating } = useSWRMutation(`${process.env.NEXT_PUBLIC_PAGE2PDF_URL}/api/pdf`, createPrintJob, {
         onSuccess: (data) => {
             toast.success(`打印转换器应答`, {
                 description: (
@@ -81,11 +81,9 @@ export function usePrintPdf(prjob: ConfigRoot<FileTransform>):[boolean, Function
  */
 export function usePageMarkinfo(
     prjob: ConfigRoot<FileTransform>,
-    onSuccess?: (outlineData: OutlineData) => Promise<void>,
-): [boolean, () => Promise<any>, OutlineData | null] {
-    const [outlineData, setOutlineData] = useState<OutlineData | null>(null)
+    onSuccess: (outlineData: OutlineData) => Promise<void>,
+): [boolean, () => Promise<any>] {
     const [isMutating, setIsMutating] = useState(false)
-
     const handleSubmit = useCallback(
         async function handleSubmit() {
             if (!prjob) return null
@@ -93,28 +91,20 @@ export function usePageMarkinfo(
             setIsMutating(true)
             try {
                 const result = await extractPageMarkAction(prjob)
-
                 if (result.success) {
                     const responseData = result.data?.data as any
-
                     toast.success(`提取书签应答`, {
                         description: <>{responseData?.result}</>,
                     })
-
                     if (responseData?.result === "Success") {
-                        const newOutlineData = responseData.outlineData
-                        setOutlineData(newOutlineData)
-
+                        const newOutlineData ={outline: responseData.outline, totalPages: responseData.totalPages }
                         // 调用成功回调函数进行缓存
-                        if (onSuccess && newOutlineData) {
-                            try {
-                                await onSuccess(newOutlineData)
-                            } catch (cacheError) {
-                                console.error("缓存数据失败:", cacheError)
-                                // 不影响主流程，只记录错误
-                            }
+                        try {
+                            await onSuccess(newOutlineData)
+                        } catch (cacheError) {
+                            console.error("缓存数据失败:", cacheError)
+                            // 不影响主流程，只记录错误
                         }
-
                         return result.data
                     } else {
                         console.error("大纲提取失败:", responseData.result)
@@ -136,7 +126,54 @@ export function usePageMarkinfo(
     )
 
     if (!prjob) {
-        return [isMutating, async () => null, null]
+        return [isMutating, async () => null]
     }
-    return [isMutating, handleSubmit, outlineData]
+    return [isMutating, handleSubmit]
+}
+
+/**提取书签信息 :但是使用浏览器的本机电脑的打印服务程序的；
+ * */
+export function usePageMarkLocal(prjob: ConfigRoot<FileTransform>, onSuccess: (outlineData: OutlineData) => Promise<void>)
+    :[boolean, Function?]
+{
+    //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
+    const { trigger, isMutating } = useSWRMutation(`${process.env.NEXT_PUBLIC_PAGE2PDF_URL}/api/pageSeq`, createPrintJob, {
+        onSuccess: async (data) => {
+            const responseData = data?.data as any
+            if(responseData?.result === "Success") {
+                const newOutlineData = {outline: responseData.outline, totalPages: responseData.totalPages}
+                // 调用成功回调函数进行缓存
+                try {
+                    await onSuccess(newOutlineData)
+                } catch (cacheError) {
+                    console.error("缓存数据失败:", cacheError)
+                }
+            }
+            toast.success(`提取书签应答`, {
+                description: (
+                    <>
+                        {responseData?.result ?? ""}<br/>
+                        顺带生成Pdf在自己电脑的文书转换器目录的子目录:<br/>
+                        {responseData?.dir ?? ""}
+                    </>
+                ),
+            })
+        },
+        onError: (error) => {
+            toast.error("提取书签应答", { description: "请确认文书打印转换器已经在本机安装并运行" + error })
+        },
+    })
+
+    // 修改为返回一个可以await的异步函数
+    const handleSubmit = useCallback(
+        async function handleSubmit() {
+            if (!prjob) return null
+            // 返回trigger的结果，这样外部可以await
+            return await trigger({ job: prjob })
+        },
+        [prjob, trigger],
+    )
+
+    if (!prjob) return [isMutating, undefined]
+    return [isMutating, handleSubmit]
 }

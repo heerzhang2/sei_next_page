@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, RefreshCw, Trash2 } from "lucide-react"
-import { usePageMarkinfo } from "@/hooks/usePrintPdf"
+import {usePageMarkinfo, usePageMarkLocal} from "@/hooks/usePrintPdf"
 import { createPdfJob } from "@/report/footer/job"
 import { PdfOutlineCacheManager, type PdfOutlineCacheItem } from "@/lib/indexeddb-cache"
+import {toast} from "sonner";
 
 interface OutlineItem {
     title: string
@@ -17,7 +18,7 @@ interface OutlineItem {
 export interface OutlineData {
     outline: OutlineItem[]
     totalPages: number
-    title: string
+    // title: string
 }
 
 interface PdfOutlineAnalyzerProps {
@@ -49,20 +50,28 @@ export default function PdfOutlineAnalyzer({ rep,slug }: PdfOutlineAnalyzerProps
     const [error, setError] = useState("")
     const [initialized, setInitialized] = useState(false)
 
-    // 缓存成功回调函数
+    //服务端提取的回调函数
     const handleCacheSuccess = async (outlineData: OutlineData) => {
         try {
-            await cacheManager.addOutlineData(dbkvId, outlineData, outlineData.title, outlineData.totalPages)
+            await cacheManager.addOutlineData(dbkvId, outlineData.outline, outlineData.totalPages)
             console.log("书签数据已缓存:", dbkvId)
             await refreshCachedData()
         } catch (error) {
             console.error("缓存书签数据失败:", error)
         }
     }
-
-    // 使用带缓存回调的 hook
-    const [isGetMarking, handleSubmit, outlineData] = usePageMarkinfo(pdf_job, handleCacheSuccess)
-
+    //服务端提取的hook
+    const [isGetMarking, handleSubmit] = usePageMarkinfo(pdf_job, handleCacheSuccess)
+    const [localGetMarking, handleSubmitLocal] = usePageMarkLocal(pdf_job, handleCacheSuccess)
+    const handleMarkGeneration = async () => {
+        if(!handleSubmitLocal)
+            toast.error("操作失败", {
+                description: "请确认文书打印转换器在运行" + error,
+            })
+        else {
+            await handleSubmitLocal()
+        }
+    }
     // 初始化数据库并自动加载数据
     useEffect(() => {
         const initDB = async () => {
@@ -135,18 +144,7 @@ export default function PdfOutlineAnalyzer({ rep,slug }: PdfOutlineAnalyzerProps
             console.error("Failed to clear all cache:", error)
         }
     }
-
-    if (!initialized) {
-        return (
-            <div className="max-w-4xl mx-auto p-6">
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin mr-3" />
-                    <span>正在初始化...</span>
-                </div>
-            </div>
-        )
-    }
-
+    if(!initialized)   return <span>在初始化indexDB...</span>
     // 渲染大纲树结构
     const renderOutlineTree = (items: OutlineItem[]) => {
         return items.map((item, index) => (
@@ -168,99 +166,33 @@ export default function PdfOutlineAnalyzer({ rep,slug }: PdfOutlineAnalyzerProps
                     <p className="text-red-700">{error}</p>
                 </div>
             )}
-
             {/* 当前书签数据显示 */}
-            {(outlineData?.outline?.length! > 0 || currentOutline?.outlineData?.outline?.length > 0) && (
+            {currentOutline ? (
                 <div className="grid grid-cols-1 gap-6 mb-6">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>书签视图</CardTitle>
-                        </CardHeader>
                         <CardContent>
-                            {outlineData ? (
-                                <>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                                        <div>
-                                            <strong>总页数:</strong> {outlineData.totalPages || ""}
-                                        </div>
-                                        <div className="col-span-2">
-                                            <strong>标题:</strong> {outlineData.title}
-                                        </div>
-                                        <Badge variant="default">最新数据</Badge>
-                                    </div>
-                                    <div className="space-y-0 max-h-96 overflow-y-auto">{renderOutlineTree(outlineData.outline)}</div>
-                                </>
-                            ) : currentOutline ? (
-                                <>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                                        <div>
-                                            <strong>总页数:</strong> {currentOutline.totalPages || ""}
-                                        </div>
-                                        <div className="col-span-2">
-                                            <strong>标题:</strong> {currentOutline.title}
-                                        </div>
-                                        <Badge variant="secondary">来自缓存</Badge>
-                                    </div>
-                                    <div className="space-y-0 max-h-96 overflow-y-auto">
-                                        {renderOutlineTree(currentOutline.outlineData.outline)}
-                                    </div>
-                                </>
-                            ) : null}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                                <div>
+                                    <strong>总页数:</strong> {currentOutline.totalPages || ""}
+                                </div>
+                            </div>
+                            { (currentOutline?.outline?.length! > 0) &&
+                                <div className="space-y-0 max-h-96 overflow-y-auto">{renderOutlineTree(currentOutline.outline)}</div>
+                            }
                         </CardContent>
                     </Card>
                 </div>
-            )}
-
-            {/* 操作按钮 */}
-            <Button onClick={handleSubmit} disabled={isGetMarking} className="w-full mb-6">
-                {isGetMarking ? "分析中..." : "🎯 提取书签信息"}
-            </Button>
-
-            {/* 缓存管理 */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>缓存管理</CardTitle>
-                            <p className="text-sm text-muted-foreground">当前缓存 {cachedOutlines.length}/10 条书签数据</p>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={refreshCachedData}>
-                                <RefreshCw className="w-4 h-4 mr-2" />
-                                刷新
-                            </Button>
-                            <Button variant="destructive" size="sm" onClick={handleClearAll} disabled={cachedOutlines.length === 0}>
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                清空缓存
-                            </Button>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {cachedOutlines.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">暂无缓存数据</div>
-                    ) : (
-                        <div className="space-y-3">
-                            {cachedOutlines.map((item, index) => (
-                                <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                    <div className="flex-1">
-                                        <div className="font-medium">{item.title}</div>
-                                        <div className="text-sm text-muted-foreground">
-                                            ID: {item.id} | 总页数: {item.totalPages}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                            缓存时间: {new Date(item.timestamp).toLocaleString()}
-                                        </div>
-                                    </div>
-                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteCache(item.id)}>
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                ) :
+                <div className="text-center">还没有数据!</div>
+            }
+            <div className="text-center">
+                <Button onClick={handleMarkGeneration} disabled={isGetMarking || localGetMarking} className="mb-6">
+                    {isGetMarking ? "本地目录生成..." : "🎯 本机提取书签"}
+                </Button>
+                <Button onClick={handleSubmit} disabled={isGetMarking || localGetMarking} className="ml-4 mb-6">
+                    {isGetMarking ? "分析中..." : "服务端提取书签"}
+                </Button>
+            </div>
         </>
     )
 }

@@ -7,6 +7,7 @@ import {EditControlProvider} from "@/component/rep/editControl-provider";
 import {useParams} from "next/navigation";
 import Skeleton from "@/component/rep/skeleton";
 import Sidebar from "@/component/rep/sidebar";
+import {Loader2} from "lucide-react";
 
 //变身 公用组件：
 export default function ReportLayout({
@@ -26,7 +27,14 @@ export default function ReportLayout({
   }, []);
   //这才能绝对避免水和的报错！
   if (!isClient) {
-    return <div className="skelon-placeholder">SSR加载中...</div>;
+    return (
+        <div className="h-screen max-w-4xl mx-auto my-auto p-6">
+          <div className="h-full flex items-center justify-center py-12">
+            <Loader2 className="w-20 h-20 animate-spin mr-3" />
+            <span>SSR加载中...</span>
+          </div>
+        </div>
+    )
   }
   // After hydration, render the full component
     //不能再加<EditControlProvider>，上面层次组件提供了

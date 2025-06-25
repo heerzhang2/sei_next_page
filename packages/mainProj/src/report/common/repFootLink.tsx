@@ -346,7 +346,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                                         <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-5" : "grid-cols-3")}>
                                             <div className={cn(screenWidth! >= 768 ? "col-span-3" : "col-span-2")}>
                                                 <Link
-                                                    href={`${process.env.NEXT_PUBLIC_OSS_ENDP}${pdfUri}`}
+                                                    href={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${pdfUri}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-lime-200 text-red-500 hover:bg-gray-200 h-8 px-3 py-1 w-full"

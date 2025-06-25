@@ -193,16 +193,15 @@ export class IndexedDBCache<T extends BaseCacheItem> {
   }
 }
 
-// PDF 书签缓存项接口
+//PDF 书签专门用的，缓存项
 export interface PdfOutlineCacheItem extends BaseCacheItem {
   id: string
-  outlineData: any // 根据你的 OutlineData 接口调整
-  title: string
+  outline: any // 根据你的 OutlineData 接口调整
   totalPages: number
   timestamp: number
 }
 
-// PDF 书签缓存管理器
+//PDF 书签缓存专门用 管理器
 export class PdfOutlineCacheManager extends IndexedDBCache<PdfOutlineCacheItem> {
   private maxItems: number
 
@@ -212,11 +211,10 @@ export class PdfOutlineCacheManager extends IndexedDBCache<PdfOutlineCacheItem> 
   }
 
   // 添加 PDF 书签数据
-  async addOutlineData(id: string, outlineData: any, title: string, totalPages: number): Promise<void> {
+  async addOutlineData(id: string, outline: any, totalPages: number): Promise<void> {
     const item: PdfOutlineCacheItem = {
       id,
-      outlineData,
-      title,
+      outline: outline,
       totalPages,
       timestamp: Date.now(),
     }

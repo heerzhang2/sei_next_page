@@ -198,7 +198,7 @@ export function useUppyUpload({
                         <Dashboard uppy={uppy} plugins={["Webcam"]} />
                     ) : storeObj1?.url ? (
                         <ImageComponentNatural
-                            src={`${process.env.NEXT_PUBLIC_OSS_ENDP}${storeObj1.url}` || "/placeholder.svg"}
+                            src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${storeObj1.url}` || "/placeholder.svg"}
                             alt={storeObj1?.url || "图片"}
                         />
                     ) : null
@@ -250,7 +250,7 @@ export function useUppyUpload({
                                 <div id={(hash ?? '_pf')+`${i}`} className="flex justify-around items-center">
                                     {url && (
                                         <ImageComponentNatural
-                                            src={process.env.NEXT_PUBLIC_OSS_ENDP + url || "/placeholder.svg"}
+                                            src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${url}` || "/placeholder.svg"}
                                             alt={url}
                                         />
                                     )}

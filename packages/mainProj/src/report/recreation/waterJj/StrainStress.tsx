@@ -292,7 +292,7 @@ export const StrainStressVw = ({orc, rep, label, sensit}: { orc: any, rep: any, 
                             <div className="flex justify-around items-center my-1">
                                 {orc?._FILE_测点?.url && (
                                     <ImageComponent
-                                        src={`${process.env.NEXT_PUBLIC_OSS_ENDP}${orc?._FILE_测点?.url}`}
+                                        src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${orc?._FILE_测点?.url}`}
                                         alt={orc?._FILE_测点?.url || "图片"}
                                         className="w-auto h-auto"
                                     />

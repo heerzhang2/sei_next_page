@@ -144,7 +144,7 @@ export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', childr
                                         <div className="flex justify-around items-center my-0.5">
                                             {url && (
                                                 <ImageComponent
-                                                    src={`${process.env.NEXT_PUBLIC_OSS_ENDP}${url}`}
+                                                    src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${url}`}
                                                     alt={url || "图片"}
                                                     className={cn(
                                                         "w-auto h-auto",
