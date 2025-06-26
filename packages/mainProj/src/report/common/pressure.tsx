@@ -20,7 +20,7 @@ export type PressureLayout = {
 
 /**构建反方向 搜索tag name的Map对象。
  * @param projects: 实际存储的分项配置数组。
- * @return Map 可按照名字检索对应的配置对象。
+ * @return Map 可按照名字检索对应的配置对象。 数组[]转成Map
  * */
 export const useItemsMapPressure= ({ projects, }:{ projects:PressureLayout[], }
 ) => {

@@ -73,12 +73,12 @@ export const BoilerDiagram =
                                 <CardContent className="space-y-1 px-2">
                                     <div className="grid grid-cols-1 gap-1">
                                         <div className="space-y-2">
-                                            <Label htmlFor="page" className="select-text">
+                                            <Label htmlFor="memojt" className="select-text">
                                                 说明：
                                             </Label>
                                             <Textarea
                                                 rows={20}
-                                                id="page"
+                                                id="memojt"
                                                 value={editForm.简图说明}
                                                 onChange={(e) => updateFormField("简图说明", e.target.value)}
                                                 placeholder="输入更多文字"

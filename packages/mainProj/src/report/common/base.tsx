@@ -5,6 +5,7 @@ import { MutableRefObject } from "react";
 import {DirectLink} from "../../routing/Link";
 import {gql, } from '@urql/next';
 import {JumpTab} from "@/report/common/JumpTab";
+import {PressureLayout} from "@/report/common/pressure";
 
 //公共的复用性好的组件。
 //各个检验单项子组件暴露给父组件的接口数据。
@@ -73,7 +74,9 @@ export interface ReportViewProps {
     //嵌入式和独立流转并存的，或独立流转的出现多个同种模板的。需要重新定位序号。默认=0
     fxIdx?: number;
 }
-
+export interface ReportViewFxProps extends ReportViewProps{
+    mapFxian: Map<string,PressureLayout>;
+}
 
 export const OriginalDataMutation =gql`
     mutation useOriginalDataMutation(

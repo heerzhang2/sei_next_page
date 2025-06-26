@@ -8,13 +8,15 @@ interface RepHeadLinkProps {
     verId: string
     repId: string
     rep: any
+    //单独正式报告的，就没有原始记录的展示模式的。
+    single?: boolean
 }
 /**报告的头部功能区
 * */
-export function RepHeadLink({ template, verId, repId, rep }: RepHeadLinkProps) {
+export function RepHeadLink({ template, verId, repId, rep, single }: RepHeadLinkProps) {
     const searchParams = useSearchParams()
     const original = "1" === searchParams!.get("original")
-    const pdfUri = original ? rep?.link?.ori : rep?.link?.rep
+    const pdfUri = (!single && original) ? rep?.link?.ori : rep?.link?.rep
 
     return (
         <div id="BeginOfRep" className="print:hidden text-center mt-4 mb-4 md:mb-0">

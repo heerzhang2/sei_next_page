@@ -74,7 +74,7 @@ function CommonReportData({ repId,children       }:
         console.log("【id切换】才会执行的：左边页面的-Relay3query获取后进的-",dat,"snap",snap);        //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
     }, [report, setStorage]);
     if (fetching) return <div>加载中...</div>
-    if (error) return <div>错误: {error.message}</div>
+    if (error) return <div>报告取数据错: {error.message}</div>
     if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>
     if (!report) return  <div className="content-center text-center h-screen w-screen">
             <Link href="/">没有找到该份报告，返回首页</Link>

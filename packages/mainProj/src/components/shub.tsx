@@ -85,4 +85,6 @@ export const ImageComponent: React.FC<ImageProps> = ({
 
 /*原本的 className={cn("object-contain max-h-[15cm] @md:5xl:max-h-[19cm]",
          landscape? "print:max-h-[705px] print:max-w-[26.5cm]" : "print:max-h-[26.5cm] print:max-w-[705px]", className)}
+
+         请求失败: http://192.168.171.3:9000/ywmast/202506/2012/37a9f6f6-36b0-45bd-add1-d59baa777b6e，状态码: net::ERR_BLOCKED_BY_ORB
 * */

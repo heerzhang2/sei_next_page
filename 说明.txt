@@ -7,7 +7,7 @@ CSS不能直接添加/删除类名，
 grid布局对于配置要求很高，一点毛病导致不达到预期。默认1X1行列；@5xl:row-span-3元素其位置前已布局的水平对齐空白区还是会保留的，其后面空间才会紧凑地利用。
 ort { fetchQuery, commitMutation, graphql } from 'relay-runtime';
 fjseireport seiadmin
-【工具】  JSON.parse(orc?._tblFixed??'[]')  ;      ["4%",  "5%", "4%", "6%", "%", "23%"] 替换目标表的columnWidths字段
+【表格打印调整】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度 1595 px；   ["14.1%", "19%", "%", "10.1%","10%","8%"]
 3. 使用fetchQuery执行查询
 fetchQuery函数允许你执行一个GraphQL查询并获取结果。你需要提供查询定义、变量、Relay环境和回调函数。
 URQL宕机自动更新：若是恢复后刷新页面浏览器cache只能第一次保存提交的才能成功保存后续保存被version拒绝，若不做页面刷新恢复后直接再点保存能完整提交
@@ -492,75 +492,3 @@ http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/5.1
 2. Tailwind CSS 4.0 中的 `touch-pan-y` 和 `touch-pan-x` 类是处理触摸滚动的推荐方式
 3. 如果遇到特定的 iOS 滚动问题，可能需要结合其他技术，如自定义滚动处理或使用专门的滚动库
 touch-pan-y touch-pinch-zoom 手机横屏的
-
-                    <a href="https://www.fjtj.com" className="block hover:underline">
-                        www.fjtj.com
-                    </a>
-                                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`} className="no-underline hover:underline">
-                                        <div className="text-blue-600 hover:text-blue-800">
-                                            {注意事项WaterJj({
-                                                rep,
-                                                comply: "依据《大型游乐设施安全技术规程》（TSG 71-2023）制定，适用于大型游乐设施监督检验",
-                                            })}
-                                        </div>
-                                    </JumpTab>
-
-
-<div css={{
-      "@media print": {
-        //【特殊】布局流如何定位到中间某一张纸张的末尾打印；纸张高度上 剪掉 上面的一行 “目录” 并没有被本div所都囊括的元素高度：推定剪掉高度是2rem。A4纸张竖版大约可接受高度大小=775pt再换算=273.4mm；A4纸297mm-2*(11.7=边距+页眉页脚)；
-        //【有问题】目标div必须小于一张纸高度？这里若稍微超出了当前定位纸张区域，@@就可能被切分两页的！！，变成后续尾随空白页面的。所以尽量考虑有余量“- 10pt”:A4纸张竖版。
-        height: `calc(100vh - 3rem)`,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',   //'flex-end', 吸附本页纸张的底部区域打印，还是在本张纸张中间打印的？
-      },
-    }}>
-      <div css={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-      }}>
-        <Text css={{
-          [theme.mediaQueries.md]: {
-            marginRight: '2rem',
-          }
-        }}>报告编号：{rep.isp.no}
-        </Text>
-      </div>
-    </div>
-
-
-
-
-
-
-
-
-                        { (new Array(9)).fill(null).map((_, i:number) => {
-                            return <>
-
-                                {orc?.Projects?.map((prj: any, i: number) => {
-                                    if(prj?.na || prj?.om)   return null;       //na:表示不在目录中显示的分项目分页。 om：只在记录显示；
-                                    if(prj?.zs || prj?.dd) return null;       //特性表跟着zs证书走到前面去的，不用显示在目录；dd表示用户自定义项目不显示在目录中
-                                    return prj?.do && (
-                                        <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList?from=${i}#ProjectList`}>
-                                            <TableRow>
-                                                <CCell>{muluSn++}</CCell>
-                                                <TableCell className="text-sm border border-gray-700">{prj?.ml ? prj?.ml : suffix? (prj?.name + '报告') : prj?.name}</TableCell>
-                                                <CCell>{prj?.page}</CCell>
-                                                <CCell>{prj?.apx??'／'}</CCell>
-                                            </TableRow>
-                                        </JumpTab>
-                                    );
-                                })
-                                }
-
-                            </>
-                        }) }
-
-
-
-
-<div class="uppy-Dashboard-AddFiles-title">Drop files here or
-<button type="button" class="uppy-u-reset uppy-c-btn uppy-Dashboard-browse" data-uppy-super-focusable="true">browse files</button>
-</div>

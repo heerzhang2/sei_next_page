@@ -144,7 +144,7 @@ export const ConclusionVw= ({ orc, rep } : { orc: any,rep:any}
                                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
                                </div>
                            </>}>
-            <FlexibleTable id='Survey' columnWidths={ ["14.1%", "19%", "%", "10.1%","10%","8%"] } className="text-sm border-collapse">
+            <FlexibleTable id='Survey' columnWidths={ ["14.8%", "19%", "%", "11.6%","10%","8%"] } className="text-sm border-collapse">
                 <TableBody>
                     <RepLink ori rep={rep} tag={'Survey'}>
                         {renderUpper}

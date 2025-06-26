@@ -25,13 +25,15 @@ interface RepFootLinkProps {
     rep: any
     pdf_job: ConfigRoot<FileTransform>
     onLocalCvtFin?: () => void
+    //单独正式报告的，就没有原始记录的展示模式的。
+    single?: boolean
 }
 
 type TimeUnit = "day" | "month" | "year"
 /**报告底部的功能区：
  * v0dev帮忙解决fiexed元素scroll的告警问题
  * */
-export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFin }: RepFootLinkProps) {
+export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFin,single }: RepFootLinkProps) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
     const createQueryString = useCreateQueryString()
@@ -421,7 +423,7 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
             {/* 返回首页链接 */}
             <div className="text-right border-b pb-4 mb-8">
                 <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    -{original? '原始记录':'报告'}完毕,返回-
+                    -{(!single && original)? '原始记录':'报告'}完毕,返回-
                 </Link>
             </div>
             <div className={cn("flex justify-center", "fixed bottom-4 -translate-x-1/2 z-50",
@@ -457,11 +459,11 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
                     >
                         {PopoverContent_All}
                         <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-7" : "grid-cols-5")}>
-                            <Button
+                            <Button disabled={single}
                                 variant="outline"
                                 onClick={() => {
-                                    const newUrl = pathname + "?" + createQueryString("original", original ? "" : "1")
-                                    handleNavigation(newUrl, true)
+                                    const newUrl = pathname + "?" + createQueryString("original", original ? "" : "1");
+                                    handleNavigation(newUrl, true);
                                 }}
                                 className={cn("text-xs h-8",screenWidth! >= 768 ? "col-span-2 col-end-4" : "col-span-2")}
                                 size="sm"

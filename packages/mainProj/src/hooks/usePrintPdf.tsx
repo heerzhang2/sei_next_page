@@ -43,17 +43,28 @@ export function usePrintPdf(prjob: ConfigRoot<FileTransform>):[boolean, Function
     //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
     const { trigger, isMutating } = useSWRMutation(`${process.env.NEXT_PUBLIC_PAGE2PDF_URL}/api/pdf`, createPrintJob, {
         onSuccess: (data) => {
-            toast.success(`打印转换器应答`, {
-                description: (
-                    <>
-                        {data?.data?.result ?? ""}
-                        <br />
-                        生成Pdf在自己电脑的文书转换器目录的子目录:
-                        <br />
-                        {data?.data?.dir ?? ""}
-                    </>
-                ),
-            })
+            const responseData = data?.data as any
+            if(responseData?.result === "Success")
+                toast.success(`打印转换器应答`, {
+                    description: (
+                        <>
+                            {data?.data?.result ?? ""}
+                            <br />
+                            { data?.data?.dir && <>
+                                生成Pdf在自己电脑的文书转换器目录的子目录:
+                                <br/>{data?.data?.dir}
+                             </>
+                            }
+                        </>
+                    ),
+                })
+            else{
+                toast.error(`打印转换器应答`, {
+                    description: (
+                        <>{responseData?.result ?? ""}<br/></>
+                    ),
+                })
+            }
         },
         onError: (error) => {
             toast.error("打印转换器应答", { description: "请确认文书打印转换器已经在本机安装并运行" + error })
@@ -91,12 +102,12 @@ export function usePageMarkinfo(
             setIsMutating(true)
             try {
                 const result = await extractPageMarkAction(prjob)
-                if (result.success) {
+                if(result.success) {
                     const responseData = result.data?.data as any
-                    toast.success(`服务端提取书签应答`, {
-                        description: <>{responseData?.result}</>,
-                    })
-                    if (responseData?.result === "Success") {
+                    if(responseData?.result === "Success") {
+                        toast.success(`服务端提取书签应答`, {
+                            description: <>{responseData?.result}</>,
+                        })
                         const newOutlineData ={outline: responseData.outline, totalPages: responseData.totalPages }
                         // 调用成功回调函数进行缓存
                         try {
@@ -151,16 +162,25 @@ export function usePageMarkLocal(prjob: ConfigRoot<FileTransform>, onSuccess: (o
                 } catch (cacheError) {
                     console.error("缓存数据失败:", cacheError)
                 }
+                toast.success(`本机提取书签应答`, {
+                    description: (
+                        <>
+                            {responseData?.result ?? ""}<br/>
+                            顺带生成Pdf在自己电脑的文书转换器目录的子目录:<br/>
+                            {responseData?.dir ?? ""}
+                        </>
+                    ),
+                })
             }
-            toast.success(`本机提取书签应答`, {
-                description: (
-                    <>
-                        {responseData?.result ?? ""}<br/>
-                        顺带生成Pdf在自己电脑的文书转换器目录的子目录:<br/>
-                        {responseData?.dir ?? ""}
-                    </>
-                ),
-            })
+            else{
+                toast.error(`本机提取书签应答`, {
+                    description: (
+                        <>
+                            {responseData?.result ?? ""}<br/>
+                        </>
+                    ),
+                })
+            }
         },
         onError: (error) => {
             toast.error("本机提取书签应答", { description: "请确认文书打印转换器已经在本机安装并运行" + error })

@@ -2,7 +2,7 @@
 import * as React from "react"
 import {useSearchParams} from "next/navigation"
 import {useStorage} from "@/report/StorageContext";
-import {RepLink, ReportViewProps, RepTitleUpdate} from "@/report/common/base"
+import {RepLink, ReportViewFxProps, RepTitleUpdate} from "@/report/common/base"
 import { 落款单位地址 } from "@/report/common/rarelyVary"
 import { 检验核准WaterJj } from "@/report/recreation/waterJj/rarelyVary"
 import {ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
@@ -26,24 +26,23 @@ export const ReportView = ({ rep }: any) => {
     const original = "1" === searchParams!.get("original")
     const { storage } = useStorage()
     const Component = OfficialReport
-    const pdf_job = createPdfJob(rep, original);
+    const [mapFxian]=useItemsMapPressure({projects: storage.Projects});
+    //若目录页的页号不计算的：需要判别mapFxian.get('目录')?.do来剔除； #且满足目录页预计只打印一张纸；干脆用户录入?
+    const pdf_job = createPdfJob(rep, original,4);
     return (
         <>
             <div id="PHEAD" />
-            <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} />
+            <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
             <RepTitleUpdate code={storage?.eqpcod} original={original} />
-            <Component source={storage} rep={rep} />
+            <Component source={storage} rep={rep} mapFxian={mapFxian}/>
             <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
-                         pdf_job={pdf_job} />
+                         pdf_job={pdf_job} single/>
             <div id="PTAIL" />
         </>
     )
 }
 
-/*有些内容放页眉页脚：<span>报告编号：{rep.isp.no}</span>页号安排放入页眉页脚。
-* */
-const OfficialReport: React.FunctionComponent<ReportViewProps> = ({source: orc, rep}) => {
-    const [mapFxian]=useItemsMapPressure({ projects:orc.Projects });
+const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,mapFxian}) => {
     return (
         <>
             <div className="not-print:my-4">

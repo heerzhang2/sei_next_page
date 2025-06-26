@@ -40,7 +40,7 @@ export function useSubRepMainNoProps(relativePath: string) {
                             <div className="p-4 border border-red-500 rounded bg-red-50 text-red-700">
                                 <h3 className="font-bold">加载组件失败</h3>
                                 <p>路径: {relativePath}</p>
-                                <p>错误: {err.message}</p>
+                                <p>加载错: {err.message}</p>
                             </div> as any
                         )
                     })
@@ -107,7 +107,7 @@ export function useSubRepMain<T>(relativePath: string, props: T) {
                             <div className="p-4 border border-red-500 rounded bg-red-50 text-red-700">
                                 <h3 className="font-bold">加载组件失败</h3>
                                 <p>路径: {relativePath}</p>
-                                <p>错误: {err.message}</p>
+                                <p>错误加载: {err.message}</p>
                             </div>  as any
                         )
                     })
