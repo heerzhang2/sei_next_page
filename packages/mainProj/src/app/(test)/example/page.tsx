@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Component from "@/components/indexeddb-cache"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -61,7 +60,6 @@ export default function Page() {
             </Card>
 
             {/* 缓存组件 */}
-            <Component userId={userId} />
         </div>
     )
 }

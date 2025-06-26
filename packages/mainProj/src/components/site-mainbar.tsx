@@ -124,12 +124,13 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
                         {/* 客户端 Header 组件 */}
                         <div className="flex items-center">
                             { userInfo?.name?? ''}
-                            {userInfo?.name ? <Button variant="ghost" size="icon" onClick={() => signOut()}>
+                            {(userInfo?.name) ? <Button variant="ghost" size="icon" onClick={() => signOut()}>
                                     <LogOut className="h-4 w-4" />
                                     <span className="sr-only">注销</span>
                                 </Button>
                                 :
-                                <Button variant="ghost" size="icon" onClick={() => signIn()}>
+                                <Button variant="ghost" size="icon" className="ml-14"
+                                        onClick={() => signIn()}>
                                     <LogIn className="h-4 w-4" />
                                     <span className="sr-only">登录</span>
                                 </Button>

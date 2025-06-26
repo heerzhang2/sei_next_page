@@ -1,5 +1,3 @@
-// "use client";
-
 // import { getTranslations, setRequestLocale } from 'next-intl/server';
 import SignInForm from "@/app/login/SignInForm";
 import Link from "next/link";
@@ -12,7 +10,9 @@ import { getSession } from 'next-auth/react';
 import {auth} from "@/app/auth";
 import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'  // Alternative to default-no-store
+//用户凭证无效的：只有这个才能真正重定向登录页面；这个是RSC后端运行的SSR代码，前端转发nextjs后端应答浏览器的数据包是运行结果信息。
+// export const dynamic = 'force-dynamic'  // Alternative to default-no-store
+
 // export const fetchCache = 'default-no-store'
 
 // type ISignInPageProps = {

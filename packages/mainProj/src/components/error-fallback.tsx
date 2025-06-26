@@ -10,7 +10,7 @@ interface ErrorFallbackProps {
 
 export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   return (
-    <div className="p-4 border border-red-500 rounded bg-red-50 text-red-700">
+    <div className="p-4 border border-red-500 rounded bg-red-50 text-red-700 text-center">
       <h2 className="text-lg font-bold">出错了</h2>
       <p>{error.message}</p>
         <div className="grid gap-8">
