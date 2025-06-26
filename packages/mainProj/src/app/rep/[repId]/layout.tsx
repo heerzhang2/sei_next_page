@@ -1,5 +1,4 @@
 import type { ReactNode } from "react"
-import ReportMakeable from "@/common/ReportMakeable"
 import ReportData from "@/component/rep/report-data"
 import { StorageProvider } from "@/report/StorageContext"
 import { ModificationIndicator } from "@/report/hook/useFormFramework"
@@ -22,7 +21,6 @@ export default async function ReportRootLayout({
     //最后只能下沉app\rep\[repId]\SLIDING_JJ\1\layout.tsx里面做的或直接上浮了。
     return (
         <ErrorBoundaryWrapper>
-            <ReportMakeable />
             <StorageProvider>
                 <ReportData repId={repId}>
                     <ModificationIndicator />

@@ -8,6 +8,7 @@ import BrowsingPattern from "@/component/rep/browsingPattern";
 import {useParams, useSearchParams} from "next/navigation";
 import {EditControlProvider} from "@/component/rep/editControl-provider";
 import {ReportView, useCatalog} from "@/report/power/boilInstall/boilerInstR1";
+import ReportMakeable from "@/common/ReportMakeable";
 
 export default function Layout({children}: Readonly<{children: React.ReactNode}>) {
     const params = useParams() as unknown as ReportParams
@@ -21,7 +22,8 @@ export default function Layout({children}: Readonly<{children: React.ReactNode}>
         <EditControlProvider>
             <PageSectionOrientation>
                 { action? <ReportLayout repPanel={<ReportView rep={report}/>} items={catItems}>
-                        { children }
+                            <ReportMakeable />
+                            { children }
                     </ReportLayout>
                     :
                     print? <>

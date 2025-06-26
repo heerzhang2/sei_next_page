@@ -564,32 +564,3 @@ touch-pan-y touch-pinch-zoom 手机横屏的
 <div class="uppy-Dashboard-AddFiles-title">Drop files here or
 <button type="button" class="uppy-u-reset uppy-c-btn uppy-Dashboard-browse" data-uppy-super-focusable="true">browse files</button>
 </div>
-PDF_SERVICE_URL=http://localhost:9389
-PDF_SERVICE_TOKEN=your-secret-bearer-token
-
-accept
-*/*
-accept-encoding
-gzip, deflate
-accept-language
-zh-CN,zh;q=0.9
-connection
-keep-alive
-cookie
-authjs.csrf-token=c75125275dbd7648b122f7a224d8cff6253dcf2203190d8c588cc613aeeed9a0%7C312c1ad6b8c1b6fc44a3762b318a4f095b5344a11c2ea6c394f77a52f3a06193; authjs.callback-url=http%3A%2F%2F192.168.171.3%3A3765; __next_hmr_refresh_hash__=da110899cea05db109a63275922c82d7633457081244afec; authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiaGVkOGJsYWpNRkpLYXRjVDdNZTN5MTFCcC1MMFRsQ3hvX00tY2ZldE14ZWNOc3BYZW5qMHdMeEE0encwUXRXajNTdktIZlpPUUZfeW9jVFlneWY4T1EifQ..MBL2Ojwcq2qgZKizVKJTNg.5aFuP0RH-Ydbt5BkTMRHOZFUvll9A1u8DYnEWqhAc2VVGuImbW9rvjihkrt1Lvkz2QC_-Ffy1j-5h4ZX7r0PmD27UcE51agg8oja4vujwNM_bCuwLZoPtLJAatNsPJCfJa5eknol5tm9X9QzVcApYsRi6ql1FR3fLvBNivcZe8uvg7Q3RznmRGR9AEgqT-fIh3ioQTKjrzgWuI90mRVTxBpfHwLHqHd47NG-NpxaOJ-nG4yzkjSsgxXrSSy3On_jwbd66kTJKOmMFjDPRYVWt4h8OKvm17dAOYKnPUz3shginanBBsDjrGzWl8FpqpUfVDHGw-Dfz7Qz7g4D1uuYHcfNwfrShCnbAi3sON3F-8Di8h4TiloeAaUQze2-A2bUHtFghbxmrWnw6cmilGPFRhyuEUlN1QWJq9-Jxl3HBtCnB-N-F2Rue9BnJMEFq3cfI5Gt-yA-zAD9rB9Jrm91yA.SzEob3Y6BYrd8oZk1P6LdzmOcS55wlUl0E60SJ5kzZ8
-host
-192.168.171.3:3765
-next-router-state-tree
-%5B%22%22%2C%7B%22children%22%3A%5B%22login%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2C%22%2Flogin%22%2C%22refresh%22%5D%7D%2Cnull%2Cnull%2Ctrue%5D%7D%2Cnull%2Cnull%2Ctrue%5D
-next-url
-/login
-referer
-http://192.168.171.3:3765/login
-rsc
-1
-user-agent
-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36
-
-
-
-
