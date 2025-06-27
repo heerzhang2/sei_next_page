@@ -27,13 +27,13 @@ export default function Home() {
                         <div className="mt-10">
                             <Link href="/main">认证后的主页home</Link>
                         </div>
-
+                        {/*KQcbgDF9RO21DsI92H3tTVJlcG9ydA*/}
                             <div className="mt-10">
                                 <Link href="/lazy">Visit (potentially) cached page ➡️</Link>
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/POWER_AJ/1">查阅当前一1份报告试图的来</Link>
+                                    href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA==/POWER_AJ/1">查阅当前1份报告</Link>
                             </div>
                             <div className="mt-10">
                                 <Link

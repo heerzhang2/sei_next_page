@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-// 获取令牌的函数
+//只能在浏览器端用的： 获取令牌的函数
 export async function getAuthToken() {
   // 从Cookie中获取令牌
   const token = Cookies.get('auth_token');
