@@ -37,6 +37,7 @@ export default function ChromeGuidePage() {
                     <TabsTrigger value="amusement">游乐设施</TabsTrigger>
                     <TabsTrigger value="boiler">锅炉</TabsTrigger>
                     <TabsTrigger value="elevator">电梯</TabsTrigger>
+                    <TabsTrigger value="pipe">管道</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="amusement">
@@ -48,7 +49,7 @@ export default function ChromeGuidePage() {
                         <CardContent>
                             <ol className="list-decimal pl-5 space-y-4">
                                 <li>
-                                  <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1">查阅样本报告</Link>
+                                  <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1">滑行车类大型游乐设施监督检验</Link>
                                 </li>
                                 <li>
                                     <p>使用以下命令启动Chrome:</p>
@@ -78,6 +79,9 @@ export default function ChromeGuidePage() {
                         </CardHeader>
                         <CardContent>
                             <ol className="list-decimal pl-5 space-y-4">
+                                <li>
+                                    <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/POWER_AJ/1">电站锅炉安装监检</Link>
+                                </li>
                                 <li>
                                     在Chrome地址栏中输入: <code>chrome://flags/#block-insecure-private-network-requests</code>
                                 </li>
@@ -125,6 +129,37 @@ export default function ChromeGuidePage() {
                                     <ExternalLink className="ml-1 h-4 w-4" />
                                 </Link>
                             </div>
+                        </CardContent>
+                        <CardFooter>
+                            <p className="text-sm text-muted-foreground">注意：此方法需要管理员权限，适合企业环境</p>
+                        </CardFooter>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="pipe">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>使用企业策略</CardTitle>
+                            <CardDescription>管道</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ol className="list-decimal pl-5 space-y-4">
+                                <li>
+                                    <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/INDPL_DJ/1">工业管道定期检验</Link>
+                                </li>
+                                <li>
+                                    <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/UTILITY_NJ/1">-----公用管道年度检查-----</Link>
+                                </li>
+                                <li>
+                                    在Chrome地址栏中输入: <code>chrome://flags/#block-insecure-private-network-requests</code>
+                                </li>
+                                <li>
+                                    将该选项设置为 <strong>Disabled</strong>
+                                </li>
+                                <li>
+                                    点击底部的 <strong>Relaunch</strong> 按钮重启Chrome
+                                </li>
+                                <li>重新访问您的应用</li>
+                            </ol>
                         </CardContent>
                         <CardFooter>
                             <p className="text-sm text-muted-foreground">注意：此方法需要管理员权限，适合企业环境</p>
