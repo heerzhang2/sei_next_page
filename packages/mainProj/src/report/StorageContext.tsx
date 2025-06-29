@@ -8,6 +8,10 @@ type StorageContextType = {
     setStorage: (data: any) => void
     modified: boolean | undefined
     setModified: (data: boolean | undefined) => void
+    parrepfs: any
+    setParrepfs: (data: any) => void
+    subrType: any
+    setSubrType: (data: any) => void
 }
 
 // Create the context with a default value
@@ -17,16 +21,19 @@ const StorageContext = createContext<StorageContextType | undefined>(undefined)
 export function StorageProvider({ children }: { children: ReactNode }) {
     const [storage, setStorage] = React.useState<any>({});
     const [modified, setModified] = React.useState<boolean | undefined>();
-    // Add your state management logic here
-
+    //可流转分项报告
+    const [parrepfs, setParrepfs] = React.useState<any>({});
+    const [subrType, setSubrType] = React.useState<string | undefined>();
     const value = {
         storage,
         setStorage,
         modified,
         setModified,
-        // Add other state and methods
+        parrepfs,
+        setParrepfs,
+        subrType,
+        setSubrType
     }
-
     return <StorageContext.Provider value={value}>{children}</StorageContext.Provider>
 }
 

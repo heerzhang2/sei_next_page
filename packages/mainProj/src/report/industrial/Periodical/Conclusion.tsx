@@ -130,7 +130,7 @@ export const mapBoilerResult = (input: "符合要求" | "基本符合要求" | "
     }
 };
 
-export const ConclusionVw= ({ orc, rep } : { orc: any,rep:any}
+export const ConclusionVw= ({ orc, rep, subrid} : { orc: any,rep:any, subrid:string}
 ) => {
     const [_,renderUpper,render2]=useThreeColumnView({orc, config:config设备概况,slash:true,split:[1,9]});
     const result1=mapBoilerResult(orc?.检验结论)
@@ -146,7 +146,7 @@ export const ConclusionVw= ({ orc, rep } : { orc: any,rep:any}
                            </>}>
             <FlexibleTable id='Survey' columnWidths={ ["14.8%", "19%", "%", "11.6%","10%","8%"] } className="text-sm border-collapse">
                 <TableBody>
-                    <RepLink ori rep={rep} tag={'Survey'}>
+                    <RepLink ori rep={rep} tag={'Survey'} subrid={subrid}>
                         {renderUpper}
                     </RepLink>
                 </TableBody>

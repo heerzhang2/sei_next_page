@@ -17,7 +17,9 @@ import {CertificatePage} from "@/report/power/boilInstall/CertificatePage";
 import {BoilerDiagramVw} from "@/report/power/boilInstall/BoilerDiagram";
 import {注意事项GasC} from "@/report/gas/rarelyVary";
 import {首页设备概况BoilI} from "@/report/power/boilInstall/rarelyVary";
-import {ConclusionVw} from "@/report/power/boilInstall/Conclusion";
+import {ConclusionVw} from "@/report/industrial/Periodical/Conclusion";
+import {ThickMsVw} from "@/report/industrial/Periodical/ThickMs";
+import SubRep, {SingeSubRep} from "@/component/rep/sub-rep";
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
 * */
@@ -35,7 +37,7 @@ export const ReportView = ({ rep }: any) => {
             <div id="PHEAD" />
             <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
             <RepTitleUpdate code={storage?.eqpcod} original={original} />
-            <Component source={storage} rep={rep} mapFxian={mapFxian}/>
+            <Component source={storage} rep={rep} mapFxian={mapFxian} subrid={subrid}/>
             <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
                          pdf_job={pdf_job} single/>
             <div id="PTAIL" />
@@ -54,7 +56,15 @@ export const ReportView = ({ rep }: any) => {
     )
 }
 
-const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,mapFxian}) => {
+const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,subrid,mapFxian}) => {
+    const { subrType } = useStorage()
+    if(subrType){
+      return (
+        <SingeSubRep rep={rep}>
+          {subrType==='THICK_MS' && <ThickMsVw orc={orc} rep={rep} subrid={subrid}/>}
+        </SingeSubRep>
+        )
+    }
     return (
         <>
             <div className="not-print:my-4">
@@ -78,14 +88,18 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
                 })}
                 {mapFxian.get('目录')?.do && <DirectoryPagePress orc={orc} rep={rep}/>}
 
-                <ConclusionVw orc={orc} rep={rep}/>
+                <ConclusionVw orc={orc} rep={rep} subrid={subrid!}/>
                 {检验核准WaterJj({orc, rep, jyt:'编制'})}
 
                 {mapFxian.get('锅炉简图')?.do && <BoilerDiagramVw orc={orc} rep={rep}/>}
                 {mapFxian.get('检验过程概述')?.do &&
                     <ExplanatoryVw orc={orc} rep={rep} title='1.3锅炉安装施工过程概述' />
                 }
-                {/*可能有很多的记录页，但还没有看到模板*/}
+                {/*多个部分的多个子报告+主报告也可能存储的*/}
+
+                {mapFxian.get('壁厚测定')?.do && <SubRep modType="THICK_MS" rep={rep}>
+                    <ThickMsVw orc={orc} rep={rep} />
+                </SubRep>}
 
             </div>
             <div className="print:hidden">
@@ -98,12 +112,18 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
 }
 
 //原始记录的导航该放在后面：
-export function useCatalog() {
+export function useCatalog(mod: string) {
     const {storage} = useStorage()
+    const [mapFxian]=useItemsMapPressure({projects: storage.Projects});
+    const head=[{title: "页面头部", url: "#PHEAD"},
+        {title: "页面尾巴", url: "#PTAIL"}]
     const dirs = React.useMemo(() => {
-        let list =[
-            {title: "页面头部", url: "#PHEAD"},
-            {title: "页面尾巴", url: "#PTAIL"},
+        if(mod==='THICK_MS') return [...head,
+            {title: "1.1锅炉安装监督检验结论报告", url: "#Conclusion"},
+            {title: "1.2锅炉结构简图", url: "#BoilerDiagram"},
+            {title: '1.3锅炉安装施工及监督检验过程概述', url: "#Explanatory"},
+        ]
+        return [...head,
             {title: "检验证书", url: "#Certificate"},
             {title: "目录", url: "#ProjectList"},
             {title: "设备概况", url: "#Survey"},
@@ -111,7 +131,6 @@ export function useCatalog() {
             {title: "1.2锅炉结构简图", url: "#BoilerDiagram"},
             {title: '1.3锅炉安装施工及监督检验过程概述', url: "#Explanatory"},
         ]
-        return list
-    }, [storage])
+    }, [mod,storage])
     return dirs
 }

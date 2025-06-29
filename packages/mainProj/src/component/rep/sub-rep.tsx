@@ -6,6 +6,12 @@ import {useStorage} from "@/report/StorageContext";
 import Link from "next/link";
 import {useSearchParams} from "next/navigation";
 import {itemA技术见证} from "@/report/common/editor";
+import {ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
+import {JumpTab} from "@/report/common/JumpTab";
+import {首页设备概况BoilI} from "@/report/power/boilInstall/rarelyVary";
+import {落款单位地址} from "@/report/common/rarelyVary";
+import {ThickMsVw} from "@/report/industrial/Periodical/ThickMs";
+import {cn} from "@/lib/utils";
 
 export interface ReportParams {
     repId: string
@@ -114,18 +120,79 @@ function CommonReportData({ repId,children       }:
     )
 }
 
-export default function ReportData({
-                                       repId,children
-                                   }: {
-    repId: string,
+export function SingeSubRep({
+                                   rep, children
+                               }: {
+    rep: any,
     children: React.ReactNode
 }) {
-    // console.log("ReportData: repId=",repId);
+// console.log("ReportData: repId=",repId);
     return (
         <Suspense>
-            <CommonReportData repId={repId} >
+            <div className="not-print:my-4">
+                <div className="print:h-screen">
+                    {ReportFirstPageHeadNmaNmbm({rep })}
+                    <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
+                        <div>
+                            <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
+                                <h1 className="text-3xl text-center print:mt-6">电站锅炉安装监检报告</h1>
+                            </JumpTab>
+                            <span className="block text-center text-sm print:mt-4"> （ FJB/GB 10082-0-2021 ）</span>
+                        </div>
+                        <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
+                    </div>
+                </div>
                 {children}
-            </CommonReportData>
+            </div>
+        </Suspense>
+    )
+}
+
+/**多子报告的：
+* */
+export default function SubRep({
+                                   rep, modType,children
+                                   }: {
+    rep: any,
+    modType: string,
+    children: any
+}) {
+    const {storage, setStorage, parrepfs} =useStorage();
+    // const sss=`_${modType}`
+    const localIdx = storage?.[`_${modType}`] ?? [];
+    const subreps = React.useMemo(() => {
+        const flsReps =rep?.isp?.reps?.edges?.filter(({node: srep}: any) => {
+            return srep?.modeltype===modType
+        })
+        return flsReps ?? []
+    }, [modType, rep])
+    console.log("localIdx: repId=",localIdx);
+    return (
+        <Suspense>
+            {localIdx.map((seq: number, k: number) => {
+                return (<div key={k}>
+                        {React.cloneElement(children, {
+                            redId: seq,
+                            key: k,
+                        })}
+                </div>)
+            })}
+            {subreps.map(({node: subrep}:any, i: number) => {
+                const dat =subrep?.data&&JSON.parse(subrep?.data);
+                const sIdx = dat?.[`_${modType}`] ?? [];
+                console.log("localIdx: sIdx=",sIdx);
+                return (<div key={i}>
+                    {sIdx.map((seq: number, k: number) => {
+                        return (
+                            React.cloneElement(children, {
+                                redId: seq,
+                                subrid: subrep?.id,
+                                key: i+"_"+k,
+                            })
+                        )
+                    })}
+                </div>)
+            })}
         </Suspense>
     )
 }

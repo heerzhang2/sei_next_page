@@ -9,6 +9,7 @@ import {Explanatory} from "@/report/power/boilInstall/Explanatory";
 import {ConclusionBoiler} from "@/report/power/boilInstall/Conclusion";
 import {CertMemo} from "@/report/power/boilInstall/CertMemo";
 import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
+import {ThkmsInstrument} from "@/report/industrial/Periodical/ThickMs";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -58,7 +59,9 @@ const recordPrintList =[
     createItem('CertMemo', <CertMemo label={'证书-说明'} />),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
     createItem('BoilerDiagram', <BoilerDiagram label="1.2锅炉结构简图"/>),
-    createItem('Explanatory', <Explanatory label={'1.3锅炉安装施工过程概述'} />),
+    createItem('Explanatory', <Explanatory label={'1.3锅炉安装施工过程概述'}/>),
+    //thickm
+    createItem('ThkmsInstrument', <ThkmsInstrument label={'工过程述'}/>),
 ];
 
 export const OriginalView=({ action, verId, rep}:OriginalViewProps)=>{

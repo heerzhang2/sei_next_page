@@ -163,13 +163,17 @@ export const ModificationIndicator = () => {
 /**报告的编辑器表单-工具条
 */
 interface UseFrameEditorBarProps {
-  rep?: any
-  values: Record<string, any>
-  onVerify?: (values: any) =>boolean
-  onReset?: () =>void
+  rep?: any;
+  values: Record<string, any>;
+  onVerify?: (values: any) =>boolean;
+  onReset?: () =>void;
+  //分项报告的： 独立流转，或者非独立的可重复分项目存储 [_modType_1]: ;
+  modType?: string;
+  subrid?: string;
+  redId?: number;
 }
 
-export function useFrameEditorBar({rep, values,onReset,onVerify}: UseFrameEditorBarProps) {
+export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,modType}: UseFrameEditorBarProps) {
   const [isSaving, setIsSaving] = useState(false)
   const { storage, setStorage, setModified } = useStorage()
   //用URQL mutation来保存变更数据到后端数据库的
@@ -180,12 +184,14 @@ export function useFrameEditorBar({rep, values,onReset,onVerify}: UseFrameEditor
       return
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
-    const { _version, "":_omit, ...RepData } = { ...storage, ...values }
+    const oldStore=storage?.[`_${modType}_${redId}`];
+    const { _version, "":_omit, ...RepData } =subrid? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, ...values} }
+        : { ...storage, ...values };
 
     // 直接定义更新函数，不使用 useCallback
     const update = async () => {
       return await updateOriginal({
-        id: rep?.id,
+        id: subrid ?? rep?.id,
         operationType: 1,
         version: _version,
         data: JSON.stringify(RepData),

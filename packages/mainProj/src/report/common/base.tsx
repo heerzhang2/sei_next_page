@@ -76,6 +76,7 @@ export interface ReportViewProps {
 }
 export interface ReportViewFxProps extends ReportViewProps{
     mapFxian: Map<string,PressureLayout>;
+    subrid?: string;
 }
 
 export const OriginalDataMutation =gql`
@@ -306,8 +307,19 @@ export const CCellUnit = ({
  * @param ori 是原始记录页面的
  * 注意DirectLink：主动把直接儿子的 div或span改成了 <a>标签。
  */
-export const RepLink= ( {rep, children, tag, ori} : {rep:any, children:React.ReactNode, tag:string,ori?:boolean}
+export const RepLink= ( {rep, children, tag, ori, subrid,redId}
+                        : {rep:any, children:React.ReactNode, tag:string,ori?:boolean,subrid?:string,redId?:number}
 ) => {
+    if(subrid){
+        if(ori)
+            return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1&subrid=${subrid}&redId=${redId}#${tag}`}>
+                {children}
+            </JumpTab>;
+        else
+            return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}&subrid=${subrid}&redId=${redId}#${tag}`}>
+                {children}
+            </JumpTab>;
+    }
     if(ori)
         return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1#${tag}`}>
             {children}
