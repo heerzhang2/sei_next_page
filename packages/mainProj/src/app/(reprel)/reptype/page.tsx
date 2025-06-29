@@ -144,7 +144,7 @@ export default function ChromeGuidePage() {
                         <CardContent>
                             <ol className="list-decimal pl-5 space-y-4">
                                 <li>
-                                    <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/INDPL_DJ/1">工业管道定期检验</Link>
+                                    <Link href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1">工业管道定期检验</Link>
                                 </li>
                                 <li>
                                     <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/UTILITY_NJ/1">-----公用管道年度检查-----</Link>

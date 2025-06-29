@@ -523,12 +523,9 @@ touch-pan-y touch-pinch-zoom 手机横屏的
 校核结果：
 1、经校核，剩余厚度满足强度要求。
 注：本校核不代替设计计算，不能免除设计者责任。
-检验：
-日期：
-2024-01-31
-审核：
-日期：
-FJS
+rep
+c8012af2-1bde-49af-995e-05322871041d   yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA
+sub1 ,2,
 29071b80-317d-44ed-b50e-003dd87ded41
 29071b80-317d-44ed-b50e-003dd87ded42
-29071b80-317d-44ed-b50e-333dd87ded40
+

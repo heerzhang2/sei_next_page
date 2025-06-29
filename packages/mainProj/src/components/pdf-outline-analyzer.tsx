@@ -50,7 +50,6 @@ export default function PdfOutlineAnalyzer({ rep,slug,inline }: PdfOutlineAnalyz
 
     const [currentOutline, setCurrentOutline] = useState<PdfOutlineCacheItem | null>(null)
     const [cachedOutlines, setCachedOutlines] = useState<PdfOutlineCacheItem[]>([])
-    const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [initialized, setInitialized] = useState(false)
 
@@ -65,9 +64,9 @@ export default function PdfOutlineAnalyzer({ rep,slug,inline }: PdfOutlineAnalyz
             console.error("缓存书签数据失败:", error)
         }
     }
-    //请服务端去提取的hook
+    //请nextjs服务端 提取的
     const [isGetMarking, handleSubmit] = usePageMarkinfo(pdf_job, handleCacheSuccess)
-    //本机提取办法的
+    //本机浏览器客户端 提取办法的
     const [localGetMarking, handleSubmitLocal] = usePageMarkLocal(pdf_job, handleCacheSuccess)
     const handleMarkGeneration = async () => {
         if(!handleSubmitLocal)
@@ -134,11 +133,9 @@ export default function PdfOutlineAnalyzer({ rep,slug,inline }: PdfOutlineAnalyz
             console.error("Failed to delete cache:", error)
         }
     }
-
     // 清空所有缓存
     const handleClearAll = async () => {
         if (!confirm("确定要清空所有缓存吗？")) return
-
         try {
             await cacheManager.clearAll()
             await refreshCachedData()
