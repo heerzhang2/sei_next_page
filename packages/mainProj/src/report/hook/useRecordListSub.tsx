@@ -138,7 +138,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     const subrid = searchParams!.get("subrid") ?? undefined
     const redId = Number(searchParams!.get("redId")) ?? undefined
     //变化的key就能导致组件的重新加载了。引起组件旧状态刷新掉了。
-    const keyRefresh=(subrid || redId)? `${subrid}${redId}` : undefined;
+    const keyRefresh=(subrid || redId)? `${subrid ??''}${redId ??''}` : undefined;
     const action=modAction;
     // {  action: modAction, redId:'',nestMd:'' };
     // const {redId,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板

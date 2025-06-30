@@ -58,11 +58,12 @@ export const ReportView = ({ rep }: any) => {
 
 const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,subrid,mapFxian}) => {
     const { subrType } = useStorage()
+    //走独立流转分项报告模式的情况： {subrType==='THICK_MS' && <ThickMsVw orc={orc} rep={rep} subrid={subrid}/>}
     if(subrType){
       return (
-        <SingeSubRep rep={rep}>
-          {subrType==='THICK_MS' && <ThickMsVw orc={orc} rep={rep} subrid={subrid}/>}
-        </SingeSubRep>
+            <SingeSubRep rep={rep}>
+               <ThickMsVw rep={rep} subrid={subrid} orc={null}/>
+            </SingeSubRep>
         )
     }
     return (

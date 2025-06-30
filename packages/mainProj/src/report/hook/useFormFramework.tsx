@@ -185,7 +185,7 @@ export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,mod
     if(onVerify && !onVerify(values))
       return
     // 默认提交处理
-    console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
+    console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
     const oldStore=storage?.[`_${modType}_${redId}`];
     //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
     // const { _version, "":_omit, ...RepData } =(subrid || (modType && redId!==undefined))? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, "仪器编号": undefined,} } : { ...storage, ...values };

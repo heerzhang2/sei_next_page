@@ -80,9 +80,9 @@ function CommonReportData({ repId,children       }:
     React.useEffect(() => {
         const  snap =report&&report.snapshot&&JSON.parse(report.snapshot);
         if(subreport){
-            const  dat =subreport.data&&JSON.parse(subreport.data);
+            const  subdat =subreport.data&&JSON.parse(subreport.data);
             //不是主报告分项的： 不需要设备台账的字段。
-            if(dat)   setStorage({...dat,  _version: subreport?.version});       //台账基础信息优先采信
+            if(subdat)   setStorage({...subdat,  _version: subreport?.version});       //台账基础信息优先采信
             else   setStorage({  _version: subreport?.version});
             setSubrType(subreport.modeltype)
         }
@@ -96,7 +96,7 @@ function CommonReportData({ repId,children       }:
             if(dat)   setStorage({...dat, ...snap, _version: report?.version});       //台账基础信息优先采信
             else   setStorage({ ...snap, _version: report?.version});
         }
-        console.log("【id切换】才会执行的：左边页面的-Relay3query获取后进的-",dat,"snap",snap);        //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
+        console.log("每次保存都会更新",dat,"snap",snap);        //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
     }, [subreport, report, setStorage,setParrepfs]);
     if (fetching) return <div>加载中...</div>
     if (error) return <div>报告取数据错: {error.message}</div>
