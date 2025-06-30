@@ -172,7 +172,9 @@ interface UseFrameEditorBarProps {
   subrid?: string;
   redId?: number;
 }
-
+/**
+ * 支持声明 modType && redId 或者subrid 来申明存储的实际位置转移：存储到分项数据结构中。
+* */
 export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,modType}: UseFrameEditorBarProps) {
   const [isSaving, setIsSaving] = useState(false)
   const { storage, setStorage, setModified } = useStorage()
@@ -185,7 +187,9 @@ export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,mod
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
     const oldStore=storage?.[`_${modType}_${redId}`];
-    const { _version, "":_omit, ...RepData } =subrid? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, ...values} }
+    //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
+    // const { _version, "":_omit, ...RepData } =(subrid || (modType && redId!==undefined))? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, "仪器编号": undefined,} } : { ...storage, ...values };
+    const { _version, "":_omit, ...RepData } =(subrid || (modType && redId!==undefined))? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, ...values} }
         : { ...storage, ...values };
 
     // 直接定义更新函数，不使用 useCallback
@@ -223,10 +227,21 @@ export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,mod
     // 获取当前表单值
     const currentValues =values
     // 更新 storage
-    setStorage((prevStorage : any) => ({
-      ...prevStorage,
-      ...currentValues,
-    }))
+    if(subrid || (modType && redId!==undefined)) {
+        setStorage((prevStorage : any) =>{
+          const oldStore=prevStorage?.[`_${modType}_${redId}`];
+          return ({
+            ...prevStorage,
+            [`_${modType}_${redId}`]: {...oldStore, ...currentValues}
+          })
+        })
+    }
+    else{
+        setStorage((prevStorage : any) => ({
+          ...prevStorage,
+          ...currentValues,
+        }))
+    }
     // 设置已修改标志
     setModified(true)
   }

@@ -109,16 +109,22 @@ export const ThickMs =
 }
 
 interface ThickMsVwProps{
+    //分项情况的：直接使用当前分项项目专属存储做法。分离开其它的同类可重复分项
     orc: any;
+    //假如orc不是主报告整体存储的情形下，提供主报告存储数据。
+    parOrc?: any;
+    //主报告实例
     rep: any;
     title?: string;
     children?: React.ReactNode
+    //分项报告id
     subrid?: string;
+    //分项报告里面的可重复分项的编号。
     redId?: number;
 }
 /**锅炉结构简图
  * */
-export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,children}: ThickMsVwProps
+export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,parOrc,children}: ThickMsVwProps
 ) => {
     return (<>
         <PrintReserveLeast reserve="6rem"
@@ -194,7 +200,7 @@ export const ThkmsInstrument =
             label,
         }:InternalItemProps
     ) => {
-        const { storage } = useStorage()
+        const { storage, parrepfs } = useStorage()
         const searchParams = useSearchParams()
         const subrid = searchParams!.get("subrid")
         const redId = searchParams!.get("redId")

@@ -310,22 +310,14 @@ export const CCellUnit = ({
 export const RepLink= ( {rep, children, tag, ori, subrid,redId}
                         : {rep:any, children:React.ReactNode, tag:string,ori?:boolean,subrid?:string,redId?:number}
 ) => {
-    if(subrid){
-        if(ori)
-            return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1&subrid=${subrid}&redId=${redId}#${tag}`}>
-                {children}
-            </JumpTab>;
-        else
-            return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}&subrid=${subrid}&redId=${redId}#${tag}`}>
-                {children}
-            </JumpTab>;
-    }
+    const apds=`${subrid ? '&subrid='+subrid : ''}`
+    const apdr=`${redId!==undefined ? '&redId='+redId : ''}`
     if(ori)
-        return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1#${tag}`}>
+        return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1${apds}${apdr}#${tag}`}>
             {children}
         </JumpTab>;
     else
-        return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}#${tag}`}>
+        return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?${apds}${apdr}#${tag}`}>
             {children}
         </JumpTab>;
 };

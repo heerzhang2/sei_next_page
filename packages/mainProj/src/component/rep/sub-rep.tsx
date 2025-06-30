@@ -149,6 +149,7 @@ export function SingeSubRep({
 }
 
 /**多子报告的：
+ * 这个组件只能在主报告的语境中使用的，但不能用于可流转分项子报告的！
 * */
 export default function SubRep({
                                    rep, modType,children
@@ -157,8 +158,7 @@ export default function SubRep({
     modType: string,
     children: any
 }) {
-    const {storage, setStorage, parrepfs} =useStorage();
-    // const sss=`_${modType}`
+    const {storage, parrepfs} =useStorage();
     const localIdx = storage?.[`_${modType}`] ?? [];
     const subreps = React.useMemo(() => {
         const flsReps =rep?.isp?.reps?.edges?.filter(({node: srep}: any) => {
@@ -166,28 +166,32 @@ export default function SubRep({
         })
         return flsReps ?? []
     }, [modType, rep])
-    console.log("localIdx: repId=",localIdx);
     return (
         <Suspense>
             {localIdx.map((seq: number, k: number) => {
+                const subStore=storage?.[`_${modType}_${seq}`];
                 return (<div key={k}>
                         {React.cloneElement(children, {
                             redId: seq,
                             key: k,
+                            orc: subStore,
+                            parOrc: storage
                         })}
                 </div>)
             })}
             {subreps.map(({node: subrep}:any, i: number) => {
                 const dat =subrep?.data&&JSON.parse(subrep?.data);
                 const sIdx = dat?.[`_${modType}`] ?? [];
-                console.log("localIdx: sIdx=",sIdx);
                 return (<div key={i}>
                     {sIdx.map((seq: number, k: number) => {
+                        const subStore=dat?.[`_${modType}_${seq}`];
                         return (
                             React.cloneElement(children, {
                                 redId: seq,
                                 subrid: subrep?.id,
                                 key: i+"_"+k,
+                                orc: subStore,
+                                parOrc: storage
                             })
                         )
                     })}
