@@ -190,6 +190,7 @@ export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,parOrc,childr
 
 //const itemA = ['仪器编号' ];
 /**保留 编辑常见的范式；
+ * 兼容分项 可重复分项，独立流转的分项：没法使用context直接局部化修改，框架左右俩个展示和编辑器分离的组装页面，不是同一个父辈组件的无法继承和拆分context
  * */
 export const ThkmsInstrument =
     (
@@ -204,6 +205,8 @@ export const ThkmsInstrument =
         const searchParams = useSearchParams()
         const subrid = searchParams!.get("subrid")
         const redId = searchParams!.get("redId")
+        //存储重新定向到：可重复分项，或者独立流转的分项报告当中的某个分项。
+
         const [content, setContent] = React.useState<string>(storage?.['仪器编号'] ?? "")
         const [editingIndex, setEditingIndex] = React.useState<number | null>(0)
         const [isAddingNew, setIsAddingNew] = React.useState(false)
