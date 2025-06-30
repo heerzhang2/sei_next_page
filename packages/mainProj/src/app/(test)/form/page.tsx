@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useStorage } from "@/report/StorageContext"
 
-import { ThkmsInstrument } from "@/components/thkms-instrument"
 import { Button } from "@/components/ui/button"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense } from "react"
@@ -43,7 +42,6 @@ function PageContent() {
                 </div>
             </div>
 
-            <ThkmsInstrument label="仪器编号编辑器" show={true} />
         </div>
     )
 }
