@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react";
 import {useProjectListAs} from "../common/base";
 import {mergeEditorItemRefs, mergeEditorItemSubRefs} from "../tools";
@@ -7,6 +9,7 @@ import {useSubNestAcion} from "../common/helper";
 import {EditorAreaConfig} from "../common/eHelper";
 import {useSubRepController} from "./useSubRepController";
 import {useStorage} from "@/report/StorageContext";
+import {useSearchParams} from "next/navigation";
 
 
 /**【代码复用】分项报告的原始记录 右半边页面内容组织
@@ -131,7 +134,14 @@ import {useStorage} from "@/report/StorageContext";
 export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                                  modAction: string, verId: string, nestMdConfig?: string,titleRender?: (store: any) => React.ReactNode
 ) {
-    const {redId,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板
+    const searchParams = useSearchParams()
+    const subrid = searchParams!.get("subrid") ?? undefined
+    const redId = Number(searchParams!.get("redId")) ?? undefined
+    //变化的key就能导致组件的重新加载了。引起组件旧状态刷新掉了。
+    const keyRefresh=(subrid || redId)? `${subrid}${redId}` : undefined;
+    const action=modAction;
+    // {  action: modAction, redId:'',nestMd:'' };
+    // const {redId,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板
     // const qs= queryString.parse(window.location.search);   //确保点击?&from=X 参数变动也能够刷新。
     const {storage, setStorage} =useStorage();
     const iDskey= '_'+nestMdConfig;
@@ -195,7 +205,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
         ,[action, rep, SubRepIds,nestMdConfig,redId, verId,recordPrintList, view]);
 
     const list=(
-        <div id="allOrgEdt" className={"mt-4 mb-8"}>
+        <div id="allOrgEdt" key={keyRefresh} className={"mt-4 mb-8"}>
             {recordList}
         </div>
     );
