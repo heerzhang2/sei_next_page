@@ -142,7 +142,7 @@ export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,parOrc,childr
                             <CCell>仪器编号</CCell>
                             <TableCell  className="border border-gray-700">
                                     <div>
-                                     {orc.仪器编号 || '／'}
+                                     {orc?.仪器编号 || '／'}
                                     </div>
                             </TableCell>
                         </TableRow>
@@ -151,13 +151,13 @@ export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,parOrc,childr
                         <TableCell colSpan={2} className="border border-gray-700">
                             <RepLink ori rep={rep} tag={'BoilerDiagram'}>
                               <div>
-                                {orc.简图说明 &&
+                                {orc?.简图说明 &&
                                     <span className="text-sm whitespace-pre-wrap">
                                         {orc.简图说明 || '／'}
                                     </span>
                                 }
 
-                                {!(orc?._FILE_S简图?.length>0) && !orc.简图说明 && <span className="block m-4 text-xl text-center">空的，进入上传吧</span>}
+                                {!(orc?._FILE_S简图?.length>0) && !orc?.简图说明 && <span className="block m-4 text-xl text-center">空的，进入上传吧</span>}
                               </div>
                             </RepLink>
                             {orc?._FILE_S简图?.map(({name, url}: any, i: number) => {

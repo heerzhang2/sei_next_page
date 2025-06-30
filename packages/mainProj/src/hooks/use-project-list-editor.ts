@@ -76,8 +76,9 @@ export function useProjectListEditor({
         })
     }, [])
 
-    // 重新排序项目
+    // 🔥 修复：重新排序项目
     const reorderProjects = useCallback((newOrder: number[]) => {
+        console.log("🔥 reorderProjects 被调用:", newOrder) // 调试日志
         setProjectIndexes(newOrder)
     }, [])
 

@@ -1,8 +1,8 @@
 "use client"
 
-import { ProjectListEditor } from "@/components/project-list-editor"
+import { ProjectListEditorMobile } from "@/components/project-list-editor-mobile"
+import { TouchDragDemo } from "@/components/touch-drag-demo"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { useState } from "react"
 
 // 模拟项目数据
@@ -55,83 +55,67 @@ export default function ProjectListEditorDemo() {
   return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">分项项目列表编辑器</h1>
-          <p className="text-gray-600">支持增删改查、拖拽排序、点击跳转的项目管理组件</p>
+          <h1 className="text-3xl font-bold">移动端友好的拖拽列表</h1>
+          <p className="text-gray-600">支持桌面端鼠标拖拽和移动端触摸拖拽</p>
         </div>
 
+        {/* 拖拽演示 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 基础版本 */}
-          <ProjectListEditor
-              title="基础项目列表"
-              initialIndexes={[1, 3, 5]}
-              availableProjects={Object.keys(mockProjects).map(Number)}
-              renderTitle={renderProjectTitle}
-              getLinkUrl={getProjectLink}
-              maxProjects={8}
-          />
+          <div>
+            <h2 className="text-xl font-semibold mb-4">简单拖拽演示</h2>
+            <TouchDragDemo />
+          </div>
 
-          {/* 高级版本 - 支持拖拽 */}
-          <ProjectListEditor
-              title="高级项目列表 (支持拖拽)"
-              initialIndexes={[2, 4, 6]}
-              availableProjects={Object.keys(mockProjects).map(Number)}
-              renderTitle={renderProjectTitle}
-              onProjectClick={handleProjectClick}
-              dragEnabled={true}
-              maxProjects={10}
-          />
-        </div>
-
-        {/* 表单集成示例 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>表单集成示例</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ProjectListEditor
-                title="选择项目 (表单字段)"
-                initialIndexes={formData}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">项目列表编辑器</h2>
+            <ProjectListEditorMobile
+                title="支持触摸拖拽"
+                initialIndexes={[1, 3, 5]}
                 availableProjects={Object.keys(mockProjects).map(Number)}
                 renderTitle={renderProjectTitle}
                 onProjectClick={handleProjectClick}
-                showClearButton={true}
-                // 这里需要通过 ref 或回调来获取数据
+                dragEnabled={true}
+                maxProjects={8}
             />
+          </div>
+        </div>
 
-            <div className="flex justify-between items-center pt-4 border-t">
-              <div className="text-sm text-gray-600">已选择 {formData.length} 个项目</div>
-              <Button onClick={handleSubmit} disabled={formData.length === 0}>
-                提交表单
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 使用说明 */}
+        {/* 功能说明 */}
         <Card>
           <CardHeader>
-            <CardTitle>功能说明</CardTitle>
+            <CardTitle>移动端拖拽优化</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h4 className="font-medium mb-2">基础功能:</h4>
-                <ul className="space-y-1 text-gray-600">
-                  <li>• 添加/删除项目</li>
-                  <li>• 上移/下移项目</li>
-                  <li>• 点击跳转链接</li>
-                  <li>• 清空所有项目</li>
+                <h4 className="font-medium mb-2">桌面端支持:</h4>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• 鼠标拖拽 (mousedown/mousemove/mouseup)</li>
+                  <li>• 悬停效果</li>
+                  <li>• 精确的拖拽控制</li>
+                  <li>• 小尺寸按钮</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium mb-2">高级功能:</h4>
-                <ul className="space-y-1 text-gray-600">
-                  <li>• 拖拽排序 (可选)</li>
-                  <li>• 自定义标题渲染</li>
-                  <li>• 最大项目数限制</li>
-                  <li>• 表单数据集成</li>
+                <h4 className="font-medium mb-2">移动端优化:</h4>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• 触摸拖拽 (touchstart/touchmove/touchend)</li>
+                  <li>• 更大的触摸目标 (44px+)</li>
+                  <li>• 触摸反馈</li>
+                  <li>• 防止页面滚动冲突</li>
                 </ul>
               </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-800 mb-2">💡 技术实现</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• 统一的事件处理：同时监听鼠标和触摸事件</li>
+                <li>• 设备检测：根据设备类型调整UI和交互</li>
+                <li>• 拖拽阈值：防止意外触发拖拽</li>
+                <li>• 视觉反馈：拖拽时的浮动元素和目标高亮</li>
+                <li>• 性能优化：使用 passive 事件监听器</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
