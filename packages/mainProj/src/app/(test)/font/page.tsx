@@ -3,7 +3,9 @@
 import { ProjectListEditor } from "@/components/project-list-editor"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import React, {useCallback, useRef, useState} from "react"
+import {ProjectListFormField, ProjectListFormFieldRef} from "@/components/project-list-form-integration";
+import {Alert, AlertDescription, AlertTitle, Input, Label} from "@/components/ui";
 
 // 模拟项目数据
 const mockProjects = {
@@ -20,8 +22,9 @@ const mockProjects = {
 }
 
 export default function ProjectListEditorDemo() {
-  const [formData, setFormData] = useState<number[]>([])
-
+  const [formData, setFormData] = useState({ projectId: [] });
+  const projectListRef = useRef<ProjectListFormFieldRef>(null);
+  const [modelredos, setModelredos] = useState<number[]>([2, 4, 6])
   // 渲染项目标题
   const renderProjectTitle = (index: number) => {
     const project = mockProjects[index as keyof typeof mockProjects]
@@ -47,65 +50,56 @@ export default function ProjectListEditorDemo() {
   }
 
   // 模拟表单提交
-  const handleSubmit = () => {
-    console.log("提交的项目索引:", formData)
-    alert(`提交成功！项目索引: [${formData.join(", ")}]`)
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (projectListRef.current) {
+      const selectedIds = projectListRef.current.getValue();
+      setFormData({ ...formData, projectId: selectedIds||[] });
+      console.log("提交的项目索引:", formData, modelredos )
+      // alert(`提交成功！项目索引: [${formData.join(", ")}]`)
+    }
+  };
 
+  const handleChange = (value: number[]) => {
+    setModelredos(value)
+  }
+  const onItemChanged = useCallback((ids: any) => {
+    setFormData({ ...formData, projectId: ids })
+  }, [setFormData])
+//renderTitle={function(index: number): React.ReactNode {
+//                       throw new Error("Function not implemented."+index)
+//                   } }
+  // @ts-ignore
   return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">分项项目列表编辑器</h1>
           <p className="text-gray-600">支持增删改查、拖拽排序、点击跳转的项目管理组件</p>
         </div>
+        <form  className="mt-8 space-y-6">
+          {/* 表单集成示例 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>表单集成示例</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ProjectListFormField
+                  renderTitle={renderProjectTitle}
+                  ref={projectListRef}
+                  value={formData.projectId}
+                  onChange={onItemChanged}
+                  availableProjects={Object.keys(mockProjects).map(Number)}
+              />
+              <div className="flex justify-between items-center pt-4 border-t">
+                <div className="text-sm text-gray-600">已选择 个项目</div>
+                <Button onClick={handleSubmit} >
+                  提交表单
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 基础版本 */}
-          <ProjectListEditor
-              title="基础项目列表"
-              initialIndexes={[1, 3, 5]}
-              availableProjects={Object.keys(mockProjects).map(Number)}
-              renderTitle={renderProjectTitle}
-              getLinkUrl={getProjectLink}
-              maxProjects={8}
-          />
-
-          {/* 高级版本 - 支持拖拽 */}
-          <ProjectListEditor
-              title="高级项目列表 (支持拖拽)"
-              initialIndexes={[2, 4, 6]}
-              availableProjects={Object.keys(mockProjects).map(Number)}
-              renderTitle={renderProjectTitle}
-              onProjectClick={handleProjectClick}
-              dragEnabled={true}
-              maxProjects={10}
-          />
-        </div>
-
-        {/* 表单集成示例 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>表单集成示例</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ProjectListEditor
-                title="选择项目 (表单字段)"
-                initialIndexes={formData}
-                availableProjects={Object.keys(mockProjects).map(Number)}
-                renderTitle={renderProjectTitle}
-                onProjectClick={handleProjectClick}
-                showClearButton={true}
-                // 这里需要通过 ref 或回调来获取数据
-            />
-
-            <div className="flex justify-between items-center pt-4 border-t">
-              <div className="text-sm text-gray-600">已选择 {formData.length} 个项目</div>
-              <Button onClick={handleSubmit} disabled={formData.length === 0}>
-                提交表单
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* 使用说明 */}
         <Card>

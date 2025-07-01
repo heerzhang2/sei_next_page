@@ -16,7 +16,6 @@ export interface ProjectListEditorProps extends ProjectListEditorOptions {
     className?: string
     showAddButton?: boolean
     showClearButton?: boolean
-    dragEnabled?: boolean
 }
 
 export function ProjectListEditor({
@@ -27,7 +26,6 @@ export function ProjectListEditor({
                                       className,
                                       showAddButton = true,
                                       showClearButton = true,
-                                      dragEnabled = false,
                                       ...editorOptions
                                   }: ProjectListEditorProps) {
     const {
@@ -52,48 +50,6 @@ export function ProjectListEditor({
             window.open(getLinkUrl(index), "_blank")
         }
     }
-
-    // 拖拽处理
-    const handleDragStart = (e: React.DragEvent, index: number) => {
-        if (!dragEnabled) return
-        setDraggedIndex(index)
-        e.dataTransfer.effectAllowed = "move"
-    }
-
-    const handleDragOver = (e: React.DragEvent) => {
-        if (!dragEnabled) return
-        e.preventDefault()
-        e.dataTransfer.dropEffect = "move"
-    }
-
-    const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-        if (!dragEnabled || draggedIndex === null) return
-        e.preventDefault()
-
-        const draggedPosition = projectIndexes.indexOf(draggedIndex)
-        const targetPosition = projectIndexes.indexOf(targetIndex)
-
-        if (draggedPosition !== -1 && targetPosition !== -1) {
-            const newOrder = [...projectIndexes]
-            const [removed] = newOrder.splice(draggedPosition, 1)
-            newOrder.splice(targetPosition, 0, removed)
-
-            // 这里需要调用 reorderProjects，但我们需要从 hook 中获取
-            // 暂时使用多次移动来实现
-            if (draggedPosition < targetPosition) {
-                for (let i = draggedPosition; i < targetPosition; i++) {
-                    moveProjectDown(draggedIndex)
-                }
-            } else {
-                for (let i = draggedPosition; i > targetPosition; i--) {
-                    moveProjectUp(draggedIndex)
-                }
-            }
-        }
-
-        setDraggedIndex(null)
-    }
-
     const availableProjects = getAvailableProjects()
 
     return (
@@ -130,14 +86,7 @@ export function ProjectListEditor({
                                     "hover:bg-gray-50",
                                     draggedIndex === projectIndex && "opacity-50",
                                 )}
-                                draggable={dragEnabled}
-                                onDragStart={(e) => handleDragStart(e, projectIndex)}
-                                onDragOver={handleDragOver}
-                                onDrop={(e) => handleDrop(e, projectIndex)}
                             >
-                                {/* 拖拽手柄 */}
-                                {dragEnabled && <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />}
-
                                 {/* 序号 */}
                                 <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
                                     {position + 1}
