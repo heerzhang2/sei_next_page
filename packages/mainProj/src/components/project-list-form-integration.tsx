@@ -30,14 +30,13 @@ export interface ProjectListFormFieldProps extends Omit<ProjectListEditorProps, 
 //     reset: () => void
 // }
 
-/**@Depracated
+/**
  * 常用例子
 * */
 export const ProjectListFormField = ({
-             value = [], onChange, name,
-                 availableProjects:orgAvailableProjects = [],
-                 maxProjects = 50,
-                 title = "项目列表编辑器",
+                 value = [], onChange, name,
+                 maxProjects = 1000,
+                 title = "可重复分项控制器",
                  renderTitle,
                  getLinkUrl,
                  onProjectClick,
@@ -51,14 +50,21 @@ export const ProjectListFormField = ({
     // 添加项目
     const addProject = useCallback(
         (index: number) => {
+            let insertId;
+            if(index<0){
+                const maxIdNumo = Math.max(...(projectIndexes || [-1]) ) ??0;
+                insertId=maxIdNumo<0 ? 0 : maxIdNumo+1;
+            }
+            else
+                insertId=index;
             setProjectIndexes((prev) => {
-                if (prev.includes(index) || prev.length >= maxProjects) {
+                if (prev.includes(insertId) || prev.length >= maxProjects) {
                     return prev
                 }
-                return [...prev, index]
+                return [...prev, insertId]
             })
         },
-        [maxProjects],
+        [maxProjects, projectIndexes]
     )
 
     // 删除项目
@@ -119,20 +125,6 @@ export const ProjectListFormField = ({
         },
         [projectIndexes],
     )
-
-    // 检查项目是否已添加
-    const isProjectAdded = useCallback(
-        (index: number) => {
-            return projectIndexes.includes(index)
-        },
-        [projectIndexes],
-    )
-
-    // 获取可添加的项目
-    const getAvailableProjects = useCallback(() => {
-        return orgAvailableProjects.filter((index) => !projectIndexes.includes(index))
-    }, [orgAvailableProjects, projectIndexes])
-
     // 当内部状态变化时，通知外部
     React.useEffect(() => {
         if (onChange) {
@@ -155,7 +147,7 @@ export const ProjectListFormField = ({
             window.open(getLinkUrl(index), "_blank")
         }
     }
-    const availableProjects = getAvailableProjects()
+
     return (
         <div>
             <Card className={cn("w-full", className)}>
@@ -223,7 +215,7 @@ export const ProjectListFormField = ({
                                             size="sm"
                                             onClick={(e) => moveProjectUp(e,projectIndex)}
                                             disabled={!canMoveUp(projectIndex)}
-                                            className="h-6 w-6 p-0"
+                                            className="h-9 w-6 p-0"
                                         >
                                             <ChevronUp className="w-3 h-3" />
                                         </Button>
@@ -232,7 +224,7 @@ export const ProjectListFormField = ({
                                             size="sm"
                                             onClick={(e) => moveProjectDown(e,projectIndex)}
                                             disabled={!canMoveDown(projectIndex)}
-                                            className="h-6 w-6 p-0"
+                                            className="h-9 w-6 p-0"
                                         >
                                             <ChevronDown className="w-3 h-3" />
                                         </Button>
@@ -253,27 +245,18 @@ export const ProjectListFormField = ({
                     </div>
 
                     {/* 添加项目按钮 */}
-                    {showAddButton && availableProjects.length > 0 && (
+                    {showAddButton  && (
                         <div className="border-t pt-4">
                             <div className="flex flex-wrap gap-2">
-                                {availableProjects.slice(0, 10).map((index) => (
-                                    <Button key={index} variant="outline" size="sm" onClick={() => addProject(index)} className="h-8">
-                                        <Plus className="w-3 h-3 mr-1" />
-                                        {renderTitle(index)}
-                                    </Button>
-                                ))}
-                                {availableProjects.length > 10 && (
+                                <Button key={1} variant="outline" size="sm" onClick={() => addProject(-1)} className="h-8">
+                                    <Plus className="w-3 h-3 mr-1" />
                                     <Badge variant="secondary" className="h-8 flex items-center">
-                                        +{availableProjects.length - 10} 更多
+                                        + {projectIndexes.length} 更多
                                     </Badge>
-                                )}
+                                </Button>
                             </div>
                         </div>
                     )}
-                    {/* 调试信息 */}
-                    <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                        <strong>当前索引数组:</strong> [{projectIndexes.join(", ")}]
-                    </div>
                 </CardContent>
             </Card>
             {name && <input type="hidden" name={name} value={JSON.stringify(projectIndexes)} />}

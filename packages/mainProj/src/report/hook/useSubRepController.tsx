@@ -62,14 +62,8 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
     //modType:"THICK_MS"
     const [render] = useFrameEditorBar({root:true, rep, values: { ['_'+modelkey]: formData.projectId }, onReset,subrid})
     const view=(
-        <div>
+        <div className="my-auto content-center"  style={{ height: `calc(100vh - 6rem)` }}>
             <Card className="py-1 gap-2">
-                <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                        仪器编号的编辑器
-                        <Badge variant="secondary">共 {(storage?.['_'+modelkey] ?? []).length} 个</Badge>
-                    </CardTitle>
-                </CardHeader>
                 <CardContent className="p-0 space-y-1">
                     <ProjectListFormField  name={"testajhde"}
                                            renderTitle={renderProjectTitle}
