@@ -23,7 +23,6 @@ const mockProjects = {
 
 export default function ProjectListEditorDemo() {
   const [formData, setFormData] = useState({ projectId: [] });
-  const projectListRef = useRef<ProjectListFormFieldRef>(null);
   const [modelredos, setModelredos] = useState<number[]>([2, 4, 6])
   // 渲染项目标题
   const renderProjectTitle = (index: number) => {
@@ -52,12 +51,9 @@ export default function ProjectListEditorDemo() {
   // 模拟表单提交
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (projectListRef.current) {
-      const selectedIds = projectListRef.current.getValue();
-      setFormData({ ...formData, projectId: selectedIds||[] });
+      setFormData({ ...formData, projectId: modelredos });
       console.log("提交的项目索引:", formData, modelredos )
       // alert(`提交成功！项目索引: [${formData.join(", ")}]`)
-    }
   };
 
   const handleChange = (value: number[]) => {
@@ -85,7 +81,6 @@ export default function ProjectListEditorDemo() {
             <CardContent className="space-y-4">
               <ProjectListFormField
                   renderTitle={renderProjectTitle}
-                  ref={projectListRef}
                   value={formData.projectId}
                   onChange={onItemChanged}
                   availableProjects={Object.keys(mockProjects).map(Number)}
