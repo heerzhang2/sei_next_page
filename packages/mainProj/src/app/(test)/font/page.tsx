@@ -1,11 +1,8 @@
 "use client"
-
-import { ProjectListEditor } from "@/components/project-list-editor"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import React, {useCallback, useRef, useState} from "react"
-import {ProjectListFormField, ProjectListFormFieldRef} from "@/components/project-list-form-integration";
-import {Alert, AlertDescription, AlertTitle, Input, Label} from "@/components/ui";
+import React, {useCallback, useState} from "react"
+import {ProjectListFormField, } from "@/components/project-list-form-integration";
 
 // 模拟项目数据
 const mockProjects = {
@@ -22,8 +19,8 @@ const mockProjects = {
 }
 
 export default function ProjectListEditorDemo() {
-  const [formData, setFormData] = useState({ projectId: [] });
   const [modelredos, setModelredos] = useState<number[]>([2, 4, 6])
+  const [formData, setFormData] = useState({ projectId: modelredos });
   // 渲染项目标题
   const renderProjectTitle = (index: number) => {
     const project = mockProjects[index as keyof typeof mockProjects]
@@ -36,36 +33,28 @@ export default function ProjectListEditorDemo() {
         </div>
     )
   }
-
   // 获取项目链接
   const getProjectLink = (index: number) => {
     return `/project/${index}`
   }
-
   // 处理项目点击
   const handleProjectClick = (index: number) => {
     console.log(`点击了项目 ${index}`)
     // 这里可以实现路由跳转或其他逻辑
   }
-
   // 模拟表单提交
   const handleSubmit = async (e) => {
-    e.preventDefault()
-      setFormData({ ...formData, projectId: modelredos });
-      console.log("提交的项目索引:", formData, modelredos )
+      e.preventDefault()
+      // setFormData({ ...formData, projectId: modelredos });
+      console.log("提交的项目索引:", formData, "旧的",modelredos )
       // alert(`提交成功！项目索引: [${formData.join(", ")}]`)
   };
-
-  const handleChange = (value: number[]) => {
-    setModelredos(value)
-  }
   const onItemChanged = useCallback((ids: any) => {
     setFormData({ ...formData, projectId: ids })
   }, [setFormData])
-//renderTitle={function(index: number): React.ReactNode {
-//                       throw new Error("Function not implemented."+index)
-//                   } }
-  // @ts-ignore
+  //renderTitle={function(index: number): React.ReactNode {
+  //                       throw new Error("Function not implemented."+index)
+  //                   } }
   return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="text-center space-y-2">
@@ -79,7 +68,7 @@ export default function ProjectListEditorDemo() {
               <CardTitle>表单集成示例</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ProjectListFormField
+              <ProjectListFormField  name={"testajhde"}
                   renderTitle={renderProjectTitle}
                   value={formData.projectId}
                   onChange={onItemChanged}
@@ -94,8 +83,6 @@ export default function ProjectListEditorDemo() {
             </CardContent>
           </Card>
         </form>
-
-
         {/* 使用说明 */}
         <Card>
           <CardHeader>

@@ -171,11 +171,13 @@ interface UseFrameEditorBarProps {
   modType?: string;
   subrid?: string;
   redId?: number;
+  //根路径存储的
+  root?: boolean;
 }
 /**
  * 支持声明 modType && redId 或者subrid 来申明存储的实际位置转移：存储到分项数据结构中。
 * */
-export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,modType}: UseFrameEditorBarProps) {
+export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,modType,root}: UseFrameEditorBarProps) {
   const [isSaving, setIsSaving] = useState(false)
   const { storage, setStorage, setModified } = useStorage()
   //用URQL mutation来保存变更数据到后端数据库的
@@ -189,8 +191,10 @@ export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,mod
     const oldStore=storage?.[`_${modType}_${redId}`];
     //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
     // const { _version, "":_omit, ...RepData } =(subrid || (modType && redId!==undefined))? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, "仪器编号": undefined,} } : { ...storage, ...values };
-    const { _version, "":_omit, ...RepData } =(subrid || (modType && redId!==undefined))? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, ...values} }
-        : { ...storage, ...values };
+    const { _version, "":_omit, ...RepData } = ((subrid || (modType && redId!==undefined)) && !root)?
+                { ...storage,  [`_${modType}_${redId}`]: {...oldStore, ...values} }
+                  :
+                { ...storage, ...values };
 
     // 直接定义更新函数，不使用 useCallback
     const update = async () => {
@@ -227,7 +231,7 @@ export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,mod
     // 获取当前表单值
     const currentValues =values
     // 更新 storage
-    if(subrid || (modType && redId!==undefined)) {
+    if((subrid || (modType && redId!==undefined)) && !root) {
         setStorage((prevStorage : any) =>{
           const oldStore=prevStorage?.[`_${modType}_${redId}`];
           return ({

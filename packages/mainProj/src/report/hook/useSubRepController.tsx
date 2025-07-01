@@ -1,152 +1,87 @@
 import * as React from "react";
 import {useStorage} from "../StorageContext";
-import {Button} from "@/components/ui";
+import {Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui";
+import {ProjectListFormField} from "@/components/project-list-form-integration";
+import {useCallback, useState} from "react";
+import {useSearchParams} from "next/navigation";
+import {cn} from "@/lib/utils";
+import {Edit} from "lucide-react";
+import {useFrameEditorBar} from "@/report/hook/useFormFramework";
 
-
-/**【代码复用】分项报告
+const mockProjects = {
+    1: { title: "用户认证系统", description: "实现用户登录注册功能" },
+    2: { title: "数据库设计", description: "设计用户和权限表结构" },
+    3: { title: "API 接口开发", description: "开发 RESTful API" },
+    4: { title: "前端界面", description: "React 组件开发" },
+    5: { title: "测试用例", description: "单元测试和集成测试" },
+    6: { title: "部署配置", description: "Docker 和 CI/CD 配置" },
+    7: { title: "文档编写", description: "API 文档和用户手册" },
+    8: { title: "性能优化", description: "数据库和前端性能优化" },
+    9: { title: "安全加固", description: "安全漏洞检查和修复" },
+    0: { title: "监控告警", description: "系统监控和告警配置" },
+}
+/**可重复的分项控制：
  * 特殊路由 的 当前分项报告的各个分项在子报告 控制
  * 新增加分项枪击确认保存后爆出hook错误了：因为右半边页面这回仅仅过render？路由没动啊。
  * */
-export function useSubRepController(nestMd: string, callback: (store: any) => React.ReactNode
+export function useSubRepController(modelkey: string, rep:any, callback: (store: any,index: number) => React.ReactNode, subrid?:string
 ) {
-    const getInpFilter = React.useCallback((par: any) => {
-        const  SubRepIds= par?.['_'+nestMd];      //动态字段的提取。
-        return { ['_'+nestMd]: SubRepIds };          //return{ 自检材料,校验材料,整改材料,资料及编号,memo,}
-    }, [nestMd]);
-    //实际上可以直接对storage读写。没必要加setInp逻辑的；但是setStorage影响范围大，每一次临时变动都会反馈给其它如左边页面的。影响性能啊！
-    const [inp, setInp] = React.useState<any>(null);
-    // const {inp, setInp} = useItemInputControl({ ref,redId,nestMd });
-    const {storage, setStorage} =useStorage();
-    const maxIdNumo = Math.max(...(inp?.['_'+nestMd] || [-1]) ) ??0;
+    const { storage, setStorage, parrepfs } = useStorage()
+    const [oldvalue, setOldvalue] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
+
+    const maxIdNumo = Math.max(...(storage?.['_'+modelkey] || [-1]) ) ??0;
     const maxIdNum =maxIdNumo<0 ? 0 : maxIdNumo;
-    function onInsertSeq(idx:number){
-        inp?.['_'+nestMd]?.splice(idx,0, maxIdNum+1);
-        setInp({...inp, ['_'+nestMd] : [...(inp?.['_'+nestMd]||[0]) ] });
-    }
-    function onDeleteSeq(idx:number){
-        if(idx> inp?.['_'+nestMd]?.length)  return;
-        inp?.['_'+nestMd]?.splice(idx,1);
-        setInp({...inp, ['_'+nestMd] : [...(inp?.['_'+nestMd]||[0]) ] });
-    }
-    function onAddSeq(){
-        inp?.['_'+nestMd]?.push(maxIdNum+1);
-        setInp({...inp, ['_'+nestMd] : [...(inp?.['_'+nestMd]||[0]) ] });
-    }
-    //等同了被替换掉的基础编辑区块组件的框架内容：
-    React.useEffect(() => {
-        storage&& setInp(getInpFilter( storage));
-    }, [storage, setInp, getInpFilter] );
-    const onConfirmation = React.useCallback(async() => {
-        //可实际上inp对象中的数组被直接修改的，会导致storage实际也是同步已经修改了，但是也需要setStorage才能够触发左边页面render显示刚刚被修改数据变动，可能数组特别的？
-        await  setStorage({ ...storage, ...inp });
-    }, [inp,storage,setStorage]);
+    // const onConfirmation = React.useCallback(async() => {
+    //     await  setStorage({ ...storage, ...inp });
+    // }, [inp,storage,setStorage]);
 
-    const [fseq, setFseq] = React.useState<number|undefined>();
-    const [tseq, setTseq] = React.useState<number|undefined>();
-    const [dseq, setDseq] = React.useState<number|undefined>();
+    const [formData, setFormData] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
+    const renderProjectTitle = (index: number) => {
+        const project = mockProjects[index as keyof typeof mockProjects]
+        if (!project) return `项目 ${index}`
+        return (
+            <div>
+                <div className="font-medium">{project.title}</div>
+                <div className="text-sm text-gray-500">{callback(storage,index)}</div>
+            </div>
+        )
+    }
+    const handleSubmit = async (e: { preventDefault: () => void; }) => {
+        e.preventDefault()
+        // setFormData({ ...formData, projectId: modelredos });
+        console.log("提交的项目索引:", formData)
+    };
+    const onItemChanged = useCallback((ids: any) => {
+        setFormData({ ...formData, projectId: ids })
+    }, [setFormData])
 
-    // const myTable=<>
-    //     {inp?.['_'+nestMd]?.map((a:any,i:number)=>{
-    //         //【分项识别标签】nestObj?. 最少一个用户识别字段 <React.Fragment  key={i}>
-    //         const  nestObj= storage?.['_'+nestMd+'_'+a];      //动态字段的提取。
-    //         const title=callback(nestObj);
-    //         return  <Popover key={i}>
-    //             <PopoverRefer>
-    //                 <Button  size="md" iconAfter={<IconChevronDown />} variant="ghost" css={{whiteSpace:'unset'}}>
-    //                     {i+1}: {title}
-    //                 </Button>
-    //             </PopoverRefer>
-    //             <PopoverContent>
-    //                 <PopoverDescription>
-    //                     <MenuList>
-    //                         <MenuItem onPress={()=>onDeleteSeq(i)}>刪除这条分项</MenuItem>
-    //                         <MenuItem onPress={()=>onInsertSeq(i)}>插入一条分项</MenuItem>
-    //                         <MenuItem onPress={()=>onAddSeq()}>末尾新增一条分项</MenuItem>
-    //                     </MenuList>
-    //                 </PopoverDescription>
-    //                 <PopoverClose>
-    //                     <IconX/>
-    //                 </PopoverClose>
-    //             </PopoverContent>
-    //         </Popover>
-    //             ;
-    //     }) }
-    // </>;
-    return { view: null };
-  //
-  //   const view=(
-  //       <div elevation={"sm"}  css={{ padding: '0.25rem' }}>
-  //           { inp?.['_'+nestMd]?.length>0? <>
-  //                   <div>{myTable}</div>
-  //                   分项报告的排序操作:
-  //                   <InputLine label={`序号:`}>
-  //                       <div css={{
-  //                           display: 'flex',
-  //                           alignItems: 'baseline',
-  //                       }}>
-  //                           <InputPure type="number" value={ fseq || ''}  placeholder="从第几个开始"
-  //                                      onChange={e => setFseq( Number(e.currentTarget.value) ) } />
-  //                           至
-  //                           <InputPure type="number" value={ tseq || ''} placeholder="第几个结束，省略算单个"
-  //                                      onChange={e => setTseq( Number(e.currentTarget.value) ) } />
-  //                       </div>
-  //                   </InputLine>
-  //                   <InputLine  label='移动操作插入序号' >
-  //                       <Input type="number" value={dseq ||''}
-  //                              onChange={e => {
-  //                                  setDseq( Number(e.currentTarget.value) )
-  //                              } } />
-  //                   </InputLine>
-  //                   <div css={{
-  //                       display: 'flex',
-  //                       alignItems: 'center',
-  //                       justifyContent: 'space-evenly',
-  //                   }}>
-  //                       <Button disabled={ !fseq || fseq<=0 || (tseq!>0 && fseq>tseq!) || !dseq || dseq<=0 || (dseq<=tseq!+1 && dseq>=fseq!)}
-  //                               onClick={async () => {
-  //                                   let sizem=(tseq!>fseq!)? tseq!-fseq!+1 : 1;
-  //                                   let movOb=inp?.['_'+nestMd]?.splice(fseq!-1,sizem);
-  //                                   if(dseq!<fseq!)
-  //                                       inp?.['_'+nestMd]?.splice(dseq!-1, 0, ...movOb);
-  //                                   else if((tseq && dseq!>tseq!) || (!tseq && dseq!>fseq!+1))
-  //                                       inp?.['_'+nestMd]?.splice(dseq!-1, 0, ...movOb);
-  //                               }}
-  //                       >移动到目标序号前面
-  //                       </Button>
-  //                       <Button disabled={ !fseq || fseq<=0 || (tseq!>0 && fseq>tseq!)  }
-  //                               onClick={async () => {
-  //                                   if(tseq && tseq>=fseq!)
-  //                                       inp?.['_'+nestMd]?.splice(fseq!-1, tseq!-fseq!+1);
-  //                                   else if(fseq && !tseq)
-  //                                       inp?.['_'+nestMd]?.splice(fseq!-1, 1);
-  //                                   setStorage({ ...storage });
-  //                               }}
-  //                       >依序号范围删除
-  //                       </Button>
-  //                   </div>
-  //               </>
-  //           :
-  //               <>
-  //                   本分项模板可以新增加多份的<br/>
-  //                   <Button onPress={() => {
-  //                       onAddSeq()
-  //                   } }
-  //                   >初始化增加一个分项报告</Button>
-  //                   <hr/>
-  //               </>
-  //           }
-  //           <div css={{textAlign: 'right',padding:'0.2rem'}}>
-  //               <Button size="lg" intent={'primary'}
-  //                       onPress={  () =>  {
-  //                           onConfirmation();
-  //                           //【非常严重】不能添加下面这一行，确认点击后导致切换storage却可能并没有继承刚刚组件的修改状态了。setStorage更新丢失！！
-  //                           //rfchange && history.push('/report/'+nestMd+'/ver/'+verId+'/'+repId+'/_Controller', {time: Date()} );   //目的：让'当前任务'同步最新的ID, URL强制刷新！
-  //                       }}>
-  //                   修改确认
-  //               </Button>
-  //           </div>
-  //       </div>
-  //   );
-  //
-  // return { view };
+
+    const onReset = () => {
+        setFormData({ ...formData, ...oldvalue })
+    }
+    //modType:"THICK_MS"
+    const [render] = useFrameEditorBar({root:true, rep, values: { ['_'+modelkey]: formData.projectId }, onReset,subrid})
+    const view=(
+        <div>
+            <Card className="py-1 gap-2">
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        仪器编号的编辑器
+                        <Badge variant="secondary">共 {(storage?.['_'+modelkey] ?? []).length} 个</Badge>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 space-y-1">
+                    <ProjectListFormField  name={"testajhde"}
+                                           renderTitle={renderProjectTitle}
+                                           value={formData.projectId}
+                                           onChange={onItemChanged}
+                                           availableProjects={Object.keys(mockProjects).map(Number)}
+                    />
+                </CardContent>
+                <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2">{render()}</CardFooter>
+            </Card>
+        </div>
+    );
+
+  return { view };
 }

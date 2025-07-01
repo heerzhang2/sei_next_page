@@ -62,7 +62,7 @@ const recordPrintList =[
 ];
 
 export const OriginalView=({ action, verId, rep}:OriginalViewProps)=>{
-    const {list}=useRecordListSubr(rep,recordPrintList,action,verId);
+    const {list}=useRecordListSubr(rep, recordPrintList, action, verId);
     return <>
           {list}
     </>;

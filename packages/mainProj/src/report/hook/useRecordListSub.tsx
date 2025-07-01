@@ -10,6 +10,7 @@ import {EditorAreaConfig} from "../common/eHelper";
 import {useSubRepController} from "./useSubRepController";
 import {useStorage} from "@/report/StorageContext";
 import {useSearchParams} from "next/navigation";
+import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 
 
 /**【代码复用】分项报告的原始记录 右半边页面内容组织
@@ -132,11 +133,13 @@ import {useSearchParams} from "next/navigation";
  * 因此，可重复分项框架模式下的，也需要像普通报告模板一样必须能从路由器开启的。
  * */
 export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
-                                 modAction: string, verId: string, nestMdConfig?: string,titleRender?: (store: any) => React.ReactNode
+                                  modAction: string, verId: string,
+                                  titleRenders?: Record<string, (store: any,index: number) => React.JSX.Element>
 ) {
     const searchParams = useSearchParams()
     const subrid = searchParams!.get("subrid") ?? undefined
     const redId = Number(searchParams!.get("redId")) ?? undefined
+    const modelkey = searchParams!.get("modelkey") ?? ''
     //变化的key就能导致组件的重新加载了。引起组件旧状态刷新掉了。
     const keyRefresh=(subrid || redId)? `${subrid ??''}${redId ??''}` : undefined;
     const action=modAction;
@@ -144,11 +147,11 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     // const {redId,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板
     // const qs= queryString.parse(window.location.search);   //确保点击?&from=X 参数变动也能够刷新。
     const {storage, setStorage} =useStorage();
-    const iDskey= '_'+nestMdConfig;
+    // const iDskey= '_'+nestMdConfig;
     // const rskey= '_'+nestMdConfig+'_'+redId;  带分项报告的机制：
-    const { [iDskey]: SubRepIds }=storage;
+    // const { [iDskey]: SubRepIds }=storage;
 
-    const {view} =useSubRepController(nestMdConfig!, titleRender!); //callback: (store: any) => React.ReactNode
+    const {view} =useSubRepController(modelkey,rep, titleRenders?.[modelkey]!, subrid); //callback: (store: any) => React.ReactNode
     //去掉了qs,依赖项；
     //编辑器【自定义路由】这里action是 '2.1' ALL none printAll 这样的路由参数 ?readOnly=1&。
     const recordList= React.useMemo(() =>
@@ -163,14 +166,15 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                             repId: rep?.id,
                             show: true,
                             redId,
-                            nestMd: nestMdConfig,
+                            subrid,
+                            // nestMd: nestMdConfig,
                             verId,
                             rep,
                         })
                     }
                 </React.Fragment>;
             }else if(action==='ALL' || action==='printAll'){
-                if(redId || !nestMdConfig)
+                if(redId)
                     return recordPrintList.map((each, i) => {
                         return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
                             show: action==='printAll',
@@ -178,31 +182,33 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                             repId: rep?.id,
                             key: i,
                             redId,
-                            nestMd: nestMdConfig,
+                            subrid,
+                            // nestMd: nestMdConfig,
                             verId,
                             rep,
                         });
                     });
-                else return  SubRepIds?.map((redId: string, k: number)=>{
-                    return recordPrintList.map((each, i) => {
-                        return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                            show: action==='printAll',
-                            alone: false,
-                            repId: rep?.id,
-                            key: i,
-                            redId,
-                            nestMd: nestMdConfig,
-                            verId,       //内嵌模式的分项模式的版本号只能听从主报告配置的。
-                            rep,
-                        });
-                    });
-                });
+                else return null;
+                // SubRepIds?.map((redId: string, k: number)=>{
+                //     return recordPrintList.map((each, i) => {
+                //         return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
+                //             show: action==='printAll',
+                //             alone: false,
+                //             repId: rep?.id,
+                //             key: i,
+                //             redId,
+                //             // nestMd: nestMdConfig,
+                //             verId,       //内嵌模式的分项模式的版本号只能听从主报告配置的。
+                //             rep,
+                //         });
+                //     });
+                // });
             }else if(action==='_Controller'){
                 return <> {view} </>;
             }
             return  null;
         }
-        ,[action, rep, SubRepIds,nestMdConfig,redId, verId,recordPrintList, view]);
+        ,[action, rep, redId, verId,recordPrintList, view]);
 
     const list=(
         <div id="allOrgEdt" key={keyRefresh} className={"mt-4 mb-8"}>

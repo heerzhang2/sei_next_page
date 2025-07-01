@@ -10,14 +10,14 @@ import {useSubRepController} from "./useSubRepController";
  * ref: useImperativeHandle， throttledSetDoConfirmModify， doConfirm，outCome，refCount 都已经作废：
  * */
 export function useRecordList(rep: any, recordPrintList: EditorAreaConfig[],
-                              modAction: string, verId: string, nestMdConfig?: string, titleRender?: (store: any) => React.ReactNode
+                              modAction: string, verId: string, nestMdConfig?: string
 ) {
-    const {redId,nestMd,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板
+    const action=modAction;   //动态解析URL路由转换可能出现的分项报告模板
     // const qs= queryString.parse(window.location.search);   //确保点击?&from=X 参数变动也能够刷新。
-    const {storage, setStorage} =useStorage();
-    const iDskey= '_'+nestMdConfig;
+    // const {storage, setStorage} =useStorage();
+    // const iDskey= '_'+nestMdConfig;
     // const rskey= '_'+nestMdConfig+'_'+redId;  带分项报告的机制：
-    const { [iDskey]: SubRepIds }=storage;
+    // const { [iDskey]: SubRepIds }=storage;
     //印象派的项目列表需对应Ref=[...recordPrintList.length, 后面的]  ？分项报告有redoId重复的倍数。
     // let editorRefCount=recordPrintList.length;      //+maxItemsSeq 伸展开的电梯item1.1列表编辑区域数量;
     //【奇怪】有时重启才会报错：违反hook规则？useProjectListAs因为是hook函数不能放在三元表达式中，但是参数就不管了。
@@ -44,7 +44,7 @@ export function useRecordList(rep: any, recordPrintList: EditorAreaConfig[],
     //     }
     // }, [doConfirmModify, outCome, storage, setStorage] );
 
-    const {view} =useSubRepController(nestMdConfig!, titleRender!); //callback: (store: any) => React.ReactNode
+    // const {view} =useSubRepController(nestMdConfig!, titleRender!); //callback: (store: any) => React.ReactNode
     // const [refMyLineC,widthMyLinec]= useReferenceWidth();
 
     // const {impressionism, setImpressionism} =React.useContext(EditStorageContext) as any;
@@ -106,8 +106,7 @@ export function useRecordList(rep: any, recordPrintList: EditorAreaConfig[],
                             key: itemA.itemArea,
                             repId: rep?.id,
                             show: true,
-                            redId,
-                            nestMd: nestMdConfig,
+                            // redId,
                             verId,
                             alone: true,
                             // refWidth: widthMyLinec,
@@ -116,7 +115,6 @@ export function useRecordList(rep: any, recordPrintList: EditorAreaConfig[],
                     }
                 </React.Fragment>;
             }else if(action==='ALL'){
-                if(redId || !nestMdConfig)
                     return recordPrintList.map((each, i) => {
                         // if(each.itemArea.startsWith("__")){         //印象派的项目列表区域:印象派模式的；
                         //     let map = new Map(Object.entries(impressionism));
@@ -133,36 +131,16 @@ export function useRecordList(rep: any, recordPrintList: EditorAreaConfig[],
                             alone: false,
                             repId: rep?.id,
                             key: i,
-                            redId,
-                            nestMd: nestMdConfig,
+                            // redId,
                             verId,
                             // refWidth: widthMyLinec,
                             rep,
                         });
                     });
-                else return  SubRepIds?.map((redId: string, k: number)=>{
-                    //可重复的分项报告 k个；  暂不考虑印象派模式的；
-                    return recordPrintList.map((each, i) => {
-                        return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                            // ref: clRefs.current![i+ k*editorRefCount],
-                            show: false,
-                            alone: false,
-                            repId: rep?.id,
-                            key: i,
-                            redId,
-                            nestMd: nestMdConfig,
-                            verId,       //内嵌模式的分项模式的版本号只能听从主报告配置的。
-                            // refWidth: widthMyLinec,
-                            rep,
-                        });
-                    });
-                });
-            }else if(action==='_Controller'){
-                return <> {view} </>;
             }
             return  null;
         }
-        ,[action, rep, SubRepIds,nestMdConfig,redId, verId,recordPrintList,view]);
+        ,[action, rep, verId,recordPrintList]);
 
     const list=(
      <div id="allOrgEdt" className={"mt-4 mb-8"}>
