@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import React, {useCallback, useState} from "react"
-import {ProjectListFormField, } from "@/components/project-list-form-integration";
+import {ProjectListFormField, } from "@/component/project-list-form";
 
 // 模拟项目数据
 const mockProjects = {

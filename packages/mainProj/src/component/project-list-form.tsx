@@ -30,8 +30,7 @@ export interface ProjectListFormFieldProps extends Omit<ProjectListEditorProps, 
 //     reset: () => void
 // }
 
-/**
- * 常用例子
+/**标题管理器 ：改变项目顺序，待选列表。
 * */
 export const ProjectListFormField = ({
                  value = [], onChange, name,
@@ -251,7 +250,7 @@ export const ProjectListFormField = ({
                                 <Button key={1} variant="outline" size="sm" onClick={() => addProject(-1)} className="h-8">
                                     <Plus className="w-3 h-3 mr-1" />
                                     <Badge variant="secondary" className="h-8 flex items-center">
-                                        + {projectIndexes.length} 更多
+                                        + {projectIndexes.length} 增加
                                     </Badge>
                                 </Button>
                             </div>

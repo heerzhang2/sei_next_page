@@ -37,7 +37,7 @@ export default function Home() {
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1?subrid=nAcfyxUaSQGqqxfO5b2waVJlcG9ydA">查阅当前第1子报告</Link>
+                                    href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/_Controller?modelkey=THICK_MS#ProjectList">查阅当前第1子报告</Link>
                             </div>
                             <div className="mt-10">
                                 <Link href="/login">⬅ 登录home</Link>

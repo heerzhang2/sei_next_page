@@ -151,7 +151,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     // const rskey= '_'+nestMdConfig+'_'+redId;  带分项报告的机制：
     // const { [iDskey]: SubRepIds }=storage;
 
-    const {view} =useSubRepController(modelkey,rep, titleRenders?.[modelkey]!, subrid); //callback: (store: any) => React.ReactNode
+    const {view} =useSubRepController(modelkey,rep, titleRenders?.[modelkey]!, subrid);
     //去掉了qs,依赖项；
     //编辑器【自定义路由】这里action是 '2.1' ALL none printAll 这样的路由参数 ?readOnly=1&。
     const recordList= React.useMemo(() =>
