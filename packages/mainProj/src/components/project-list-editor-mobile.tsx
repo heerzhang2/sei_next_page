@@ -139,14 +139,26 @@ export function ProjectListEditorMobile({
                                             className={cn(
                                                 "flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded",
                                                 "hover:bg-gray-200 transition-colors",
+                                                // 🔥 修复：添加 CSS 来防止触摸滚动
+                                                "touch-none select-none",
                                                 isTouchDevice ? "touch-manipulation" : "",
                                             )}
+                                            style={{
+                                                // 🔥 修复：CSS 防止触摸滚动
+                                                touchAction: "none",
+                                                WebkitTouchCallout: "none",
+                                                WebkitUserSelect: "none",
+                                                userSelect: "none",
+                                            }}
                                             onMouseDown={(e) => {
                                                 console.log("🔥 鼠标按下:", { projectIndex, position }) // 调试日志
                                                 handleDragStart({ id: projectIndex, index: position }, e as React.MouseEvent)
                                             }}
                                             onTouchStart={(e) => {
                                                 console.log("🔥 触摸开始:", { projectIndex, position }) // 调试日志
+                                                // 🔥 修复：阻止触摸滚动
+                                                // e.preventDefault()
+                                                e.stopPropagation()
                                                 handleDragStart({ id: projectIndex, index: position }, e as React.TouchEvent)
                                             }}
                                         >
@@ -266,6 +278,8 @@ export function ProjectListEditorMobile({
                     style={{
                         left: dragPosition.x,
                         top: dragPosition.y,
+                        // 🔥 修复：确保浮动元素不影响触摸
+                        touchAction: "none",
                     }}
                 >
                     <div className="text-sm font-medium">拖拽中...</div>
