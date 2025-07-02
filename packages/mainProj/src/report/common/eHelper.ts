@@ -4,13 +4,61 @@ import {ItemOmniConfig} from "./omni";
 // import {string} from "prop-types";
 //通用处理函数。
 
+  //仅支持最多2层的EditorAreaConfig嵌套类型：
 export type EditorAreaConfig = {
   itemArea: string;
-  zoneContent: React.ReactNode;
+  zoneContent: React.ReactNode | EditorAreaConfig[];
+  subrType?: string;
 };
 export function createItem(itemArea: string, zoneContent: React.ReactNode) {
   return {itemArea,  zoneContent} as EditorAreaConfig;
 }
+/**目标：承压类依据项目目录表实际需执行的检验项，来隐藏要显示的编辑器部分列表项。
+* */
+export function aggregateProj(project: string, subrType:string, edAreas: EditorAreaConfig[]) {
+  return {itemArea: project, subrType, zoneContent: edAreas};
+}
+// 平铺后的类型
+export type FlattenedEditorAreaConfig = {
+  itemArea: string;
+  zoneContent: React.ReactNode;
+  subrType?: string;
+};
+
+// 类型守卫：判断是否为 EditorAreaConfig 数组
+const isEditorAreaConfigArray = (
+    value: React.ReactNode
+) => {
+  return (
+      Array.isArray(value) &&
+      value.every(item =>
+          'itemArea' in item &&
+          typeof item.itemArea === 'string' &&
+          ('zoneContent' in item)
+      )
+  );
+};
+
+// 平铺函数
+export const flattenEditorAreaConfig = (
+    data: EditorAreaConfig[],
+    maxDepth: number = 2
+): FlattenedEditorAreaConfig[] => {
+  // @ts-ignore
+  return data.reduce<FlattenedEditorAreaConfig[]>((acc, item) => {
+    const { zoneContent, ...rest } = item;
+
+    // 处理嵌套数组
+    if (isEditorAreaConfigArray(zoneContent as any) && maxDepth > 0) {
+      const children = flattenEditorAreaConfig(zoneContent as any, maxDepth - 1);
+      return [...acc, ...children];
+    }
+
+    // 处理简单类型
+    return [...acc, { ...rest, zoneContent }];
+  }, []);
+};
+
 //通用的检验项目模板配置格式的：
 export function getInspectionItemsLength(inspectionContent :any[]){
   let seq = 0;

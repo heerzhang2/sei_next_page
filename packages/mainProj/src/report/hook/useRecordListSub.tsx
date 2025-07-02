@@ -6,12 +6,12 @@ import {mergeEditorItemRefs, mergeEditorItemSubRefs} from "../tools";
 import {useThrottle} from "../../hooks/useHelpers";
 import {useSubNestAcion} from "../common/helper";
 // import {EditStorageContext} from "../StorageContext";
-import {EditorAreaConfig} from "../common/eHelper";
+import {EditorAreaConfig, flattenEditorAreaConfig} from "../common/eHelper";
 import {useSubRepController} from "./useSubRepController";
 import {useStorage} from "@/report/StorageContext";
 import {useSearchParams} from "next/navigation";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
-import {useItemsMapPressure} from "@/report/common/pressure";
+import {PressureLayout, useItemsMapPressure} from "@/report/common/pressure";
 
 
 /**【代码复用】分项报告的原始记录 右半边页面内容组织
@@ -140,6 +140,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     const searchParams = useSearchParams()
     const subrid = searchParams!.get("subrid") ?? undefined
     const redId = Number(searchParams!.get("redId")) ?? undefined
+    //控制器的编辑才有传递该参数的：
     const modelkey = searchParams!.get("modelkey") ?? ''
     //变化的key就能导致组件的重新加载了。引起组件旧状态刷新掉了。
     const keyRefresh=(subrid || redId)? `${subrid ??''}${redId ??''}` : undefined;
@@ -147,7 +148,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     const {storage, setStorage, parrepfs ,subrType} =useStorage();
     //针对可独立流转的分项目情形：有subrType & subrid的;
     const [mapFxian]=useItemsMapPressure({projects: subrid? parrepfs.Projects : storage.Projects});
-
+    const rcaList =React.useMemo(() => flattenEditorAreaConfig(recordPrintList), [recordPrintList]);
     // {  action: modAction, redId:'',nestMd:'' };
     // const {redId,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板
     // const qs= queryString.parse(window.location.search);   //确保点击?&from=X 参数变动也能够刷新。
@@ -162,7 +163,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     const recordList= React.useMemo(() =>
         {
             //【路由器分解】明面上最直观的路由部分，[action]==createItem(itemArea?)。
-            const itemA=recordPrintList.find((one)=>one.itemArea===action);
+            const itemA=rcaList.find((one)=>one.itemArea===action);
             if(itemA){
                 return <React.Fragment>
                     {
@@ -180,7 +181,25 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                 </React.Fragment>;
             }else if(action==='ALL' || action==='printAll'){
                 return recordPrintList.map((each, i) => {
-                    return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
+                    if(Array.isArray(each.zoneContent)){
+                        if(mapFxian.get(each.itemArea)?.do && (subrType===each.subrType || !subrid))
+                            return each.zoneContent.map(({itemArea, zoneContent},m)=> {
+                                return React.cloneElement(zoneContent as React.ReactElement<any>, {
+                                    show: action==='printAll',
+                                    alone: false,
+                                    repId: rep?.id,
+                                    key: m,
+                                    redId,
+                                    subrid,
+                                    // nestMd: nestMdConfig,
+                                    verId,
+                                    rep,
+                                })
+                            });
+                        else return null;
+                    }
+                    else if(!subrid || each.itemArea==='Entrance')
+                        return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
                         show: action==='printAll',
                         alone: false,
                         repId: rep?.id,
@@ -192,26 +211,12 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                         rep,
                     });
                 });
-                // SubRepIds?.map((redId: string, k: number)=>{
-                //     return recordPrintList.map((each, i) => {
-                //         return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                //             show: action==='printAll',
-                //             alone: false,
-                //             repId: rep?.id,
-                //             key: i,
-                //             redId,
-                //             // nestMd: nestMdConfig,
-                //             verId,       //内嵌模式的分项模式的版本号只能听从主报告配置的。
-                //             rep,
-                //         });
-                //     });
-                // });
             }else if(action==='_Controller'){
                 return <> {view} </>;
             }
             return  null;
         }
-        ,[action, rep, redId, verId,recordPrintList, view]);
+        ,[action, rep, redId, verId,mapFxian, recordPrintList,rcaList, view]);
 
     const list=(
         <div id="allOrgEdt" key={keyRefresh} className={"mt-4 mb-8"}>

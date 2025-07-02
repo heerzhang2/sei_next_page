@@ -1,6 +1,6 @@
 import * as React from "react";
 import {OriginalViewProps} from "@/report/common/base";
-import {createItem} from "@/report/common/eHelper";
+import {aggregateProj, createItem} from "@/report/common/eHelper";
 import {DeviceSurveyD} from "@/report/common/survey";
 import {EntranceSetup, config设备概况, config证书概要,} from "./orcBase";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
@@ -45,11 +45,20 @@ const recordPrintList =[
     createItem('CertMemo', <CertMemo label={'证书-说明'} />),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
     createItem('BoilerDiagram', <BoilerDiagram label="1.2锅炉结构简图"/>),
-    createItem('Explanatory', <Explanatory label={'1.3锅炉安装施工过程概述'}/>),
+
     // createItem('_Controller',  <></>),
     //thickm 侧壁厚部分： 没有独立流转子报告的版本号，依附于主报告。
-    createItem('ThkmsInstrument', <ThkmsInstrument label={'壁厚测定-概要仪器'}/>),
+    aggregateProj('壁厚测定', 'THICK_MS', [
+        createItem('ThkmsInstrument', <ThkmsInstrument label={'壁厚测定-概要仪器'}/>),
+        createItem('ThkmsCertMemo', <CertMemo label={'壁厚测定ThkmsThkms-说明'} />),
+    ]),
+    aggregateProj('渗透检测', 'PERME_TS', [
+        createItem('PERME_TSInstrument', <ThkmsInstrument label={'渗透检测-概要仪器'}/>),
+        createItem('PERME_TSCertMemo', <CertMemo label={'渗透888检测-说明'} />),
+    ]),
+    createItem('Explanatory', <Explanatory label={'8.3锅炉安装施工过程概述'}/>),
 ];
+
 
 export const OriginalView=({ action, verId, rep}:OriginalViewProps)=>{
     const {list}=useRecordListSubr(rep,recordPrintList,action,verId,titleRenders);

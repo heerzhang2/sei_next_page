@@ -336,7 +336,7 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                                 </button>
 
                                 <button
-                                    onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`,true,"editor")}
+                                    onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`+(subrid? '?subrid='+subrid :''),true,"editor")}
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
                                 >
                                     原始记录列表
