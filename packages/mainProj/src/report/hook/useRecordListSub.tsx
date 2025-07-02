@@ -11,6 +11,7 @@ import {useSubRepController} from "./useSubRepController";
 import {useStorage} from "@/report/StorageContext";
 import {useSearchParams} from "next/navigation";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
+import {useItemsMapPressure} from "@/report/common/pressure";
 
 
 /**【代码复用】分项报告的原始记录 右半边页面内容组织
@@ -143,10 +144,14 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     //变化的key就能导致组件的重新加载了。引起组件旧状态刷新掉了。
     const keyRefresh=(subrid || redId)? `${subrid ??''}${redId ??''}` : undefined;
     const action=modAction;
+    const {storage, setStorage, parrepfs ,subrType} =useStorage();
+    //针对可独立流转的分项目情形：有subrType & subrid的;
+    const [mapFxian]=useItemsMapPressure({projects: subrid? parrepfs.Projects : storage.Projects});
+
     // {  action: modAction, redId:'',nestMd:'' };
     // const {redId,action}=useSubNestAcion(modAction);   //动态解析URL路由转换可能出现的分项报告模板
     // const qs= queryString.parse(window.location.search);   //确保点击?&from=X 参数变动也能够刷新。
-    const {storage, setStorage} =useStorage();
+    // const {storage, setStorage} =useStorage();
     // const iDskey= '_'+nestMdConfig;
     // const rskey= '_'+nestMdConfig+'_'+redId;  带分项报告的机制：
     // const { [iDskey]: SubRepIds }=storage;
@@ -174,21 +179,19 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                     }
                 </React.Fragment>;
             }else if(action==='ALL' || action==='printAll'){
-                if(redId)
-                    return recordPrintList.map((each, i) => {
-                        return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                            show: action==='printAll',
-                            alone: false,
-                            repId: rep?.id,
-                            key: i,
-                            redId,
-                            subrid,
-                            // nestMd: nestMdConfig,
-                            verId,
-                            rep,
-                        });
+                return recordPrintList.map((each, i) => {
+                    return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
+                        show: action==='printAll',
+                        alone: false,
+                        repId: rep?.id,
+                        key: i,
+                        redId,
+                        subrid,
+                        // nestMd: nestMdConfig,
+                        verId,
+                        rep,
                     });
-                else return null;
+                });
                 // SubRepIds?.map((redId: string, k: number)=>{
                 //     return recordPrintList.map((each, i) => {
                 //         return React.cloneElement(each.zoneContent as React.ReactElement<any>, {

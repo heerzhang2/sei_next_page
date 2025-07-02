@@ -316,8 +316,11 @@ export const RepLink= ( {rep, children, tag, ori, subrid,redId}
         return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1${apds}${apdr}#${tag}`}>
             {children}
         </JumpTab>;
-    else
+    else if(tag)
         return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?${apds}${apdr}#${tag}`}>
+            {children}
+        </JumpTab>;
+    else return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?${apds}${apdr}`}>
             {children}
         </JumpTab>;
 };

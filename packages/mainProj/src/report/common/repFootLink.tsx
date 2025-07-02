@@ -17,6 +17,7 @@ import type React from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import {useWindowSize} from "@/hooks/use-window-size";
 import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
+import {RepLink} from "@/report/common/base";
 
 interface RepFootLinkProps {
     template: string
@@ -27,13 +28,15 @@ interface RepFootLinkProps {
     onLocalCvtFin?: () => void
     //单独正式报告的，就没有原始记录的展示模式的。
     single?: boolean
+    //只显示独立流转的分项报告模式形态的。
+    subrid?: string
 }
 
 type TimeUnit = "day" | "month" | "year"
 /**报告底部的功能区：
  * v0dev帮忙解决fiexed元素scroll的告警问题
  * */
-export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFin,single }: RepFootLinkProps) {
+export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin,single,subrid}: RepFootLinkProps) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
     const createQueryString = useCreateQueryString()
@@ -422,6 +425,11 @@ export function RepFootLink({ template, verId, repId, rep, pdf_job, onLocalCvtFi
         <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
             {/* 返回首页链接 */}
             <div className="text-right border-b pb-4 mb-8">
+                { subrid &&
+                    <RepLink rep={rep} tag="">
+                        <div className="mr-8 text-blue-600 hover:text-blue-800 text-sm font-medium">-返回主报告-</div>
+                    </RepLink>
+                }
                 <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                     -{(!single && original)? '原始记录':'报告'}完毕,返回-
                 </Link>

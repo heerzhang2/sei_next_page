@@ -47,8 +47,8 @@ const recordPrintList =[
     createItem('BoilerDiagram', <BoilerDiagram label="1.2锅炉结构简图"/>),
     createItem('Explanatory', <Explanatory label={'1.3锅炉安装施工过程概述'}/>),
     // createItem('_Controller',  <></>),
-    //thickm 侧壁厚部分：
-    createItem('ThkmsInstrument', <ThkmsInstrument label={'工过程述'}/>),
+    //thickm 侧壁厚部分： 没有独立流转子报告的版本号，依附于主报告。
+    createItem('ThkmsInstrument', <ThkmsInstrument label={'壁厚测定-概要仪器'}/>),
 ];
 
 export const OriginalView=({ action, verId, rep}:OriginalViewProps)=>{

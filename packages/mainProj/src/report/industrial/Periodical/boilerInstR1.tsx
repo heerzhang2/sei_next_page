@@ -26,34 +26,31 @@ import SubRep, {SingeSubRep} from "@/component/rep/sub-rep";
 export const ReportView = ({ rep }: any) => {
     const searchParams = useSearchParams()
     const original = "1" === searchParams!.get("original")
-    const { storage } = useStorage()
+    const { storage,parrepfs } = useStorage()
     const Component = OfficialReport
     const [mapFxian]=useItemsMapPressure({projects: storage.Projects});
     //若目录页的页号不计算的：需要判别mapFxian.get('目录')?.do来剔除； #且满足目录页预计只打印一张纸；干脆用户录入?
     const pdf_job = createPdfJob(rep, original,4);
     const subrid = searchParams!.get("subrid")
-    if(subrid) return (
-        <>
-            <div id="PHEAD" />
-            <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
-            <RepTitleUpdate code={storage?.eqpcod} original={original} />
-            <Component source={storage} rep={rep} mapFxian={mapFxian} subrid={subrid}/>
-            <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
-                         pdf_job={pdf_job} single/>
-            <div id="PTAIL" />
-        </>
-    )
-    return (
-        <>
-            <div id="PHEAD" />
-            <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
-            <RepTitleUpdate code={storage?.eqpcod} original={original} />
-            <Component source={storage} rep={rep} mapFxian={mapFxian}/>
-            <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
-                         pdf_job={pdf_job} single/>
-            <div id="PTAIL" />
-        </>
-    )
+    return (<>
+        <div id="PHEAD" />
+        { subrid ? <>
+                <RepTitleUpdate code={parrepfs?.eqpcod+"子报告的"} original={original} />
+                <Component source={storage} rep={rep} mapFxian={mapFxian} subrid={subrid}/>
+                <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
+                             pdf_job={pdf_job} single subrid={subrid}/>
+            </>
+            :
+            <>
+                <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
+                <RepTitleUpdate code={storage?.eqpcod} original={original} />
+                <Component source={storage} rep={rep} mapFxian={mapFxian}/>
+                <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
+                             pdf_job={pdf_job} single/>
+            </>
+        }
+        <div id="PTAIL" />
+    </>)
 }
 
 const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,subrid,mapFxian}) => {
@@ -61,7 +58,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
     //走独立流转分项报告模式的情况： {subrType==='THICK_MS' && <ThickMsVw orc={orc} rep={rep} subrid={subrid}/>}
     if(subrType){
       return (
-            <SingeSubRep rep={rep}>
+            <SingeSubRep rep={rep} subrid={subrid!}>
                <ThickMsVw rep={rep} subrid={subrid} orc={null}/>
             </SingeSubRep>
         )

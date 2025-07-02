@@ -24,6 +24,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     //可流转分项报告
     const [parrepfs, setParrepfs] = React.useState<any>({});
     const [subrType, setSubrType] = React.useState<string | undefined>();
+    //复用app路由带来的【问题】流转分项与主报告的状态管理，交叉？。
     const value = {
         storage,
         setStorage,

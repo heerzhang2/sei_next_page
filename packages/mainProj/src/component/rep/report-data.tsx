@@ -62,7 +62,7 @@ function CommonReportData({ repId,children       }:
     })
     const { data, fetching, error } = result
     const { getReport: report } = data || {}
-    const {setStorage} =useStorage();
+    const {setStorage, setSubrType} =useStorage();
     //服务器也运行的console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);
     React.useEffect(() => {
         const  snap =report&&report.snapshot&&JSON.parse(report.snapshot);
@@ -70,6 +70,8 @@ function CommonReportData({ repId,children       }:
         //JPA互斥锁 _version 同时保存一份到了data区域,保存数据需要回传后端的。  snapshot【只有经过一次】保存才能复制进入data字段，否则不变。
         if(dat)   setStorage({...dat, ...snap, _version: report?.version});       //台账基础信息优先采信
         else   setStorage({ ...snap, _version: report?.version});
+        //切换，否则报告页面无法更新：
+        setSubrType(undefined)
         console.log("每次保存都会更新",dat,"snap",snap);        //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
     }, [report, setStorage]);
     if (fetching) return <div>加载中...</div>

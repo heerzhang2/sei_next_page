@@ -15,6 +15,7 @@ import {cn} from "@/lib/utils";
 import {X, Edit} from "lucide-react";
 import {useSearchParams} from "next/navigation";
 
+//可以支持非规定中的子模板，衍生可重复分项项目存储设计目的，广义上的存储拆分和编制的做法；modelkey预期的分解个数数量不应太多的。
 const modelkey="THICK_MS";
 interface ProjectItem {
     简图说明: string
@@ -121,15 +122,22 @@ interface ThickMsVwProps{
     subrid?: string;
     //分项报告里面的可重复分项的编号。
     redId?: number;
+    //可重复分项目的附加后缀：
+    apxid?: string;
+    //避免pdf书签太多：
+    useh2?: boolean;
 }
 /**锅炉结构简图
  * */
-export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,parOrc,children}: ThickMsVwProps
+export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,parOrc,apxid,useh2,children}: ThickMsVwProps
 ) => {
+    const TComponent=useh2? "h2":"div"
     return (<>
         <PrintReserveLeast reserve="6rem"
                            title={<>
-                               <h2 id={"BoilerDiagram"} className="text-2xl text-center mt-4">{title}</h2>
+                               <TComponent id={"BoilerDiagram"+apxid} className="text-2xl text-center mt-4">{title}
+                                   <span className="text-base">{apxid}</span>
+                               </TComponent>
                                <div className="flex justify-between">
                                    <span className="text-sm">工程名称：{orc?.工程名称}</span>
                                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
@@ -347,3 +355,4 @@ export const ThkmsInstrument =
             </CollapsibleFormSection>
         )
     }
+

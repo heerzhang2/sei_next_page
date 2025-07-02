@@ -24,7 +24,7 @@ export default function Layout({children}: Readonly<{children: React.ReactNode}>
             return node?.id===subrid
         })
         return reps[0]?.node?.modeltype
-    }, [subrid])
+    }, [subrid, report])
     const catItems=useCatalog(subrepType)
     return (
         <EditControlProvider>

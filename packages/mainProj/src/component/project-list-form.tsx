@@ -12,17 +12,20 @@ export interface ProjectListEditorOptions {
 export interface ProjectListEditorProps extends ProjectListEditorOptions {
     title?: string
     renderTitle: (index: number) => React.ReactNode
+    //新开tab窗口的
     getLinkUrl?: (index: number) => string
     onProjectClick?: (index: number) => void
     className?: string
     showAddButton?: boolean
     showClearButton?: boolean
     dragEnabled?: boolean
+    canDeleteItem?: (index: number) => boolean
 }
 export interface ProjectListFormFieldProps extends Omit<ProjectListEditorProps, "initialIndexes"> {
     value?: number[]
     onChange?: (value: number[]) => void
     name?: string
+    id?: string
 }
 // export interface ProjectListFormFieldRef {
 //     getValue: () => number[]
@@ -30,7 +33,7 @@ export interface ProjectListFormFieldProps extends Omit<ProjectListEditorProps, 
 //     reset: () => void
 // }
 
-/**标题管理器 ：改变项目顺序，待选列表。
+/**标题管理器 ：改变项目顺序，待选列表。删除分项项目必须事前清空关联内容的。
 * */
 export const ProjectListFormField = ({
                  value = [], onChange, name,
@@ -41,7 +44,9 @@ export const ProjectListFormField = ({
                  onProjectClick,
                  className,
                  showAddButton = true,
-                 showClearButton = true,
+                 showClearButton = false,
+                 canDeleteItem,
+                 id
    }: ProjectListFormFieldProps) => {
 
     const [projectIndexes, setProjectIndexes] = useState<number[]>(value)
@@ -52,7 +57,7 @@ export const ProjectListFormField = ({
             let insertId;
             if(index<0){
                 const maxIdNumo = Math.max(...(projectIndexes || [-1]) ) ??0;
-                insertId=maxIdNumo<0 ? 0 : maxIdNumo+1;
+                insertId=maxIdNumo<=0 ? 1 : maxIdNumo+1;
             }
             else
                 insertId=index;
@@ -146,9 +151,16 @@ export const ProjectListFormField = ({
             window.open(getLinkUrl(index), "_blank")
         }
     }
+    // 检查是否可以删除
+    const canDelete = useCallback(
+        (currentIndex: number) => {
+           return canDeleteItem? canDeleteItem(currentIndex) : true
+        },
+        [canDeleteItem]
+    )
 
     return (
-        <div>
+        <div id={id}>
             <Card className={cn("w-full", className)}>
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
@@ -232,7 +244,7 @@ export const ProjectListFormField = ({
                                     {/* 删除按钮 */}
                                     <Button
                                         variant="ghost"
-                                        size="sm"
+                                        size="sm" disabled={!canDelete(projectIndex)}
                                         onClick={() => removeProject(projectIndex)}
                                         className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                                     >
