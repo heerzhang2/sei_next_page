@@ -8,16 +8,44 @@ import {ItemOmniConfig} from "./omni";
 export type EditorAreaConfig = {
   itemArea: string;
   zoneContent: React.ReactNode | EditorAreaConfig[];
+  //聚合项才有的：createItem没有这个参数。
   subrType?: string;
 };
 export function createItem(itemArea: string, zoneContent: React.ReactNode) {
   return {itemArea,  zoneContent} as EditorAreaConfig;
 }
 /**目标：承压类依据项目目录表实际需执行的检验项，来隐藏要显示的编辑器部分列表项。
+ * 需传递给 编辑区的 modType：可重复分项的模板类型，存储路径。
 * */
-export function aggregateProj(project: string, subrType:string, edAreas: EditorAreaConfig[]) {
-  return {itemArea: project, subrType, zoneContent: edAreas};
+export function aggregateProj(
+    project: string,
+    subrType: string,
+    edAreas: EditorAreaConfig[]
+) {
+  // 递归处理嵌套结构的辅助函数
+  const processContent = (content: React.ReactNode | EditorAreaConfig[]) => {
+    if (Array.isArray(content)) {
+      return content.map(({itemArea, zoneContent}) => {
+        if (React.isValidElement(zoneContent)) {
+          // 克隆元素并注入subrType参数
+          return {
+            itemArea,
+            zoneContent:  React.cloneElement(zoneContent, { modType: subrType } as any),
+          };
+        }
+        return {itemArea, zoneContent};
+      });
+    }
+    return content;
+  };
+
+  return {
+    itemArea: project,
+    subrType,
+    zoneContent: processContent(edAreas) as EditorAreaConfig[]
+  };
 }
+
 // 平铺后的类型
 export type FlattenedEditorAreaConfig = {
   itemArea: string;

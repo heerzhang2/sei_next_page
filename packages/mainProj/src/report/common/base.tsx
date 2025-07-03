@@ -23,15 +23,19 @@ export interface InternalItemProps{
     show?: boolean;
     children?: React.ReactNode
     //报告ID号；以及verId： 正常需直接用rep?.; 可独立流转分项报告的模板例外
-    repId?: string;
+    // repId?: string;
+
     verId?: string;
     //可重复加的报告实例id
-    redId?: string;
+    redId?: number;
     //嵌入分项报告的模板号,
-    nestMd?: string;
+
+    // nestMd?: string;
     // refWidth?: number;
     // alone?: boolean;
-    ref?: any;
+
+    // ref?: any;
+    subrid?: string;
 }
 
 

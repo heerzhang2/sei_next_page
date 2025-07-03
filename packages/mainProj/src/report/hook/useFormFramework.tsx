@@ -30,6 +30,12 @@ interface UseFormFrameworkProps {
   // 其他参数
   rep?: any
   onSubmit?: (values: any) => Promise<void>
+  //独立流转的：那个最终的实体存储报告
+  subrid?: string;
+  //可重复分项
+  redId?: number;
+  //分项报告的： 独立流转，或者非独立的可重复分项目存储 [_modType_1]: ;
+  modType?: string;
 }
 /**报告的编辑器表单框架
  * */
@@ -40,6 +46,9 @@ export function useFormFramework({
                                    arrayFields = [],
                                    rep,
                                    onSubmit: customOnSubmit,
+                                   subrid,
+                                   redId,
+                                   modType,
                                  }: UseFormFrameworkProps) {
   const { storage, setStorage, setModified } = useStorage()
 
@@ -61,15 +70,20 @@ export function useFormFramework({
       await customOnSubmit(values)
       return
     }
-
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
-    const { _version, "":_omit, ...RepData } = { ...storage, ...values }
+    const oldStore=storage?.[`_${modType}_${redId}`];
+    //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
+    //存储到可重复分项的专用位置：
+    const { _version, "":_omit, ...RepData } = (subrid || (modType && redId!==undefined))?
+        { ...storage,  [`_${modType}_${redId}`]: {...oldStore, ...values} }
+        :
+        { ...storage, ...values };
 
     // 直接定义更新函数，不使用 useCallback
     const update = async () => {
       return await updateOriginal({
-        id: rep?.id,
+        id: subrid ?? rep?.id,
         operationType: 1,
         version: _version,
         data: JSON.stringify(RepData),
@@ -98,10 +112,21 @@ export function useFormFramework({
     // 获取当前表单值
     const currentValues = structuredClone(form.getValues())
     // 更新 storage
-    setStorage((prevStorage : any) => ({
-      ...prevStorage,
-      ...currentValues,
-    }))
+    if(subrid || (modType && redId!==undefined)) {
+      setStorage((prevStorage : any) =>{
+        const oldStore=prevStorage?.[`_${modType}_${redId}`];
+        return ({
+          ...prevStorage,
+          [`_${modType}_${redId}`]: {...oldStore, ...currentValues}
+        })
+      })
+    }
+    else{
+      setStorage((prevStorage : any) => ({
+        ...prevStorage,
+        ...currentValues,
+      }))
+    }
     // 设置已修改标志
     setModified(true)
   }
@@ -231,7 +256,7 @@ export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,mod
   const handleConfirm = () => {
     if(onVerify && !onVerify(values))
       return
-    // 获取当前表单值
+    // 获取当前表单值: 都在外部做修改注入的。
     const currentValues =values
     // 更新 storage
     if((subrid || (modType && redId!==undefined)) && !root) {

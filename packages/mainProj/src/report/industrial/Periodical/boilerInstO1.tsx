@@ -1,7 +1,7 @@
 import * as React from "react";
 import {OriginalViewProps} from "@/report/common/base";
 import {aggregateProj, createItem} from "@/report/common/eHelper";
-import {DeviceSurveyD} from "@/report/common/survey";
+import {DeviceSurveyD, DeviceSurveyFx} from "@/report/common/survey";
 import {EntranceSetup, config设备概况, config证书概要,} from "./orcBase";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
@@ -49,7 +49,7 @@ const recordPrintList =[
     // createItem('_Controller',  <></>),
     //thickm 侧壁厚部分： 没有独立流转子报告的版本号，依附于主报告。
     aggregateProj('壁厚测定', 'THICK_MS', [
-        createItem('ThkmsInstrument', <DeviceSurveyD config={config壁厚测仪} label={'壁厚测定-概要仪器'}/>),
+        createItem('ThkmsInstrument', <DeviceSurveyFx config={config壁厚测仪} label={'壁厚测定-概要仪器'}/>),
         createItem('ThkmsInstrument2', <ThkmsInstrument label={'壁厚测定-概要仪器'}/>),
         createItem('ThkmsCertMemo', <CertMemo label={'壁厚测定ThkmsThkms-说明'} />),
     ]),

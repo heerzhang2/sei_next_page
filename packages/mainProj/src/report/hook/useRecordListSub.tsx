@@ -139,7 +139,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     const searchParams = useSearchParams()
     const subrid = searchParams!.get("subrid") ?? undefined
     const redId = Number(searchParams!.get("redId")) ?? undefined
-    //控制器的编辑才有传递该参数的：
+    //只有是控制器的编辑器 才有传递该参数的：
     const modelkey = searchParams!.get("modelkey") ?? ''
     //变化的key就能导致组件的重新加载了。引起组件旧状态刷新掉了。
     const keyRefresh=(subrid || redId)? `${subrid ??''}${redId ??''}` : undefined;
@@ -168,7 +168,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                     {
                         React.cloneElement(itemA.zoneContent as React.ReactElement<any>, {
                             key: itemA.itemArea,
-                            repId: rep?.id,
+                            // repId: rep?.id,
                             show: true,
                             redId,
                             subrid,
@@ -185,8 +185,8 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                             return each.zoneContent.map(({itemArea, zoneContent},m)=> {
                                 return React.cloneElement(zoneContent as React.ReactElement<any>, {
                                     show: action==='printAll',
-                                    alone: false,
-                                    repId: rep?.id,
+                                    // alone: false,
+                                    // repId: rep?.id,
                                     key: m,
                                     redId,
                                     subrid,
@@ -200,8 +200,8 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                     else if(!subrid || each.itemArea==='Entrance')
                         return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
                         show: action==='printAll',
-                        alone: false,
-                        repId: rep?.id,
+                        // alone: false,
+                        // repId: rep?.id,
                         key: i,
                         redId,
                         subrid,
@@ -212,8 +212,9 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                 });
             }else if(action==='_Controller'){
                 return <> {view} </>;
-            }
-            return  null;
+            }else if(action===null)
+                return null;
+            throw new Error("action路由不存在");
         }
         ,[action, rep, redId, verId,mapFxian, recordPrintList,rcaList, view]);
 

@@ -93,3 +93,99 @@ export const DeviceSurveyD = ({ children, show, label, config, itemA, rep }: Dev
         </CollapsibleFormSection>
     )
 }
+
+interface DeviceSurveyFxProps extends DeviceSurveyDProps {
+    modType?: string
+}
+/**支持可重复分项的，但是不支持modType为空的 普通 情形。
+ * 兼容位于主报告，兼容可独立流转子报告
+* */
+export const DeviceSurveyFx = ({ children, show, label, config, itemA, rep,subrid,redId,modType }: DeviceSurveyFxProps) => {
+    //分项目：modType有的，但是subrType却不一定有的： 处于独立流转分项编辑才有的。
+    const { storage, subrType, parrepfs } = useStorage()
+    if(!modType || redId===undefined)    throw new Error(`可重复分项才能用`);
+    const subStore=storage?.[`_${modType}_${redId}`];           //有可能可独立流转子报告的
+    // 创建动态 schema
+    const fullSchema = React.useMemo(() => {
+        const schemaFields = {} as any
+        const surveyItems = [] as any
+
+        config?.forEach(([[desc, name, cb], add2p]: any, i: number) => {
+            const [desc2, name2, cb2] = add2p || []
+            if (typeof name === "string" && !name?.startsWith("_$")) surveyItems.push({ name, cb })
+            else if (typeof name === "object" && name.n && !name.r && !name.n.startsWith("_$"))
+                surveyItems.push({ name: name.n, cb })
+            if (typeof name2 === "string" && name2 && !name2.startsWith("_$")) surveyItems.push({ name: name2, cb: cb2 })
+            else if (typeof name2 === "object" && name2.n && !name2.r && !name2.n.startsWith("_$"))
+                surveyItems.push({ name: name2.n, cb: cb2 })
+        })
+
+        const itemA设备概况: string[] = itemA ? [...itemA] : []
+
+        // 初始化存储字段
+        surveyItems.forEach(({ name, cb }: any) => {
+            if (cb?.names) itemA设备概况.push(...cb?.names)
+            else itemA设备概况.push(name)
+        })
+
+        itemA设备概况.forEach((namecfg) => {
+            schemaFields[namecfg] = z.string().optional()
+        })
+
+        return z.object(schemaFields)
+    }, [config, itemA])
+
+    // 计算默认值： 从存储恢复的
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        //"_$"开头的表示主报告的data存储中。  @ 可重复项目内嵌的字段不可能被其它地方交叉去引用的！
+        config?.forEach(([[desc, name, cb], add2p]: any) => {
+            const [desc2, name2, cb2] = add2p || []
+            if (typeof name === "string" && !name?.startsWith("_$")) fields[name] = subStore[name] ?? ""
+            else if (typeof name === "object" && name.n && !name.r && !name.n.startsWith("_$"))
+                fields[name.n] = subStore[name.n] ?? ""
+            if (typeof name2 === "string" && name2 && !name2.startsWith("_$")) fields[name2] = subStore[name2] ?? ""
+            else if (typeof name2 === "object" && name2.n && !name2.r && !name2.n.startsWith("_$"))
+                fields[name2.n] = subStore[name2.n] ?? ""
+        })
+        //subStore当中的；替换掉storage的；
+        itemA?.forEach((name) => {
+            if(name.startsWith("_$")){
+                const nname=name.substring(2, name.length);
+                fields[nname] =(subrType ? parrepfs?.[nname] : storage?.[nname]) ?? ""
+            }
+            else
+                fields[name] = subStore[name] ?? ""
+        })
+
+        return fields
+    }, [config, itemA,subStore, storage,parrepfs])
+
+    // 使用通用表单框架hook
+    const { render, form } = useFormFramework({
+        schema: fullSchema,
+        defaultValues,
+        //contentRendererFactory :不再使用回调函数
+        rep,
+        redId,
+        subrid,
+        modType,
+    })
+
+    // 将 usePrefixDataEdit 移到组件顶层
+    const [renderEditor] = usePrefixDataEdit({ config: config || [], form })
+
+    //替代原本的contentRendererFactory()的位置; 创建内容渲染器函数，但不再调用 hooks
+    const content = (
+        <>
+            {children}
+            {renderEditor}
+        </>
+    )
+
+    return (
+        <CollapsibleFormSection title={label ?? "一、设备概况"} defaultOpen={show}>
+            {render(content)}
+        </CollapsibleFormSection>
+    )
+}
