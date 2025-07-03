@@ -31,7 +31,7 @@ config加速度.forEach(([name,title], i:number)=>{
 const AxyzNm = ['a', 'b', 'c', 'd', 'e', 'f'];
 const AxyzCfg=[ ['a','Ax.max'],['b','Ax.min'],['c','Ay.max'],['d','Ay.min'],['e','Az.max'],['f','Az.min'] ];
 
-export const Acceleration = ({ children, show, alone = true, redId, nestMd, label, rep,stnum=3 }: Props) => {
+export const Acceleration = ({ children, show, label, rep,stnum=3 }: Props) => {
     const { storage } = useStorage()
     // 1. 创建动态 schema
     const schema = React.useMemo(() => {

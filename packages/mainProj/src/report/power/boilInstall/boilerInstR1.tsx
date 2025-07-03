@@ -2,7 +2,7 @@
 import * as React from "react"
 import {useSearchParams} from "next/navigation"
 import {useStorage} from "@/report/StorageContext";
-import {RepLink, ReportViewFxProps, RepTitleUpdate} from "@/report/common/base"
+import {RepLink, ReportEntryProps, ReportViewFxProps, RepTitleUpdate} from "@/report/common/base"
 import { 落款单位地址 } from "@/report/common/rarelyVary"
 import { 检验核准WaterJj } from "@/report/recreation/waterJj/rarelyVary"
 import {ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
@@ -21,7 +21,7 @@ import {ConclusionVw} from "@/report/power/boilInstall/Conclusion";
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
 * */
-export const ReportView = ({ rep }: any) => {
+export const ReportView = ({ rep }: ReportEntryProps) => {
     const searchParams = useSearchParams()
     const original = "1" === searchParams!.get("original")
     const { storage } = useStorage()

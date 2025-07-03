@@ -31,7 +31,7 @@ interface Props  extends InternalItemProps{
     //文字上稍微一点的差别： 灵敏
     sensit?: boolean;
 }
-export const StrainStress = ({ children, show, alone = true, redId, nestMd, label, rep,sensit }: Props) => {
+export const StrainStress = ({ children, show, label, rep,sensit }: Props) => {
     const {storage,setStorage,modified,setModified} =useStorage();
     const schema = React.useMemo(() => {
         const schemaFields = {} as any

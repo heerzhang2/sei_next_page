@@ -168,10 +168,13 @@ interface UseFrameEditorBarProps {
   onVerify?: (values: any) =>boolean;
   onReset?: () =>void;
   //分项报告的： 独立流转，或者非独立的可重复分项目存储 [_modType_1]: ;
+  //不是独立流转的可重复分项其它情形没有subrType【所以】不采用的useStorage()中的subrType来取代。
   modType?: string;
+  //独立流转的：那个最终的实体存储报告
   subrid?: string;
+  //可重复分项
   redId?: number;
-  //根路径存储的
+  //逻辑上优先！强调确保是根路径存储的； #针对分项控制器的特别情况的：不嵌套。
   root?: boolean;
 }
 /**

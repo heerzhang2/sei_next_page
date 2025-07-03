@@ -9,7 +9,7 @@ import {Explanatory} from "@/report/power/boilInstall/Explanatory";
 import {ConclusionBoiler} from "@/report/power/boilInstall/Conclusion";
 import {CertMemo} from "@/report/power/boilInstall/CertMemo";
 import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
-import {ThkmsInstrument} from "@/report/industrial/Periodical/ThickMs";
+import {config壁厚测仪, ThkmsInstrument} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 
 
@@ -49,7 +49,8 @@ const recordPrintList =[
     // createItem('_Controller',  <></>),
     //thickm 侧壁厚部分： 没有独立流转子报告的版本号，依附于主报告。
     aggregateProj('壁厚测定', 'THICK_MS', [
-        createItem('ThkmsInstrument', <ThkmsInstrument label={'壁厚测定-概要仪器'}/>),
+        createItem('ThkmsInstrument', <DeviceSurveyD config={config壁厚测仪} label={'壁厚测定-概要仪器'}/>),
+        createItem('ThkmsInstrument2', <ThkmsInstrument label={'壁厚测定-概要仪器'}/>),
         createItem('ThkmsCertMemo', <CertMemo label={'壁厚测定ThkmsThkms-说明'} />),
     ]),
     aggregateProj('渗透检测', 'PERME_TS', [

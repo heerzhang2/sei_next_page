@@ -13,7 +13,7 @@ import {
     FormLabel,
     FormMessage, Input
 } from "@/components/ui";
-import {BlobInputList, CollapsibleFormSection, FormSelectField} from "@/components/chub";
+import {CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 
 interface ConclusionProps  extends InternalItemProps{
@@ -28,7 +28,7 @@ const 结论选 = [
 ]
 export const itemA结论 = ['检验结论', '新下检日','检验日期','检验日期1' ];
 //下结论页面：
-export const ConclusionWaterJj = ({ children, show, alone = true, redId, nestMd, label, rep,
+export const ConclusionWaterJj = ({ children, show, label, rep,
                                       startd=false,nxtstyp='检验',rslist=结论选}: ConclusionProps) => {
     const {storage,} =useStorage();
     const schema = React.useMemo(() => {

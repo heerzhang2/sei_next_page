@@ -74,9 +74,15 @@ export interface ReportViewProps {
     //嵌入式和独立流转并存的，或独立流转的出现多个同种模板的。需要重新定位序号。默认=0
     fxIdx?: number;
 }
+export interface ReportEntryProps {
+    rep: any;
+    //打印预览模式的：
+    printMode?: boolean;
+}
 export interface ReportViewFxProps extends ReportViewProps{
     mapFxian: Map<string,PressureLayout>;
     subrid?: string;
+    printMode?: boolean;
 }
 
 export const OriginalDataMutation =gql`
@@ -246,13 +252,13 @@ export interface InputReproducibleProps {
 //count=下拉组件亦即独立展示项目个数；
 //HOOK机制要求，useXXX() 次数与顺序都不允许变化。HOOK报错。
 //外部采用路由模式，组件进入后采取根据入口参数来调节count的就没问题，count不会因为两次render表现出个数差异。
-export function useProjectListAs({count} :{count:number}) {
-  const array= new Array(count).fill(null);
-  function WrappedComp(i: number) {
-        return React.useRef<InternalItemHandResult>(null);
-  };
-  return React.useRef<MutableRefObject<InternalItemHandResult>[] | null>(array.map((i) => WrappedComp(i) ) as any);
-}
+// export function useProjectListAs({count} :{count:number}) {
+//   const array= new Array(count).fill(null);
+//   function WrappedComp(i: number) {
+//         return React.useRef<InternalItemHandResult>(null);
+//   };
+//   return React.useRef<MutableRefObject<InternalItemHandResult>[] | null>(array.map((i) => WrappedComp(i) ) as any);
+// }
 
 
 

@@ -4,7 +4,7 @@ import {useSearchParams} from "next/navigation"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
-import {ReportViewProps, RepTitleUpdate} from "@/report/common/base"
+import {ReportEntryProps, ReportViewProps, RepTitleUpdate} from "@/report/common/base"
 import { 落款单位地址 } from "@/report/common/rarelyVary"
 import type { Column_Setting } from "@/report/common/useFormatOmni"
 import { useOfficialOmni } from "@/report/common/useOfficialOmni"
@@ -22,7 +22,7 @@ import {RepHeadLink} from "@/report/common/repHeadLink";
 import {JumpTab} from "@/report/common/JumpTab";
 
 
-export const ReportView = ({ rep }: any) => {
+export const ReportView = ({ rep }: ReportEntryProps) => {
     const searchParams = useSearchParams()
     const original = "1" === searchParams!.get("original")
     const { storage } = useStorage()

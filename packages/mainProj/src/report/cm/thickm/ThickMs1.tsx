@@ -1,7 +1,18 @@
 "use client"
 import * as React from "react";
 import {CollapsibleFormSection} from "@/components/chub";
-import {Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Label, Textarea} from "@/components/ui";
+import {
+    Badge,
+    Button,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    Collapsible, CollapsibleContent, CollapsibleTrigger,
+    Label,
+    Textarea
+} from "@/components/ui";
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import {InternalItemProps, RepLink} from "@/report/common/base";
 import {useStorage} from "@/report/StorageContext";
@@ -12,8 +23,16 @@ import {JumpTab} from "@/report/common/JumpTab";
 import {FootMensLine} from "@/report/common/view";
 import {ImageComponent} from "@/components/shub";
 import {cn} from "@/lib/utils";
-import {X, Edit} from "lucide-react";
+import {X, Edit, ChevronUp, ChevronDown} from "lucide-react";
 import {useSearchParams} from "next/navigation";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import PdfOutlineAnalyzer from "@/components/pdf-outline-analyzer";
+import {useEffect} from "react";
+import {CollapseFx} from "@/report/common/collapse";
+import {render设备类别} from "@/report/common/render";
+import {input额定是} from "@/report/boiler/rarelyVary";
+import {config证书概要, 许可级别选} from "@/report/power/boilInstall/orcBase";
+import {usePrefixDataTable} from "@/report/hook/usePrefixData";
 
 //可以支持非规定中的子模板，衍生可重复分项项目存储设计目的，广义上的存储拆分和编制的做法；modelkey预期的分解个数数量不应太多的。
 const modelkey="THICK_MS";
@@ -34,8 +53,8 @@ export const ThickMs =
 }:InternalItemProps) => {
     const {storage,setStorage,modified,setModified} =useStorage();
     const searchParams = useSearchParams()
-    const subrid = searchParams!.get("subrid")
-    const redId = searchParams!.get("redId")
+    const subrid = searchParams!.get("subrid") ?? undefined
+    const redId = Number(searchParams!.get("redId")) ?? undefined
     //原本editForm一表的其中一行对象。 但是这里改成非表格的模式：减少一层存储组织嵌套了。
     const initialState=()=>(
         {
@@ -110,12 +129,12 @@ export const ThickMs =
 }
 
 interface ThickMsVwProps{
-    //分项情况的：直接使用当前分项项目专属存储做法。分离开其它的同类可重复分项
-    orc: any;
-    //假如orc不是主报告整体存储的情形下，提供主报告存储数据。
-    parOrc?: any;
     //主报告实例
     rep: any;
+    //分项情况的：直接使用当前分项项目专属存储做法。分离开其它的同类可重复分项
+    orc?: any;
+    //假如orc不是主报告整体存储的情形下，提供主报告存储数据。
+    parOrc?: any;
     title?: string;
     children?: React.ReactNode
     //分项报告id
@@ -126,12 +145,15 @@ interface ThickMsVwProps{
     apxid?: string;
     //避免pdf书签太多：
     useh2?: boolean;
+    printMode?: boolean;
 }
-/**锅炉结构简图
+/**壁厚测定报告
  * */
-export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,parOrc,apxid,useh2,children}: ThickMsVwProps
+export const ThickMsVw= ({orc, rep, title='壁厚测定报告',subrid,redId,parOrc,apxid,useh2,printMode,children}: ThickMsVwProps
 ) => {
     const TComponent=useh2? "h2":"div"
+    const renderUpper=usePrefixDataTable({config: config壁厚测仪, orc, rep, slash:true});
+
     return (<>
         <PrintReserveLeast reserve="6rem"
                            title={<>
@@ -143,58 +165,70 @@ export const ThickMsVw= ({ orc, rep, title='测厚xx',subrid,redId,parOrc,apxid,
                                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
                                </div>
                            </>}>
-            <FlexibleTable columnWidths={["62%", "%"]} className="text-sm">
-                <TableBody>
-                    <RepLink ori rep={rep} tag={'ThkmsInstrument'} subrid={subrid} redId={redId}>
-                        <TableRow className="border border-gray-700">
-                            <CCell>仪器编号</CCell>
-                            <TableCell  className="border border-gray-700">
+            <CollapseFx printMode={printMode} subrid={subrid}>
+                <FlexibleTable  columnWidths={["9.9%","6.8%","37%","12.1%","4%","%"]} className="text-sm border-collapse">
+                    <TableBody>
+                        <RepLink ori rep={rep} tag={'CertificateSummary'}>
+                            {renderUpper}
+                        </RepLink>
+                        <RepLink ori rep={rep} tag={'ThkmsInstrument'} subrid={subrid} redId={redId}>
+                            <TableRow className="border border-gray-700">
+                                <CCell>仪器编号</CCell>
+                                <TableCell  className="border border-gray-700">
                                     <div>
-                                     {orc?.仪器编号 || '／'}
+                                        {orc?.仪器编号 || '／'}
                                     </div>
-                            </TableCell>
-                        </TableRow>
-                    </RepLink>
-                    <TableRow className="border border-gray-700">
-                        <TableCell colSpan={2} className="border border-gray-700">
-                            <RepLink ori rep={rep} tag={'BoilerDiagram'}>
-                              <div>
-                                {orc?.简图说明 &&
-                                    <span className="text-sm whitespace-pre-wrap">
+                                </TableCell>
+                            </TableRow>
+                        </RepLink>
+                        <TableRow className="border border-gray-700">
+                            <TableCell colSpan={2} className="border border-gray-700">
+                                <RepLink ori rep={rep} tag={'BoilerDiagram'}>
+                                    <div>
+                                        {orc?.简图说明 &&
+                                            <span className="text-sm whitespace-pre-wrap">
                                         {orc.简图说明 || '／'}
                                     </span>
-                                }
+                                        }
 
-                                {!(orc?._FILE_S简图?.length>0) && !orc?.简图说明 && <span className="block m-4 text-xl text-center">空的，进入上传吧</span>}
-                              </div>
-                            </RepLink>
-                            {orc?._FILE_S简图?.map(({name, url}: any, i: number) => {
-                                return <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
-                                    {i>0 && <hr/>}
-                                    <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/BoilerDiagram?#BoilerDiagram_pf${i}`}>
-                                        <div className="flex justify-around items-center my-0.5">
-                                            {url && (
-                                                <ImageComponent
-                                                    src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${url}`}
-                                                    alt={url || "图片"}
-                                                    className={cn(
-                                                        "w-auto h-auto",
-                                                        i>0 ? "print:max-h-[calc(100vh-2.5rem)]" : "print:max-h-[calc(100vh-5.9rem)]",
-                                                    )}
-                                                />
-                                            )}
-                                        </div>
-                                    </JumpTab>
-                                </div>
-                            }) }
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </FlexibleTable>
-            <FootMensLine cap='监检' href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}/>
+                                        {!(orc?._FILE_S简图?.length>0) && !orc?.简图说明 && <span className="block m-4 text-xl text-center">空的，进入上传吧</span>}
+                                    </div>
+                                </RepLink>
+                                {orc?._FILE_S简图?.map(({name, url}: any, i: number) => {
+                                    return <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
+                                        {i>0 && <hr/>}
+                                        <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/BoilerDiagram?#BoilerDiagram_pf${i}`}>
+                                            <div className="flex justify-around items-center my-0.5">
+                                                {url && (
+                                                    <ImageComponent
+                                                        src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${url}`}
+                                                        alt={url || "图片"}
+                                                        className={cn(
+                                                            "w-auto h-auto",
+                                                            i>0 ? "print:max-h-[calc(100vh-2.5rem)]" : "print:max-h-[calc(100vh-5.9rem)]",
+                                                        )}
+                                                    />
+                                                )}
+                                            </div>
+                                        </JumpTab>
+                                    </div>
+                                }) }
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </FlexibleTable>
+                <FootMensLine cap='监检' href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}/>
+            </CollapseFx>
         </PrintReserveLeast>
     </>)
 };
+
+
+export const config壁厚测仪 = [
+    [['设备名称', '设备名称'], ['设备编号', '设备编号']],
+    [['仪器型号', '仪器型号'], ['仪器编号', '仪器编号']],
+    [['仪器精度','仪器精度', 'mm'], ['耦合剂','耦合剂']],
+];
 
 //const itemA = ['仪器编号' ];
 /**保留 编辑常见的范式；

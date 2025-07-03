@@ -36,7 +36,7 @@ export default function Layout({children}: Readonly<{children: React.ReactNode}>
                     :
                     print? <>
                             {children}
-                            <ReportView rep={report}/>
+                            <ReportView rep={report} printMode/>
                         </>
                        :
                         <div className="flex h-screen print:h-auto">

@@ -2,7 +2,7 @@
 import * as React from "react"
 import {useSearchParams} from "next/navigation"
 import {useStorage} from "@/report/StorageContext";
-import {RepLink, ReportViewFxProps, RepTitleUpdate} from "@/report/common/base"
+import {RepLink, ReportEntryProps, ReportViewFxProps, RepTitleUpdate} from "@/report/common/base"
 import { 落款单位地址 } from "@/report/common/rarelyVary"
 import { 检验核准WaterJj } from "@/report/recreation/waterJj/rarelyVary"
 import {ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
@@ -18,12 +18,12 @@ import {BoilerDiagramVw} from "@/report/power/boilInstall/BoilerDiagram";
 import {注意事项GasC} from "@/report/gas/rarelyVary";
 import {首页设备概况BoilI} from "@/report/power/boilInstall/rarelyVary";
 import {ConclusionVw} from "@/report/industrial/Periodical/Conclusion";
-import {ThickMsVw} from "@/report/industrial/Periodical/ThickMs";
+import {ThickMsVw} from "@/report/cm/thickm/ThickMs1";
 import SubRep, {SingeSubRep} from "@/component/rep/sub-rep";
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
 * */
-export const ReportView = ({ rep }: any) => {
+export const ReportView = ({ rep,printMode }: ReportEntryProps) => {
     const searchParams = useSearchParams()
     const original = "1" === searchParams!.get("original")
     const { storage,parrepfs } = useStorage()
@@ -36,7 +36,7 @@ export const ReportView = ({ rep }: any) => {
         <div id="PHEAD" />
         { subrid ? <>
                 <RepTitleUpdate code={parrepfs?.eqpcod+"子报告的"} original={original} />
-                <Component source={storage} rep={rep} mapFxian={mapFxian} subrid={subrid}/>
+                <Component source={storage} rep={rep} mapFxian={mapFxian} subrid={subrid} printMode={printMode}/>
                 <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
                              pdf_job={pdf_job} single subrid={subrid}/>
             </>
@@ -44,7 +44,7 @@ export const ReportView = ({ rep }: any) => {
             <>
                 <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
                 <RepTitleUpdate code={storage?.eqpcod} original={original} />
-                <Component source={storage} rep={rep} mapFxian={mapFxian}/>
+                <Component source={storage} rep={rep} mapFxian={mapFxian} printMode={printMode}/>
                 <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
                              pdf_job={pdf_job} single/>
             </>
@@ -53,13 +53,14 @@ export const ReportView = ({ rep }: any) => {
     </>)
 }
 
-const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,subrid,mapFxian}) => {
+const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,subrid,mapFxian,printMode}) => {
     const { subrType } = useStorage()
     //走独立流转分项报告模式的情况： {subrType==='THICK_MS' && <ThickMsVw orc={orc} rep={rep} subrid={subrid}/>}
+    //【考虑】编排顺序上可能会插入其它的分项@，不然可以？：传递 ：组件名 ThickMsVw  '壁厚测定' THICK_MS 。HOOK 生成两个子页面render{single,[combined1,2,3]}= {[配置独立流转模板的相关数组]};
     if(subrType){
       return (
             <SingeSubRep rep={rep} subrid={subrid!}>
-               <ThickMsVw rep={rep} subrid={subrid} orc={null}/>
+               <ThickMsVw rep={rep} subrid={subrid}/>
             </SingeSubRep>
         )
     }
@@ -96,7 +97,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
                 {/*多个部分的多个子报告+主报告也可能存储的*/}
 
                 {mapFxian.get('壁厚测定')?.do && <SubRep modType="THICK_MS" rep={rep}>
-                    <ThickMsVw orc={orc} rep={rep} />
+                    <ThickMsVw orc={orc} rep={rep} printMode={printMode}/>
                 </SubRep>}
 
             </div>

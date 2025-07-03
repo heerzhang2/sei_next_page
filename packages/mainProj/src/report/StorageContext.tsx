@@ -23,6 +23,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [modified, setModified] = React.useState<boolean | undefined>();
     //可流转分项报告
     const [parrepfs, setParrepfs] = React.useState<any>({});
+    //不是独立流转的，其它情形（可重复分项的）就没有这个！
     const [subrType, setSubrType] = React.useState<string | undefined>();
     //复用app路由带来的【问题】流转分项与主报告的状态管理，交叉？。
     const value = {

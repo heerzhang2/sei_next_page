@@ -16,6 +16,7 @@ export function SingeSubRep({rep,subrid,children}: {
     const {storage, subrType: modType,  parrepfs } = useStorage()
     console.log("SingeSubRep 位置=storage=", storage)
     const localIdx = storage?.[`_${modType}`] ?? [];
+    //可以考虑：加上控制折叠显示的使能按钮，全部折叠上可折叠的区域。传递参数给children；
     return (
         <Suspense>
             <div className="not-print:my-4">

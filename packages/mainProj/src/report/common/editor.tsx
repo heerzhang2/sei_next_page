@@ -318,7 +318,7 @@ export interface RecheckEditorProps  extends ItemRecheckOmniRProps{
 /**复检的原始记录 需要自定义增加检验项目的情形：类似ItemRecheckOmniR；
  * @param setup  每个模板的setupItemAreaRoute检验项目配置构建函数  增加依赖项storage?._Oitems,  setup注入增加了orc；
  * */
-export const RecheckEditor = ({ children, show, alone = true, redId, nestMd, label, rep
+export const RecheckEditor = ({ children, show, label, rep
                                   ,config=config复检表 ,setup}: RecheckEditorProps) => {
     const searchParams = useSearchParams()
     const erItemNo =searchParams!.get("from")
