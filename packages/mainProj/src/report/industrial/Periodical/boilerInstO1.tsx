@@ -45,12 +45,10 @@ const recordPrintList =[
     createItem('CertMemo', <CertMemo label={'证书-说明'} />),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
     createItem('BoilerDiagram', <BoilerDiagram label="1.2锅炉结构简图"/>),
-
-    // createItem('_Controller',  <></>),
-    //thickm 侧壁厚部分： 没有独立流转子报告的版本号，依附于主报告。
+    //侧壁厚： 没有独立流转子报告的版本号，依附于主报告。
     aggregateProj('壁厚测定', 'THICK_MS', [
         createItem('ThkmsInstrument', <DeviceSurveyFx config={config壁厚测仪} label={'壁厚测定-概要仪器'}/>),
-        createItem('ThkmsInstrument2', <ThkmsInstrument label={'壁厚测定-概要仪器'}/>),
+        createItem('ThkmsPartSummary', <PartSummary/>),
         createItem('ThkmsCertMemo', <CertMemo label={'壁厚测定ThkmsThkms-说明'} />),
     ]),
     aggregateProj('渗透检测', 'PERME_TS', [
