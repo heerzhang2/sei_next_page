@@ -4,7 +4,18 @@ import {Card, CardContent, CardFooter} from "@/components/ui";
 import {ProjectListFormField} from "@/component/project-list-form";
 import {useCallback, useState} from "react";
 import {useFrameEditorBar} from "@/report/hook/useFormFramework";
-import {useRouter, useSearchParams} from "next/navigation";
+import {usePathname, useRouter, useSearchParams} from "next/navigation";
+
+const suffixToRemove = "_Controller";
+export const findNodeIndex = <T extends { node: { id: string } }>(
+    arr: T[],
+    targetId: string
+): number => {
+    return arr.findIndex(item => {
+        const node = item.node;
+        return node && node.id === targetId;
+    });
+};
 
 /**可重复的分项控制：
  * 特殊路由 的 当前分项报告的各个分项在子报告 控制
@@ -15,7 +26,7 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
     const router = useRouter()
     const searchParams = useSearchParams()
     const currentRedId = searchParams.get("redId") || "0"
-    const { storage,  } = useStorage()
+    const { storage, subrType, parrepfs, } = useStorage()
     const [oldvalue, ] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
     const [formData, setFormData] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
     const renderProjectTitle = (index: number) => {
@@ -36,13 +47,35 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
         const key =`_${modelkey}_${pid}`
         return storage?.[key]===undefined
     }, [modelkey,storage])
+    //编辑器上下文的： 若属于可独立流转的必然是有subrType subrid，普通的可重复分项目必定归属主报告上下文。
+    //当前可流转分项目的存储：主报告，多个可流转分项报告；
+    const localIdx =(subrType? parrepfs : storage)?.[`_${modelkey}`] ?? [];
+    //同一种子报告的相对排序位置：
+    const subrepidx = React.useMemo(() => {
+        if(subrid){
+            const flsReps =rep?.isp?.reps?.edges?.filter(({node: srep}: any) => {
+                return srep?.modeltype===modelkey
+            })
+            const ifind = findNodeIndex(flsReps, subrid);
+            //可流转分项报告：独立子报告单独显示的？定位
+            // const storageIds =(subrType? storage : parrepfs)?.[`_${modelkey}`] ?? [];
+            console.log("等待匹配的ID列表: 当前可流转分项ifind=", ifind);
+            return ifind ?? undefined
+        }
+        else
+            return 0;   //本地的分项不管有没有id都要加前缀1； localIdx?.length>0 ? 0: undefined;
+    }, [subrid, modelkey, rep])
+    const pathname = usePathname()
+    //替换掉URL的action==='_Controller'部分；原本是router.push(`?${params.toString()}`)
     const switchRedId = (newRedId: number) => {
+        const newUrlp = pathname.slice(0, -suffixToRemove.length)
         const params = new URLSearchParams(searchParams.toString())
         params.set("redId", String(newRedId))
-        params.set("original", "1") // 保持其他参数
-        router.push(`?${params.toString()}`)
+        //params.set("original", "1")       router.push(`?${params.toString()}`)
+        const hash=`_${modelkey}${subrepidx!>=0? '_'+(subrepidx!+1) : ''}-${newRedId}`
+        router.push(newUrlp+`?${params.toString()}#${hash}`)
     }
-    //http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/_Controller?modelkey=THICK_MS
+    //http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1?modelkey=THICK_MS&redId=0&original=1
     //http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ThkmsInstrument?original=1&redId=0#ThkmsInstrument
     const onProjectClick= useCallback((index: number) => {
         switchRedId(index)

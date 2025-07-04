@@ -141,7 +141,7 @@ interface ThickMsVwProps{
     subrid?: string;
     //分项报告里面的可重复分项的编号。
     redId?: number;
-    //可重复分项目的附加后缀：
+    //可重复分项目的附加后缀： 【定位】hash页面路由使用的，确保主报告中唯一性。
     apxid?: string;
     //避免pdf书签太多：
     useh2?: boolean;
@@ -153,11 +153,11 @@ export const ThickMsVw= ({orc, rep, title='壁厚测定报告',subrid,redId,parO
 ) => {
     const TComponent=useh2? "h2":"div"
     const renderUpper=usePrefixDataTable({config: config壁厚测仪, orc, rep, slash:true});
-
+        //{title}这里不加上id； id需上一层的div统一做添加的。
     return (<>
         <PrintReserveLeast reserve="6rem"
                            title={<>
-                               <TComponent id={"BoilerDiagram"+apxid} className="text-2xl text-center mt-4">{title}
+                               <TComponent className="text-2xl text-center mt-4">{title}
                                    <span className="text-base">{apxid}</span>
                                </TComponent>
                                <div className="flex justify-between">
@@ -168,7 +168,7 @@ export const ThickMsVw= ({orc, rep, title='壁厚测定报告',subrid,redId,parO
             <CollapseFx printMode={printMode} subrid={subrid}>
                 <FlexibleTable  columnWidths={["9.9%","6.8%","37%","12.1%","4%","%"]} className="text-sm border-collapse">
                     <TableBody>
-                        <RepLink ori rep={rep} tag={'CertificateSummary'}>
+                        <RepLink ori rep={rep} tag={'ThkmsInstrument'} subrid={subrid} redId={redId}>
                             {renderUpper}
                         </RepLink>
                         <RepLink ori rep={rep} tag={'ThkmsInstrument'} subrid={subrid} redId={redId}>

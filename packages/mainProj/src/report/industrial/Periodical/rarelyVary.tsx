@@ -22,7 +22,7 @@ export const 首页设备概况BoilI= (orc:any, rep:any, original?:boolean
 * */
 export const titleRenders ={
   "THICK_MS": (store: any,index: number) => {
-    const firstTag=store?.['_THICK_MS_'+index]?.['仪器编号'] ?? `编号是${index}的`
+    const firstTag=store?.['_THICK_MS_'+index]?.['设备名称'] ?? ``
     return <> { `[${firstTag}] `}
     </>;
   }

@@ -4,6 +4,7 @@ import {useStorage} from "@/report/StorageContext";
 import {ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
 import {JumpTab} from "@/report/common/JumpTab";
 import {落款单位地址} from "@/report/common/rarelyVary";
+import {findNodeIndex} from "@/report/hook/useSubRepController";
 
 /**单独一份的独立流转分项报告;
  * 打印也没考虑：单独去打印可独立流转的分项报告的。
@@ -16,6 +17,14 @@ export function SingeSubRep({rep,subrid,children}: {
     const {storage, subrType: modType,  parrepfs } = useStorage()
     console.log("SingeSubRep 位置=storage=", storage)
     const localIdx = storage?.[`_${modType}`] ?? [];
+    //同一种子报告的相对排序位置：
+    const subrepidx = React.useMemo(() => {
+        const flsReps =rep?.isp?.reps?.edges?.filter(({node: srep}: any) => {
+            return srep?.modeltype===modType
+        })
+        const ifind = findNodeIndex(flsReps, subrid);
+        return ifind ?? 0
+    }, [subrid, modType, rep])
     //可以考虑：加上控制折叠显示的使能按钮，全部折叠上可折叠的区域。传递参数给children；
     return (
         <Suspense>
@@ -34,7 +43,8 @@ export function SingeSubRep({rep,subrid,children}: {
                 </div>
                 {localIdx.map((seq: number, k: number) => {
                     const subStore=storage?.[`_${modType}_${seq}`];
-                    return (<div key={k}>
+                    const hash="_"+modType+"_"+(subrepidx+1)+"-"+seq;
+                    return (<div key={k} id={hash}>
                         {React.cloneElement(children, {
                             redId: seq,
                             key: k,
@@ -77,14 +87,19 @@ export default function SubRep({
             }
             {localIdx.map((seq: number, k: number) => {
                 const subStore=storage?.[`_${modType}_${seq}`];
+                //区分若没有任一个独立流转分项的情况：
                 const head=subreps.length > 0? '1' : '';
-                return (<div key={k}>
+                const apxid=head+`-${k+1}`;
+                const hash="_"+modType+"_1-"+seq;       //本地id固定都有_1的；
+                return (<div key={k} id={hash}>
                         {React.cloneElement(children, {
+                            //存储用的标签。
                             redId: seq,
                             key: k,
                             orc: subStore,
                             parOrc: storage,
-                            apxid:  head+`-${seq}`,
+                            //页面路由定位+报告排序序号：id={"_THICK_MS_"+apxid}
+                            apxid,
                             useh2: k===0,
                         })}
                 </div>)
@@ -98,18 +113,21 @@ export default function SubRep({
                     </JumpTab>
                     {sIdx.map((seq: number, k: number) => {
                         const subStore=dat?.[`_${modType}_${seq}`];
+                        //独立流转分项：前缀基数都要显示出，不管是否只有唯一一个的。
                         const ihead=localIdx?.length > 0? i+2 : i+1;
-                        return (
-                            React.cloneElement(children, {
+                        const apxid=ihead+`-${k+1}`;
+                        const hash="_"+modType+"_"+ihead+"-"+seq;
+                        return (<div key={k} id={hash}>
+                            {React.cloneElement(children, {
                                 redId: seq,
                                 subrid: subrep?.id,
                                 key: i+"_"+k,
                                 orc: subStore,
                                 parOrc: storage,
-                                apxid:  ihead+`-${seq}`,
+                                apxid,
                                 useh2: k===0,
-                            })
-                        )
+                            })}
+                        </div>)
                     })}
                 </div>)
             })}
