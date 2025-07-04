@@ -19,7 +19,10 @@ export interface ProjectListEditorProps extends ProjectListEditorOptions {
     showAddButton?: boolean
     showClearButton?: boolean
     dragEnabled?: boolean
+    //改成需要强制确认的情形：不需要disabled={!canDelete(projectIndex)}，两步骤确认法。
     canDeleteItem?: (index: number) => boolean
+    //删除的关联操作
+    onDeleteItem?: (index: number) => void
 }
 export interface ProjectListFormFieldProps extends Omit<ProjectListEditorProps, "initialIndexes"> {
     value?: number[]
@@ -46,7 +49,8 @@ export const ProjectListFormField = ({
                  showAddButton = true,
                  showClearButton = false,
                  canDeleteItem,
-                 id
+                 id,
+                 onDeleteItem,
    }: ProjectListFormFieldProps) => {
 
     const [projectIndexes, setProjectIndexes] = useState<number[]>(value)
@@ -73,7 +77,12 @@ export const ProjectListFormField = ({
 
     // 删除项目
     const removeProject = useCallback((index: number) => {
-        setProjectIndexes((prev) => prev.filter((item) => item !== index))
+        if (canDelete(index)
+            || window.confirm('确定要从列表中移除此分项吗？保存后此操作就无法撤销。'))
+        {
+            onDeleteItem?.(index);
+            setProjectIndexes((prev) => prev.filter((item) => item !== index))
+        }
     }, [])
 
     // 上移项目
@@ -110,6 +119,7 @@ export const ProjectListFormField = ({
     // 清空所有项目
     const clearAll = useCallback(() => {
         setProjectIndexes([])
+        //onDeleteItem?(?)
     }, [])
 
     // 检查是否可以上移
@@ -244,7 +254,7 @@ export const ProjectListFormField = ({
                                     {/* 删除按钮 */}
                                     <Button
                                         variant="ghost"
-                                        size="sm" disabled={!canDelete(projectIndex)}
+                                        size="sm"
                                         onClick={() => removeProject(projectIndex)}
                                         className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                                     >

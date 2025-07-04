@@ -104,7 +104,8 @@ export const DeviceSurveyFx = ({ children, show, label, config, itemA, rep,subri
     //分项目：modType有的，但是subrType却不一定有的： 处于独立流转分项编辑才有的。
     const { storage, subrType, parrepfs } = useStorage()
     if(!modType || redId===undefined)    throw new Error(`可重复分项才能用`);
-    const subStore=storage?.[`_${modType}_${redId}`];           //有可能可独立流转子报告的
+    //【必然的前提】可重复分项都必须是对象类型。
+    const subStore=storage?.[`_${modType}_${redId}`] || {};           //有可能可独立流转子报告的
     // 创建动态 schema
     const fullSchema = React.useMemo(() => {
         const schemaFields = {} as any

@@ -50,11 +50,14 @@ export function SingeSubRep({rep,subrid,children}: {
                             key: k,
                             orc: subStore,
                             parOrc: parrepfs,
-                            apxid: `-${seq}`,
+                            apxid: `-${k+1}`,
                             useh2: k===0,
                         })}
                     </div>)
                 })}
+                {localIdx.length<=0 &&
+                    <div className="text-center mt-8 text-xl">此分项报告，还未有任何内容</div>
+                }
             </div>
         </Suspense>
     )
@@ -129,6 +132,9 @@ export default function SubRep({
                             })}
                         </div>)
                     })}
+                    {sIdx.length<=0 &&
+                        <div className="text-center mt-8 text-xl">此分项报告，还未有任何内容</div>
+                    }
                 </div>)
             })}
         </Suspense>

@@ -5,6 +5,7 @@ import {ProjectListFormField} from "@/component/project-list-form";
 import {useCallback, useState} from "react";
 import {useFrameEditorBar} from "@/report/hook/useFormFramework";
 import {usePathname, useRouter, useSearchParams} from "next/navigation";
+import {undefined} from "zod";
 
 const suffixToRemove = "_Controller";
 export const findNodeIndex = <T extends { node: { id: string } }>(
@@ -26,7 +27,7 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
     const router = useRouter()
     const searchParams = useSearchParams()
     const currentRedId = searchParams.get("redId") || "0"
-    const { storage, subrType, parrepfs, } = useStorage()
+    const { storage,setStorage, subrType, parrepfs,setModified } = useStorage()
     const [oldvalue, ] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
     const [formData, setFormData] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
     const renderProjectTitle = (index: number) => {
@@ -45,7 +46,8 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
     }
     const canDeleteItem = useCallback((pid: number) => {
         const key =`_${modelkey}_${pid}`
-        return storage?.[key]===undefined
+        //不能用return (storage?.[key] === undefined)
+        return (! storage?.[key] )
     }, [modelkey,storage])
     //编辑器上下文的： 若属于可独立流转的必然是有subrType subrid，普通的可重复分项目必定归属主报告上下文。
     //当前可流转分项目的存储：主报告，多个可流转分项报告；
@@ -75,12 +77,17 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
         const hash=`_${modelkey}${subrepidx!>=0? '_'+(subrepidx!+1) : ''}-${newRedId}`
         router.push(newUrlp+`?${params.toString()}#${hash}`)
     }
-    //http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1?modelkey=THICK_MS&redId=0&original=1
-    //http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ThkmsInstrument?original=1&redId=0#ThkmsInstrument
     const onProjectClick= useCallback((index: number) => {
         switchRedId(index)
     }, [modelkey,storage])
-
+    const onSubProjDelete= useCallback((index: number) => {
+        const key =`_${modelkey}_${index}`
+        setStorage((prevStorage :any) => ({
+            ...prevStorage,
+            [key]: undefined,
+        }))
+        setModified(true)
+    }, [modelkey,storage])
     const [render] = useFrameEditorBar({root:true, rep, values: { ['_'+modelkey]: formData.projectId }, onReset,subrid})
     const view=(
         <div className="my-auto content-center"  style={{ height: `calc(100vh - 6rem)` }}>
@@ -89,6 +96,7 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
                     <ProjectListFormField  renderTitle={renderProjectTitle}
                            value={formData.projectId}  onChange={onItemChanged}
                            canDeleteItem={canDeleteItem} onProjectClick={onProjectClick}
+                           onDeleteItem={onSubProjDelete}
                     />
                 </CardContent>
                 <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2 mb-8">
