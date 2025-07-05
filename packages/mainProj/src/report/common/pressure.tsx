@@ -8,12 +8,10 @@ export type PressureLayout = {
     do: boolean;
     ml?: string;        //目录上的显示文字
     ha: string;      //URL路由定位
-
     //用户编辑设置：
     page?: string;
     //打印的顺序？
     //是否新开一个页来打印。
-
     //动态的数据: push(Node) 排序打印
     //renderDom: any;
 };

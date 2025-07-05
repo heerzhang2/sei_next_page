@@ -17,15 +17,7 @@ export default function Layout({children}: Readonly<{children: React.ReactNode}>
     const print = "1"===searchParams!.get("print")
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
     const {getReport: report} = result?.data;
-    const subrid = searchParams!.get("subrid")
-    const subrepType = React.useMemo(() => {
-        if(!subrid) return null;
-        const reps =report?.isp?.reps?.edges?.filter(({node}: any) => {
-            return node?.id===subrid
-        })
-        return reps[0]?.node?.modeltype
-    }, [subrid, report])
-    const catItems=useCatalog(subrepType)
+    const catItems=useCatalog()
     return (
         <EditControlProvider>
             <PageSectionOrientation>

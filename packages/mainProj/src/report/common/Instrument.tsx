@@ -27,7 +27,7 @@ const config仪器表=[['测量设备名称','n',140],['规格型号','t',120],[
 ] as Each_ZdSetting[];
 /**可复用的： 仪器表录入页面的
  * */
-export const ItemInstrumentTable = ({ children, show, alone = true, redId, nestMd, label, rep}: InternalItemProps) => {
+export const ItemInstrumentTable = ({children, show, label, rep}: InternalItemProps) => {
     const {storage,setStorage,modified,setModified} =useStorage();
     const schema = React.useMemo(() => {
         const schemaFields = {} as any

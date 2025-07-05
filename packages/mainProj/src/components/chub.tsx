@@ -149,7 +149,7 @@ export function CollapsibleFormSection({
                 titleClassName,
             )}
             aria-expanded={isOpen}
-            aria-controls={`content-${title.replace(/\s+/g, "-").toLowerCase()}`}
+            aria-controls={`content-${title?.replace(/\s+/g, "-").toLowerCase()}`}
         >
           <span>{title}</span>
           {isOpen ? (
@@ -159,7 +159,7 @@ export function CollapsibleFormSection({
           )}
         </button>
         <div
-            id={`content-${title.replace(/\s+/g, "-").toLowerCase()}`}
+            id={`content-${title?.replace(/\s+/g, "-").toLowerCase()}`}
             className={cn(
                 "transition-all duration-300 ease-in-out",
                 isOpen ? "opacity-100" : "max-h-0 opacity-0",

@@ -16,5 +16,5 @@ export default function Page() {
     }, [params])
     const [result] = useQuery({ query: ReportQuery, variables: { id: params?.repId } });
     const {getReport: report} = result?.data;
-    return <OriginalView action={action!} verId={'1'} repId={params?.repId as string} rep={report}/>
+    return <OriginalView action={action!} verId={'1'} rep={report}/>
 }

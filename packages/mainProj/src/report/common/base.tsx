@@ -1,8 +1,6 @@
 import * as React from "react";
 import {CCell, } from "@/components/flexible-table";
 import { Dispatch, SetStateAction } from "react";
-import { MutableRefObject } from "react";
-import {DirectLink} from "../../routing/Link";
 import {gql, } from '@urql/next';
 import {JumpTab} from "@/report/common/JumpTab";
 import {PressureLayout} from "@/report/common/pressure";
@@ -24,28 +22,20 @@ export interface InternalItemProps{
     children?: React.ReactNode
     //报告ID号；以及verId： 正常需直接用rep?.; 可独立流转分项报告的模板例外
     // repId?: string;
-
     verId?: string;
     //可重复加的报告实例id
     redId?: number;
-    //嵌入分项报告的模板号,
-
-    // nestMd?: string;
-    // refWidth?: number;
     // alone?: boolean;
-
-    // ref?: any;
     subrid?: string;
 }
 
 
 //动态载入的类似原始记录编辑区域模板组件, 所有参数都必须？可选的，否则报错。#若要打印原始记录需求的？：可能需要单独组织类似报告printView专门打印的组件来组织编辑器汇总输出。
 export interface OriginalViewProps {
-    repId?: string;
     //提取编辑区需要的一部分source{data + snapshot};编辑保存后inp赋值给了data{}；
-    inp?: any;
+    // inp?: any;
     //编辑器各个区块的汇总回流数据用到的，只有ALL printAll才有用的。
-    ref?: any;
+    // ref?: any;
     verId: string;
     /**扩展数据Query获得; 若是编辑器复制字段的是快照语义的保存时刻取值固定到data{}。若是纯粹正是报告集成动态信息的就是最新后端获取值会随着时间更新的。
      * 关联的检验信息 relay对象
@@ -60,12 +50,12 @@ export interface OriginalViewProps {
 
 //报告ReportStarter会在框架的两个地方引用作为入口的：1：打印预览正式报告的全屏模式(全部显示要给打印准备)；2：作为嵌入式列表导航目的的在编辑器左边页面显示的(可折叠可点击展开的)。
 export interface ReportViewProps {
-    repId?: string;
+    // repId?: string;
     //本报告(主报告不包含独立流转分项的)的data + 主报告给出的snapshot合并对象。 snapshot是不信任前端编辑人员的后端给出字段快照对象=基础信息赋值。
     source: any;
     //printing?: boolean;
     //该参数没必要啊, 组件框架带?编辑器各个区块的汇总回流数据用到的，只有ALL printAll才有用的。
-    ref?: any;
+    // ref?: any;
     //主报告模板版本，或者当前分项报告模板版本、
     verId?: string;
     /**扩展数据获取，从路由器relay Query获得。独立流转分项+内嵌分项或主报告都可能需要提取额外的字段？。
@@ -74,10 +64,11 @@ export interface ReportViewProps {
      * */
     rep?: any;
     //可重复加的报告实例id，分项报告需要。嵌入式需要在正式报告显示上分项组件区分可重复的子报告。
-    redId?: string;
+    // redId?: string;
     //嵌入式和独立流转并存的，或独立流转的出现多个同种模板的。需要重新定位序号。默认=0
-    fxIdx?: number;
+    // fxIdx?: number;
 }
+
 export interface ReportEntryProps {
     rep: any;
     //打印预览模式的：
@@ -88,6 +79,28 @@ export interface ReportViewFxProps extends ReportViewProps{
     subrid?: string;
     printMode?: boolean;
 }
+/**支持可独立流转分项报告
+ * */
+export interface RepVwProps{
+    //主报告实例
+    rep: any;
+    //分项情况的：直接使用当前分项项目专属存储做法。分离开其它的同类可重复分项
+    orc?: any;
+    //假如orc不是主报告整体存储的情形下，提供主报告存储数据。
+    parOrc?: any;
+    title?: string;
+    children?: React.ReactNode
+    //分项报告id
+    subrid?: string;
+    //分项报告里面的可重复分项的编号。
+    redId?: number;
+    //可重复分项目的附加后缀： 【定位】hash页面路由使用的，确保主报告中唯一性。
+    apxid?: string;
+    //避免pdf书签太多：
+    useh2?: boolean;
+    printMode?: boolean;
+}
+
 
 export const OriginalDataMutation =gql`
     mutation useOriginalDataMutation(

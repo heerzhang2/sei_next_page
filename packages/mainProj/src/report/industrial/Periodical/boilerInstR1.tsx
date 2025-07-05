@@ -111,8 +111,8 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
 }
 
 //原始记录的导航该放在后面：
-export function useCatalog(mod: string) {
-    const {storage} = useStorage()
+export function useCatalog() {
+    const {storage, subrType: mod} = useStorage()
     const [mapFxian]=useItemsMapPressure({projects: storage.Projects});
     const head=[{title: "页面头部", url: "#PHEAD"},
         {title: "页面尾巴", url: "#PTAIL"}]

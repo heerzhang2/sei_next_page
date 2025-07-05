@@ -26,8 +26,8 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
 ) {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const currentRedId = searchParams.get("redId") || "0"
-    const { storage,setStorage, subrType, parrepfs,setModified } = useStorage()
+    // const currentRedId = searchParams.get("redId") || "0"
+    const { storage,setStorage, setModified } = useStorage()
     const [oldvalue, ] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
     const [formData, setFormData] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
     const renderProjectTitle = (index: number) => {
@@ -51,7 +51,7 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
     }, [modelkey,storage])
     //编辑器上下文的： 若属于可独立流转的必然是有subrType subrid，普通的可重复分项目必定归属主报告上下文。
     //当前可流转分项目的存储：主报告，多个可流转分项报告；
-    const localIdx =(subrType? parrepfs : storage)?.[`_${modelkey}`] ?? [];
+    // const localIdx =(subrType? parrepfs : storage)?.[`_${modelkey}`] ?? [];
     //同一种子报告的相对排序位置：
     const subrepidx = React.useMemo(() => {
         if(subrid){
@@ -106,5 +106,5 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
             </Card>
         </div>
     );
-  return { view };
+    return { view };
 }

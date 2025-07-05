@@ -9,7 +9,7 @@ import {Explanatory} from "@/report/power/boilInstall/Explanatory";
 import {ConclusionBoiler} from "@/report/power/boilInstall/Conclusion";
 import {CertMemo} from "@/report/power/boilInstall/CertMemo";
 import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
-import {config壁厚测仪, ThkmsInstrument} from "@/report/cm/thickm/ThickMs1";
+import {config壁厚测仪, ThkmsInstrument, TkmsPartSummary} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 
 
@@ -45,10 +45,10 @@ const recordPrintList =[
     createItem('CertMemo', <CertMemo label={'证书-说明'} />),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
     createItem('BoilerDiagram', <BoilerDiagram label="1.2锅炉结构简图"/>),
-    //侧壁厚： 没有独立流转子报告的版本号，依附于主报告。
+    //侧壁厚： 没有独立流转子报告的版本号，依附于主报告。 确保名称与 Projects记录 中的一致；
     aggregateProj('壁厚测定', 'THICK_MS', [
-        createItem('ThkmsInstrument', <DeviceSurveyFx config={config壁厚测仪} label={'壁厚测定-概要仪器'}/>),
-        createItem('ThkmsPartSummary', <PartSummary/>),
+        createItem('ThkmsInstrument', <DeviceSurveyFx config={config壁厚测仪} label='壁厚测定-概要仪器'/>),
+        createItem('TkmsPartSummary', <TkmsPartSummary label='壁厚各部位测点和最小壁厚'/>),
         createItem('ThkmsCertMemo', <CertMemo label={'壁厚测定ThkmsThkms-说明'} />),
     ]),
     aggregateProj('渗透检测', 'PERME_TS', [
@@ -59,7 +59,7 @@ const recordPrintList =[
 ];
 
 
-export const OriginalView=({ action, verId, rep}:OriginalViewProps)=>{
+export const OriginalView=({action, verId, rep}:OriginalViewProps)=>{
     const {list}=useRecordListSubr(rep,recordPrintList,action,verId,titleRenders);
     return <>
           {list}

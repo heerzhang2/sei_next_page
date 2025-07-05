@@ -14,8 +14,8 @@ export function SingeSubRep({rep,subrid,children}: {
     subrid: string,
     children:  any
 }) {
-    const {storage, subrType: modType,  parrepfs } = useStorage()
-    console.log("SingeSubRep 位置=storage=", storage)
+    const {storage, subrType: modType, parrepfs } = useStorage()
+    // console.log("SingeSubRep 位置=storage=", storage)
     const localIdx = storage?.[`_${modType}`] ?? [];
     //同一种子报告的相对排序位置：
     const subrepidx = React.useMemo(() => {

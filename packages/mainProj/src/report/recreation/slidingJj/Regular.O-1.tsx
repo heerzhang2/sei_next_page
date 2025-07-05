@@ -61,8 +61,7 @@ const recordPrintList =[
 ];
 if(process.env.NEXT_PUBLIC_APP_TEST==='true')  recordPrintList.splice(0,0,createItem('GenCode', <GenCode type='CmnTowerCrane' frameMod={defFrameM} defTitle={defaultTitle}/>));
 
-//repId传递无效： 实际最后还用rep动态克隆配置的。
-export const OriginalView=({ action,  verId, repId='', rep}:OriginalViewProps)=>{
+export const OriginalView=({action, verId, rep}:OriginalViewProps)=>{
     const {storage, setStorage} =useStorage();
     // console.log("OriginalViewaction=", action);
     const recordPrintListNow =React.useMemo(() => {
@@ -80,7 +79,7 @@ export const OriginalView=({ action,  verId, repId='', rep}:OriginalViewProps)=>
             let moreItems = [] as any;
             itemConfigs.forEach((area, x) => {
               seq += 1;
-              const rowHead =<ActionMapItem key={seq} repId={repId} alone={false} editAreasConf={itemConfigs}
+              const rowHead =<ActionMapItem key={seq} repId={rep?.id} alone={false} editAreasConf={itemConfigs}
                                                     index={x} sureD editIts={config记录} />;
               moreItems.push(createItem(area.tag, rowHead));
             });
@@ -91,7 +90,7 @@ export const OriginalView=({ action,  verId, repId='', rep}:OriginalViewProps)=>
       }
       routeAreas=routeAreas.concat(recordPrintList.slice(prevpos));
       return routeAreas;
-    }, [verId, repId,rep, storage?._Oitems]);
+    }, [verId, rep, storage?._Oitems]);
 
     const {list}=useRecordList(rep,recordPrintListNow,action,verId);
     return <React.Fragment>
