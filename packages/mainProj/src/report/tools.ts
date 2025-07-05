@@ -140,4 +140,9 @@ export function findMaxByField(arr:any[], field:string) {
     return (Number(obj[field]) > max) ? Number(obj[field]) : max;
   }, -Infinity);      // 使用 -Infinity 作为初始值，确保任何数字都会大于它
 }
-
+/**将数组按指定数量分组
+ * */
+export const groupArray = (arr: any[], size: number) =>
+    Array.from({length: Math.ceil(arr.length / size)}, (_, i) =>
+        arr.slice(i * size, i * size + size)
+);

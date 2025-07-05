@@ -9,8 +9,15 @@ import {Explanatory} from "@/report/power/boilInstall/Explanatory";
 import {ConclusionBoiler} from "@/report/power/boilInstall/Conclusion";
 import {CertMemo} from "@/report/power/boilInstall/CertMemo";
 import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
-import {config壁厚测仪, ThkmsInstrument, TkmsPartSummary} from "@/report/cm/thickm/ThickMs1";
+import {
+    config壁厚测仪,
+    ThkmsInstrument,
+    TkmsConclusion,
+    TkmsMeasurement,
+    TkmsPartSummary
+} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
+import {FxDiagram} from "@/report/cm/thickm/FxDiagram";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -49,7 +56,10 @@ const recordPrintList =[
     aggregateProj('壁厚测定', 'THICK_MS', [
         createItem('ThkmsInstrument', <DeviceSurveyFx config={config壁厚测仪} label='壁厚测定-概要仪器'/>),
         createItem('TkmsPartSummary', <TkmsPartSummary label='壁厚各部位测点和最小壁厚'/>),
-        createItem('ThkmsCertMemo', <CertMemo label={'壁厚测定ThkmsThkms-说明'} />),
+        createItem('TkmsDiagram', <FxDiagram label="测厚点位置示图" pic='_FILE_S部位' memo='点图说明' maxFile={3}/>),
+        createItem('TkmsMeasurement', <TkmsMeasurement label='测厚表'/>),
+
+        createItem('TkmsConclusion', <TkmsConclusion label={'壁厚测定ThkmsThkms-说明'} />),
     ]),
     aggregateProj('渗透检测', 'PERME_TS', [
         createItem('PERME_TSInstrument', <ThkmsInstrument label={'渗透检测-概要仪器'}/>),

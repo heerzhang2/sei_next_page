@@ -14,6 +14,7 @@ interface JumpTabProps extends React.HTMLAttributes<HTMLElement> {
 }
 /**替代DirectLink：报告编辑器的Context底下的，附带Tabs跳转能力； div span :被替换为<a>; 剥离一层嵌套标签的;
  * 类似上一代的 JumpOrgTag
+ * 【限制】遇到是table的必须放在tr的上一层，不能直接放在table那一层的。
  */
 export const JumpTab: React.FunctionComponent<JumpTabProps> = (props: JumpTabProps) => {
     const router = useRouter()

@@ -27,6 +27,8 @@ export interface InternalItemProps{
     redId?: number;
     // alone?: boolean;
     subrid?: string;
+    //独立流转可重复分项
+    modType?: string;
 }
 
 
