@@ -12,7 +12,6 @@ import {JumpTab} from "@/report/common/JumpTab";
 import {FootMensLine} from "@/report/common/view";
 import {ImageComponent} from "@/components/shub";
 import {cn} from "@/lib/utils";
-import {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 /*上传图+说明;
 * */
@@ -27,7 +26,7 @@ interface FxDiagramProps  extends InternalItemProps{
 //     _FILE_S简图?: string
 // }
 //锅炉简图
-export const itemA简图=['简图说明','_FILE_S简图',];
+// export const itemA简图=['简图说明','_FILE_S简图',];
 /**保留 编辑常见的范式；
  * 复杂的表单的确不采用useForm真不方便，编辑器简单的还可以对付。
  * */
@@ -95,7 +94,7 @@ export const FxDiagram =
                                                 说明：
                                             </Label>
                                             <Textarea
-                                                rows={20}
+                                                className="min-h-[8rem] resize-y"
                                                 id="memojt"
                                                 value={editForm?.[memo]}
                                                 onChange={(e) => updateFormField(memo, e.target.value)}
@@ -107,7 +106,7 @@ export const FxDiagram =
                                 </CardContent>
                             </Card>
                             {/* 新增按钮和表单 */}
-                            锅炉简图：
+                            {label}的图：
                             {uploadDom}
                             {children}
                         </div>
@@ -121,15 +120,16 @@ export const FxDiagram =
     )
 }
 
-interface BoilerDiagramVwProps{
+interface FxDiagramVwProps{
     orc: any;
     rep: any;
     title?: string;
     children?: React.ReactNode
 }
-/**锅炉结构简图
+/**还未用？
+ * 简图 ，可复用性？
  * */
-export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', children}: BoilerDiagramVwProps
+export const FxDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', children}: FxDiagramVwProps
 ) => {
     return (<>
         <PrintReserveLeast reserve="6rem"

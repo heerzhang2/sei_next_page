@@ -9,13 +9,7 @@ import {Explanatory} from "@/report/power/boilInstall/Explanatory";
 import {ConclusionBoiler} from "@/report/power/boilInstall/Conclusion";
 import {CertMemo} from "@/report/power/boilInstall/CertMemo";
 import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
-import {
-    config壁厚测仪,
-    ThkmsInstrument,
-    TkmsConclusion,
-    TkmsMeasurement,
-    TkmsPartSummary
-} from "@/report/cm/thickm/ThickMs1";
+import {config壁厚测仪, TkmsConclusion, TkmsMeasurement, TkmsPartSummary} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 import {FxDiagram} from "@/report/cm/thickm/FxDiagram";
 
@@ -51,21 +45,20 @@ const recordPrintList =[
     createItem('CertificateSummary', <DeviceSurveyD config={config证书概要} label={'证书的设备概况部分'}/>),
     createItem('CertMemo', <CertMemo label={'证书-说明'} />),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
-    createItem('BoilerDiagram', <BoilerDiagram label="1.2锅炉结构简图"/>),
+    createItem('BoilerDiagram', <BoilerDiagram label="xxx锅炉结构简图"/>),
     //侧壁厚： 没有独立流转子报告的版本号，依附于主报告。 确保名称与 Projects记录 中的一致；
     aggregateProj('壁厚测定', 'THICK_MS', [
-        createItem('ThkmsInstrument', <DeviceSurveyFx config={config壁厚测仪} label='壁厚测定-概要仪器'/>),
+        createItem('TkmsInstrument', <DeviceSurveyFx config={config壁厚测仪} label='壁厚测定-概要仪器'/>),
         createItem('TkmsPartSummary', <TkmsPartSummary label='壁厚各部位测点和最小壁厚'/>),
         createItem('TkmsDiagram', <FxDiagram label="测厚点位置示图" pic='_FILE_S部位' memo='点图说明' maxFile={3}/>),
         createItem('TkmsMeasurement', <TkmsMeasurement label='测厚表'/>),
-
-        createItem('TkmsConclusion', <TkmsConclusion label={'壁厚测定ThkmsThkms-说明'} />),
+        createItem('TkmsConclusion', <TkmsConclusion label={'壁厚测定-结果'} />),
     ]),
     aggregateProj('渗透检测', 'PERME_TS', [
-        createItem('PERME_TSInstrument', <ThkmsInstrument label={'渗透检测-概要仪器'}/>),
-        createItem('PERME_TSCertMemo', <CertMemo label={'渗透888检测-说明'} />),
+        // createItem('PERME_TSInstrument', <TkmsInstrument label={'渗透检测-概要仪器'}/>),
+        createItem('PERME_TSCertMemo', <CertMemo label={'渗透---检测-说明'} />),
     ]),
-    createItem('Explanatory', <Explanatory label={'8.3锅炉安装施工过程概述'}/>),
+    createItem('Explanatory', <Explanatory label={'YY.3锅炉安装施工过程概述'}/>),
 ];
 
 
