@@ -2,7 +2,7 @@
 import * as React from "react"
 import { CollapsibleFormSection } from "@/components/chub"
 import { Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Label, Textarea } from "@/components/ui"
-import { useFormFramework, useFrameEditorBar } from "@/report/hook/useFormFramework"
+import {initFormTable, useFormFramework, useFrameEditorBar} from "@/report/hook/useFormFramework"
 import { type InternalItemProps, RepLink, type RepVwProps } from "@/report/common/base"
 import { useStorage } from "@/report/StorageContext"
 import { useUppyUpload } from "@/report/hook/useUppyUpload"
@@ -21,6 +21,7 @@ import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
 import { z } from "zod"
 import type { UseFormReturn } from "react-hook-form"
 import { groupArray } from "@/report/tools"
+import {useFormTableInit} from "@/report/hook/useFieldArrays";
 
 //可以支持非规定中的子模板，衍生可重复分项项目存储设计目的，广义上的存储拆分和编制的做法；modelkey预期的分解个数数量不应太多的。
 const modelkey = "THICK_MS"
@@ -195,7 +196,7 @@ export const ThickMsVw = ({
                     </FlexibleTable>
                     <FlexibleTable columnWidths={["17%", "18%", "12%", "12%", "16%", "9%", "%"]}>
                         <TableBody>
-                            <TableRow>
+                            <TableRow className="text-sm">
                                 <CCell>检测标准</CCell>
                                 <TableCell className="border border-gray-700" colSpan={6}>
                                     GB/T 11344-2021《无损检测 超声测厚》
@@ -275,7 +276,7 @@ export const ThickMsVw = ({
                             {orc.测厚表?.length === 0 ? (
                                 <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId}>
                                     <TableRow>
-                                        <CCell colSpan={6}>暂无数据</CCell>
+                                        <CCell colSpan={12}>暂无数据</CCell>
                                     </TableRow>
                                 </RepLink>
                             ) : (
@@ -284,8 +285,8 @@ export const ThickMsVw = ({
                                         <TableRow>
                                             {group.map(({ n, v }: any, i: number) => (
                                                 <React.Fragment key={`${groupIndex}-${i}`}>
-                                                    <CCell className="break-all text-sm">{n}</CCell>
-                                                    <CCell className="break-all text-sm">{v}</CCell>
+                                                    <CCell className="break-all text-sm">{n || "／"}</CCell>
+                                                    <CCell className="break-all text-sm">{v || "／"}</CCell>
                                                 </React.Fragment>
                                             ))}
                                         </TableRow>
@@ -530,21 +531,7 @@ export const TkmsPartSummary = ({
         return z.object(schemaFields)
     }, [])
     const defaultValues = React.useMemo(() => {
-        const fields = {} as any
-        // 确保数组字段有默认值，并且每个对象的字段都有默认值
-        const tableData = subStore?.["部位表"] || []
-        fields["部位表"] = tableData.map((item: any) => {
-            const normalizedItem = {} as any
-            config.forEach(([_, tag, __, ___, park]) => {
-                if (park) {
-                    if (!normalizedItem[park]) normalizedItem[park] = {}
-                    normalizedItem[park][tag] = item?.[park]?.[tag] !== undefined ? item[park][tag] : ""
-                } else {
-                    normalizedItem[tag] = item?.[tag] !== undefined ? item[tag] : ""
-                }
-            })
-            return normalizedItem
-        })
+        const fields =initFormTable(subStore,"部位表",config)
         return fields
     }, [subStore, config])
     const arrayFields = React.useMemo(() => {
@@ -596,8 +583,8 @@ export const TkmsPartSummary = ({
     )
 }
 export const config测厚表 = [
-    ["测点编号", "n", 125],
-    ["测点厚度", "v", 75],
+    ["测点编号", "n", 100],
+    ["测点厚度", "v", 50],
 ] as Each_ZdSetting[]
 export const TkmsMeasurement = ({
                                     children,
@@ -611,41 +598,7 @@ export const TkmsMeasurement = ({
                                 }: ThkPartSummaryProps) => {
     const { storage, setStorage, subrType, modified, setModified } = useStorage()
     const subStore = storage?.[`_${modType}_${redId}`]
-    const schema = React.useMemo(() => {
-        const schemaFields = {} as any
-        const schemaTab = {} as any
-        config.forEach(([t, field, s, o, park]) => {
-            schemaTab[field] = z.string().optional()
-        })
-        schemaFields["测厚表"] = z.array(z.object(schemaTab))
-        return z.object(schemaFields)
-    }, [])
-    const defaultValues = React.useMemo(() => {
-        const fields = {} as any
-        // 确保数组字段有默认值，并且每个对象的字段都有默认值
-        const tableData = subStore?.["测厚表"] || []
-        fields["测厚表"] = tableData.map((item: any) => {
-            const normalizedItem = {} as any
-            config.forEach(([_, tag, __, ___, park]) => {
-                if (park) {
-                    if (!normalizedItem[park]) normalizedItem[park] = {}
-                    normalizedItem[park][tag] = item?.[park]?.[tag] !== undefined ? item[park][tag] : ""
-                } else {
-                    normalizedItem[tag] = item?.[tag] !== undefined ? item[tag] : ""
-                }
-            })
-            return normalizedItem
-        })
-        return fields
-    }, [subStore, config])
-    const arrayFields = React.useMemo(() => {
-        const itemTemplate = {} as any
-        config.forEach(([t, field, s]) => {
-            itemTemplate[field] = ""
-        })
-        return [{ name: "测厚表", itemTemplate }]
-    }, [])
-
+    const {schema,defaultValues,arrayFields}= useFormTableInit(subStore,"测厚表",config)
     const headview = <h5>{label}：</h5>
     const tailview = <>{tail测仪器}</>
     const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
@@ -668,7 +621,7 @@ export const TkmsMeasurement = ({
         defFixedLay: true,
         headview,
         tailview,
-        pageSize: 10,
+        pageSize: 30,
     })
     const content = React.useMemo(() => {
         return (

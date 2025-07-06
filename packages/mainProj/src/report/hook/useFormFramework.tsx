@@ -12,6 +12,52 @@ import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
 import { Save } from "lucide-react"
+import type {Each_ZdSetting} from "@/report/hook/use-table-edit";
+
+// 数据清理函数：移除空字符串字段
+const cleanEmptyFields = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    // 如果是数组，递归清理每个元素
+    return obj
+        .map((item) => cleanEmptyFields(item))
+        .filter((item) => {
+          // 如果清理后的对象为空或只包含空值，则过滤掉
+          if (typeof item === "object" && item !== null) {
+            const keys = Object.keys(item)
+            return (
+                keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
+            )
+          }
+          return item !== "" && item !== null && item !== undefined
+        })
+  } else if (typeof obj === "object" && obj !== null) {
+    // 如果是对象，递归清理每个属性
+    const cleaned: any = {}
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== "" && value !== null && value !== undefined) {
+        const cleanedValue = cleanEmptyFields(value)
+        // 只有清理后的值不为空才添加到结果中
+        if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
+          // 对于数组，如果清理后长度为0，则不添加
+          if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
+            continue
+          }
+          // 对于对象，如果清理后没有属性，则不添加
+          if (
+              typeof cleanedValue === "object" &&
+              !Array.isArray(cleanedValue) &&
+              Object.keys(cleanedValue).length === 0
+          ) {
+            continue
+          }
+          cleaned[key] = cleanedValue
+        }
+      }
+    }
+    return cleaned
+  }
+  return obj
+}
 
 interface UseFormFrameworkProps {
   // 接收外部传入的schema和默认值
@@ -75,52 +121,7 @@ export function useFormFramework({
     const oldStore = storage?.[`_${modType}_${redId}`]
     //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
     //存储到可重复分项的专用位置：
-
     // 数据清理函数：移除空字符串字段
-    const cleanEmptyFields = (obj: any): any => {
-      if (Array.isArray(obj)) {
-        // 如果是数组，递归清理每个元素
-        return obj
-            .map((item) => cleanEmptyFields(item))
-            .filter((item) => {
-              // 如果清理后的对象为空或只包含空值，则过滤掉
-              if (typeof item === "object" && item !== null) {
-                const keys = Object.keys(item)
-                return (
-                    keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
-                )
-              }
-              return item !== "" && item !== null && item !== undefined
-            })
-      } else if (typeof obj === "object" && obj !== null) {
-        // 如果是对象，递归清理每个属性
-        const cleaned: any = {}
-        for (const [key, value] of Object.entries(obj)) {
-          if (value !== "" && value !== null && value !== undefined) {
-            const cleanedValue = cleanEmptyFields(value)
-            // 只有清理后的值不为空才添加到结果中
-            if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
-              // 对于数组，如果清理后长度为0，则不添加
-              if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
-                continue
-              }
-              // 对于对象，如果清理后没有属性，则不添加
-              if (
-                  typeof cleanedValue === "object" &&
-                  !Array.isArray(cleanedValue) &&
-                  Object.keys(cleanedValue).length === 0
-              ) {
-                continue
-              }
-              cleaned[key] = cleanedValue
-            }
-          }
-        }
-        return cleaned
-      }
-      return obj
-    }
-
     // 清理表单数据
     const cleanedValues = cleanEmptyFields(values)
     console.log("清理前的表单值:", JSON.stringify(values, null, 2))
@@ -278,51 +279,6 @@ export function useFrameEditorBar({
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
 
-    // 数据清理函数：移除空字符串字段
-    const cleanEmptyFields = (obj: any): any => {
-      if (Array.isArray(obj)) {
-        // 如果是数组，递归清理每个元素
-        return obj
-            .map((item) => cleanEmptyFields(item))
-            .filter((item) => {
-              // 如果清理后的对象为空或只包含空值，则过滤掉
-              if (typeof item === "object" && item !== null) {
-                const keys = Object.keys(item)
-                return (
-                    keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
-                )
-              }
-              return item !== "" && item !== null && item !== undefined
-            })
-      } else if (typeof obj === "object" && obj !== null) {
-        // 如果是对象，递归清理每个属性
-        const cleaned: any = {}
-        for (const [key, value] of Object.entries(obj)) {
-          if (value !== "" && value !== null && value !== undefined) {
-            const cleanedValue = cleanEmptyFields(value)
-            // 只有清理后的值不为空才添加到结果中
-            if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
-              // 对于数组，如果清理后长度为0，则不添加
-              if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
-                continue
-              }
-              // 对于对象，如果清理后没有属性，则不添加
-              if (
-                  typeof cleanedValue === "object" &&
-                  !Array.isArray(cleanedValue) &&
-                  Object.keys(cleanedValue).length === 0
-              ) {
-                continue
-              }
-              cleaned[key] = cleanedValue
-            }
-          }
-        }
-        return cleaned
-      }
-      return obj
-    }
-
     // 清理表单数据
     const cleanedValues = cleanEmptyFields(values)
     console.log("清理前的表单值:", JSON.stringify(values, null, 2))
@@ -407,4 +363,27 @@ export function useFrameEditorBar({
       </div>
   )
   return [render]
+}
+
+/**
+ * form的表格 初始化 undefined字段；React Hook Form 期望这些字段都有默认值
+ * 避免报错 changing an uncontrolled input to be controlled.
+ */
+export const initFormTable = (subStore: any,table:string,config: Each_ZdSetting[]): any => {
+  const fields = {} as any
+  // 确保数组字段有默认值，并且每个对象的字段都有默认值
+  const tableData = subStore?.[table] || []
+  fields[table] = tableData.map((item: any) => {
+    const normalizedItem = {} as any
+    config.forEach(([_, tag, __, ___, park]) => {
+      if (park) {
+        if (!normalizedItem[park]) normalizedItem[park] = {}
+        normalizedItem[park][tag] = item?.[park]?.[tag] !== undefined ? item[park][tag] : ""
+      } else {
+        normalizedItem[tag] = item?.[tag] !== undefined ? item[tag] : ""
+      }
+    })
+    return normalizedItem
+  })
+  return fields
 }

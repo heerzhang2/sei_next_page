@@ -2,6 +2,10 @@
 
 import { useFieldArray } from "react-hook-form"
 import type { Control } from "react-hook-form"
+import * as React from "react";
+import {z} from "zod";
+import {initFormTable} from "@/report/hook/useFormFramework";
+import type {Each_ZdSetting} from "@/report/hook/use-table-edit";
 
 interface ArrayField {
   name: string
@@ -81,14 +85,35 @@ export function useFieldArrays(control: Control<any>, arrayFields: ArrayField[] 
   else return arrayControls
 }
 
-/*
-  {
-    const arrayField=arrayFields[1]
-    const { fields, append, remove, move, insert } = useFieldArray({
-      control: form.control,
-      name: arrayField?.name || "",
-    })
-    if(arrayField?.name)
-        arrayControls[arrayField.name] = { fields, append, remove, move, insert }
-  }
+/**
+ * 常用的：表格用 react-hook-form 的必要的初始化。
 * */
+export function useFormTableInit(subStore: any,table:string,config: Each_ZdSetting[]) {
+  const schema = React.useMemo(() => {
+    const schemaFields = {} as any
+    const schemaTab = {} as any
+    config.forEach(([t, field, s, o, park]) => {
+      schemaTab[field] = z.string().optional()
+    })
+    schemaFields[table] = z.array(z.object(schemaTab))
+    return z.object(schemaFields)
+  }, [])
+
+  const defaultValues = React.useMemo(() => {
+    return initFormTable(subStore,table,config)
+  }, [subStore, config])
+
+  const arrayFields = React.useMemo(() => {
+    const itemTemplate = {} as any
+    config.forEach(([t, field, s]) => {
+      itemTemplate[field] = ""
+    })
+    return [{ name: table, itemTemplate }]
+  }, [])
+
+  return{
+    schema,
+    defaultValues,
+    arrayFields
+  }
+}
