@@ -10,8 +10,8 @@ import { OriginalDataMutation } from "../common/base"
 import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
-import {useState} from "react";
-import {Save} from "lucide-react";
+import { useState } from "react"
+import { Save } from "lucide-react"
 
 interface UseFormFrameworkProps {
   // 接收外部传入的schema和默认值
@@ -31,11 +31,11 @@ interface UseFormFrameworkProps {
   rep?: any
   onSubmit?: (values: any) => Promise<void>
   //独立流转的：那个最终的实体存储报告
-  subrid?: string;
+  subrid?: string
   //可重复分项
-  redId?: number;
+  redId?: number
   //分项报告的： 独立流转，或者非独立的可重复分项目存储 [_modType_1]: ;
-  modType?: string;
+  modType?: string
 }
 /**报告的编辑器表单框架
  * */
@@ -72,13 +72,67 @@ export function useFormFramework({
     }
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
-    const oldStore=storage?.[`_${modType}_${redId}`];
+    const oldStore = storage?.[`_${modType}_${redId}`]
     //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
     //存储到可重复分项的专用位置：
-    const { _version, "":_omit, ...RepData } = (subrid || (modType && redId!==undefined))?
-        { ...storage,  [`_${modType}_${redId}`]: {...oldStore, ...values} }
-        :
-        { ...storage, ...values };
+
+    // 数据清理函数：移除空字符串字段
+    const cleanEmptyFields = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        // 如果是数组，递归清理每个元素
+        return obj
+            .map((item) => cleanEmptyFields(item))
+            .filter((item) => {
+              // 如果清理后的对象为空或只包含空值，则过滤掉
+              if (typeof item === "object" && item !== null) {
+                const keys = Object.keys(item)
+                return (
+                    keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
+                )
+              }
+              return item !== "" && item !== null && item !== undefined
+            })
+      } else if (typeof obj === "object" && obj !== null) {
+        // 如果是对象，递归清理每个属性
+        const cleaned: any = {}
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== "" && value !== null && value !== undefined) {
+            const cleanedValue = cleanEmptyFields(value)
+            // 只有清理后的值不为空才添加到结果中
+            if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
+              // 对于数组，如果清理后长度为0，则不添加
+              if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
+                continue
+              }
+              // 对于对象，如果清理后没有属性，则不添加
+              if (
+                  typeof cleanedValue === "object" &&
+                  !Array.isArray(cleanedValue) &&
+                  Object.keys(cleanedValue).length === 0
+              ) {
+                continue
+              }
+              cleaned[key] = cleanedValue
+            }
+          }
+        }
+        return cleaned
+      }
+      return obj
+    }
+
+    // 清理表单数据
+    const cleanedValues = cleanEmptyFields(values)
+    console.log("清理前的表单值:", JSON.stringify(values, null, 2))
+    console.log("清理后的表单值:", JSON.stringify(cleanedValues, null, 2))
+
+    const {
+      _version,
+      "": _omit,
+      ...RepData
+    } = subrid || (modType && redId !== undefined)
+        ? { ...storage, [`_${modType}_${redId}`]: { ...oldStore, ...cleanedValues } }
+        : { ...storage, ...cleanedValues }
 
     // 直接定义更新函数，不使用 useCallback
     const update = async () => {
@@ -110,19 +164,58 @@ export function useFormFramework({
   //同步或确认操作：处理确认按钮 - 临时保存到 storage
   const handleConfirm = () => {
     // 获取当前表单值
-    const currentValues = structuredClone(form.getValues())
-    // 更新 storage
-    if(subrid || (modType && redId!==undefined)) {
-      setStorage((prevStorage : any) =>{
-        const oldStore=prevStorage?.[`_${modType}_${redId}`];
-        return ({
-          ...prevStorage,
-          [`_${modType}_${redId}`]: {...oldStore, ...currentValues}
-        })
-      })
+    const cleanEmptyFields = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        return obj
+            .map((item) => cleanEmptyFields(item))
+            .filter((item) => {
+              if (typeof item === "object" && item !== null) {
+                const keys = Object.keys(item)
+                return (
+                    keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
+                )
+              }
+              return item !== "" && item !== null && item !== undefined
+            })
+      } else if (typeof obj === "object" && obj !== null) {
+        const cleaned: any = {}
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== "" && value !== null && value !== undefined) {
+            const cleanedValue = cleanEmptyFields(value)
+            if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
+              if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
+                continue
+              }
+              if (
+                  typeof cleanedValue === "object" &&
+                  !Array.isArray(cleanedValue) &&
+                  Object.keys(cleanedValue).length === 0
+              ) {
+                continue
+              }
+              cleaned[key] = cleanedValue
+            }
+          }
+        }
+        return cleaned
+      }
+      return obj
     }
-    else{
-      setStorage((prevStorage : any) => ({
+
+    // 清理数据
+    const currentValues = cleanEmptyFields(form.getValues())
+    console.log("确认时清理后的数据:", JSON.stringify(currentValues, null, 2))
+    // 更新 storage
+    if (subrid || (modType && redId !== undefined)) {
+      setStorage((prevStorage: any) => {
+        const oldStore = prevStorage?.[`_${modType}_${redId}`]
+        return {
+          ...prevStorage,
+          [`_${modType}_${redId}`]: { ...oldStore, ...currentValues },
+        }
+      })
+    } else {
+      setStorage((prevStorage: any) => ({
         ...prevStorage,
         ...currentValues,
       }))
@@ -132,7 +225,7 @@ export function useFormFramework({
   }
 
   // 使用contentRendererFactory创建内容渲染器
-  const contentRenderer = contentRendererFactory? contentRendererFactory(form, arrayControls) :null;
+  const contentRenderer = contentRendererFactory ? contentRendererFactory(form, arrayControls) : null
 
   // 创建渲染函数 把@container上移给CollapsibleFormSection
   const render = (node: any) => (
@@ -186,43 +279,105 @@ export const ModificationIndicator = () => {
   )
 }
 /**报告的编辑器表单-工具条
-*/
+ */
 interface UseFrameEditorBarProps {
-  rep?: any;
-  values: Record<string, any>;
-  onVerify?: (values: any) =>boolean;
-  onReset?: () =>void;
+  rep?: any
+  values: Record<string, any>
+  onVerify?: (values: any) => boolean
+  onReset?: () => void
   //分项报告的： 独立流转，或者非独立的可重复分项目存储 [_modType_1]: ;
   //不是独立流转的可重复分项其它情形没有subrType【所以】不采用的useStorage()中的subrType来取代。
-  modType?: string;
+  modType?: string
   //独立流转的：那个最终的实体存储报告
-  subrid?: string;
+  subrid?: string
   //可重复分项
-  redId?: number;
+  redId?: number
   //逻辑上优先！强调确保是根路径存储的； #针对分项控制器的特别情况的：不嵌套。
-  root?: boolean;
+  root?: boolean
 }
 /**
  * 支持声明 modType && redId 或者subrid 来申明存储的实际位置转移：存储到分项数据结构中。
-* */
-export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,modType,root}: UseFrameEditorBarProps) {
+ * */
+export function useFrameEditorBar({
+                                    rep,
+                                    values,
+                                    onReset,
+                                    onVerify,
+                                    subrid,
+                                    redId,
+                                    modType,
+                                    root,
+                                  }: UseFrameEditorBarProps) {
   const [isSaving, setIsSaving] = useState(false)
   const { storage, setStorage, setModified } = useStorage()
   //用URQL mutation来保存变更数据到后端数据库的
   const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
   //保存：处理表单提交
   const handleSubmit = async () => {
-    if(onVerify && !onVerify(values))
-      return
+    if (onVerify && !onVerify(values)) return
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
-    const oldStore=storage?.[`_${modType}_${redId}`];
+
+    // 数据清理函数：移除空字符串字段
+    const cleanEmptyFields = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        // 如果是数组，递归清理每个元素
+        return obj
+            .map((item) => cleanEmptyFields(item))
+            .filter((item) => {
+              // 如果清理后的对象为空或只包含空值，则过滤掉
+              if (typeof item === "object" && item !== null) {
+                const keys = Object.keys(item)
+                return (
+                    keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
+                )
+              }
+              return item !== "" && item !== null && item !== undefined
+            })
+      } else if (typeof obj === "object" && obj !== null) {
+        // 如果是对象，递归清理每个属性
+        const cleaned: any = {}
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== "" && value !== null && value !== undefined) {
+            const cleanedValue = cleanEmptyFields(value)
+            // 只有清理后的值不为空才添加到结果中
+            if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
+              // 对于数组，如果清理后长度为0，则不添加
+              if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
+                continue
+              }
+              // 对于对象，如果清理后没有属性，则不添加
+              if (
+                  typeof cleanedValue === "object" &&
+                  !Array.isArray(cleanedValue) &&
+                  Object.keys(cleanedValue).length === 0
+              ) {
+                continue
+              }
+              cleaned[key] = cleanedValue
+            }
+          }
+        }
+        return cleaned
+      }
+      return obj
+    }
+
+    // 清理表单数据
+    const cleanedValues = cleanEmptyFields(values)
+    console.log("清理前的表单值:", JSON.stringify(values, null, 2))
+    console.log("清理后的表单值:", JSON.stringify(cleanedValues, null, 2))
+
+    const oldStore = storage?.[`_${modType}_${redId}`]
     //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
     // const { _version, "":_omit, ...RepData } =(subrid || (modType && redId!==undefined))? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, "仪器编号": undefined,} } : { ...storage, ...values };
-    const { _version, "":_omit, ...RepData } = ((subrid || (modType && redId!==undefined)) && !root)?
-                { ...storage,  [`_${modType}_${redId}`]: {...oldStore, ...values} }
-                  :
-                { ...storage, ...values };
+    const {
+      _version,
+      "": _omit,
+      ...RepData
+    } = (subrid || (modType && redId !== undefined)) && !root
+        ? { ...storage, [`_${modType}_${redId}`]: { ...oldStore, ...cleanedValues } }
+        : { ...storage, ...cleanedValues }
 
     // 直接定义更新函数，不使用 useCallback
     const update = async () => {
@@ -254,30 +409,68 @@ export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,mod
 
   //同步或确认操作：处理确认按钮 - 临时保存到 storage
   const handleConfirm = () => {
-    if(onVerify && !onVerify(values))
-      return
+    if (onVerify && !onVerify(values)) return
     // 获取当前表单值: 都在外部做修改注入的。
-    const currentValues =values
-    // 更新 storage
-    if((subrid || (modType && redId!==undefined)) && !root) {
-        setStorage((prevStorage : any) =>{
-          const oldStore=prevStorage?.[`_${modType}_${redId}`];
-          return ({
-            ...prevStorage,
-            [`_${modType}_${redId}`]: {...oldStore, ...currentValues}
-          })
-        })
+    // 数据清理函数：移除空字符串字段（与上面相同的函数）
+    const cleanEmptyFields = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        return obj
+            .map((item) => cleanEmptyFields(item))
+            .filter((item) => {
+              if (typeof item === "object" && item !== null) {
+                const keys = Object.keys(item)
+                return (
+                    keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
+                )
+              }
+              return item !== "" && item !== null && item !== undefined
+            })
+      } else if (typeof obj === "object" && obj !== null) {
+        const cleaned: any = {}
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== "" && value !== null && value !== undefined) {
+            const cleanedValue = cleanEmptyFields(value)
+            if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
+              if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
+                continue
+              }
+              if (
+                  typeof cleanedValue === "object" &&
+                  !Array.isArray(cleanedValue) &&
+                  Object.keys(cleanedValue).length === 0
+              ) {
+                continue
+              }
+              cleaned[key] = cleanedValue
+            }
+          }
+        }
+        return cleaned
+      }
+      return obj
     }
-    else{
-        setStorage((prevStorage : any) => ({
+
+    // 清理数据
+    const currentValues = cleanEmptyFields(values)
+    console.log("确认时清理后的数据:", JSON.stringify(currentValues, null, 2))
+    // 更新 storage
+    if ((subrid || (modType && redId !== undefined)) && !root) {
+      setStorage((prevStorage: any) => {
+        const oldStore = prevStorage?.[`_${modType}_${redId}`]
+        return {
           ...prevStorage,
-          ...currentValues,
-        }))
+          [`_${modType}_${redId}`]: { ...oldStore, ...currentValues },
+        }
+      })
+    } else {
+      setStorage((prevStorage: any) => ({
+        ...prevStorage,
+        ...currentValues,
+      }))
     }
     // 设置已修改标志
     setModified(true)
   }
-
 
   // 创建渲染函数
   const render = () => (
@@ -288,11 +481,11 @@ export function useFrameEditorBar({rep, values,onReset,onVerify,subrid,redId,mod
         <Button type="button" variant="outline" onClick={handleConfirm}>
           确认
         </Button>
-        <Button type="submit" disabled={isSaving} onClick={handleSubmit} >
+        <Button type="submit" disabled={isSaving} onClick={handleSubmit}>
           <Save className="w-4 h-4 mr-2" />
           {isSaving ? "保存到后端..." : "保存"}
         </Button>
       </div>
   )
-  return [ render ]
+  return [render]
 }
