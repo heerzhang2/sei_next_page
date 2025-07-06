@@ -164,47 +164,7 @@ export function useFormFramework({
   //同步或确认操作：处理确认按钮 - 临时保存到 storage
   const handleConfirm = () => {
     // 获取当前表单值
-    const cleanEmptyFields = (obj: any): any => {
-      if (Array.isArray(obj)) {
-        return obj
-            .map((item) => cleanEmptyFields(item))
-            .filter((item) => {
-              if (typeof item === "object" && item !== null) {
-                const keys = Object.keys(item)
-                return (
-                    keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
-                )
-              }
-              return item !== "" && item !== null && item !== undefined
-            })
-      } else if (typeof obj === "object" && obj !== null) {
-        const cleaned: any = {}
-        for (const [key, value] of Object.entries(obj)) {
-          if (value !== "" && value !== null && value !== undefined) {
-            const cleanedValue = cleanEmptyFields(value)
-            if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
-              if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
-                continue
-              }
-              if (
-                  typeof cleanedValue === "object" &&
-                  !Array.isArray(cleanedValue) &&
-                  Object.keys(cleanedValue).length === 0
-              ) {
-                continue
-              }
-              cleaned[key] = cleanedValue
-            }
-          }
-        }
-        return cleaned
-      }
-      return obj
-    }
-
-    // 清理数据
-    const currentValues = cleanEmptyFields(form.getValues())
-    console.log("确认时清理后的数据:", JSON.stringify(currentValues, null, 2))
+    const currentValues = structuredClone(form.getValues())
     // 更新 storage
     if (subrid || (modType && redId !== undefined)) {
       setStorage((prevStorage: any) => {
@@ -411,48 +371,7 @@ export function useFrameEditorBar({
   const handleConfirm = () => {
     if (onVerify && !onVerify(values)) return
     // 获取当前表单值: 都在外部做修改注入的。
-    // 数据清理函数：移除空字符串字段（与上面相同的函数）
-    const cleanEmptyFields = (obj: any): any => {
-      if (Array.isArray(obj)) {
-        return obj
-            .map((item) => cleanEmptyFields(item))
-            .filter((item) => {
-              if (typeof item === "object" && item !== null) {
-                const keys = Object.keys(item)
-                return (
-                    keys.length > 0 && keys.some((key) => item[key] !== "" && item[key] !== null && item[key] !== undefined)
-                )
-              }
-              return item !== "" && item !== null && item !== undefined
-            })
-      } else if (typeof obj === "object" && obj !== null) {
-        const cleaned: any = {}
-        for (const [key, value] of Object.entries(obj)) {
-          if (value !== "" && value !== null && value !== undefined) {
-            const cleanedValue = cleanEmptyFields(value)
-            if (cleanedValue !== "" && cleanedValue !== null && cleanedValue !== undefined) {
-              if (Array.isArray(cleanedValue) && cleanedValue.length === 0) {
-                continue
-              }
-              if (
-                  typeof cleanedValue === "object" &&
-                  !Array.isArray(cleanedValue) &&
-                  Object.keys(cleanedValue).length === 0
-              ) {
-                continue
-              }
-              cleaned[key] = cleanedValue
-            }
-          }
-        }
-        return cleaned
-      }
-      return obj
-    }
-
-    // 清理数据
-    const currentValues = cleanEmptyFields(values)
-    console.log("确认时清理后的数据:", JSON.stringify(currentValues, null, 2))
+    const currentValues = values
     // 更新 storage
     if ((subrid || (modType && redId !== undefined)) && !root) {
       setStorage((prevStorage: any) => {

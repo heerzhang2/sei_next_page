@@ -29,7 +29,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react"
 import { useEffect } from "react"
 
@@ -299,7 +299,7 @@ export function useTableEdit({
   // 添加动态调整编辑器高度的 useEffect 没法修正？
   React.useEffect(() => {
     //editorPosition已经再点击修改按钮后初始化了:初始hidden不显示的；然后这里重新设置窗口height。
-    if(editorContentRef.current && showEditorPortal && editorPosition?.visibility==="hidden") {
+    if (editorContentRef.current && showEditorPortal && editorPosition?.visibility === "hidden") {
       const adjustEditorHeight = () => {
         const contentElement = editorContentRef.current
         if (!contentElement) return
@@ -321,7 +321,7 @@ export function useTableEdit({
         if (isMobile || phoneLandscape) {
           // 移动设备：限制最大高度，但允许内容自适应
           const maxHeight = viewportHeight * (phoneLandscape ? 0.96 : 0.9)
-          const minHeight =phoneLandscape? Math.min(200, viewportHeight * 0.4) : Math.min(300, viewportHeight * 0.3)
+          const minHeight = phoneLandscape ? Math.min(200, viewportHeight * 0.4) : Math.min(300, viewportHeight * 0.3)
           newHeight = Math.max(minHeight, Math.min(totalContentHeight, maxHeight))
           newTop = Math.max(5, (viewportHeight - newHeight) / 2)
         } else {
@@ -338,7 +338,7 @@ export function useTableEdit({
                   ...prev,
                   height: newHeight,
                   top: newTop,
-                  visibility: "unset"
+                  visibility: "unset",
                 }
                 : null,
         )
@@ -352,15 +352,12 @@ export function useTableEdit({
         //实际马上就移除掉resize监听的：就没意义啊！
         window.removeEventListener("resize", adjustEditorHeight)
       }
-    }
-    else if(!showEditorPortal){
+    } else if (!showEditorPortal) {
       //设置"hidden"，变成等待初始化的状态。
-        setEditorPosition((prev) =>
-            prev ? {...prev, visibility: "hidden"} : null
-        )
+      setEditorPosition((prev) => (prev ? { ...prev, visibility: "hidden" } : null))
     }
     //绝不能加上依赖 editorPosition 会导致死循环的；
-  }, [editorContentRef.current, showEditorPortal,screenHeight, screenWidth])
+  }, [editorContentRef.current, showEditorPortal, screenHeight, screenWidth])
 
   function spliteor(i: number) {
     return TabSplChars[i % TabSplChars.length]
@@ -444,14 +441,20 @@ export function useTableEdit({
             config.forEach(([_, tag, __, ___, park]) => {
               try {
                 if (park) {
-                  if (originalData[park]) {
-                    form.setValue(`${table}.${seq}.${park}.${tag}`, originalData[park][tag] || "", {
-                      shouldDirty: false,
-                      shouldTouch: false,
-                    })
+                  // 确保嵌套对象存在
+                  if (!originalData[park]) {
+                    originalData[park] = {}
                   }
+                  // 确保字段有默认值
+                  const fieldValue = originalData[park][tag] !== undefined ? originalData[park][tag] : ""
+                  form.setValue(`${table}.${seq}.${park}.${tag}`, fieldValue, {
+                    shouldDirty: false,
+                    shouldTouch: false,
+                  })
                 } else {
-                  form.setValue(`${table}.${seq}.${tag}`, originalData[tag] || "", {
+                  // 确保字段有默认值
+                  const fieldValue = originalData[tag] !== undefined ? originalData[tag] : ""
+                  form.setValue(`${table}.${seq}.${tag}`, fieldValue, {
                     shouldDirty: false,
                     shouldTouch: false,
                   })
@@ -489,14 +492,20 @@ export function useTableEdit({
             config.forEach(([_, tag, __, ___, park]) => {
               try {
                 if (park) {
-                  if (nextRowData[park]) {
-                    form.setValue(`${table}.${nextIndex}.${park}.${tag}`, nextRowData[park][tag] || "", {
-                      shouldDirty: true,
-                      shouldTouch: true,
-                    })
+                  // 确保嵌套对象存在
+                  if (!nextRowData[park]) {
+                    nextRowData[park] = {}
                   }
+                  // 确保字段有默认值
+                  const fieldValue = nextRowData[park][tag] !== undefined ? nextRowData[park][tag] : ""
+                  form.setValue(`${table}.${nextIndex}.${park}.${tag}`, fieldValue, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                  })
                 } else {
-                  form.setValue(`${table}.${nextIndex}.${tag}`, nextRowData[tag] || "", {
+                  // 确保字段有默认值
+                  const fieldValue = nextRowData[tag] !== undefined ? nextRowData[tag] : ""
+                  form.setValue(`${table}.${nextIndex}.${tag}`, fieldValue, {
                     shouldDirty: true,
                     shouldTouch: true,
                   })
@@ -587,7 +596,7 @@ export function useTableEdit({
           <Card
               className={cn(
                   "flex justify-center w-full flex-col md:p-1 gap-1",
-                  showEditorPortal && ("h-full flex flex-col py-0"), // 添加滚动支持
+                  showEditorPortal && "h-full flex flex-col py-0", // 添加滚动支持
               )}
               ref={editorRef}
           >
@@ -604,7 +613,9 @@ export function useTableEdit({
                   关闭
                 </Button>
               </div>
-              <div className="flex-nowrap text-sm @md:text-base m-auto">{seq === null ? "新增一" : `第${seq! + 1}`}条：</div>
+              <div className="flex-nowrap text-sm @md:text-base m-auto">
+                {seq === null ? "新增一" : `第${seq! + 1}`}条：
+              </div>
               <div className="flex gap-2 ml-auto">
                 <Button variant="default" size="sm" onClick={handleConfirmEdit}>
                   <EyeClosed className="h-4 w-4 @md:mr-2" />
@@ -906,14 +917,20 @@ export function useTableEdit({
             config.forEach(([_, tag, __, ___, park]) => {
               try {
                 if (park) {
-                  if (rowData[park]) {
-                    form.setValue(`${table}.${dataIndex}.${park}.${tag}`, rowData[park][tag] || "", {
-                      shouldDirty: true,
-                      shouldTouch: true,
-                    })
+                  // 确保嵌套对象存在
+                  if (!rowData[park]) {
+                    rowData[park] = {}
                   }
+                  // 确保字段有默认值
+                  const fieldValue = rowData[park][tag] !== undefined ? rowData[park][tag] : ""
+                  form.setValue(`${table}.${dataIndex}.${park}.${tag}`, fieldValue, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                  })
                 } else {
-                  form.setValue(`${table}.${dataIndex}.${tag}`, rowData[tag] || "", {
+                  // 确保字段有默认值
+                  const fieldValue = rowData[tag] !== undefined ? rowData[tag] : ""
+                  form.setValue(`${table}.${dataIndex}.${tag}`, fieldValue, {
                     shouldDirty: true,
                     shouldTouch: true,
                   })
@@ -926,7 +943,8 @@ export function useTableEdit({
         }
         // 固定编辑器位置在屏幕中央，增加宽度
         if (portalContainerRef.current) {
-          if(!showEditorPortal){    //有必要调整窗口
+          if (!showEditorPortal) {
+            //有必要调整窗口
             const viewportHeight = window.innerHeight
             const viewportWidth = window.innerWidth
             const phoneLandscape = viewportWidth > viewportHeight && viewportHeight < 500
@@ -940,7 +958,7 @@ export function useTableEdit({
                 left: Math.max(5, viewportWidth * 0.02),
                 width: viewportWidth * 0.96,
                 height: viewportHeight * (phoneLandscape ? 0.96 : 0.9), // 初始高度，会被动态调整
-                visibility: editorPosition?.visibility ?? "hidden"
+                visibility: editorPosition?.visibility ?? "hidden",
               })
             } else {
               // 桌面设备：居中弹窗，增加宽度
@@ -951,7 +969,7 @@ export function useTableEdit({
                 left: (viewportWidth - editorWidth) / 2,
                 width: editorWidth,
                 height: editorHeight, // 初始高度，会被动态调整
-                visibility: editorPosition?.visibility ?? "hidden"
+                visibility: editorPosition?.visibility ?? "hidden",
               })
             }
           }
@@ -959,7 +977,7 @@ export function useTableEdit({
           setShowEditorPortal(true)
         }
       },
-      [pageIndexToGlobalIndex, localTableData, config, table,editorPosition?.visibility],
+      [pageIndexToGlobalIndex, localTableData, config, table, editorPosition?.visibility],
   )
 
   // 2. 添加一个 useEffect 来初始化本地数据和在关键操作后更新它【没有用到？】
@@ -1034,8 +1052,10 @@ export function useTableEdit({
         <div className="flex flex-wrap items-center justify-between px-2 py-2 bg-white border-t border-gray-200">
           {/* 页面大小选择器 */}
           <div className="flex items-center space-x-2 mb-2 sm:mb-0">
-            <label htmlFor={getUniqueId("page-size-select", position)}
-                   className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}>
+            <label
+                htmlFor={getUniqueId("page-size-select", position)}
+                className={isSmallScreen ? "text-xs" : "text-sm text-gray-700"}
+            >
               {isSmallScreen ? "每页:" : "每页显示:"}
             </label>
             <select
@@ -1174,7 +1194,8 @@ export function useTableEdit({
             {/* 新增: 跳转到指定页码 - 桌面版 */}
             <div className="hidden sm:flex items-center ml-2 space-x-1">
               <span className="text-xs text-gray-600">跳至</span>
-              <input name="_tzymz"
+              <input
+                  name="_tzymz"
                   type="text"
                   value={jumpToPage}
                   onChange={(e) => setJumpToPage(e.target.value)}
@@ -1187,7 +1208,7 @@ export function useTableEdit({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 px-2 text-xs"
+                  className="h-8 px-2 text-xs bg-transparent"
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -1200,7 +1221,8 @@ export function useTableEdit({
 
             {/* 移动端紧凑版跳转 */}
             <div className="flex sm:hidden items-center ml-1">
-              <input name="_tzymp"
+              <input
+                  name="_tzymp"
                   type="text"
                   value={jumpToPage}
                   onChange={(e) => setJumpToPage(e.target.value)}
@@ -1214,7 +1236,7 @@ export function useTableEdit({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9 px-1 text-xs rounded-l-none border-l-0"
+                  className="h-9 px-1 text-xs rounded-l-none border-l-0 bg-transparent"
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -1898,7 +1920,7 @@ export function useTableEdit({
             <span className="ml-2 text-sm">
             按每行{defaultV && fixColumn! >= 1 && noDelAdd ? config.length - fixColumn! : config.length}列为一组录入
           </span>
-            <Button variant="outline" className="ml-auto" onClick={clearTable}>
+            <Button variant="outline" className="ml-auto bg-transparent" onClick={clearTable}>
               清空全表至默认
             </Button>
           </div>
@@ -1934,7 +1956,7 @@ export function useTableEdit({
                         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
                         borderRadius: "8px",
                         overflow: "hidden",
-                        visibility:  editorPosition.visibility,
+                        visibility: editorPosition.visibility,
                       }}
                       className={"@container"}
                   >
