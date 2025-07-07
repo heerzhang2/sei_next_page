@@ -322,3 +322,32 @@ export const AttentionPoint = ({ rep, children, comply, telurl,btClass}: Attenti
         </div>
     );
 };
+
+/**可独立流转的分项报告，头部，不考虑单独打印分项报告：
+* */
+export const 独立流转分项 = () => (
+    <div className="print:h-screen">
+        <div className="text-center space-y-1">
+            <div className="text-2xl font-bold">福建省特种设备检验研究院</div>
+            <div className="text-base">
+                FUJIAN SPECIAL EQUIPMENT INSPECTION AND RESEARCH INSTITUTE
+            </div>
+            <div className="border-t-2 border-gray-600 w-full mx-auto"></div>
+            <p className="mt-1 text-left">地址（Add.）：福建省福州市仓山区卢滨路370号</p>
+            <div className="flex flex-wrap gap-1 mt-1">
+                <div className="flex-1 inline-flex flex-nowrap items-center">
+                    <span className="block text-sm font-medium">电话（Tel.）：</span>
+                    <span className="block">0591-968829</span>
+                </div>
+                <div className="flex-1 inline-flex flex-nowrap items-center">
+                    <span className="block text-sm font-medium">传真（Fax）：</span>
+                    <span className="block">0591-88700509</span>
+                </div>
+                <div className="flex-1 inline-flex flex-nowrap items-center">
+                    <span className="block text-sm font-medium">邮政编码：</span>
+                    <span className="block">350008</span>
+                </div>
+            </div>
+        </div>
+    </div>
+);

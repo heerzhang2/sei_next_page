@@ -3,7 +3,7 @@ import React, {Suspense, } from 'react';
 import {useStorage} from "@/report/StorageContext";
 import {ReportFirstPageHeadNmaNmbm} from "@/report/common/head";
 import {JumpTab} from "@/report/common/JumpTab";
-import {落款单位地址} from "@/report/common/rarelyVary";
+import {独立流转分项, 落款单位地址} from "@/report/common/rarelyVary";
 import {findNodeIndex} from "@/report/hook/useSubRepController";
 
 /**单独一份的独立流转分项报告;
@@ -29,20 +29,14 @@ export function SingeSubRep({rep,subrid,children}: {
     return (
         <Suspense>
             <div className="not-print:my-4">
-                <div className="print:h-screen">
-                    {ReportFirstPageHeadNmaNmbm({rep })}
-                    <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
-                        <div>
-                            <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/_Controller?subrid=${subrid}&modelkey=${modType}`}>
-                                <div className="block pt-2 print:hidden">可独立流转分项报告 {'>'}</div>
-                            </JumpTab>
-                            <span className="block text-center text-sm print:mt-4"> （ FJB/GB 10082-0-2021 ）</span>
-                        </div>
-                        <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
-                    </div>
+                {独立流转分项()}
+                <div className="not-print:my-4">
+                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/_Controller?subrid=${subrid}&modelkey=${modType}`}>
+                        <div className="block pt-2 print:hidden">{'<<'} 可独立流转分项报告</div>
+                    </JumpTab>
                 </div>
                 {localIdx.map((seq: number, k: number) => {
-                    const subStore=storage?.[`_${modType}_${seq}`];
+                    const subStore=storage?.[`_${modType}_${seq}`] || {};
                     const hash="_"+modType+"_"+(subrepidx+1)+"-"+seq;
                     return (<div key={k} id={hash}>
                         {React.cloneElement(children, {
@@ -56,7 +50,7 @@ export function SingeSubRep({rep,subrid,children}: {
                     </div>)
                 })}
                 {localIdx.length<=0 &&
-                    <div className="text-center mt-8 text-xl">此分项报告，还未有任何内容</div>
+                    <strong className="text-center mt-8 text-xl">此分项报告，还未有任何内容</strong>
                 }
             </div>
         </Suspense>
@@ -89,7 +83,7 @@ export default function SubRep({
                 </JumpTab>
             }
             {localIdx.map((seq: number, k: number) => {
-                const subStore=storage?.[`_${modType}_${seq}`];
+                const subStore=storage?.[`_${modType}_${seq}`] || {};
                 //区分若没有任一个独立流转分项的情况：
                 const head=subreps.length > 0? '1' : '';
                 const apxid=head+`-${k+1}`;
@@ -112,10 +106,10 @@ export default function SubRep({
                 const sIdx = dat?.[`_${modType}`] ?? [];
                 return (<div key={i}>
                     <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/_Controller?subrid=${subrep?.id}&modelkey=${modType}`}>
-                        <div className="block pt-2 print:hidden">报告的独立流转分项 {'>'}</div>
+                        <div className="block pt-2 print:hidden">报告的独立流转分项 {'>>'}</div>
                     </JumpTab>
                     {sIdx.map((seq: number, k: number) => {
-                        const subStore=dat?.[`_${modType}_${seq}`];
+                        const subStore=dat?.[`_${modType}_${seq}`]  || {};
                         //独立流转分项：前缀基数都要显示出，不管是否只有唯一一个的。
                         const ihead=localIdx?.length > 0? i+2 : i+1;
                         const apxid=ihead+`-${k+1}`;
@@ -133,7 +127,7 @@ export default function SubRep({
                         </div>)
                     })}
                     {sIdx.length<=0 &&
-                        <div className="text-center mt-8 text-xl">此分项报告，还未有任何内容</div>
+                        <strong className="text-center mt-8 text-xl">此分项报告，还未有任何内容</strong>
                     }
                 </div>)
             })}

@@ -21,12 +21,11 @@ interface FxDiagramProps  extends InternalItemProps{
     memo: string;
     maxFile?: number;
 }
+
 // interface ProjectItem {
 //     简图说明: string
 //     _FILE_S简图?: string
 // }
-//锅炉简图
-// export const itemA简图=['简图说明','_FILE_S简图',];
 /**保留 编辑常见的范式；
  * 复杂的表单的确不采用useForm真不方便，编辑器简单的还可以对付。
  * */
@@ -56,6 +55,7 @@ export const FxDiagram =
         //_FILE_S简图 : 特例对待的！ 必须保证一致性同步未见系统的数据，避免丢失文件管理者。_FILE_S简图：提取单独，自动确认的。
         setEditForm(content)
     }
+    //依赖项必须加上， 否则：可能同一个上传文件，被保存给到多个分项的存储对象。
     const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
         // setStorage({...storage, [pic]: upfile});
         setStorage((prevStorage : any) =>{
@@ -66,9 +66,12 @@ export const FxDiagram =
             })
         })
         !modified && setModified(true);
-    }, [storage, modified,setStorage,setModified]);
+    }, [modType,redId, storage, modified,pic, setStorage,setModified]);
+
     const [uploadDom]=useUppyUpload({ repId:rep?.id!,
-        maxFile:maxFile, onFinish, storeObj: subStore?.[pic] ,liveDays:10, hash:"FxDiagram_pf"
+        maxFile:maxFile, onFinish,
+        storeObj: subStore?.[pic] || [],
+        liveDays:10, hash:"FxDiagram_pf"
     });
     //不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent {某一个表行的记录对象再倒腾一次}。
     const [render] = useFrameEditorBar({ rep, values: { ...editForm }, onReset,subrid,redId,modType})
@@ -120,13 +123,14 @@ export const FxDiagram =
     )
 }
 
+
 interface FxDiagramVwProps{
     orc: any;
     rep: any;
     title?: string;
     children?: React.ReactNode
 }
-/**还未用？
+/** #还 未 用？
  * 简图 ，可复用性？
  * */
 export const FxDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', children}: FxDiagramVwProps

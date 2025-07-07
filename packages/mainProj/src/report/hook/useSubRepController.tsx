@@ -59,9 +59,6 @@ export function useSubRepController(modelkey: string, rep:any, callback: (store:
                 return srep?.modeltype===modelkey
             })
             const ifind = findNodeIndex(flsReps, subrid);
-            //可流转分项报告：独立子报告单独显示的？定位
-            // const storageIds =(subrType? storage : parrepfs)?.[`_${modelkey}`] ?? [];
-            console.log("等待匹配的ID列表: 当前可流转分项ifind=", ifind);
             return ifind ?? undefined
         }
         else
