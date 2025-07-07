@@ -99,7 +99,7 @@ export const FxDiagram =
                                             <Textarea
                                                 className="min-h-[8rem] resize-y"
                                                 id="memojt"
-                                                value={editForm?.[memo]}
+                                                value={editForm?.[memo] || ""}
                                                 onChange={(e) => updateFormField(memo, e.target.value)}
                                                 placeholder="输入更多文字"
                                             />

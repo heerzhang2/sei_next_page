@@ -49,8 +49,9 @@ export const ThickMsVw = ({
                     {title}
                     <span className="text-base">{apxid}</span>
                 </TComponent>
+                <span className="block text-center text-xs">FJB/JK 1050-0-2022</span>
                 <div className="flex justify-between">
-                    <span className="text-sm">工程名称：{orc?.工程名称}</span>
+                    &nbsp;
                     <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
                 </div>
             </>
@@ -107,8 +108,8 @@ export const ThickMsVw = ({
                     <TableRow className="border border-gray-700">
                         <TableCell colSpan={7} className="border border-gray-700">
                             <RepLink ori rep={rep} tag={"TkmsDiagram"} subrid={subrid} redId={redId}>
-                                <div>
-                                    {orc?.点图说明 && <span className="text-sm whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
+                                <div className="text-sm">测厚点位置示图：&nbsp;
+                                    {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
                                     {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
                                         <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
                                     )}
@@ -189,19 +190,19 @@ export const ThickMsVw = ({
                         <TableRow>
                             <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
                                 <span className="block">备注：</span>
-                                <span className="block indent-[2rem] text-left">{orc.记录备注}</span>
+                                <span className="block indent-[2rem] text-left">{orc.记录备注 || '／'}</span>
                             </TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
                                 <p>检测结果：</p>
-                                {orc.检测结果}
+                                <span className="block indent-[2rem] text-left">{orc.检测结果 || '／'}</span>
                             </TableCell>
                         </TableRow>
                     </RepLink>
                 </TableBody>
             </FlexibleTable>
-            <FootMensLine cap="监检"
+            <FootMensLine cap="检验"
                 href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
             />
         </CollapseFx>

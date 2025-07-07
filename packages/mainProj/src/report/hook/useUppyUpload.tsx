@@ -66,6 +66,7 @@ export function useUppyUpload({
                                   maxSize = 3,
                                   onFinish,
                                   hash,
+                                  id,
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -74,13 +75,14 @@ export function useUppyUpload({
     maxSize?: number
     onFinish?: (file: any, del: boolean) => void
     hash?: string
+    id?: string
 }) {
     const [openUppy, setOpenUppy] = React.useState(false)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
 
     // 创建 Uppy 实例的函数 - 移除 useCallback，直接在 useEffect 中创建
     const createUppyInstance = () => {
-        const uniqueId = `Report-${repId}-${hash || "default"}-${Date.now()}`
+        const uniqueId =id? id:`Report-${repId}-${hash || "default"}`;
         // console.log(`Creating new Uppy instance: ${uniqueId}`)
         const newUppy = new Uppy({
             id: uniqueId,

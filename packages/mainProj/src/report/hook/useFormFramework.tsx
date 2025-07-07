@@ -12,9 +12,29 @@ import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
 import { Save } from "lucide-react"
-import type {Each_ZdSetting} from "@/report/hook/use-table-edit";
+import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
 
-// 数据清理函数：移除空字符串字段
+// 将空字符串转为 undefined，但保留字段
+const convertEmptyToUndefined = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map((item) => convertEmptyToUndefined(item))
+  } else if (typeof obj === "object" && obj !== null) {
+    const converted: any = {}
+    for (const [key, value] of Object.entries(obj)) {
+      if (value === "") {
+        converted[key] = undefined
+      } else if (value !== null && value !== undefined) {
+        converted[key] = convertEmptyToUndefined(value)
+      } else {
+        converted[key] = value
+      }
+    }
+    return converted
+  }
+  return obj === "" ? undefined : obj
+}
+
+// 数据清理函数：移除空字符串字段、undefined字段和空数组、空对象
 const cleanEmptyFields = (obj: any): any => {
   if (Array.isArray(obj)) {
     // 如果是数组，递归清理每个元素
@@ -119,21 +139,24 @@ export function useFormFramework({
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
     const oldStore = storage?.[`_${modType}_${redId}`]
-    //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
-    //存储到可重复分项的专用位置：
-    // 数据清理函数：移除空字符串字段
-    // 清理表单数据
-    const cleanedValues = cleanEmptyFields(values)
-    console.log("清理前的表单值:", JSON.stringify(values, null, 2))
-    console.log("清理后的表单值:", JSON.stringify(cleanedValues, null, 2))
 
-    const {
-      _version,
-      "": _omit,
-      ...RepData
-    } = subrid || (modType && redId !== undefined)
-        ? { ...storage, [`_${modType}_${redId}`]: { ...oldStore, ...cleanedValues } }
-        : { ...storage, ...cleanedValues }
+    // 第一步：将空字符串转为 undefined，但保留字段
+    const valuesWithUndefined = convertEmptyToUndefined(values)
+    console.log("转换空字符串为undefined后:", JSON.stringify(valuesWithUndefined, null, 2))
+
+    // 第二步：合并到存储中（undefined 会覆盖原有的空字符串）
+    const mergedStorage =
+        subrid || (modType && redId !== undefined)
+            ? { ...storage, [`_${modType}_${redId}`]: { ...oldStore, ...valuesWithUndefined } }
+            : { ...storage, ...valuesWithUndefined }
+
+    // 第三步：从合并后的存储中提取数据并清理
+    const { _version, "": _omit, ...RepData } = mergedStorage
+
+    // 第四步：清理 RepData，移除 undefined 和空字符串字段
+    const cleanedRepData = cleanEmptyFields(RepData)
+    console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
+    console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
 
     // 直接定义更新函数，不使用 useCallback
     const update = async () => {
@@ -141,7 +164,7 @@ export function useFormFramework({
         id: subrid ?? rep?.id,
         operationType: 1,
         version: _version,
-        data: JSON.stringify(RepData),
+        data: JSON.stringify(cleanedRepData),
       })
     }
 
@@ -166,19 +189,23 @@ export function useFormFramework({
   const handleConfirm = () => {
     // 获取当前表单值
     const currentValues = structuredClone(form.getValues())
+
+    // 将空字符串转为 undefined
+    const valuesWithUndefined = convertEmptyToUndefined(currentValues)
+
     // 更新 storage
     if (subrid || (modType && redId !== undefined)) {
       setStorage((prevStorage: any) => {
         const oldStore = prevStorage?.[`_${modType}_${redId}`]
         return {
           ...prevStorage,
-          [`_${modType}_${redId}`]: { ...oldStore, ...currentValues },
+          [`_${modType}_${redId}`]: { ...oldStore, ...valuesWithUndefined },
         }
       })
     } else {
       setStorage((prevStorage: any) => ({
         ...prevStorage,
-        ...currentValues,
+        ...valuesWithUndefined,
       }))
     }
     // 设置已修改标志
@@ -279,21 +306,25 @@ export function useFrameEditorBar({
     // 默认提交处理
     console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
 
-    // 清理表单数据
-    const cleanedValues = cleanEmptyFields(values)
-    console.log("清理前的表单值:", JSON.stringify(values, null, 2))
-    console.log("清理后的表单值:", JSON.stringify(cleanedValues, null, 2))
-
     const oldStore = storage?.[`_${modType}_${redId}`]
-    //这个办法是可以把内部嵌套的属性字段 设置为undefined 等同删除该键值的，做法可行。
-    // const { _version, "":_omit, ...RepData } =(subrid || (modType && redId!==undefined))? { ...storage,  [`_${modType}_${redId}`]: {...oldStore, "仪器编号": undefined,} } : { ...storage, ...values };
-    const {
-      _version,
-      "": _omit,
-      ...RepData
-    } = (subrid || (modType && redId !== undefined)) && !root
-        ? { ...storage, [`_${modType}_${redId}`]: { ...oldStore, ...cleanedValues } }
-        : { ...storage, ...cleanedValues }
+
+    // 第一步：将空字符串转为 undefined，但保留字段
+    const valuesWithUndefined = convertEmptyToUndefined(values)
+    console.log("转换空字符串为undefined后:", JSON.stringify(valuesWithUndefined, null, 2))
+
+    // 第二步：合并到存储中（undefined 会覆盖原有的空字符串）
+    const mergedStorage =
+        (subrid || (modType && redId !== undefined)) && !root
+            ? { ...storage, [`_${modType}_${redId}`]: { ...oldStore, ...valuesWithUndefined } }
+            : { ...storage, ...valuesWithUndefined }
+
+    // 第三步：从合并后的存储中提取数据并清理
+    const { _version, "": _omit, ...RepData } = mergedStorage
+
+    // 第四步：清理 RepData，移除 undefined 和空字符串字段
+    const cleanedRepData = cleanEmptyFields(RepData)
+    console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
+    console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
 
     // 直接定义更新函数，不使用 useCallback
     const update = async () => {
@@ -301,7 +332,7 @@ export function useFrameEditorBar({
         id: subrid ?? rep?.id,
         operationType: 1,
         version: _version,
-        data: JSON.stringify(RepData),
+        data: JSON.stringify(cleanedRepData),
       })
     }
     setIsSaving(true)
@@ -326,21 +357,23 @@ export function useFrameEditorBar({
   //同步或确认操作：处理确认按钮 - 临时保存到 storage
   const handleConfirm = () => {
     if (onVerify && !onVerify(values)) return
-    // 获取当前表单值: 都在外部做修改注入的。
-    const currentValues = values
+
+    // 将空字符串转为 undefined
+    const valuesWithUndefined = convertEmptyToUndefined(values)
+
     // 更新 storage
     if ((subrid || (modType && redId !== undefined)) && !root) {
       setStorage((prevStorage: any) => {
         const oldStore = prevStorage?.[`_${modType}_${redId}`]
         return {
           ...prevStorage,
-          [`_${modType}_${redId}`]: { ...oldStore, ...currentValues },
+          [`_${modType}_${redId}`]: { ...oldStore, ...valuesWithUndefined },
         }
       })
     } else {
       setStorage((prevStorage: any) => ({
         ...prevStorage,
-        ...currentValues,
+        ...valuesWithUndefined,
       }))
     }
     // 设置已修改标志
@@ -369,7 +402,7 @@ export function useFrameEditorBar({
  * form的表格 初始化 undefined字段；React Hook Form 期望这些字段都有默认值
  * 避免报错 changing an uncontrolled input to be controlled.
  */
-export const initFormTable = (subStore: any,table:string,config: Each_ZdSetting[]): any => {
+export const initFormTable = (subStore: any, table: string, config: Each_ZdSetting[]): any => {
   const fields = {} as any
   // 确保数组字段有默认值，并且每个对象的字段都有默认值
   const tableData = subStore?.[table] || []
