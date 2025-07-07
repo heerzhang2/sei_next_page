@@ -1519,7 +1519,14 @@ export function useTableEdit({
                                         </div>
                                         <div className="flex flex-wrap justify-start items-stretch w-full min-h-[inherit] gap-0">
                                           {config.map(([title, tag, width, _o, park]: any, k: number) => {
-                                            const pageDataIndex = raft * i + b
+                                            const pageDataIndex = raft * i + b;
+                                            const zdvalue=excludeFix && k < fixColumn!
+                                                ? park
+                                                    ? defaultV![globalIndex]?.[park]?.[tag]
+                                                    : defaultV![globalIndex]?.[tag]
+                                                : park
+                                                    ? (currentPageData[pageDataIndex]?.[park]?.[tag] ?? "")
+                                                    : (currentPageData[pageDataIndex]?.[tag] ?? "");
                                             return (
                                                 <div
                                                     key={k}
@@ -1534,13 +1541,7 @@ export function useTableEdit({
                                                     }}
                                                 >
                                                   <div className={cn("m-auto", cellText)}>
-                                                    {excludeFix && k < fixColumn!
-                                                        ? park
-                                                            ? defaultV![globalIndex]?.[park]?.[tag]
-                                                            : defaultV![globalIndex]?.[tag]
-                                                        : park
-                                                            ? (currentPageData[pageDataIndex]?.[park]?.[tag] ?? "")
-                                                            : (currentPageData[pageDataIndex]?.[tag] ?? "")}
+                                                    {zdvalue || "\u00A0"}
                                                   </div>
                                                 </div>
                                             )

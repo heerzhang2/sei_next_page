@@ -154,7 +154,7 @@ export const ThickMsVw = ({
                                 return (
                                     <React.Fragment key={i}>
                                         <CCell className="text-sm">测点编号</CCell>
-                                        <CCell className="text-sm">测点厚度</CCell>
+                                        <CCell className="text-xs">测点厚度</CCell>
                                     </React.Fragment>
                                 )
                             })}
@@ -295,10 +295,22 @@ export const TkmsPartSummary = ({
         </CollapsibleFormSection>
     )
 }
-
+/**方便：用户分块跳行的布局输入。 一次录入6组。
+ * 不再用groupArray(orc.测厚表 || [], 6).map((group, groupIndex) => (
+* */
 export const config测厚表 = [
-    ["测点编号", "n", 100],
-    ["测点厚度", "v", 50],
+    ["点1编号", "n1", 100],
+    ["点1厚度", "v1", 50],
+    ["点2编号", "n2", 100],
+    ["点2厚度", "v2", 50],
+    ["点3编号", "n3", 100],
+    ["点3厚度", "v3", 50],
+    ["点4编号", "n4", 100],
+    ["点4厚度", "v4", 50],
+    ["点5编号", "n5", 100],
+    ["点5厚度", "v5", 50],
+    ["点6编号", "n6", 100],
+    ["点6厚度", "v6", 50],
 ] as Each_ZdSetting[]
 export const TkmsMeasurement = ({
                                     children,
