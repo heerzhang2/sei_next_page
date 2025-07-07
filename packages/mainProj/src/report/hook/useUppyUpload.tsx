@@ -13,66 +13,39 @@ import "./uppy-fixes.css"
 import { getAuthToken, refreshAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
-import { useCallback } from 'react';
-
-/**【uppy复用】
- *官方文档  https://uppy.io/docs/uppy/
- *URQL一般请求是用authorization: Bearer 给后端token的。
- * */
-//new实例：自带状态存储的；    不是React组件管理的。
-const uppy = new Uppy({ id: "Report", restrictions: { maxNumberOfFiles: 2 } }).use(Tus, {
-    endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
-    withCredentials: true,
-    async onBeforeRequest(req) {
-        const token = await getAuthToken()
-        if (token) {
-            req.setHeader("Authorization", `Bearer ${token}`)
-        }
-    },
-    async onAfterResponse(req, res) {
-        if (res.getStatus() === 401) {
-            await refreshAuthToken()
-            uppy.info("刷新token")
-        }
-        const url = req.getURL()
-        const value = res.getHeader("Tus2minIoUrl") //对TUS协议还要自定义扩展的包头Tus2minIoUrl
-        var occur = value?.indexOf("DO NOT TRY:") //扩充包头含义。
-        if (occur === 0) {
-            uppy.info("不要重试，报错" + value, "error", 999000)
-            uppy.pauseAll()
-        } else {
-            const steob = {} as any
-            steob[url] = value
-            uppy.setState({ ...steob }) //做关联映射TUS的id==>MinIO的下载链接。
-        }
-    },
-})
-//.use(Webcam)
+import { useCallback } from "react"
 
 export type FileStore = {
     name: string
     url: string
 }
-
 export const useScrollHandler = (targetSelector: string) => {
-    return useCallback((stateSetter: (arg0: boolean) => void, currentState: any) => (e: { preventDefault: () => void }) => {
-        e.preventDefault();
-        stateSetter(!currentState);
+    return useCallback(
+        (stateSetter: (arg0: boolean) => void, currentState: any) => (e: { preventDefault: () => void }) => {
+            e.preventDefault()
+            stateSetter(!currentState)
+            // 使用requestAnimationFrame优化滚动时机
+            requestAnimationFrame(() => {
+                const target = document.querySelector(targetSelector)
+                target?.scrollIntoView?.({
+                    behavior: "smooth",
+                    block: "center",
+                })
+            })
+        },
+        [targetSelector],
+    )
+}
+//直接onClick={toggleUppy}的版本：
+// const toggleUppy = React.useCallback(
+//     (e: React.MouseEvent) => {
+//         e.preventDefault()
+//         setOpenUppy((prev) => !prev)
+//     },
+//     [],
+// )
 
-        // 使用requestAnimationFrame优化滚动时机
-        requestAnimationFrame(() => {
-            const target = document.querySelector(targetSelector);
-            target?.scrollIntoView?.({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        });
-    }, [targetSelector]);
-};
-
-//【注意】必须用uppy.getState()来做配合; 而不能用React.useState<any[]>( storeObj as any[]);且下面handleUpSuccess回调无法提取外部的storeObj等状态变量取值都是空的。
-//加限制 restrictions:{maxFileSize: 6000,maxNumberOfFiles: 1, allowedFileTypes:['image/*', '.jpg', '.jpeg', '.png', '.gif']}
-/**针对报告的 嵌入式的 文件上传。 针对与报告的 文件上传对象： #通常情形没必要用useUppyUploadM来替代;
+/**可以支持一个页面 多个上传的面板同时存在的。
  * @param repId 分布式对象存储系统靠这个 rep ID来关联业务系统关系数据库的。
  * @param field  inp?.[field]? 存储上传后的文件对象信息对应inp字段。 _FILE_为前缀的； 数据=可能是{}单个的，也可能多为文件形式[{ }, ]？
  * @param maxFile 设计上的最多文件个数【maxFile决定了file保存是数组还是对象】最多传几个文件； 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
@@ -92,7 +65,7 @@ export function useUppyUpload({
                                   liveDays = 2,
                                   maxSize = 3,
                                   onFinish,
-                                  hash
+                                  hash,
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -103,8 +76,90 @@ export function useUppyUpload({
     hash?: string
 }) {
     const [openUppy, setOpenUppy] = React.useState(false)
-    //实际本次发起上传的活动允许的可上传文件数还会更少：扣除已经有的数量。
-    //或者 storeObj instanceof Array ?
+    const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
+
+    // 创建 Uppy 实例的函数 - 移除 useCallback，直接在 useEffect 中创建
+    const createUppyInstance = () => {
+        const uniqueId = `Report-${repId}-${hash || "default"}-${Date.now()}`
+        // console.log(`Creating new Uppy instance: ${uniqueId}`)
+        const newUppy = new Uppy({
+            id: uniqueId,
+            restrictions: { maxNumberOfFiles: maxFile },
+        }).use(Tus, {
+            endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
+            withCredentials: true,
+            async onBeforeRequest(req) {
+                const token = await getAuthToken()
+                if (token) {
+                    req.setHeader("Authorization", `Bearer ${token}`)
+                }
+            },
+            async onAfterResponse(req, res) {
+                if (res.getStatus() === 401) {
+                    await refreshAuthToken()
+                    // 直接使用 newUppy 实例
+                    newUppy.info("刷新token")
+                }
+                const url = req.getURL()
+                const value = res.getHeader("Tus2minIoUrl")
+                var occur = value?.indexOf("DO NOT TRY:")
+                if (occur === 0) {
+                    newUppy.info("不要重试，报错" + value, "error", 999000)
+                    newUppy.pauseAll()
+                } else {
+                    const steob = {} as any
+                    steob[url] = value
+                    // 直接使用 newUppy 实例设置状态
+                    newUppy.setState({ ...steob })
+                    // console.log(`Setting state for ${url}: ${value}`)
+                }
+            },
+        })
+
+        return newUppy
+    }
+
+    // 初始化 Uppy 实例
+    React.useEffect(() => {
+        // 如果实例不存在，创建新实例
+        if (!uppyInstance) {
+            const newUppy = createUppyInstance()
+            setUppyInstance(newUppy)
+            // console.log(`Uppy instance created for repId: ${repId}, hash: ${hash}`)
+        }
+        // 当关键参数变化时，销毁旧实例并创建新实例
+        else {
+            // console.log(`Recreating Uppy instance due to parameter change`)
+            uppyInstance.destroy()
+            const newUppy = createUppyInstance()
+            setUppyInstance(newUppy)
+        }
+    }, [repId, hash, maxFile]) // 当这些关键参数变化时重新创建实例
+
+    // 当关键参数变化时重新初始化 Uppy 状态
+    React.useEffect(() => {
+        if (uppyInstance) {
+            // 清理之前的状态
+            uppyInstance.cancelAll()
+            uppyInstance.setState({ oldfiles: undefined })
+            // 设置新的状态
+            uppyInstance.setMeta({ rep: repId, liveDays })
+            uppyInstance.setState({ oldfiles: maxFile > 1 ? storeObj : undefined })
+            // console.log(`Uppy state updated for repId: ${repId}, hash: ${hash}`)
+        }
+    }, [repId, liveDays, uppyInstance, maxFile, storeObj])
+
+    // 组件卸载时清理 Uppy 实例
+    React.useEffect(() => {
+        return () => {
+            if (uppyInstance) {
+                // console.log(`Destroying Uppy instance for repId: ${repId}`)
+                uppyInstance.destroy()
+            }
+        }
+    }, [uppyInstance, repId])
+
+    //验证存储对象类型
     if (storeObj) {
         if (Array.isArray(storeObj)) {
             if (maxFile <= 1) throw new Error(`存储非法${maxFile}`)
@@ -112,53 +167,52 @@ export function useUppyUpload({
             if (maxFile > 1) throw new Error(`存储非法${maxFile}`)
         }
     }
-    const storeObj1 = storeObj as FileStore //编译报错！
-    const storeObj2 = storeObj as FileStore[]
-    const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length | 0) : 1
-    // const [infiles, setInfiles] = React.useState<any[]>( storeObj as any[]);  不能使用：会导致重复了
-    uppy.setState({ oldfiles: maxFile > 1 ? storeObj : undefined }) //多个文件存储的才需要，
 
-    React.useEffect(() => {
-        uppy.setMeta({ rep: repId, liveDays })
-    }, [repId, liveDays])
-    //【上传应答】结束时刻回调，报错 unnecessary dependency: 'uppy'
+    const storeObj1 = storeObj as FileStore
+    const storeObj2 = storeObj as FileStore[]
+    const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : 1
+
+    //【上传应答】结束时刻回调
     const handleUpSuccess = React.useCallback(
         (result: { successful: any[] }) => {
-            const newUppsta = uppy.getState()
+            // console.log(`Upload success for repId: ${repId}, hash: ${hash}`, result)
+            if (!uppyInstance) {
+                console.error("Uppy instance is null in handleUpSuccess")
+                return
+            }
+            const newUppsta = uppyInstance.getState()
+            // console.log("Uppy state after upload:", newUppsta)
             const more = result.successful.map((up) => {
-                return { name: up.name, url: newUppsta[up.uploadURL], type: up.type }
+                const fileUrl = newUppsta[up.uploadURL]
+                // console.log(`File ${up.name} uploaded to: ${fileUrl}`)
+                return { name: up.name, url: fileUrl, type: up.type }
             })
-            //本次活动实际上还允许分成几次操作上传的，都算一个独立上传的活动，只要uppy状态没有切换，还没有关闭卸载uppy组件的都是相同的一个独立活动。
             const newarr = [...more]
-            // const newarr=[...(infiles||[]), ...more];
-            // setInfiles(newarr);
             const cntfile = newarr.length
             if (cntfile > 0) {
                 setOpenUppy(false)
-                //可能一次上传活动就能有多个文件。  这一次独立活动 汇总上传的文件，但是不包本组件加载状态后的扩参数storeObj进来已经就存在的文件。
-                const newfile = newarr?.map(({ name, url }, i) => {
-                    return { name, url }
-                })
-                // console.log("onFinis忙要执行",result.successful,"row=", row,"newfile",newfile);
+                const newfile = newarr?.map(({ name, url }) => ({ name, url }))
+
                 if (onFinish) {
-                    if (1 === maxFile) onFinish(newfile?.[0] || undefined, false)
-                    else {
+                    if (1 === maxFile) {
+                        onFinish(newfile?.[0] || undefined, false)
+                    } else {
                         const { oldfiles } = newUppsta
-                        console.log("onFinis忙要执行oldfiles=", oldfiles, "newfile", newfile)
-                        //【操蛋了，可惜】在这个位置获取storeObj2  infiles storeObj全都是未定义的，！！只能外部去麻烦加了
-                        const megerd = [...((oldfiles as any[]) ?? []), ...(newfile as any[])]
-                        onFinish(megerd, false)
+                        // console.log("多文件上传完成 - oldfiles:", oldfiles, "newfile:", newfile)
+                        const merged = [...((oldfiles as any[]) ?? []), ...(newfile as any[])]
+                        onFinish(merged, false)
                     }
                 }
             }
-            //【注意】这个依赖项必须加上 onFinish 否则导致onFinish()执行时实际上回调函数参数inp数据为null；
         },
-        [maxFile, onFinish],
+        [maxFile, onFinish, uppyInstance, repId, hash],
     )
-    /// }, [infiles, maxFile,onFinish,setInfiles]);
 
+    // 设置 Uppy 选项和事件监听
     React.useEffect(() => {
-        uppy.setOptions({
+        if (!uppyInstance) return
+
+        uppyInstance.setOptions({
             restrictions: { maxNumberOfFiles: thisMaxFiles, maxFileSize: maxSize * 1024 * 1024 },
             locale: {
                 strings: {
@@ -166,68 +220,79 @@ export function useUppyUpload({
                 },
             },
         })
-        //uppy.on('complete', handleUpSuccess);
-    }, [thisMaxFiles, maxSize])
+        // 移除之前的监听器，添加新的
+        // @ts-ignore
+        uppyInstance.off("complete", handleUpSuccess)
+        // @ts-ignore
+        uppyInstance.on("complete", handleUpSuccess)
 
-    // @ts-ignore
-    uppy.on("complete", handleUpSuccess)
+        return () => {
+            // @ts-ignore
+            uppyInstance.off("complete", handleUpSuccess)
+        }
+    }, [thisMaxFiles, maxSize, handleUpSuccess, uppyInstance])
 
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
-    const whenDeleted = (reult: any, arIndex: number) => {
-        if ("成功" === reult || "不存在" === reult) {
-            if (1 === maxFile) {
-                onFinish && onFinish(undefined, true)
-            } else {
-                storeObj2?.splice(arIndex, 1) //添加或删除数组中的元素。会改变原始数组。
-                onFinish && onFinish(storeObj2, true)
+    const whenDeleted = React.useCallback(
+        (result: any, arIndex: number) => {
+            // console.log(`File deleted for repId: ${repId}, hash: ${hash}, index: ${arIndex}`)
+            if ("成功" === result || "不存在" === result) {
+                if (1 === maxFile) {
+                    onFinish && onFinish(undefined, true)
+                } else {
+                    const newStoreObj = [...storeObj2]
+                    newStoreObj.splice(arIndex, 1)
+                    onFinish && onFinish(newStoreObj, true)
+                }
             }
-        }
-    }
+        },
+        [maxFile, onFinish, storeObj2, repId, hash],
+    )
+
     const { call: delOssFileFunc } = useOssDeleteFileMutation(whenDeleted)
-    // const handleDelete = () => {
-    //     delOssFileFunc(url, i, 'rep', repId)
-    // }
-    // Images with "fill" always use position absolute - it cannot be modified.
-    const scrollHandler = useScrollHandler('.uppy-Dashboard-browse')(setOpenUppy, openUppy);
+    const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
+
+    // 如果 Uppy 实例还没有创建，显示加载状态
+    if (!uppyInstance) {
+        return [<div key="loading">正在初始化上传组件...</div>]
+    }
     //单一文件情况的：
     if (1 === maxFile) {
         const onlyOne = (
             <>
-                {
-                    openUppy ? (
-                        <Dashboard uppy={uppy} plugins={["Webcam"]} />
-                    ) : storeObj1?.url ? (
+                {openUppy ? (
+                    <div key="dashboard">
+                        <Dashboard uppy={uppyInstance} plugins={["Webcam"]} />
+                    </div>
+                ) : storeObj1?.url ? (
+                    <div key="image">
                         <ImageComponentNatural
                             src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${storeObj1.url}` || "/placeholder.svg"}
                             alt={storeObj1?.url || "图片"}
                         />
-                    ) : null
-                    /*            <div className="flex justify-around items-center">
-                                          <div className="">
-                                              <Image width={300} height={200}
-                                                  src={imageUrl || "/placeholder.svg"}
-                                                  alt={storeObj1?.url || "图片"}
-                                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                                  className="object-contain h-auto max-h-[14cm] print:max-h-[26cm] print:max-w-[705px] lg:max-h-[18cm]"
-                                                  unoptimized     //为不优化，避免配置 remotePatterns
-                                                 style={{
-                                                     objectFit: 'contain',
-                                                 }}
-                                              />
-                                          </div>
-                                      </div>*/
-                }
-                <div id={hash ?? '_pf'} className="text-center">
+                    </div>
+                ) : (
+                    <div key="placeholder" className="text-center p-4 border-2 border-dashed border-gray-300 rounded-lg">
+                        <p className="text-gray-500">暂无图片</p>
+                    </div>
+                )}
+                <div id={hash ?? "_pf"} className="text-center mt-2">
                     {storeObj1?.url ? (
-                        <Button
-                            size="sm"
-                            onClick={(e) => {
-                                delOssFileFunc(storeObj1?.url, 0, "rep", repId)
-                                e.preventDefault()
-                            }}
-                        >
-                            旧的先刪除
-                        </Button>
+                        <div className="space-x-2">
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={(e) => {
+                                    delOssFileFunc(storeObj1?.url, 0, "rep", repId)
+                                    e.preventDefault()
+                                }}
+                            >
+                                删除图片
+                            </Button>
+                            <Button size="sm" onClick={scrollHandler}>
+                                {openUppy ? "关闭上传" : "重新上传"}
+                            </Button>
+                        </div>
                     ) : (
                         <Button size="sm" onClick={scrollHandler}>
                             {openUppy ? "关闭上传" : "开启上传"}
@@ -247,7 +312,7 @@ export function useUppyUpload({
                         return (
                             <div key={i}>
                                 {i > 0 && <hr />}
-                                <div id={(hash ?? '_pf')+`${i}`} className="flex justify-around items-center">
+                                <div id={(hash ?? "_pf") + `${i}`} className="flex justify-around items-center">
                                     {url && (
                                         <ImageComponentNatural
                                             src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${url}` || "/placeholder.svg"}
@@ -263,19 +328,20 @@ export function useUppyUpload({
                                         e.preventDefault()
                                     }}
                                 >
-                                    旧的刪除
+                                    删除第{i + 1}个文件
                                 </Button>
                             </div>
                         )
                     })}
                 </div>
                 <div className="text-center mt-4">
-                    {openUppy && <Dashboard uppy={uppy} plugins={["Webcam"]} />}
-                    <Button size="sm"
-                        disabled={!openUppy && thisMaxFiles <= 0}
-                        onClick={scrollHandler}
-                    >
-                        {openUppy ? "关闭上传" : "开启上传"}
+                    {openUppy && (
+                        <div key="dashboard-multi">
+                            <Dashboard uppy={uppyInstance} plugins={["Webcam"]} />
+                        </div>
+                    )}
+                    <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
+                        {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
                     </Button>
                 </div>
             </>
