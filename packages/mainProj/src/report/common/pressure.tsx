@@ -33,3 +33,22 @@ export const useItemsMapPressure= ({ projects, }:{ projects:PressureLayout[], }
     return [itemsMap];
 };
 
+export type HashConfig = {
+    title: string;
+    url: string;
+};
+export function redoProjHash(
+    ids: string[],
+    navRow: HashConfig[]
+): Array<{
+    title: string;
+    url: string;
+}> {
+    if (!Array.isArray(ids) || !Array.isArray(navRow)) return [];
+    return ids.flatMap((idno, k) =>
+        navRow.map(({ title, url }, i) => ({
+            title: `${title}-${k + 1}`,
+            url: `${url}_${idno}`
+        }))
+    );
+}

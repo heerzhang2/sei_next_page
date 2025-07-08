@@ -6,7 +6,7 @@ import {JumpTab} from "@/report/common/JumpTab";
 import {独立流转分项, 落款单位地址} from "@/report/common/rarelyVary";
 import {findNodeIndex} from "@/report/hook/useSubRepController";
 
-/**单独一份的独立流转分项报告;
+/**单独一份的独立流转分项报告; 更为特殊的可重复分项；
  * 打印也没考虑：单独去打印可独立流转的分项报告的。
 * */
 export function SingeSubRep({rep,subrid,children}: {
@@ -59,13 +59,15 @@ export function SingeSubRep({rep,subrid,children}: {
 
 /**多子报告的：
  * 这个组件只能在主报告的语境中使用的，但不能用于可流转分项子报告的！
+ * 普通的不可独立流转可重复分项的 modType 不要和公用模板类型代码冲突：
 * */
 export default function SubRep({
-               rep, modType,children
+               rep, modType,children,title
                }: {
     rep: any,
     modType: string,
-    children: any
+    children: any,
+    title: string
 }) {
     const {storage, parrepfs} =useStorage();
     const localIdx = storage?.[`_${modType}`] ?? [];
@@ -76,10 +78,14 @@ export default function SubRep({
         return flsReps ?? []
     }, [modType, rep])
     return (
-        <Suspense>
-            { localIdx?.length > 0 &&
+        <div id={`_${modType}_`}>
+            { localIdx?.length > 0 ?
                 <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/_Controller?modelkey=${modType}`}>
-                    <div className="block pt-2 print:hidden">报告的分项形式子报告 {'>'}</div>
+                    <div className="block pt-2 print:hidden">{title}的分项形式子报告 {'>'}</div>
+                </JumpTab>
+                :
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/_Controller?modelkey=${modType}`}>
+                    <div className="block pt-2 print:hidden">新增加：{title}的分项 {'>'}</div>
                 </JumpTab>
             }
             {localIdx.map((seq: number, k: number) => {
@@ -131,6 +137,6 @@ export default function SubRep({
                     }
                 </div>)
             })}
-        </Suspense>
+        </div>
     )
 }

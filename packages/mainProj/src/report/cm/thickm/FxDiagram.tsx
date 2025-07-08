@@ -32,7 +32,7 @@ interface FxDiagramProps  extends InternalItemProps{
 export const FxDiagram =
 ({  rep,
     children,
-    show = true,
+    show = false,
     label, maxFile=1, memo, pic, modType, subrid,redId
 }:FxDiagramProps) => {
     const {storage,setStorage,subrType,modified,setModified} =useStorage();
@@ -68,6 +68,7 @@ export const FxDiagram =
         !modified && setModified(true);
     }, [modType,redId, storage, modified,pic, setStorage,setModified]);
 
+    //【特殊】导航hash:"FxDiagram_pf"是给右边的编辑器用的，而通常的hash都是配合用于左边的著内容列表做的导航。
     const [uploadDom]=useUppyUpload({ repId:rep?.id!,
         maxFile:maxFile, onFinish,
         storeObj: subStore?.[pic] || [],

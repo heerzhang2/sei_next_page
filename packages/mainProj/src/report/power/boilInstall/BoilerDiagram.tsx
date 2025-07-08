@@ -26,7 +26,7 @@ export const itemA简图=['简图说明','_FILE_S简图',];
 export const BoilerDiagram =
 ({  rep,
     children,
-    show = true,
+    show = false,
     label,
 }:InternalItemProps) => {
     const {storage,setStorage,modified,setModified} =useStorage();

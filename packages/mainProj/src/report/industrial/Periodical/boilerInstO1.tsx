@@ -12,6 +12,7 @@ import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
 import {config壁厚测仪, TkmsConclusion, TkmsMeasurement, TkmsPartSummary} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 import {FxDiagram} from "@/report/cm/thickm/FxDiagram";
+import {config磁粉仪概, MangPartSummary} from "@/report/cm/magnetic/Magnetic1";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -46,7 +47,7 @@ const recordPrintList =[
     createItem('CertMemo', <CertMemo label={'证书-说明'} />),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
     createItem('BoilerDiagram', <BoilerDiagram label="xxx锅炉结构简图"/>),
-    //侧壁厚： 没有独立流转子报告的版本号，依附于主报告。 确保名称与 Projects记录 中的一致；可重复分项的name命名冲突检查是独立于主报告的。
+    //侧壁厚： 没有独立流转子报告的版本号，依附于主报告。 确保名称与 Projects记录 中的一致；可重复分项的name命名冲突检查是独立于主报告的。没有独立的Entrance初始化和原始记录列表。
     aggregateProj('壁厚测定', 'THICK_MS', [
         createItem('TkmsInstrument', <DeviceSurveyFx config={config壁厚测仪} label='壁厚测定-概要仪器'/>),
         createItem('TkmsPartSummary', <TkmsPartSummary label='壁厚各部位测点和最小壁厚'/>),
@@ -54,9 +55,10 @@ const recordPrintList =[
         createItem('TkmsMeasurement', <TkmsMeasurement label='测厚表'/>),
         createItem('TkmsConclusion', <TkmsConclusion label={'壁厚测定-结果'} />),
     ]),
-    aggregateProj('渗透检测', 'PERME_TS', [
-        // createItem('PERME_TSInstrument', <TkmsInstrument label={'渗透检测-概要仪器'}/>),
-        createItem('PERME_TSCertMemo', <CertMemo label={'渗透---检测-说明'} />),
+    aggregateProj('磁粉检测', 'MAGNT_TS', [
+        createItem('MangInstrument', <DeviceSurveyFx config={config磁粉仪概} label='磁粉检测-概要仪器'/>),
+        createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
+        createItem('PERME_TSCertMemo', <CertMemo label={'磁粉检测---检测-说明'} />),
     ]),
     createItem('Explanatory', <Explanatory label={'YY.3锅炉安装施工过程概述'}/>),
 ];

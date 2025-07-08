@@ -25,5 +25,10 @@ export const titleRenders ={
     const firstTag=store?.['_THICK_MS_'+index]?.['设备名称'] ?? ``
     return <> { `[${firstTag}] `}
     </>;
-  }
+  },
+  "MAGNT_TS": (store: any,index: number) => {
+    const firstTag=store?.['_MAGNT_TS_'+index]?.['设备名称'] ?? ``
+    return <> { `[${firstTag}] `}
+    </>;
+  },
 }

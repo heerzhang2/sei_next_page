@@ -16,7 +16,8 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
 ) {
     const searchParams = useSearchParams()
     const subrid = searchParams!.get("subrid") ?? undefined
-    const redId = Number(searchParams!.get("redId")) ?? undefined
+    const redIdStr =searchParams!.get("redId")
+    const redId =redIdStr? Number(redIdStr) : undefined
     //只有是控制器的编辑器 才有传递该参数的：
     const modelkey = searchParams!.get("modelkey") ?? ''
     //变化的key就能导致组件的重新加载了。引起组件旧状态刷新掉了。
@@ -27,7 +28,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     const [mapFxian]=useItemsMapPressure({projects: subrid? parrepfs.Projects : storage.Projects});
     const rcaList =React.useMemo(() => flattenEditorAreaConfig(recordPrintList), [recordPrintList]);
 
-    const {view} =useSubRepController(modelkey,rep, titleRenders?.[modelkey]!, subrid);
+    const {view} =useSubRepController(modelkey || subrType, rep, titleRenders?.[modelkey || subrType]!, subrid);
     //去掉了qs,依赖项；
     //编辑器【自定义路由】这里action是 '2.1' ALL none printAll 这样的路由参数 ?readOnly=1&。
     const recordList= React.useMemo(() =>
@@ -47,31 +48,37 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                         })
                     }
                 </React.Fragment>;
-            }else if(action==='ALL' || action==='printAll'){
+            }else if(action==='ALL'){
+                // if(redId===undefined && subrid){
+                //     return <> {view} </>;
+                // }
                 return recordPrintList.map((each, i) => {
                     if(Array.isArray(each.zoneContent)){
                         if(mapFxian.get(each.itemArea)?.do && (subrType===each.subrType || !subrid))
-                            return each.zoneContent.map(({itemArea, zoneContent},m)=> {
-                                return React.cloneElement(zoneContent as React.ReactElement<any>, {
-                                    show: action==='printAll',
-                                    key: m,
-                                    redId,
-                                    subrid,
-                                    verId,
-                                    rep,
-                                })
-                            });
+                        {
+                            if(!each.subrType || redId)
+                                return each.zoneContent.map(({itemArea, zoneContent},m)=> {
+                                    return React.cloneElement(zoneContent as React.ReactElement<any>, {
+                                        key: m,
+                                        redId,
+                                        subrid,
+                                        verId,
+                                        rep,
+                                    })
+                                });
+                            else return null;
+                        }
                         else return null;
                     }
-                    else if(!subrid || each.itemArea==='Entrance')
+                    else if(!subrid || each.itemArea==='Entrance'){
                         return React.cloneElement(each.zoneContent as React.ReactElement<any>, {
-                        show: action==='printAll',
-                        key: i,
-                        redId,
-                        subrid,
-                        verId,
-                        rep,
-                    });
+                            key: i,
+                            redId,
+                            subrid,
+                            verId,
+                            rep,
+                        });
+                    }
                 });
             }else if(action==='_Controller'){
                 return <> {view} </>;

@@ -283,3 +283,93 @@ export const usePrefixDataTable= ({orc, config, rep, parentOrc:orgParOrc, slash,
     });
     return  nodes;
 };
+
+/**特殊的： 统一都是3列的概况。 支持前缀；
+ * 规矩的3栏目， 若异常的只能拆分做了。 布局(2列标题区+1列输入文本)*3字段的==9列。
+ * */
+export const useThreeColumnSurvey= ({orc, config, rep, parentOrc:orgParOrc, slash,embed} : PrefixDataTableProps
+) => {
+    const parentOrc=orgParOrc? orgParOrc : orc;         //兼容分项报告的情形
+    let prefix1='',     prefix2='',     prefix3='';
+    const nodes=config?.map(([[desc,name,cb],add2p,add3p] : any, i:number)=> {
+        const [desc2,name2,cb2]= add2p||[];
+        const [desc3,name3,cb3]= add3p||[];
+        //<CCell colSpan={desc2? 1 : 3}>{typeof desc==='string'? name: desc?.view(orc)}</CCell>  '见附录13'
+        //附加单位的两个形式：第三位置自带单位的， 或第二对象内部u字段指明单位。
+        // console.log("检验设备情况3 faxian=", name2,'sdfds',typeof orc?.[name2]);
+        const tailUnit1=typeof cb==='string'? cb : (typeof name==='object' && name.u)? name.u:undefined;
+        const txtnode1=cb&&cb.view? cb.view(orc, parentOrc,rep) :
+            typeof name==='string'? (name?.startsWith('_$')? parentOrc?.[name.substring(2)] : orc?.[name]) :
+                name.r? name.r :
+                    name.t==='b'? (orc?.[name.n]? '是':'否') :
+                        name.t === 'm' ? <div className="text-left whitespace-pre-wrap">{orc?.[name.n] ?? '／'}</div>
+                            :
+                            name.n.startsWith('_$') ? parentOrc?.[name.n.substring(2)] :
+                                orc?.[name.n];
+
+        const tailUnit2=!desc2? undefined :
+            typeof cb2==='string'? cb2 : (typeof name2==='object' && name2.u)? name2.u:undefined;
+        const txtnode2=!desc2? undefined :
+            cb2&&cb2.view? cb2.view(orc, parentOrc,rep) :
+                typeof name2==='string'? (name2?.startsWith('_$')? parentOrc?.[name2.substring(2)] : orc?.[name2]) :
+                    name2.r? name2.r :
+                        name2.t==='b'? (orc?.[name2.n]? '是':'否') :
+                            name2.n.startsWith('_$')? parentOrc?.[name2.n.substring(2)] :
+                                orc?.[name2.n];
+
+        const tailUnit3=!desc3? undefined :
+            typeof cb3==='string'? cb3 : (typeof name3==='object' && name3.u)? name3.u:undefined;
+        const txtnode3=!desc3? undefined :
+            cb3&&cb3.view? cb3.view(orc, parentOrc,rep) :
+                typeof name3==='string'? (name3?.startsWith('_$')? parentOrc?.[name3.substring(2)] : orc?.[name3]) :
+                    name3.r? name3.r :
+                        name3.t==='b'? (orc?.[name3.n]? '是':'否') :
+                            name3.n.startsWith('_$')? parentOrc?.[name3.n.substring(2)] :
+                                orc?.[name3.n];
+
+        if(typeof desc==='object')
+            prefix1=desc?.pr===null? '' : desc?.pr? desc?.pr : prefix1;
+        else prefix1='';
+        if(typeof desc2==='object')
+            prefix2=desc2?.pr===null? '' : desc2?.pr? desc2?.pr : prefix2;
+        else prefix2='';
+        if(typeof desc3==='object')
+            prefix3=desc3?.pr===null? '' : desc3?.pr? desc3?.pr : prefix3;
+        else prefix3='';
+
+        return <React.Fragment key={i}>
+            <TableRow className={"break-all"}>
+                { embed && embed[i] }
+                { (typeof desc==='object' && desc.span) && <CCell rowSpan={desc.span}>{desc?.prview? desc?.prview(orc,parentOrc) : desc?.pr}</CCell> }
+                <CCell colSpan={prefix1 ? 1 : 2}>{typeof desc==='string'? desc: desc?.view? desc?.view(orc,parentOrc,rep) : desc?.t}</CCell>
+                { tailUnit1?
+                    <CCellUnit unit={tailUnit1} colSpan={name2? 1:4}>{txtnode1??(slash&&'／')}</CCellUnit>
+                    :
+                    <CCell colSpan={name2? 1:6}>{txtnode1??(slash&&'／')}</CCell>
+                }
+                {desc2 && <>
+                    { (typeof desc2==='object' && desc2.span) && <CCell rowSpan={desc2.span}>{desc2?.prview? desc2?.prview(orc,parentOrc) : desc2?.pr}</CCell> }
+                    <CCell colSpan={prefix2 ? 1 : 2}>{typeof desc2==='string'? desc2: desc2?.view? desc2?.view(orc,parentOrc,rep) : desc2?.t}</CCell>
+                    { tailUnit2?
+                        <CCellUnit unit={tailUnit2} >{txtnode2??(slash&&'／')}</CCellUnit>
+                        :
+                        <CCell >{txtnode2??(slash&&'／')}</CCell>
+                    }
+                </>
+                }
+                {desc3 && <>
+                    { (typeof desc3==='object' && desc3.span) && <CCell rowSpan={desc3.span}>{desc3?.prview? desc3?.prview(orc,parentOrc) : desc3?.pr}</CCell> }
+                    <CCell colSpan={prefix3 ? 1 : 2}>{typeof desc3==='string'? desc3: desc3?.view? desc3?.view(orc,parentOrc,rep) : desc3?.t}</CCell>
+                    { tailUnit3?
+                        <CCellUnit unit={tailUnit3} >{txtnode3??(slash&&'／')}</CCellUnit>
+                        :
+                        <CCell >{txtnode3??(slash&&'／')}</CCell>
+                    }
+                </>
+                }
+            </TableRow>
+        </React.Fragment>;
+    });
+    return  nodes;
+};
+

@@ -10,7 +10,7 @@ import {createPdfJob} from "@/report/footer/job";
 import {RepFootLink} from "@/report/common/repFootLink";
 import {RepHeadLink} from "@/report/common/repHeadLink";
 import {JumpTab} from "@/report/common/JumpTab";
-import {useItemsMapPressure} from "@/report/common/pressure";
+import {redoProjHash, useItemsMapPressure} from "@/report/common/pressure";
 import {DirectoryPagePress} from "@/report/common/directory";
 import {ExplanatoryVw} from "@/report/power/boilInstall/Explanatory";
 import {CertificatePage} from "@/report/power/boilInstall/CertificatePage";
@@ -18,8 +18,10 @@ import {BoilerDiagramVw} from "@/report/power/boilInstall/BoilerDiagram";
 import {注意事项GasC} from "@/report/gas/rarelyVary";
 import {首页设备概况BoilI} from "@/report/power/boilInstall/rarelyVary";
 import {ConclusionVw} from "@/report/industrial/Periodical/Conclusion";
-import {ThickMsVw} from "@/report/cm/thickm/ThickMs1";
+import {cat_Thickms, ThickMsVw} from "@/report/cm/thickm/ThickMs1";
 import SubRep, {SingeSubRep} from "@/component/rep/sub-rep";
+import {EditorAreaConfig} from "@/report/common/eHelper";
+import {MagneticVw} from "@/report/cm/magnetic/Magnetic1";
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
 * */
@@ -35,7 +37,7 @@ export const ReportView = ({ rep,printMode }: ReportEntryProps) => {
     return (<>
         <div id="PHEAD" />
         { subrid ? <>
-                <RepTitleUpdate code={parrepfs?.eqpcod+"子报告的"} original={original} />
+                <RepTitleUpdate code={parrepfs?.eqpcod+"子报告的"} />
                 <Component source={storage} rep={rep} mapFxian={mapFxian} subrid={subrid} printMode={printMode}/>
                 <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
                              pdf_job={pdf_job} single subrid={subrid}/>
@@ -43,7 +45,7 @@ export const ReportView = ({ rep,printMode }: ReportEntryProps) => {
             :
             <>
                 <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
-                <RepTitleUpdate code={storage?.eqpcod} original={original} />
+                <RepTitleUpdate code={storage?.eqpcod} />
                 <Component source={storage} rep={rep} mapFxian={mapFxian} printMode={printMode}/>
                 <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
                              pdf_job={pdf_job} single/>
@@ -60,7 +62,10 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
     if(subrType){
       return (
             <SingeSubRep rep={rep} subrid={subrid!}>
-               <ThickMsVw rep={rep} subrid={subrid}/>
+              {subrType==='THICK_MS' ? <ThickMsVw rep={rep} subrid={subrid}/> :
+               subrType==='MAGNT_TS' ? <MagneticVw rep={rep} subrid={subrid}/> :
+                 null
+              }
             </SingeSubRep>
         )
     }
@@ -96,8 +101,11 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
                 }
                 {/*多个部分的多个子报告+主报告也可能存储的*/}
 
-                {mapFxian.get('壁厚测定')?.do && <SubRep modType="THICK_MS" rep={rep}>
+                {mapFxian.get('壁厚测定')?.do && <SubRep modType="THICK_MS" rep={rep} title={'壁厚测定'}>
                     <ThickMsVw orc={orc} rep={rep} printMode={printMode}/>
+                </SubRep>}
+                {mapFxian.get('磁粉检测')?.do && <SubRep modType="MAGNT_TS" rep={rep} title={'磁粉检测'}>
+                    <MagneticVw orc={orc} rep={rep} printMode={printMode}/>
                 </SubRep>}
 
             </div>
@@ -110,7 +118,9 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
     )
 }
 
+
 //原始记录的导航该放在后面：
+//因为Collapse没有显示出来的情况下，会导致无法跳转到导航锚点，所以还是不要添加导航项了。
 export function useCatalog() {
     const {storage, subrType: mod} = useStorage()
     const [mapFxian]=useItemsMapPressure({projects: storage.Projects});
@@ -118,9 +128,7 @@ export function useCatalog() {
         {title: "页面尾巴", url: "#PTAIL"}]
     const dirs = React.useMemo(() => {
         if(mod==='THICK_MS') return [...head,
-            {title: "1.1锅炉安装监督检验结论报告", url: "#Conclusion"},
-            {title: "1.2锅炉结构简图", url: "#BoilerDiagram"},
-            {title: '1.3锅炉安装施工及监督检验过程概述', url: "#Explanatory"},
+            ...redoProjHash(storage?.[`_${mod}`], cat_Thickms),
         ]
         return [...head,
             {title: "检验证书", url: "#Certificate"},
@@ -129,7 +137,10 @@ export function useCatalog() {
             {title: "1.1锅炉安装监督检验结论报告", url: "#Conclusion"},
             {title: "1.2锅炉结构简图", url: "#BoilerDiagram"},
             {title: '1.3锅炉安装施工及监督检验过程概述', url: "#Explanatory"},
-        ]
+            mapFxian.get('壁厚测定')?.do && {title: "壁厚测定报告", url: "#_THICK_MS_"},
+            mapFxian.get('磁粉检测')?.do && {title: "磁粉检测报告", url: "#_MAGNT_TS_"},
+            {title: "设erewrwe备概况", url: "#Survddey2"},
+        ].filter(Boolean);
     }, [mod,storage])
     return dirs
 }

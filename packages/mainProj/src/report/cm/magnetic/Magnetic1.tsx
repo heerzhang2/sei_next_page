@@ -13,7 +13,7 @@ import { ImageComponent } from "@/components/shub"
 import { cn } from "@/lib/utils"
 import { useCallback } from "react"
 import { CollapseFx } from "@/report/common/collapse"
-import { usePrefixDataTable } from "@/report/hook/usePrefixData"
+import {usePrefixDataTable, useThreeColumnSurvey} from "@/report/hook/usePrefixData"
 import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
 import { z } from "zod"
 import type { UseFormReturn } from "react-hook-form"
@@ -21,15 +21,13 @@ import { groupArray } from "@/report/tools"
 import { useFormTableInit } from "@/report/hook/useFieldArrays"
 import {getRepUnqIndexByNo} from "@/report/common/editor";
 import {useSearchParams} from "next/navigation";
+import {mergeToThreeColumn} from "@/report/common/survey";
 
-/**壁厚测定报告
- *因为有空值赋值""的，#必须用 {o?.[tag] || '／'} 来替代 {o?.[tag] ?? '／'} 否则不会显示反斜杠。
- * 可重复分项：因为默认Collapse隐藏，所以没必要加hash导航: 比如<JumpTab  /TkmsPartSummary?original=1${apds}${apdr}#TkmsPartSummary_${redId}`}>
- * */
-export const ThickMsVw = ({
+
+export const MagneticVw = ({
                               orc,
                               rep,
-                              title = "壁厚测定报告",
+                              title = "磁粉检测报告",
                               subrid,
                               redId,
                               parOrc,
@@ -39,7 +37,7 @@ export const ThickMsVw = ({
                               children,
                           }: RepVwProps) => {
     const TComponent = useh2 ? "h2" : "div"
-    const renderUpper = usePrefixDataTable({ config: config壁厚测仪, orc, rep, slash: true })
+    const renderUpper = useThreeColumnSurvey({ config: config磁粉概要, orc, rep, slash: true })
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
     //{title}这里不加上id； id需上一层的div统一做添加的。
@@ -52,7 +50,7 @@ export const ThickMsVw = ({
                     {title}
                     <span className="text-base">{apxid}</span>
                 </TComponent>
-                <span className="block text-center text-xs">FJB/JK 1050-0-2022</span>
+                <span className="block text-center text-xs">FJB/JK 1045-0-2018</span>
                 <div className="flex justify-between">
                     &nbsp;
                     <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
@@ -61,60 +59,19 @@ export const ThickMsVw = ({
         }
     >
         <CollapseFx printMode={printMode} subrid={subrid}>
-            <FlexibleTable columnWidths={["9.9%", "6.8%", "37%", "12.1%", "4%", "%"]} className="text-sm border-collapse">
+            <FlexibleTable columnWidths={ ["5%", "5%", "25%", "5%", "4%","22%", "6%","5%", "%"] } className="text-sm border-collapse">
                 <TableBody>
-                    <RepLink ori rep={rep} tag={"TkmsInstrument"} subrid={subrid} redId={redId}>
+                    <RepLink ori rep={rep} tag={"MangInstrument"} subrid={subrid} redId={redId}>
                         {renderUpper}
                     </RepLink>
                 </TableBody>
             </FlexibleTable>
-            <FlexibleTable id={'TkmsPartSummary_'+redId} columnWidths={ ["17%", "18%", "10.2%", "10.2%", "16%", "7.2%", "%"] }>
-                <TableHeader>
-                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsPartSummary?original=1${apds}${apdr}#TkmsPartSummary_${redId}`}>
-                        <TableRow>
-                            {config部位汇总.map(([title, _2, _1], i: number) => {
-                                return (
-                                    <CCell key={i} className="text-sm">
-                                        {title}
-                                    </CCell>
-                                )
-                            })}
-                        </TableRow>
-                    </JumpTab>
-                </TableHeader>
+            <FlexibleTable columnWidths={["%"]}>
                 <TableBody>
-                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsPartSummary?original=1${apds}${apdr}#TkmsPartSummary_${redId}`}>
-                        {orc?.部位表?.map((o: any, i: React.Key) => (
-                            <TableRow key={i}>
-                                {config部位汇总.map(([_1, tag, _3], k: number) => {
-                                    return (
-                                        <CCell key={k} className="break-all text-sm">
-                                            {o?.[tag] || "／"}
-                                        </CCell>
-                                    )
-                                })}
-                            </TableRow>
-                        ))}
-                        {!(orc?.部位表?.length > 0)  && (
-                            <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
-                        )}
-                    </JumpTab>
-                </TableBody>
-            </FlexibleTable>
-            <FlexibleTable columnWidths={["17%", "18%", "12%", "12%", "16%", "9%", "%"]}>
-                <TableBody>
-                    <TableRow className="text-sm">
-                        <CCell>检测标准</CCell>
-                        <TableCell className="border border-gray-700" colSpan={6}>
-                            GB/T 11344-2021《无损检测 超声测厚》
-                            <br />
-                            NB/T 47013.3-2015 《承压设备无损检测 第3部份：超声检测》
-                        </TableCell>
-                    </TableRow>
                     <TableRow id={'TkmsDiagram_'+redId}  className="border border-gray-700">
-                        <TableCell colSpan={7} className="border border-gray-700">
+                        <TableCell  className="border border-gray-700">
                             <RepLink ori rep={rep} tag={"TkmsDiagram"} subrid={subrid} redId={redId}>
-                                <div className="text-sm">测厚点位置示图：&nbsp;
+                                <div className="text-sm">检测部位、缺陷位置示意图：&nbsp;
                                     {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
                                     {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
                                         <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
@@ -149,62 +106,43 @@ export const ThickMsVw = ({
                     </TableRow>
                 </TableBody>
             </FlexibleTable>
-            <FlexibleTable id={'TkmsMeasurement_'+redId} columnWidths={["8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "%",]}>
+            <FlexibleTable id={'MangPartSummary_'+redId} columnWidths={ ["17%", "18%", "10.2%", "10.2%", "16%", "7.2%", "%"] }>
                 <TableHeader>
-                    <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId}>
-                        <TableRow className="text-sm">
-                            <CCell colSpan={12}>测 厚 记 录 （ 测点厚度单位：㎜）</CCell>
-                        </TableRow>
+                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/MangPartSummary?original=1${apds}${apdr}#MangPartSummary_${redId}`}>
                         <TableRow>
-                            {new Array(6).fill(null).map((a: any, i: number) => {
+                            {config部位汇总.map(([title, _2, _1], i: number) => {
                                 return (
-                                    <React.Fragment key={i}>
-                                        <CCell className="text-sm">测点编号</CCell>
-                                        <CCell className="text-xs">测点厚度</CCell>
-                                    </React.Fragment>
+                                    <CCell key={i} className="text-sm">
+                                        {title}
+                                    </CCell>
                                 )
                             })}
                         </TableRow>
-                    </RepLink>
+                    </JumpTab>
                 </TableHeader>
                 <TableBody>
-                    {(orc.测厚表??[]).length === 0 ? (
-                        <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId}>
-                            <TableRow>
-                                <CCell colSpan={12}>暂无数据</CCell>
+                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/MangPartSummary?original=1${apds}${apdr}#MangPartSummary_${redId}`}>
+                        {orc?.部位表?.map((o: any, i: React.Key) => (
+                            <TableRow key={i}>
+                                {config部位汇总.map(([_1, tag, _3], k: number) => {
+                                    return (
+                                        <CCell key={k} className="break-all text-sm">
+                                            {o?.[tag] || "／"}
+                                        </CCell>
+                                    )
+                                })}
                             </TableRow>
-                        </RepLink>
-                    ) : (
-                        (orc.测厚表 || []).map(({n1, v1,n2, v2,n3, v3,n4, v4,n5, v5,n6, v6}: any, i: number) => (
-                            <JumpTab key={i}  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsMeasurement?original=1${apds}${apdr}&from=${i}#TkmsMeasurement`}>
-                                <TableRow >
-                                    <CCell className="break-all text-sm">{n1 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v1 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n2 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v2 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n3 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v3 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n4 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v4 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n5 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v5 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n6 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v6 || "／"}</CCell>
-                                </TableRow>
-                            </JumpTab>
-                        ))
-                    )}
+                        ))}
+                        {!(orc?.部位表?.length > 0)  && (
+                            <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
+                        )}
+                    </JumpTab>
                 </TableBody>
             </FlexibleTable>
+
             <FlexibleTable id={'TkmsConclusion_'+redId} columnWidths={["%"]} className="text-sm border-collapse">
                 <TableBody>
                     <RepLink ori rep={rep} tag={"TkmsConclusion"} subrid={subrid} redId={redId}>
-                        <TableRow>
-                            <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
-                                <span className="block">备注：</span>
-                                <span className="block indent-[2rem] text-left">{orc.记录备注 || '／'}</span>
-                            </TableCell>
-                        </TableRow>
                         <TableRow>
                             <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
                                 <p>检测结果：</p>
@@ -214,6 +152,7 @@ export const ThickMsVw = ({
                     </RepLink>
                 </TableBody>
             </FlexibleTable>
+
             <FootMensLine cap="检验"
                 href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
             />
@@ -222,28 +161,62 @@ export const ThickMsVw = ({
     )
 }
 
-export const config壁厚测仪 = [
-    [["设备名称", "设备名称"], ["设备编号", "设备编号"],],
-    [["仪器型号", "仪器型号"], ["仪器编号", "仪器编号"],],
-    [["仪器精度", "仪器精度", "mm"], ["耦合剂", "耦合剂"],],
+const 设备类别选=['GC2','工艺管道' ];
+const 材质选=['20' ];
+const 表面状态选=['经表面处理后' ];
+const 热处理状态选=['处理' ];
+const 规格尺寸选=['见管道特性表' ];
+const 检测标准选=["NB/T47013.4-2015" ];
+const 灵敏度试片选=['A1:30/100' ];
+const 检测时机选=['宏观检验后' ];
+const 合格级别选=['Ⅰ级' ];
+const 检测方法选=['连续法','湿法/连续法' ];
+const 磁粉类型选=['非荧光磁粉' ];
+const 磁悬液选=['低粘度油基' ];
+const 磁化方法选=['磁轭法' ];
+const 提升力选=['≥45N' ];
+
+export const config磁粉仪概 = [
+    [["设备名称", "_$设备名称"], ['设备编号', {n:'设备编',t:'l',l:['见特性表']}], ],
+    [['设备类别', {n:'设备类',t:'l',l:设备类别选}], ["部件名称", "部件"], ],
+    [["部件编号", "部件号"], ['材质', {n:'材质',t:'l',l:材质选}] ],
+    [['规格尺寸',{n:'规格',t:'l',l:规格尺寸选}], ['表面状态', {n:'表面',t:'l',l:表面状态选}], ],
+    [['热处理状态', {n:'热处',t:'l',l:热处理状态选}], ['检测标准', {n:'检标准',t:'l',l:检测标准选}], ],
+    [['检测比例', {n:'检比例',t:'l',l:['27.3%（抽查）']} ], ['灵敏度试片', {n:'灵试',t:'l',l:灵敏度试片选}] ],
+    [['检测时机', {n:'时机',t:'l',l:检测时机选}], ['合格级别', {n:'合级别',t:'l',l:合格级别选} ], ],
+    [['检测方法', {n:'检法',t:'l',l:检测方法选}], ['磁粉类型', {n:'粉类',t:'l',l:磁粉类型选}] ],
+    [['磁悬液', {n:'悬液',t:'l',l:磁悬液选}], ['磁化方法', {n:'磁化法',t:'l',l:磁化方法选}] ],
+    [['提升力/磁化电流', {n:'升力',t:'l',l:提升力选}], ['施加方法','施法'],],
+    [['电流类型', {n:'电类',t:'l',l:["交流" ]}] , ]
 ]
+//编辑器2列；显示需改为3列的：
+export const config磁粉概要 = mergeToThreeColumn(config磁粉仪概);
+
 
 export const config部位汇总 = [
     ["部位名称", "n", 125], ["材质", "c", 95], ["公称厚度mm", "t", 75], ["腐蚀裕量mm", "f", 75],
     ["表面状况", "b", 90], ["实测点数", "d", 55], ["实测最小壁厚mm", "r", 90],
 ] as Each_ZdSetting[]
+
+//配置第四个位置的{ t: type, l: list, u: unit, s: size }
+export const config磁粉评定=[['部位编号','n',120],['缺陷编号','h',90],
+    ['缺陷位置','p',80, {t:'B',l:['0位']}],
+    ['长度（mm）','l',85],['缺陷性质','Q',120, {t:'B',l:['未焊透/整条']}],
+    ['评定级别','C',55, {t:'B',l:['Ⅳ级','Ⅲ级','Ⅱ级','Ⅰ级']}],
+    ['备 注','m',105] ] as Each_ZdSetting[];
+
 interface ThkPartSummaryProps extends InternalItemProps {
     config?: Each_ZdSetting[]
 }
 // const modType = "THICK_MS"
 /**可复用的： 仪器表录入页面的
  * */
-export const TkmsPartSummary = ({
+export const MangPartSummary = ({
                                     children,
                                     show,
                                     label,
                                     rep,
-                                    config = config部位汇总,
+                                    config = config磁粉评定,
                                     subrid,
                                     redId,modType
                                 }: ThkPartSummaryProps) => {
@@ -279,6 +252,7 @@ export const TkmsPartSummary = ({
         redId,
         modType: modType,
     })
+
     const [nestRenderer] = useTableEdit({
         form,
         arrayControls,

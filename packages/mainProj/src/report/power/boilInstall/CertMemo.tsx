@@ -17,7 +17,7 @@ export const CertMemo =
         {
             rep,
             children,
-            show = true,
+            show = false,
             label,
         }:InternalItemProps
     ) => {

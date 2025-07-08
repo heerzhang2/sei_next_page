@@ -71,7 +71,7 @@ interface Props  extends React.HTMLAttributes<HTMLDivElement>{
  * refWidth：抛弃不用了？ 没必要用LineColumn布局，直接多列的做。
 * */
 export const ActionMapItem = ({
-                                  show = true,
+                                  show = false,
                                   // alone = true,
                                   editAreasConf,
                                   index,

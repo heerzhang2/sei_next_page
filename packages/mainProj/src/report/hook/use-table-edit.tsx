@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui"
-import { FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput } from "@/components/chub"
+import {BlobInputList, FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput} from "@/components/chub"
 import type { UseFormReturn } from "react-hook-form"
 import {
   Check,
@@ -690,7 +690,7 @@ export function useTableEdit({
                                             <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
                                               <FormLabel className="select-text">{title}</FormLabel>
                                               <FormControl className="w-full">
-                                                {/*<BlobInputList datalist={list} unit={unit}  {...field}  />*/}
+                                                <BlobInputList  datalist={list} rows={size ?? 2} unit={unit} {...field} />
                                               </FormControl>
                                               <FormMessage />
                                             </FormItem>

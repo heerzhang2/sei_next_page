@@ -30,9 +30,7 @@ export const Explanatory =
         {
             rep,
             children,
-            show = true,
-            redId,
-            nestMd,
+            show = false,
             label = "长文本编辑器",
             stname = "长文字页",
         }:ExplanatoryProps,
