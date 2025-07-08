@@ -9,10 +9,11 @@ import {findNodeIndex} from "@/report/hook/useSubRepController";
 /**单独一份的独立流转分项报告; 更为特殊的可重复分项；
  * 打印也没考虑：单独去打印可独立流转的分项报告的。
 * */
-export function SingeSubRep({rep,subrid,children}: {
+export function SingeSubRep({rep,subrid,children,title}: {
     rep: any,
     subrid: string,
-    children:  any
+    children:  any,
+    title: string
 }) {
     const {storage, subrType: modType, parrepfs } = useStorage()
     // console.log("SingeSubRep 位置=storage=", storage)
@@ -50,7 +51,7 @@ export function SingeSubRep({rep,subrid,children}: {
                     </div>)
                 })}
                 {localIdx.length<=0 &&
-                    <strong className="text-center mt-8 text-xl">此分项报告，还未有任何内容</strong>
+                    <strong className="text-center mt-8 text-xl">{title}-分项报告，还未有任何内容</strong>
                 }
             </div>
         </Suspense>
@@ -133,10 +134,26 @@ export default function SubRep({
                         </div>)
                     })}
                     {sIdx.length<=0 &&
-                        <strong className="text-center mt-8 text-xl">此分项报告，还未有任何内容</strong>
+                        <strong className="text-center mt-8 text-xl">{title}-分项报告，还未有任何内容</strong>
                     }
                 </div>)
             })}
         </div>
     )
 }
+
+// 子报告配置映射； modType:避免用整数键（或可转换为整数的字符串）;
+export interface SubReportConfig {
+    //报告里面的提示信息：
+    title: string
+    //模板入口
+    component: React.ComponentType<{
+        orc?: any
+        rep: any
+        subrid?: string
+        printMode?: boolean
+    }>
+    //项目列表中的名称：
+    catalogKey: string // 用于 mapFxian.get() 的键
+}
+

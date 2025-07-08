@@ -6,6 +6,7 @@ import {useCallback, useState} from "react";
 import {useFrameEditorBar} from "@/report/hook/useFormFramework";
 import {usePathname, useRouter, useSearchParams} from "next/navigation";
 import {undefined} from "zod";
+import {EditorAreaConfig} from "@/report/common/eHelper";
 
 const suffixToRemove = "_Controller";
 export const findNodeIndex = <T extends { node: { id: string } }>(
@@ -22,7 +23,7 @@ export const findNodeIndex = <T extends { node: { id: string } }>(
  * 特殊路由 的 当前分项报告的各个分项在子报告 控制
  * 新增加分项枪击确认保存后爆出hook错误了：因为右半边页面这回仅仅过render？路由没动啊。
  * */
-export function useSubRepController(modelkey: string, rep:any, callback: (store: any,index: number) => React.ReactNode, subrid?:string
+export function useSubRepController(recordPrintList: EditorAreaConfig[],modelkey: string, rep:any, callback: (store: any,index: number) => React.ReactNode, subrid?:string
 ) {
     const router = useRouter()
     const searchParams = useSearchParams()

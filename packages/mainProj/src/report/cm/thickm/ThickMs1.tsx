@@ -247,7 +247,7 @@ export const TkmsPartSummary = ({
                                     subrid,
                                     redId,modType
                                 }: ThkPartSummaryProps) => {
-    const { storage, setStorage, subrType, modified, setModified } = useStorage()
+    const { storage, } = useStorage()
     const subStore = storage?.[`_${modType}_${redId}`]
     const schema = React.useMemo(() => {
         const schemaFields = {} as any

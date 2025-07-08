@@ -28,7 +28,7 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
     const [mapFxian]=useItemsMapPressure({projects: subrid? parrepfs.Projects : storage.Projects});
     const rcaList =React.useMemo(() => flattenEditorAreaConfig(recordPrintList), [recordPrintList]);
 
-    const {view} =useSubRepController(modelkey || subrType, rep, titleRenders?.[modelkey || subrType]!, subrid);
+    const {view} =useSubRepController(recordPrintList,modelkey || subrType, rep, titleRenders?.[modelkey || subrType]!, subrid);
     //去掉了qs,依赖项；
     //编辑器【自定义路由】这里action是 '2.1' ALL none printAll 这样的路由参数 ?readOnly=1&。
     const recordList= React.useMemo(() =>
