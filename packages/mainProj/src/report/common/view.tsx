@@ -268,7 +268,7 @@ export const MeasureMemoTwoRaft = ({
         }
     </>;
 };
-/**测压多使用的 人员：
+/**承压多使用的 人员：
 * */
 export const FootMensLine = ({
                                children,
@@ -367,6 +367,83 @@ export const FootMensLine = ({
                         </CCell>
                     </TableRow>
                 )}
+            </TableBody>
+        </FlexibleTable>
+    );
+};
+
+/**磁粉检测 使用的 人员；2行的： 有加证书级别的 jcl和ccl参数；
+ * */
+export const CfootMensLine = ({
+                                 children,
+                                 href,
+                                 cap,
+                                 scap,
+                                 jm,
+                                 jd,
+                                 cm,
+                                 cd,
+                                 tijb,jcl,ccl, columnWidths
+                             }: {
+    children?: React.ReactNode;
+    href?: string;
+    cap?: string;
+    scap?: string;
+    jm?: any[] | any;
+    cm?: any;
+    jd?: string;
+    cd?: string;
+    tijb?: string;
+    jcl?: any;
+    ccl?: any;
+    columnWidths?: string[];
+}) => {
+    // 处理检验人显示逻辑
+    const jmRender = jm && (
+        <>
+            {Array.isArray(jm) ? (
+                <>
+                    {jm.map((m: any, k: number) => (
+                        <React.Fragment key={k}>
+                            {k !== 0 && ','}&nbsp;{m}
+                        </React.Fragment>
+                    ))}
+                </>
+            ) : (
+                jm
+            )}
+        </>
+    );
+    const jymens = jmRender || '检验人';
+    const render=()=><>
+        <TableRow>
+            <CCell>{cap ?? '检验'}：</CCell>
+            <CCell>{jymens}</CCell>
+            <CCell>{tijb ??'级别'}</CCell>
+            <CCell>{jcl}</CCell>
+            <CCell>日期</CCell>
+            <CCell>{jd || '2024-12-31'}</CCell>
+        </TableRow>
+        <TableRow>
+            <CCell>{scap ?? '审核'}：</CCell>
+            <CCell>{cm || '审核人'}</CCell>
+            <CCell>{tijb ??'级别'}</CCell>
+            <CCell>{ccl}</CCell>
+            <CCell>日期</CCell>
+            <CCell>{cd || '2025-01-31'}</CCell>
+        </TableRow>
+    </>
+    return (
+        <FlexibleTable className="text-sm" columnWidths={columnWidths ?? ["8.6%","%","9%","38.5%","5.3%","11.3%"] }>
+            <TableBody>
+                {children}
+                {href ? (
+                    <DirectLink href={href}>
+                        {render()}
+                    </DirectLink>
+                    )
+                    : render()
+                }
             </TableBody>
         </FlexibleTable>
     );

@@ -391,35 +391,35 @@ export function BlobInputList({
   const items = inputValue ? datalist.filter((item) => item.toLowerCase().includes(inputValue.toLowerCase())) : datalist
 
   return (
-      <div className="inline-flex items-center">
-      <textarea
-          className={cn(
-              "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-              className,
-          )}
-          {...other}
-          {...getReferenceProps({
-            ref: refs.setReference,
-            onChange: handleInputChange,
-            value: inputValue,
-            placeholder: placeholder,
-            "aria-autocomplete": "list",
-            onKeyDown(event) {
-              if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
-                event.preventDefault()
-                setInputValue(items[activeIndex])
-                if (onListChange) {
-                  onListChange(items[activeIndex])
-                }
-                setActiveIndex(null)
-                setOpen(false)
-              }
-            },
-            onPointerDown() {
-              setOpen(true)
-            },
-          })}
-      />
+      <div className="w-full inline-flex items-center">
+         <textarea
+              className={cn(
+                  "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                  className,
+              )}
+              {...other}
+              {...getReferenceProps({
+                ref: refs.setReference,
+                onChange: handleInputChange,
+                value: inputValue,
+                placeholder: placeholder,
+                "aria-autocomplete": "list",
+                onKeyDown(event) {
+                  if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
+                    event.preventDefault()
+                    setInputValue(items[activeIndex])
+                    if (onListChange) {
+                      onListChange(items[activeIndex])
+                    }
+                    setActiveIndex(null)
+                    setOpen(false)
+                  }
+                },
+                onPointerDown() {
+                  setOpen(true)
+                },
+              })}
+         />
         {unit}
         <FloatingPortal>
           {open && items.length > 0 && (

@@ -49,7 +49,7 @@ export default function ChromeGuidePage() {
                         <CardContent>
                             <ol className="list-decimal pl-5 space-y-4">
                                 <li>
-                                  <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1">滑行车类大型游乐设施监督检验</Link>
+                                  <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">滑行车类大型游乐设施监督检验</Link>
                                 </li>
                                 <li>
                                     <p>使用以下命令启动Chrome:</p>

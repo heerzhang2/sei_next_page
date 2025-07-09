@@ -12,7 +12,8 @@ import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
 import {config壁厚测仪, TkmsConclusion, TkmsMeasurement, TkmsPartSummary} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 import {FxDiagram} from "@/report/cm/thickm/FxDiagram";
-import {config磁粉仪概, MangPartSummary} from "@/report/cm/magnetic/Magnetic1";
+import {config磁粉仪概, MangConclusion, MangPartSummary, mang示说选} from "@/report/cm/magnetic/Magnetic1";
+import {FxSimpConclus} from "@/report/cm/magnetic/FxSimpConclus";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -57,8 +58,9 @@ const recordPrintList =[
     ]),
     aggregateProj('磁粉检测', 'MAGNT_TS', [
         createItem('MangInstrument', <DeviceSurveyFx config={config磁粉仪概} label='磁粉检测-概要仪器'/>),
+        createItem('MangDiagram', <FxDiagram label="检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={mang示说选}/>),
         createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
-        createItem('PERME_TSCertMemo', <CertMemo label={'磁粉检测---检测-说明'} />),
+        createItem('MangConclusion', <FxSimpConclus label={'磁粉检测-检测结果'} clc="结果" clist={["1级"]}/>),
     ]),
     createItem('Explanatory', <Explanatory label={'YY.3锅炉安装施工过程概述'}/>),
 ];

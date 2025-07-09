@@ -1,7 +1,15 @@
 "use client"
 import * as React from "react";
-import {CollapsibleFormSection} from "@/components/chub";
-import {Badge, Card, CardContent, CardFooter, CardHeader, CardTitle,Label,Textarea} from "@/components/ui";
+import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
+import {
+    Badge,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    Label,
+} from "@/components/ui";
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import {InternalItemProps, RepLink} from "@/report/common/base";
 import {useStorage} from "@/report/StorageContext";
@@ -20,6 +28,7 @@ interface FxDiagramProps  extends InternalItemProps{
     pic: string;
     memo: string;
     maxFile?: number;
+    dlist?: string[];
 }
 
 // interface ProjectItem {
@@ -33,7 +42,7 @@ export const FxDiagram =
 ({  rep,
     children,
     show = false,
-    label, maxFile=1, memo, pic, modType, subrid,redId
+    label, maxFile=1, memo, pic, modType, subrid,redId,dlist
 }:FxDiagramProps) => {
     const {storage,setStorage,subrType,modified,setModified} =useStorage();
     const subStore=storage?.[`_${modType}_${redId}`];
@@ -97,12 +106,12 @@ export const FxDiagram =
                                             <Label htmlFor="memojt" className="select-text">
                                                 说明：
                                             </Label>
-                                            <Textarea
-                                                className="min-h-[8rem] resize-y"
-                                                id="memojt"
-                                                value={editForm?.[memo] || ""}
-                                                onChange={(e) => updateFormField(memo, e.target.value)}
-                                                placeholder="输入更多文字"
+                                            <BlobInputList className="w-full min-h-[8rem] resize-y"
+                                                   id="memojt"
+                                                   datalist={dlist}
+                                                   value={editForm?.[memo] || ""}
+                                                   onChange={(val) => updateFormField(memo, val)}
+                                                   placeholder="输入更多文字"
                                             />
                                             {editErr && <p className="text-sm text-red-600">{editErr}</p>}
                                         </div>

@@ -470,8 +470,8 @@ export const TkmsConclusion = ({ rep, children, show = false, label, subrid, red
 }
 
 export const cat_Thickms=[
-    {title: "测量部位名称", url: "#TkmsPartSummary"},
+    {title: "壁厚测定-部位名称", url: "#TkmsPartSummary"},
     {title: "测厚点位置", url: "#TkmsDiagram"},
-    {title: "测 厚 记 录", url: "#TkmsMeasurement"},
-    {title: '检测结果', url: "#TkmsConclusion"},
+    {title: "测厚记录", url: "#TkmsMeasurement"},
+    {title: '壁厚测定-结果', url: "#TkmsConclusion"},
 ];

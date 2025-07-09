@@ -1,4 +1,6 @@
 import * as React from "react";
+import {SubReportConfig} from "@/component/rep/sub-rep";
+import {SUBREP_CONFIG} from "@/report/industrial/Periodical/boilerInstR1";
 
 //承压类的，较为常用的：
 export type PressureLayout = {
@@ -52,3 +54,31 @@ export function redoProjHash(
         }))
     );
 }
+/**动态添加子报告的目录项
+ * 弥补：无法感知下一级组件的具体的折叠状态变量的变动。 免去用Url search param? 或者use context ?
+* */
+export function subRepHash(
+    config: Record<string, SubReportConfig>,
+    mapFxian: Map<string, PressureLayout>,
+    storage: any
+): Array<{
+    title: string;
+    url: string;
+}> {
+    let tmpAr: Array<{ title: string; url: string; }> = [];
+    Object.entries(config)
+        .filter(([modType, config]) => mapFxian.get(config.catKey)?.do)
+        .forEach(([modType, config]) => {
+            tmpAr.push({
+                title: `${config.catKey ?? config.title}报告`,
+                url: `#_${modType}_`,
+            });
+            const localIdx = storage?.[`_${modType}`] ?? [];
+            //真的有必要：隐藏折叠 hash定位无效
+            if (localIdx?.length === 1 && !config.collapse) {
+                tmpAr.push(...redoProjHash([localIdx[0]], config.cat));
+            }
+        });
+  return tmpAr;
+}
+

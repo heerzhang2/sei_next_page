@@ -10,7 +10,7 @@ import { createPdfJob } from "@/report/footer/job"
 import { RepFootLink } from "@/report/common/repFootLink"
 import { RepHeadLink } from "@/report/common/repHeadLink"
 import { JumpTab } from "@/report/common/JumpTab"
-import { redoProjHash, useItemsMapPressure } from "@/report/common/pressure"
+import {redoProjHash, subRepHash, useItemsMapPressure} from "@/report/common/pressure"
 import { DirectoryPagePress } from "@/report/common/directory"
 import { ExplanatoryVw } from "@/report/power/boilInstall/Explanatory"
 import { CertificatePage } from "@/report/power/boilInstall/CertificatePage"
@@ -20,19 +20,20 @@ import { 首页设备概况BoilI } from "@/report/power/boilInstall/rarelyVary"
 import { ConclusionVw } from "@/report/industrial/Periodical/Conclusion"
 import { cat_Thickms, ThickMsVw } from "@/report/cm/thickm/ThickMs1"
 import SubRep, {SingeSubRep, SubReportConfig} from "@/component/rep/sub-rep"
-import { MagneticVw } from "@/report/cm/magnetic/Magnetic1"
+import {cat_Magne, MagneticVw} from "@/report/cm/magnetic/Magnetic1"
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
-const SUB_REPORT_CONFIG: Record<string, SubReportConfig> = {
+export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     THICK_MS: {
         catKey: "壁厚测定",
         component: ThickMsVw,
-        collapse: true
+        collapse: true,
+        cat: cat_Thickms
     },
     MAGNT_TS: {
         catKey: "磁粉检测",
         component: MagneticVw,
-        collapse: true
+        cat: cat_Magne
     },
 }
 
@@ -92,17 +93,14 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                                                                         printMode,
                                                                     }) => {
     const { subrType } = useStorage()
-
-    // 渲染单个子报告
+    //单个子报告
     const renderSingleSubReport = () => {
         if (!subrType) return null
-
-        const config = SUB_REPORT_CONFIG[subrType]
+        const config = SUBREP_CONFIG[subrType]
         if (!config) {
             console.warn(`未找到 ${subrType} 的配置`)
             return null
         }
-
         const Component = config.component
         return (
             <SingeSubRep rep={rep} subrid={subrid!} title={config.title?? config.catKey}>
@@ -110,29 +108,21 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
             </SingeSubRep>
         )
     }
-
-    // 渲染所有子报告（用于主报告）
-    const renderAllSubReports = () => {
-        //避免使用数字或可转换为数字的字符串作为键名，改用非数字字符串; 数字键优先按数值排序，非数字键按插入顺序
-        return Object.entries(SUB_REPORT_CONFIG)
-            .map(([modType, config]) => {
-                if (!mapFxian.get(config.catKey)?.do) return null
-
-                const Component = config.component
-                return (
-                    <SubRep key={modType} modType={modType} rep={rep} title={config.title?? config.catKey} collapse={config.collapse}>
-                        <Component orc={orc} rep={rep} printMode={printMode} />
-                    </SubRep>
-                )
-            })
-            .filter(Boolean)
+    //渲染子报告
+    const renderSub = (modType: keyof typeof SUBREP_CONFIG) => {
+        const config=SUBREP_CONFIG[modType]
+        if (!mapFxian.get(config.catKey)?.do) return null
+        const Component = config.component
+        return (
+            <SubRep key={modType} modType={modType} rep={rep} title={config.title?? config.catKey} collapse={config.collapse}>
+                <Component orc={orc} rep={rep} printMode={printMode} />
+            </SubRep>
+        )
     }
-
     //走独立流转分项报告模式的情况
     if (subrType) {
         return renderSingleSubReport()
     }
-
     return (
         <>
             <div className="not-print:my-4">
@@ -160,8 +150,8 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {mapFxian.get("锅炉简图")?.do && <BoilerDiagramVw orc={orc} rep={rep} />}
                 {mapFxian.get("检验过程概述")?.do && <ExplanatoryVw orc={orc} rep={rep} title="1.3锅炉安装施工过程概述" />}
 
-                {/* 渲染所有配置的子报告 */}
-                {renderAllSubReports()}
+                {renderSub('THICK_MS')}
+                {renderSub('MAGNT_TS')}
             </div>
             <div className="print:hidden">
                 <RepLink ori rep={rep} tag={"ProjectList"}>
@@ -182,8 +172,8 @@ export function useCatalog() {
         { title: "页面尾巴", url: "#PTAIL" },
     ]
     const dirs = React.useMemo(() => {
-        if (mod && SUB_REPORT_CONFIG[mod]) {
-            return [...head, ...redoProjHash(storage?.[`_${mod}`], cat_Thickms)]
+        if (mod && SUBREP_CONFIG[mod]) {
+            return [...head, ...redoProjHash(storage?.[`_${mod}`], SUBREP_CONFIG[mod].cat)]
         }
         // 主报告的目录
         const mainReportDirs = [
@@ -194,20 +184,9 @@ export function useCatalog() {
             { title: "1.2锅炉结构简图", url: "#BoilerDiagram" },
             { title: "1.3锅炉安装施工及监督检验过程概述", url: "#Explanatory" },
         ]
-        // 动态添加子报告的目录项
-        const subReportDirs = Object.entries(SUB_REPORT_CONFIG)
-            .filter(([modType, config]) => mapFxian.get(config.catKey)?.do)
-            .map(([modType, config]) => ({
-                title: `${config.title}报告`,
-                url: `#_${modType}_`,
-            }))
-
-        return [...head, ...mainReportDirs, ...subReportDirs,
+        return [...head, ...mainReportDirs, ...subRepHash(SUBREP_CONFIG,mapFxian,storage),
             { title: "设erewrwe备概况", url: "#Survddey2" }
         ].filter(Boolean)
     }, [mod, storage, mapFxian])
     return dirs
 }
-
-// 导出配置供其他地方使用
-export { SUB_REPORT_CONFIG }

@@ -160,6 +160,7 @@ export interface SubReportConfig {
         printMode?: boolean
     }>
     //必须折叠，不允许自动展开的。
-    collapse?: boolean
+    collapse?: boolean,
+    cat: {title: string, url:string}[],
 }
 
