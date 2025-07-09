@@ -36,14 +36,173 @@ export const ThickMsVw = ({
                               apxid,
                               useh2,
                               printMode,
-                              children,
+                              children, unfold,
                           }: RepVwProps) => {
     const TComponent = useh2 ? "h2" : "div"
     const renderUpper = usePrefixDataTable({ config: config壁厚测仪, orc, rep, slash: true })
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
     //{title}这里不加上id； id需上一层的div统一做添加的。
-    return (
+    const render=()=><>
+        <FlexibleTable columnWidths={["9.9%", "6.8%", "37%", "12.1%", "4%", "%"]} className="text-sm border-collapse">
+            <TableBody>
+                <RepLink ori rep={rep} tag={"TkmsInstrument"} subrid={subrid} redId={redId}>
+                    {renderUpper}
+                </RepLink>
+            </TableBody>
+        </FlexibleTable>
+        <FlexibleTable id={'TkmsPartSummary_'+redId} columnWidths={ ["17%", "18%", "10.2%", "10.2%", "16%", "7.2%", "%"] }>
+            <TableHeader>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsPartSummary?original=1${apds}${apdr}#TkmsPartSummary_${redId}`}>
+                    <TableRow>
+                        {config部位汇总.map(([title, _2, _1], i: number) => {
+                            return (
+                                <CCell key={i} className="text-sm">
+                                    {title}
+                                </CCell>
+                            )
+                        })}
+                    </TableRow>
+                </JumpTab>
+            </TableHeader>
+            <TableBody>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsPartSummary?original=1${apds}${apdr}#TkmsPartSummary_${redId}`}>
+                    {orc?.部位表?.map((o: any, i: React.Key) => (
+                        <TableRow key={i}>
+                            {config部位汇总.map(([_1, tag, _3], k: number) => {
+                                return (
+                                    <CCell key={k} className="break-all text-sm">
+                                        {o?.[tag] || "／"}
+                                    </CCell>
+                                )
+                            })}
+                        </TableRow>
+                    ))}
+                    {!(orc?.部位表?.length > 0)  && (
+                        <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
+                    )}
+                </JumpTab>
+            </TableBody>
+        </FlexibleTable>
+        <FlexibleTable columnWidths={["17%", "18%", "12%", "12%", "16%", "9%", "%"]}>
+            <TableBody>
+                <TableRow className="text-sm">
+                    <CCell>检测标准</CCell>
+                    <TableCell className="border border-gray-700" colSpan={6}>
+                        GB/T 11344-2021《无损检测 超声测厚》
+                        <br />
+                        NB/T 47013.3-2015 《承压设备无损检测 第3部份：超声检测》
+                    </TableCell>
+                </TableRow>
+                <TableRow id={'TkmsDiagram_'+redId}  className="border border-gray-700">
+                    <TableCell colSpan={7} className="border border-gray-700">
+                        <RepLink ori rep={rep} tag={"TkmsDiagram"} subrid={subrid} redId={redId}>
+                            <div className="text-sm">测厚点位置示图：&nbsp;
+                                {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
+                                {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
+                                    <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
+                                )}
+                            </div>
+                        </RepLink>
+                        {orc?._FILE_S部位?.map(({ name, url }: any, i: number) => {
+                            return (
+                                <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
+                                    {i > 0 && <hr />}
+                                    <JumpTab
+                                        key={i}
+                                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsDiagram?original=1${apds}${apdr}#FxDiagram_pf${i}`}
+                                    >
+                                        <div className="flex justify-around items-center my-0.5">
+                                            {url && (
+                                                <ImageComponent
+                                                    src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${url}`}
+                                                    alt={url || "图片"}
+                                                    className={cn(
+                                                        "w-auto h-auto",
+                                                        i > 0 ? "print:max-h-[calc(100vh-2.5rem)]" : "print:max-h-[calc(100vh-5.9rem)]",
+                                                    )}
+                                                />
+                                            )}
+                                        </div>
+                                    </JumpTab>
+                                </div>
+                            )
+                        })}
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        </FlexibleTable>
+        <FlexibleTable id={'TkmsMeasurement_'+redId} columnWidths={["8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "%",]}>
+            <TableHeader>
+                <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId}>
+                    <TableRow className="text-sm">
+                        <CCell colSpan={12}>测 厚 记 录 （ 测点厚度单位：㎜）</CCell>
+                    </TableRow>
+                    <TableRow>
+                        {new Array(6).fill(null).map((a: any, i: number) => {
+                            return (
+                                <React.Fragment key={i}>
+                                    <CCell className="text-sm">测点编号</CCell>
+                                    <CCell className="text-xs">测点厚度</CCell>
+                                </React.Fragment>
+                            )
+                        })}
+                    </TableRow>
+                </RepLink>
+            </TableHeader>
+            <TableBody>
+                {(orc.测厚表??[]).length === 0 ? (
+                    <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId}>
+                        <TableRow>
+                            <CCell colSpan={12}>暂无数据</CCell>
+                        </TableRow>
+                    </RepLink>
+                ) : (
+                    (orc.测厚表 || []).map(({n1, v1,n2, v2,n3, v3,n4, v4,n5, v5,n6, v6}: any, i: number) => (
+                        <JumpTab key={i}  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsMeasurement?original=1${apds}${apdr}&from=${i}#TkmsMeasurement`}>
+                            <TableRow >
+                                <CCell className="break-all text-sm">{n1 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{v1 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{n2 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{v2 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{n3 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{v3 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{n4 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{v4 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{n5 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{v5 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{n6 || "／"}</CCell>
+                                <CCell className="break-all text-sm">{v6 || "／"}</CCell>
+                            </TableRow>
+                        </JumpTab>
+                    ))
+                )}
+            </TableBody>
+        </FlexibleTable>
+        <FlexibleTable id={'TkmsConclusion_'+redId} columnWidths={["%"]} className="text-sm border-collapse">
+            <TableBody>
+                <RepLink ori rep={rep} tag={"TkmsConclusion"} subrid={subrid} redId={redId}>
+                    <TableRow>
+                        <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                            <span className="block">备注：</span>
+                            <span className="block indent-[2rem] text-left">{orc.记录备注 || '／'}</span>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                            <p>检测结果：</p>
+                            <span className="block indent-[2rem] text-left">{orc.检测结果 || '／'}</span>
+                        </TableCell>
+                    </TableRow>
+                </RepLink>
+            </TableBody>
+        </FlexibleTable>
+        <FootMensLine cap="检验"
+                      href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
+        />
+    </>
+
+   return (
     <PrintReserveLeast
         reserve="6rem"
         title={
@@ -60,164 +219,11 @@ export const ThickMsVw = ({
             </>
         }
     >
-        <CollapseFx printMode={printMode} subrid={subrid}>
-            <FlexibleTable columnWidths={["9.9%", "6.8%", "37%", "12.1%", "4%", "%"]} className="text-sm border-collapse">
-                <TableBody>
-                    <RepLink ori rep={rep} tag={"TkmsInstrument"} subrid={subrid} redId={redId}>
-                        {renderUpper}
-                    </RepLink>
-                </TableBody>
-            </FlexibleTable>
-            <FlexibleTable id={'TkmsPartSummary_'+redId} columnWidths={ ["17%", "18%", "10.2%", "10.2%", "16%", "7.2%", "%"] }>
-                <TableHeader>
-                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsPartSummary?original=1${apds}${apdr}#TkmsPartSummary_${redId}`}>
-                        <TableRow>
-                            {config部位汇总.map(([title, _2, _1], i: number) => {
-                                return (
-                                    <CCell key={i} className="text-sm">
-                                        {title}
-                                    </CCell>
-                                )
-                            })}
-                        </TableRow>
-                    </JumpTab>
-                </TableHeader>
-                <TableBody>
-                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsPartSummary?original=1${apds}${apdr}#TkmsPartSummary_${redId}`}>
-                        {orc?.部位表?.map((o: any, i: React.Key) => (
-                            <TableRow key={i}>
-                                {config部位汇总.map(([_1, tag, _3], k: number) => {
-                                    return (
-                                        <CCell key={k} className="break-all text-sm">
-                                            {o?.[tag] || "／"}
-                                        </CCell>
-                                    )
-                                })}
-                            </TableRow>
-                        ))}
-                        {!(orc?.部位表?.length > 0)  && (
-                            <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
-                        )}
-                    </JumpTab>
-                </TableBody>
-            </FlexibleTable>
-            <FlexibleTable columnWidths={["17%", "18%", "12%", "12%", "16%", "9%", "%"]}>
-                <TableBody>
-                    <TableRow className="text-sm">
-                        <CCell>检测标准</CCell>
-                        <TableCell className="border border-gray-700" colSpan={6}>
-                            GB/T 11344-2021《无损检测 超声测厚》
-                            <br />
-                            NB/T 47013.3-2015 《承压设备无损检测 第3部份：超声检测》
-                        </TableCell>
-                    </TableRow>
-                    <TableRow id={'TkmsDiagram_'+redId}  className="border border-gray-700">
-                        <TableCell colSpan={7} className="border border-gray-700">
-                            <RepLink ori rep={rep} tag={"TkmsDiagram"} subrid={subrid} redId={redId}>
-                                <div className="text-sm">测厚点位置示图：&nbsp;
-                                    {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
-                                    {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
-                                        <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
-                                    )}
-                                </div>
-                            </RepLink>
-                            {orc?._FILE_S部位?.map(({ name, url }: any, i: number) => {
-                                return (
-                                    <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
-                                        {i > 0 && <hr />}
-                                        <JumpTab
-                                            key={i}
-                                            href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsDiagram?original=1${apds}${apdr}#FxDiagram_pf${i}`}
-                                        >
-                                            <div className="flex justify-around items-center my-0.5">
-                                                {url && (
-                                                    <ImageComponent
-                                                        src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${url}`}
-                                                        alt={url || "图片"}
-                                                        className={cn(
-                                                            "w-auto h-auto",
-                                                            i > 0 ? "print:max-h-[calc(100vh-2.5rem)]" : "print:max-h-[calc(100vh-5.9rem)]",
-                                                        )}
-                                                    />
-                                                )}
-                                            </div>
-                                        </JumpTab>
-                                    </div>
-                                )
-                            })}
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </FlexibleTable>
-            <FlexibleTable id={'TkmsMeasurement_'+redId} columnWidths={["8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "%",]}>
-                <TableHeader>
-                    <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId}>
-                        <TableRow className="text-sm">
-                            <CCell colSpan={12}>测 厚 记 录 （ 测点厚度单位：㎜）</CCell>
-                        </TableRow>
-                        <TableRow>
-                            {new Array(6).fill(null).map((a: any, i: number) => {
-                                return (
-                                    <React.Fragment key={i}>
-                                        <CCell className="text-sm">测点编号</CCell>
-                                        <CCell className="text-xs">测点厚度</CCell>
-                                    </React.Fragment>
-                                )
-                            })}
-                        </TableRow>
-                    </RepLink>
-                </TableHeader>
-                <TableBody>
-                    {(orc.测厚表??[]).length === 0 ? (
-                        <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId}>
-                            <TableRow>
-                                <CCell colSpan={12}>暂无数据</CCell>
-                            </TableRow>
-                        </RepLink>
-                    ) : (
-                        (orc.测厚表 || []).map(({n1, v1,n2, v2,n3, v3,n4, v4,n5, v5,n6, v6}: any, i: number) => (
-                            <JumpTab key={i}  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsMeasurement?original=1${apds}${apdr}&from=${i}#TkmsMeasurement`}>
-                                <TableRow >
-                                    <CCell className="break-all text-sm">{n1 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v1 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n2 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v2 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n3 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v3 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n4 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v4 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n5 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v5 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{n6 || "／"}</CCell>
-                                    <CCell className="break-all text-sm">{v6 || "／"}</CCell>
-                                </TableRow>
-                            </JumpTab>
-                        ))
-                    )}
-                </TableBody>
-            </FlexibleTable>
-            <FlexibleTable id={'TkmsConclusion_'+redId} columnWidths={["%"]} className="text-sm border-collapse">
-                <TableBody>
-                    <RepLink ori rep={rep} tag={"TkmsConclusion"} subrid={subrid} redId={redId}>
-                        <TableRow>
-                            <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
-                                <span className="block">备注：</span>
-                                <span className="block indent-[2rem] text-left">{orc.记录备注 || '／'}</span>
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
-                                <p>检测结果：</p>
-                                <span className="block indent-[2rem] text-left">{orc.检测结果 || '／'}</span>
-                            </TableCell>
-                        </TableRow>
-                    </RepLink>
-                </TableBody>
-            </FlexibleTable>
-            <FootMensLine cap="检验"
-                href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
-            />
-        </CollapseFx>
+        {unfold ? render() :
+            <CollapseFx printMode={printMode} subrid={subrid}>
+                {render()}
+            </CollapseFx>
+        }
     </PrintReserveLeast>
     )
 }

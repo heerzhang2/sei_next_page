@@ -86,6 +86,18 @@ export const flattenEditorAreaConfig = (
     return [...acc, { ...rest, zoneContent }];
   }, []);
 };
+/**映射subrType 到 itemArea
+* */
+export const subrType2ProjTitle = <T extends EditorAreaConfig>(
+    configs: T[],
+    targetSubrType: string
+): Extract<T, { subrType: string }>["itemArea"][] => {
+  return configs
+      .filter((config): config is Extract<T, { subrType: string }> =>
+          config.subrType === targetSubrType
+      )
+      .map((config) => config.itemArea);
+};
 
 //通用的检验项目模板配置格式的：
 export function getInspectionItemsLength(inspectionContent :any[]){

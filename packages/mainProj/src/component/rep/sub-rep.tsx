@@ -61,14 +61,16 @@ export function SingeSubRep({rep,subrid,children,title}: {
 /**多子报告的：
  * 这个组件只能在主报告的语境中使用的，但不能用于可流转分项子报告的！
  * 普通的不可独立流转可重复分项的 modType 不要和公用模板类型代码冲突：
+ * 假设是主报告里面内置的 可重复分项个数只有一个的，那麽默认直接显示出来不折叠了。
 * */
 export default function SubRep({
-               rep, modType,children,title
+               rep, modType,children,title,collapse
                }: {
     rep: any,
     modType: string,
     children: any,
-    title: string
+    title: string,
+    collapse?: boolean
 }) {
     const {storage, parrepfs} =useStorage();
     const localIdx = storage?.[`_${modType}`] ?? [];
@@ -95,6 +97,7 @@ export default function SubRep({
                 const head=subreps.length > 0? '1' : '';
                 const apxid=head+`-${k+1}`;
                 const hash="_"+modType+"_1-"+seq;       //本地id固定都有_1的；
+                const needCollapse=collapse || (localIdx?.length >1)
                 return (<div key={k} id={hash}>
                         {React.cloneElement(children, {
                             //存储用的标签。
@@ -105,6 +108,7 @@ export default function SubRep({
                             //页面路由定位+报告排序序号：id={"_THICK_MS_"+apxid}
                             apxid,
                             useh2: k===0,
+                            unfold: (k===0 && !needCollapse),
                         })}
                 </div>)
             })}
@@ -144,8 +148,10 @@ export default function SubRep({
 
 // 子报告配置映射； modType:避免用整数键（或可转换为整数的字符串）;
 export interface SubReportConfig {
-    //报告里面的提示信息：
-    title: string
+    //项目列表中的名称：
+    catKey: string // 用于 mapFxian.get() 的键
+    //报告里面的提示信息： 默认的=catKey
+    title?: string
     //模板入口
     component: React.ComponentType<{
         orc?: any
@@ -153,7 +159,7 @@ export interface SubReportConfig {
         subrid?: string
         printMode?: boolean
     }>
-    //项目列表中的名称：
-    catalogKey: string // 用于 mapFxian.get() 的键
+    //必须折叠，不允许自动展开的。
+    collapse?: boolean
 }
 

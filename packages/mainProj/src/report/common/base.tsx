@@ -100,7 +100,10 @@ export interface RepVwProps{
     apxid?: string;
     //避免pdf书签太多：
     useh2?: boolean;
+    //打印预览
     printMode?: boolean;
+    //不折叠
+    unfold?: boolean;
 }
 
 

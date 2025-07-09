@@ -25,21 +25,15 @@ import { MagneticVw } from "@/report/cm/magnetic/Magnetic1"
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 const SUB_REPORT_CONFIG: Record<string, SubReportConfig> = {
     THICK_MS: {
-        title: "壁厚测定",
+        catKey: "壁厚测定",
         component: ThickMsVw,
-        catalogKey: "壁厚测定",
+        collapse: true
     },
     MAGNT_TS: {
-        title: "磁粉检测",
+        catKey: "磁粉检测",
         component: MagneticVw,
-        catalogKey: "磁粉检测",
+        collapse: true
     },
-    // 可以继续添加其他子报告配置
-    // 'OTHER_TYPE': {
-    //   title: '其他检测',
-    //   component: OtherVw,
-    //   catalogKey: '其他检测'
-    // }
 }
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
@@ -111,7 +105,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
 
         const Component = config.component
         return (
-            <SingeSubRep rep={rep} subrid={subrid!} title={config.title}>
+            <SingeSubRep rep={rep} subrid={subrid!} title={config.title?? config.catKey}>
                 <Component rep={rep} subrid={subrid} />
             </SingeSubRep>
         )
@@ -122,11 +116,11 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
         //避免使用数字或可转换为数字的字符串作为键名，改用非数字字符串; 数字键优先按数值排序，非数字键按插入顺序
         return Object.entries(SUB_REPORT_CONFIG)
             .map(([modType, config]) => {
-                if (!mapFxian.get(config.catalogKey)?.do) return null
+                if (!mapFxian.get(config.catKey)?.do) return null
 
                 const Component = config.component
                 return (
-                    <SubRep key={modType} modType={modType} rep={rep} title={config.title}>
+                    <SubRep key={modType} modType={modType} rep={rep} title={config.title?? config.catKey} collapse={config.collapse}>
                         <Component orc={orc} rep={rep} printMode={printMode} />
                     </SubRep>
                 )
@@ -202,7 +196,7 @@ export function useCatalog() {
         ]
         // 动态添加子报告的目录项
         const subReportDirs = Object.entries(SUB_REPORT_CONFIG)
-            .filter(([modType, config]) => mapFxian.get(config.catalogKey)?.do)
+            .filter(([modType, config]) => mapFxian.get(config.catKey)?.do)
             .map(([modType, config]) => ({
                 title: `${config.title}报告`,
                 url: `#_${modType}_`,

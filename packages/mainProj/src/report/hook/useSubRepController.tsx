@@ -6,7 +6,7 @@ import {useCallback, useState} from "react";
 import {useFrameEditorBar} from "@/report/hook/useFormFramework";
 import {usePathname, useRouter, useSearchParams} from "next/navigation";
 import {undefined} from "zod";
-import {EditorAreaConfig} from "@/report/common/eHelper";
+import {EditorAreaConfig, subrType2ProjTitle} from "@/report/common/eHelper";
 
 const suffixToRemove = "_Controller";
 export const findNodeIndex = <T extends { node: { id: string } }>(
@@ -31,6 +31,8 @@ export function useSubRepController(recordPrintList: EditorAreaConfig[],modelkey
     const { storage,setStorage, setModified } = useStorage()
     const [oldvalue, ] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
     const [formData, setFormData] = useState({ projectId: storage?.['_'+modelkey] ?? [] });
+    const projTitles = subrType2ProjTitle(recordPrintList, modelkey);
+    const title=projTitles?.[0] ??'';
     const renderProjectTitle = (index: number) => {
         return (
             <div>
@@ -95,6 +97,7 @@ export function useSubRepController(recordPrintList: EditorAreaConfig[],modelkey
                            value={formData.projectId}  onChange={onItemChanged}
                            canDeleteItem={canDeleteItem} onProjectClick={onProjectClick}
                            onDeleteItem={onSubProjDelete}
+                           title={`${title? title+'-' :''}可重复分项控制器`}
                     />
                 </CardContent>
                 <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2 mb-8">
