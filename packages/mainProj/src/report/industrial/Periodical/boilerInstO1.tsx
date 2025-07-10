@@ -12,7 +12,7 @@ import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
 import {config壁厚测仪, TkmsConclusion, TkmsMeasurement, TkmsPartSummary} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 import {FxDiagram} from "@/report/cm/thickm/FxDiagram";
-import {config磁粉仪概, MangConclusion, MangPartSummary, mang示说选} from "@/report/cm/magnetic/Magnetic1";
+import {config磁粉仪概, MangPartSummary, mang示说选} from "@/report/cm/magnetic/Magnetic1";
 import {FxSimpConclus} from "@/report/cm/magnetic/FxSimpConclus";
 
 

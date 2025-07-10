@@ -17,13 +17,12 @@ import { usePrefixDataTable } from "@/report/hook/usePrefixData"
 import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
 import { z } from "zod"
 import type { UseFormReturn } from "react-hook-form"
-import { groupArray } from "@/report/tools"
 import { useFormTableInit } from "@/report/hook/useFieldArrays"
-import {getRepUnqIndexByNo} from "@/report/common/editor";
 import {useSearchParams} from "next/navigation";
 
 /**壁厚测定报告
- *因为有空值赋值""的，#必须用 {o?.[tag] || '／'} 来替代 {o?.[tag] ?? '／'} 否则不会显示反斜杠。
+ *这一代：@不再用import(`./components/${path}`))动态导入的思路： @还是走正规的静态导入：编译时刻已经确定了文件名，不再依赖参数拼凑导入文件名了。构建时确定依赖，优化更充分，性能好点。
+  *因为有空值赋值""的，#必须用 {o?.[tag] || '／'} 来替代 {o?.[tag] ?? '／'} 否则不会显示反斜杠。
  * 可重复分项：因为默认Collapse隐藏，所以没必要加hash导航: 比如<JumpTab  /TkmsPartSummary?original=1${apds}${apdr}#TkmsPartSummary_${redId}`}>
  * */
 export const ThickMsVw = ({
@@ -341,7 +340,7 @@ export const TkmsMeasurement = ({
                                     redId,
                                     modType,
                                 }: ThkPartSummaryProps) => {
-    const { storage, setStorage, subrType, modified, setModified } = useStorage()
+    const { storage, } = useStorage()
     const subStore = storage?.[`_${modType}_${redId}`]
     const { schema, defaultValues, arrayFields } = useFormTableInit(subStore, "测厚表", config)
     const searchParams = useSearchParams()
