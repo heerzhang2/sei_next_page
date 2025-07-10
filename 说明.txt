@@ -544,3 +544,12 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/IND?subrid=KQcbgDF9
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/TkmsInstrument?original=1&subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&redId=1#TkmsInstrument
 
 ["9.9%", "6.8%", "15%", "10%", "7%","11%", "7%","7%", "%"]
+  const render =() => <div>some text</div>
+  return <>
+  {render()}
+  </>
+
+  const render = <div>some text</div>
+    return <>
+    {render}
+    </>

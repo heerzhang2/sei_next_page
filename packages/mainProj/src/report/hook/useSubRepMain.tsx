@@ -3,7 +3,11 @@ import React,{ useCallback, useState } from "react"
 import dynamic from "next/dynamic"
 import { useStorage } from "@/report/StorageContext"
 
-/**
+/**没有用  旧代码迁移v0dev生成的
+ * ### 1. **构建时 vs 运行时**
+ * 因为 import(`./components/${path}`))  文件路径是动态的。 不是静态可以提前知道文件名字情况。是动态导入：
+ * - **静态导入**：构建时确定依赖，优化更充分
+ * - **动态导入**：运行时解析，灵活性更高但性能开销更大
  * 用于动态加载子报告组件的自定义 Hook
  *
  * @param relativePath 组件的相对路径，不包含文件扩展名
@@ -69,7 +73,7 @@ export function useSubRepMainNoProps(relativePath: string) {
     }
 }
 
-/**
+/**没有用      #迁移时v0dev自动生成的!
  * 用于动态加载子报告组件的自定义 Hook（带参数版本）
  *
  * @param relativePath 组件的相对路径，不包含文件扩展名
@@ -138,10 +142,3 @@ export function useSubRepMain<T>(relativePath: string, props: T) {
         error,
     }
 }
-
-/*
-const { Component: SubReportWithProps } = useSubRepMainWithProps('path/to/component', {
-  id: 123,
-  title: '子报告标题'
-});
-* */
