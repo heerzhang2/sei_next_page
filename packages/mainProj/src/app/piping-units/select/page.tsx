@@ -14,7 +14,7 @@ export default function PipingUnitSelectPage() {
 
     const returnUrl = searchParams.get("returnUrl") || "/"
     const field = searchParams.get("field") || "units"
-    const pipeId = searchParams.get("pipeId")
+    const pipelineId = searchParams.get("pipelineId")
 
     const { selectedUnits, count } = usePipingUnitSelection({
         storageKey: `piping-unit-${field}`,
@@ -58,7 +58,7 @@ export default function PipingUnitSelectPage() {
                     <CardTitle>管道单元列表</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <PipingUnitList pipeId={pipeId || undefined} storageKey={`piping-unit-${field}`} selectable={true} />
+                    <PipingUnitList pipelineId={pipelineId || undefined} storageKey={`piping-unit-${field}`} selectable={true} />
                 </CardContent>
             </Card>
         </div>

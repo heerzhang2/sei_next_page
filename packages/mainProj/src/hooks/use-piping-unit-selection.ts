@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import type { IPipingUnitEntity } from "@/types/piping-unit"
 
 interface UsePipingUnitSelectionProps {
@@ -14,10 +14,11 @@ export function usePipingUnitSelection({
                                        }: UsePipingUnitSelectionProps = {}) {
     const [selectedUnits, setSelectedUnits] = useState<IPipingUnitEntity[]>([])
     const [isLoading, setIsLoading] = useState(false)
+    const initialized = useRef(false)
 
-    // 从 sessionStorage 恢复选择状态
+    // 从 sessionStorage 恢复选择状态 - 只在组件挂载时执行一次
     useEffect(() => {
-        if (typeof window !== "undefined") {
+        if (typeof window !== "undefined" && !initialized.current) {
             const stored = sessionStorage.getItem(storageKey)
             if (stored) {
                 try {
@@ -30,8 +31,9 @@ export function usePipingUnitSelection({
             } else {
                 setSelectedUnits(initialSelection)
             }
+            initialized.current = true
         }
-    }, [initialSelection, storageKey])
+    }, []) // 移除依赖，只在挂载时执行
 
     // 保存到 sessionStorage
     const saveToStorage = useCallback(
@@ -96,13 +98,21 @@ export function usePipingUnitSelection({
     // 切换选择状态
     const toggleUnit = useCallback(
         (unit: IPipingUnitEntity) => {
-            if (isSelected(unit.id)) {
-                removeUnit(unit.id)
-            } else {
-                addUnit(unit)
-            }
+            setSelectedUnits((prev) => {
+                const isCurrentlySelected = prev.some((u) => u.id === unit.id)
+                let newUnits: IPipingUnitEntity[]
+
+                if (isCurrentlySelected) {
+                    newUnits = prev.filter((u) => u.id !== unit.id)
+                } else {
+                    newUnits = [...prev, unit]
+                }
+
+                saveToStorage(newUnits)
+                return newUnits
+            })
         },
-        [isSelected, removeUnit, addUnit],
+        [saveToStorage],
     )
 
     return {

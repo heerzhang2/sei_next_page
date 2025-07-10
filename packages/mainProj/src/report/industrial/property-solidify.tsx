@@ -85,7 +85,7 @@ export const PropertySolidify = ({
                         <FormItem>
                             <FormLabel>选择管道单元</FormLabel>
                             <FormControl>
-                                <PipingUnitSelector
+                                <PipingUnitSelector pipelineId={rep.isp.dev.id}
                                     field="units"
                                     initialUnits={field.value}
                                     onSelectionChange={field.onChange}
