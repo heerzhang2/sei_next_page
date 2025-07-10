@@ -157,6 +157,9 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 <RepLink ori rep={rep} tag={"ProjectList"}>
                     <div>目录列表编辑器</div>
                 </RepLink>
+                <RepLink ori rep={rep} tag={"Solidify"}>
+                    <div>进入管道单元列表</div>
+                </RepLink>
             </div>
         </>
     )

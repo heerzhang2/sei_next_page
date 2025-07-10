@@ -39,7 +39,7 @@ function defModelToRepData(pipe:IPipingUnitEntity){
  * 固化单元列表给后端做同步计费: 约定后端检查收费状态，要承认后端对本Report的当前关联Isp/Detail模型关联pipus[]只能是本(主)报告的单元集合一一对应，要不要删除不在前端视图内的的单元，新增加漏掉的管道单元，后端决定。页面可校验不一致。
  * 特性表有顺序编排按钮。单线图自然上传顺序。
  * */
-export const PropertySolidify=
+export const PropertySolidify3=
     React.forwardRef((
         { children, show ,alone=true,redId,nestMd,label,titles,rep,filterCB=defModelToRepData}:Props,  ref
     ) => {
