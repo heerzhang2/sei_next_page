@@ -27,7 +27,7 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     THICK_MS: {
         catKey: "壁厚测定",
         component: ThickMsVw,
-        collapse: true,
+        collapse: false,
         cat: cat_Thickms
     },
     MAGNT_TS: {

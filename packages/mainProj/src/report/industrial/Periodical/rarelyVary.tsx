@@ -21,8 +21,8 @@ export const 首页设备概况BoilI= (orc:any, rep:any, original?:boolean
 /*较为通用的配置： 可重复的分项标题。
 * */
 export const titleRenders ={
-  "THICK_MS": (store: any,i: number) => <>`[${store?.['_THICK_MS_'+i]?.['设备名称'] ?? ``}]`</>,
-  "MAGNT_TS": (store: any,i: number) => <>`[${store?.['_MAGNT_TS_'+i]?.['部件'] ?? ``}]`</>,
+  "THICK_MS": (store: any,i: number) => <>[{store?.['_THICK_MS_'+i]?.['设备编号'] ?? ``}]</>,
+  "MAGNT_TS": (store: any,i: number) => <>[{store?.['_MAGNT_TS_'+i]?.['部件'] ?? ``}]</>,
 
 }
 
