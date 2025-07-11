@@ -15,6 +15,9 @@ import {
 } from "@/lib/graphql/piping-unit-queries"
 import type { IPipingUnitEntity, PipingUnitFilter, DeviceCommonInput } from "@/types/piping-unit"
 import { usePipingUnitSelection } from "@/hooks/use-piping-unit-selection"
+import { useDisplayMode } from "@/hooks/use-display-mode"
+import { PipingUnitCard } from "./piping-unit-card"
+import { PipingUnitListItem } from "./piping-unit-list-item"
 
 interface PipingUnitListProps {
     pipelineId?: string
@@ -36,6 +39,7 @@ export function PipingUnitList({
                                    storageKey = "piping-unit-selection",
                                }: PipingUnitListProps) {
     const [searchQuery, setSearchQuery] = useState("")
+    const { displayMode, visibleFields } = useDisplayMode()
 
     const { selectedUnits, isSelected, toggleUnit, count } = usePipingUnitSelection({ storageKey })
 
@@ -83,9 +87,11 @@ export function PipingUnitList({
         },
         pause: !shouldUseSearchQuery,
     })
+
     const refresh = () => {
-        reQuerypipeline({ requestPolicy: 'network-only' });
-    };
+        reQuerypipeline({ requestPolicy: "network-only" })
+    }
+
     // 选择当前使用的结果
     const currentResult = shouldUseSearchQuery ? searchResult : shouldUseDirectQuery ? directResult : pipelineResult
 
@@ -108,11 +114,10 @@ export function PipingUnitList({
         setSearchQuery(query)
     }, [])
 
-    // 处理单元选择 - 移除对 selectedUnits 的依赖
+    // 处理单元选择
     const handleUnitToggle = useCallback(
         (unit: IPipingUnitEntity) => {
             toggleUnit(unit)
-            // 延迟调用 onSelectionChange，避免在渲染过程中触发状态更新
             setTimeout(() => {
                 onSelectionChange?.(selectedUnits)
             }, 0)
@@ -154,7 +159,7 @@ export function PipingUnitList({
                 </div>
 
                 <Button variant="outline" size="icon" onClick={handleRefresh} disabled={fetching}>
-                    <RefreshCw className={`h-4 w-4 ${fetching ? "animate-spin" : ""}`} />刷新吗
+                    <RefreshCw className={`h-4 w-4 ${fetching ? "animate-spin" : ""}`} />
                 </Button>
 
                 {selectable && (
@@ -173,64 +178,66 @@ export function PipingUnitList({
                 {pipelineId && ` | 管道装置: ${pipelineId}`}
             </div>
 
-            {/* 列表 - 使用普通 div 替代 ScrollArea */}
-            <div className="h-[600px] overflow-y-auto border rounded-md bg-background">
-                <div className="space-y-2 p-4">
-                    {fetching && (
-                        <>
-                            {Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="flex items-center space-x-3 p-3 border rounded-lg">
-                                    <Skeleton className="h-4 w-4" />
-                                    <div className="flex-1 space-y-2">
-                                        <Skeleton className="h-4 w-24" />
-                                        <Skeleton className="h-3 w-32" />
-                                        <Skeleton className="h-3 w-48" />
-                                    </div>
-                                </div>
-                            ))}
-                        </>
-                    )}
-
-                    {!fetching &&
-                        units.map((unit: IPipingUnitEntity) => (
-                            <div
-                                key={unit.id}
-                                className={`flex items-center space-x-3 p-3 border rounded-lg transition-colors ${
-                                    isSelected(unit.id) ? "bg-blue-50 border-blue-200" : "hover:bg-gray-50"
-                                }`}
-                            >
-                                {selectable && (
-                                    <Checkbox checked={isSelected(unit.id)} onCheckedChange={() => handleUnitToggle(unit)} />
-                                )}
-
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Badge variant="outline">{unit.code}</Badge>
-                                        <span className="text-sm text-muted-foreground">{unit.rno}</span>
-                                    </div>
-
-                                    <div className="font-medium">{unit.name}</div>
-
-                                    <div className="text-sm text-muted-foreground">
-                                        <div>
-                                            {unit.start} → {unit.stop}
-                                        </div>
-                                        <div>
-                                            长度: {unit.leng}m | 项目: {unit.proj}
-                                        </div>
-                                        <div>使用单位: {unit.useu?.name}</div>
-                                        <div>管道装置: {unit.pipe?.cod}</div>
-                                    </div>
+            {/* 列表 */}
+            <div className="min-h-[400px]">
+                {fetching && (
+                    <div className="space-y-4">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="flex items-center space-x-3 p-3 border rounded-lg">
+                                <Skeleton className="h-4 w-4" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-3 w-32" />
+                                    <Skeleton className="h-3 w-48" />
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
 
-                    {!fetching && units.length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                            {searchQuery ? "未找到匹配的管道单元" : "暂无管道单元数据"}
-                        </div>
-                    )}
-                </div>
+                {!fetching && units.length > 0 && (
+                    <>
+                        {displayMode === "card" ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {units.map((unit: IPipingUnitEntity) => (
+                                    <PipingUnitCard
+                                        key={unit.id}
+                                        unit={unit}
+                                        visibleFields={visibleFields}
+                                        actions={
+                                            selectable && (
+                                                <Checkbox checked={isSelected(unit.id)} onCheckedChange={() => handleUnitToggle(unit)} />
+                                            )
+                                        }
+                                        onSelect={selectable ? () => handleUnitToggle(unit) : undefined}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {units.map((unit: IPipingUnitEntity) => (
+                                    <PipingUnitListItem
+                                        key={unit.id}
+                                        unit={unit}
+                                        visibleFields={visibleFields}
+                                        actions={
+                                            selectable && (
+                                                <Checkbox checked={isSelected(unit.id)} onCheckedChange={() => handleUnitToggle(unit)} />
+                                            )
+                                        }
+                                        onSelect={selectable ? () => handleUnitToggle(unit) : undefined}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {!fetching && units.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                        {searchQuery ? "未找到匹配的管道单元" : "暂无管道单元数据"}
+                    </div>
+                )}
             </div>
         </div>
     )

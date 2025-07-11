@@ -1,20 +1,25 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Check } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ArrowLeft, Check, List } from "lucide-react"
 import { PipingUnitList } from "@/components/piping-unit/piping-unit-list"
+import { SelectedUnitsList } from "@/components/piping-unit/selected-units-list"
+import { DisplayModeSelector } from "@/components/piping-unit/display-mode-selector"
 import { usePipingUnitSelection } from "@/hooks/use-piping-unit-selection"
 
 export default function PipingUnitSelectPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const [activeTab, setActiveTab] = useState("available")
 
     const returnUrl = searchParams.get("returnUrl") || "/"
     const field = searchParams.get("field") || "units"
     const pipelineId = searchParams.get("pipelineId")
+    const queryMode = searchParams.get("queryMode") || "pipeline"
 
     const { selectedUnits, count } = usePipingUnitSelection({
         storageKey: `piping-unit-${field}`,
@@ -27,7 +32,6 @@ export default function PipingUnitSelectPage() {
 
     // 确认选择并返回
     const handleConfirm = useCallback(() => {
-        // 可以在这里触发一些额外的逻辑
         router.push(returnUrl)
     }, [router, returnUrl])
 
@@ -52,15 +56,52 @@ export default function PipingUnitSelectPage() {
                 </Button>
             </div>
 
-            {/* 选择列表 */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>管道单元列表</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <PipingUnitList pipelineId={pipelineId || undefined} storageKey={`piping-unit-${field}`} selectable={true} />
-                </CardContent>
-            </Card>
+            {/* 主要内容 */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="available" className="flex items-center gap-2">
+                        <List className="h-4 w-4" />
+                        可选单元
+                    </TabsTrigger>
+                    <TabsTrigger value="selected" className="flex items-center gap-2">
+                        <Check className="h-4 w-4" />
+                        已选单元 ({count})
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="available" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <CardTitle>可选择的管道单元</CardTitle>
+                                <DisplayModeSelector />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <PipingUnitList
+                                pipelineId={pipelineId || undefined}
+                                queryMode={queryMode as any}
+                                storageKey={`piping-unit-${field}`}
+                                selectable={true}
+                            />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="selected" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <CardTitle>已选择的管道单元</CardTitle>
+                                <DisplayModeSelector />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <SelectedUnitsList storageKey={`piping-unit-${field}`} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }
