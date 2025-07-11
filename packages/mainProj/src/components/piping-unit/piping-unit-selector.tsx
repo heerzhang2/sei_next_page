@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -46,21 +48,45 @@ export function PipingUnitSelector({
     }, [selectedUnits, onSelectionChange])
 
     // 跳转到选择页面 - 直接跳转，不弹对话框
-    const handleNavigateToSelector = useCallback(() => {
-        const currentUrl = window.location.pathname + window.location.search
-        const params = new URLSearchParams()
-        params.set("returnUrl", currentUrl)
-        params.set("field", field)
-        params.set("queryMode", queryMode)
-        if (pipelineId) params.set("pipelineId", pipelineId)
+    const handleNavigateToSelector = useCallback(
+        (e: React.MouseEvent) => {
+            // 问题5：阻止表单提交
+            e.preventDefault()
+            e.stopPropagation()
 
-        router.push(`/piping-units/select?${params.toString()}`)
-    }, [router, field, pipelineId, queryMode])
+            const currentUrl = window.location.pathname + window.location.search
+            const params = new URLSearchParams()
+            params.set("returnUrl", currentUrl)
+            params.set("field", field)
+            params.set("queryMode", queryMode)
+            if (pipelineId) params.set("pipelineId", pipelineId)
+
+            router.push(`/piping-units/select?${params.toString()}`)
+        },
+        [router, field, pipelineId, queryMode],
+    )
 
     // 重置选择
-    const handleReset = useCallback(() => {
-        setUnits(initialUnits)
-    }, [setUnits, initialUnits])
+    const handleReset = useCallback(
+        (e: React.MouseEvent) => {
+            // 问题5：阻止表单提交
+            e.preventDefault()
+            e.stopPropagation()
+            setUnits(initialUnits)
+        },
+        [setUnits, initialUnits],
+    )
+
+    // 清空选择
+    const handleClear = useCallback(
+        (e: React.MouseEvent) => {
+            // 问题5：阻止表单提交
+            e.preventDefault()
+            e.stopPropagation()
+            clearSelection()
+        },
+        [clearSelection],
+    )
 
     return (
         <div className={className}>
@@ -88,15 +114,33 @@ export function PipingUnitSelector({
                             </Select>
                         )}
 
-                        <Button variant="outline" size="icon" onClick={handleNavigateToSelector} title="选择管道单元">
+                        <Button
+                            type="button" // 问题5：明确指定按钮类型
+                            variant="outline"
+                            size="icon"
+                            onClick={handleNavigateToSelector}
+                            title="选择管道单元"
+                        >
                             <Plus className="h-4 w-4" />
                         </Button>
 
-                        <Button variant="outline" size="icon" onClick={clearSelection} title="清空选择">
+                        <Button
+                            type="button" // 问题5：明确指定按钮类型
+                            variant="outline"
+                            size="icon"
+                            onClick={handleClear}
+                            title="清空选择"
+                        >
                             <X className="h-4 w-4" />
                         </Button>
 
-                        <Button variant="outline" size="icon" onClick={handleReset} title="重置">
+                        <Button
+                            type="button" // 问题5：明确指定按钮类型
+                            variant="outline"
+                            size="icon"
+                            onClick={handleReset}
+                            title="重置"
+                        >
                             <RotateCcw className="h-4 w-4" />
                         </Button>
                     </>

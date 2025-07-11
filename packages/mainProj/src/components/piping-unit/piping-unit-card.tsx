@@ -50,7 +50,7 @@ export function PipingUnitCard({ unit, visibleFields, actions, onSelect }: Pipin
     }
 
     return (
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={onSelect}>
+        <Card className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

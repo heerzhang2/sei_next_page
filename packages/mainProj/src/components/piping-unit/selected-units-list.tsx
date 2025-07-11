@@ -5,26 +5,37 @@ import { usePipingUnitSelection } from "@/hooks/use-piping-unit-selection"
 import { useDisplayMode } from "@/hooks/use-display-mode"
 import { PipingUnitCard } from "./piping-unit-card"
 import { PipingUnitListItem } from "./piping-unit-list-item"
+import { useEffect, useState } from "react"
 
 interface SelectedUnitsListProps {
     storageKey: string
+    useFullHeight?: boolean
 }
 
-export function SelectedUnitsList({ storageKey }: SelectedUnitsListProps) {
+export function SelectedUnitsList({ storageKey, useFullHeight = false }: SelectedUnitsListProps) {
     const { selectedUnits, removeUnit, clearSelection, count } = usePipingUnitSelection({ storageKey })
     const { displayMode, visibleFields } = useDisplayMode()
+    const [forceUpdate, setForceUpdate] = useState(0) // 问题2：强制更新计数器
+
+    // 问题2：监听显示模式和字段变化，强制重新渲染
+    useEffect(() => {
+        console.log("Selected list - Display mode or fields changed:", { displayMode, visibleFields })
+        setForceUpdate((prev) => prev + 1)
+    }, [displayMode, visibleFields])
 
     if (count === 0) {
         return (
             <div className="text-center py-12 text-muted-foreground">
-                <div className="text-lg mb-2">暂无选择的管道单元</div>
-                <div className="text-sm">请在"可选单元"标签页中选择管道单元</div>
+                <div>
+                    <div className="text-lg mb-2">暂无选择的管道单元</div>
+                    <div className="text-sm">请在"管道单元列表"标签页中选择管道单元</div>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="space-y-4">
+        <div key={forceUpdate} className="space-y-4">
             {/* 操作栏 */}
             <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">共选择了 {count} 个管道单元</div>
@@ -35,47 +46,49 @@ export function SelectedUnitsList({ storageKey }: SelectedUnitsListProps) {
             </div>
 
             {/* 单元列表 */}
-            {displayMode === "card" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {selectedUnits.map((unit) => (
-                        <PipingUnitCard
-                            key={unit.id}
-                            unit={unit}
-                            visibleFields={visibleFields}
-                            actions={
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeUnit(unit.id)}
-                                    className="text-red-500 hover:text-red-700"
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            }
-                        />
-                    ))}
-                </div>
-            ) : (
-                <div className="space-y-2">
-                    {selectedUnits.map((unit) => (
-                        <PipingUnitListItem
-                            key={unit.id}
-                            unit={unit}
-                            visibleFields={visibleFields}
-                            actions={
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeUnit(unit.id)}
-                                    className="text-red-500 hover:text-red-700"
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            }
-                        />
-                    ))}
-                </div>
-            )}
+            <div className="space-y-2">
+                {displayMode === "card" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {selectedUnits.map((unit) => (
+                            <PipingUnitCard
+                                key={unit.id}
+                                unit={unit}
+                                visibleFields={visibleFields}
+                                actions={
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeUnit(unit.id)}
+                                        className="text-red-500 hover:text-red-700"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                }
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {selectedUnits.map((unit) => (
+                            <PipingUnitListItem
+                                key={unit.id}
+                                unit={unit}
+                                visibleFields={visibleFields}
+                                actions={
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeUnit(unit.id)}
+                                        className="text-red-500 hover:text-red-700"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                }
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

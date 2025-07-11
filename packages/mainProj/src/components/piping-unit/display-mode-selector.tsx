@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -49,6 +49,15 @@ export function DisplayModeSelector() {
     const { displayMode, setDisplayMode, visibleFields, setVisibleFields } = useDisplayMode()
     const [selectedPreset, setSelectedPreset] = useState("基础信息")
 
+    // 问题3：确保预设选择状态正确同步
+    useEffect(() => {
+        const matchingPreset = DISPLAY_PRESETS.find(
+            (preset) =>
+                preset.fields.length === visibleFields.length && preset.fields.every((field) => visibleFields.includes(field)),
+        )
+        setSelectedPreset(matchingPreset?.name || "")
+    }, [visibleFields])
+
     const handlePresetChange = (presetName: string) => {
         const preset = DISPLAY_PRESETS.find((p) => p.name === presetName)
         if (preset) {
@@ -58,13 +67,22 @@ export function DisplayModeSelector() {
     }
 
     const handleFieldToggle = (fieldKey: string, checked: boolean) => {
+        let newFields: string[]
         if (checked) {
-            setVisibleFields([...visibleFields, fieldKey])
+            newFields = [...visibleFields, fieldKey]
         } else {
-            setVisibleFields(visibleFields.filter((f) => f !== fieldKey))
+            newFields = visibleFields.filter((f) => f !== fieldKey)
         }
-        // 如果手动修改了字段，清除预设选择
-        setSelectedPreset("")
+
+        // 问题3：立即更新字段显示
+        setVisibleFields(newFields)
+
+        // 检查是否匹配某个预设
+        const matchingPreset = DISPLAY_PRESETS.find(
+            (preset) =>
+                preset.fields.length === newFields.length && preset.fields.every((field) => newFields.includes(field)),
+        )
+        setSelectedPreset(matchingPreset?.name || "")
     }
 
     const groupedFields = FIELD_OPTIONS.reduce(
@@ -80,7 +98,7 @@ export function DisplayModeSelector() {
 
     return (
         <div className="flex items-center gap-2">
-            {/* 显示模式切换 */}
+            {/* 问题2：显示模式切换 - 确保状态正确绑定 */}
             <div className="flex items-center border rounded-md">
                 <Button
                     variant={displayMode === "list" ? "default" : "ghost"}

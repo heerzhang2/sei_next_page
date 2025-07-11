@@ -16,10 +16,10 @@ export function usePipingUnitSelection({
     const [isLoading, setIsLoading] = useState(false)
     const initialized = useRef(false)
 
-    // 从 sessionStorage 恢复选择状态 - 只在组件挂载时执行一次
+    // 问题1：改用 localStorage 而不是 sessionStorage
     useEffect(() => {
         if (typeof window !== "undefined" && !initialized.current) {
-            const stored = sessionStorage.getItem(storageKey)
+            const stored = localStorage.getItem(storageKey)
             if (stored) {
                 try {
                     const parsed = JSON.parse(stored)
@@ -33,13 +33,13 @@ export function usePipingUnitSelection({
             }
             initialized.current = true
         }
-    }, []) // 移除依赖，只在挂载时执行
+    }, [])
 
-    // 保存到 sessionStorage
+    // 保存到 localStorage
     const saveToStorage = useCallback(
         (units: IPipingUnitEntity[]) => {
             if (typeof window !== "undefined") {
-                sessionStorage.setItem(storageKey, JSON.stringify(units))
+                localStorage.setItem(storageKey, JSON.stringify(units))
             }
         },
         [storageKey],
