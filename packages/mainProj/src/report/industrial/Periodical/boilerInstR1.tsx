@@ -152,6 +152,10 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
 
                 {renderSub('THICK_MS')}
                 {renderSub('MAGNT_TS')}
+
+                {mapFxian.get('管道特性表')?.do &&
+                    <PipelineCharacteristics orc={orc} rep={rep}/>
+                }
             </div>
             <div className="print:hidden">
                 <RepLink ori rep={rep} tag={"ProjectList"}>

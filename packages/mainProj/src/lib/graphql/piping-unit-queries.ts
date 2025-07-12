@@ -227,3 +227,38 @@ export const GET_PIPING_UNITS_BY_IDS = gql`
     }
   }
 `
+
+export const LIST_ALL_PIPINGUNIT = gql`
+  query GetPipingUnitsByPipeline(
+    $detId: ID!
+    $orderBy: String
+    $asc: Boolean
+  ) {
+    listAllPipingUnit(detId: $detId,orderBy: $orderBy,asc: $asc) {
+              id
+              code
+              rno
+              name
+              ust
+              reg
+              nxtd1
+              nxtd2
+              start
+              stop
+              proj
+              leng
+              crDate
+              pipe {
+                id
+                cod
+                oid
+                useu {
+                  id
+                  name
+                }
+              }
+              svp
+              pa
+    }
+  }
+`

@@ -1,6 +1,5 @@
 import * as React from "react";
 // import {useAreaFoldable} from "../common/helper";
-// import {VsProjects默认} from "../vessel/orcBase";
 
 /**【代码复用】从独立流转的分项返回主报告链接,
  * */
@@ -111,183 +110,6 @@ export function useFoldFor(list: any[], blockMax:number, viewALL:boolean, hidden
     const btnBindUses ={}//useAreaFoldable(viewALL, hidden? seeDefsFix2 : seeDefsFix1);
     return { ...all, btnBindUses };
 }
-/**报告目录菜单的链接构造,     #${VsProjects默认[5].ha}` VsProjects默认
- * @param configProjs: 配置好的分项 hash；其对象必须有{name,ha}两个属性字段。
- * @param projects: 实际的分项。
- * 【问题】不在项目目录列表无法增加，附加的的插入位置？
- * */
-const MAX_MENU_ITEMS=8;       //小屏幕第一层次弹出来菜单允许最多有几行。
-// export function useRepMenuDirItems(configProjs: any[], projects: any[]=[], url:string
-// ) {
-//     const router = useRouter();
-//     // const {history } = useContext(RoutingContext);
-//     const searchParams = useSearchParams()
-//     const [printing, setPrinting] = useState(false)
-//     useEffect(() => {
-//         const printing = searchParams.get('print')
-//         setPrinting(!!printing)
-//     }, [searchParams])
-//
-//     const menu=React.useMemo(() => {
-//         let result=[] as any;
-//         if(projects.length>0){
-//             projects?.forEach(subrp => {
-//                 if(subrp?.do){
-//                     const predef=configProjs?.find((obj:any) => obj?.name===subrp?.name);
-//                     if(predef){
-//                         const {name,ha}=predef;
-//                         result.push({name,ha});
-//                     }
-//                 }
-//             });
-//         }else{     //不需要后端存储分项报告projects配置的情况，仅仅前端做hash路由的标签点集合。
-//             configProjs.forEach(predef => {
-//                 const {name,ha}=predef;
-//                 result.push({name,ha});
-//             });
-//         }
-//         const _length = result.length;
-//         const _splitNums = _length % MAX_MENU_ITEMS === 0 ? _length / MAX_MENU_ITEMS : Math.ceil(_length / MAX_MENU_ITEMS);
-//         let all = [];       //拆分成二维数组的；
-//         for(let i = 0; i < _splitNums; i++){
-//             let _tempArr = result.slice(i * MAX_MENU_ITEMS, i * MAX_MENU_ITEMS + MAX_MENU_ITEMS);
-//             all.push(_tempArr);
-//         }
-//         let arrLayer=[];
-//         for(let i=0; i<all.length; i++){
-//             const parts=all[i];
-//             const nestMn=parts.map((part: {name: string; ha: string; }, i:number) => {
-//                 return  (
-//                     <DdMenuItem  key={i}  label={part?.name} onClick={() => { router.push(`${url}#${part?.ha}`);
-//                     }}>{part?.name}</DdMenuItem>
-//                 );
-//             });
-//             arrLayer.push(nestMn);
-//         }
-//         let doms=null;
-//         for(let i=arrLayer.length-1; i>=0; i--){
-//             if(i>0){
-//                 doms= <>
-//                     { (i < arrLayer.length-1) &&  <DdMenu key={i} label="更多">
-//                                  { doms }
-//                                 </DdMenu>
-//                     }
-//                     { arrLayer[i] }
-//                     </>;
-//             }
-//             else{
-//                 doms= <LeftTopMenuBar id={'topleftmenu'} css={{
-//                         justifyContent: "space-between", "@media print": {display: 'none',}
-//                     }}>
-//                         <DdMenu key={i} label="报告目录"  tight={true}
-//                                 icon={<IconCpu size={'lg'} css={{background: printing? 'unset':'gold'}}/> }
-//                                 divStyle={{lineHeight: '1.0', width: '2rem',
-//                                 }}
-//                         >
-//                             { (arrLayer.length>1) &&  <DdMenu label="更多">
-//                                          { doms }
-//                                         </DdMenu>
-//                             }
-//                             { arrLayer[i] }
-//                         </DdMenu>
-//                     </LeftTopMenuBar>;
-//             }
-//         }
-//
-//         return <React.Fragment>
-//             <Global
-//                 styles={{
-//                     html: {
-//                         "#root #topleftmenu": {
-//                             opacity: '0.5',
-//                         }
-//                     }
-//                 }}
-//             />
-//             {doms}
-//         </React.Fragment>;
-//     }, [projects,printing,router, url, configProjs]);
-//
-//     return [ menu ];
-// }
-
-/**没有分项目报告的版本：不用后端存储的，前端预定义标签做法。 #页面哈希路由方式;
- * */
-// export function useRepMenuDirItemT(configProjs: any[], url:string
-// ) {
-//     const {history } = useContext(RoutingContext);
-//     const qs= queryString.parse(window.location.search);
-//     const printing =qs && !!qs.print;
-//     const menu=React.useMemo(() => {
-//         let result=[] as any;
-//         configProjs.forEach(predef => {
-//             const {name,ha}=predef;
-//             result.push({name,ha});
-//         });
-//         const _length = result.length;
-//         const _splitNums = _length % MAX_MENU_ITEMS === 0 ? _length / MAX_MENU_ITEMS : Math.ceil(_length / MAX_MENU_ITEMS);
-//         let all = [];       //拆分成二维数组的；
-//         for(let i = 0; i < _splitNums; i++){
-//             let _tempArr = result.slice(i * MAX_MENU_ITEMS, i * MAX_MENU_ITEMS + MAX_MENU_ITEMS);
-//             all.push(_tempArr);
-//         }
-//         let arrLayer=[];
-//         for(let i=0; i<all.length; i++){
-//             const parts=all[i];
-//             const nestMn=parts.map((part: {name: string; ha: string; }, i:number) => {
-//                 return  (
-//                     <DdMenuItem  key={i}  label={part?.name} onClick={() => { history.push(`${url}#${part?.ha}`, {time: Date()});
-//                     }}>{part?.name}</DdMenuItem>
-//                 );
-//             });
-//             arrLayer.push(nestMn);
-//         }
-//         let doms=null;
-//         for(let i=arrLayer.length-1; i>=0; i--){
-//             if(i>0){
-//                 doms= <>
-//                     { (i < arrLayer.length-1) &&  <DdMenu key={i} label="更多">
-//                         { doms }
-//                     </DdMenu>
-//                     }
-//                     { arrLayer[i] }
-//                 </>;
-//             }
-//             else{
-//                 doms= <LeftTopMenuBar id={'topleftmenu'} css={{
-//                     justifyContent: "space-between", "@media print": {display: 'none',}
-//                 }}>
-//                     <DdMenu key={i} label="报告目录"  tight={true}
-//                             icon={<IconCpu size={'lg'} css={{background: printing? 'unset':'gold'}}/> }
-//                             divStyle={{lineHeight: '1.0', width: '2rem',
-//                             }}
-//                     >
-//                         { (arrLayer.length>1) &&  <DdMenu label="更多">
-//                             { doms }
-//                         </DdMenu>
-//                         }
-//                         { arrLayer[i] }
-//                     </DdMenu>
-//                 </LeftTopMenuBar>;
-//             }
-//         }
-//
-//         return <React.Fragment>
-//             <Global
-//                 styles={{
-//                     html: {
-//                         "#root #topleftmenu": {
-//                             opacity: '0.5',
-//                         }
-//                     }
-//                 }}
-//             />
-//             {doms}
-//         </React.Fragment>;
-//     }, [printing, url,history, configProjs]);
-//
-//     return [ menu ];
-// }
 
 /**可折叠的render回调
  * @param dlPage  队列已经切分后，当前显示的某一个对象。
@@ -304,39 +126,39 @@ export declare type FoldRenderCallback = (dlPage: any, arak:number, pid:number) 
  * @property zeroDisp  第一页总是会执行显示的，尽管队列为空。
  * @property mark  用于醒目分辨的区域标题
  * */
-// export function useFoldGenerate({sumArea,btnBindUses,areaContent,callback,mark,zeroDisp}
-//           : {sumArea:number,btnBindUses:any[],areaContent:any[][],callback:FoldRenderCallback,mark?:string,zeroDisp?:boolean}
-// ) {
-//     const render=<React.Fragment>
-//         {(new Array(sumArea).fill(null)).map((s:any,ak:number) => {
-//             const [isDisplay, bindBtn]=btnBindUses[ak];      //不要加上 tabIndex={0} 超过折叠区域最大数量的？
-//             // console.log("可折叠区的-第ak个大折叠ak=",ak);
-//             //可折叠区的：独立流转的报告，和内嵌分项的，实际还分开的。两者独自控制折叠的。内嵌分项rep.id相等，独立流转的却不等的ID;
-//             return <React.Fragment key={ak}>
-//                 <div role="button" {...bindBtn}  css={{"@media print":{display: 'none'}}}>
-//                     <Text variant="h4">{`${mark??'可折叠区'}${ak+1}，`}{isDisplay ? `收起`:`更多..`}</Text>
-//                 </div>
-//                 <Collapse  id={`${ak}_c`} show={isDisplay} noAnimated>
-//                     { areaContent[ak]?.map((one: any, m:number) => {
-//                         // console.log("可折叠区的气派第二层areaContent[ak]- one=",one ,"ak=",ak, "m=",m);
-//                       return <React.Fragment key={m}>
-//                         {callback(one, ak, m)}
-//                       </React.Fragment>
-//                     }) }
-//                     { zeroDisp && undefined===areaContent[ak] &&
-//                         <>
-//                             {callback(undefined, 0, 0)}
-//                         </>
-//                     }
-//                 <div role="button" {...bindBtn}  css={{"@media print":{display: 'none'}}}>
-//                     <Text variant="h4">{`${mark??'可折叠区'}${ak+1}结束,收起`}</Text>
-//                 </div>
-//                     </Collapse>
-//                 </React.Fragment>;
-//         })}
-//     </React.Fragment>;
-//     return [ render ];
-// }
+export function useFoldGenerate({sumArea,btnBindUses,areaContent,callback,mark,zeroDisp}
+          : {sumArea:number,btnBindUses:any[],areaContent:any[][],callback:FoldRenderCallback,mark?:string,zeroDisp?:boolean}
+) {
+    const render=<React.Fragment>
+        {(new Array(sumArea).fill(null)).map((s:any,ak:number) => {
+            const [isDisplay, bindBtn]=btnBindUses[ak];      //不要加上 tabIndex={0} 超过折叠区域最大数量的？
+            // console.log("可折叠区的-第ak个大折叠ak=",ak);
+            //可折叠区的：独立流转的报告，和内嵌分项的，实际还分开的。两者独自控制折叠的。内嵌分项rep.id相等，独立流转的却不等的ID;
+            return <React.Fragment key={ak}>
+                <div role="button" {...bindBtn}  css={{"@media print":{display: 'none'}}}>
+                    <Text variant="h4">{`${mark??'可折叠区'}${ak+1}，`}{isDisplay ? `收起`:`更多..`}</Text>
+                </div>
+                <Collapse  id={`${ak}_c`} show={isDisplay} noAnimated>
+                    { areaContent[ak]?.map((one: any, m:number) => {
+                        // console.log("可折叠区的气派第二层areaContent[ak]- one=",one ,"ak=",ak, "m=",m);
+                      return <React.Fragment key={m}>
+                        {callback(one, ak, m)}
+                      </React.Fragment>
+                    }) }
+                    { zeroDisp && undefined===areaContent[ak] &&
+                        <>
+                            {callback(undefined, 0, 0)}
+                        </>
+                    }
+                <div role="button" {...bindBtn}  css={{"@media print":{display: 'none'}}}>
+                    <Text variant="h4">{`${mark??'可折叠区'}${ak+1}结束,收起`}</Text>
+                </div>
+                    </Collapse>
+                </React.Fragment>;
+        })}
+    </React.Fragment>;
+    return [ render ];
+}
 
 export declare type NodeCallback = () => React.ReactNode;
 /**某些页面可折叠的： 非列表多个页面的情况。

@@ -60,3 +60,4 @@ export {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./collapsible"
+export { Separator } from "./separator"
