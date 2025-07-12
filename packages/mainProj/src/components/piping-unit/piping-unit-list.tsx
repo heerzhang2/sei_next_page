@@ -45,7 +45,7 @@ export function PipingUnitList({
                                    excludeSelected = false,
                                    useFullHeight = false,
                                }: PipingUnitListProps) {
-    const [searchQuery, setSearchQuery] = useState("")
+    const [searchQuery, setSearchQuery] = useState({pipe: pipelineId,})
     const [filterValues, setFilterValues] = useState<PipingUnitFilterValues>({})
     const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "code", direction: "asc" })
     const [cursor, setCursor] = useState<string | null>(null)
@@ -75,7 +75,7 @@ export function PipingUnitList({
         const baseVars = {
             pipelineId,
             where: { ...deviceFilter, ...filterValues },
-            first: 20,
+            first: 5,
             orderBy: sortConfig.field, // 问题1：添加排序字段
             asc: sortConfig.direction === "asc", // 问题1：添加排序方向
             after: cursor,
@@ -85,7 +85,7 @@ export function PipingUnitList({
             return {
                 query: searchQuery,
                 pipeId: pipelineId,
-                first: 20,
+                first: 5,
             }
         }
 

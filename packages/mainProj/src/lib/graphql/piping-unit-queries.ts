@@ -140,16 +140,18 @@ export const GET_PIPING_UNITS_DIRECT = gql`
 // 搜索管道单元
 export const SEARCH_PIPING_UNITS = gql`
   query SearchPipingUnits(
-    $query: String!
-    $pipeId: ID
-    $useuId: ID
+    $query: PipingUnitInput
+    $after: String
     $first: Int = 10
+        $orderBy: String
+        $asc: Boolean
   ) {
-    searchPipingUnits(
-      query: $query
-      pipeId: $pipeId
-      useuId: $useuId
+    searchPipingUnitEs(
+      where: $query
+      after: $after
       first: $first
+      orderBy: $orderBy
+      asc: $asc
     ) {
       edges {
         node {

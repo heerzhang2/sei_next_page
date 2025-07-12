@@ -32,7 +32,7 @@ export function PipingUnitSelector({
                                        disabled = false,
                                        className,
                                        allowModeSwitch = true,
-                                       defaultQueryMode = "pipeline",
+                                       defaultQueryMode = "search",
                                    }: PipingUnitSelectorProps) {
     const router = useRouter()
     const [queryMode, setQueryMode] = useState(defaultQueryMode)
