@@ -17,7 +17,7 @@ export default function BrowsingPattern({ items,children }: ReportProps) {
       <>
           <div className="flex-1 overflow-auto">
               <div className="mx-auto px-0 md:px-6 py-8 print:px-0 print:py-0">
-                  <div  className="flex flex-col min-h-screen">
+                  <div  className="flex flex-col min-h-screen @container">
                       <header className="print:hidden border-b">
                           <div className="container flex items-center justify-between h-14">
                               <h1 className="text-xl font-bold">福建特检</h1>

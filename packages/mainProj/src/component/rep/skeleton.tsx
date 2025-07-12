@@ -158,7 +158,7 @@ export default function Skeleton({
                                         <div className="flex-1">
                                             <div className="h-screen">
                                                 <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
-                                                    <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto">
+                                                    <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto @container">
                                                         {repPanel}
                                                     </div>
                                                 </div>
@@ -227,7 +227,7 @@ export default function Skeleton({
                                 <div className="flex-1">
                                     <div className="h-[calc(100vh-33px)]">
                                         <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
-                                            <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto">
+                                            <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto @container">
                                                 {repPanel}
                                             </div>
                                         </div>
@@ -255,7 +255,7 @@ export default function Skeleton({
                     independentScrolling={true}
                     leftPanel={
                         <div className="flex flex-col h-screen">
-                            <div className="overflow-auto flex-1">{repPanel}</div>
+                            <div className="overflow-auto flex-1 @container">{repPanel}</div>
                         </div>
                     }
                     rightPanel={

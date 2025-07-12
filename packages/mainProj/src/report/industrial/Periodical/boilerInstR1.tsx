@@ -21,6 +21,7 @@ import { ConclusionVw } from "@/report/industrial/Periodical/Conclusion"
 import { cat_Thickms, ThickMsVw } from "@/report/cm/thickm/ThickMs1"
 import SubRep, {SingeSubRep, SubReportConfig} from "@/component/rep/sub-rep"
 import {cat_Magne, MagneticVw} from "@/report/cm/magnetic/Magnetic1"
+import {PipelineCharacteristics} from "@/report/industrial/pipe-feature";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {

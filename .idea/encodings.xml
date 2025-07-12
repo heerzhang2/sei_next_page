@@ -64,6 +64,7 @@
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/hook" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/hook/temp.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/hook/uppy-fixes.css" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/hook/use-main-rep-url.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/hook/use-table-edit (1).tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/hook/use-table-edit (2).tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/hook/use-table-edit (3).tsx" charset="UTF-8" />
@@ -91,8 +92,8 @@
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/boilerInstR1.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/orcBase.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/rarelyVary.tsx" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/pipe-feature.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/property-solidify.tsx" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/viewFeature.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/mobilecr" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/mobilecr/Intial/i.E.tsx" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/mobilecr/intialWt/i.E.tsx" charset="UTF-8" />

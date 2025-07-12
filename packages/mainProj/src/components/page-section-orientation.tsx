@@ -51,7 +51,7 @@ export default function PageSectionOrientation({
       <div
         ref={sectionRef}
         id={sectionId}
-        className={`print-section ${orientationClass}`}
+        className={`print-section ${orientationClass} @container`}
         data-orientation={orientation}
         data-nested={isNested ? "true" : "false"}
         data-parent-orientation={parentContext.parentOrientation}
