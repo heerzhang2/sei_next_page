@@ -5,7 +5,8 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import {FootMensLine} from "@/report/common/view";
 import {FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
-import { useFoldForList, useFoldGenerate, useSplitSubCapacity } from "@/report/hook/use-main-rep-url"
+import { useFoldForList, useFoldGenerate, useSplitSubCapacity } from "@/report/hook/use-fold-gen"
+import {cn} from "@/lib/utils";
 
 // 表格列宽配置实际表5列 和才2列的：宽度可自己调节
 const CLnPercents=[["%","55%"], ["%","37%","37%"],
@@ -41,9 +42,10 @@ interface PipelineCharacteristicsProps {
     orc: any
     rep: any
     children?: React.ReactNode
+    v_bh?: boolean
 }
 
-export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = ({ orc, rep, children }) => {
+export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = ({ orc, rep, children,v_bh }) => {
     // 重组成二维数组，每4个单元一页
     const pages = React.useMemo(() => {
         if (!orc?.单元表?.length) return []
@@ -71,128 +73,103 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                 if (!men) 检验员s.push(pp?.sgm)
             }
         }
-
+        const jyms=检验员s.map((m: any, k: number) =>m.name);
+        const CompH=(arak===0 && pid===0)? "h2" : "div"
         return (
-            <div key={pid} className="mb-8 print:mb-0">
+            <div key={pid} className="mb-8 print:mb-0 print:min-h-screen print:flex print:flex-col print:justify-around print:break-before-page">
+              <div className="mt-4 print:mt-0">
                 {/* 标题 */}
-                <div className="print:break-before-page print:mt-0 mt-4">
+                <div>
                     <Link
                         href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Solidify#Solidify`}
                         className="block text-center"
                     >
-                        <h2 className="text-2xl font-bold mb-4">管道特性表</h2>
+                        <CompH className={cn(arak===0 && pid===0 ? "" : "hidden print:block", "text-xl mb-4")}
+                        >管道特性表</CompH>
                     </Link>
-
-                    <div className="flex justify-end mb-4">
-                        <span className="text-sm">报告编号：{rep.isp.no}</span>
-                    </div>
+                    {v_bh && <div className="flex justify-end mb-4">
+                            <span className="text-sm">报告编号：{rep.isp.no}</span>
+                        </div>
+                    }
                 </div>
 
-                {/* 主要特性表 */}
-                    <FlexibleTable columnWidths={ CLnPercents[xsize-1] }>
-                        <TableHeader>
-                            <TableRow>
-                                <TableCell className="text-center font-bold border">
-                                    <span className="text-xs">项目 \ 序号</span>
+                <FlexibleTable columnWidths={ CLnPercents[xsize-1] } className="text-sm print:text-[0.75rem]">
+                    <TableHeader>
+                        <TableRow>
+                            <TableCell className="text-center font-bold border">
+                                <span className="text-xs">项目 \ 序号</span>
+                            </TableCell>
+                            {dlPage.map((p: any, c: number) => (
+                                <TableCell key={c} className="text-center font-bold border">
+                                    <span id={`Characteristics${(pn + pid) * 4 + c}`}>{(pn + pid) * 4 + c + 1}</span>
                                 </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {LaySettings.map(([field, title, where], fn: number) => (
+                            <TableRow key={fn}>
+                                <TableCell className="font-medium border bg-gray-50">{title}</TableCell>
                                 {dlPage.map((p: any, c: number) => (
-                                    <TableCell key={c} className="text-center font-bold border">
-                                        <span id={`Characteristics${(pn + pid) * 4 + c}`}>{(pn + pid) * 4 + c + 1}</span>
+                                    <TableCell key={c} className="border">
+                                        <Link
+                                            href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Solidify?ppcode=${p?.code}#Solidify`}
+                                            className="block hover:bg-gray-50 p-1 rounded"
+                                        >
+                                            { p?.id?
+                                                where === 1 ? p?.svp?.[field] : where === 2 ? p?.pa?.[field] : p?.[field]
+                                                : null
+                                            }
+                                        </Link>
                                     </TableCell>
                                 ))}
                             </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {LaySettings.map(([field, title, where], fn: number) => (
-                                <TableRow key={fn}>
-                                    <TableCell className="font-medium border bg-gray-50">{title}</TableCell>
-                                    {dlPage.map((p: any, c: number) => (
-                                        <TableCell key={c} className="border">
-                                            <Link
-                                                href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Solidify?ppcode=${p?.code}#Solidify`}
-                                                className="block hover:bg-gray-50 p-1 rounded"
-                                            >
-                                                { p?.id?
-                                                    where === 1 ? p?.svp?.[field] : where === 2 ? p?.pa?.[field] : p?.[field]
-                                                    : null
-                                                }
-                                            </Link>
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </FlexibleTable>
-
-                {/* 备注和签名表 */}
-                    <FlexibleTable columnWidths={["%","45%"]}>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell colSpan={2} className="border">
-                                    <Link
-                                        href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/LineDiagram#LineDiagram`}
-                                        className="block"
-                                    >
-                                        <div>
-                                            <strong>备注：</strong>
-                                            {dlPage.map(
-                                                (p: any, c: number) =>
-                                                    p?.mm && (
-                                                        <span key={c} className="ml-2">
-                              {p.mm}。
-                            </span>
-                                                    ),
-                                            )}
-                                        </div>
-                                    </Link>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="border w-1/2">
-                                    <Link
-                                        href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/LineDiagram#LineDiagram`}
-                                        className="block"
-                                    >
-                                        <div className="flex justify-between items-start h-full">
-                                            <div>
-                                                <span className="font-medium">检验：</span>
-                                                {检验员s.map((m: any, k: number) => (
-                                                    <span key={k} className="ml-2">
-                            {m.name}
-                          </span>
-                                                ))}
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-medium">日期</div>
-                                                <div>2022-12-31</div>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                </TableCell>
-                                <TableCell className="border w-1/2">
-                                    <div className="flex justify-between items-start h-full">
-                                        <div>
-                                            <span className="font-medium">审核：</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-medium">日期</div>
-                                            <div>2021-01-31</div>
-                                        </div>
+                        ))}
+                    </TableBody>
+                </FlexibleTable>
+                <FlexibleTable columnWidths={["%"]} className="text-sm print:text-[0.75rem]">
+                    <TableBody>
+                        <TableRow>
+                            <TableCell className="border">
+                                <Link
+                                    href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/LineDiagram#LineDiagram`}
+                                    className="block"
+                                >
+                                    <div>
+                                        <span>备注：</span>
+                                        {dlPage.map(
+                                            (p: any, c: number) =>
+                                                p?.mm && (
+                                                    <span key={c} className="ml-2">
+                                                      {p.mm}。
+                                                    </span>
+                                                ),
+                                        )}
                                     </div>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </FlexibleTable>
+                                </Link>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </FlexibleTable>
+                 <FootMensLine jm={jyms} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}/>
             </div>
+          </div>
         )
     }
 
+    const titleCb = (arak: number) => {
+        const start = arak * (lsBlockMax*4) // 当前折叠区第一张的序号数
+        const dymax =orc?.单元表?.length || 0
+        const last=((arak+1)*(lsBlockMax*4))>=dymax? dymax-1: (arak+1)*(lsBlockMax*4)
+        return `特性表折叠${start+1} - ${last+1} `
+    }
     const [renderAll] = useFoldGenerate({
         sumArea,
         btnBindUses,
         areaContent,
         callback: frCallback,
         mark: "特性表折叠",
+        titleCb
     })
 
     return (
@@ -206,7 +183,6 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                     </Link>
                 </div>
             )}
-
             <div id="Characteristics"></div>
             {renderAll}
             {children}

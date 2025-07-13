@@ -104,7 +104,11 @@ export function useFoldForList(list: any[], blockMax: number, viewALL: boolean, 
  * 折叠渲染回调类型
  */
 export type FoldRenderCallback = (dlPage: any, arak: number, pid: number) => React.ReactNode
-
+/**
+ @param sumArea 最多几个区域，
+ @param arak 第几个区域
+* */
+export type TitleRenderCallback = (arak: number) => React.ReactNode
 /**
  * 较为通用的抽象组件：队列的折叠
  */
@@ -115,6 +119,7 @@ export function useFoldGenerate({
                                     callback,
                                     mark,
                                     zeroDisp,
+                                    titleCb
                                 }: {
     sumArea: number
     btnBindUses: any[]
@@ -122,6 +127,7 @@ export function useFoldGenerate({
     callback: FoldRenderCallback
     mark?: string
     zeroDisp?: boolean
+    titleCb?: TitleRenderCallback
 }) {
     const render = React.useMemo(
         () => (
@@ -135,8 +141,10 @@ export function useFoldGenerate({
                         >
                             <CollapsibleTrigger asChild>
                                 <Button variant="outline" className="w-full justify-between print:hidden bg-transparent">
-                                  <span className="@5xl:ml-[28rem]">{mark ?? "可折叠区"}{ak + 1}</span>
-                                    {isDisplay ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                  <span className="@5xl:ml-[28rem]">{ titleCb? titleCb(ak) :
+                                      (mark ?? "可折叠区")+(ak + 1)
+                                  }</span>
+                                 {isDisplay ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 </Button>
                             </CollapsibleTrigger>
                             <CollapsibleContent className="space-y-4">
