@@ -6,6 +6,7 @@ import { FootMensLine } from "@/report/common/view"
 import { FlexibleTable, TableBody, TableCell, TableHeader, TableRow } from "@/components/flexible-table"
 import { useFoldForList, useFoldGenerate, useSplitSubCapacity } from "@/report/hook/use-fold-gen"
 import { cn } from "@/lib/utils"
+import {RepLink} from "@/report/common/base";
 
 // 表格列宽配置实际表5列 和才2列的：宽度可自己调节
 const CLnPercents = [
@@ -192,9 +193,9 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
         <div className="space-y-4">
             {pages.length <= 0 && (
                 <div className="text-center print:hidden">
-                    <Link href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Solidify#Solidify`}>
+                    <RepLink ori rep={rep} tag={"Solidify"}>
                         <span id="Solidify" className="text-2xl font-bold mt-4">特性表的管道单元</span>
-                    </Link>
+                    </RepLink>
                 </div>
             )}
             <div id="Characteristics"></div>
