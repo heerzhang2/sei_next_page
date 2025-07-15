@@ -14,7 +14,7 @@ import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
 
-// 创建网络状态管理
+// 创建网络状态管理:全局的。
 const networkStatus = {
     isOnline: true,
     lastError: null as Error | null,

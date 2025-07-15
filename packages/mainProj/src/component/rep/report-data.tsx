@@ -1,11 +1,10 @@
 "use client"
 
-import React, { Suspense, useEffect, useState } from "react"
+import React, { Suspense,} from "react"
 import { useQuery, gql } from "@urql/next"
 import { useStorage } from "@/report/StorageContext"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { subscribeToNetworkStatus, getNetworkStatus } from "@/auth/graphql-component"
 
 export interface ReportParams {
     repId: string
@@ -53,63 +52,6 @@ export const ReportQuery = gql`
     }
 `
 
-// 判断数据来源的辅助函数
-function getDataSource(result: any) {
-    // 方法1: 检查缓存结果
-    const cacheOutcome = result?.operation?.context?.meta?.cacheOutcome
-    if (cacheOutcome === "hit") {
-        return "cache" // 完全来自缓存
-    } else if (cacheOutcome === "miss") {
-        return "network" // 来自网络请求
-    } else if (cacheOutcome === "partial") {
-        return "partial" // 部分来自缓存
-    }
-
-    // 方法2: 检查 stale 标志
-    if (result?.stale) {
-        return "stale-cache" // 过期的缓存数据
-    }
-
-    // 方法3: 如果正在获取且没有数据，说明是首次网络请求
-    if (result?.fetching && !result?.data) {
-        return "network-loading"
-    }
-
-    // 方法4: 如果有数据且不在获取中，可能是缓存
-    if (result?.data && !result?.fetching) {
-        return "cache-or-network"
-    }
-
-    return "unknown"
-}
-
-// 判断是否为网络错误（表示后端离线）, 针对java的graphQL后端; 前端服务器nextjs离线不在这里涉及。
-function isNetworkError(error: any) {
-    if (!error) return false
-
-    // 检查自定义的网络错误标记
-    if (error.isNetworkError) return true
-
-    // 检查错误类型
-    const errorMessage = error.message?.toLowerCase() || ""
-    const networkErrorKeywords = [
-        "network error",
-        "fetch failed",
-        "connection refused",
-        "timeout",
-        "network request failed",
-        "failed to fetch",
-        "err_connection_refused",
-        "err_network",
-        "err_internet_disconnected",
-    ]
-
-    return (
-        networkErrorKeywords.some((keyword) => errorMessage.includes(keyword)) ||
-        (error.name === "TypeError" && errorMessage.includes("fetch"))
-    )
-}
-
 function CommonReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const [result] = useQuery({
         query: ReportQuery,
@@ -118,31 +60,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     })
     const { data, fetching, error } = result
     const { getReport: report } = data || {}
-    const { setStorage, setSubrType, offline, setOffline } = useStorage()
-
-    // 监听全局网络状态
-    const [networkState, setNetworkState] = useState(getNetworkStatus())
-
-    useEffect(() => {
-        const unsubscribe = subscribeToNetworkStatus(setNetworkState)
-        return unsubscribe
-    }, [])
-
-    // 判断数据来源
-    const dataSource = getDataSource(result)
-    const isFromCache = dataSource === "cache" || dataSource === "stale-cache"
-    const isNetworkFailure = isNetworkError(error) || !networkState.isOnline
-
-    console.log(
-        "数据来源:",
-        dataSource,
-        "是否来自缓存:",
-        isFromCache,
-        "网络错误:",
-        isNetworkFailure,
-        "全局网络状态:",
-        networkState,
-    )
+    const { setStorage, setSubrType, } = useStorage()
 
     //服务器也运行的console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);
     React.useEffect(() => {
@@ -157,37 +75,11 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         console.log("每次保存都会更新", dat, "snap", snap) //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
     }, [report, setStorage])
 
-    // 处理离线状态
-    React.useEffect(() => {
-        if (isNetworkFailure || !networkState.isOnline) {
-            // 网络错误，设置为离线
-            setOffline(true)
-        } else if (dataSource === "network" || dataSource === "network-loading" || networkState.isOnline) {
-            // 成功从网络获取数据，设置为在线
-            setOffline(false)
-        }
-        // 如果只是从缓存获取数据，不改变离线状态
-    }, [dataSource, isNetworkFailure, networkState, setOffline])
-
     if (fetching && !data) return <div>加载中...</div>
 
     if (error) {
-        if (isNetworkFailure) {
-            return (
-                <div className="text-center p-4">
-                    <div className="text-red-500 mb-2">后端服务器离线</div>
-                    <div className="text-sm text-gray-600">{isFromCache || data ? "正在使用缓存数据" : "无法连接到服务器"}</div>
-                    <div className="text-xs text-gray-500 mt-2">
-                        错误: {error?.message || networkState.lastError?.message || "网络连接失败"}
-                    </div>
-                    {data && <div className="text-xs text-blue-600 mt-2">已加载缓存数据，功能可能受限</div>}
-                </div>
-            )
-        } else {
             return <div>报告取数据错: {error.message}</div>
-        }
     }
-    //error= {error??'err'}  networkState.isOnline={networkState.isOnline ?'tr':'f'}  isNetworkFailure={isNetworkFailure?'tr':'f'}
     if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>
     if (!report)
         return (
@@ -240,23 +132,7 @@ function CommonReportDataSub({
     })
     const { data: dataSub, fetching: fetchingSub, error: errorSub } = resultSub
     const { getReport: reportSub } = dataSub || {}
-    const { setStorage, setSubrType, setParrepfs, offline, setOffline } = useStorage()
-
-    // 监听全局网络状态
-    const [networkState, setNetworkState] = useState(getNetworkStatus())
-
-    useEffect(() => {
-        const unsubscribe = subscribeToNetworkStatus(setNetworkState)
-        return unsubscribe
-    }, [])
-
-    // 判断主查询和子查询的数据来源
-    const mainDataSource = getDataSource(result)
-    const subDataSource = getDataSource(resultSub)
-    const isMainNetworkError = isNetworkError(error)
-    const isSubNetworkError = isNetworkError(errorSub)
-
-    console.log("主查询数据来源:", mainDataSource, "子查询数据来源:", subDataSource, "网络状态:", networkState)
+    const { setStorage, setSubrType, setParrepfs, } = useStorage()
 
     //服务器也运行的console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);
     React.useEffect(() => {
@@ -278,39 +154,13 @@ function CommonReportDataSub({
         }
     }, [reportSub, report, setStorage, setParrepfs])
 
-    // 处理离线状态
-    React.useEffect(() => {
-        const hasNetworkError = isMainNetworkError || isSubNetworkError || !networkState.isOnline
-        const hasNetworkSuccess = (mainDataSource === "network" || subDataSource === "network") && networkState.isOnline
-
-        if (hasNetworkError) {
-            setOffline(true)
-        } else if (hasNetworkSuccess) {
-            setOffline(false)
-        }
-    }, [mainDataSource, subDataSource, isMainNetworkError, isSubNetworkError, networkState, setOffline])
-
     if (fetching || fetchingSub) return <div>加载中...</div>
-
     if (error || errorSub) {
-        const hasNetworkError = isMainNetworkError || isSubNetworkError
-        if (hasNetworkError) {
-            return (
-                <div className="text-center p-4">
-                    <div className="text-red-500 mb-2">后端服务器离线</div>
-                    <div className="text-sm text-gray-600">正在使用缓存数据</div>
-                    <div className="text-xs text-gray-500 mt-2">
-                        {error?.message} {errorSub?.message} {networkState.lastError?.message}
-                    </div>
-                </div>
-            )
-        } else {
             return (
                 <div>
                     报告取数据错: {error?.message} {errorSub?.message}
                 </div>
             )
-        }
     }
 
     if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>

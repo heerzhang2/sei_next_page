@@ -12,8 +12,6 @@ type StorageContextType = {
     setParrepfs: (data: any) => void
     subrType: any
     setSubrType: (data: any) => void
-    offline: boolean
-    setOffline: (data: boolean) => void
 }
 
 // Create the context with a default value
@@ -27,8 +25,6 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [parrepfs, setParrepfs] = React.useState<any>({});
     //不是独立流转的，其它情形（可重复分项的）就没有这个！
     const [subrType, setSubrType] = React.useState<string | undefined>();
-    //后端主要的服务器离线了
-    const [offline, setOffline] = React.useState<boolean>(false);
     //复用app路由带来的【问题】流转分项与主报告的状态管理，交叉？。
     const value = {
         storage,
@@ -39,8 +35,6 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         setParrepfs,
         subrType,
         setSubrType,
-        offline,
-        setOffline,
     }
     return <StorageContext.Provider value={value}>{children}</StorageContext.Provider>
 }

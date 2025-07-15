@@ -13,6 +13,7 @@ import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
 import { Save,AlertCircle, Pencil } from 'lucide-react';
 import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
+import {useNetworkStatus} from "@/hooks/use-network-status";
 
 // 将空字符串转为 undefined，但保留字段
 const convertEmptyToUndefined = (obj: any): any => {
@@ -256,10 +257,11 @@ export function useFormFramework({
 
 // 创建一个修改指示器组件
 export const ModificationIndicator = () => {
-  const { modified,offline } = useStorage();
+  const { modified, } = useStorage();
+  const gQLstatus=useNetworkStatus()
   return (
       <div className="fixed top-4 left-10 z-50">
-        {offline && (
+        {!gQLstatus.isOnline && (
             <div className="relative bg-amber-500/80 border border-amber-900/80 rounded-lg p-3">
               <AlertCircle
                   className="absolute top-0 left-0 w-6 h-6 text-amber-500 animate-pulse"
