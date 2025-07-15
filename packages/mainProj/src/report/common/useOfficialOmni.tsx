@@ -1,6 +1,5 @@
 import * as React from "react";
 import {CCell,TableRow} from "@/components/flexible-table";
-import {DirectLink} from "@/routing/Link";
 import {RecordOmniArea, ItemOmniConfig, resTranslOmni, itemResTransformRpo,} from "./omni";
 import {resTranslCm} from "./helper";
 import {Column_Setting} from "./useFormatOmni";

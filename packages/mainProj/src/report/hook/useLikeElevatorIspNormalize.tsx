@@ -1,5 +1,4 @@
 import * as React from "react";
-import {DirectLink} from "../../routing/Link";
 
 //通用的格式显示。 电梯的；x.y下标 较为统一的检验 对报告项目布局。
 /**@Deprecated

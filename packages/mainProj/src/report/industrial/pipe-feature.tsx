@@ -7,6 +7,7 @@ import { FlexibleTable, TableBody, TableCell, TableHeader, TableRow } from "@/co
 import { useFoldForList, useFoldGenerate, useSplitSubCapacity } from "@/report/hook/use-fold-gen"
 import { cn } from "@/lib/utils"
 import {RepLink} from "@/report/common/base";
+import {JumpTab} from "@/report/common/JumpTab";
 
 // 表格列宽配置实际表5列 和才2列的：宽度可自己调节
 const CLnPercents = [
@@ -47,9 +48,13 @@ interface PipelineCharacteristicsProps {
     rep: any
     children?: React.ReactNode
     v_bh?: boolean
+    //可修改的表格文字样式
+    className?: string
 }
 
-export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = ({ orc, rep, children, v_bh }) => {
+export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
+    { orc, rep, children, v_bh,className }
+) => {
     // 重组成二维数组，每4个单元一页
     const pages = React.useMemo(() => {
         if (!orc?.单元表?.length) return []
@@ -102,7 +107,9 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                         )}
                     </div>
 
-                    <FlexibleTable columnWidths={CLnPercents[xsize - 1]} className="text-sm print:text-[0.75rem]">
+                    <FlexibleTable columnWidths={CLnPercents[xsize - 1]}
+                          className={cn("text-sm print:text-[0.77rem]", className)}
+                    >
                         <TableHeader>
                             <TableRow>
                                 <TableCell className="text-center font-bold border">
@@ -112,9 +119,11 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                                     // 计算全局序号：当前单元在整个单元表中的索引位置
                                     const globalIndex = (pn + pid) * 4 + c
                                     return (
-                                        <TableCell key={c} className="text-center font-bold border">
-                                            <span id={`Characteristics${globalIndex}`}>{globalIndex + 1}</span>
-                                        </TableCell>
+                                        <JumpTab key={c} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Solidify?unitIndex=${globalIndex}#Solidify`}>
+                                            <TableCell className="text-center font-bold border">
+                                                <span id={`Characteristics${globalIndex}`}>{globalIndex + 1}</span>
+                                            </TableCell>
+                                        </JumpTab>
                                     )
                                 })}
                             </TableRow>
@@ -128,12 +137,7 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                                         const globalIndex = (pn + pid) * 4 + c
                                         return (
                                             <TableCell key={c} className="border">
-                                                <Link
-                                                    href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Solidify?unitIndex=${globalIndex}#Solidify`}
-                                                    className="block hover:bg-gray-50 p-1 rounded"
-                                                >
-                                                    {p?.id ? (where === 1 ? p?.svp?.[field] : where === 2 ? p?.pa?.[field] : p?.[field]) : null}
-                                                </Link>
+                                             {p?.id ? (where === 1 ? p?.svp?.[field] : where === 2 ? p?.pa?.[field] : p?.[field]) : null}
                                             </TableCell>
                                         )
                                     })}
@@ -141,7 +145,9 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                             ))}
                         </TableBody>
                     </FlexibleTable>
-                    <FlexibleTable columnWidths={["%"]} className="text-sm print:text-[0.75rem]">
+                    <FlexibleTable columnWidths={["%"]}
+                          className={cn("text-sm print:text-[0.77rem]", className)}
+                    >
                         <TableBody>
                             <TableRow>
                                 <TableCell className="border">

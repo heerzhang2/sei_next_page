@@ -1,7 +1,6 @@
 import * as React from "react";
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow,} from "@/components/flexible-table";
 import {Button} from "@/components/ui";
-import {DirectLink, } from "../../routing/Link";
 import {NosTagMapping} from "./omni";
 import {useContext} from "react";
 //不能用！ import { useRouter } from 'next/router'

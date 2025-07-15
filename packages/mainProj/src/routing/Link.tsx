@@ -46,8 +46,8 @@ interface DirectLinkProps extends React.HTMLAttributes<HTMLElement> {
     scroll?: boolean
 }
 
-/**
- * 任意都能做Link的；
+/**任意都能做Link的；
+ * 但是报告模板框架中的，已经用JumpTab替代了；
  * 直接用next.js Link 导致报错In HTML, <tr> cannot be a child of <a>.
  * In HTML, <a> cannot be a child of <tbody>. This will cause a hydration error.
  * 表头不能加上<DirectLink >传递各列宽度？

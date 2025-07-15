@@ -1,7 +1,6 @@
 import * as React from "react";
 import {cn} from "@/lib/utils";
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
-import {DirectLink} from "@/routing/Link";
 import {RepLink} from "@/report/common/base";
 import {usePrefixDataTable} from "@/report/hook/usePrefixData";
 import {useThreeColumnView} from "@/report/hook/useThreeColumnSubr";
