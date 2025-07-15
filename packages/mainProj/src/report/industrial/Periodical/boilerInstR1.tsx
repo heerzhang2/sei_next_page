@@ -22,6 +22,7 @@ import { cat_Thickms, ThickMsVw } from "@/report/cm/thickm/ThickMs1"
 import SubRep, {SingeSubRep, SubReportConfig} from "@/component/rep/sub-rep"
 import {cat_Magne, MagneticVw} from "@/report/cm/magnetic/Magnetic1"
 import {PipelineCharacteristics} from "@/report/industrial/pipe-feature";
+import {PipeLineDiagram} from "@/report/industrial/pipeline-diagram";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -156,6 +157,9 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
 
                 {mapFxian.get('管道特性表')?.do &&
                     <PipelineCharacteristics orc={orc} rep={rep}/>
+                }
+                {mapFxian.get('管道单线图')?.do &&
+                    <PipeLineDiagram orc={orc} rep={rep} title={'工业管道单线图'}/>
                 }
             </div>
             <div className="print:hidden">

@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
-import { Save } from "lucide-react"
+import { Save,AlertCircle, Pencil } from 'lucide-react';
 import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
 
 // 将空字符串转为 undefined，但保留字段
@@ -256,16 +256,30 @@ export function useFormFramework({
 
 // 创建一个修改指示器组件
 export const ModificationIndicator = () => {
-  const { modified } = useStorage()
-  if (!modified) return null
+  const { modified,offline } = useStorage();
   return (
-      <div className="fixed top-4 left-10 z-50 bg-yellow-500 border border-pink-900 text-black px-1 py-1 rounded-lg shadow-xl animate-pulse">
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 bg-red-400 rounded-full animate-spin-slow"></div>
-        </div>
+      <div className="fixed top-4 left-10 z-50">
+        {offline && (
+            <div className="relative bg-amber-500/80 border border-amber-900/80 rounded-lg p-3">
+              <AlertCircle
+                  className="absolute top-0 left-0 w-6 h-6 text-amber-500 animate-pulse"
+                  style={{ zIndex: 2 }}
+              />
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 text-sm font-medium text-amber-800 z-10">
+                离线
+              </span>
+            </div>
+        )}
+        {/* 修改状态图标 */}
+        {modified && (
+            <div className="bg-yellow-500 border border-pink-900 text-black px-0 py-0 @5xl:px-1 @5xl:py-1 rounded-lg animate-spin-slow">
+              <Pencil className="w-3 h-3 text-red-500 animate-spin" />
+            </div>
+        )}
       </div>
-  )
-}
+  );
+};
+
 /**报告的编辑器表单-工具条
  */
 interface UseFrameEditorBarProps {

@@ -23,9 +23,9 @@ export default async function ReportRootLayout({
         <ErrorBoundaryWrapper>
             <StorageProvider>
                 <ReportData repId={repId}>
-                    <ModificationIndicator />
                     <div>{children}</div>
                 </ReportData>
+                <ModificationIndicator />
             </StorageProvider>
         </ErrorBoundaryWrapper>
     )

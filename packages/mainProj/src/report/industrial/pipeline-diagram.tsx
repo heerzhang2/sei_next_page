@@ -43,7 +43,7 @@ const LaySettings = [
     ["rno", "管道单元登记编码"],
 ]
 
-interface PipelineCharacteristicsProps {
+interface PipeLineDiagramProps {
     orc: any
     rep: any
     children?: React.ReactNode
@@ -51,9 +51,9 @@ interface PipelineCharacteristicsProps {
     //可修改的表格文字样式
     className?: string
 }
-/**通用特性表
+/**通用单线图
  * */
-export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
+export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
     { orc, rep, children, v_bh,className }
 ) => {
     // 重组成二维数组，每4个单元一页

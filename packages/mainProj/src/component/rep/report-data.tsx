@@ -1,10 +1,12 @@
 "use client"
 
-import React, {Suspense} from 'react';
-import {useQuery, gql} from '@urql/next';
-import {useStorage} from "@/report/StorageContext";
-import Link from "next/link";
-import {useSearchParams} from "next/navigation";
+import React, {ErrorInfo, Suspense} from "react"
+import { useQuery, gql } from "@urql/next"
+import { useStorage } from "@/report/StorageContext"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
+import { ErrorBoundary } from "react-error-boundary";
+import {ErrorFallback} from "@/components/error-fallback";
 
 export interface ReportParams {
     repId: string
@@ -50,38 +52,129 @@ export const ReportQuery = gql`
             }
         }
     }
-`;
+`
 
-function CommonReportData({ repId,children       }:
-                          {  repId:  string, children: React.ReactNode}
-) {
+// 判断数据来源的辅助函数
+function getDataSource(result: any) {
+    // 方法1: 检查缓存结果
+    const cacheOutcome = result?.operation?.context?.meta?.cacheOutcome
+    if (cacheOutcome === "hit") {
+        return "cache" // 完全来自缓存
+    } else if (cacheOutcome === "miss") {
+        return "network" // 来自网络请求
+    } else if (cacheOutcome === "partial") {
+        return "partial" // 部分来自缓存
+    }
+
+    // 方法2: 检查 stale 标志
+    if (result?.stale) {
+        return "stale-cache" // 过期的缓存数据
+    }
+
+    // 方法3: 如果正在获取且没有数据，说明是首次网络请求
+    if (result?.fetching && !result?.data) {
+        return "network-loading"
+    }
+
+    // 方法4: 如果有数据且不在获取中，可能是缓存
+    if (result?.data && !result?.fetching) {
+        return "cache-or-network"
+    }
+
+    return "unknown"
+}
+
+// 判断是否为网络错误（表示后端离线）
+function isNetworkError(error: any) {
+    if (!error) return false
+
+    // 检查错误类型
+    const errorMessage = error.message?.toLowerCase() || ""
+    const networkErrorKeywords = [
+        "network error",
+        "fetch failed",
+        "connection refused",
+        "timeout",
+        "network request failed",
+        "failed to fetch",
+    ]
+
+    return networkErrorKeywords.some((keyword) => errorMessage.includes(keyword))
+}
+
+function CommonReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const [result] = useQuery({
         query: ReportQuery,
         variables: { id: repId },
-        requestPolicy: 'cache-and-network',
+        requestPolicy: "cache-and-network",
     })
     const { data, fetching, error } = result
     const { getReport: report } = data || {}
-    const {setStorage, setSubrType} =useStorage();
+    const { setStorage, setSubrType, offline, setOffline } = useStorage()
+
+    // 判断数据来源
+    const dataSource = getDataSource(result)
+    const isFromCache = dataSource === "cache" || dataSource === "stale-cache"
+    const isNetworkFailure = isNetworkError(error)
+
+    console.log("数据来源:", dataSource, "是否来自缓存:", isFromCache, "网络错误:", isNetworkFailure)
+
     //服务器也运行的console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);
     React.useEffect(() => {
-        const  snap =report&&report.snapshot&&JSON.parse(report.snapshot);
-        const  dat =report&&report.data&&JSON.parse(report.data);
+        const snap = report && report.snapshot && JSON.parse(report.snapshot)
+        const dat = report && report.data && JSON.parse(report.data)
         //JPA互斥锁 _version 同时保存一份到了data区域,保存数据需要回传后端的。  snapshot【只有经过一次】保存才能复制进入data字段，否则不变。
-        if(dat)   setStorage({...dat, ...snap, _version: report?.version});       //台账基础信息优先采信
-        else   setStorage({ ...snap, _version: report?.version});
+        if (dat)
+            setStorage({ ...dat, ...snap, _version: report?.version }) //台账基础信息优先采信
+        else setStorage({ ...snap, _version: report?.version })
         //切换，否则报告页面无法更新：
         setSubrType(undefined)
-        console.log("每次保存都会更新",dat,"snap",snap);        //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
-    }, [report, setStorage]);
-    if (fetching) return <div>加载中...</div>
-    if (error) return <div>报告取数据错: {error.message}</div>
+        console.log("每次保存都会更新", dat, "snap", snap) //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
+    }, [report, setStorage])
+
+    // 处理离线状态
+    React.useEffect(() => {
+        if (isNetworkFailure) {
+            // 网络错误，设置为离线
+            setOffline(true)
+        } else if (dataSource === "network" || dataSource === "network-loading") {
+            // 成功从网络获取数据，设置为在线
+            setOffline(false)
+        }
+        // 如果只是从缓存获取数据，不改变离线状态
+    }, [dataSource, isNetworkFailure, setOffline])
+
+    if (fetching && !data) return <div>加载中...</div>
+
+    if (error) {
+        if (isNetworkFailure) {
+            return (
+                <div className="text-center p-4">
+                    <div className="text-red-500 mb-2">后端服务器离线</div>
+                    <div className="text-sm text-gray-600">{isFromCache ? "正在使用缓存数据" : "无法连接到服务器"}</div>
+                    <div className="text-xs text-gray-500 mt-2">错误: {error.message}</div>
+                </div>
+            )
+        } else {
+            return <div>报告取数据错: {error.message}</div>
+        }
+    }
+
     if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>
-    if (!report) return  <div className="content-center text-center h-screen w-screen">
-            <Link href="/">没有找到该份报告，返回首页</Link>
-        </div>;
+    if (!report)
+        return (
+            <div className="content-center text-center h-screen w-screen">
+                <Link href="/">没有找到该份报告，返回首页</Link>
+            </div>
+        )
+
     return (
         <Suspense>
+         {/* {process.env.NODE_ENV === "development" && (
+                <div className="fixed top-0 right-0 bg-blue-100 text-xs p-2 z-50">
+                    数据来源: {dataSource} | 离线: {offline ? "是" : "否"}
+                </div>
+            )}*/}
             {children}
         </Suspense>
     )
@@ -93,86 +186,156 @@ export const ReportSubQuery = gql`
             id,version,data,modeltype
         }
     }
-`;
+`
 
 /**独立流转分项需要同步显示，避免主报告不能刷新子报告的新数据。
  * 直接查询子报告的数据，替换子报告数据修改部分。
-* */
-function CommonReportDataSub({ repId, subrid, children       }:
-           {  repId:  string, subrid:  string, children: React.ReactNode}
-) {
+ * */
+function CommonReportDataSub({
+                                 repId,
+                                 subrid,
+                                 children,
+                             }: { repId: string; subrid: string; children: React.ReactNode }) {
     const [result] = useQuery({
         query: ReportQuery,
         variables: { id: repId },
-        requestPolicy: 'cache-and-network',
+        requestPolicy: "cache-and-network",
     })
-    const { data, fetching, error } = result;
+    const { data, fetching, error } = result
     const { getReport: report } = data || {}
+
     //独立流转的分项报告：  独立分项报告反而需附加一个查询。因为上面主查询不会因子报告保存做立刻更新的。
     const [resultSub] = useQuery({
         query: ReportSubQuery,
         variables: { id: subrid },
-        requestPolicy: 'cache-and-network',
+        requestPolicy: "cache-and-network",
     })
-    const { data:dataSub, fetching:fetchingSub, error:errorSub } = resultSub;
+    const { data: dataSub, fetching: fetchingSub, error: errorSub } = resultSub
     const { getReport: reportSub } = dataSub || {}
-    const {setStorage, setSubrType, setParrepfs} =useStorage();
+    const { setStorage, setSubrType, setParrepfs, offline, setOffline } = useStorage()
+
+    // 判断主查询和子查询的数据来源
+    const mainDataSource = getDataSource(result)
+    const subDataSource = getDataSource(resultSub)
+    const isMainNetworkError = isNetworkError(error)
+    const isSubNetworkError = isNetworkError(errorSub)
+
+    console.log("主查询数据来源:", mainDataSource, "子查询数据来源:", subDataSource)
+
     //服务器也运行的console.log("左边页面的OriginalRecordMainInner",storage,"routeData",);
     React.useEffect(() => {
-        const  snap =report&&report.snapshot&&JSON.parse(report.snapshot);
-        if(reportSub){
-            const  subdat =reportSub.data&&JSON.parse(reportSub.data);
+        const snap = report && report.snapshot && JSON.parse(report.snapshot)
+        if (reportSub) {
+            const subdat = reportSub.data && JSON.parse(reportSub.data)
             //不是主报告分项的： 不需要设备台账的字段。
-            if(subdat)   setStorage({...subdat,  _version: reportSub?.version});       //台账基础信息优先采信
-            else   setStorage({  _version: reportSub?.version});
+            if (subdat)
+                setStorage({ ...subdat, _version: reportSub?.version }) //台账基础信息优先采信
+            else setStorage({ _version: reportSub?.version })
             setSubrType(reportSub.modeltype)
-            console.log("每次保存CommonReportDataSub", subdat);   //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
+            console.log("每次保存CommonReportDataSub", subdat) //点击不同的编辑区块链接跳转后这个竟然没有再去运行！！
         }
-        const  dat =report&&report.data&&JSON.parse(report.data);
+        const dat = report && report.data && JSON.parse(report.data)
         //JPA互斥锁 _version 同时保存一份到了data区域,保存数据需要回传后端的。  snapshot【只有经过一次】保存才能复制进入data字段，否则不变。
-        if(reportSub){
-            if(dat)   setParrepfs({...dat, ...snap, _version: report?.version});
-            else   setParrepfs({ ...snap, _version: report?.version});
+        if (reportSub) {
+            if (dat) setParrepfs({ ...dat, ...snap, _version: report?.version })
+            else setParrepfs({ ...snap, _version: report?.version })
         }
-    }, [reportSub, report, setStorage,setParrepfs]);
+    }, [reportSub, report, setStorage, setParrepfs])
+
+    // 处理离线状态
+    React.useEffect(() => {
+        const hasNetworkError = isMainNetworkError || isSubNetworkError
+        const hasNetworkSuccess = mainDataSource === "network" || subDataSource === "network"
+
+        if (hasNetworkError) {
+            setOffline(true)
+        } else if (hasNetworkSuccess) {
+            setOffline(false)
+        }
+    }, [mainDataSource, subDataSource, isMainNetworkError, isSubNetworkError, setOffline])
+
     if (fetching || fetchingSub) return <div>加载中...</div>
-    if (error || errorSub) return <div>报告取数据错: {error?.message} {errorSub?.message}</div>
+
+    if (error || errorSub) {
+        const hasNetworkError = isMainNetworkError || isSubNetworkError
+        if (hasNetworkError) {
+            return (
+                <div className="text-center p-4">
+                    <div className="text-red-500 mb-2">后端服务器离线</div>
+                    <div className="text-sm text-gray-600">正在使用缓存数据</div>
+                    <div className="text-xs text-gray-500 mt-2">
+                        {error?.message} {errorSub?.message}
+                    </div>
+                </div>
+            )
+        } else {
+            return (
+                <div>
+                    报告取数据错: {error?.message} {errorSub?.message}
+                </div>
+            )
+        }
+    }
+
     if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>
-    if(!report) return  <div className="content-center text-center h-screen w-screen">
-        <Link href="/">没有找到该份报告，返回首页</Link>
-    </div>;
-    if(!reportSub) return  <div className="content-center text-center h-screen w-screen">
-        <Link href="/">没有该独立流转子报告，返回首页</Link>
-    </div>;
+    if (!report)
+        return (
+            <div className="content-center text-center h-screen w-screen">
+                <Link href="/">没有找到该份报告，返回首页</Link>
+            </div>
+        )
+    if (!reportSub)
+        return (
+            <div className="content-center text-center h-screen w-screen">
+                <Link href="/">没有该独立流转子报告，返回首页</Link>
+            </div>
+        )
+
     return (
         <Suspense>
+            {/* 显示数据来源信息（开发模式下） */}
+            {process.env.NODE_ENV === "development" && (
+                <div className="fixed top-0 right-0 bg-blue-100 text-xs p-2 z-50">
+                    主: {mainDataSource} | 子: {subDataSource} | 离线: {offline ? "是" : "否"}
+                </div>
+            )}
             {children}
         </Suspense>
     )
 }
 
+
 /**支持：子报告编辑情形需要单独展示子报告，不涉及主报告显示的模式。
-* */
+ * */
 export default function ReportData({
-                                       repId,children
+                                       repId,
+                                       children,
                                    }: {
-    repId: string,
+    repId: string
     children: React.ReactNode
 }) {
+
+    const logError = (error: Error, info: ErrorInfo) => {
+        console.log("主查询ErrorBoundary:=", info, "rErr:", error)
+    };
     const searchParams = useSearchParams()
     const subrid = searchParams!.get("subrid")
-    if(subrid)  return (
-        <Suspense>
-            <CommonReportDataSub repId={repId} subrid={subrid}>
-                {children}
-            </CommonReportDataSub>
-        </Suspense>
-    )
-    else return (
-        <Suspense>
-            <CommonReportData repId={repId} >
-                {children}
-            </CommonReportData>
-        </Suspense>
-    )
+    if (subrid)
+        return (
+            <ErrorBoundary FallbackComponent={ErrorFallback} onError={logError}>
+                <Suspense>
+                    <CommonReportDataSub repId={repId} subrid={subrid}>
+                        {children}
+                    </CommonReportDataSub>
+                </Suspense>
+            </ErrorBoundary>
+        )
+    else
+        return (
+            <ErrorBoundary FallbackComponent={ErrorFallback} onError={logError}>
+                <Suspense>
+                    <CommonReportData repId={repId}>{children}</CommonReportData>
+                </Suspense>
+            </ErrorBoundary>
+        )
 }
