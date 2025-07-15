@@ -553,3 +553,4 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/TkmsInst
     return <>
     {render}
     </>
+管道单元超过500个的性能可以接受，开发版本运行的反映有些迟钝，生产环境反馈还可以
