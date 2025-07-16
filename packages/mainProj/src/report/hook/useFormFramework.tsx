@@ -286,8 +286,9 @@ export const ModificationIndicator = () => {
  */
 interface UseFrameEditorBarProps {
   rep?: any
+  //必须相对于根部存储的，或者可重复分项情况下的是分项相对根部存储。
   values: Record<string, any>
-  //校验当前编辑区域的字段取值合理性
+  //校验当前编辑区域的字段取值合理性,或给出提醒信息；
   onVerify?: (values: any) => boolean
   onReset?: () => void
   //分项报告的： 独立流转，或者非独立的可重复分项目存储 [_modType_1]: ;

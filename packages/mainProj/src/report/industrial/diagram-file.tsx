@@ -2,10 +2,10 @@
 import { useSearchParams } from "next/navigation"
 import type { InternalItemProps } from "../common/base"
 import { useStorage } from "@/report/StorageContext"
-import { Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Label } from "@/components/ui"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, Label } from "@/components/ui"
 import { BlobInputList, CollapsibleFormSection } from "@/components/chub"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
-import { useCallback, useState, useEffect } from "react"
+import {useCallback, useState, useEffect, useMemo} from "react"
 import { toast } from "sonner"
 import {FileStore, useUppyUpload} from "@/report/hook/useUppyUpload"
 
@@ -31,10 +31,9 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
 
     // 获取当前单线图列表
     const currentDiagrams: LineDiagramItem[] = storage.单图表 || []
-
     // 编辑表单状态
     const [editForm, setEditForm] = useState<{ m: string }>({ m: "" })
-    // 保存初始值用于重置
+    //【简易， 单一字段，特例！】 保存初始值用于重置
     const [initialMemo, setInitialMemo] = useState<string>("")
 
     // 根据lineIndex参数确定编辑模式
@@ -52,8 +51,8 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                 setInitialMemo(memoText)
                 console.log(`编辑现有单线图: 序号${index + 1}`)
             } else if (index >= 0) {
-                // 新增单线图模式
-                setSelectedIndex(index)
+                // 新增单线图模式：
+                setSelectedIndex(currentDiagrams.length)
                 setIsNewMode(true)
                 setEditForm({ m: "" })
                 setInitialMemo("")
@@ -73,7 +72,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         }
     }, [lineIndexParam])
 
-    // 更新说明字段
+    //【特例：只有单一个字段的，没用复合结构的状态对象】 更新说明字段
     const updateMemoField = useCallback(
         (value: any ) => {
             setEditForm({ m: value })
@@ -88,18 +87,15 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                 toast.error("请先选择要编辑的单线图")
                 return
             }
-
             setStorage((prevStorage: any) => {
                 const currentDiagrams = prevStorage.单图表 || []
                 const newDiagrams = [...currentDiagrams]
-
                 if (isNewMode) {
                     // 新增模式：确保数组有足够的长度
                     while (newDiagrams.length <= selectedIndex) {
                         newDiagrams.push({ m: "" })
                     }
                 }
-
                 // 更新指定索引的文件
                 if (newDiagrams[selectedIndex]) {
                     newDiagrams[selectedIndex] = {
@@ -113,8 +109,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                         m: editForm.m || "",
                     }
                 }
-
-                console.log(`${del ? "删除" : "上传"}文件到单线图 ${selectedIndex + 1}:`, upfile)
+                // console.log(`${del ? "删除" : "上传"}文件到单线图 ${selectedIndex + 1}:`, upfile)
                 return {
                     ...prevStorage,
                     单图表: newDiagrams,
@@ -122,69 +117,65 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
             })
 
             if (!modified) setModified(true)
-
             if (!del) {
                 toast.success(`文件上传成功到单线图 ${selectedIndex + 1}`)
             }
         },
         [selectedIndex, isNewMode, editForm.m, modified, setStorage, setModified],
     )
+    // const saveMemoToStorage = useCallback(() => {
+    //     setStorage((prevStorage: any) => {
+    //         const currentDiagrams = prevStorage.单图表 || []
+    //         const newDiagrams = [...currentDiagrams]
+    //         if (isNewMode) {
+    //         return {
+    //             ...prevStorage,
+    //             单图表: newDiagrams,
+    //         }
+    //     })
+    // }, [editForm.m, selectedIndex, isNewMode])
 
-    // 保存说明字段到存储
-    const saveMemoToStorage = useCallback(() => {
-        if (selectedIndex < 0) {
-            toast.error("请先选择要编辑的单线图")
-            return
+    //【表当中某一行】的编辑操作，没有使用useForm做法的：表格的某一行必须在这里做变更控制的setEditForm那些字段。
+    const saveForm = useMemo(() => {
+        if(selectedIndex < 0) return
+        const currentDiagrams = storage.单图表 || []
+        const newDiagrams = [...currentDiagrams]
+        if (isNewMode) {
+            // 新增模式：确保数组有足够的长度
+            while (newDiagrams.length <= selectedIndex) {
+                newDiagrams.push({ m: "" })
+            }
+        }
+        // 更新指定索引的： 修改旧数据
+        if (newDiagrams[selectedIndex]) {
+            newDiagrams[selectedIndex] = {
+                ...newDiagrams[selectedIndex],
+                m: editForm.m || undefined,
+            }
+        } else {
+            // 如果索引位置不存在，创建新对象
+            newDiagrams[selectedIndex] = {
+                m: editForm.m || undefined,
+            }
         }
 
-        setStorage((prevStorage: any) => {
-            const currentDiagrams = prevStorage.单图表 || []
-            const newDiagrams = [...currentDiagrams]
-
-            if (isNewMode) {
-                // 新增模式：确保数组有足够的长度
-                while (newDiagrams.length <= selectedIndex) {
-                    newDiagrams.push({ m: "" })
-                }
-            }
-
-            // 更新指定索引的说明
-            if (newDiagrams[selectedIndex]) {
-                newDiagrams[selectedIndex] = {
-                    ...newDiagrams[selectedIndex],
-                    m: editForm.m || undefined,
-                }
-            } else {
-                // 如果索引位置不存在，创建新对象
-                newDiagrams[selectedIndex] = {
-                    m: editForm.m || undefined,
-                }
-            }
-
-            console.log(`保存说明到单线图 ${selectedIndex + 1}:`, editForm.m)
-            return {
-                ...prevStorage,
-                单图表: newDiagrams,
-            }
-        })
-
-        setModified(true)
-        toast.success(`说明已保存到单线图 ${selectedIndex + 1}`)
-    }, [selectedIndex, isNewMode, editForm.m, setStorage, setModified])
+        return {
+            //...prevStorage, 更多变量
+            单图表: newDiagrams,
+        }
+    }, [editForm.m, storage.单图表, selectedIndex, isNewMode])
 
     // 重置函数 - 只重置说明字段，不重置文件
     const onReset = useCallback(() => {
         setEditForm({ m: initialMemo })
-        toast.info("已重置说明字段")
+        // toast.info("已重置说明字段")
     }, [initialMemo])
 
     // 获取当前编辑的单线图数据
     const currentDiagram = selectedIndex >= 0 && !isNewMode ? currentDiagrams[selectedIndex] : undefined
     const currentFile = currentDiagram?._FILE_
-
     // 为 useUppyUpload 准备文件对象
     const storeObj = currentFile || {}  as FileStore
-
     const [uploadDom] = useUppyUpload({
         repId: rep?.id!,
         maxFile: 1,
@@ -194,17 +185,18 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         hash: `LineDiagram_${selectedIndex}`,
         id: `LineDiagram_${selectedIndex}`,
     })
+    const onVerify = useCallback((values: any) => {
+        if(selectedIndex < 0)   return false
+        const currentDiagrams = values.单图表 || []
+        const obj=currentDiagrams[selectedIndex] || {}
+        if(!obj.m && !obj._FILE_) {
+            toast.warning(`该序号单线图对象即将删除${selectedIndex + 1}，但请注意：编辑器自动切换新排序的序号的内容`)
+        }
+        return true
+    }, [selectedIndex, editForm.m, isNewMode])
 
-    const [render] = useFrameEditorBar({
-        rep,
-        values: { m: editForm.m },
-        onReset,
-        onVerify: () => {
-            // 保存说明字段到存储
-            saveMemoToStorage()
-            return true
-        },
-    })
+    //【很特别】针对表格一行的编辑：删除空行？
+    const [render] = useFrameEditorBar({rep, values: { ...saveForm },onVerify, onReset,})
 
     // 如果没有选择单线图，显示提示
     if (selectedIndex < 0) {
@@ -248,7 +240,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                                         placeholder="输入单线图的说明文字..."
                                     />
                                 </div>
-{/*                                <Button type="button" variant="outline" size="sm" onClick={saveMemoToStorage}>
+                            {/*       <Button type="button" variant="outline" size="sm" onClick={saveMemoToStorage}>
                                     保存说明
                                 </Button>*/}
                             </CardContent>
