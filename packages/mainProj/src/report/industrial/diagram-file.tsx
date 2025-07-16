@@ -1,116 +1,224 @@
 "use client"
-
-import * as React from "react"
 import { useSearchParams } from "next/navigation"
 import type { InternalItemProps } from "../common/base"
 import { useStorage } from "@/report/StorageContext"
-import {
-    Badge,
-    Button,
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-    Input,
-    Label,
-    Separator,
-    Textarea,
-} from "@/components/ui"
-import {BlobInputList, CollapsibleFormSection} from "@/components/chub"
+import { Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Label } from "@/components/ui"
+import { BlobInputList, CollapsibleFormSection } from "@/components/chub"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
-import type { IPipingUnitEntity } from "@/types/piping-unit"
 import { useCallback, useState, useEffect } from "react"
 import { toast } from "sonner"
-import {useUppyUpload} from "@/report/hook/useUppyUpload";
+import {FileStore, useUppyUpload} from "@/report/hook/useUppyUpload"
 
-
-//只能存储于主报告:单元表 单图表[{_FILE_ , "m": 说明},]；
-interface EditorItem {
-    //保留单元表，    ？扩展功能。
-    单元表: IPipingUnitEntity[]
-    单图表: IPipingUnitEntity[]
+// 单线图对象类型
+interface LineDiagramItem {
+    _FILE_?: {
+        name: string
+        url: string
+    }
+    m?: string // 说明文字
 }
-//编辑区域功能独立出来：避免混乱。只做图片上传的。
-export const LineDiagramFile =
-({  rep,
-     children,
-     show = false,
-     label='单线图-文件上传',
- }:InternalItemProps) => {
+
+// 编辑区域功能独立出来：避免混乱。只做图片上传的。
+export const LineDiagramFile = ({ rep, children, show = false, label = "单线图-文件上传" }: InternalItemProps) => {
     const searchParams = useSearchParams()
     const lineIndexParam = searchParams?.get("lineIndex") // 从URL获取单线图序号
-    const {storage,setStorage,modified,setModified} =useStorage();
+    const { storage, setStorage, modified, setModified } = useStorage()
 
-    //原本editForm一表的其中一行对象。 但是这里改成非表格的模式：减少一层存储组织嵌套了。
-    const initialState=()=>(
-        {
-           m:  subStore?.[memo] ?? "",
-        }  as any
-    );
-    const [editForm, setEditForm] = React.useState<any>(()=>initialState())
-    //const [content, setContent]=React.useState<string>(storage?.[''] ??)不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent{某一个表行的记录对象再倒腾一次}。
-    const [content, ] = React.useState<any>(()=>initialState())
-    const [editErr, setEditErr] = React.useState<string>()
-    // 当前选中的单元索引
+    // 当前选中的单线图索引
     const [selectedIndex, setSelectedIndex] = useState<number>(-1)
-    const currentUnits = storage.单图表 || []
-    // 根据lineIndex参数自动选择单元
+    // 是否为新增模式
+    const [isNewMode, setIsNewMode] = useState<boolean>(false)
+
+    // 获取当前单线图列表
+    const currentDiagrams: LineDiagramItem[] = storage.单图表 || []
+
+    // 编辑表单状态
+    const [editForm, setEditForm] = useState<{ m: string }>({ m: "" })
+    // 保存初始值用于重置
+    const [initialMemo, setInitialMemo] = useState<string>("")
+
+    // 根据lineIndex参数确定编辑模式
     useEffect(() => {
-        if (lineIndexParam && currentUnits.length > 0) {
+        if (lineIndexParam !== null) {
             const index = Number.parseInt(lineIndexParam, 10)
-            // 验证索引是否有效
-            if (index >= 0 && index < currentUnits.length) {
+
+            if (index >= 0 && index < currentDiagrams.length) {
+                // 编辑现有单线图
                 setSelectedIndex(index)
-                // setMemoText(currentUnits[index].mm || "")
-                console.log(`自动选择单元: 序号${index + 1}, 编码${currentUnits[index].code}`)
+                setIsNewMode(false)
+                const currentItem = currentDiagrams[index]
+                const memoText = currentItem?.m || ""
+                setEditForm({ m: memoText })
+                setInitialMemo(memoText)
+                console.log(`编辑现有单线图: 序号${index + 1}`)
+            } else if (index >= 0) {
+                // 新增单线图模式
+                setSelectedIndex(index)
+                setIsNewMode(true)
+                setEditForm({ m: "" })
+                setInitialMemo("")
+                console.log(`新增单线图: 序号${index + 1}`)
             } else {
-                console.warn(`无效的单元索引: ${index}, 当前单元总数: ${currentUnits.length}`)
-                toast.error(`无效的单元序号: ${index + 1}`)
+                console.warn(`无效的单线图索引: ${index}`)
+                toast.error(`无效的单线图序号: ${index + 1}`)
+                setSelectedIndex(-1)
+                setIsNewMode(false)
             }
+        } else {
+            // 没有指定索引，默认显示列表或提示
+            setSelectedIndex(-1)
+            setIsNewMode(false)
+            setEditForm({ m: "" })
+            setInitialMemo("")
         }
-    }, [lineIndexParam, currentUnits])
+    }, [lineIndexParam])
 
-    // 更新表单字段
-    const updateFormField = (field: string, value: any) => {
-        setEditForm((prev: any) => ({ ...prev, [field]: value }))
-    }
-    const onReset = () => {
-        //_FILE_ 单线图，不能重置的：保证一致性同步未见系统的数据，避免丢失文件管理者。自动确认的。
-        setEditForm(content)
-    }
-    //依赖项必须加上， 否则：可能同一个上传文件，被保存给到多个分项的存储对象。
-    const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
-        // setStorage({...storage, [pic]: upfile});
-        if(selectedIndex>=0){
-            setStorage((prevStorage : any) =>{
-                const oldStore=storage.单图表?.[selectedIndex];
-                storage.单图表?.slice()
-                return ({
+    // 更新说明字段
+    const updateMemoField = useCallback(
+        (value: any ) => {
+            setEditForm({ m: value })
+        },
+        [],
+    )
+
+    // 文件上传完成回调
+    const onFinish = useCallback(
+        async (upfile: any, del: boolean) => {
+            if (selectedIndex < 0) {
+                toast.error("请先选择要编辑的单线图")
+                return
+            }
+
+            setStorage((prevStorage: any) => {
+                const currentDiagrams = prevStorage.单图表 || []
+                const newDiagrams = [...currentDiagrams]
+
+                if (isNewMode) {
+                    // 新增模式：确保数组有足够的长度
+                    while (newDiagrams.length <= selectedIndex) {
+                        newDiagrams.push({ m: "" })
+                    }
+                }
+
+                // 更新指定索引的文件
+                if (newDiagrams[selectedIndex]) {
+                    newDiagrams[selectedIndex] = {
+                        ...newDiagrams[selectedIndex],
+                        _FILE_: del ? undefined : upfile,
+                    }
+                } else {
+                    // 如果索引位置不存在，创建新对象
+                    newDiagrams[selectedIndex] = {
+                        _FILE_: del ? undefined : upfile,
+                        m: editForm.m || "",
+                    }
+                }
+
+                console.log(`${del ? "删除" : "上传"}文件到单线图 ${selectedIndex + 1}:`, upfile)
+                return {
                     ...prevStorage,
-                    单图表: [] {...oldStore, [pic]: upfile}
-                })
+                    单图表: newDiagrams,
+                }
             })
-        }
-        setStorage((prevStorage : any) =>{
-            const oldStore=prevStorage?.[`_${modType}_${redId}`];
-            return ({
-                ...prevStorage,
-                [`_${modType}_${redId}`]: {...oldStore, [pic]: upfile}
-            })
-        })
-        !modified && setModified(true);
-    }, [selectedIndex, storage, modified]);
 
-    //【特殊】导航hash:"FxDiagram_pf"是给右边的编辑器用的，而通常的hash都是配合用于左边的著内容列表做的导航。
-    const [uploadDom]=useUppyUpload({ repId:rep?.id!,
-        maxFile:1, onFinish,
-        storeObj: selectedIndex>=0? storage.单图表?.[selectedIndex]._FILE_ || [] :[],
-        liveDays:10, hash:"FxDiagram_pf"
-    });
-    //不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent {某一个表行的记录对象再倒腾一次}。
-    const [render] = useFrameEditorBar({ rep, values: { ...editForm }, onReset,})
-    // const [render] = useFrameEditorBar({ rep, values: { ['仪器编号']: content }, onReset,subrid,redId,modType:"THICK_MS"})
+            if (!modified) setModified(true)
+
+            if (!del) {
+                toast.success(`文件上传成功到单线图 ${selectedIndex + 1}`)
+            }
+        },
+        [selectedIndex, isNewMode, editForm.m, modified, setStorage, setModified],
+    )
+
+    // 保存说明字段到存储
+    const saveMemoToStorage = useCallback(() => {
+        if (selectedIndex < 0) {
+            toast.error("请先选择要编辑的单线图")
+            return
+        }
+
+        setStorage((prevStorage: any) => {
+            const currentDiagrams = prevStorage.单图表 || []
+            const newDiagrams = [...currentDiagrams]
+
+            if (isNewMode) {
+                // 新增模式：确保数组有足够的长度
+                while (newDiagrams.length <= selectedIndex) {
+                    newDiagrams.push({ m: "" })
+                }
+            }
+
+            // 更新指定索引的说明
+            if (newDiagrams[selectedIndex]) {
+                newDiagrams[selectedIndex] = {
+                    ...newDiagrams[selectedIndex],
+                    m: editForm.m || undefined,
+                }
+            } else {
+                // 如果索引位置不存在，创建新对象
+                newDiagrams[selectedIndex] = {
+                    m: editForm.m || undefined,
+                }
+            }
+
+            console.log(`保存说明到单线图 ${selectedIndex + 1}:`, editForm.m)
+            return {
+                ...prevStorage,
+                单图表: newDiagrams,
+            }
+        })
+
+        setModified(true)
+        toast.success(`说明已保存到单线图 ${selectedIndex + 1}`)
+    }, [selectedIndex, isNewMode, editForm.m, setStorage, setModified])
+
+    // 重置函数 - 只重置说明字段，不重置文件
+    const onReset = useCallback(() => {
+        setEditForm({ m: initialMemo })
+        toast.info("已重置说明字段")
+    }, [initialMemo])
+
+    // 获取当前编辑的单线图数据
+    const currentDiagram = selectedIndex >= 0 && !isNewMode ? currentDiagrams[selectedIndex] : undefined
+    const currentFile = currentDiagram?._FILE_
+
+    // 为 useUppyUpload 准备文件对象
+    const storeObj = currentFile || {}  as FileStore
+
+    const [uploadDom] = useUppyUpload({
+        repId: rep?.id!,
+        maxFile: 1,
+        onFinish,
+        storeObj,
+        liveDays: 10,
+        hash: `LineDiagram_${selectedIndex}`,
+        id: `LineDiagram_${selectedIndex}`,
+    })
+
+    const [render] = useFrameEditorBar({
+        rep,
+        values: { m: editForm.m },
+        onReset,
+        onVerify: () => {
+            // 保存说明字段到存储
+            saveMemoToStorage()
+            return true
+        },
+    })
+
+    // 如果没有选择单线图，显示提示
+    if (selectedIndex < 0) {
+        return (
+            <CollapsibleFormSection title={label!} defaultOpen={show}>
+                <Card className="py-4">
+                    <CardContent className="text-center">
+                        <p className="text-muted-foreground">要指定要编辑的单线图序号，才能用</p>
+                        <p className="text-sm text-muted-foreground mt-2">当前共有 {currentDiagrams.length} 个单线图</p>
+                    </CardContent>
+                </Card>
+            </CollapsibleFormSection>
+        )
+    }
 
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
@@ -118,40 +226,56 @@ export const LineDiagramFile =
                 <Card className="py-1 gap-2">
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
-                            &nbsp;  <Badge variant="secondary">这里共 {subStore?.[pic]?.length || 0} 个图</Badge>
+                          <span>
+                            {isNewMode ? "新增" : "编辑"}单线图 #{selectedIndex + 1}
+                          </span>
                         </CardTitle>
+                        {isNewMode && <p className="text-sm text-muted-foreground">这是一个新的单线图，上传文件后将自动创建</p>}
                     </CardHeader>
-                    <CardContent className="p-0 space-y-1">
-                        <div className="space-y-0.5">
-                            {/* 编辑表单 */}
-                            <Card className="mt-1 border-l-4 border-l-blue-500 gap-1 py-1">
-                                <CardContent className="space-y-1 px-2">
-                                    <div className="grid grid-cols-1 gap-1">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="memojt" className="select-text">
-                                                说明：
-                                            </Label>
-                                            <BlobInputList className="w-full min-h-[8rem] resize-y"
-                                                           id="memojt"
-                                                           value={editForm?.m || ""}
-                                                           onChange={(val) => updateFormField("m", val)}
-                                                           placeholder="输入更多文字"
-                                            />
-                                            {editErr && <p className="text-sm text-red-600">{editErr}</p>}
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            {/* 新增按钮和表单 */}
-                            {label}的图：
+                    <CardContent className="p-0 space-y-4">
+                        {/* 说明字段编辑 */}
+                        <Card className="mt-1 border-l-4 border-l-blue-500 gap-1 py-1">
+                            <CardContent className="space-y-2 px-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="memojt" className="select-text">
+                                        说明文字：
+                                    </Label>
+                                    <BlobInputList
+                                        className="w-full min-h-[8rem] resize-y"
+                                        id="memojt"
+                                        value={editForm.m || ""}
+                                        onChange={(val) => updateMemoField(val ) }
+                                        placeholder="输入单线图的说明文字..."
+                                    />
+                                </div>
+{/*                                <Button type="button" variant="outline" size="sm" onClick={saveMemoToStorage}>
+                                    保存说明
+                                </Button>*/}
+                            </CardContent>
+                        </Card>
+
+                        {/* 文件上传区域 */}
+                        <div className="space-y-2">
+                            <Label>单线图文件：</Label>
                             {uploadDom}
-                            {children}
                         </div>
-                        <span>注意：所有文件上传不能用重置按钮来撤销，需手动删除。</span>
+                        {/* 当前状态显示 */}
+                        <div className="text-sm text-muted-foreground space-y-1">
+                            <p>• 文件状态: {currentFile?.name ? `已上传 ${currentFile.name}` : "未上传"}</p>
+                            <p>• 模式: {isNewMode ? "新增模式" : "编辑模式"}</p>
+                        </div>
+
+                        <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                            <p>注意：</p>
+                            <p>• 文件上传不能用重置按钮撤销，需手动删除</p>
+                            <p>• 重置按钮只会重置说明文字，不会影响已上传的文件</p>
+                            <p>• 保存按钮会同时保存说明文字和确认文件上传</p>
+                        </div>
+
+                        {children}
                     </CardContent>
                     <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2">{render()}</CardFooter>
                 </Card>
-                {children}
             </div>
         </CollapsibleFormSection>
     )

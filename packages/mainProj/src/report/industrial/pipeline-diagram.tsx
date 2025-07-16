@@ -8,40 +8,8 @@ import { useFoldForList, useFoldGenerate, useSplitSubCapacity } from "@/report/h
 import { cn } from "@/lib/utils"
 import {RepLink} from "@/report/common/base";
 import {JumpTab} from "@/report/common/JumpTab";
+import {ImageComponent} from "@/components/shub";
 
-// 表格列宽配置实际表5列 和才2列的：宽度可自己调节
-const CLnPercents = [
-    ["%", "55%"],
-    ["%", "37%", "37%"],
-    ["%", "25%", "25%", "25%"],
-    ["%", "20%", "20%", "20%", "20%"],
-]
-// 字段配置
-const LaySettings = [
-    ["name", "管道名称"],
-    ["code", "管道编号"],
-    ["规格", "管道规格（mm）", 1],
-    ["leng", "管道长度（m）"],
-    ["level", "管道级别"],
-    ["工介", "输送介质", 2],
-    ["材料", "管道材料", 1],
-    ["设压", "设计压力（MPa）", 1],
-    ["工压", "操作压力（MPa）", 2],
-    ["试压", "试验压力（MPa）", 2],
-    ["设温", "设计温度（℃）", 1],
-    ["工温", "操作温度（℃）", 2],
-    ["start", "管道起点"],
-    ["stop", "管道止点"],
-    ["腐蚀", "腐蚀裕量（mm）", 1],
-    ["焊数", "对接焊口数量", 1],
-    ["lay", "敷设方式"],
-    ["防腐材", "防腐层材料", 2],
-    ["绝材", "绝热层材料", 2],
-    ["绝厚", "绝热层厚度(mm)", 2],
-    ["保数", "安全保护装置数量", 2],
-    ["safe", "安全状况等级"],
-    ["rno", "管道单元登记编码"],
-]
 
 interface PipeLineDiagramProps {
     orc: any
@@ -50,45 +18,25 @@ interface PipeLineDiagramProps {
     v_bh?: boolean
     //可修改的表格文字样式
     className?: string
+    title?: string
+    mtil?: string
 }
 /**通用单线图
  * */
 export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
-    { orc, rep, children, v_bh,className }
+    { orc, rep, children, v_bh,className,title,mtil }
 ) => {
-    // 重组成二维数组，每4个单元一页
-    const pages = React.useMemo(() => {
-        if (!orc?.单图表?.length) return []
-
-        const pages: any[] = []
-        for (let f = 0; f < orc.单图表.length; f += 4) {
-            pages.push(orc.单图表.slice(f, f + 4))
-        }
-        return pages
-    }, [orc?.单图表])
-
-    const lsBlockMax = useSplitSubCapacity(pages.length, 4)
+    const lsBlockMax = useSplitSubCapacity(orc?.单图表?.length||0, 4)
     // 切分折叠区
-    const { sumArea, areaContent, btnBindUses } = useFoldForList(pages, lsBlockMax, false)
+    const { sumArea, areaContent, btnBindUses } = useFoldForList(orc?.单图表||[], lsBlockMax, false)
     // 渲染回调函数
-    const frCallback = (dlPage: any, arak: number, pid: number) => {
-        const pn = arak * lsBlockMax // 当前折叠区第一张的序号数
-        const xsize = dlPage.length
-
-        // 收集检验员信息
-        const 检验员s: any[] = []
-        for (const pp of dlPage) {
-            if (pp?.sgm) {
-                const men = 检验员s.find((m: any) => m.name === pp?.sgm.name)
-                if (!men) 检验员s.push(pp?.sgm)
-            }
-        }
-        const jyms = 检验员s.map((m: any, k: number) => m.name)
+    const frCallback = (lobj: any, arak: number, pid: number) => {
+        const index=arak * lsBlockMax +pid;
         const CompH = arak === 0 && pid === 0 ? "h2" : "div"
         return (
             <div
                 key={pid}
-                className="mb-8 print:mb-0 print:min-h-screen print:flex print:flex-col print:justify-around print:break-before-page"
+                className="mb-4 print:mb-0 print:min-h-screen print:flex print:flex-col print:justify-around print:break-before-page"
             >
                 <div className="mt-4 print:mt-0">
                     {/* 标题 */}
@@ -98,94 +46,63 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
                             className="block text-center"
                         >
                             <CompH className={cn(arak === 0 && pid === 0 ? "" : "hidden print:block", "text-xl mb-4")}>
-                                管道特性表
+                               {title ??'压力管道单线图'}
                             </CompH>
                         </Link>
+                        <div className="flex justify-end print:hidden">
+                            <span className="text-xs mr-4">序号{index+1}</span>
+                        </div>
                         {v_bh && (
                             <div className="flex justify-end mb-4">
                                 <span className="text-sm">报告编号：{rep.isp.no}</span>
                             </div>
                         )}
                     </div>
+                    <FlexibleTable columnWidths={["%"]}>
+                        <TableBody>
+                            <TableRow id={'LineDiagram'+index}>
+                                <JumpTab
+                                    href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LineDiagramFile?original=1&lineIndex=${index}#LineDiagram${index}`}
+                                >
+                                <TableCell className="border bg-gray-50">
+                                    <div className={cn( lobj?._FILE_?.url? "text-xs": "text-sm" )} >{mtil ??'缺陷附图或说明'}：&nbsp;
+                                        {lobj?.m && <span className="text-sm whitespace-pre-wrap">{lobj?.m || "／"}</span>}
+                                        {!(lobj?._FILE_?.url) && !lobj?.m && (
+                                            <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
+                                        )}
+                                    </div>
+                                    {lobj?._FILE_?.url &&
+                                            <div className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
 
-                    <FlexibleTable columnWidths={CLnPercents[xsize - 1]}
-                          className={cn("text-sm print:text-[0.77rem]", className)}
-                    >
-                        <TableHeader>
-                            <TableRow>
-                                <TableCell className="text-center font-bold border">
-                                    <span className="text-xs">项目 \ 序号</span>
+                                                    <div className="flex justify-around items-center my-0.5">
+                                                            <ImageComponent
+                                                                src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${lobj?._FILE_?.url}`}
+                                                                alt={lobj?._FILE_?.name || "图片"}
+                                                                className={cn(
+                                                                    "w-auto h-auto",
+                                                                    "print:max-h-[calc(100vh-5.9rem)]",
+                                                                )}
+                                                            />
+                                                    </div>
+
+                                            </div>
+                                    }
                                 </TableCell>
-                                {dlPage.map((p: any, c: number) => {
-                                    // 计算全局序号：当前单元在整个单图表中的索引位置
-                                    const globalIndex = (pn + pid) * 4 + c
-                                    return (
-                                        <JumpTab key={c} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Solidify?unitIndex=${globalIndex}#Solidify`}>
-                                            <TableCell className="text-center font-bold border">
-                                                <span id={`Characteristics${globalIndex}`}>{globalIndex + 1}</span>
-                                            </TableCell>
-                                        </JumpTab>
-                                    )
-                                })}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {LaySettings.map(([field, title, where], fn: number) => (
-                                <TableRow key={fn}>
-                                    <TableCell className="font-medium border bg-gray-50">{title}</TableCell>
-                                    {dlPage.map((p: any, c: number) => {
-                                        // 计算全局序号：当前单元在整个单图表中的索引位置
-                                        const globalIndex = (pn + pid) * 4 + c
-                                        return (
-                                            <TableCell key={c} className="border">
-                                             {p?.id ? (where === 1 ? p?.svp?.[field] : where === 2 ? p?.pa?.[field] : p?.[field]) : null}
-                                            </TableCell>
-                                        )
-                                    })}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </FlexibleTable>
-                    <FlexibleTable columnWidths={["%"]}
-                          className={cn("text-sm print:text-[0.77rem]", className)}
-                    >
-                        <TableBody>
-                            <TableRow>
-                                <TableCell className="border">
-                                    <Link
-                                        href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/LineDiagram#LineDiagram`}
-                                        className="block"
-                                    >
-                                        <div>
-                                            <span>备注：</span>
-                                            {dlPage.map(
-                                                (p: any, c: number) =>
-                                                    p?.mm && (
-                                                        <span key={c} className="ml-2">
-                                                          {p.mm}。
-                                                        </span>
-                                                      ),
-                                            )}
-                                        </div>
-                                    </Link>
-                                </TableCell>
+                            </JumpTab>
                             </TableRow>
                         </TableBody>
                     </FlexibleTable>
-                    <FootMensLine
-                        jm={jyms}
-                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
-                    />
+                    <FootMensLine     />
                 </div>
             </div>
         )
     }
 
     const titleCb = (arak: number) => {
-        const start = arak * (lsBlockMax * 4) // 当前折叠区第一张的序号数
+        const start = arak * lsBlockMax         // 当前折叠区第一张的序号数
         const dymax = orc?.单图表?.length || 0
-        const last = (arak + 1) * (lsBlockMax * 4) >= dymax ? dymax - 1 : (arak + 1) * (lsBlockMax * 4)
-        return "单线图折叠" +(last<1? "（暂无数据）" : `${start + 1} - ${last + 1} `)
+        const last = (arak + 1)*lsBlockMax >= dymax ? dymax : (arak + 1)*lsBlockMax
+        return "单线图折叠" +(last<1? "（暂无数据）" : `${start + 1} - ${last} `)
     }
     const [renderAll] = useFoldGenerate({
         sumArea,
@@ -195,22 +112,20 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
         mark: "单线图折叠",
         titleCb,
     })
-
+    const addIdx= orc?.单图表?.length || 0;
     return (
-        <div className="space-y-4">
+        <div className="space-y-1">
             <div id="LineDiagram" className="text-center print:hidden">
                 <RepLink ori rep={rep} tag={"LineDiagram"}>
                     <span  className="text-2xl font-bold mt-4">单线图的管理</span>
                 </RepLink>
             </div>
-            {pages.length <= 0 && (
-                <div className="text-center print:hidden">
-                    <RepLink ori rep={rep} tag={"LineDiagramFile"}>
-                        <span  className="text-2xl font-bold mt-4">新增一个单线图</span>
-                    </RepLink>
-                </div>
-            )}
             {renderAll}
+            <div className="text-center print:hidden">
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LineDiagramFile?original=1&lineIndex=${addIdx}`}>
+                    <span  className="text-xl font-bold">新增一个单线图</span>
+                </JumpTab>
+            </div>
             {children}
         </div>
     )

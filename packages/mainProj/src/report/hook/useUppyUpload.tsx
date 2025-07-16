@@ -289,10 +289,7 @@ export function useUppyUpload({
                                     e.preventDefault()
                                 }}
                             >
-                                删除图片
-                            </Button>
-                            <Button size="sm" onClick={scrollHandler}>
-                                {openUppy ? "关闭上传" : "重新上传"}
+                             删除旧的
                             </Button>
                         </div>
                     ) : (

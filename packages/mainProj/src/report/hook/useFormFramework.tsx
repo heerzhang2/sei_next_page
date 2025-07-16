@@ -287,6 +287,7 @@ export const ModificationIndicator = () => {
 interface UseFrameEditorBarProps {
   rep?: any
   values: Record<string, any>
+  //校验当前编辑区域的字段取值合理性
   onVerify?: (values: any) => boolean
   onReset?: () => void
   //分项报告的： 独立流转，或者非独立的可重复分项目存储 [_modType_1]: ;

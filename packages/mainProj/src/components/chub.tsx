@@ -303,11 +303,14 @@ interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
   value?: string
   /** List of suggestions to display */
   datalist?: string[]
-  /** Callback when the value changes */
-  onListChange?: (value: string | undefined) => void
   /** Additional className for the list container */
   listClassName?: string
+  /**正常直接用 onChange，没必要使用onListChange
+   * 在非useForm场合下的，函数类型问题 (value: any ) =>void
+  */
   onChange?: ChangeEventHandler<HTMLTextAreaElement> // (value: string) => void
+  /** Callback when the value changes */
+  onListChange?: (value: string | undefined) => void
   unit?: any
 }
 

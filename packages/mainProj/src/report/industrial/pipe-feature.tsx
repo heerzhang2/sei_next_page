@@ -88,7 +88,7 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
         return (
             <div
                 key={pid}
-                className="mb-8 print:mb-0 print:min-h-screen print:flex print:flex-col print:justify-around print:break-before-page"
+                className="mb-4 print:mb-0 print:min-h-screen print:flex print:flex-col print:justify-around print:break-before-page"
             >
                 <div className="mt-4 print:mt-0">
                     {/* 标题 */}
@@ -184,8 +184,8 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
     const titleCb = (arak: number) => {
         const start = arak * (lsBlockMax * 4) // 当前折叠区第一张的序号数
         const dymax = orc?.单元表?.length || 0
-        const last = (arak + 1) * (lsBlockMax * 4) >= dymax ? dymax - 1 : (arak + 1) * (lsBlockMax * 4)
-        return "特性表折叠" +(last<1? "（暂无数据）" : `${start + 1} - ${last + 1} `)
+        const last = (arak + 1) * (lsBlockMax * 4) >= dymax ? dymax  : (arak + 1) * (lsBlockMax * 4)
+        return "特性表折叠" +(last<1? "（暂无数据）" : `${start + 1} - ${last} `)
     }
     const [renderAll] = useFoldGenerate({
         sumArea,
