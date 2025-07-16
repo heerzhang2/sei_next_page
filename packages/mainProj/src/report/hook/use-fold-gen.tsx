@@ -65,17 +65,47 @@ export function useFoldForList(list: any[], blockMax: number, viewALL: boolean, 
         return { sumArea, areaContent }
     }, [list, blockMax])
 
-    // 创建折叠状态管理
+    // 创建折叠状态管理 - 修复：当 sumArea 变化时同步更新状态数组
     const [openStates, setOpenStates] = React.useState<boolean[]>(() => {
         const initialStates = new Array(all.sumArea).fill(false)
         if (!hidden) initialStates[0] = true // 默认第一个展开
         return initialStates
     })
 
+    // 修复问题2：当 sumArea 变化时，同步更新 openStates 数组长度
+    React.useEffect(() => {
+        setOpenStates((prevStates) => {
+            const newStates = new Array(all.sumArea).fill(false)
+
+            // 保持已有状态，新增的区域默认为 false
+            for (let i = 0; i < Math.min(prevStates.length, all.sumArea); i++) {
+                newStates[i] = prevStates[i]
+            }
+
+            // 如果没有隐藏且是第一次或者之前没有任何展开的区域，展开第一个
+            if (!hidden && newStates.length > 0 && !newStates.some((state) => state)) {
+                newStates[0] = true
+            }
+
+            console.log(`折叠区数量变化: ${prevStates.length} -> ${all.sumArea}`, {
+                prevStates,
+                newStates,
+                sumArea: all.sumArea,
+            })
+
+            return newStates
+        })
+    }, [all.sumArea, hidden])
+
     const toggleOpen = React.useCallback((index: number) => {
+        console.log(`切换折叠区 ${index}`)
         setOpenStates((prev) => {
             const newStates = [...prev]
-            newStates[index] = !newStates[index]
+            // 确保索引在有效范围内
+            if (index >= 0 && index < newStates.length) {
+                newStates[index] = !newStates[index]
+                console.log(`折叠区 ${index} 状态: ${prev[index]} -> ${newStates[index]}`)
+            }
             return newStates
         })
     }, [])
@@ -91,7 +121,10 @@ export function useFoldForList(list: any[], blockMax: number, viewALL: boolean, 
         return openStates.map((isOpen, index) => [
             isOpen,
             {
-                onClick: () => toggleOpen(index),
+                onClick: () => {
+                    console.log(`点击折叠区按钮 ${index}, 当前状态: ${isOpen}`)
+                    toggleOpen(index)
+                },
                 "aria-expanded": isOpen,
             },
         ])
@@ -107,8 +140,9 @@ export type FoldRenderCallback = (dlPage: any, arak: number, pid: number) => Rea
 /**
  @param sumArea 最多几个区域，
  @param arak 第几个区域
-* */
+ * */
 export type TitleRenderCallback = (arak: number) => React.ReactNode
+
 /**
  * 较为通用的抽象组件：队列的折叠
  */
@@ -119,7 +153,7 @@ export function useFoldGenerate({
                                     callback,
                                     mark,
                                     zeroDisp,
-                                    titleCb
+                                    titleCb,
                                 }: {
     sumArea: number
     btnBindUses: any[]
@@ -135,38 +169,51 @@ export function useFoldGenerate({
                 {Array.from({ length: sumArea }, (_, ak) => {
                     const [isDisplay, bindBtn] = btnBindUses[ak] || [false, {}]
 
-                    return (<React.Fragment key={ak}>
-                        <Collapsible open={isDisplay} onOpenChange={() => bindBtn.onClick?.()}
-                                     className="print:hidden"
-                        >
-                            <CollapsibleTrigger asChild>
-                                <Button variant="outline" className="w-full justify-between print:hidden bg-transparent">
-                                  <span className="@5xl:ml-[28rem]">{ titleCb? titleCb(ak) :
-                                      (mark ?? "可折叠区")+(ak + 1)
-                                  }</span>
-                                 {isDisplay ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                </Button>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="space-y-4">
+                    return (
+                        <React.Fragment key={ak}>
+                            <Collapsible
+                                open={isDisplay}
+                                onOpenChange={(open) => {
+                                    console.log(`Collapsible ${ak} onOpenChange: ${open}`)
+                                    bindBtn.onClick?.()
+                                }}
+                                className="print:hidden"
+                            >
+                                <CollapsibleTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-between print:hidden bg-transparent"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            console.log(`CollapsibleTrigger ${ak} clicked`)
+                                            bindBtn.onClick?.()
+                                        }}
+                                    >
+                                        <span className="@5xl:ml-[28rem]">{titleCb ? titleCb(ak) : (mark ?? "可折叠区") + (ak + 1)}</span>
+                                        {isDisplay ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                    </Button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="space-y-4">
+                                    {areaContent[ak]?.map((one: any, m: number) => (
+                                        <div key={m}>{callback(one, ak, m)}</div>
+                                    ))}
+
+                                    {zeroDisp && !areaContent[ak] && <div>{callback(undefined, 0, 0)}</div>}
+                                </CollapsibleContent>
+                            </Collapsible>
+                            <div className="hidden print:block">
                                 {areaContent[ak]?.map((one: any, m: number) => (
                                     <div key={m}>{callback(one, ak, m)}</div>
                                 ))}
 
                                 {zeroDisp && !areaContent[ak] && <div>{callback(undefined, 0, 0)}</div>}
-                            </CollapsibleContent>
-                        </Collapsible>
-                        <div className="hidden print:block">
-                            {areaContent[ak]?.map((one: any, m: number) => (
-                                <div key={m}>{callback(one, ak, m)}</div>
-                            ))}
-
-                            {zeroDisp && !areaContent[ak] && <div>{callback(undefined, 0, 0)}</div>}
-                        </div>
-                    </React.Fragment>)
+                            </div>
+                        </React.Fragment>
+                    )
                 })}
             </div>
         ),
-        [sumArea, btnBindUses, areaContent, callback, mark, zeroDisp],
+        [sumArea, btnBindUses, areaContent, callback, mark, zeroDisp, titleCb],
     )
 
     return [render]

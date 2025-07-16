@@ -5,7 +5,7 @@ import { useStorage } from "@/report/StorageContext"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, Label } from "@/components/ui"
 import { BlobInputList, CollapsibleFormSection } from "@/components/chub"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
-import { useCallback, useState, useEffect, useMemo } from "react"
+import { useCallback, useState, useEffect, useMemo, useRef } from "react"
 import { toast } from "sonner"
 import { type FileStore, useUppyUpload } from "@/report/hook/useUppyUpload"
 
@@ -30,11 +30,15 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     const [isNewMode, setIsNewMode] = useState<boolean>(false)
     // 强制更新计数器 - 用于解决上传后显示问题
     const [forceUpdate, setForceUpdate] = useState<number>(0)
+    // 用于跟踪上传状态的 ref
+    const uploadingRef = useRef<boolean>(false)
+    // 用于跟踪最新的文件状态
+    const latestFileRef = useRef<any>(null)
 
     // 获取当前单线图列表 - 使用 useMemo 确保引用稳定
     const currentDiagrams: LineDiagramItem[] = useMemo(() => {
         return storage.单图表 || []
-    }, [storage.单图表, forceUpdate]) // 添加 forceUpdate 作为依赖
+    }, [storage.单图表])
 
     // 编辑表单状态
     const [editForm, setEditForm] = useState<{ m: string }>({ m: "" })
@@ -54,13 +58,16 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                 const memoText = currentItem?.m || ""
                 setEditForm({ m: memoText })
                 setInitialMemo(memoText)
+                // 更新最新文件引用
+                latestFileRef.current = currentItem?._FILE_
                 console.log(`编辑现有单线图: 序号${index + 1}`)
             } else if (index >= 0) {
                 // 新增单线图模式
-                setSelectedIndex(currentDiagrams.length)
+                setSelectedIndex(index) // 使用传入的索引，而不是 currentDiagrams.length
                 setIsNewMode(true)
                 setEditForm({ m: "" })
                 setInitialMemo("")
+                latestFileRef.current = null
                 console.log(`新增单线图: 序号${index + 1}`)
             } else {
                 console.warn(`无效的单线图索引: ${index}`)
@@ -74,6 +81,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
             setIsNewMode(false)
             setEditForm({ m: "" })
             setInitialMemo("")
+            latestFileRef.current = null
         }
     }, [lineIndexParam]) // 移除 currentDiagrams.length 作为依赖
 
@@ -82,13 +90,25 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         setEditForm({ m: value })
     }, [])
 
-    // 文件上传完成回调 - 优化状态更新逻辑
+    // 文件上传完成回调 - 修复问题1
     const onFinish = useCallback(
         async (upfile: any, del: boolean) => {
             if (selectedIndex < 0) {
                 toast.error("请先选择要编辑的单线图")
                 return
             }
+
+            console.log(`开始处理文件${del ? "删除" : "上传"}:`, {
+                selectedIndex,
+                isNewMode,
+                upfile,
+                currentMemo: editForm.m,
+            })
+
+            uploadingRef.current = true
+
+            // 更新最新文件引用
+            latestFileRef.current = del ? null : upfile
 
             setStorage((prevStorage: any) => {
                 const currentDiagrams = prevStorage.单图表 || []
@@ -99,19 +119,20 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                     newDiagrams.push({ m: "" })
                 }
 
-                // 更新指定索引的文件，保持说明文字
+                // 更新指定索引的文件和说明文字
                 const existingItem = newDiagrams[selectedIndex] || {}
                 newDiagrams[selectedIndex] = {
                     ...existingItem,
                     _FILE_: del ? undefined : upfile,
-                    // 如果是新增模式，同时保存当前的说明文字
-                    m: isNewMode ? editForm.m || existingItem.m : existingItem.m,
+                    // 保存当前的说明文字
+                    m: editForm.m || existingItem.m || undefined,
                 }
 
                 console.log(`${del ? "删除" : "上传"}文件到单线图 ${selectedIndex + 1}:`, {
                     file: upfile,
                     memo: newDiagrams[selectedIndex].m,
                     isNewMode,
+                    newDiagrams: newDiagrams[selectedIndex],
                 })
 
                 return {
@@ -120,14 +141,17 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                 }
             })
 
-            // 强制触发重新渲染
-            setForceUpdate((prev) => prev + 1)
+            // 延迟触发强制更新，确保 storage 更新完成
+            setTimeout(() => {
+                setForceUpdate((prev) => prev + 1)
+                uploadingRef.current = false
 
-            if (!modified) setModified(true)
+                if (!modified) setModified(true)
 
-            if (!del) {
-                toast.success(`文件上传成功到单线图 ${selectedIndex + 1}`)
-            }
+                if (!del) {
+                    toast.success(`文件上传成功到单线图 ${selectedIndex + 1}`)
+                }
+            }, 100)
         },
         [selectedIndex, isNewMode, editForm.m, modified, setStorage, setModified],
     )
@@ -161,17 +185,40 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         setEditForm({ m: initialMemo })
     }, [initialMemo])
 
-    // 获取当前编辑的单线图数据 - 使用 useMemo 确保引用稳定
+    // 获取当前编辑的单线图数据 - 修复问题1：优先使用最新的文件状态
     const currentDiagram = useMemo(() => {
-        return selectedIndex >= 0 && !isNewMode ? currentDiagrams[selectedIndex] : undefined
-    }, [selectedIndex, isNewMode, currentDiagrams, forceUpdate])
+        if (selectedIndex < 0) return undefined
 
-    // 为 useUppyUpload 准备文件对象 - 使用 useMemo 确保引用稳定
+        const storageItem = currentDiagrams[selectedIndex]
+
+        // 如果正在上传，使用最新的文件引用
+        if (uploadingRef.current && latestFileRef.current) {
+            return {
+                ...storageItem,
+                _FILE_: latestFileRef.current,
+            }
+        }
+
+        return storageItem
+    }, [selectedIndex, currentDiagrams, forceUpdate])
+
+    // 为 useUppyUpload 准备文件对象 - 修复问题1
     const storeObj = useMemo(() => {
-        const file = currentDiagram?._FILE_
+        // 优先使用最新的文件状态
+        const file = uploadingRef.current ? latestFileRef.current : currentDiagram?._FILE_
+
+        console.log("计算 storeObj:", {
+            selectedIndex,
+            isUploading: uploadingRef.current,
+            latestFile: latestFileRef.current,
+            currentFile: currentDiagram?._FILE_,
+            finalFile: file,
+            forceUpdate,
+        })
+
         // 确保返回一个稳定的对象引用
         return file ? { name: file.name, url: file.url } : ({} as FileStore)
-    }, [currentDiagram?._FILE_, forceUpdate])
+    }, [currentDiagram?._FILE_, forceUpdate, selectedIndex])
 
     // 验证函数
     const onVerify = useCallback(
@@ -189,15 +236,15 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         [selectedIndex],
     )
 
-    // 使用 useUppyUpload - 添加关键依赖项
+    // 使用 useUppyUpload - 修复问题1：确保每次状态变化都重新创建
     const [uploadDom] = useUppyUpload({
         repId: rep?.id!,
         maxFile: 1,
         onFinish,
         storeObj,
         liveDays: 10,
-        hash: `LineDiagram_${selectedIndex}_${forceUpdate}`, // 添加 forceUpdate 确保唯一性
-        id: `LineDiagram_${selectedIndex}_${forceUpdate}`,
+        hash: `LineDiagram_${selectedIndex}_${forceUpdate}_${Date.now()}`, // 添加时间戳确保唯一性
+        id: `LineDiagram_${selectedIndex}_${forceUpdate}_${Date.now()}`,
     })
 
     const [render] = useFrameEditorBar({
@@ -263,6 +310,8 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                             <p>• 文件状态: {currentDiagram?._FILE_?.name ? `已上传 ${currentDiagram._FILE_.name}` : "未上传"}</p>
                             <p>• 模式: {isNewMode ? "新增模式" : "编辑模式"}</p>
                             <p>• 更新计数: {forceUpdate}</p>
+                            <p>• 正在上传: {uploadingRef.current ? "是" : "否"}</p>
+                            <p>• 最新文件: {latestFileRef.current?.name || "无"}</p>
                         </div>
 
                         <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">

@@ -65,7 +65,7 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
                                     href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LineDiagramFile?original=1&lineIndex=${index}#LineDiagram${index}`}
                                 >
                                 <TableCell className="border bg-gray-50">
-                                    <div className={cn( lobj?._FILE_?.url? "text-xs": "text-sm" )} >{mtil ??'缺陷附图或说明'}：&nbsp;
+                                    <div className={cn( lobj?._FILE_?.url? "text-[0.7rem]": "text-sm" )} >{mtil ??'缺陷附图或说明'}：&nbsp;
                                         {lobj?.m && <span className="text-sm whitespace-pre-wrap">{lobj?.m || "／"}</span>}
                                         {!(lobj?._FILE_?.url) && !lobj?.m && (
                                             <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
