@@ -58,14 +58,14 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
 ) => {
     // 重组成二维数组，每4个单元一页
     const pages = React.useMemo(() => {
-        if (!orc?.单元表?.length) return []
+        if (!orc?.单图表?.length) return []
 
         const pages: any[] = []
-        for (let f = 0; f < orc.单元表.length; f += 4) {
-            pages.push(orc.单元表.slice(f, f + 4))
+        for (let f = 0; f < orc.单图表.length; f += 4) {
+            pages.push(orc.单图表.slice(f, f + 4))
         }
         return pages
-    }, [orc?.单元表])
+    }, [orc?.单图表])
 
     const lsBlockMax = useSplitSubCapacity(pages.length, 4)
     // 切分折叠区
@@ -117,7 +117,7 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
                                     <span className="text-xs">项目 \ 序号</span>
                                 </TableCell>
                                 {dlPage.map((p: any, c: number) => {
-                                    // 计算全局序号：当前单元在整个单元表中的索引位置
+                                    // 计算全局序号：当前单元在整个单图表中的索引位置
                                     const globalIndex = (pn + pid) * 4 + c
                                     return (
                                         <JumpTab key={c} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Solidify?unitIndex=${globalIndex}#Solidify`}>
@@ -134,7 +134,7 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
                                 <TableRow key={fn}>
                                     <TableCell className="font-medium border bg-gray-50">{title}</TableCell>
                                     {dlPage.map((p: any, c: number) => {
-                                        // 计算全局序号：当前单元在整个单元表中的索引位置
+                                        // 计算全局序号：当前单元在整个单图表中的索引位置
                                         const globalIndex = (pn + pid) * 4 + c
                                         return (
                                             <TableCell key={c} className="border">
@@ -183,29 +183,33 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = (
 
     const titleCb = (arak: number) => {
         const start = arak * (lsBlockMax * 4) // 当前折叠区第一张的序号数
-        const dymax = orc?.单元表?.length || 0
+        const dymax = orc?.单图表?.length || 0
         const last = (arak + 1) * (lsBlockMax * 4) >= dymax ? dymax - 1 : (arak + 1) * (lsBlockMax * 4)
-        return "特性表折叠" +(last<1? "（暂无数据）" : `${start + 1} - ${last + 1} `)
+        return "单线图折叠" +(last<1? "（暂无数据）" : `${start + 1} - ${last + 1} `)
     }
     const [renderAll] = useFoldGenerate({
         sumArea,
         btnBindUses,
         areaContent,
         callback: frCallback,
-        mark: "特性表折叠",
+        mark: "单线图折叠",
         titleCb,
     })
 
     return (
         <div className="space-y-4">
+            <div id="LineDiagram" className="text-center print:hidden">
+                <RepLink ori rep={rep} tag={"LineDiagram"}>
+                    <span  className="text-2xl font-bold mt-4">单线图的管理</span>
+                </RepLink>
+            </div>
             {pages.length <= 0 && (
                 <div className="text-center print:hidden">
-                    <RepLink ori rep={rep} tag={"Solidify"}>
-                        <span id="Solidify" className="text-2xl font-bold mt-4">特性表的管道单元</span>
+                    <RepLink ori rep={rep} tag={"LineDiagramFile"}>
+                        <span  className="text-2xl font-bold mt-4">新增一个单线图</span>
                     </RepLink>
                 </div>
             )}
-            <div id="Characteristics"></div>
             {renderAll}
             {children}
         </div>

@@ -103,6 +103,7 @@ const networkErrorExchange: Exchange = ({ forward }) => {
     }
 }
 
+//20250715用v0dev生成的。pipe看来同类的样子代码，setTimeout不知为何如何让timeoutId如何传递的。
 // 自定义 fetch exchange 来更好地处理网络错误
 const customFetchExchange: Exchange = ({ forward }) => {
     return (operations$) => {
