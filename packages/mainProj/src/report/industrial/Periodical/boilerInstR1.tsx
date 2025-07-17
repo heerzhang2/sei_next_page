@@ -159,7 +159,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                     <PipelineCharacteristics orc={orc} rep={rep}/>
                 }
                 {mapFxian.get('管道单线图')?.do &&
-                    <PipeLineDiagram orc={orc} rep={rep} title={'工业管道单线图'}/>
+                    <PipeLineDiagram orc={orc} rep={rep} title={'工业管道单线图'} printMode={printMode}/>
                 }
             </div>
             <div className="print:hidden">

@@ -51,9 +51,11 @@ export function FormField({ id, label, required = false, error, className, child
 interface ImageProps {
     src: string
     alt?: string
-    //图片自身的：
+    //图片自身的： 外部注入基本都需要"print:max-h-full"；
+    //`calc(100vh - 6rem - ${textHeight}rem)` tailwindcss 不能用多个-rem拼凑的！没有空格的；`calc(100vh-${textHeight}rem)`
     className?: string  // 新增 className 属性
     //更容易控制打印的具体高度用： 垂直方向的居中布局；
+    //TailwindCss 没法用这样的"print:h-["+imageMaxHeight+"]", 但是可以用这样的"print:h-[calc(100vh-8rem)]", 不能用动态的字符串注入的样式？改用style={{}}
     divClass?: string
 }
 /**报告打印专用的： #不支持打印：宽度上 多于一个纸张宽的。 高度上 也不支持超出一个纸张高的。
@@ -63,13 +65,18 @@ interface ImageProps {
 export const ImageComponent: React.FC<ImageProps> = ({
                                                          src,
                                                          alt = "图片",
+                                                         style,
                                                          className,divClass  // 解构 className
                                                      }) => {
     const {parentOrientation} =usePageSectionOrientation();
     const landscape="landscape"===parentOrientation
     //landscape:外部上一级组件，应该自己知晓的。打印高度自己决定的。
   return (
-        <div className={`flex justify-around items-center ${divClass || ''}`}>
+        <div className={cn("flex justify-around items-center",
+                            divClass
+                        )}
+             style={{ ...style } as any}
+        >
               <img
                   src={src || "/placeholder.svg"}
                   alt={alt}

@@ -20,7 +20,6 @@ interface PipeLineDiagramProps {
     className?: string
     title?: string
     mtil?: string
-    printMode?: boolean
 }
 
 // 问题1：修复Hook调用问题 - 将useTextHeight移到组件外部
@@ -74,9 +73,7 @@ const DiagramItem: React.FC<{
     title?: string
     mtil?: string
     v_bh?: boolean
-    printMode?: boolean
-}> = ({ lobj, arak, pid, lsBlockMax, rep, title, mtil, v_bh,printMode }
-) => {
+}> = ({ lobj, arak, pid, lsBlockMax, rep, title, mtil, v_bh }) => {
     const index = arak * lsBlockMax + pid
     const CompH = arak === 0 && pid === 0 ? "h2" : "div"
 
@@ -84,16 +81,16 @@ const DiagramItem: React.FC<{
     const dynamicTextHeight = useTextHeight(lobj?.m || "", "text-[0.7rem]")
 
     // 方案1：使用用户设置的文本高度，方案2：使用动态计算的高度
-    const textHeight = (lobj?.tH || dynamicTextHeight || 1)+ 6   // 问题3：使用tH字段
+    const textHeight = (lobj?.tH || dynamicTextHeight || 1)+ 5   // 问题3：使用tH字段
 
     // 计算图片可用高度：总高度 - 标题高度 - 文本高度 - 页脚高度 - 边距
-    const imageMaxHeight = `calc(100vh - ${textHeight}rem)`
+    // const imageMaxHeight = `calc(100vh - 6rem - ${textHeight}rem - 3rem - 2rem)`
     // const imageMaxHeight = `calc(100vh - 2rem)`      内联样式使用的情况！
 
 
     // const imageMaxHeight = `calc(100vh-2rem)`
     //tailwindcss 不能用多个拼凑的！没有空格的；
-    // const imageMaxHeight = `calc(100vh-${textHeight}rem)`;
+    const imageMaxHeight = `calc(100vh-${textHeight}rem)`
     console.log("imageMaxHeight给Tailwind做的=", imageMaxHeight, lobj?.tH, dynamicTextHeight);
 
     return (
@@ -163,20 +160,19 @@ const DiagramItem: React.FC<{
                                                         src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${lobj?._FILE_?.url}`}
                                                         alt={lobj?._FILE_?.name || "图片"}
                                                         className={cn(
-                                                            "w-full h-auto print:max-w-full print:max-h-full",
+                                                            "w-full h-auto print:object-contain print:max-w-full",
                                                             // "print:h-["+imageMaxHeight+"]",
                                                             // "print:h-["+imageMaxHeight+"]",
                                                             //  "print:max-h-["+imageMaxHeight+"]",
                                                         )}
                                                         divClass={cn(
-                                                            "w-full h-auto print:max-w-full",
+                                                            "w-full h-auto print:max-h-full print:object-contain print:max-w-full",
                                                             // "print:h-["+imageMaxHeight+"]",
-                                                             // "print:h-[calc(100vh-8rem)]",
-                                                            // "print:max-h-["+imageMaxHeight+"]",
+                                                            //  "print:h-["+imageMaxHeight+"]",
                                                         )}
-                                                        style={{
-                                                            height: printMode? imageMaxHeight : undefined,
-                                                        }}
+                                                        // style={{
+                                                        //     height: imageMaxHeight,
+                                                        // }}
                                                     />
                                                 </div>
                                             </div>
@@ -208,6 +204,7 @@ const DiagramItem: React.FC<{
                         </TableBody>
                     </FlexibleTable>
                 </div>
+            <div>UUDHDH</div>
                 {/* 页脚区域 - 固定高度 */}
                 <div className="print:flex-shrink-0">
                     <FootMensLine />
@@ -227,7 +224,6 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = ({
                                                                     className,
                                                                     title,
                                                                     mtil,
-                                                                    printMode,
                                                                 }) => {
     const lsBlockMax = useSplitSubCapacity(orc?.单图表?.length || 0, 4)
     // 切分折叠区
@@ -246,7 +242,6 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = ({
                 title={title}
                 mtil={mtil}
                 v_bh={v_bh}
-                printMode={printMode}
             />
         )
     }
