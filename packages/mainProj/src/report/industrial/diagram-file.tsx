@@ -16,7 +16,7 @@ interface LineDiagramItem {
         url: string
     }
     m?: string // 说明文字
-    tH?: number // 问题3：改名为tH，用户手动设置的文本高度预留值（单位：rem）
+    tH?: number //用户手动设置的图片高度修正值（单位：rem）
 }
 
 // 编辑区域功能独立出来：避免混乱。只做图片上传的。
@@ -24,24 +24,22 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     const searchParams = useSearchParams()
     const lineIndexParam = searchParams?.get("lineIndex") // 从URL获取单线图序号
     const { storage, setStorage, modified, setModified } = useStorage()
-
     // 当前选中的单线图索引
     const [selectedIndex, setSelectedIndex] = useState<number>(-1)
     // 是否为新增模式
     const [isNewMode, setIsNewMode] = useState<boolean>(false)
     // 强制更新计数器 - 用于解决上传后显示问题
     const [forceUpdate, setForceUpdate] = useState<number>(0)
-
     // 获取当前单线图列表 - 使用 useMemo 确保引用稳定
     const currentDiagrams: LineDiagramItem[] = useMemo(() => {
         return storage.单图表 || []
     }, [storage.单图表, forceUpdate]) // 添加 forceUpdate 作为依赖
 
     // 编辑表单状态
-    const [editForm, setEditForm] = useState<{ m: string; tH: number }>({ m: "", tH: 4 })
+    const [editForm, setEditForm] = useState<{ m: string; tH: number }>({ m: "", tH: "" })
     // 保存初始值用于重置
     const [initialMemo, setInitialMemo] = useState<string>("")
-    const [initialTextHeight, setInitialTextHeight] = useState<number>(4)
+    const [initialTextHeight, setInitialTextHeight] = useState<number>(0)
 
     // 根据lineIndex参数确定编辑模式
     useEffect(() => {
@@ -54,21 +52,21 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                 setIsNewMode(false)
                 const currentItem = currentDiagrams[index]
                 const memoText = currentItem?.m || ""
-                const textHeight = currentItem?.tH || 4
+                const textHeight = currentItem?.tH || ""
                 setEditForm({ m: memoText, tH: textHeight })
                 setInitialMemo(memoText)
                 setInitialTextHeight(textHeight)
-                console.log(`编辑现有单线图: 序号${index + 1}`)
+                // console.log(`编辑现有单线图: 序号${index + 1}`)
             } else if (index >= 0) {
-                // 新增单线图模式
+                // 新增单线图模式，因为新加单线图点击进入必须初始化空对象【毛病】强制提醒已修改，临时对象单线图多一个的导致折叠区可能多一个。
                 setSelectedIndex(currentDiagrams.length)
                 setIsNewMode(true)
-                setEditForm({ m: "", tH: 4 })
+                setEditForm({ m: "", tH: "" })
                 setInitialMemo("")
                 setInitialTextHeight(4)
-                console.log(`新增单线图: 序号${index + 1}`)
+                // console.log(`新增单线图: 序号${index + 1}`)
             } else {
-                console.warn(`无效的单线图索引: ${index}`)
+                // console.warn(`无效的单线图索引: ${index}`)
                 toast.error(`无效的单线图序号: ${index + 1}`)
                 setSelectedIndex(-1)
                 setIsNewMode(false)
@@ -77,7 +75,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
             // 没有指定索引，默认显示列表或提示
             setSelectedIndex(-1)
             setIsNewMode(false)
-            setEditForm({ m: "", tH: 4 })
+            setEditForm({ m: "", tH: "" })
             setInitialMemo("")
             setInitialTextHeight(4)
         }
@@ -95,12 +93,12 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
 
                     // 确保数组有足够的长度，并初始化空对象
                     while (newDiagrams.length <= selectedIndex) {
-                        newDiagrams.push({ m: "", tH: 4 })
+                        newDiagrams.push({ m: "", tH: "" })
                     }
 
                     // 如果对应位置是 null 或 undefined，初始化为空对象
                     if (!newDiagrams[selectedIndex]) {
-                        newDiagrams[selectedIndex] = { m: "", tH: 4 }
+                        newDiagrams[selectedIndex] = { m: "", tH: "" }
                     }
 
                     console.log(`初始化单线图对象 ${selectedIndex + 1}:`, newDiagrams[selectedIndex])
@@ -124,7 +122,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
 
     // 更新文本高度字段
     const updateTextHeightField = useCallback((value: number) => {
-        setEditForm((prev) => ({ ...prev, tH: value }))
+        setEditForm((prev) => ({ ...prev, tH: value ??"" }))
     }, [])
 
     // 文件上传完成回调 - 优化状态更新逻辑
@@ -141,7 +139,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
 
                 // 确保数组有足够的长度（新增模式）
                 while (newDiagrams.length <= selectedIndex) {
-                    newDiagrams.push({ m: "", tH: 4 })
+                    newDiagrams.push({ m: "", tH: "" })
                 }
 
                 // 更新指定索引的文件，保持说明文字和文本高度
@@ -188,7 +186,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
 
         // 确保数组有足够的长度（新增模式）
         while (newDiagrams.length <= selectedIndex) {
-            newDiagrams.push({ m: "", tH: 4 })
+            newDiagrams.push({ m: "", tH: "" })
         }
 
         // 更新指定索引的说明文字和文本高度，保持文件不变
@@ -196,7 +194,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         newDiagrams[selectedIndex] = {
             ...existingItem,
             m: editForm.m || undefined,
-            tH: editForm.tH || 4,
+            tH: editForm.tH || "",
         }
 
         return {
@@ -300,13 +298,30 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                                 </div>
                             </CardContent>
                         </Card>
+                        {/* 文件上传区域 */}
+                        <div className="space-y-2">
+                            <span>单线图文件：</span>
+                            {uploadDom}
+                        </div>
 
-                        {/* 方案1：文本高度预留设置 */}
+                        {/* 当前状态显示 */}
+                        <div className="text-sm text-muted-foreground space-y-1">
+                            <p>• 文件状态: {currentDiagram?._FILE_?.name ? `已上传 ${currentDiagram._FILE_.name}` : "未上传"}</p>
+                        </div>
+                        <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                            <p>注意：</p>
+                            <p>• 文件上传不能用重置按钮撤销，需手动删除</p>
+                            <p>• 重置按钮会重置说明文字和图片高度修正值，不会影响已上传的文件</p>
+                            <p>• 保存按钮会同时保存说明文字、图片高度修正值和确认文件上传</p>
+                            <p>• 图片高度修正值用于打印时计算图片的可用空间，避免打印一张纸都不够用</p>
+                        </div>
+
+                        {/* 方案1：图片高度修正设置 */}
                         <Card className="mt-1 border-l-4 border-l-orange-500 gap-1 py-1">
                             <CardContent className="space-y-2 px-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="textHeight" className="select-text">
-                                        文本高度预留 (rem)：
+                                        图片高度修正，正+负-数(rem)：
                                     </Label>
                                     <Input
                                         id="textHeight"
@@ -319,36 +334,11 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                                         className="w-32"
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        设置说明文字在打印时的高度预留值，用于计算图片可用空间。
-                                        <br />
-                                        建议值：短文本 2-4rem，中等文本 4-8rem，长文本 8-12rem
+                                        设置说明文字打印时的高度偏移量，用于修正图片可用高度。单位 rem=字符高
                                     </p>
                                 </div>
                             </CardContent>
                         </Card>
-
-                        {/* 文件上传区域 */}
-                        <div className="space-y-2">
-                            <Label>单线图文件：</Label>
-                            {uploadDom}
-                        </div>
-
-                        {/* 当前状态显示 */}
-                        <div className="text-sm text-muted-foreground space-y-1">
-                            <p>• 文件状态: {currentDiagram?._FILE_?.name ? `已上传 ${currentDiagram._FILE_.name}` : "未上传"}</p>
-                            <p>• 文本高度预留: {editForm.tH}rem</p>
-                            <p>• 模式: {isNewMode ? "新增模式" : "编辑模式"}</p>
-                            <p>• 更新计数: {forceUpdate}</p>
-                        </div>
-
-                        <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                            <p>注意：</p>
-                            <p>• 文件上传不能用重置按钮撤销，需手动删除</p>
-                            <p>• 重置按钮会重置说明文字和文本高度预留值，不会影响已上传的文件</p>
-                            <p>• 保存按钮会同时保存说明文字、文本高度预留值和确认文件上传</p>
-                            <p>• 文本高度预留值用于打印时计算图片的可用空间，避免内容溢出</p>
-                        </div>
-
                         {children}
                     </CardContent>
                     <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2">{render()}</CardFooter>

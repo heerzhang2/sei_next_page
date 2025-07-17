@@ -15,10 +15,12 @@ interface PipeLineDiagramProps {
     orc: any
     rep: any
     children?: React.ReactNode
+    //显示报告编号吗
     v_bh?: boolean
     //可修改的表格文字样式
     className?: string
     title?: string
+    //文本说明备注的标题：
     mtil?: string
     printMode?: boolean
 }
@@ -26,13 +28,11 @@ interface PipeLineDiagramProps {
 // 问题1：修复Hook调用问题 - 将useTextHeight移到组件外部
 const useTextHeight = (text: string, className = "text-[0.7rem]") => {
     const [textHeight, setTextHeight] = useState<number>(0)
-
     useEffect(() => {
         if (!text || typeof window === "undefined") {
             setTextHeight(0)
             return
         }
-
         // 问题2：计算A4纸实际可用宽度
         // A4纸宽度: 210mm = 8.27英寸 = 794px (96dpi)
         // 默认边距: 通常为1英寸 = 96px，左右共192px
@@ -79,22 +79,18 @@ const DiagramItem: React.FC<{
 ) => {
     const index = arak * lsBlockMax + pid
     const CompH = arak === 0 && pid === 0 ? "h2" : "div"
-
-    // 问题1：现在可以安全地在组件顶层调用Hook
+    //太不准确的计算
     const dynamicTextHeight = useTextHeight(lobj?.m || "", "text-[0.7rem]")
 
     // 方案1：使用用户设置的文本高度，方案2：使用动态计算的高度
-    const textHeight = (lobj?.tH || dynamicTextHeight || 1)+ 6   // 问题3：使用tH字段
-
+    const textHeight =lobj?.tH ? (lobj?.tH + dynamicTextHeight+7.5) :
+            dynamicTextHeight ? (dynamicTextHeight+7.5)
+                : 5.5;
     // 计算图片可用高度：总高度 - 标题高度 - 文本高度 - 页脚高度 - 边距
     const imageMaxHeight = `calc(100vh - ${textHeight}rem)`
     // const imageMaxHeight = `calc(100vh - 2rem)`      内联样式使用的情况！
-
-
-    // const imageMaxHeight = `calc(100vh-2rem)`
     //tailwindcss 不能用多个拼凑的！没有空格的；
     // const imageMaxHeight = `calc(100vh-${textHeight}rem)`;
-    console.log("imageMaxHeight给Tailwind做的=", imageMaxHeight, lobj?.tH, dynamicTextHeight);
 
     return (
         <div
@@ -132,19 +128,13 @@ const DiagramItem: React.FC<{
                                     className="print:flex-1 print:flex print:flex-col"
                                 >
                                     <TableCell className="print:flex-1 print:flex print:flex-col print:p-0">
-                                        {/* 说明文字区域 - 固定高度 border bg-gray-50 */}
-                                        <div
-                                            className={cn(lobj?._FILE_?.url ? "text-[0.7rem]" : "text-sm", "print:flex-shrink-0")}
-                                            style={{
-                                                // 方案1：使用用户设置的高度
-                                                height: lobj?.tH ? `${lobj.tH}rem` : undefined, // 问题3：使用tH字段
-                                                // 方案2：使用动态计算的高度（如果没有用户设置）
-                                                // minHeight: !lobj?.tH ? `${dynamicTextHeight}rem` : undefined,
-                                            }}
-                                        >
-                                            {mtil ?? "缺陷附图或说明"}：&nbsp;
-
-                                            {lobj?.m && <span className="text-sm whitespace-pre-wrap">{lobj?.m || "／"}</span>}
+                                        {/* 说明文字区域*/}
+                                        <div className={cn(lobj?._FILE_?.url ? "text-[0.7rem]" : "text-sm", "print:flex-shrink-0")}>
+                                            {lobj?.m && <>
+                                                {mtil ?? "缺陷附图或说明"}：&nbsp;
+                                                <span className="text-sm whitespace-pre-wrap">{lobj?.m || "／"}</span>
+                                                </>
+                                            }
 
                                             {!lobj?._FILE_?.url && !lobj?.m && (
                                                 <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
@@ -153,26 +143,16 @@ const DiagramItem: React.FC<{
 
                                         {/* 图片区域 - 可伸缩 overflow-hidden */}
                                         {lobj?._FILE_?.url &&
-                                            <div className={cn(
-                                                "break-inside-avoid-page pb-[1px] pt-[1px] ",
-                                                // "print:h-["+imageMaxHeight+"]",
-                                            )}
-                                            >
+                                            <div className={cn("break-inside-avoid-page pb-[1px] pt-[1px] ",)}>
                                                 <div className="flex justify-around items-center my-0.5 h-full w-full">
                                                     <ImageComponent
                                                         src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${lobj?._FILE_?.url}`}
                                                         alt={lobj?._FILE_?.name || "图片"}
                                                         className={cn(
                                                             "w-full h-auto print:max-w-full print:max-h-full",
-                                                            // "print:h-["+imageMaxHeight+"]",
-                                                            // "print:h-["+imageMaxHeight+"]",
-                                                            //  "print:max-h-["+imageMaxHeight+"]",
                                                         )}
                                                         divClass={cn(
                                                             "w-full h-auto print:max-w-full",
-                                                            // "print:h-["+imageMaxHeight+"]",
-                                                             // "print:h-[calc(100vh-8rem)]",
-                                                            // "print:max-h-["+imageMaxHeight+"]",
                                                         )}
                                                         style={{
                                                             height: printMode? imageMaxHeight : undefined,
@@ -181,27 +161,6 @@ const DiagramItem: React.FC<{
                                                 </div>
                                             </div>
                                         }
-                                        {/*{lobj?._FILE_?.url && (*/}
-                                        {/*    <div className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden print:flex-1 print:flex print:items-center print:justify-center print:min-h-0">*/}
-                                        {/*        <div className="flex justify-around items-center my-0.5 print:max-h-full print:w-full print:h-full">*/}
-                                        {/*            <ImageComponent*/}
-                                        {/*                src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${lobj?._FILE_?.url}`}*/}
-                                        {/*                alt={lobj?._FILE_?.name || "图片"}*/}
-                                        {/*                className={cn(*/}
-                                        {/*                    "w-auto max-w-full",*/}
-                                        {/*                    "print:max-w-full print:object-contain",*/}
-                                        {/*                    "print:h-["+imageMaxHeight+"]",*/}
-                                        {/*                )}*/}
-                                        {/*                // style={{*/}
-                                        {/*                //     // 方案1和方案2：动态设置图片最大高度*/}
-                                        {/*                //     maxHeight: imageMaxHeight,*/}
-                                        {/*                // }}*/}
-                                        {/*                //"w-auto h-auto",*/}
-                                        {/*                //     "print:max-h-[calc(100vh-5.9rem)]",*/}
-                                        {/*            />*/}
-                                        {/*        </div>*/}
-                                        {/*    </div>*/}
-                                        {/*)}*/}
                                     </TableCell>
                                 </JumpTab>
                             </TableRow>
