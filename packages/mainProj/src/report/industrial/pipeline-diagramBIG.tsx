@@ -95,11 +95,11 @@ const DiagramItem: React.FC<{
     return (
         <div
             key={pid}
-            className="h-screen max-h-screen overflow-hidden  mb-4 print:mb-0 print:h-screen print:max-h-screen print:flex print:flex-col print:justify-start print:break-before-page print:overflow-hidden"
+            className="mb-4 print:mb-0 print:h-screen print:max-h-screen print:flex print:flex-col print:justify-start print:break-before-page print:overflow-hidden"
         >
             <div className="mt-4 print:mt-0 print:flex-1 print:flex print:flex-col">
                 {/* 标题区域 - 固定高度 */}
-                <div >
+                <div className="print:flex-shrink-0">
                     <Link
                         href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Solidify#Solidify`}
                         className="block text-center"
@@ -120,44 +120,57 @@ const DiagramItem: React.FC<{
 
                 {/* 主要内容区域 - 可伸缩 */}
                 <div className="print:flex-1 print:flex print:flex-col">
-
+                    <FlexibleTable columnWidths={["%"]} className="print:flex-1 print:flex print:flex-col">
+                        <TableBody className="print:flex-1 print:flex print:flex-col">
+                            <TableRow variant='borderless' id={"LineDiagram" + index} className="print:flex-1 print:flex print:flex-col">
+                                <JumpTab
+                                    href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LineDiagramFile?original=1&lineIndex=${index}#LineDiagram${index}`}
+                                    className="print:flex-1 print:flex print:flex-col"
+                                >
+                                    <TableCell className="print:flex-1 print:flex print:flex-col print:p-0">
                                         {/* 说明文字区域*/}
-                                        <div className={cn(lobj?._FILE_?.url ? "text-[0.7rem]" : "text-sm" )}>
+                                        <div className={cn(lobj?._FILE_?.url ? "text-[0.7rem]" : "text-sm", "print:flex-shrink-0")}>
                                             {lobj?.m && <>
                                                 {mtil ?? "缺陷附图或说明"}：&nbsp;
                                                 <span className="text-sm whitespace-pre-wrap">{lobj?.m || "／"}</span>
                                                 </>
                                             }
+
+                                            {!lobj?._FILE_?.url && !lobj?.m && (
+                                                <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
+                                            )}
                                         </div>
 
                                         {/* 图片区域 - 可伸缩 overflow-hidden */}
                                         {lobj?._FILE_?.url &&
-                                            <div  style={{
-                                                width: "auto",
-                                                height: "auto",
-                                                maxHeight: "-webkit-fill-available",
-                                                // height: "-webkit-fill-available",
-                                                maxWidth: "100%",
-                                            }}>
-                                                <img
-                                                    src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${lobj?._FILE_?.url}` || "/placeholder.svg"}
-                                                    className={cn("object-contain  ",
-                                                         "print:max-w-[705px]",
-                                                    )}
-                                                    style={{
-                                                        width: "auto",
-                                                        height: "auto",
-                                                        maxHeight: "-webkit-fill-available",
-                                                        // height: "-webkit-fill-available",
-                                                        maxWidth: "100%",
-                                                    }}
-                                                />
+                                            <div className={cn("break-inside-avoid-page pb-[1px] pt-[1px] ",)}>
+                                                <div className="flex justify-around items-center my-0.5 h-full w-full">
+                                                    <ImageComponent
+                                                        src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${lobj?._FILE_?.url}`}
+                                                        alt={lobj?._FILE_?.name || "图片"}
+                                                        className={cn(
+                                                            "w-full h-auto print:max-w-full print:max-h-full",
+                                                        )}
+                                                        divClass={cn(
+                                                            "w-full h-auto print:max-w-full",
+                                                        )}
+                                                        style={{
+                                                            height: printMode? imageMaxHeight : undefined,
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         }
-
+                                    </TableCell>
+                                </JumpTab>
+                            </TableRow>
+                        </TableBody>
+                    </FlexibleTable>
                 </div>
                 {/* 页脚区域 - 固定高度 */}
-                  <FootMensLine />
+                <div className="print:flex-shrink-0">
+                    <FootMensLine />
+                </div>
             </div>
         </div>
     )
