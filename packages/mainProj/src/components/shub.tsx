@@ -51,7 +51,10 @@ export function FormField({ id, label, required = false, error, className, child
 interface ImageProps {
     src: string
     alt?: string
+    //图片自身的：
     className?: string  // 新增 className 属性
+    //更容易控制打印的具体高度用： 垂直方向的居中布局；
+    divClass?: string
 }
 /**报告打印专用的： #不支持打印：宽度上 多于一个纸张宽的。 高度上 也不支持超出一个纸张高的。
  * css中的数值：默认针对设置是，打印纸张=A4竖着答应的版本；
@@ -60,19 +63,20 @@ interface ImageProps {
 export const ImageComponent: React.FC<ImageProps> = ({
                                                          src,
                                                          alt = "图片",
-                                                         className  // 解构 className
+                                                         className,divClass  // 解构 className
                                                      }) => {
     const {parentOrientation} =usePageSectionOrientation();
     const landscape="landscape"===parentOrientation
     //landscape:外部上一级组件，应该自己知晓的。打印高度自己决定的。
   return (
-        <div className={`flex justify-around items-center ${className || ''}`}>
+        <div className={`flex justify-around items-center ${divClass || ''}`}>
               <img
                   src={src || "/placeholder.svg"}
                   alt={alt}
                   className={cn("object-contain max-h-[15cm] @md:5xl:max-h-[19cm]",
                       landscape? "print:max-w-[26.5cm]" : "print:max-w-[705px]",
-                      className)}
+                      className
+                  )}
                   style={{
                       width: "auto",
                       height: "auto",
@@ -82,6 +86,7 @@ export const ImageComponent: React.FC<ImageProps> = ({
         </div>
   )
 }
+
 
 /*原本的 className={cn("object-contain max-h-[15cm] @md:5xl:max-h-[19cm]",
          landscape? "print:max-h-[705px] print:max-w-[26.5cm]" : "print:max-h-[26.5cm] print:max-w-[705px]", className)}
