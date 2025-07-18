@@ -194,7 +194,8 @@ export function useCatalog() {
             { title: "1.3锅炉安装施工及监督检验过程概述", url: "#Explanatory" },
         ]
         return [...head, ...mainReportDirs, ...subRepHash(SUBREP_CONFIG,mapFxian,storage),
-            { title: "设erewrwe备概况", url: "#Survddey2" }
+            { title: "特性表-管道单元", url: "#Characteristics" },
+            { title: "管道单线图", url: "#LineDiagram" },
         ].filter(Boolean)
     }, [mod, storage, mapFxian])
     return dirs

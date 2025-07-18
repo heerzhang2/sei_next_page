@@ -1705,6 +1705,7 @@ type Query {
   升级弃用findAllISPfilter(where: WhereTree, offset:Int!, first:Int=20, orderBy:String, asc:Boolean=true): [Isp]!
   """
   findMeDetails(orderBy: String, asc: Boolean, where: IspCommonInput, first: Int, after: String, last: Int, before: String): DetailConnection
+  listAllPipingUnit(detId: ID!, orderBy: String, asc: Boolean): [PipingUnit!]
   findAllISPs: [Isp]!
   countISP(ispMen: ID): Int
   getISP(id: ID!): Isp @deprecated
