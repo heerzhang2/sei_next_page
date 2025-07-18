@@ -76,35 +76,29 @@ export function useFoldForList(list: any[], blockMax: number, viewALL: boolean, 
     React.useEffect(() => {
         setOpenStates((prevStates) => {
             const newStates = new Array(all.sumArea).fill(false)
-
             // 保持已有状态，新增的区域默认为 false
             for (let i = 0; i < Math.min(prevStates.length, all.sumArea); i++) {
                 newStates[i] = prevStates[i]
             }
-
             // 如果没有隐藏且是第一次或者之前没有任何展开的区域，展开第一个
             if (!hidden && newStates.length > 0 && !newStates.some((state) => state)) {
                 newStates[0] = true
             }
-
-            console.log(`折叠区数量变化: ${prevStates.length} -> ${all.sumArea}`, {
-                prevStates,
-                newStates,
-                sumArea: all.sumArea,
-            })
-
+            // console.log(`折叠区数量变化: ${prevStates.length} -> ${all.sumArea}`, {
+            //     prevStates,
+            //     newStates,
+            //     sumArea: all.sumArea,
+            // })
             return newStates
         })
     }, [all.sumArea, hidden])
 
     const toggleOpen = React.useCallback((index: number) => {
-        console.log(`切换折叠区 ${index}`)
         setOpenStates((prev) => {
             const newStates = [...prev]
             // 确保索引在有效范围内
             if (index >= 0 && index < newStates.length) {
                 newStates[index] = !newStates[index]
-                console.log(`折叠区 ${index} 状态: ${prev[index]} -> ${newStates[index]}`)
             }
             return newStates
         })
@@ -122,7 +116,6 @@ export function useFoldForList(list: any[], blockMax: number, viewALL: boolean, 
             isOpen,
             {
                 onClick: () => {
-                    console.log(`点击折叠区按钮 ${index}, 当前状态: ${isOpen}`)
                     toggleOpen(index)
                 },
                 "aria-expanded": isOpen,
@@ -144,7 +137,7 @@ export type FoldRenderCallback = (dlPage: any, arak: number, pid: number) => Rea
 export type TitleRenderCallback = (arak: number) => React.ReactNode
 
 /**
- * 较为通用的抽象组件：队列的折叠
+ * 较为通用的抽象组件：队列的折叠: 有很多的可重复分项目情况。
  */
 export function useFoldGenerate({
                                     sumArea,
@@ -182,10 +175,9 @@ export function useFoldGenerate({
                                 <CollapsibleTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        className="w-full justify-between print:hidden bg-transparent"
+                                        className="w-full justify-between print:hidden bg-blue-100"
                                         onClick={(e) => {
                                             e.preventDefault()
-                                            console.log(`CollapsibleTrigger ${ak} clicked`)
                                             bindBtn.onClick?.()
                                         }}
                                     >

@@ -63,6 +63,7 @@ const DiagramItem: React.FC<{
 ) => {
     const index = arak * lsBlockMax + pid
     const CompH = arak === 0 && pid === 0 ? "h2" : "div"
+    const tlrender=<>{title ?? "压力管道单线图"}</>
     //太不准确的计算
         // const dynamicTextHeight = useTextHeight(lobj?.m || "", "text-[0.7rem]")
         // const imageMaxHeight = `calc(100vh - ${textHeight}rem)`
@@ -73,14 +74,22 @@ const DiagramItem: React.FC<{
         <div key={pid} className="print:h-screen mx-auto bg-white shadow-lg print:shadow-none flex flex-col">
             {/* 标题和内容区域 */}
             <div className="flex-shrink-0">
-                <CompH className={cn("text-center",arak === 0 && pid === 0 ? "" : "hidden print:block", "text-xl mb-4")}>
-                    {title ?? "压力管道单线图"}
-                </CompH>
+                {(arak === 0 && pid === 0) ?
+                    <RepLink ori rep={rep} tag={"LineDiagram"}>
+                        <CompH className={cn("text-center text-xl mb-2", "pt-2 print:pt-0")}>
+                            {printMode? tlrender : '单线图的管理'}
+                        </CompH>
+                    </RepLink>
+                    :
+                    <CompH className={cn("text-center text-xl mb-2", "hidden print:block")}>
+                        {tlrender}
+                    </CompH>
+                }
                 <div className="flex justify-end print:hidden">
                     <span className="text-xs mr-4">序号{index + 1}</span>
                 </div>
                 {v_bh && (
-                    <div className="flex justify-end mb-4">
+                    <div className="flex justify-end">
                         <span className="text-sm">报告编号：{rep.isp.no}</span>
                     </div>
                 )}
@@ -138,7 +147,9 @@ interface PipeLineDiagramProps {
     mtil?: string
     printMode?: boolean
 }
-/**通用单线图
+//每几个图折叠的：
+const  MAX_COLL_PICS=4
+/**通用单线图,
  * */
 export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = ({
                                                                     orc,
@@ -150,7 +161,7 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = ({
                                                                     mtil,
                                                                     printMode,
                                                                 }) => {
-    const lsBlockMax = useSplitSubCapacity(orc?.单图表?.length || 0, 4)
+    const lsBlockMax = useSplitSubCapacity(orc?.单图表?.length || 0, MAX_COLL_PICS)
     // 切分折叠区
     const { sumArea, areaContent, btnBindUses } = useFoldForList(orc?.单图表 || [], lsBlockMax, false)
 
@@ -190,9 +201,11 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = ({
     return (
         <div className="space-y-1">
             <div id="LineDiagram" className="text-center print:hidden">
-                <RepLink ori rep={rep} tag={"LineDiagram"}>
-                    <span className="text-2xl font-bold mt-4">单线图的管理</span>
-                </RepLink>
+                {!orc?.单图表?.length>0 &&
+                    <RepLink ori rep={rep} tag={"LineDiagram"}>
+                        <span className="text-2xl font-bold mt-4">单线图的管理</span>
+                    </RepLink>
+                }
             </div>
             {renderAll}
             <div className="text-center print:hidden">

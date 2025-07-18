@@ -46,7 +46,9 @@ interface EditorItem {
 }
 export const itemA单特性 = ["单元表", "单图表"]
 //特性表-管道单元管理：同步 排序
-export const PropertySolidify = ({ children, show, label, rep }: InternalItemProps) => {
+export const PropertySolidify = (
+    { children, show, label='特性表-管道单元的管理', rep }: InternalItemProps
+) => {
     const searchParams = useSearchParams()
     const unitIndexParam = searchParams?.get("unitIndex") // 从URL获取单元序号
 
@@ -88,7 +90,6 @@ export const PropertySolidify = ({ children, show, label, rep }: InternalItemPro
             if (index >= 0 && index < currentUnits.length) {
                 setSelectedIndex(index)
                 setMemoText(currentUnits[index].mm || "")
-                console.log(`自动选择单元: 序号${index + 1}, 编码${currentUnits[index].code}`)
             } else {
                 console.warn(`无效的单元索引: ${index}, 当前单元总数: ${currentUnits.length}`)
                 toast.error(`无效的单元序号: ${index + 1}`)
