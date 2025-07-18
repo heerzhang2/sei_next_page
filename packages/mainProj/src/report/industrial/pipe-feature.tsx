@@ -93,14 +93,9 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                 <div className="mt-4 print:mt-0">
                     {/* 标题 */}
                     <div>
-                        <Link
-                            href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Solidify#Solidify`}
-                            className="block text-center"
-                        >
-                            <CompH className={cn(arak === 0 && pid === 0 ? "" : "hidden print:block", "text-xl mb-4")}>
-                                管道特性表
-                            </CompH>
-                        </Link>
+                        <CompH className={cn("text-center",arak === 0 && pid === 0 ? "" : "hidden print:block", "text-xl mb-4")}>
+                            管道特性表
+                        </CompH>
                         {v_bh && (
                             <div className="flex justify-end mb-4">
                                 <span className="text-sm">报告编号：{rep.isp.no}</span>
@@ -152,22 +147,17 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                         <TableBody>
                             <TableRow>
                                 <TableCell className="border">
-                                    <Link
-                                        href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/LineDiagram#LineDiagram`}
-                                        className="block"
-                                    >
-                                        <div>
-                                            <span>备注：</span>
-                                            {dlPage.map(
-                                                (p: any, c: number) =>
-                                                    p?.mm && (
-                                                        <span key={c} className="ml-2">
-                                                          {p.mm}。
-                                                        </span>
-                                                      ),
-                                            )}
-                                        </div>
-                                    </Link>
+                                    <div>
+                                        <span>备注：</span>
+                                        {dlPage.map(
+                                            (p: any, c: number) =>
+                                                p?.mm && (
+                                                    <span key={c} className="ml-2">
+                                                      {p.mm}。
+                                                    </span>
+                                                  ),
+                                        )}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         </TableBody>

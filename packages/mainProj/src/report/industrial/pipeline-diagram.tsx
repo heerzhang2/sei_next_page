@@ -2,30 +2,14 @@
 
 import type * as React from "react"
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { FootMensLine } from "@/report/common/view"
-import { FlexibleTable, TableBody, TableCell, TableRow } from "@/components/flexible-table"
+// import { FlexibleTable, TableBody, TableCell, TableRow } from "@/components/flexible-table"
 import { useFoldForList, useFoldGenerate, useSplitSubCapacity } from "@/report/hook/use-fold-gen"
 import { cn } from "@/lib/utils"
 import { RepLink } from "@/report/common/base"
 import { JumpTab } from "@/report/common/JumpTab"
-import { ImageComponent } from "@/components/shub"
 
-interface PipeLineDiagramProps {
-    orc: any
-    rep: any
-    children?: React.ReactNode
-    //显示报告编号吗
-    v_bh?: boolean
-    //可修改的表格文字样式
-    className?: string
-    title?: string
-    //文本说明备注的标题：
-    mtil?: string
-    printMode?: boolean
-}
-
-// 问题1：修复Hook调用问题 - 将useTextHeight移到组件外部
+//没用！    问题1：修复Hook调用问题 - 将useTextHeight移到组件外部
 const useTextHeight = (text: string, className = "text-[0.7rem]") => {
     const [textHeight, setTextHeight] = useState<number>(0)
     useEffect(() => {
@@ -80,89 +64,80 @@ const DiagramItem: React.FC<{
     const index = arak * lsBlockMax + pid
     const CompH = arak === 0 && pid === 0 ? "h2" : "div"
     //太不准确的计算
-    const dynamicTextHeight = useTextHeight(lobj?.m || "", "text-[0.7rem]")
-
-    // 方案1：使用用户设置的文本高度，方案2：使用动态计算的高度
-    const textHeight =lobj?.tH ? (lobj?.tH + dynamicTextHeight+7.5) :
-            dynamicTextHeight ? (dynamicTextHeight+7.5)
-                : 5.5;
-    // 计算图片可用高度：总高度 - 标题高度 - 文本高度 - 页脚高度 - 边距
-    const imageMaxHeight = `calc(100vh - ${textHeight}rem)`
-    // const imageMaxHeight = `calc(100vh - 2rem)`      内联样式使用的情况！
-    //tailwindcss 不能用多个拼凑的！没有空格的；
-    // const imageMaxHeight = `calc(100vh-${textHeight}rem)`;
-
+        // const dynamicTextHeight = useTextHeight(lobj?.m || "", "text-[0.7rem]")
+        // const imageMaxHeight = `calc(100vh - ${textHeight}rem)`
+        // const imageMaxHeight = `calc(100vh - 2rem)`      内联样式使用的情况！
+            //tailwindcss 不能用多个拼凑的！没有空格的；
+    //【打印让最后人员一行吸附纸张的底部】关键是依靠设置print:h-screen以及配套的flex-shrink-0和没有flex-shrink-0的弹性元素来组合的；前提条件全部能在一张纸能打印得下，不得超出，那一个弹性的DOM可收缩。
     return (
-        <div
-            key={pid}
-            className="h-screen max-h-screen overflow-hidden  mb-4 print:mb-0 print:h-screen print:max-h-screen print:flex print:flex-col print:justify-start print:break-before-page print:overflow-hidden"
-        >
-            <div className="mt-4 print:mt-0 print:flex-1 print:flex print:flex-col">
-                {/* 标题区域 - 固定高度 */}
-                <div >
-                    <Link
-                        href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/Solidify#Solidify`}
-                        className="block text-center"
-                    >
-                        <CompH className={cn(arak === 0 && pid === 0 ? "" : "hidden print:block", "text-xl mb-4")}>
-                            {title ?? "压力管道单线图"}
-                        </CompH>
-                    </Link>
-                    <div className="flex justify-end print:hidden">
-                        <span className="text-xs mr-4">序号{index + 1}</span>
+        <div key={pid} className="print:h-screen mx-auto bg-white shadow-lg print:shadow-none flex flex-col">
+            {/* 标题和内容区域 */}
+            <div className="flex-shrink-0">
+                <CompH className={cn("text-center",arak === 0 && pid === 0 ? "" : "hidden print:block", "text-xl mb-4")}>
+                    {title ?? "压力管道单线图"}
+                </CompH>
+                <div className="flex justify-end print:hidden">
+                    <span className="text-xs mr-4">序号{index + 1}</span>
+                </div>
+                {v_bh && (
+                    <div className="flex justify-end mb-4">
+                        <span className="text-sm">报告编号：{rep.isp.no}</span>
                     </div>
-                    {v_bh && (
-                        <div className="flex justify-end mb-4">
-                            <span className="text-sm">报告编号：{rep.isp.no}</span>
+                )}
+            </div>
+            <JumpTab
+                href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LineDiagramFile?original=1&lineIndex=${index}#LineDiagram${index}`}
+                className="print:flex-1 print:flex print:flex-col"
+            >
+                <div className="flex-shrink-0">
+                    {/* 说明文字区域*/}
+                    {lobj?.m &&
+                        <div className={cn("text-content space-y-1 border border-gray-400 px-1", lobj?._FILE_?.url ? "text-[0.7rem]" : "text-sm" )}>
+                            {mtil ?? "缺陷附图或说明"}：&nbsp;
+                            <span className="text-sm whitespace-pre-wrap">{lobj?.m || "／"}</span>
                         </div>
-                    )}
+                    }
                 </div>
-
-                {/* 主要内容区域 - 可伸缩 */}
-                <div className="print:flex-1 print:flex print:flex-col">
-
-                                        {/* 说明文字区域*/}
-                                        <div className={cn(lobj?._FILE_?.url ? "text-[0.7rem]" : "text-sm" )}>
-                                            {lobj?.m && <>
-                                                {mtil ?? "缺陷附图或说明"}：&nbsp;
-                                                <span className="text-sm whitespace-pre-wrap">{lobj?.m || "／"}</span>
-                                                </>
-                                            }
-                                        </div>
-
-                                        {/* 图片区域 - 可伸缩 overflow-hidden */}
-                                        {lobj?._FILE_?.url &&
-                                            <div  style={{
-                                                width: "auto",
-                                                height: "auto",
-                                                maxHeight: "-webkit-fill-available",
-                                                // height: "-webkit-fill-available",
-                                                maxWidth: "100%",
-                                            }}>
-                                                <img
-                                                    src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${lobj?._FILE_?.url}` || "/placeholder.svg"}
-                                                    className={cn("object-contain  ",
-                                                         "print:max-w-[705px]",
-                                                    )}
-                                                    style={{
-                                                        width: "auto",
-                                                        height: "auto",
-                                                        maxHeight: "-webkit-fill-available",
-                                                        // height: "-webkit-fill-available",
-                                                        maxWidth: "100%",
-                                                    }}
-                                                />
-                                            </div>
-                                        }
-
-                </div>
-                {/* 页脚区域 - 固定高度 */}
-                  <FootMensLine />
+                {/* 图片区域 */}
+                {lobj?._FILE_?.url && (
+                    <div className="flex-1 flex items-center justify-center border border-gray-200 bg-gray-50 print:border-gray-300 print:bg-white p-2 print:p-1 min-h-0">
+                        <img
+                            src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${lobj?._FILE_?.url}` || "/placeholder.svg"}
+                            alt={lobj?._FILE_?.name || "图片"}
+                            className={cn("max-w-full object-contain",
+                                "max-h-[15cm] @md:5xl:max-h-[19cm] print:max-h-full",
+                            )}
+                            loading={printMode? "eager" : "lazy"}
+                        />
+                    </div>
+                )}
+                {/* 弹性高度区域，确保人员那一条在纸张底部打印 */}
+                {!lobj?._FILE_?.url && (
+                    <div className="flex-1 flex items-center justify-center border border-gray-400 bg-gray-50 print:bg-white p-2 print:p-1 min-h-0">
+                    </div>
+                )}
+            </JumpTab>
+            {/* 人员 */}
+            <div className="flex-shrink-0 text-center text-xs text-gray-500  print:text-[10px]">
+                <FootMensLine />
             </div>
         </div>
     )
 }
 
+interface PipeLineDiagramProps {
+    orc: any
+    rep: any
+    children?: React.ReactNode
+    //显示报告编号吗
+    v_bh?: boolean
+    //可修改的表格文字样式
+    className?: string
+    title?: string
+    //文本说明备注的标题：
+    mtil?: string
+    printMode?: boolean
+}
 /**通用单线图
  * */
 export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = ({
@@ -179,7 +154,7 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = ({
     // 切分折叠区
     const { sumArea, areaContent, btnBindUses } = useFoldForList(orc?.单图表 || [], lsBlockMax, false)
 
-    // 问题1：修复Hook调用问题 - 渲染回调函数现在使用独立组件
+    // 问题1：修复Hook调用问题 useCallback里面用hook报错 - 渲染回调函数现在使用独立组件
     const frCallback = (lobj: any, arak: number, pid: number) => {
         return (
             <DiagramItem

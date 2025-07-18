@@ -61,6 +61,7 @@ interface ImageProps {
 /**报告打印专用的： #不支持打印：宽度上 多于一个纸张宽的。 高度上 也不支持超出一个纸张高的。
  * css中的数值：默认针对设置是，打印纸张=A4竖着答应的版本；
  * 横着A4打印情况？
+ * 单线图的打印因为需要和文本区域共享一张纸高度导致图片高度要自适应的，已不用这个组件来做了。
  * */
 export const ImageComponent: React.FC<ImageProps> = ({
                                                          src,
