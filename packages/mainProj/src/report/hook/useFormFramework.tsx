@@ -220,7 +220,7 @@ export function useFormFramework({
   const render = (node: any) => (
       <>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
             {contentRenderer}
             {node}
             <CardFooter className="flex flex-col justify-between border-t p-6 space-y-4">

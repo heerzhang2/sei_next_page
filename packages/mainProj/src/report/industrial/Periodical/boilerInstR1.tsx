@@ -193,7 +193,7 @@ export function useCatalog() {
             { title: "目录", url: "#ProjectList" },
             { title: "设备概况", url: "#Survey" },
             { title: "1.1锅炉安装监督检验结论报告", url: "#Conclusion" },
-            { title: "1.2锅炉结构简图", url: "#BoilerDiagram" },
+            { title: "宏观检验报告", url: "#Macroscopic" },
             { title: "1.3锅炉安装施工及监督检验过程概述", url: "#Explanatory" },
         ]
         return [...head, ...mainReportDirs, ...subRepHash(SUBREP_CONFIG,mapFxian,storage),

@@ -23,14 +23,14 @@ import {Macroscopic} from "@/report/industrial/Periodical/Macroscopic";
 /**有的 是非Pdf的原始记录 *.doc附件形式：
  * */
 export const Projects记录 = [
-    {name:'资料审查',do:true,ha:'MaterialReview'},
-    {name:'宏观检验',do:true,ml:'工业管道宏观检验报告',ha:'Structural'},
-    {name:'安全附件与仪表检验',do:false,ml:'安全附件与仪表检验报告',ha:'AdditionalTest'},
+    {name:'资料审查',do:true},
+    {name:'宏观检验',do:true,ml:'工业管道宏观检验报告'},
+    {name:'安全附件与仪表检验',do:false,ml:'安全附件与仪表检验报告'},
     // {name:'压力容器资料审查',do:true,ha:'Conclusion'},   {name:'衍射时差法（TOFD）超声检测',ha:'rp_tofd_'},
-    {name:'壁厚测定',ha:'rp_thickm_'},
-    {name:'渗透检测',ha:'rp_permeation_'},
-    {name:'射线检测',ha:'rp_radio_'},
-    {name:'磁粉检测',ml:'磁粉检测报告',ha:'rp_magnetic_'},
+    {name:'壁厚测定',},
+    {name:'渗透检测',},
+    {name:'射线检测'},
+    {name:'磁粉检测',ml:'磁粉检测报告',},
     {name:'超声波检测',ml:'超声波检测报告',ha:'rp_sonic_'},
     {name:'光谱分析',ml:'材料成分分析（光谱分析）报告',ha:'rp_spectrA_'},
     {name:'光谱检测',ha:'rp_optical_'},
@@ -38,8 +38,8 @@ export const Projects记录 = [
     {name:'金相分析'},
     {name:'泄漏试验'},
     {name:'耐压试验'},
-    {name:'管道特性表',ml:'管道特性表',ha:'Characteristics',na:true},
-    {name:'管道单线图',ml:'管道单线图',ha:'PipeLineDiagram',na:true},
+    {name:'管道特性表',ml:'管道特性表',na:true},
+    {name:'管道单线图',ml:'管道单线图',na:true},
     {name:'耐压强度校核',ml:'耐压强度校核报告'},
 ];
 
