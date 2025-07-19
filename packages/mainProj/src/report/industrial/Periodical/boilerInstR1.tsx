@@ -23,6 +23,7 @@ import SubRep, {SingeSubRep, SubReportConfig} from "@/component/rep/sub-rep"
 import {cat_Magne, MagneticVw} from "@/report/cm/magnetic/Magnetic1"
 import {PipelineCharacteristics} from "@/report/industrial/pipe-feature";
 import {PipeLineDiagram} from "@/report/industrial/pipeline-diagram";
+import {MacroscopicVw} from "@/report/industrial/Periodical/Macroscopic";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -151,6 +152,8 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
 
                 {mapFxian.get("锅炉简图")?.do && <BoilerDiagramVw orc={orc} rep={rep} />}
                 {mapFxian.get("检验过程概述")?.do && <ExplanatoryVw orc={orc} rep={rep} title="1.3锅炉安装施工过程概述" />}
+
+                <MacroscopicVw orc={orc} rep={rep}/>
 
                 {renderSub('THICK_MS')}
                 {renderSub('MAGNT_TS')}

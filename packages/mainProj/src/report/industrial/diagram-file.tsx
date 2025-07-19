@@ -255,7 +255,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                                         className="w-full min-h-[8rem] resize-y"
                                         id="memojt"
                                         value={editForm.m || ""}
-                                        onChange={(val) => updateMemoField(val)}
+                                        onChange={(val) => updateMemoField(val as unknown as string)}
                                         placeholder="输入单线图的说明文字..."
                                     />
                                 </div>
