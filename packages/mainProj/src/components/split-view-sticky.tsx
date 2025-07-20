@@ -219,7 +219,8 @@ export function SplitViewSticky({
 
       { rightPanel &&
           <div
-              className={cn(independentScrolling ? "overflow-auto h-full" : "overflow-auto",
+              //底下的overflow-auto h-full导致异常滚动条情况，改成overflow-hidden h-full
+              className={cn(independentScrolling ? "overflow-hidden h-full" : "overflow-auto",
                   sticky? "sticky top-0":""
               )}
               style={{
@@ -232,4 +233,3 @@ export function SplitViewSticky({
     </div>
   )
 }
-

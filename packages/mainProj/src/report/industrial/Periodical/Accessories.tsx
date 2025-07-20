@@ -28,6 +28,7 @@ import {SmartTruncatedText} from "@/components/smart-truncated-text";
 import { AlertCircleIcon, Edit, Plus, Trash2, X } from 'lucide-react';
 import {CustomSwitch} from "@/components/shub";
 import {boolean} from "zod/lib/types";
+import {uniqueId} from "lodash-es";
 
 function CustomSwitch4() {
     const [checked, setChecked] = useState(false);
@@ -117,7 +118,7 @@ export const Accessories = ({
             schemaFields[name]= z.object(schemaTab)
         })
         schemaFields.宏观结果= z.string().optional()
-        schemaFields.有效的= z.boolean().optional()
+        schemaFields.有效2= z.boolean()
         return z.object(schemaFields)
     }, [configN])
     const defaultValues = React.useMemo(() => {
@@ -126,7 +127,7 @@ export const Accessories = ({
             fields[name] = storage[name] ?? {}
         })
         fields.宏观结果= storage.宏观结果 ?? "";
-        fields.有效的= storage.有效的 ?? true;
+        fields.有效2= storage.有效2;
         return fields
     }, [storage,configN])
     const arrayFields = React.useMemo(() => {
@@ -165,14 +166,20 @@ export const Accessories = ({
                                                         <div className="flex items-center space-x-2">
                                                             {/* 问题2：修复Switch的使用方式 */}
                                                             <FormField
-                                                                key={`有效的`}
+                                                                key={`有效2`}
                                                                 control={form.control}
-                                                                name={`有效的`}
+                                                                name={`有效2`}
                                                                 render={({ field }) => (
                                                                     <FormItem className="pt-2 w-full break-inside-avoid">
                                                                         <FormLabel className="select-text">是否在校验有效期内</FormLabel>
                                                                         <FormControl>
-                                                                          <CustomSwitch {...field}/>
+                                                                          {/*<CustomSwitch {...field}/>*/}
+                                                                            <Switch
+                                                                                value={field.value || false}
+                                                                                onChange={field.onChange}
+                                                                                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+                                                                            />
+
                                                                         </FormControl>
                                                                         <FormMessage />
                                                                     </FormItem>

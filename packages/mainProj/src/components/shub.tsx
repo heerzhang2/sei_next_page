@@ -119,6 +119,7 @@ export interface CustomSwitchProps {
         onChange={field.onChange}
         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
     />
+ 淘汰：因在SplitViewSticky修改后overflow-hidden之后就在没有异常的滚动条了。
 * */
 export const CustomSwitch =({
                                            value,
