@@ -24,6 +24,7 @@ import {cat_Magne, MagneticVw} from "@/report/cm/magnetic/Magnetic1"
 import {PipelineCharacteristics} from "@/report/industrial/pipe-feature";
 import {PipeLineDiagram} from "@/report/industrial/pipeline-diagram";
 import {MacroscopicVw} from "@/report/industrial/Periodical/Macroscopic";
+import {AccessoriesVw} from "@/report/industrial/Periodical/Accessories";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -154,7 +155,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {mapFxian.get("检验过程概述")?.do && <ExplanatoryVw orc={orc} rep={rep} title="1.3锅炉安装施工过程概述" />}
 
                 <MacroscopicVw orc={orc} rep={rep}/>
-
+                {mapFxian.get('安全附件与仪表检验')?.do && <AccessoriesVw orc={orc} rep={rep}/>}
                 {renderSub('THICK_MS')}
                 {renderSub('MAGNT_TS')}
 
@@ -194,6 +195,7 @@ export function useCatalog() {
             { title: "设备概况", url: "#Survey" },
             { title: "1.1锅炉安装监督检验结论报告", url: "#Conclusion" },
             { title: "宏观检验报告", url: "#Macroscopic" },
+            { title: "安全附件与仪表检验", url: "#Accessories" },
             { title: "1.3锅炉安装施工及监督检验过程概述", url: "#Explanatory" },
         ]
         return [...head, ...mainReportDirs, ...subRepHash(SUBREP_CONFIG,mapFxian,storage),

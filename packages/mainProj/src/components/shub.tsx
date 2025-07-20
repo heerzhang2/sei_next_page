@@ -1,8 +1,9 @@
-import type { ReactNode } from "react"
+import  { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import {useStorage} from "@/report/StorageContext";
 import {usePageSectionOrientation} from "@/components/page-section-orientation";
+import * as React from "react";
 
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
@@ -48,7 +49,8 @@ export function FormField({ id, label, required = false, error, className, child
 }
 </div>
 * */
-interface ImageProps {
+
+interface ImageProps extends React.ComponentProps<"div">{
     src: string
     alt?: string
     //图片自身的： 外部注入基本都需要"print:max-h-full"；
@@ -95,9 +97,58 @@ export const ImageComponent: React.FC<ImageProps> = ({
   )
 }
 
-
 /*原本的 className={cn("object-contain max-h-[15cm] @md:5xl:max-h-[19cm]",
          landscape? "print:max-h-[705px] print:max-w-[26.5cm]" : "print:max-h-[26.5cm] print:max-w-[705px]", className)}
 
          请求失败: http://192.168.171.3:9000/ywmast/202506/2012/37a9f6f6-36b0-45bd-add1-d59baa777b6e，状态码: net::ERR_BLOCKED_BY_ORB
 * */
+
+
+export interface CustomSwitchProps {
+    checked: boolean;
+    onChange: (value: boolean) => void;
+    onBlur?: (e: React.FocusEvent) => void;
+    disabled?: boolean;
+    name?: string;
+    className?: string;
+}
+export const CustomSwitch =({
+                                           checked,
+                                           onChange,
+                                           onBlur,
+                                           disabled = false,
+                                           name,
+                                           ...rest
+                                       }: CustomSwitchProps) => {
+    const handleClick = (e) => {
+        if (disabled) return;
+        const newValue = !checked;
+        onChange(newValue);
+    };
+
+    return (
+        <div className="relative inline-flex shrink-0 h-[25px] w-[42px]">
+            <button
+                type="button"
+                role="switch"
+                aria-checked={checked}
+                data-state={checked ? "checked" : "unchecked"}
+                className={`peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input ${
+                    disabled ? 'opacity-50 cursor-not-allowed' : ''
+                } ${rest.className || ''}`}
+                onClick={handleClick}
+                onBlur={onBlur}
+                disabled={disabled}
+                name={name}
+            >
+                <span
+                    data-state={checked ? "checked" : "unchecked"}
+                    className="pointer-events-none block size-4 rounded-full transition-transform ${
+                    checked ? 'translate-x-[17px]' : 'translate-x-0'
+                  }"
+                />
+            </button>
+        </div>
+    );
+}
+

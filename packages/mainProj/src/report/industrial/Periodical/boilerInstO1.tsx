@@ -18,6 +18,7 @@ import {PropertySolidify} from "@/report/industrial/property-solidify";
 import {SingleLineDiagram} from "@/report/industrial/diagram-manager";
 import {LineDiagramFile} from "@/report/industrial/diagram-file";
 import {Macroscopic} from "@/report/industrial/Periodical/Macroscopic";
+import {Accessories} from "@/report/industrial/Periodical/Accessories";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -53,6 +54,7 @@ const recordPrintList =[
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
     createItem('BoilerDiagram', <BoilerDiagram label="xxx锅炉结构简图"/>),
     createItem('Macroscopic', <Macroscopic label="宏观检验报告"/>),
+    createItem('Accessories', <Accessories label="宏观检验报告"/>),
     createItem('Solidify', <PropertySolidify />),
     createItem('LineDiagram', <SingleLineDiagram />),
     createItem('LineDiagramFile', <LineDiagramFile />),
