@@ -524,6 +524,12 @@ export const 现场条件选 = [
     {label: "符合", value: "✔" },
     {label: "不符合", value: "✘" },
 ]
+//因为Select不支持value=布尔取值的。
+export const YesNos = [
+    {label: "是", value: "是" },
+    {label: "否", value: "否" },
+]
+
 /**检验条件：表格一样。
  * 表单useForm毛病【特别注意】form.setValue(`.${fields.length-1}.`,)name={`.${fields.length-1}.`}的索引序号需有效序号,新增按钮{ fields.length>0 &&隐藏编辑器，否则自动乱加空行导致后续报错。append前直接编辑导致空行。
  * */

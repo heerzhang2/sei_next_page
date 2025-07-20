@@ -7,15 +7,36 @@ import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import { useFormFramework} from "@/report/hook/useFormFramework";
 import {FootMensLine, } from "@/report/common/view";
-import {Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input, Separator, Textarea} from "@/components/ui";
+import {
+    Badge,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+    Input,
+    Separator,
+    Switch,
+    Textarea
+} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, FormSelectField, SuffixInput} from "@/components/chub";
-import {YesNos} from "@/report/common/editor";
+import {FormSwitch} from "@/components/shub";
 
+export const ReviewSels = [
+    { value: "齐全" },
+    { value: "缺失" },
+    { value: "无资料" },
+]
 const jgwtLst=[`1、系统中压力表、安全阀经校验合格；
 2、所检项目未见异常。`,
 ]
-export const itemA安全附件: string[]=['附件备注','附件问题','安阀检','爆片检','急断阀','压表检'];
-export const Accessories = ({
+export const itemA安全附件: string[]=['设资料','安资料','改资料','使资料','检资料', '压表检'];
+export const MaterialReview = ({
                                 children,
                                 show,
                                 label,
@@ -25,21 +46,22 @@ export const Accessories = ({
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
         const schemaTab = {} as any
-        schemaTab['no'] = z.string().optional()
-        schemaTab['s'] = z.string().optional()
+        schemaTab['r'] = z.string().optional()
+        schemaTab['s'] = z.boolean().optional()
         schemaTab['Y'] = z.string().optional()
         schemaTab['IS'] = z.string().optional()
-        schemaFields.安阀检= z.object(schemaTab)
-        schemaFields.爆片检= z.object(schemaTab)
-        schemaFields.急断阀= z.object(schemaTab)
-        schemaFields.压表检= z.object(schemaTab)
+        schemaFields.设资料= z.object(schemaTab)
+        // schemaFields.安资料= z.object(schemaTab)
+        // schemaFields.改资料= z.object(schemaTab)
+        // schemaFields.使资料= z.object(schemaTab)
+        // schemaFields.检资料= z.object(schemaTab)
         schemaFields.附件备注= z.string().optional()
         schemaFields.附件问题= z.string().optional()
         return z.object(schemaFields)
     }, [])
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
-        fields.安阀检= storage.安阀检?? {no:"",};
+        fields.设资料= storage.设资料?? {};
         fields.爆片检= storage.爆片检?? {no:"",};
         fields.急断阀= storage.急断阀?? {s:"",};
         fields.压表检= storage.压表检?? {s:"",};
@@ -55,28 +77,33 @@ export const Accessories = ({
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
                             {label}
-                            <Badge variant="secondary">共 4 项检验</Badge>
+                            <Badge variant="secondary">共 5 项审查</Badge>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="px-1 mb-2">
-                        <strong>安全阀检验</strong>
+                        <strong>设计资料</strong>
                         <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-1 @md:gap-3">
-                            <FormField name={`安阀检.no`} control={form.control} render={({ field }) => (
+                            <FormField name={`设资料.r`} control={form.control} render={({field}) => (
+                                <FormSelectField options={ReviewSels} label={'审查结果'}
+                                                 field={field} selectClass="w-full @md:w-[20rem]"/>
+                            )}/>
+
+                            <FormField name={`设资料.s`} control={form.control} render={({ field }) => (
+                                <FormSwitch field={field} label='非首次定期检验'/>
+                            )}/>
+                            <FormField name={`设资料.no`} control={form.control} render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
                                     <FormLabel className="select-text">校验记录编号</FormLabel>
                                     <FormControl><Input {...field} /></FormControl><FormMessage />
                                 </FormItem>
                             )}/>
-                            <FormField name="安阀检.s" control={form.control} render={({ field }) => (
+                            <FormField name="设资料.s" control={form.control} render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid">
                                     <FormLabel className="select-text">数量</FormLabel>
                                     <FormControl><SuffixInput unit='个'  {...field}/></FormControl><FormMessage />
                                 </FormItem>
                             )}/>
-                            <FormField name={`安阀检.Y`} control={form.control} render={({field}) => (
-                                <FormSelectField options={YesNos} label={'是否在校验有效期内'}
-                                                 field={field} selectClass="w-full @md:w-[20rem]"/>
-                            )}/>
+
                         </div>
                         <Separator className="my-2"/>
                         <strong>爆破片装置检验</strong>
@@ -94,7 +121,7 @@ export const Accessories = ({
                                 </FormItem>
                             )}/>
                             <FormField name={`爆片检.Y`} control={form.control} render={({field}) => (
-                                <FormSelectField options={YesNos} label={'是否按期更换'}
+                                <FormSelectField options={ReviewSels} label={'是否按期更换'}
                                                  field={field} selectClass="w-full @md:w-[20rem]"/>
                             )}/>
                         </div>
@@ -114,7 +141,7 @@ export const Accessories = ({
                                 </FormItem>
                             )}/>
                             <FormField name={`急断阀.Y`} control={form.control} render={({field}) => (
-                                <FormSelectField options={YesNos} label={'是否完好'}
+                                <FormSelectField options={ReviewSels} label={'是否完好'}
                                                  field={field} selectClass="w-full @md:w-[20rem]"/>
                             )}/>
                         </div>
@@ -134,11 +161,11 @@ export const Accessories = ({
                                 </FormItem>
                             )}/>
                             <FormField name={`压表检.Y`} control={form.control} render={({field}) => (
-                                <FormSelectField options={YesNos} label={'是否在检定有效期内'}
+                                <FormSelectField options={ReviewSels} label={'是否在检定有效期内'}
                                                  field={field} selectClass="w-full @md:w-[20rem]"/>
                             )}/>
                             <FormField name={`压表检.IS`} control={form.control} render={({field}) => (
-                                <FormSelectField options={YesNos} label={'无检定要求'}
+                                <FormSelectField options={ReviewSels} label={'无检定要求'}
                                                  field={field} selectClass="w-full @md:w-[20rem]"/>
                             )}/>
                         </div>
@@ -185,10 +212,10 @@ interface ViewProps {
     rep: any
     children?: React.ReactNode
 }
-export const AccessoriesVw = ({orc, rep, children }: ViewProps) => {
+export const MaterialReviewVw = ({orc, rep, children }: ViewProps) => {
     return <PrintReserveLeast reserve="6rem"
                               title={<>
-                                  <h2 id='Accessories' className="block text-center leading-[0.9] text-3xl font-normal mt-4">安全附件与仪表检验报告</h2>
+                                  <h2 id='MaterialReview' className="block text-center leading-[0.9] text-3xl font-normal mt-4">工业管道资料审查报告</h2>
                                   <div className="flex justify-between text-sm">
                                       <span>单位内部编号：{orc.单位内部编号}</span>
                                       <span className="@3xl:mr-4"></span>
@@ -197,7 +224,7 @@ export const AccessoriesVw = ({orc, rep, children }: ViewProps) => {
     >
         <FlexibleTable columnWidths={["14%","%","15%","9%","15%","4%","25%"]} className="text-sm border-collapse">
             <TableBody>
-                <RepLink ori rep={rep} tag={'Accessories'}>
+                <RepLink ori rep={rep} tag={'MaterialReview'}>
                     <TableRow>
                         <CCell rowSpan={3}>安全阀检验</CCell><CCell>校验记录编号</CCell><CCell colSpan={5}>{orc?.安阀检?.no || '／'}</CCell>
                     </TableRow>

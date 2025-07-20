@@ -25,6 +25,7 @@ import {PipelineCharacteristics} from "@/report/industrial/pipe-feature";
 import {PipeLineDiagram} from "@/report/industrial/pipeline-diagram";
 import {MacroscopicVw} from "@/report/industrial/Periodical/Macroscopic";
 import {AccessoriesVw} from "@/report/industrial/Periodical/Accessories";
+import {MaterialReviewVw} from "@/report/industrial/Periodical/MaterialReview";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -151,9 +152,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 <ConclusionVw orc={orc} rep={rep} subrid={subrid!} />
                 {检验核准WaterJj({ orc, rep, jyt: "编制" })}
 
-                {mapFxian.get("锅炉简图")?.do && <BoilerDiagramVw orc={orc} rep={rep} />}
-                {mapFxian.get("检验过程概述")?.do && <ExplanatoryVw orc={orc} rep={rep} title="1.3锅炉安装施工过程概述" />}
-
+                <MaterialReviewVw orc={orc} rep={rep}/>
                 <MacroscopicVw orc={orc} rep={rep}/>
                 {mapFxian.get('安全附件与仪表检验')?.do && <AccessoriesVw orc={orc} rep={rep}/>}
                 {renderSub('THICK_MS')}

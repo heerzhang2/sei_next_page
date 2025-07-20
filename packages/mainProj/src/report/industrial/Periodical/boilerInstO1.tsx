@@ -19,6 +19,7 @@ import {SingleLineDiagram} from "@/report/industrial/diagram-manager";
 import {LineDiagramFile} from "@/report/industrial/diagram-file";
 import {Macroscopic} from "@/report/industrial/Periodical/Macroscopic";
 import {Accessories} from "@/report/industrial/Periodical/Accessories";
+import {MaterialReview, MaterialReviewVw} from "@/report/industrial/Periodical/MaterialReview";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -52,9 +53,9 @@ const recordPrintList =[
     createItem('CertificateSummary', <DeviceSurveyD config={config证书概要} label={'证书的设备概况部分'}/>),
     createItem('CertMemo', <CertMemo label={'证书-说明'} />),
     createItem('Conclusion', <ConclusionBoiler startd cjry label={'检验结论报告-下结论'}/>),
-    createItem('BoilerDiagram', <BoilerDiagram label="xxx锅炉结构简图"/>),
+    createItem('MaterialReview', <MaterialReview label="工业管道资料审查报告"/>),
     createItem('Macroscopic', <Macroscopic label="宏观检验报告"/>),
-    createItem('Accessories', <Accessories label="宏观检验报告"/>),
+    createItem('Accessories', <Accessories label="安全附件与仪表检验报告"/>),
     createItem('Solidify', <PropertySolidify />),
     createItem('LineDiagram', <SingleLineDiagram />),
     createItem('LineDiagramFile', <LineDiagramFile />),

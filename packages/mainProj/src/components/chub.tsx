@@ -484,7 +484,7 @@ export function SuffixInput({ fullWidth = true, className, style, value, onChang
                     "rounded-md border border-input bg-background flex-1 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                     className,
                 )}
-                value={value}
+                value={value || ""}
                 onChange={onChange}
                 {...other}
             />
@@ -582,8 +582,8 @@ export function MemoDateInput({
     );
 }
 
-// 创建一个可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。
-/*必须配套useForm使用的;
+/**必须配套 useForm 使用的;
+可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。
  * */
 export function ClearableSelect({
                                   field,
@@ -648,12 +648,13 @@ export function ClearableSelect({
 interface FormSelectFieldProps {
   field: ControllerRenderProps<any, any>
   label: any
+    //选择取值value只能是 字符串 类型！
   options: { value: string; label?: any }[]
   className?: string
   selectClass?: string
   value?: any
 }
-/*配套于useForm；
+/*配套 useForm， 简化嵌套的形式；
  * */
 export function FormSelectField({ field, label, options, className, selectClass, value }: FormSelectFieldProps) {
   const id = useId() + "-" + field.name // 使用 field.name 生成唯一ID
@@ -675,7 +676,7 @@ export function FormSelectField({ field, label, options, className, selectClass,
   )
 }
 
-/**
+/**通用版本：
  * 不在局限于form绑定的情况的： 因为嵌套在form组件底下的，需要加id;
  * */
 export function CommonSelect({
@@ -693,7 +694,7 @@ export function CommonSelect({
   id?: string
   className?: string
   value?: any
-  //特殊：不是传递e:event;直接拆地选择取值的。
+  //特殊：不是传递e:event;直接传递已经选取值。
   onValueChange?: (value: any) => void
 }) {
   // const uId = useId()    防止报错，加 name={id}

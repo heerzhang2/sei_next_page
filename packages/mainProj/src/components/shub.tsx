@@ -1,9 +1,13 @@
-import {ReactNode, useState} from "react"
+import {ReactNode, useId, useState} from "react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import {useStorage} from "@/report/StorageContext";
 import {usePageSectionOrientation} from "@/components/page-section-orientation";
 import * as React from "react";
+import type {ControllerRenderProps} from "react-hook-form";
+import {FormControl, FormItem, FormLabel, FormMessage, Switch} from "@/components/ui";
+import {ClearableSelect} from "@/components/chub";
+import {useFormField} from "@/components/ui/form";
 
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
@@ -113,13 +117,13 @@ export interface CustomSwitchProps {
     className?: string;
     id?: string;
 }
-/**替代原本Switch； 避免useForm配合情况下的出现多余滚动条毛病。
-    <CustomSwitch
-        value={field.value || false}
-        onChange={field.onChange}
+/**替代原本Switch； 避免useForm配合情况下的出现多余滚动条毛病。【参数】俩版本是不一样的！
+    <CustomSwitch value={field.value || false} onChange={field.onChange}
         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
     />
- 淘汰：因在SplitViewSticky修改后overflow-hidden之后就在没有异常的滚动条了。
+ 前者      value={field.value || false} onChange={field.onChange}
+ 后者 checked={field.value || false} onCheckedChange={field.onChange} name={field.name}
+ 可淘汰：因在SplitViewSticky修改后overflow-hidden之后就在没有异常的滚动条了。
 * */
 export const CustomSwitch =({
                                            value,
@@ -157,4 +161,32 @@ export const CustomSwitch =({
             </button>
         </div>
     );
+}
+
+interface FormSwitchProps {
+    field: ControllerRenderProps<any, any>
+    label: any
+    className?: string
+    switchClass?: string
+}
+/*配套 useForm， 简化嵌套的形式；
+ * */
+export function FormSwitch({ field, label, className, switchClass }: FormSwitchProps) {
+    const id = useId() + "-" + field.name
+    const { error, formItemId } = useFormField()
+    return (
+        <FormItem className={cn("pt-2 w-full break-inside-avoid", className)}>
+            <FormLabel className="select-text">{label}</FormLabel>
+            <FormControl>
+                <Switch  id={formItemId}
+                        checked={field.value || false}
+                        name={field.name}
+                        onCheckedChange={field.onChange}
+                        className={cn("h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]",
+                            switchClass)}
+                />
+            </FormControl>
+            <FormMessage />
+        </FormItem>
+    )
 }
