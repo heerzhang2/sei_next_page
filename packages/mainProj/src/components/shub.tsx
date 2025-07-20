@@ -1,4 +1,4 @@
-import  { ReactNode } from "react"
+import {ReactNode, useState} from "react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import {useStorage} from "@/report/StorageContext";
@@ -105,50 +105,55 @@ export const ImageComponent: React.FC<ImageProps> = ({
 
 
 export interface CustomSwitchProps {
-    checked: boolean;
+    value: boolean;
     onChange: (value: boolean) => void;
     onBlur?: (e: React.FocusEvent) => void;
     disabled?: boolean;
     name?: string;
     className?: string;
+    id?: string;
 }
+/**替代原本Switch； 避免useForm配合情况下的出现多余滚动条毛病。
+    <CustomSwitch
+        value={field.value || false}
+        onChange={field.onChange}
+        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+    />
+* */
 export const CustomSwitch =({
-                                           checked,
+                                           value,
                                            onChange,
                                            onBlur,
                                            disabled = false,
-                                           name,
+                                           name, id, className,
                                            ...rest
                                        }: CustomSwitchProps) => {
-    const handleClick = (e) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         if (disabled) return;
-        const newValue = !checked;
+        const newValue = !value;
         onChange(newValue);
     };
-
     return (
-        <div className="relative inline-flex shrink-0 h-[25px] w-[42px]">
+        <div style={{ position: 'relative' }}>
             <button
                 type="button"
                 role="switch"
-                aria-checked={checked}
-                data-state={checked ? "checked" : "unchecked"}
-                className={`peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input ${
-                    disabled ? 'opacity-50 cursor-not-allowed' : ''
-                } ${rest.className || ''}`}
+                aria-checked={value}
+                data-state={value ? "checked" : "unchecked"}
+                value="on"
+                data-slot="switch"
+                className={cn("peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]",
+                            className)}
+                id={id}
                 onClick={handleClick}
-                onBlur={onBlur}
                 disabled={disabled}
-                name={name}
             >
                 <span
-                    data-state={checked ? "checked" : "unchecked"}
-                    className="pointer-events-none block size-4 rounded-full transition-transform ${
-                    checked ? 'translate-x-[17px]' : 'translate-x-0'
-                  }"
+                    data-state={value ? "checked" : "unchecked"}
+                    data-slot="switch-thumb"
+                    className="bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0"
                 />
             </button>
         </div>
     );
 }
-

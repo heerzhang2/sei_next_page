@@ -25,8 +25,9 @@ import {BlobInputList, CollapsibleFormSection, InputDatalist} from "@/components
 import {OmniPref, useOmnipotentPref, useOmniPrefTitle} from "@/report/hook/useOmnipotentPref";
 import {cn} from "@/lib/utils";
 import {SmartTruncatedText} from "@/components/smart-truncated-text";
-import {AlertCircleIcon, Edit, Plus, Trash2, X} from "lucide-react";
+import { AlertCircleIcon, Edit, Plus, Trash2, X } from 'lucide-react';
 import {CustomSwitch} from "@/components/shub";
+import {boolean} from "zod/lib/types";
 
 function CustomSwitch4() {
     const [checked, setChecked] = useState(false);
@@ -94,12 +95,12 @@ itemE检验项.forEach(([name, ], i: number) => {
 });
 
 export const Accessories = ({
-                                    children,
-                                    show,
-                                    label,
-                                    rep,
-                                    config = setConfig宏观,
-                                }: Props) => {
+                                children,
+                                show,
+                                label,
+                                rep,
+                                config = setConfig宏观,
+                            }: Props) => {
     const { storage, } = useStorage()
     const configN = React.useMemo(() => {
         return config(storage,true)
@@ -116,6 +117,7 @@ export const Accessories = ({
             schemaFields[name]= z.object(schemaTab)
         })
         schemaFields.宏观结果= z.string().optional()
+        schemaFields.有效的= z.boolean().optional()
         return z.object(schemaFields)
     }, [configN])
     const defaultValues = React.useMemo(() => {
@@ -124,6 +126,7 @@ export const Accessories = ({
             fields[name] = storage[name] ?? {}
         })
         fields.宏观结果= storage.宏观结果 ?? "";
+        fields.有效的= storage.有效的 ?? true;
         return fields
     }, [storage,configN])
     const arrayFields = React.useMemo(() => {
@@ -138,6 +141,7 @@ export const Accessories = ({
     })
     const titNode=useOmniPrefTitle({config:configN,});
     const content = React.useMemo(() => {
+        const Vlfovalue = form.watch('有效的')
         return (
             <>
                 <Card className="py-1 gap-1">
@@ -159,28 +163,33 @@ export const Accessories = ({
 
                                                     <div className="grid grid-cols-2 @5xl:grid-cols-4 gap-1">
                                                         <div className="flex items-center space-x-2">
-                                                            <CustomSwitch checked={false} onChange={function(value: boolean): void {
-                                                                throw new Error("Function not implemented.");
-                                                            } } />
-
-                                                            <Label htmlFor="do" className="text-sm select-text">
-                                                                有做该项目
-                                                            </Label>
+                                                            {/* 问题2：修复Switch的使用方式 */}
+                                                            <FormField
+                                                                key={`有效的`}
+                                                                control={form.control}
+                                                                name={`有效的`}
+                                                                render={({ field }) => (
+                                                                    <FormItem className="pt-2 w-full break-inside-avoid">
+                                                                        <FormLabel className="select-text">是否在校验有效期内</FormLabel>
+                                                                        <FormControl>
+                                                                          <CustomSwitch {...field}/>
+                                                                        </FormControl>
+                                                                        <FormMessage />
+                                                                    </FormItem>
+                                                                )}
+                                                            />
                                                         </div>
                                                         <div className="flex items-center space-x-2">
-                                                            {/*<Switch id="na"*/}
-                                                            {/*        checked={  false}*/}
-                                                            {/*        onCheckedChange={(checked) => 0}*/}
-                                                            {/*        className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"*/}
-                                                            {/*/>*/}
+
                                                             <Label htmlFor="na" className="text-sm select-text">
                                                                 不在目录中显示
                                                             </Label>
                                                         </div>
                                                     </div>
-
+                                                    <div className="h-[30rem] flex items-center space-x-2">
+                                                    </div>
                                                     <div className="flex justify-end space-x-2 pt-4 border-t">
-                                                    <Button variant="outline" >
+                                                        <Button variant="outline" >
                                                             <X className="w-4 h-4 mr-2" />
                                                             取消
                                                         </Button>
@@ -191,20 +200,6 @@ export const Accessories = ({
                                             </Card>
                                         </div>
                                     </div>
-{/*                                    <FormField
-                                        key={`${name}.V`}
-                                        control={form.control}
-                                        name={`${name}.V`}
-                                        render={({ field }) => (
-                                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                                <FormLabel className="select-text">是否在校验有效期内</FormLabel>
-                                                <FormControl  className="">
-                                                    <Switch   {...field}  />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />*/}
 
                                 </div>
                             </div>
@@ -216,7 +211,7 @@ export const Accessories = ({
                 {children}
             </>
         )
-    }, [titNode, children])
+    }, [titNode, children, form])
 
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
@@ -230,15 +225,15 @@ export const Accessories = ({
                     </CardHeader>
                     <CardContent className="p-0 space-y-1">
                         <div className="space-y-0.5">
-                            {content}
+                            {/*{content}*/}
 
                             {/* 新增按钮和表单 */}
                             <div className="pt-4 border-t">
 
-                                    <Button size="sm"   className="w-full max-w-32">
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        新增目录项
-                                    </Button>
+                                <Button size="sm"   className="w-full max-w-32">
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    新增目录项
+                                </Button>
 
                             </div>
                         </div>
@@ -305,13 +300,13 @@ interface ViewProps {
 
 export const AccessoriesVw = ({orc, rep, children,config=setConfig宏观 }: ViewProps) => {
     return <PrintReserveLeast reserve="6rem"
-            title={<>
-                    <h2 id='Accessories' className="block text-center leading-[0.9] text-3xl font-normal mt-4">安全附件与仪表检验报告</h2>
-                    <div className="flex justify-between text-sm">
-                        <span>单位内部编号：{orc.单位内部编号}</span>
-                        <span className="@3xl:mr-4"></span>
-                    </div>
-                </>}
+                              title={<>
+                                  <h2 id='Accessories' className="block text-center leading-[0.9] text-3xl font-normal mt-4">安全附件与仪表检验报告</h2>
+                                  <div className="flex justify-between text-sm">
+                                      <span>单位内部编号：{orc.单位内部编号}</span>
+                                      <span className="@3xl:mr-4"></span>
+                                  </div>
+                              </>}
     >
         <FlexibleTable  columnWidths={["14%","%","15%","9%","15%","4%","25%"]} className="text-sm border-collapse">
             <TableBody>
@@ -326,12 +321,12 @@ export const AccessoriesVw = ({orc, rep, children,config=setConfig宏观 }: View
                     <TableRow>
                         <CCell>是否在校验有效期内</CCell><CCell>( {('是'===orc?.安阀检?.Y)? '√' : orc?.安阀检?.Y? '':'／'} )是</CCell>
                         <CCell></CCell><CCell>( {('否'===orc?.安阀检?.Y)? '√' : orc?.安阀检?.Y? '':'／'} )否</CCell>
-                            <CCell colSpan={2}></CCell>
+                        <CCell colSpan={2}></CCell>
                     </TableRow>
                     <TableRow>
                         <CCell>是否在校验有效期内</CCell><CCell>( {('是'===orc?.安阀检?.Y)? '√' : orc?.安阀检?.Y? '':'／'} )是</CCell>
                         <CCell></CCell><CCell>( {('否'===orc?.安阀检?.Y)? '√' : orc?.安阀检?.Y? '':'／'} )否</CCell>
-                          <CCell></CCell><CCell>( {'是'===orc?.安阀检?.IS && '√'} )无检定要求</CCell>
+                        <CCell></CCell><CCell>( {'是'===orc?.安阀检?.IS && '√'} )无检定要求</CCell>
                     </TableRow>
                     <TableRow>
                         <TableCell colSpan={6} className="border border-gray-700">
