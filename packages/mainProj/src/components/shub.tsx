@@ -181,7 +181,7 @@ export function FormSwitch({ field, label, className, switchClass }: FormSwitchP
                          checked={field.value || false}
                          name={field.name}
                          onCheckedChange={field.onChange}
-                         className={cn("h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]",
+                         className={cn("h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px] ml-8",
                              switchClass)}
                 />
             </FormControl>

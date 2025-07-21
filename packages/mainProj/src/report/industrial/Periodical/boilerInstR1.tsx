@@ -26,6 +26,7 @@ import {PipeLineDiagram} from "@/report/industrial/pipeline-diagram";
 import {MacroscopicVw} from "@/report/industrial/Periodical/Macroscopic";
 import {AccessoriesVw} from "@/report/industrial/Periodical/Accessories";
 import {MaterialReviewVw} from "@/report/industrial/Periodical/MaterialReview";
+import {ConcAppendixVw} from "@/report/industrial/Periodical/ConcAppendix";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -131,14 +132,12 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
     return (
         <>
             <div className="not-print:my-4">
-                <CertificatePage orc={orc} rep={rep} />
-
                 <div className="print:h-screen">
                     {ReportFirstPageHeadNmaNmbm({ rep })}
                     <div className="print:flex print:flex-col print:justify-between print:h-[calc(100vh-8.5rem)]">
                         <div>
                             <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
-                                <h1 className="text-3xl text-center print:mt-6">电站锅炉安装监检报告</h1>
+                                <h1 className="text-3xl text-center print:mt-6">工业管道定期检验报告</h1>
                             </JumpTab>
                             <span className="block text-center text-sm print:mt-4"> （ FJB/GB 10082-0-2021 ）</span>
                         </div>
@@ -147,11 +146,13 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                     </div>
                 </div>
                 {注意事项GasC({ rep, comply: "书为依据《锅炉安全技术规程》制定，适用于电站锅炉安装监督检验的结论报告" })}
-                {mapFxian.get("目录")?.do && <DirectoryPagePress orc={orc} rep={rep} />}
+                <DirectoryPagePress orc={orc} rep={rep} />
 
                 <ConclusionVw orc={orc} rep={rep} subrid={subrid!} />
                 {检验核准WaterJj({ orc, rep, jyt: "编制" })}
 
+
+                <ConcAppendixVw orc={orc} rep={rep}/>
                 <MaterialReviewVw orc={orc} rep={rep}/>
                 <MacroscopicVw orc={orc} rep={rep}/>
                 {mapFxian.get('安全附件与仪表检验')?.do && <AccessoriesVw orc={orc} rep={rep}/>}

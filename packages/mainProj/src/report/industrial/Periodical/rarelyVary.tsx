@@ -26,3 +26,5 @@ export const titleRenders ={
 
 }
 
+export const 管道级别=['GA1','GA2','GB1','GB2','GC1','GC2','GC3','GD1','GD2'];
+export const 工作介质选=['蒸汽','导热油','见管道特性表'];

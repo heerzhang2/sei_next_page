@@ -10,6 +10,7 @@ import {FootMensLine, } from "@/report/common/view";
 import {Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input, Separator, Textarea} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, FormSelectField, SuffixInput} from "@/components/chub";
 import {FormSwitch} from "@/components/shub";
+import {cn} from "@/lib/utils";
 
 export const ReviewSels = [
     { value: "齐全" },
@@ -33,25 +34,27 @@ export const MaterialReview = ({
         schemaTab['r'] = z.string().optional()
         schemaTab['s'] = z.boolean().optional()
         schemaTab['L'] = z.string().optional()
-
-        schemaTab['IS'] = z.string().optional()
+        schemaTab['X'] = z.boolean().optional()
         schemaFields.设资料= z.object(schemaTab)
         schemaFields.安资料= z.object(schemaTab)
-        // schemaFields.改资料= z.object(schemaTab)
-        // schemaFields.使资料= z.object(schemaTab)
-        // schemaFields.检资料= z.object(schemaTab)
-        schemaFields.附件备注= z.string().optional()
-        schemaFields.附件问题= z.string().optional()
+        schemaFields.改资料= z.object(schemaTab)
+        schemaFields.使资料= z.object(schemaTab)
+        schemaFields.检资料= z.object(schemaTab)
+        schemaFields.上次报告= z.string().optional()
+        schemaFields.上次评级= z.string().optional()
+        schemaFields.上次缺处= z.string().optional()
         return z.object(schemaFields)
     }, [])
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
         fields.设资料= storage.设资料?? {};
         fields.安资料= storage.安资料?? {};
-        fields.急断阀= storage.急断阀?? {s:"",};
-        fields.压表检= storage.压表检?? {s:"",};
-        fields.附件备注= storage.附件备注 ?? "";
-        fields.附件问题= storage.附件问题 ?? "";
+        fields.改资料= storage.改资料?? {};
+        fields.使资料= storage.使资料?? {};
+        fields.检资料= storage.检资料?? {};
+        fields.上次报告= storage.上次报告 ?? "";
+        fields.上次评级= storage.上次评级 ?? "";
+        fields.上次缺处= storage.上次缺处 ?? "";
         return fields
     }, [storage,])
     const { render, form } = useFormFramework({schema, defaultValues, rep,})
@@ -102,70 +105,89 @@ export const MaterialReview = ({
                             )}/>
                         </div>
                         <Separator className="my-2"/>
-                        <strong>紧急切断阀检验</strong>
+                        <strong>改造或者重大修理资料</strong>
                         <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-1 @md:gap-3">
-                            <FormField name={`急断阀.no`} control={form.control} render={({ field }) => (
-                                <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel className="select-text">型式与规格</FormLabel>
-                                    <FormControl><Input {...field} /></FormControl><FormMessage />
-                                </FormItem>
+                            <FormField name={`改资料.X`} control={form.control} render={({ field }) => (
+                                <FormSwitch field={field} label='无此项'/>
                             )}/>
-                            <FormField name="急断阀.s" control={form.control} render={({ field }) => (
-                                <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel className="select-text">数量</FormLabel>
-                                    <FormControl><SuffixInput unit='个'  {...field}/></FormControl><FormMessage />
-                                </FormItem>
-                            )}/>
-                            <FormField name={`急断阀.Y`} control={form.control} render={({field}) => (
-                                <FormSelectField options={ReviewSels} label={'是否完好'}
+                            <FormField name={`改资料.r`} control={form.control} render={({field}) => (
+                                <FormSelectField options={ReviewSels} label={'审查结果'}
                                                  field={field} selectClass="w-full @md:max-w-[20rem]"/>
+                            )}/>
+                            <FormField name={`改资料.s`} control={form.control} render={({ field }) => (
+                                <FormSwitch field={field} label='非首次定期检验'/>
+                            )}/>
+                            <FormField name={"改资料.L"} control={form.control} render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel className="select-text">缺失情况</FormLabel>
+                                    <FormControl className="w-full mr-1"><BlobInputList rows={2} {...field}/></FormControl>
+                                    <FormMessage />
+                                </FormItem>
                             )}/>
                         </div>
                         <Separator className="my-2"/>
-                        <strong>压力表检验</strong>
+                        <strong>使用管理资料</strong>
                         <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-1 @md:gap-3">
-                            <FormField name={`压表检.no`} control={form.control} render={({ field }) => (
-                                <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel className="select-text">编号</FormLabel>
-                                    <FormControl><Input {...field} value={field.value||''}/></FormControl><FormMessage />
-                                </FormItem>
-                            )}/>
-                            <FormField name="压表检.s" control={form.control} render={({ field }) => (
-                                <FormItem className="pt-2 w-full break-inside-avoid">
-                                    <FormLabel className="select-text">数量</FormLabel>
-                                    <FormControl><SuffixInput unit='个'  {...field}/></FormControl><FormMessage />
-                                </FormItem>
-                            )}/>
-                            <FormField name={`压表检.Y`} control={form.control} render={({field}) => (
-                                <FormSelectField options={ReviewSels} label={'是否在检定有效期内'}
+                            <FormField name={`使资料.r`} control={form.control} render={({field}) => (
+                                <FormSelectField options={ReviewSels} label={'审查结果'}
                                                  field={field} selectClass="w-full @md:max-w-[20rem]"/>
                             )}/>
-                            <FormField name={`压表检.IS`} control={form.control} render={({field}) => (
-                                <FormSelectField options={ReviewSels} label={'无检定要求'}
+                            <FormField name={"使资料.L"} control={form.control} render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel className="select-text">缺失情况</FormLabel>
+                                    <FormControl className="w-full mr-1"><BlobInputList rows={2} {...field}/></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                        </div>
+                        <Separator className="my-2"/>
+                        <strong>检验、检查资料</strong>
+                        <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-1 @md:gap-3">
+                            <FormField name={`检资料.r`} control={form.control} render={({field}) => (
+                                <FormSelectField options={ReviewSels} label={'审查结果'}
                                                  field={field} selectClass="w-full @md:max-w-[20rem]"/>
+                            )}/>
+                            <FormField name={"检资料.L"} control={form.control} render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel className="select-text">缺失情况</FormLabel>
+                                    <FormControl className="w-full mr-1"><BlobInputList rows={2} {...field}/></FormControl>
+                                    <FormMessage />
+                                </FormItem>
                             )}/>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="py-1 gap-2">
+                <Card className="py-2 px-1 gap-2">
+                    <CardHeader>
+                        <CardTitle><strong>上次定期检验问题</strong></CardTitle>
+                    </CardHeader>
                     <CardContent className="p-0 space-y-1">
-                        <FormField name={"附件备注"} control={form.control} render={({ field }) => (
+                        <FormField name={"上次报告"} control={form.control} render={({ field }) => (
+                            <FormItem className="pt-2 w-full break-inside-avoid">
+                                <FormLabel className="select-text">上次定期检验报告编号：</FormLabel>
+                                <FormControl className="w-full">
+                                    <BlobInputList rows={2} {...field} datalist={[]} className="text-base md:text-sm max-w-[22rem]"/>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}/>
+                        <FormField name={"上次评级"} control={form.control} render={({ field }) => (
+                            <FormItem className="pt-2 w-full break-inside-avoid">
+                                <FormLabel className="select-text">上次定期检验安全状况等级评为</FormLabel>
+                                <FormControl className="w-full">
+                                    <BlobInputList rows={1} unit='级。' {...field} datalist={[]} className="text-base md:text-sm max-w-[15rem] text-center"/>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}/>
+                        <FormField name={"上次缺处"} control={form.control} render={({ field }) => (
                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                    <FormLabel className="select-text">备注：</FormLabel>
+                                    <FormLabel className="select-text">上次定期检验问题记载（注明上次定期检验发现的主要缺陷及处理情况）</FormLabel>
                                     <FormControl className="w-full">
-                                        <Textarea rows={4} {...field} />
+                                        <Textarea rows={6} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
-                        )}/>
-                        <FormField name={"附件问题"} control={form.control} render={({ field }) => (
-                               <FormItem className="pt-2 w-full break-inside-avoid">
-                                   <FormLabel className="select-text">发现问题描述：</FormLabel>
-                                   <FormControl className="w-full">
-                                       <BlobInputList rows={5} {...field} datalist={jgwtLst} className="text-base md:text-sm"/>
-                                   </FormControl>
-                                   <FormMessage />
-                               </FormItem>
                         )}/>
                     </CardContent>
                     <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2">
@@ -226,33 +248,46 @@ export const MaterialReviewVw = ({orc, rep, children }: ViewProps) => {
                     <TableRow>
                         <CCell colSpan={3}>( {orc?.安资料?.s&&'✔'} )非首次定期检验</CCell>
                     </TableRow>
-
-
                     <TableRow>
-                        <CCell rowSpan={3}>安全阀检验</CCell><CCell>校验记录编号</CCell><CCell colSpan={5}>{orc?.安阀检?.no || '／'}</CCell>
+                        <CCell rowSpan={2}>改造或者重大修理资料</CCell>
+                        <CCell>( {'齐全'===orc?.改资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.改资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.改资料?.r&&'✔'} )无资料</CCell>
+                        <CCell rowSpan={2} className="whitespace-pre-wrap">
+                            {orc?.改资料?.L || '／'}
+                        </CCell>
                     </TableRow>
                     <TableRow>
-                        <CCell>数量</CCell><CCell colSpan={3}>{orc?.安阀检?.s || '／'}</CCell><CCell>个</CCell><CCell></CCell>
+                        <CCell colSpan={2}>( {orc?.改资料?.s&&'✔'} )非首次定期检验</CCell><CCell>( {orc?.改资料?.X&&'✔'} )无此项</CCell>
                     </TableRow>
                     <TableRow>
-                        <CCell>是否在校验有效期内</CCell><CCell>( {('是'===orc?.安阀检?.Y)? '✔' : orc?.安阀检?.Y? '':'／'} )是</CCell>
-                        <CCell></CCell><CCell>( {('否'===orc?.安阀检?.Y)? '✔' : orc?.安阀检?.Y? '':'／'} )否</CCell><CCell colSpan={2}></CCell>
-                    </TableRow>
-
-                    <TableRow>
-                        <TableCell colSpan={7} className="border border-gray-700">备注：</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell colSpan={7} className="border border-gray-700 min-h-[4rem] whitespace-pre-wrap mt-[0.2rem] p-[0.2rem] text-indent-[2rem]">
-                            <div className="min-h-[2rem]">{orc?.附件备注 || '／'}</div>
-                        </TableCell>
+                        <CCell>使用管理资料</CCell>
+                        <CCell>( {'齐全'===orc?.使资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.使资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.使资料?.r&&'✔'} )无资料</CCell>
+                        <CCell className="whitespace-pre-wrap">
+                            {orc?.使资料?.L || '／'}
+                        </CCell>
                     </TableRow>
                     <TableRow>
-                        <TableCell colSpan={7} className="border border-gray-700">发现问题描述：</TableCell>
+                        <CCell>检验、检查资料</CCell>
+                        <CCell>( {'齐全'===orc?.检资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.检资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.检资料?.r&&'✔'} )无资料</CCell>
+                        <CCell className="whitespace-pre-wrap">
+                            {orc?.检资料?.L || '／'}
+                        </CCell>
+                    </TableRow>
+                </RepLink>
+            </TableBody>
+        </FlexibleTable>
+        <FlexibleTable columnWidths={["13%","%"]} className="text-sm border-collapse">
+            <TableBody>
+                <RepLink ori rep={rep} tag={'MaterialReview'}>
+                    <TableRow>
+                        <CCell rowSpan={2}>上次定期检验问题记载</CCell>
+                        <CCell>上次定期检验报告编号： {orc.上次报告 || '／'}<br/>
+                            上次定期检验安全状况等级评为： {orc.上次评级 || '／'} 级。
+                        </CCell>
                     </TableRow>
                     <TableRow>
-                        <TableCell colSpan={7} className="border border-gray-700 min-h-[4rem] whitespace-pre-wrap mt-[0.2rem] p-[0.2rem] text-indent-[2rem]">
-                            <div className="min-h-[4rem]">{orc?.附件问题 || '／'}</div>
+                        <TableCell className="border border-gray-700 min-h-[4rem] whitespace-pre-wrap mt-[0.2rem] p-[0.2rem] text-indent-[2rem]">
+                            <div className={cn("min-h-[5rem]", orc.上次缺处?.length>20 ? "" : "text-center mt-4",)}
+                            >{orc.上次缺处 || '／'}</div>
                         </TableCell>
                     </TableRow>
                 </RepLink>

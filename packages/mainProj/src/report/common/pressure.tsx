@@ -1,6 +1,6 @@
 import * as React from "react";
 import {SubReportConfig} from "@/component/rep/sub-rep";
-import {SUBREP_CONFIG} from "@/report/industrial/Periodical/boilerInstR1";
+import {cn} from "@/lib/utils";
 
 //承压类的，较为常用的：
 export type PressureLayout = {
@@ -80,5 +80,26 @@ export function subRepHash(
             }
         });
   return tmpAr;
+}
+
+/**动态加的 自主添加检验项：前缀模式， 多行,
+ * */
+export function customPrefI(
+    nhead: string, //结论它
+    count: number,  //总共几个存储量
+    storage: any,
+    edit?: boolean,  //显示编辑器中的
+): Array<[ string, any[],any ]>
+{
+    let tmpAr: Array<[ string, any[],any ]> = [];
+    for(let i=0;i<count;i++){
+        const title=storage?.[`${nhead}${i+1}`]?.T
+        if(edit || !!title){
+            tmpAr.push(
+                    [`${nhead}${i+1}`, [{}], <span className={cn(edit? "text-base" : "text-sm")}>{title ??'／'}</span> ]
+              );
+        }
+    }
+    return tmpAr;
 }
 

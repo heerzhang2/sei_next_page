@@ -11,9 +11,11 @@ interface DeviceSurveyDProps extends InternalItemProps {
     label: string
     config?: any[]
     itemA?: string[]
+    //在某一个行位置遣返注入某个分段的描述，断开布局的，序号基数为1的。
+    comment?: Record<number, any>
 }
 
-export const DeviceSurveyD = ({ children, show, label, config, itemA, rep }: DeviceSurveyDProps) => {
+export const DeviceSurveyD = ({ children, show, label, config, itemA, rep,comment}: DeviceSurveyDProps) => {
     const { storage } = useStorage()
 
     // 创建动态 schema

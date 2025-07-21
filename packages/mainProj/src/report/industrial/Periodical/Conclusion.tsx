@@ -5,10 +5,11 @@ import {z} from "zod";
 import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {config设备概况} from "@/report/power/boilInstall/orcBase";
+import {config设备概况} from "@/report/industrial/Periodical/orcBase";
 import {useThreeColumnView} from "@/report/hook/useThreeColumnSubr";
 import {CCell, FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
+import {usePrefixDataTable} from "@/report/hook/usePrefixData";
 
 interface ConclusionProps  extends InternalItemProps{
     startd?: boolean;
@@ -130,19 +131,20 @@ export const mapBoilerResult = (input: "符合要求" | "基本符合要求" | "
     }
 };
 
+const config设备上=config设备概况.slice(0, 7);
+const config设备下=config设备概况.slice(7);
+
 export const ConclusionVw= ({ orc, rep, subrid} : { orc: any,rep:any, subrid:string}
 ) => {
-    const [_,renderUpper,render2]=useThreeColumnView({orc, config:config设备概况,slash:true,split:[1,9]});
+    const renderUpper=usePrefixDataTable({config: config设备上, orc, rep, slash:true});
+    const [performant]=useThreeColumnView({orc, config:config设备下,slash:true,
+                        embedCol: [ <CCell key='1' rowSpan={4}>性能参数</CCell> ] });
+
     const result1=mapBoilerResult(orc?.检验结论)
     return <React.Fragment>
         <PrintReserveLeast reserve="10rem"
                            title={<>
-                               <h2 className="text-xl text-center mt-4">一、锅炉安装监督检验综合报告</h2>
-                               <h3 id={"Conclusion"} className="text-xl text-center">1.1锅炉安装监督检验结论报告</h3>
-                               <div className="flex justify-between">
-                                   <span className="text-sm">工程名称：{orc?.工程名称}</span>
-                                   <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
-                               </div>
+                               <h2 id={"Conclusion"} className="text-2xl text-center mt-4 mb-2">工业管道定期检验结论报告</h2>
                            </>}>
             <FlexibleTable id='Survey' columnWidths={ ["14.8%", "19%", "%", "11.6%","10%","8%"] } className="text-sm border-collapse">
                 <TableBody>
@@ -154,8 +156,8 @@ export const ConclusionVw= ({ orc, rep, subrid} : { orc: any,rep:any, subrid:str
         </PrintReserveLeast>
         <FlexibleTable columnWidths={ ["16.7%", "11%", "%", "16.7%","16%","16%"] }  className="text-sm">
             <TableBody>
-                <RepLink ori rep={rep} tag={'Survey'}>
-                    {render2}
+                <RepLink ori rep={rep} tag={'Survey'} subrid={subrid}>
+                    {performant}
                 </RepLink>
                 <RepLink rep={rep} tag={'Conclusion'}>
                     <TableRow>
