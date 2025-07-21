@@ -148,7 +148,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {注意事项GasC({ rep, comply: "书为依据《锅炉安全技术规程》制定，适用于电站锅炉安装监督检验的结论报告" })}
                 <DirectoryPagePress orc={orc} rep={rep} />
 
-                <ConclusionVw orc={orc} rep={rep} subrid={subrid!} />
+                <ConclusionVw orc={orc} rep={rep}/>
                 {检验核准WaterJj({ orc, rep, jyt: "编制" })}
 
 

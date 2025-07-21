@@ -5,24 +5,43 @@ import {CCell, TableRow} from "@/components/flexible-table";
 import {CCellUnit, } from "../common/base";
 import type { UseFormReturn } from "react-hook-form"
 
-
+type EditCommentPart= {
+    survey: any[];
+    comment: any;
+};
 /**给usePrefixDataTable配套的， 2排编辑器。 【缺点】只能最多支持2排的布局的。支持配置方式的pr:""前缀列。不支持直接拆分的。 不支持分项报告；
  * 对比（useThreeColumnView、）它是支持直接拆分支持3排的布局；
  * 类似设备概况的：支持'_$'开头的字段：无需编辑输入的配置情形。`
  * @param config  范式模型配置; 基础配置统一为[desc, name, cb] 3元组合的。`
  * @param itemA  外部需要的在inp体现字段。  inp:any,setInp:React.Dispatch<React.SetStateAction<any>>,
+ * @param form  配套于useForm的表单；
+ * @param comment 在某一个行位置遣返注入某个分段的描述，断开布局的，序号基数为1的。
  *预定义编辑器的render回调 cb.edit(inp, setInp) 也必需要修改了： cb.edit(form: UseFormReturn<any, any, any>)
  * 【注意】上级定义样式 @container ；
  * */
-export const usePrefixDataEdit= ({ config,itemA, form }  :
-                             {  config:any[][][], itemA?:string[], form: UseFormReturn<any, any, any> }
+export const usePrefixDataEdit= ({ config,itemA, form, comment={}}  :
+                             {  config:any[][][], itemA?:string[],
+                                 form: UseFormReturn<any, any, any>,
+                                 comment?: Record<number, any>
+                             }
 ) => {
     //surveyItems: 2大列布局映射成： 统一1个列表的。 编辑器没有考虑左边还是右边的那一列位置关系。
-    const [surveyItems,] = React.useMemo(() => {
+    const [parts,] = React.useMemo(() => {
+        const parts = [] as EditCommentPart[];      //支持插入注解分区块显示的。
         const surveyItems = [] as any;          //原本布局2排或1排的，需首先转为正常的1排列表，若desc有前缀的首先预处理！
         let oldPref1='';
         let oldPref2='';
+        let sumRow=0;
+        let transferNode=undefined;
         config?.forEach(([[desc, name, cb], add2p]: any, i: number) => {
+            if( comment[(i+1)] ) {
+                const part={ survey:[...surveyItems], comment:transferNode }
+                transferNode= comment[(i+1)];
+                parts.push(part)
+                surveyItems.length = 0;
+                sumRow=0;
+            }
+            sumRow++;    //下一个说明语义comment注解的引入的编辑分区。
             let [desc2, name2, cb2] = add2p || [];
             if (typeof desc === 'object'){
                 oldPref1= desc?.pr===null? '' : desc?.pr? desc?.pr : oldPref1;
@@ -41,159 +60,168 @@ export const usePrefixDataEdit= ({ config,itemA, form }  :
             if (typeof name2 === 'string' && name2 && !name2.startsWith('_$')) surveyItems.push({name: name2, desc: desc2, cb: cb2});
             else if (typeof name2 === 'object' && name2.n && !name2.r && !name2.n.startsWith('_$')) surveyItems.push({name: name2.n, desc: desc2, cb: cb2, type: name2.t, unit: name2.u, list: name2.l});
         });
-        return [surveyItems,];
+        if(sumRow>0){
+            const part={ survey:[...surveyItems], comment:transferNode }
+            parts.push(part)
+        }
+        return [parts,];
     }, [config,itemA]);
-    //正常的每一行都独立 布局； 若一个序号多个小项目的：可能遭遇太过拥挤情况。
+    //正常的每一行都独立 布局； 若一个序号多个小项目的：可能遭遇太过拥挤情况。//这里假定上层表单<form >有设置 @container 样式。
     const render= React.useMemo(() =>
-        {
-            const lastAiObj=surveyItems[surveyItems.length-1];
-            const isMemoLast= lastAiObj?.type==='m';
-            const toTailNodes: React.ReactNode[]=[];         //支持有些DOM溢出移动到了<LineColumn外部做布局的。 cb?.{toTail, edit};
-            //这里假定上层表单<form >有设置 @container 样式。
-         return <>
-             <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
-                 {
-                     surveyItems.map(({name, desc:orgDesc, cb, type, unit, list}: any, i: number) => {
-                         if(isMemoLast && (surveyItems.length-1)===i)  return null;
-                         let desc;
-                         if (typeof orgDesc === 'object'){
-                             desc=orgDesc?.pr + orgDesc?.t;
-                         }
-                         else desc=orgDesc;
-                         if (cb?.edit) {
-                             if(!cb?.toTail)
-                                 return <React.Fragment key={i}>{ cb.edit(form) }</React.Fragment>;
-                             else{
-                                 const aNode=<React.Fragment key={i}>
-                                     <h6>{cb?.toTail}：</h6>
-                                     { cb.edit(form) }
-                                 </React.Fragment>;
-                                 toTailNodes.push(aNode);
-                                 return null;
-                             }
-                         } else if (type === 'l') return <FormField
-                                         key={name}
-                                         control={form.control}
-                                         name={name  as any}
-                                         render={({ field }) => (
-                                             <FormItem className="pt-2 w-full break-inside-avoid">
-                                                 <FormLabel className="select-text">{desc}</FormLabel>
-                                                 <FormControl className="w-full">
-                                                     <InputDatalist  datalist={list} unit={unit}  {...field}  />
-                                                 </FormControl>
-                                                 <FormMessage />
-                                             </FormItem>
-                                         )}
-                                     />;
-                         else if (type === 'd') return <FormField
-                                             key={name}
-                                             control={form.control}
-                                             name={name  as any}
-                                             render={({ field }) => (
-                                                 <FormItem className="pt-2 w-full break-inside-avoid">
-                                                     <FormLabel className="select-text">{desc}</FormLabel>
-                                                     <FormControl  className="w-full">
-                                                         <Input type='date'   {...field}  />
-                                                     </FormControl>
-                                                     <FormMessage />
-                                                 </FormItem>
-                                             )}
-                                         />;
-                         else if (type === 'b') return <FormField
-                                         key={name}
-                                         control={form.control}
-                                         name={name  as any}
-                                         render={({ field }) => (
-                                             <FormItem className="pt-2 w-full break-inside-avoid">
-                                                 <FormLabel className="select-text">{desc}</FormLabel>
-                                                 <FormControl  className="w-full">
-                                                     <Switch   {...field}  />
-                                                 </FormControl>
-                                                 <FormMessage />
-                                             </FormItem>
-                                         )}
-                                     />;
-                         else if (type === 'B') return <FormField
-                                         key={name}
-                                         control={form.control}
-                                         name={name  as any}
-                                         render={({ field }) => (
-                                             <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2">
-                                                 <FormLabel className="select-text">{desc}</FormLabel>
-                                                 <FormControl className="w-full">
-                                                     <BlobInputList datalist={list} unit={unit}  {...field}  />
-                                                 </FormControl>
-                                                 <FormMessage />
-                                             </FormItem>
-                                         )}
-                                     />;
-                         else if (type === 'm') return <FormField
-                                             key={name}
-                                             control={form.control}
-                                             name={name  as any}
-                                             render={({ field }) => (
-                                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
-                                                     <FormLabel className="select-text">{desc}:</FormLabel>
-                                                     <FormControl  className="w-full">
-                                                         <Textarea rows={4}  {...field} />
-                                                     </FormControl>
-                                                     <FormMessage />
-                                                 </FormItem>
-                                             )}
-                                         />;
-                         else if (unit) return <FormField
-                                         key={name}
-                                         control={form.control}
-                                         name={name  as any}
-                                         render={({ field }) => (
-                                             <FormItem className="pt-2 w-full break-inside-avoid">
-                                                 <FormLabel className="select-text">{desc}：</FormLabel>
-                                                 <FormControl className="w-full">
-                                                     <SuffixInput  unit={unit}  {...field}  />
-                                                 </FormControl>
-                                                 <FormMessage />
-                                             </FormItem>
-                                         )}
-                                     />;
-                         else return <FormField
-                                 key={name}
-                                 control={form.control}
-                                 name={name  as any}
-                                 render={({ field }) => (
-                                     <FormItem className="pt-2 w-full break-inside-avoid">
-                                         <FormLabel className="select-text">{desc + `:`}</FormLabel>
-                                         <FormControl  className="w-full">
-                                             <Input type={type === 'n' ? "number" : undefined}   {...field}  />
-                                         </FormControl>
-                                         <FormMessage />
-                                     </FormItem>
-                                 )}
-                             />;
-                     })
-                 }
-             </div>
-             {toTailNodes}
-             { isMemoLast && <>
-                 {lastAiObj.desc}:
-                 <FormField
-                     key={lastAiObj.name}
-                     control={form.control}
-                     name={lastAiObj.name  as any}
-                     render={({ field }) => (
-                         <FormItem className="pt-2 w-full break-inside-avoid">
-                             <FormLabel className="select-text"></FormLabel>
-                             <FormControl  className="w-full">
-                                 <Textarea rows={5}  {...field} />
-                             </FormControl>
-                             <FormMessage />
-                         </FormItem>
-                     )}
-                 />
-             </>
-             }
+        {   return <>
+            {parts.map(({survey: surveyItems, comment}, p: number) => {
+                const lastAiObj=surveyItems[surveyItems.length-1];
+                const isMemoLast= lastAiObj?.type==='m';
+                const toTailNodes: React.ReactNode[]=[];         //支持有些DOM溢出移动到了<LineColumn外部做布局的。 cb?.{toTail, edit};
+                const comenNode=typeof comment==='string'? <strong className={"text-base"}>{comment}：</strong> : comment;
+                return <React.Fragment key={p}>
+                    {comment && <div className={"mt-4"}>{comenNode}</div> }
+                    <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-4">
+                        {
+                            surveyItems.map(({name, desc:orgDesc, cb, type, unit, list}: any, i: number) => {
+                                if(isMemoLast && (surveyItems.length-1)===i)  return null;
+                                let desc;
+                                if (typeof orgDesc === 'object'){
+                                    desc=orgDesc?.pr + orgDesc?.t;
+                                }
+                                else desc=orgDesc;
+                                if (cb?.edit) {
+                                    if(!cb?.toTail)
+                                        return <React.Fragment key={i}>{ cb.edit(form) }</React.Fragment>;
+                                    else{
+                                        const aNode=<React.Fragment key={i}>
+                                            <h6>{cb?.toTail}：</h6>
+                                            { cb.edit(form) }
+                                        </React.Fragment>;
+                                        toTailNodes.push(aNode);
+                                        return null;
+                                    }
+                                } else if (type === 'l') return <FormField
+                                    key={name}
+                                    control={form.control}
+                                    name={name  as any}
+                                    render={({ field }) => (
+                                        <FormItem className="pt-2 w-full break-inside-avoid">
+                                            <FormLabel className="select-text">{desc}</FormLabel>
+                                            <FormControl className="w-full">
+                                                <InputDatalist  datalist={list} unit={unit}  {...field}  />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />;
+                                else if (type === 'd') return <FormField
+                                    key={name}
+                                    control={form.control}
+                                    name={name  as any}
+                                    render={({ field }) => (
+                                        <FormItem className="pt-2 w-full break-inside-avoid">
+                                            <FormLabel className="select-text">{desc}</FormLabel>
+                                            <FormControl  className="w-full">
+                                                <Input type='date'   {...field}  />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />;
+                                else if (type === 'b') return <FormField
+                                    key={name}
+                                    control={form.control}
+                                    name={name  as any}
+                                    render={({ field }) => (
+                                        <FormItem className="pt-2 w-full break-inside-avoid">
+                                            <FormLabel className="select-text">{desc}</FormLabel>
+                                            <FormControl  className="w-full">
+                                                <Switch   {...field}  />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />;
+                                else if (type === 'B') return <FormField
+                                    key={name}
+                                    control={form.control}
+                                    name={name  as any}
+                                    render={({ field }) => (
+                                        <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2">
+                                            <FormLabel className="select-text">{desc}</FormLabel>
+                                            <FormControl className="w-full">
+                                                <BlobInputList datalist={list} unit={unit}  {...field}  />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />;
+                                else if (type === 'm') return <FormField
+                                    key={name}
+                                    control={form.control}
+                                    name={name  as any}
+                                    render={({ field }) => (
+                                        <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                            <FormLabel className="select-text">{desc}:</FormLabel>
+                                            <FormControl  className="w-full">
+                                                <Textarea rows={4}  {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />;
+                                else if (unit) return <FormField
+                                    key={name}
+                                    control={form.control}
+                                    name={name  as any}
+                                    render={({ field }) => (
+                                        <FormItem className="pt-2 w-full break-inside-avoid">
+                                            <FormLabel className="select-text">{desc}：</FormLabel>
+                                            <FormControl className="w-full">
+                                                <SuffixInput  unit={unit}  {...field}  />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />;
+                                else return <FormField
+                                        key={name}
+                                        control={form.control}
+                                        name={name  as any}
+                                        render={({ field }) => (
+                                            <FormItem className="pt-2 w-full break-inside-avoid">
+                                                <FormLabel className="select-text">{desc + `:`}</FormLabel>
+                                                <FormControl  className="w-full">
+                                                    <Input type={type === 'n' ? "number" : undefined}   {...field}  />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />;
+                            })
+                        }
+                    </div>
+                    {toTailNodes}
+                    { isMemoLast && <>
+                        {lastAiObj.desc}:
+                        <FormField
+                            key={lastAiObj.name}
+                            control={form.control}
+                            name={lastAiObj.name  as any}
+                            render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel className="select-text"></FormLabel>
+                                    <FormControl  className="w-full">
+                                        <Textarea rows={5}  {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </>
+                    }
+                </React.Fragment>
+                })
+            }
         </>;
         }
-        ,[surveyItems]);
+        ,[parts]);
   return [render];
 }
 

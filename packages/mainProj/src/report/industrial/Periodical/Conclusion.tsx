@@ -2,7 +2,19 @@ import * as React from "react";
 import {InternalItemProps, RepLink} from "../../common/base";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
-import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
+import {
+    Card,
+    CardContent, CardFooter,
+    CardHeader,
+    CardTitle,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+    Input,
+    Textarea
+} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {config设备概况} from "@/report/industrial/Periodical/orcBase";
@@ -22,9 +34,9 @@ const 结论选 = [
     { value: "基本符合要求" },
     { value: "不符合要求" },
 ]
-export const itemA结论 = ['检验结论', '新下检日','检验日期','检验日期1','参检人员' ];
+export const itemA结论 = ['检验结论', '新下检日','检验日期','检验日期1','参检人员','问题及处' ];
 //下结论页面：
-export const ConclusionBoiler = ({ children, show,  redId, nestMd, label, rep,
+export const ConclusionIndPer = ({ children, show,  redId, nestMd, label, rep,
                                       startd=false,nxtstyp='检验',rslist=结论选,cjry}: ConclusionProps) => {
     const {storage,} =useStorage();
     const schema = React.useMemo(() => {
@@ -41,15 +53,16 @@ export const ConclusionBoiler = ({ children, show,  redId, nestMd, label, rep,
         })
         return fields
     }, [storage])
-    const contentRendererFactory = React.useCallback(
-        (form: any, arrays?: Record<string, any>) => {
+    const { render,form } = useFormFramework({schema, defaultValues, rep})
+
+    const content = React.useMemo(() => {
             return (
                 <>
-                    <Card className="py-1 mb-2 gap-2 max-w-[60rem] m-auto">
+                    <Card className="py-1 mb-2 gap-2  m-auto">
                         <CardHeader>
                             <CardTitle>{label}</CardTitle>
                         </CardHeader>
-                        <CardContent className="px-1 max-w-[40rem] m-auto">
+                        <CardContent className="px-1  m-auto">
                             <h5>(报告下结论)：</h5>
                             {cjry && <FormField control={form.control} name={"参检人员"}
                                                render={({ field }) => (
@@ -105,17 +118,53 @@ export const ConclusionBoiler = ({ children, show,  redId, nestMd, label, rep,
                                            </FormItem>
                                        )}
                             />
-                            {children}
                         </CardContent>
+                    </Card>
+                    <Card className="py-2 px-1 gap-2">
+                        <CardHeader>
+                            <CardTitle><strong>问题及其处理</strong></CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 space-y-1">
+                            <FormField name={"问题及处"} control={form.control} render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                    <FormLabel className="select-text">[检验发现的缺陷位置、性质、程度及处理意见（必要时附图或者附页，也可以直接注明见某项报告）]</FormLabel>
+                                    <FormControl className="w-full">
+                                        <Textarea rows={5} {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                            <FormField name={"上次评级"} control={form.control} render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid">
+                                    <FormLabel className="select-text">上次定期检验安全状况等级评为</FormLabel>
+                                    <FormControl className="w-full">
+                                        <BlobInputList rows={1} unit='级。' {...field} datalist={[]} className="text-base md:text-sm max-w-[15rem] text-center"/>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                            <FormField name={"上次缺处"} control={form.control} render={({ field }) => (
+                                <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                    <FormLabel className="select-text">上次定期检验问题记载（注明上次定期检验发现的主要缺陷及处理情况）</FormLabel>
+                                    <FormControl className="w-full">
+                                        <Textarea rows={6} {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                        </CardContent>
+                        <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2">
+                            {children}
+                        </CardFooter>
                     </Card>
                 </>
             )
         },
         [children,],
     )
-    const { render } = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
+
     return  <CollapsibleFormSection title={label!} defaultOpen={show}>
-        {render(null)}
+        {render(content)}
     </CollapsibleFormSection>;
 };
 
@@ -134,7 +183,7 @@ export const mapBoilerResult = (input: "符合要求" | "基本符合要求" | "
 const config设备上=config设备概况.slice(0, 7);
 const config设备下=config设备概况.slice(7);
 
-export const ConclusionVw= ({ orc, rep, subrid} : { orc: any,rep:any, subrid:string}
+export const ConclusionVw= ({ orc, rep} : { orc: any,rep:any}
 ) => {
     const renderUpper=usePrefixDataTable({config: config设备上, orc, rep, slash:true});
     const [performant]=useThreeColumnView({orc, config:config设备下,slash:true,
@@ -148,15 +197,31 @@ export const ConclusionVw= ({ orc, rep, subrid} : { orc: any,rep:any, subrid:str
                            </>}>
             <FlexibleTable id='Survey' columnWidths={ ["14.8%", "19%", "%", "11.6%","10%","8%"] } className="text-sm border-collapse">
                 <TableBody>
-                    <RepLink ori rep={rep} tag={'Survey'} subrid={subrid}>
+                    <RepLink ori rep={rep} tag={'Survey'}>
                         {renderUpper}
                     </RepLink>
+                    <TableRow>
+                        <CCell colSpan={2}>检验依据</CCell>
+                        <CCell colSpan={4}>《压力管道安全技术监察规程——工业管道》（TSG D0001-2009）<br/>
+                            《压力管道定期检验规则——工业管道》（TSG D7005-2018）</CCell>
+                    </TableRow>
                 </TableBody>
             </FlexibleTable>
         </PrintReserveLeast>
         <FlexibleTable columnWidths={ ["16.7%", "11%", "%", "16.7%","16%","16%"] }  className="text-sm">
             <TableBody>
-                <RepLink ori rep={rep} tag={'Survey'} subrid={subrid}>
+                <RepLink ori rep={rep} tag={'Conclusion'}>
+                    <TableRow>
+                        <CCell colSpan={2}>问题及其处理</CCell>
+                        <TableCell colSpan={4} className="border border-gray-700">
+                            [检验发现的缺陷位置、性质、程度及处理意见（必要时附图或者附页，也可以直接注明见某项报告）]<br/>
+                            <div className="min-h-[4rem] whitespace-pre-wrap mt-[0.2rem] p-[0.2rem] text-indent-[2rem] overflow-auto">
+                                {orc?.问题及处 || '／'}
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </RepLink>
+                <RepLink ori rep={rep} tag={'Survey'}>
                     {performant}
                 </RepLink>
                 <RepLink rep={rep} tag={'Conclusion'}>

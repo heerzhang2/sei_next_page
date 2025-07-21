@@ -11,7 +11,7 @@ interface DeviceSurveyDProps extends InternalItemProps {
     label: string
     config?: any[]
     itemA?: string[]
-    //在某一个行位置遣返注入某个分段的描述，断开布局的，序号基数为1的。
+    //在某一个行位置遣返注入某个分段的描述，断开布局的，配置某一行的序号插入描述Dom，基数1的。
     comment?: Record<number, any>
 }
 
@@ -78,7 +78,7 @@ export const DeviceSurveyD = ({ children, show, label, config, itemA, rep,commen
     })
 
     // 将 usePrefixDataEdit 移到组件顶层
-    const [renderEditor] = usePrefixDataEdit({ config: config || [], form })
+    const [renderEditor] = usePrefixDataEdit({ config: config || [], form, comment})
 
     //替代原本的contentRendererFactory()的位置; 创建内容渲染器函数，但不再调用 hooks
     const content = (
