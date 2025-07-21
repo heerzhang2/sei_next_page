@@ -631,7 +631,7 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
                                                            render={({field}) => (
                                                                <FormSelectField field={field} label={desc}
                                                                                 options={现场条件选}
-                                                                                selectClass="w-full @md:w-[20rem]"
+                                                                                selectClass="w-full @md:max-w-[20rem]"
                                                                                 value={tabledArr[index] ? tabledArr[index][tag] : ""}
                                                                />
                                                            )}

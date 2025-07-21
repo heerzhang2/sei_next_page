@@ -173,20 +173,20 @@ interface FormSwitchProps {
  * */
 export function FormSwitch({ field, label, className, switchClass }: FormSwitchProps) {
     const id = useId() + "-" + field.name
-    const { error, formItemId } = useFormField()
     return (
         <FormItem className={cn("pt-2 w-full break-inside-avoid", className)}>
-            <FormLabel className="select-text">{label}</FormLabel>
+            <FormLabel htmlFor={id} className="select-text">{label}</FormLabel>
             <FormControl>
-                <Switch  id={formItemId}
-                        checked={field.value || false}
-                        name={field.name}
-                        onCheckedChange={field.onChange}
-                        className={cn("h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]",
-                            switchClass)}
+                <Switch  id={id}
+                         checked={field.value || false}
+                         name={field.name}
+                         onCheckedChange={field.onChange}
+                         className={cn("h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]",
+                             switchClass)}
                 />
             </FormControl>
             <FormMessage />
         </FormItem>
     )
 }
+

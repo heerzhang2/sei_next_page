@@ -75,7 +75,7 @@ export const Accessories = ({
                             )}/>
                             <FormField name={`安阀检.Y`} control={form.control} render={({field}) => (
                                 <FormSelectField options={YesNos} label={'是否在校验有效期内'}
-                                                 field={field} selectClass="w-full @md:w-[20rem]"/>
+                                                 field={field} selectClass="w-full @md:max-w-[20rem]"/>
                             )}/>
                         </div>
                         <Separator className="my-2"/>
@@ -95,7 +95,7 @@ export const Accessories = ({
                             )}/>
                             <FormField name={`爆片检.Y`} control={form.control} render={({field}) => (
                                 <FormSelectField options={YesNos} label={'是否按期更换'}
-                                                 field={field} selectClass="w-full @md:w-[20rem]"/>
+                                                 field={field} selectClass="w-full @md:max-w-[20rem]"/>
                             )}/>
                         </div>
                         <Separator className="my-2"/>
@@ -115,7 +115,7 @@ export const Accessories = ({
                             )}/>
                             <FormField name={`急断阀.Y`} control={form.control} render={({field}) => (
                                 <FormSelectField options={YesNos} label={'是否完好'}
-                                                 field={field} selectClass="w-full @md:w-[20rem]"/>
+                                                 field={field} selectClass="w-full @md:max-w-[20rem]"/>
                             )}/>
                         </div>
                         <Separator className="my-2"/>
@@ -135,11 +135,11 @@ export const Accessories = ({
                             )}/>
                             <FormField name={`压表检.Y`} control={form.control} render={({field}) => (
                                 <FormSelectField options={YesNos} label={'是否在检定有效期内'}
-                                                 field={field} selectClass="w-full @md:w-[20rem]"/>
+                                                 field={field} selectClass="w-full @md:max-w-[20rem]"/>
                             )}/>
                             <FormField name={`压表检.IS`} control={form.control} render={({field}) => (
                                 <FormSelectField options={YesNos} label={'无检定要求'}
-                                                 field={field} selectClass="w-full @md:w-[20rem]"/>
+                                                 field={field} selectClass="w-full @md:max-w-[20rem]"/>
                             )}/>
                         </div>
                     </CardContent>

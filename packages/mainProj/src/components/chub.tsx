@@ -17,10 +17,11 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import {FormControl, FormItem, FormLabel, FormMessage, useFormField} from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 // 修改 CollapsibleFormSection 组件，添加触摸屏检测
 import { useTouchDevice } from "@/hooks/use-touch-device"
+import {Switch} from "@/components/ui";
 
 /*v0.dev自动帮忙写代码，替代旧的UI库代码。
  * */

@@ -72,10 +72,9 @@ function processTableSection(section: ReactNode, columnWidths: string[]): ReactN
 * */
 export function FlexibleTable({ children, columnWidths, className, variant = "default", id }: FlexibleTableProps) {
   const variantStyles = {
-    default: "border rounded-md",
+    default: "border border-gray-700 rounded-md",
     borderless: "",
   }
-
   // Process column widths for colgroup
   const processedWidths = processColumnWidths(columnWidths)
 
