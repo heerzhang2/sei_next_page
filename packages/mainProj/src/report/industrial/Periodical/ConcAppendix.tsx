@@ -7,9 +7,10 @@ import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import { useFormFramework} from "@/report/hook/useFormFramework";
 import {Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
-import {BlobInputList, CollapsibleFormSection, InputDatalist} from "@/components/chub";
+import {BlobInputList, ClearableSelect, CollapsibleFormSection, InputDatalist} from "@/components/chub";
 import {OmniPref, useOmnipotentPref, useOmniPrefTitle} from "@/report/hook/useOmnipotentPref";
 import {customPrefI} from "@/report/common/pressure";
+import {clcOptions} from "@/report/common/ActionMapItem";
 
 const setConfig结论 =(orc:any,edit:boolean)=> [
     ['资料审查', [{}], '资料审查'],
@@ -107,6 +108,20 @@ export const ConcAppendix = ({
                                                 <FormMessage />
                                             </FormItem>
                                         )}
+                                    />
+                                    <FormField control={form.control} name={`${name}.r`}
+                                               render={({field}) => (
+                                                   <FormItem className="pt-2 w-full break-inside-avoid">
+                                                       <FormLabel className="select-text">结果判定</FormLabel>
+                                                       <FormControl>
+                                                           <ClearableSelect field={field} options={clcOptions}
+                                                                            onClear={() => {
+                                                                                form.setValue(`${name}.r`, "")
+                                                                            }}/>
+                                                       </FormControl>
+                                                       <FormMessage/>
+                                                   </FormItem>
+                                               )}
                                     />
                                     <FormField
                                         control={form.control}
