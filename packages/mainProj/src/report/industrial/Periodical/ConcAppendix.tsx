@@ -7,10 +7,17 @@ import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import { useFormFramework} from "@/report/hook/useFormFramework";
 import {Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
-import {BlobInputList, ClearableSelect, CollapsibleFormSection, InputDatalist} from "@/components/chub";
+import {
+    BlobInputList,
+    ClearableSelect,
+    CollapsibleFormSection,
+    HybridInputSelect,
+    InputDatalist
+} from "@/components/chub";
 import {OmniPref, useOmnipotentPref, useOmniPrefTitle} from "@/report/hook/useOmnipotentPref";
 import {customPrefI} from "@/report/common/pressure";
 import {clcOptions} from "@/report/common/ActionMapItem";
+import {FormHybridSelect, FormSwitch} from "@/components/shub";
 
 const setConfig结论 =(orc:any,edit:boolean)=> [
     ['资料审查', [{}], '资料审查'],
@@ -30,7 +37,11 @@ const setConfig结论 =(orc:any,edit:boolean)=> [
     ...customPrefI('结论它', 7, orc, edit),
 ] as OmniPref[];
 
-
+const specificationOptions = ["DN50 PN16", "DN80 PN25", "基本符合要求", "DN150 PN25",
+    `sdfsdfdsf
+    会讲故事的方法关键时刻的方法
+    士大夫地方`,
+    "DN200 PN16"]
 const 检验结果选=['符合要求','基本符合要求','不符合要求'];
 export const 等级评定选=['1级','2级','3级','4级'];
 interface Props extends InternalItemProps {
@@ -96,7 +107,7 @@ export const ConcAppendix = ({
                                                    </FormItem>
                                                )}
                                     />}
-                                    <FormField
+                                    {/*<FormField
                                         control={form.control}
                                         name={`${name}.r`}
                                         render={({ field }) => (
@@ -122,6 +133,13 @@ export const ConcAppendix = ({
                                                        <FormMessage/>
                                                    </FormItem>
                                                )}
+                                    />*/}
+                                    <FormField
+                                        control={form.control}
+                                        name={`${name}.r`}
+                                        render={({ field }) => (
+                                            <FormHybridSelect field={field} label='检验结果' sing options={检验结果选}/>
+                                        )}
                                     />
                                     <FormField
                                         control={form.control}

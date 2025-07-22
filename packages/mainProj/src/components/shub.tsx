@@ -6,7 +6,7 @@ import {usePageSectionOrientation} from "@/components/page-section-orientation";
 import * as React from "react";
 import type {ControllerRenderProps} from "react-hook-form";
 import {FormControl, FormItem, FormLabel, FormMessage, Switch} from "@/components/ui";
-import {ClearableSelect} from "@/components/chub";
+import {ClearableSelect, HybridInputSelect} from "@/components/chub";
 import {useFormField} from "@/components/ui/form";
 
 
@@ -190,3 +190,38 @@ export function FormSwitch({ field, label, className, switchClass }: FormSwitchP
     )
 }
 
+interface FormHybridSelectProps extends HybridInputSelectProps{
+    field: ControllerRenderProps<any, any>
+    label: any
+    options?: string[]
+    unit?: any
+    rows?: number
+    defSel?: boolean    //默认选择模式的：
+    /** 是否使用input替代textarea做输入框框，没法用多行的 */
+    sing?: boolean
+}
+/*配套 useForm， 简化嵌套的形式；
+ * */
+export function FormHybridSelect({field, label,options, defSel, rows=1, unit,
+                                     placeholder="选择或输入", sing
+                                 }: FormHybridSelectProps) {
+    const id = useId()
+    return (
+        <FormItem>
+            <FormLabel htmlFor={id}>{label}</FormLabel>
+            <FormControl>
+                <HybridInputSelect id={id}
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    options={options}
+                    placeholder={placeholder}
+                    rows={rows}
+                    defaultMode={defSel? "select" : "input"}
+                    unit={unit}
+                    sing={sing}
+                />
+            </FormControl>
+            <FormMessage />
+        </FormItem>
+    )
+}
