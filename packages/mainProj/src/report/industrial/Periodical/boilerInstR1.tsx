@@ -27,6 +27,8 @@ import {MacroscopicVw} from "@/report/industrial/Periodical/Macroscopic";
 import {AccessoriesVw} from "@/report/industrial/Periodical/Accessories";
 import {MaterialReviewVw} from "@/report/industrial/Periodical/MaterialReview";
 import {ConcAppendixVw} from "@/report/industrial/Periodical/ConcAppendix";
+import {注意事项IndPl, 首页设备IndPer} from "@/report/industrial/Periodical/rarelyVary";
+import {UltrasoundVw} from "@/report/cm/sonic/Ultrasound1";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -39,6 +41,11 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     MAGNT_TS: {
         catKey: "磁粉检测",
         component: MagneticVw,
+        cat: cat_Magne
+    },
+    SONIC_TS: {
+        catKey: "超声波检测",
+        component: UltrasoundVw,
         cat: cat_Magne
     },
 }
@@ -139,14 +146,16 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                             <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Entrance#Entrance`}>
                                 <h1 className="text-3xl text-center print:mt-6">工业管道定期检验报告</h1>
                             </JumpTab>
-                            <span className="block text-center text-sm print:mt-4"> （ FJB/GB 10082-0-2021 ）</span>
+                            <span className="block text-center text-sm print:mt-4"> （ FJB/DC-1040-0-2018 ）</span>
                         </div>
-                        {首页设备概况BoilI(orc, rep)}
+                        {首页设备IndPer(orc, rep)}
                         <div className="text-center print:break-after-page print:break-inside-avoid">{落款单位地址()}</div>
                     </div>
                 </div>
-                {注意事项GasC({ rep, comply: "书为依据《锅炉安全技术规程》制定，适用于电站锅炉安装监督检验的结论报告" })}
-                <DirectoryPagePress orc={orc} rep={rep} />
+                {注意事项IndPl({ rep,
+                    comply: '书为依据《压力管道安全技术监察规程——工业管道》（TSG D0001-2009）、《压力管道定期检验规则——工业管道》（TSG D7005-2018）制定，适用于工业管道定期检验报告的结论报告，检验结论仅代表该设备在检验时的安全状况'
+                })}
+                <DirectoryPagePress orc={orc} rep={rep} nApxc suffix/>
 
                 <ConclusionVw orc={orc} rep={rep}/>
                 {检验核准WaterJj({ orc, rep, jyt: "编制" })}
@@ -159,6 +168,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {renderSub('THICK_MS')}
                 {renderSub('MAGNT_TS')}
 
+                {renderSub('SONIC_TS')}
                 {mapFxian.get('管道特性表')?.do &&
                     <PipelineCharacteristics orc={orc} rep={rep}/>
                 }

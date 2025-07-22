@@ -199,7 +199,7 @@ export const PipeLineDiagram: React.FC<PipeLineDiagramProps> = ({
     })
     const addIdx = orc?.单图表?.length || 0
     return (
-        <div className="space-y-1">
+        <div className="space-y-1 print:break-before-page">
             <div id="LineDiagram" className="text-center print:hidden">
                 {!orc?.单图表?.length>0 &&
                     <RepLink ori rep={rep} tag={"LineDiagram"}>

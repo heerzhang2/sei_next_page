@@ -1261,7 +1261,8 @@ export function HybridInputSelect({
                             <button id={id}
                                 type="button"
                                 onClick={handleShowOptions}
-                                className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                                className={cn("p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring",
+                                                        inputValue ? "absolute right-[2.5rem]" : "")}
                                 aria-label="显示选项"
                                 title="显示选项"
                             >
@@ -1272,7 +1273,7 @@ export function HybridInputSelect({
                 </div>
 
                 {/* 单位显示 */}
-                {unit && <div className="ml-2 flex items-start pt-2 whitespace-nowrap flex-shrink-0">{unit}</div>}
+                {unit && <div className="ml-1 flex items-start pt-2 whitespace-nowrap flex-shrink-0">{unit}</div>}
             </div>
 
             {/* 选项下拉列表 */}

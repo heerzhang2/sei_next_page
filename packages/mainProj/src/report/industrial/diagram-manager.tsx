@@ -232,9 +232,9 @@ export const SingleLineDiagram = (
 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div>
-                                <Label htmlFor="startIndex">起始序号</Label>
+                                <Label htmlFor="startIdxPSol">起始序号</Label>
                                 <Input
-                                    id="startIndex"
+                                    id="startIdxPSol"
                                     type="number"
                                     min={1}
                                     max={currentUnits.length}
@@ -244,9 +244,9 @@ export const SingleLineDiagram = (
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="endIndex">结束序号</Label>
+                                <Label htmlFor="endIdxDiam">结束序号</Label>
                                 <Input
-                                    id="endIndex"
+                                    id="endIdxDiam"
                                     type="number"
                                     min={1}
                                     max={currentUnits.length}
@@ -256,9 +256,9 @@ export const SingleLineDiagram = (
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="targetIndex">目标位置</Label>
+                                <Label htmlFor="targetIdxDiam">目标位置</Label>
                                 <Input
-                                    id="targetIndex"
+                                    id="targetIdxDiam"
                                     type="number"
                                     min={1}
                                     max={currentUnits.length + 1}

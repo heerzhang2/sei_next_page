@@ -134,13 +134,9 @@ export const ConcAppendix = ({
                                                    </FormItem>
                                                )}
                                     />*/}
-                                    <FormField
-                                        control={form.control}
-                                        name={`${name}.r`}
-                                        render={({ field }) => (
-                                            <FormHybridSelect field={field} label='检验结果' sing options={检验结果选}/>
-                                        )}
-                                    />
+                                    <FormField name={`${name}.r`} control={form.control} render={({ field }) => (
+                                        <FormHybridSelect field={field} label='检验结果' options={检验结果选}/>
+                                    )}/>
                                     <FormField
                                         control={form.control}
                                         name={`${name}.c`}

@@ -88,7 +88,7 @@ export default function SubRep({
                 </JumpTab>
                 :
                 <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/_Controller?modelkey=${modType}`}>
-                    <div className="block pt-2 print:hidden">新增加：{title}的分项 {'>'}</div>
+                    <div className="block p-4 text-2xl font-bold print:hidden">新增加：{title}的分项 {'>'}</div>
                 </JumpTab>
             }
             {localIdx.map((seq: number, k: number) => {
@@ -117,7 +117,7 @@ export default function SubRep({
                 const sIdx = dat?.[`_${modType}`] ?? [];
                 return (<div key={i}>
                     <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/_Controller?subrid=${subrep?.id}&modelkey=${modType}`}>
-                        <div className="block pt-2 print:hidden">报告的独立流转分项 {'>>'}</div>
+                        <div className="block p-4 text-2xl font-bold print:hidden">报告的独立流转分项 {'>>'}</div>
                     </JumpTab>
                     {sIdx.map((seq: number, k: number) => {
                         const subStore=dat?.[`_${modType}_${seq}`]  || {};

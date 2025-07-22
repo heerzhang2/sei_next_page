@@ -22,24 +22,27 @@ import {Accessories} from "@/report/industrial/Periodical/Accessories";
 import {MaterialReview, MaterialReviewVw} from "@/report/industrial/Periodical/MaterialReview";
 import {ConcAppendix} from "@/report/industrial/Periodical/ConcAppendix";
 import {ConclusionIndPer} from "@/report/industrial/Periodical/Conclusion";
+import {config超声仪概} from "@/report/cm/sonic/Ultrasound1";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
- *  因为模板已经里另外做一个ConcAppendix附页编辑器了，参数na:不需要再设置了
+ *  因为模板已经里另外做一个ConcAppendix附页编辑器了，参数na:不需要再设置了 ha:也不要用;
+ *  这里缺少关联 modType :
  * */
 export const Projects记录 = [
-    {name:'资料审查',do:true},
+    {name:'工业管道定期检验结论',do:true},
+    {name:'资料审查',do:true,ml:'工业管道资料审查报告'},
     {name:'宏观检验',do:true,ml:'工业管道宏观检验报告'},
     {name:'安全附件与仪表检验',do:false,ml:'安全附件与仪表检验报告'},
-    // {name:'压力容器资料审查',do:true,ha:'Conclusion'},   {name:'衍射时差法（TOFD）超声检测',ha:'rp_tofd_'},
+    // {name:'压力容器资料审查',do:true,ha:''},   {name:'衍射时差法（TOFD）超声检测',ha:''},
     {name:'壁厚测定',},
     {name:'渗透检测',},
     {name:'射线检测'},
     {name:'磁粉检测',ml:'磁粉检测报告',},
-    {name:'超声波检测',ml:'超声波检测报告',ha:'rp_sonic_'},
-    {name:'光谱分析',ml:'材料成分分析（光谱分析）报告',ha:'rp_spectrA_'},
-    {name:'光谱检测',ha:'rp_optical_'},
-    {name:'硬度检测',ha:'rp_hardness_'},
+    {name:'超声波检测',ml:'超声波检测报告'},
+    {name:'光谱分析',ml:'材料成分分析（光谱分析）报告'},
+    {name:'光谱检测',},
+    {name:'硬度检测',},
     {name:'金相分析'},
     {name:'泄漏试验'},
     {name:'耐压试验'},
@@ -55,6 +58,7 @@ const recordPrintList =[
     createItem('Survey', <DeviceSurveyD config={config设备概况} label={'检验结论报告-概况'} comment={{8:"以下8个性能参数"}}/>),
     createItem('CertificateSummary', <DeviceSurveyD config={config证书概要} label={'证书的设备概况部分'}/>),
     createItem('CertMemo', <CertMemo label={'证书-说明'} />),
+
     createItem('Conclusion', <ConclusionIndPer startd cjry label={'检验结论报告-下结论'}/>),
     createItem('ConcAppendix', <ConcAppendix label="工业管道定期检验结论报告附页"/>),
     createItem('MaterialReview', <MaterialReview label="工业管道资料审查报告"/>),
@@ -77,7 +81,12 @@ const recordPrintList =[
         createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
         createItem('MangConclusion', <FxSimpConclus label={'磁粉检测-检测结果'} clc="结果" clist={["1级"]}/>),
     ]),
-    createItem('Explanatory', <Explanatory label={'YY.3锅炉安装施工过程概述'}/>),
+    aggregateProj('超声波检测', 'SONIC_TS', [
+        createItem('SoniInstrument', <DeviceSurveyFx config={config超声仪概} label='超声波检测-概要仪器'/>),
+        createItem('MangDiagram', <FxDiagram label="检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={mang示说选}/>),
+        createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
+        createItem('MangConclusion', <FxSimpConclus label={'磁粉检测-检测结果'} clc="结果" clist={["1级"]}/>),
+    ]),
 ];
 
 

@@ -442,9 +442,9 @@ export const PropertySolidify = (
 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div>
-                                <Label htmlFor="startIndex">起始序号</Label>
+                                <Label htmlFor="startIxPsol">起始序号</Label>
                                 <Input
-                                    id="startIndex"
+                                    id="startIxPsol"
                                     type="number"
                                     min={1}
                                     max={currentUnits.length}
@@ -455,9 +455,9 @@ export const PropertySolidify = (
                             </div>
 
                             <div>
-                                <Label htmlFor="endIndex">结束序号</Label>
+                                <Label htmlFor="endIdxPsol">结束序号</Label>
                                 <Input
-                                    id="endIndex"
+                                    id="endIdxPsol"
                                     type="number"
                                     min={1}
                                     max={currentUnits.length}
@@ -468,9 +468,9 @@ export const PropertySolidify = (
                             </div>
 
                             <div>
-                                <Label htmlFor="targetIndex">目标位置</Label>
+                                <Label htmlFor="targetIxPSol">目标位置</Label>
                                 <Input
-                                    id="targetIndex"
+                                    id="targetIxPSol"
                                     type="number"
                                     min={1}
                                     max={currentUnits.length + 1}

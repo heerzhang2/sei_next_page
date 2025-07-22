@@ -7,11 +7,13 @@ interface InspectionApprovalProps {
     orc: any
     rep: any
     suffix?: boolean
+    nApxc?: boolean     //没有附页附图列的：
 }
 /**允许目录内容可超过1张纸张的
  * 目录页VS
  * */
-export const DirectoryPagePress= ({ orc, rep, suffix }:InspectionApprovalProps) => {
+export const DirectoryPagePress= ({ orc, rep, suffix,nApxc }:InspectionApprovalProps) => {
+    const fixedCw=nApxc? ["9%", "%", "18%"] : ["7%", "%", "11%", "18%"]
     let muluSn=1;       //目录显示项目序号
     //<div className="relative h-full print:h-[calc(100vh-3rem)] flex flex-col justify-center print:mb-10">  print:mt-auto
     return (
@@ -23,14 +25,14 @@ export const DirectoryPagePress= ({ orc, rep, suffix }:InspectionApprovalProps) 
                 <div className="flex justify-end">
                     <span className="text-sm mr-4 text-right md:text-right">报告编号：{rep.isp.no}</span>
                 </div>
-                <FlexibleTable className="text-sm w-full border-collapse" columnWidths={["7%", "%", "11%", "18%"]}>
+                <FlexibleTable className="text-sm w-full border-collapse" columnWidths={fixedCw}>
                     <TableHeader>
                         <RepLink rep={rep} ori tag="ALL">
                             <TableRow>
                                 <CCell className="text-xs leading-[1] p-0">序号</CCell>
                                 <CCell>项目</CCell>
                                 <CCell>页号</CCell>
-                                <CCell><span className="text-sm">附页、附图</span></CCell>
+                                {!nApxc && <CCell><span className="text-sm">附页、附图</span></CCell>}
                             </TableRow>
                         </RepLink>
                     </TableHeader>
@@ -44,7 +46,7 @@ export const DirectoryPagePress= ({ orc, rep, suffix }:InspectionApprovalProps) 
                                         <CCell className="text-sm">{muluSn++}</CCell>
                                         <TableCell className="text-sm border border-gray-700">{prj?.ml ? prj?.ml : suffix? (prj?.name + '报告') : prj?.name}</TableCell>
                                         <CCell className="text-sm">{prj?.page}</CCell>
-                                        <CCell className="text-sm">{prj?.apx??'／'}</CCell>
+                                        {!nApxc && <CCell className="text-sm">{prj?.apx??'／'}</CCell>}
                                     </TableRow>
                                 </JumpTab>
                             );
@@ -53,7 +55,7 @@ export const DirectoryPagePress= ({ orc, rep, suffix }:InspectionApprovalProps) 
                         { !(orc?.Projects?.length>0) &&
                             <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}>
                                 <TableRow>
-                                    <CCell colSpan={4}>还未初始化！<br/>空目录表</CCell>
+                                    <CCell colSpan={nApxc? 3:4}>还未初始化！<br/>空目录表</CCell>
                                 </TableRow>
                             </JumpTab>
                         }
