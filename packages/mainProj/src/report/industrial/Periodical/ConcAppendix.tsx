@@ -11,8 +11,7 @@ import {
     BlobInputList,
     ClearableSelect,
     CollapsibleFormSection,
-    HybridInputSelect,
-    InputDatalist
+    InputDatalist, InputSimplelist
 } from "@/components/chub";
 import {OmniPref, useOmnipotentPref, useOmniPrefTitle} from "@/report/hook/useOmnipotentPref";
 import {customPrefI} from "@/report/common/pressure";
@@ -107,14 +106,14 @@ export const ConcAppendix = ({
                                                    </FormItem>
                                                )}
                                     />}
-                                    {/*<FormField
+                                    {/* <FormField
                                         control={form.control}
-                                        name={`${name}.r`}
+                                        name={`${name}.c`}
                                         render={({ field }) => (
                                             <FormItem className="pt-2 w-full break-inside-avoid">
-                                                <FormLabel className="select-text">检验结果:</FormLabel>
+                                                <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <InputDatalist  datalist={检验结果选}  {...field}  />
+                                                    <InputSimplelist datalist={等级评定选} {...field} autoComplete="on"/>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -135,7 +134,7 @@ export const ConcAppendix = ({
                                                )}
                                     />*/}
                                     <FormField name={`${name}.r`} control={form.control} render={({ field }) => (
-                                        <FormHybridSelect field={field} label='检验结果' options={检验结果选}/>
+                                        <FormHybridSelect field={field} label='检验结果' options={检验结果选} sing autoComplete="on"/>
                                     )}/>
                                     <FormField
                                         control={form.control}
@@ -144,7 +143,7 @@ export const ConcAppendix = ({
                                             <FormItem className="pt-2 w-full break-inside-avoid">
                                                 <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <InputDatalist datalist={等级评定选} {...field} autoComplete="on"/>
+                                                    <InputSimplelist datalist={等级评定选} {...field} autoComplete="on"/>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

@@ -232,8 +232,7 @@ interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
     unit?: any
 }
 
-/**
- * A textarea with autocomplete dropdown functionality
+/**支持多行输入的；  缺点：textarea无法记住用户的历史输入；没有清空按钮在手机上不方便。
  * 若是放入FormItem底下的情况：不要自行去设置id的，不一致；<FormItem会转换的。
  */
 export function BlobInputList({
@@ -340,6 +339,7 @@ export function BlobInputList({
                   setOpen(true)
               },
           })}
+          autoComplete="on"
       />
             {unit}
             <FloatingPortal>
@@ -1195,7 +1195,7 @@ export function HybridInputSelect({
                                 "w-full rounded-md border border-input bg-background p-2 pr-20 resize-vertical focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                                 inputClassName,
                             )}
-                            autoComplete="off"
+                            // autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
                             spellCheck={false}
@@ -1319,6 +1319,60 @@ export function HybridInputSelect({
                     </FloatingFocusManager>
                 )}
             </FloatingPortal>
+        </div>
+    )
+}
+
+//最为简易的版本，台式机可用，手机的表现就不好了。 InputDatalist的原始版本；
+export function InputSimplelist({
+                                  fullWidth = true,
+                                  datalist = [],
+                                  className,
+                                  style,
+                                  onListChange,
+                                  value,
+                                  onChange,
+                                  id,
+                                  unit,
+                                  ...other
+                              }: InputDatalistProps) {
+    const [inputValue, setInputValue] = useState(value || "")
+    const uid = id //useId()避免不会记住用户输入文字
+    const listId = `list-${uid}`
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value
+        setInputValue(newValue)
+
+        if (onChange) {
+            onChange(e)
+        }
+        if (onListChange) {
+            onListChange(newValue)
+        }
+    }
+
+    return (
+        <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
+            <datalist id={listId}>
+                {datalist.map((option, i) => (
+                    <option key={i} value={option} />
+                ))}
+            </datalist>
+
+            <input
+                className={cn(
+                    "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                    fullWidth ? "w-full" : "w-auto",
+                    className,
+                )}
+                value={inputValue}
+                onChange={handleChange}
+                list={listId}
+                id={id}
+                {...other}
+            />
+            {unit}
         </div>
     )
 }
