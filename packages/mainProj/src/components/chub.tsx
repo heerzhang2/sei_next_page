@@ -891,7 +891,7 @@ export function InputDatalist({
                     onBlur={handleBlur}
                     list={!isMobile ? listId : undefined}
                     id={id}
-                    autoComplete="off"
+                    // autoComplete="off"  # autoComplete="on"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}

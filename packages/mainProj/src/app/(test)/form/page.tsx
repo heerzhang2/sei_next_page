@@ -12,6 +12,7 @@ import { useStorage } from "@/report/StorageContext"
 import { Button } from "@/components/ui/button"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense } from "react"
+import Component from "./input-history-demo"
 
 function PageContent() {
     const router = useRouter()
@@ -50,6 +51,7 @@ export default function Page() {
     const { storage } = useStorage()
     return (
             <Suspense fallback={<div>Loading...</div>}>
+                <Component />
                     <PageContent />
             </Suspense>
 
