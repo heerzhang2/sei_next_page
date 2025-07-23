@@ -313,7 +313,7 @@ export const usePrefixDataTable= ({orc, config, rep, parentOrc:orgParOrc, slash,
 };
 
 /**特殊的： 统一都是3列的概况。 支持前缀；
- * 规矩的3栏目， 若异常的只能拆分做了。 布局(2列标题区+1列输入文本)*3字段的==9列。
+ * 规矩的3栏目， 若异常的只能拆分做了。 布局(2列标题区+1列输入文本)*3字段的=9列。但是也可以支持2栏目配置的输出就是6列。
  * */
 export const useThreeColumnSurvey= ({orc, config, rep, parentOrc:orgParOrc, slash,embed} : PrefixDataTableProps
 ) => {

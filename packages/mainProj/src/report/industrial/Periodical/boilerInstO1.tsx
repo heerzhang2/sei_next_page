@@ -5,10 +5,7 @@ import {DeviceSurveyD, DeviceSurveyFx} from "@/report/common/survey";
 import {EntranceSetup, config设备概况, config证书概要,} from "./orcBase";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
-import {Explanatory} from "@/report/power/boilInstall/Explanatory";
-import {ConclusionBoiler} from "@/report/power/boilInstall/Conclusion";
 import {CertMemo} from "@/report/power/boilInstall/CertMemo";
-import {BoilerDiagram} from "@/report/power/boilInstall/BoilerDiagram";
 import {config壁厚测仪, TkmsConclusion, TkmsMeasurement, TkmsPartSummary} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 import {FxDiagram} from "@/report/cm/thickm/FxDiagram";
@@ -19,10 +16,10 @@ import {SingleLineDiagram} from "@/report/industrial/diagram-manager";
 import {LineDiagramFile} from "@/report/industrial/diagram-file";
 import {Macroscopic} from "@/report/industrial/Periodical/Macroscopic";
 import {Accessories} from "@/report/industrial/Periodical/Accessories";
-import {MaterialReview, MaterialReviewVw} from "@/report/industrial/Periodical/MaterialReview";
+import {MaterialReview} from "@/report/industrial/Periodical/MaterialReview";
 import {ConcAppendix} from "@/report/industrial/Periodical/ConcAppendix";
 import {ConclusionIndPer} from "@/report/industrial/Periodical/Conclusion";
-import {config超声仪概} from "@/report/cm/sonic/Ultrasound1";
+import {config超声仪概, SoniEvaluation, soni结果选} from "@/report/cm/sonic/Ultrasound1";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -83,9 +80,8 @@ const recordPrintList =[
     ]),
     aggregateProj('超声波检测', 'SONIC_TS', [
         createItem('SoniInstrument', <DeviceSurveyFx config={config超声仪概} label='超声波检测-概要仪器'/>),
-        createItem('MangDiagram', <FxDiagram label="检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={mang示说选}/>),
-        createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
-        createItem('MangConclusion', <FxSimpConclus label={'磁粉检测-检测结果'} clc="结果" clist={["1级"]}/>),
+        createItem('SoniEvaluation', <SoniEvaluation label='焊接接头超声检测-结果评定表'/>),
+        createItem('SoniConclusion', <FxSimpConclus label={'超声波检测-检测结果'} clc="结果" clist={soni结果选}/>),
     ]),
 ];
 

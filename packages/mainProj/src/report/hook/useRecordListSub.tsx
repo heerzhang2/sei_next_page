@@ -9,6 +9,7 @@ import {useItemsMapPressure} from "@/report/common/pressure";
 
 
 /**支持可独立流转的分项。可重复分项。
+ * 但是因ALL展开的右边列表形态页面中：可重复分项modelkey的对应的编辑器列表并没有合并到主报告中了。
  * */
 export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                                   modAction: string, verId: string,

@@ -115,6 +115,7 @@ export function TableFooter({ className, ...props }: React.ComponentProps<"tfoot
   )
 }
 
+//无法把TableHeader布局放在TableBody位置下方的。
 export function TableBody({ children }: { children: ReactNode }) {
   return <tbody>{children}</tbody>
 }

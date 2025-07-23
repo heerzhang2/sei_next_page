@@ -28,7 +28,7 @@ import {AccessoriesVw} from "@/report/industrial/Periodical/Accessories";
 import {MaterialReviewVw} from "@/report/industrial/Periodical/MaterialReview";
 import {ConcAppendixVw} from "@/report/industrial/Periodical/ConcAppendix";
 import {注意事项IndPl, 首页设备IndPer} from "@/report/industrial/Periodical/rarelyVary";
-import {UltrasoundVw} from "@/report/cm/sonic/Ultrasound1";
+import {cat_Sonic, UltrasoundVw} from "@/report/cm/sonic/Ultrasound1";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -46,7 +46,8 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     SONIC_TS: {
         catKey: "超声波检测",
         component: UltrasoundVw,
-        cat: cat_Magne
+        //【不要复制这个】报错Encountered two children with the same key, `#MangInstrument_1`. Keys should be unique
+        cat: cat_Sonic
     },
 }
 

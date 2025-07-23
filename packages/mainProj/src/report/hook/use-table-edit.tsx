@@ -17,9 +17,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger, Switch,
 } from "@/components/ui"
-import {BlobInputList, FormSelectField, MemoDateInput, MemoDatesInput, SuffixInput} from "@/components/chub"
+import {
+  BlobInputList,
+  FormSelectField,
+  HybridInputSelect, InputDatalist,
+  MemoDateInput,
+  MemoDatesInput,
+  SuffixInput
+} from "@/components/chub"
 import type { UseFormReturn } from "react-hook-form"
 import {
   Check,
@@ -32,6 +39,7 @@ import {
   ArrowRight,
 } from "lucide-react"
 import { useEffect } from "react"
+import {FormHybridSelect} from "@/components/shub";
 
 export interface Each_ZdSetting extends Array<any> {
   n1: string //字段标题名
@@ -636,23 +644,20 @@ export function useTableEdit({
                       ) : (
                           <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2 p-2">
                             {config.map(([title, tag, _, extobj, park]: any, i: number) => {
-                              const { t: type, l: list, u: unit, s: size } = extobj || {}
+                              const { t: type, l: list, u: unit, s: size, a:autoComplete } = extobj || {}
                               if ((fixColumn && i < fixColumn) || !(fields?.length > 0))
                                 return <React.Fragment key={i}></React.Fragment>
+                              const eiid=park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`;    //表单项ID
                               if (type === "s")
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => <FormSelectField field={field} label={title} options={list} />}
                                     />
                                 )
                               else if (type === "d")
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full break-inside-avoid">
@@ -667,14 +672,17 @@ export function useTableEdit({
                                 )
                               else if (type === "b")
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full break-inside-avoid">
-                                              <FormLabel className="select-text">{title}</FormLabel>
-                                              <FormControl className="w-full">{/*<Switch   {...field}  />*/}</FormControl>
+                                              <FormLabel htmlFor={eiid} className="select-text">{title}</FormLabel>
+                                              <FormControl className="w-full">
+                                                <Switch  id={eiid} checked={field.value || false} name={field.name}
+                                                         onCheckedChange={field.onChange}
+                                                         className={cn("h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px] ml-8") }
+                                                />
+                                              </FormControl>
                                               <FormMessage />
                                             </FormItem>
                                         )}
@@ -682,31 +690,43 @@ export function useTableEdit({
                                 )
                               else if (type === "B")
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
                                               <FormLabel className="select-text">{title}</FormLabel>
                                               <FormControl className="w-full">
-                                                <BlobInputList  datalist={list} rows={size ?? 2} unit={unit} {...field} />
+                                                <BlobInputList  datalist={list} rows={size ?? 2} unit={unit} {...field} autoComplete={autoComplete}/>
                                               </FormControl>
                                               <FormMessage />
                                             </FormItem>
                                         )}
                                     />
                                 )
-                              else if (type === "m")
+                              else if (type === "H")
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i}  name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
+                                               control={form.control} render={({ field }) => (
+                                        <FormItem className="w-full break-inside-avoid @5xl:col-span-2">
+                                          <FormLabel htmlFor={eiid} className="select-text">{title}</FormLabel>
+                                          <FormControl className="w-full">
+                                            <HybridInputSelect id={eiid} value={field.value || ""} onChange={field.onChange}
+                                                               options={list} rows={size ?? 2} defaultMode="input" unit={unit} autoComplete={autoComplete ?? "on"}/>
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                )
+                              else if (type === "L")
+                                return (
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => (
-                                            <FormItem className="w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
+                                            <FormItem className="w-full break-inside-avoid">
                                               <FormLabel className="select-text">{title}</FormLabel>
-                                              <FormControl className="w-full">{/*<Textarea rows={4}  {...field} />*/}</FormControl>
+                                              <FormControl className="w-full">
+                                                <InputDatalist  datalist={list}  {...field} rows={size ?? 2} unit={unit} autoComplete={autoComplete ?? "on"}/>
+                                              </FormControl>
                                               <FormMessage />
                                             </FormItem>
                                         )}
@@ -714,9 +734,7 @@ export function useTableEdit({
                                 )
                               else if (type === "M")
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full break-inside-avoid">
@@ -731,9 +749,7 @@ export function useTableEdit({
                                 )
                               else if (type === "D")
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full break-inside-avoid">
@@ -748,9 +764,7 @@ export function useTableEdit({
                                 )
                               else if (unit)
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full break-inside-avoid">
@@ -765,15 +779,13 @@ export function useTableEdit({
                                 )
                               else
                                 return (
-                                    <FormField
-                                        key={i}
-                                        control={form.control}
+                                    <FormField key={i} control={form.control}
                                         name={park ? `${table}.${index}.${park}.${tag}` : `${table}.${index}.${tag}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full break-inside-avoid">
                                               <FormLabel className="select-text">{title}</FormLabel>
                                               <FormControl className="w-full">
-                                                <Input type={type === "n" ? "number" : undefined} {...field} />
+                                                <Input type={type === "n" ? "number" : undefined} {...field} autoComplete={autoComplete}/>
                                               </FormControl>
                                               <FormMessage />
                                             </FormItem>
