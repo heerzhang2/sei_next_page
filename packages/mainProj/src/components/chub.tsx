@@ -662,7 +662,8 @@ interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement>
     onListChange?: (value: string) => void
     unit?: any
 }
-//[列表优先版本]：台式机还好得，但苹果手机上面定位偏离。
+
+//[列表优先版本]：修复移动端定位问题
 export function InputDatalist({
                                   fullWidth = true,
                                   datalist = [],
@@ -680,8 +681,9 @@ export function InputDatalist({
     const [isOpen, setIsOpen] = useState(false)
     const [activeIndex, setActiveIndex] = useState<number | null>(null)
     const [isMobile, setIsMobile] = useState(false)
-    const [showAllOptions, setShowAllOptions] = useState(false) // 新增：控制是否显示全部选项
+    const [showAllOptions, setShowAllOptions] = useState(false)
 
+    // 使用固定的 ref，不再动态切换
     const inputRef = useRef<HTMLInputElement>(null)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const listRef = useRef<Array<HTMLElement | null>>([])
@@ -700,7 +702,7 @@ export function InputDatalist({
         checkMobile()
     }, [])
 
-    // Floating UI setup for mobile custom dropdown
+    // Floating UI setup - 始终使用 inputRef，不再动态切换
     const { x, y, refs, strategy, context } = useFloating<HTMLInputElement>({
         whileElementsMounted: autoUpdate,
         open: isOpen && isMobile,
@@ -765,6 +767,13 @@ export function InputDatalist({
     useEffect(() => {
         setShowClearButton(inputValue !== "")
     }, [inputValue])
+
+    // 同步 refs.setReference 和 inputRef
+    useEffect(() => {
+        if (inputRef.current && isMobile) {
+            refs.setReference(inputRef.current)
+        }
+    }, [refs, isMobile])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value
@@ -862,6 +871,25 @@ export function InputDatalist({
         }, 150)
     }
 
+    // 合并移动端的 getReferenceProps 和常规的 props
+    const inputProps = isMobile
+        ? {
+            ...getReferenceProps({
+                onChange: handleChange,
+                onKeyDown: handleKeyDown,
+                onFocus: handleFocus,
+                onBlur: handleBlur,
+            }),
+            ...other,
+        }
+        : {
+            onChange: handleChange,
+            onKeyDown: handleKeyDown,
+            onFocus: handleFocus,
+            onBlur: handleBlur,
+            ...other,
+        }
+
     return (
         <div
             ref={wrapperRef}
@@ -869,17 +897,15 @@ export function InputDatalist({
             style={style}
         >
             {/* 桌面端使用原生 datalist */}
-            {!isMobile && (
-                <datalist id={listId}>
-                    {datalist.map((option, i) => (
-                        <option key={i} value={option} />
-                    ))}
-                </datalist>
-            )}
+            <datalist id={listId}>
+                {datalist.map((option, i) => (
+                    <option key={i} value={option} />
+                ))}
+            </datalist>
 
             <div className="relative flex-1">
                 <input
-                    ref={isMobile ? refs.setReference : inputRef}
+                    ref={inputRef}
                     className={cn(
                         "min-h-8 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full",
                         // 调整右侧padding以容纳按钮
@@ -887,20 +913,14 @@ export function InputDatalist({
                         className,
                     )}
                     value={inputValue}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                    list={!isMobile ? listId : undefined}
+                    list={listId}
                     id={id}
-                    // autoComplete="off"  # autoComplete="on"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
                     data-form-type="other"
                     suppressHydrationWarning
-                    {...(isMobile ? getReferenceProps() : {})}
-                    {...other}
+                    {...inputProps}
                 />
 
                 {/* 按钮容器 */}
@@ -1015,7 +1035,7 @@ interface HybridInputSelectProps {
 /**手机需要多一次点击切换模式的，在电脑上若配列表初始化模式的感觉罗嗦。
  * 替换，旧的组件InputDatalist 和 BlobInputList；
  * 问题：底下的<datalist id={listId}>根本就无法生效,可选择列表不能自己输入之后记住并增加的。
-* */
+ * */
 export function HybridInputSelect({
                                       value = "",
                                       onChange,
@@ -1031,10 +1051,11 @@ export function HybridInputSelect({
                                       required,
                                       disabled,
                                       id,
-                                      defaultMode = "select", sing,
+                                      defaultMode = "select",
+                                      sing,
                                       ...other
                                   }: HybridInputSelectProps) {
-    const ComInput=sing? "input" : "textarea"
+    const ComInput = sing ? "input" : "textarea"
     const [inputValue, setInputValue] = useState(value)
     const [isInputMode, setIsInputMode] = useState(defaultMode === "input")
     const [isOpen, setIsOpen] = useState(false)
@@ -1097,10 +1118,11 @@ export function HybridInputSelect({
 
     // 过滤选项
     const filteredOptions = React.useMemo(() => {
-       const opts=inputValue && !isInputMode
-            ? allOptions.filter((option) => option.toLowerCase().includes(inputValue.toLowerCase()))
-            : allOptions
-       return (opts.length<=0)? allOptions : opts;
+        const opts =
+            inputValue && !isInputMode
+                ? allOptions.filter((option) => option.toLowerCase().includes(inputValue.toLowerCase()))
+                : allOptions
+        return opts.length <= 0 ? allOptions : opts
     }, [inputValue, isInputMode, allOptions])
 
     // 处理输入变化
@@ -1213,7 +1235,7 @@ export function HybridInputSelect({
                                 className: cn(
                                     "w-full rounded-md border border-input bg-background p-2 pr-20 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                                     inputClassName,
-                                    inputValue ? "min-h-[3rem]":"min-h-[1.5rem]",
+                                    inputValue ? "min-h-[3rem]" : "min-h-[1.5rem]",
                                 ),
                                 tabIndex: 0,
                                 role: "combobox",
@@ -1261,11 +1283,14 @@ export function HybridInputSelect({
 
                         {/* 下拉按钮（仅选择模式显示） */}
                         {!isInputMode && (
-                            <button id={id}
+                            <button
+                                id={id}
                                 type="button"
                                 onClick={handleShowOptions}
-                                className={cn("p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring",
-                                                        inputValue ? "absolute right-[2.5rem]" : "")}
+                                className={cn(
+                                    "p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring",
+                                    inputValue ? "absolute right-[2.5rem]" : "",
+                                )}
                                 aria-label="显示选项"
                                 title="显示选项"
                             >
@@ -1328,17 +1353,17 @@ export function HybridInputSelect({
 
 //[淘汰！] 简易版本，台式机还好得，但苹果手机就没法用。
 export function InputSimplelist({
-                                  fullWidth = true,
-                                  datalist = [],
-                                  className,
-                                  style,
-                                  onListChange,
-                                  value,
-                                  onChange,
-                                  id,
-                                  unit,
-                                  ...other
-                              }: InputDatalistProps) {
+                                    fullWidth = true,
+                                    datalist = [],
+                                    className,
+                                    style,
+                                    onListChange,
+                                    value,
+                                    onChange,
+                                    id,
+                                    unit,
+                                    ...other
+                                }: InputDatalistProps) {
     const [inputValue, setInputValue] = useState(value || "")
     const uid = id //useId()避免不会记住用户输入文字
     const listId = `list-${uid}`

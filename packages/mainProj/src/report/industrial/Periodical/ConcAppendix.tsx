@@ -118,21 +118,8 @@ export const ConcAppendix = ({
                                                 <FormMessage />
                                             </FormItem>
                                         )}
-                                    />
-                                    <FormField control={form.control} name={`${name}.r`}
-                                               render={({field}) => (
-                                                   <FormItem className="pt-2 w-full break-inside-avoid">
-                                                       <FormLabel className="select-text">结果判定</FormLabel>
-                                                       <FormControl>
-                                                           <ClearableSelect field={field} options={clcOptions}
-                                                                            onClear={() => {
-                                                                                form.setValue(`${name}.r`, "")
-                                                                            }}/>
-                                                       </FormControl>
-                                                       <FormMessage/>
-                                                   </FormItem>
-                                               )}
-                                    />*/}
+                                    /> autoComplete="on"
+                                    */}
                                     <FormField name={`${name}.r`} control={form.control} render={({ field }) => (
                                         <FormHybridSelect field={field} label='检验结果' options={检验结果选} sing autoComplete="on"/>
                                     )}/>
@@ -143,7 +130,7 @@ export const ConcAppendix = ({
                                             <FormItem className="pt-2 w-full break-inside-avoid">
                                                 <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <InputSimplelist datalist={等级评定选} {...field} autoComplete="on"/>
+                                                    <InputDatalist datalist={等级评定选} {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
