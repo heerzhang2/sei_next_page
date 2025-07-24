@@ -42,7 +42,13 @@ const specificationOptions = ["DN50 PN16", "DN80 PN25", "基本符合要求", "D
     士大夫地方`,
     "DN200 PN16"]
 const 检验结果选=['符合要求','基本符合要求','不符合要求'];
-export const 等级评定选=['1级','2级','3级','4级'];
+export const 等级评定选=['1级','2级','3级','4级',
+    "DN50 PN16", "DN80 PN25", "基本符合要求", "DN150 PN25",
+    `sdf的方法sdf符合要dsf本符sdf符合要dsf本合要
+    会讲sdf符合要dsf本故事的bbbb方法本333333符合要关键时刻9945354 345435的方法sdf符合要dsf本
+    士大夫sdf符合要dsf本的方法地方`,"基本符合0要求", "DN150 P0N25","基本8符合要求", "DN1580 PN25",
+    "DN200 PN16"
+];
 interface Props extends InternalItemProps {
     config?: (orc:any,edit:boolean)=>OmniPref[]
 }
@@ -116,7 +122,7 @@ export const ConcAppendix = ({
                                             <FormItem className="pt-2 w-full break-inside-avoid">
                                                 <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <BlobInputList datalist={等级评定选} {...field} rows={1} autoComplete="on"/>
+                                                    <BlobInputList datalist={等级评定选} {...field} rows={4} autoComplete={`${name}.c`}/>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

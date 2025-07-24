@@ -214,7 +214,7 @@ function Item({
     )
 }
 
-interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement | HTMLInputElement> {
     value?: string
     /** List of suggestions to display */
     datalist?: string[]
@@ -223,7 +223,7 @@ interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
     /**正常直接用 onChange，没必要使用onListChange
      * 在非useForm场合下的，函数类型问题 (value: any ) =>void
      */
-    onChange?: ChangeEventHandler<HTMLTextAreaElement> // (value: string) => void
+    onChange?: ChangeEventHandler<HTMLTextAreaElement | HTMLInputElement> // (value: string) => void
     /** Callback when the value changes */
     onListChange?: (value: string | undefined) => void
     unit?: any
@@ -288,7 +288,7 @@ export function BlobInputList({
     ])
 
     // 处理输入变化
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const newValue = e.target.value
         setInputValue(newValue)
         // 同时调用两个回调函数
