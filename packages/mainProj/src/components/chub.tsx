@@ -350,8 +350,8 @@ export function BlobInputList({
                                     if (onListChange) onListChange(value)
                                 }}
                             >
-                                <SelectTrigger className="w-full pr-20 pl-1">
-                                    <SelectValue placeholder={placeholder} />
+                                <SelectTrigger className="w-full pr-5 pl-1 h-auto min-h-[2.5rem] py-2 break-words text-left leading-tight whitespace-normal">
+                                    <SelectValue placeholder={placeholder}/>
                                 </SelectTrigger>
                                 <SelectContent>
                                     {items.length > 0 ? (
@@ -369,15 +369,18 @@ export function BlobInputList({
                             </Select>
                             {/* 控制按钮组 - 上下布局 */}
                             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
-                                <button type="button"
+                                <button
+                                    type="button"
                                     onClick={() => setIsSelectMode(false)}
                                     className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                                    aria-label="切换到输入模式" title="切换到输入模式"
+                                    aria-label="切换到输入模式"
+                                    title="切换到输入模式"
                                 >
                                     <Type size={18} className="text-muted-foreground" />
                                 </button>
                                 {inputValue && (
-                                    <button type="button"
+                                    <button
+                                        type="button"
                                         onClick={() => {
                                             setInputValue("")
                                             if (onChange) {
@@ -387,7 +390,8 @@ export function BlobInputList({
                                             if (onListChange) onListChange("")
                                         }}
                                         className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                                        aria-label="清除内容" title="清除内容"
+                                        aria-label="清除内容"
+                                        title="清除内容"
                                     >
                                         <X size={18} className="text-muted-foreground" />
                                     </button>
@@ -399,7 +403,7 @@ export function BlobInputList({
                         <div className="relative flex-1">
                             <ComInp
                                 className={cn(
-                                    "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input pr-20 pl-1",
+                                    "w-full pr-5 pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                                     className,
                                 )}
                                 {...other}
@@ -410,15 +414,18 @@ export function BlobInputList({
                             />
                             {/* 控制按钮组 - 上下布局 */}
                             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
-                                <button type="button"
+                                <button
+                                    type="button"
                                     onClick={() => setIsSelectMode(true)}
                                     className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                                    aria-label="切换到选择模式" title="切换到选择模式"
+                                    aria-label="切换到选择模式"
+                                    title="切换到选择模式"
                                 >
                                     <List size={18} className="text-muted-foreground" />
                                 </button>
                                 {inputValue && (
-                                    <button type="button"
+                                    <button
+                                        type="button"
                                         onClick={() => {
                                             setInputValue("")
                                             if (onChange) {
@@ -428,7 +435,8 @@ export function BlobInputList({
                                             if (onListChange) onListChange("")
                                         }}
                                         className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                                        aria-label="清除内容" title="清除内容"
+                                        aria-label="清除内容"
+                                        title="清除内容"
                                     >
                                         <X size={18} className="text-muted-foreground" />
                                     </button>
@@ -444,7 +452,7 @@ export function BlobInputList({
                 <div className="w-full flex items-center gap-1">
                     <ComInp
                         className={cn(
-                            "w-full pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                            "w-full pr-1 pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                             className,
                         )}
                         {...other}
@@ -960,7 +968,7 @@ function MobileInputDatalist({
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value
         setInputValue(newValue)
-        // 同时调用两个回调函数
+        // 同时调用
         if (onChange) {
             // @ts-ignore
             onChange(newValue)

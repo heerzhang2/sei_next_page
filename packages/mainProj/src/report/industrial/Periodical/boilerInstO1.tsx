@@ -20,6 +20,7 @@ import {MaterialReview} from "@/report/industrial/Periodical/MaterialReview";
 import {ConcAppendix} from "@/report/industrial/Periodical/ConcAppendix";
 import {ConclusionIndPer} from "@/report/industrial/Periodical/Conclusion";
 import {config超声仪概, SoniEvaluation, soni结果选} from "@/report/cm/sonic/Ultrasound1";
+import {HydrostaticTest} from "@/report/industrial/Periodical/HydrostaticTest";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -83,6 +84,7 @@ const recordPrintList =[
         createItem('SoniEvaluation', <SoniEvaluation label='焊接接头超声检测-结果评定表'/>),
         createItem('SoniConclusion', <FxSimpConclus label={'超声波检测-检测结果'} clc="结果" clist={soni结果选}/>),
     ]),
+    createItem('HydrostaticTest', <HydrostaticTest label='耐压试验报告'/>),
 ];
 
 

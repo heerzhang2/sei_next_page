@@ -106,20 +106,6 @@ export const ConcAppendix = ({
                                                    </FormItem>
                                                )}
                                     />}
-                                    {/* <FormField
-                                        control={form.control}
-                                        name={`${name}.c`}
-                                        render={({ field }) => (
-                                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                                <FormLabel className="select-text">安全状况等级:</FormLabel>
-                                                <FormControl className="w-full">
-                                                    <InputSimplelist datalist={等级评定选} {...field} autoComplete="on"/>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    /> autoComplete="on"
-                                    */}
                                     <FormField name={`${name}.r`} control={form.control} render={({ field }) => (
                                         <FormHybridSelect field={field} label='检验结果' options={检验结果选} autoComplete="on"/>
                                     )}/>
@@ -130,7 +116,7 @@ export const ConcAppendix = ({
                                             <FormItem className="pt-2 w-full break-inside-avoid">
                                                 <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <BlobInputList datalist={specificationOptions} {...field} rows={2}/>
+                                                    <BlobInputList datalist={等级评定选} {...field} rows={1} autoComplete="on"/>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

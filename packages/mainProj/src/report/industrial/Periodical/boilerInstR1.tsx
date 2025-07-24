@@ -29,6 +29,7 @@ import {MaterialReviewVw} from "@/report/industrial/Periodical/MaterialReview";
 import {ConcAppendixVw} from "@/report/industrial/Periodical/ConcAppendix";
 import {注意事项IndPl, 首页设备IndPer} from "@/report/industrial/Periodical/rarelyVary";
 import {cat_Sonic, UltrasoundVw} from "@/report/cm/sonic/Ultrasound1";
+import {HydrostaticTestVw} from "@/report/industrial/Periodical/HydrostaticTest";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -170,6 +171,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {renderSub('MAGNT_TS')}
 
                 {renderSub('SONIC_TS')}
+                {mapFxian.get('耐压试验')?.do && <HydrostaticTestVw orc={orc} rep={rep}/>}
                 {mapFxian.get('管道特性表')?.do &&
                     <PipelineCharacteristics orc={orc} rep={rep}/>
                 }

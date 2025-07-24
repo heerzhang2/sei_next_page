@@ -5,15 +5,13 @@ import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Bad
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import { CollapsibleFormSection } from "@/components/chub"
 import { useStorage } from "@/report/StorageContext"
-import {Edit, Trash2, Plus, X, AlertCircleIcon, ChevronUp, ChevronDown} from "lucide-react"
+import { Edit, Trash2, Plus, X, AlertCircleIcon, ChevronUp, ChevronDown } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { Alert, AlertTitle } from "@/components/ui"
 import { SmartTruncatedText } from "@/components/smart-truncated-text"
 import {useSearchParams} from "next/navigation";
 import PdfOutlineAnalyzer from "@/components/pdf-outline-analyzer";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import { ChevronsUpDown } from "lucide-react"
-import {VisuallyHidden} from "@radix-ui/react-visually-hidden";
 
 // export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
 interface ProjectItem {
@@ -61,23 +59,43 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
     })
     const [editErr, setEditErr] = React.useState<string>()
 
-    // 开始编辑
+    // 取消编辑或新增的通用方法
+    const cancelEdit = () => {
+        setEditingIndex(null)
+        setIsAddingNew(false)
+        setEditErr("")
+    }
+
+    // 开始编辑 - 自动取消其他操作
     const startEdit = (index: number) => {
+        // 如果有正在进行的编辑或新增，先取消
+        if (editingIndex !== null || isAddingNew) {
+            cancelEdit()
+        }
+
         setEditingIndex(index)
         setEditForm({ ...projects[index] })
         setIsAddingNew(false)
     }
+
     useEffect(() => {
         jumpProjIdx && startEdit(Number(jumpProjIdx))
     }, [jumpProjIdx])
-    // 开始新增
+
+    // 开始新增 - 自动取消其他操作
     const startAdd = () => {
+        // 如果有正在进行的编辑，先取消
+        if (editingIndex !== null) {
+            cancelEdit()
+        }
+
         setIsAddingNew(true)
         setEditingIndex(null)
         setEditForm({
             name: "",
         })
     }
+
     // 保存编辑
     const saveEdit = () => {
         if (editingIndex !== null) {
@@ -104,14 +122,13 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
         setEditErr("")
     }
 
-    // 取消编辑
-    const cancelEdit = () => {
-        setEditingIndex(null)
-        setIsAddingNew(false)
-    }
-
-    // 删除项目
+    // 删除项目 - 自动取消其他操作
     const deleteProject = (index: number) => {
+        // 如果有正在进行的编辑或新增，先取消
+        if (editingIndex !== null || isAddingNew) {
+            cancelEdit()
+        }
+
         const newProjects = projects.filter((_, i) => i !== index)
         setProjects(newProjects)
     }
@@ -125,8 +142,8 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
     const renderEditForm = (item: ProjectItem, isNew = false) => (
         <Card className="mt-1 border-l-4 border-l-blue-500 gap-1 py-1">
             {isNew && <CardHeader className="pb-0">
-                    <CardTitle>新增目录项</CardTitle>
-                </CardHeader>
+                <CardTitle>新增目录项</CardTitle>
+            </CardHeader>
             }
             <CardContent className="space-y-1 px-2">
                 <div className="grid grid-cols-1 @md:grid-cols-2 @5xl:grid-cols-3 gap-1">
@@ -152,14 +169,14 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                         />
                     </div>
                     {!nApx && <div className="space-y-2">
-                            <Label htmlFor="apx" className="select-text">附页、附图</Label>
-                            <Input
-                                id="apx"
-                                value={item.apx || ""}
-                                onChange={(e) => updateFormField("apx", e.target.value)}
-                                placeholder="输入附页、附图"
-                            />
-                        </div>
+                        <Label htmlFor="apx" className="select-text">附页、附图</Label>
+                        <Input
+                            id="apx"
+                            value={item.apx || ""}
+                            onChange={(e) => updateFormField("apx", e.target.value)}
+                            placeholder="输入附页、附图"
+                        />
+                    </div>
                     }
                     {!nRec && <>
                         <div className="space-y-2">
@@ -201,7 +218,7 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                 className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
                         />
                         <Label htmlFor="do" className="text-sm select-text">
-                          有做该项目
+                            有做该项目
                         </Label>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -211,7 +228,7 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                 className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
                         />
                         <Label htmlFor="na" className="text-sm select-text">
-                          不在目录中显示
+                            不在目录中显示
                         </Label>
                     </div>
                 </div>
@@ -323,7 +340,6 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => startEdit(index)}
-                                                disabled={editingIndex !== null || isAddingNew}
                                                 className="@md:size-9 px-1 has-[>svg]:px-1"
                                                 aria-label="修改"
                                             >
@@ -334,7 +350,6 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => deleteProject(index)}
-                                                    disabled={editingIndex !== null || isAddingNew}
                                                     className="@md:size-9 px-1 has-[>svg]:px-1 text-red-600 hover:text-red-700"
                                                     aria-label="删除"
                                                 >
@@ -352,7 +367,7 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                             {/* 新增按钮和表单 */}
                             <div className="pt-4 border-t">
                                 {!isAddingNew ? (
-                                    <Button size="sm" onClick={startAdd} disabled={editingIndex !== null} className="w-full max-w-32">
+                                    <Button size="sm" onClick={startAdd} className="w-full max-w-32">
                                         <Plus className="w-4 h-4 mr-2" />
                                         新增目录项
                                     </Button>
