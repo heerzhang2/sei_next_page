@@ -195,7 +195,7 @@ export const PipelineCharacteristics: React.FC<PipelineCharacteristicsProps> = (
                     </RepLink>
                 </div>
             )}
-            <div id="Characteristics"></div>
+            <div id="Characteristics" className="print:hidden"></div>
             {renderAll}
             {children}
         </div>
