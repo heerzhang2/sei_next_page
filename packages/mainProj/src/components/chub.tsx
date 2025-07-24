@@ -29,6 +29,7 @@ const debounce = (fn: Function, ms = 300) => {
         timeoutId = setTimeout(() => fn.apply(this, args), ms)
     }
 }
+
 interface CollapsibleFormSectionProps {
     title: string
     defaultOpen?: boolean
@@ -38,7 +39,6 @@ interface CollapsibleFormSectionProps {
     children: React.ReactNode
 }
 
-// 在 CollapsibleFormSection 函数内部添加
 export function CollapsibleFormSection({
                                            title,
                                            defaultOpen = false,
@@ -122,7 +122,6 @@ interface MemoDatesInputProps {
     dateInputWidth?: string | number
 }
 
-//随意日期录入最大情形:包含 `onChange` 事件处理器，这些是客户端交互功能。只有当组件完全是静态的或只执行服务器端逻辑时，才可不用use client;
 export function MemoDatesInput({
                                    id,
                                    value = "",
@@ -187,14 +186,12 @@ export function MemoDatesInput({
     )
 }
 
-//扩展列表大的输入框
 interface ItemProps {
     children: React.ReactNode
     active: boolean
     index: number
 }
 
-//不能声明为 : ItemProps & Omit<React.HTMLProps<HTMLDivElement>, "onClick"> & { ref?: React.Ref<HTMLDivElement> })
 function Item({
                   children,
                   active,
@@ -232,11 +229,6 @@ interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
     unit?: any
 }
 
-/**全兼容自适应版本：
- * 台式机+触摸屏屏幕高度高的还好，但苹果手机横屏手机高度太窄的就没法用。
- * 支持多行输入的；  缺点：textarea无法记住用户的历史输入；没有清空按钮在手机上不方便。
- * 若是放入FormItem底下的情况：不要自行去设置id的，不一致；<FormItem会转换的。
- */
 export function BlobInputList({
                                   value,
                                   className,
@@ -245,7 +237,7 @@ export function BlobInputList({
                                   onListChange,
                                   onChange,
                                   listClassName,
-                                  unit,
+                                  unit, autoComplete,
                                   ...other
                               }: BlobInputListProps) {
     const [open, setOpen] = useState(false)
@@ -341,7 +333,7 @@ export function BlobInputList({
                   setOpen(true)
               },
           })}
-          autoComplete="on"
+          autoComplete={autoComplete ?? "on"}
       />
             {unit}
             <FloatingPortal>
@@ -422,8 +414,7 @@ interface MemoDateInputProps extends Omit<React.TextareaHTMLAttributes<HTMLTextA
     /** Number of rows for the text input */
     rows?: number
 }
-/**日期输入： 支持日期，文本切换的模式。
- */
+
 export function MemoDateInput({
                                   id,
                                   className,
@@ -503,9 +494,6 @@ export function MemoDateInput({
     )
 }
 
-/**必须配套 useForm 使用的;
- 可清除的 Select 组件；  注意上级的<FormLabel htmlFor={field.name}></FormLabel>一致性的配套id=name。
- * */
 export function ClearableSelect({
                                     field,
                                     options,
@@ -575,8 +563,7 @@ interface FormSelectFieldProps {
     selectClass?: string
     value?: any
 }
-/*配套 useForm， 简化嵌套的形式；
- * */
+
 export function FormSelectField({ field, label, options, className, selectClass, value }: FormSelectFieldProps) {
     const id = useId() + "-" + field.name // 使用 field.name 生成唯一ID
     return (
@@ -599,9 +586,6 @@ export function FormSelectField({ field, label, options, className, selectClass,
     )
 }
 
-/**通用版本：
- * 不在局限于form绑定的情况的： 因为嵌套在form组件底下的，需要加id;
- * */
 export function CommonSelect({
                                  options,
                                  placeholder = "",
@@ -653,7 +637,8 @@ export function CommonSelect({
     )
 }
 
-interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement> {
+// 基础接口定义
+interface BaseInputDatalistProps {
     /** Whether the input should take full width */
     fullWidth?: boolean
     /** List of suggestions to display */
@@ -661,10 +646,26 @@ interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement>
     /** Callback when the value changes */
     onListChange?: (value: string) => void
     unit?: any
+    /** Current value */
+    value?: string | number
+    /** Change handler */
+    onChange?: React.ChangeEventHandler<HTMLInputElement>
+    /** Input ID */
+    id?: string
+    /** Custom className */
+    className?: string
+    /** Custom style */
+    style?: React.CSSProperties
+    /** Placeholder text */
+    placeholder?: string
+    /** Whether input is required */
+    required?: boolean
+    /** Whether input is disabled */
+    disabled?: boolean
 }
 
-//[列表优先版本]：修复移动端定位问题
-export function InputDatalist({
+// 桌面端组件 - 使用原生 datalist
+function DesktopInputDatalist({
                                   fullWidth = true,
                                   datalist = [],
                                   className,
@@ -673,46 +674,125 @@ export function InputDatalist({
                                   value,
                                   onChange,
                                   id,
-                                  unit,
+                                  unit, autoComplete, listClassName,
                                   ...other
-                              }: InputDatalistProps) {
-    const [inputValue, setInputValue] = useState(value || "")
+                              }: BaseInputDatalistProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps>) {
+    const [inputValue, setInputValue] = useState(String(value || ""))
     const [showClearButton, setShowClearButton] = useState(Boolean(value && String(value).length > 0))
-    const [isOpen, setIsOpen] = useState(false)
-    const [activeIndex, setActiveIndex] = useState<number | null>(null)
-    const [isMobile, setIsMobile] = useState(false)
-    const [showAllOptions, setShowAllOptions] = useState(false)
 
-    // 使用固定的 ref，不再动态切换
-    const inputRef = useRef<HTMLInputElement>(null)
-    const wrapperRef = useRef<HTMLDivElement>(null)
-    const listRef = useRef<Array<HTMLElement | null>>([])
-    const uid = id
-    const listId = `list-${uid}`
+    const uid = id || useId()
+    const listId = `desktop-list-${uid}`
 
-    // 检测是否为移动设备
+    // 同步外部值变化
     useEffect(() => {
-        const checkMobile = () => {
-            const userAgent = navigator.userAgent.toLowerCase()
-            const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)
-            const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0
-            setIsMobile(isMobileDevice || isTouchDevice)
+        setInputValue(String(value || ""))
+        setShowClearButton(Boolean(value && String(value).length > 0))
+    }, [value])
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value
+        setInputValue(newValue)
+        setShowClearButton(newValue !== "")
+
+        if (onChange) {
+            onChange(e)
         }
+        if (onListChange) {
+            onListChange(newValue)
+        }
+    }
 
-        checkMobile()
-    }, [])
+    const handleClear = () => {
+        setInputValue("")
+        setShowClearButton(false)
+        if (onListChange) {
+            onListChange("")
+        }
+        if (onChange) {
+            const event = {
+                target: { value: "" },
+            } as React.ChangeEvent<HTMLInputElement>
+            onChange(event)
+        }
+    }
 
-    // Floating UI setup - 始终使用 inputRef，不再动态切换
-    const { x, y, refs, strategy, context } = useFloating<HTMLInputElement>({
+    return (
+        <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
+            <datalist id={listId} className={listClassName}>
+                {datalist.map((option, i) => (
+                    <option key={i} value={option} />
+                ))}
+            </datalist>
+
+            <div className="relative flex-1">
+                <input
+                    className={cn(
+                        "min-h-8 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full",
+                        showClearButton ? "pr-8" : "pr-2",
+                        className,
+                    )}
+                    value={inputValue}
+                    onChange={handleChange}
+                    list={listId}
+                    id={id}
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    {...other}
+                    autoComplete={autoComplete ?? "on"}
+                />
+
+                {/* 清除按钮 */}
+                {showClearButton && (
+                    <button
+                        type="button"
+                        onClick={handleClear}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                        aria-label="清除输入"
+                    >
+                        <X size={14} className="text-gray-500" />
+                    </button>
+                )}
+            </div>
+
+            {unit}
+        </div>
+    )
+}
+
+// 移动端组件 - 使用 Floating UI
+function MobileInputDatalist({
+                                 fullWidth = true,
+                                 datalist = [],
+                                 className,
+                                 style,
+                                 onListChange,
+                                 value,
+                                 onChange,
+                                 id,
+                                 unit, autoComplete,listClassName,
+                                 ...other
+                             }: BaseInputDatalistProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps>) {
+    const [open, setOpen] = useState(false)
+    const [inputValue, setInputValue] = useState(value)
+    const [activeIndex, setActiveIndex] = useState<number | null>(null)
+
+    useEffect(() => {
+        setInputValue(value)
+    }, [value])
+
+    const listRef = useRef<Array<HTMLElement | null>>([])
+
+    const { x, y, refs, strategy, context } = useFloating<HTMLTextAreaElement>({
         whileElementsMounted: autoUpdate,
-        open: isOpen && isMobile,
-        onOpenChange: setIsOpen,
+        open,
+        onOpenChange: setOpen,
         middleware: [
             size({
                 apply({ rects, availableHeight, elements }) {
                     Object.assign(elements.floating.style, {
                         width: `${rects.reference.width}px`,
-                        maxHeight: `${Math.min(availableHeight, 200)}px`,
+                        maxHeight: `${availableHeight}px`,
                     })
                 },
                 padding: 10,
@@ -732,269 +812,138 @@ export function InputDatalist({
         }),
     ])
 
-    // 修改过滤选项逻辑
-    const filteredOptions = showAllOptions
-        ? datalist
-        : inputValue
-            ? datalist.filter((option) => option.toLowerCase().includes(inputValue.toLowerCase()))
-            : datalist
-
-    // 清理 Chrome 添加的属性
-    useEffect(() => {
-        const input = inputRef.current
-        if (input && !isMobile) {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === "attributes") {
-                        const target = mutation.target as HTMLElement
-                        if (target.hasAttribute("__gchrome_uniqueid")) {
-                            target.removeAttribute("__gchrome_uniqueid")
-                        }
-                    }
-                })
-            })
-
-            observer.observe(input, {
-                attributes: true,
-                attributeFilter: ["__gchrome_uniqueid"],
-            })
-
-            return () => observer.disconnect()
-        }
-    }, [isMobile])
-
-    // 更新清除按钮显示状态
-    useEffect(() => {
-        setShowClearButton(inputValue !== "")
-    }, [inputValue])
-
-    // 同步 refs.setReference 和 inputRef
-    useEffect(() => {
-        if (inputRef.current && isMobile) {
-            refs.setReference(inputRef.current)
-        }
-    }, [refs, isMobile])
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 处理输入变化
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value
         setInputValue(newValue)
-        setShowAllOptions(false) // 输入时重置为过滤模式
-
+        // 同时调用两个回调函数
         if (onChange) {
-            onChange(e)
+            // @ts-ignore
+            onChange(newValue)
         }
-        if (onListChange) {
-            onListChange(newValue)
-        }
-
-        // 移动端：输入时显示下拉列表
-        if (isMobile && newValue && filteredOptions.length > 0) {
-            setIsOpen(true)
-        }
+        if (onListChange) onListChange(newValue)
     }
 
-    const handleClear = () => {
-        setInputValue("")
-        setIsOpen(false)
-        setShowAllOptions(false)
-        if (onListChange) {
-            onListChange("")
-        }
+    // 处理选择列表项
+    const handleSelectItem = (item: string) => {
+        setInputValue(item)
+        // 同时调用两个回调函数
         if (onChange) {
-            const event = {
-                target: {
-                    value: "",
-                },
-            } as React.ChangeEvent<HTMLInputElement>
-            onChange(event)
+            // @ts-ignore
+            onChange(item)
         }
-        if (inputRef.current) {
-            inputRef.current.focus()
-        }
+        if (onListChange) onListChange(item)
     }
 
-    // 新增：处理下拉按钮点击
-    const handleDropdownClick = () => {
-        setShowAllOptions(true)
-        setIsOpen(true)
-        setActiveIndex(null)
-        if (inputRef.current) {
-            inputRef.current.focus()
-        }
-    }
-
-    const handleSelectOption = (option: string) => {
-        setInputValue(option)
-        setIsOpen(false)
-        setActiveIndex(null)
-        setShowAllOptions(false)
-
-        if (onListChange) {
-            onListChange(option)
-        }
-        if (onChange) {
-            const event = {
-                target: {
-                    value: option,
-                },
-            } as React.ChangeEvent<HTMLInputElement>
-            onChange(event)
-        }
-    }
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (isMobile && isOpen) {
-            if (e.key === "Enter" && activeIndex !== null && filteredOptions[activeIndex]) {
-                e.preventDefault()
-                handleSelectOption(filteredOptions[activeIndex])
-            } else if (e.key === "Escape") {
-                setIsOpen(false)
-                setActiveIndex(null)
-                setShowAllOptions(false)
-            }
-        }
-    }
-
-    const handleFocus = () => {
-        if (isMobile && filteredOptions.length > 0) {
-            setIsOpen(true)
-        }
-    }
-
-    const handleBlur = () => {
-        // 延迟关闭，允许点击选项
-        setTimeout(() => {
-            if (isMobile) {
-                setIsOpen(false)
-                setShowAllOptions(false)
-            }
-        }, 150)
-    }
-
-    // 合并移动端的 getReferenceProps 和常规的 props
-    const inputProps = isMobile
-        ? {
-            ...getReferenceProps({
-                onChange: handleChange,
-                onKeyDown: handleKeyDown,
-                onFocus: handleFocus,
-                onBlur: handleBlur,
-            }),
-            ...other,
-        }
-        : {
-            onChange: handleChange,
-            onKeyDown: handleKeyDown,
-            onFocus: handleFocus,
-            onBlur: handleBlur,
-            ...other,
-        }
+    const items = inputValue ? datalist.filter((item) => item.toLowerCase().includes(inputValue.toLowerCase())) : datalist
 
     return (
-        <div
-            ref={wrapperRef}
-            className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")}
-            style={style}
-        >
-            {/* 桌面端使用原生 datalist */}
-            <datalist id={listId}>
-                {datalist.map((option, i) => (
-                    <option key={i} value={option} />
-                ))}
-            </datalist>
-
-            <div className="relative flex-1">
-                <input
-                    ref={inputRef}
-                    className={cn(
-                        "min-h-8 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full",
-                        // 调整右侧padding以容纳按钮
-                        showClearButton ? "pr-16" : "pr-10",
-                        className,
-                    )}
-                    value={inputValue}
-                    list={listId}
-                    id={id}
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                    data-form-type="other"
-                    suppressHydrationWarning
-                    {...inputProps}
-                />
-
-                {/* 按钮容器 */}
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    {/* 清除按钮 */}
-                    {showClearButton && (
-                        <button
-                            type="button"
-                            onClick={handleClear}
-                            className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring z-10"
-                            aria-label="清除输入"
-                        >
-                            <X size={14} className="text-gray-500" />
-                        </button>
-                    )}
-
-                    {/* 下拉箭头按钮 */}
-                    <button
-                        type="button"
-                        onClick={handleDropdownClick}
-                        className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring z-10"
-                        aria-label="显示选项列表"
-                    >
-                        <ChevronDown size={14} className="text-gray-500" />
-                    </button>
-                </div>
-            </div>
-
-            {/* 移动端自定义下拉列表 */}
-            {isMobile && (
-                <FloatingPortal>
-                    {isOpen && filteredOptions.length > 0 && (
-                        <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
-                            <div
-                                {...getFloatingProps({
-                                    ref: refs.setFloating,
-                                    className: "z-50 bg-white border border-slate-200 shadow-lg rounded-md overflow-y-auto",
-                                    style: {
-                                        position: strategy,
-                                        left: x ?? 0,
-                                        top: y ?? 0,
-                                    },
-                                })}
-                            >
-                                {filteredOptions.map((option, index) => (
-                                    <div
-                                        key={option}
-                                        {...getItemProps({
-                                            ref(node) {
-                                                listRef.current[index] = node
-                                            },
-                                            onClick() {
-                                                handleSelectOption(option)
-                                            },
-                                        })}
-                                        className={cn(
-                                            "cursor-pointer p-3 text-sm border-b border-gray-100 last:border-b-0",
-                                            activeIndex === index ? "bg-blue-50 text-blue-700" : "hover:bg-gray-50",
-                                        )}
-                                        role="option"
-                                        aria-selected={activeIndex === index}
-                                    >
-                                        {option}
-                                    </div>
-                                ))}
-                            </div>
-                        </FloatingFocusManager>
-                    )}
-                </FloatingPortal>
-            )}
-
+        <div className="w-full inline-flex items-center">
+      <textarea
+          className={cn(
+              "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+              className,
+          )}
+          {...other}
+          {...getReferenceProps({
+              ref: refs.setReference,
+              onChange: handleInputChange,
+              value: inputValue,
+              "aria-autocomplete": "list",
+              onKeyDown(event) {
+                  if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
+                      event.preventDefault()
+                      setInputValue(items[activeIndex])
+                      if (onListChange) {
+                          onListChange(items[activeIndex])
+                      }
+                      setActiveIndex(null)
+                      setOpen(false)
+                  }
+              },
+              onPointerDown() {
+                  setOpen(true)
+              },
+          })}
+          autoComplete={autoComplete ?? "on"}
+      />
             {unit}
+            <FloatingPortal>
+                {open && items.length > 0 && (
+                    <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
+                        <div
+                            {...getFloatingProps({
+                                ref: refs.setFloating,
+                                className: cn(
+                                    "z-50 bg-white border border-slate-200 shadow-md rounded-md overflow-y-auto",
+                                    listClassName,
+                                ),
+                                style: {
+                                    position: strategy,
+                                    left: x ?? 0,
+                                    top: y ?? 0,
+                                },
+                            })}
+                        >
+                            {items.map((item, index) => (
+                                <Item
+                                    key={item}
+                                    index={index}
+                                    {...getItemProps({
+                                        ref(node) {
+                                            listRef.current[index] = node
+                                        },
+                                        onClick() {
+                                            handleSelectItem(item)
+                                            setOpen(false)
+                                        },
+                                    })}
+                                    active={activeIndex === index}
+                                >
+                                    {item}
+                                </Item>
+                            ))}
+                        </div>
+                    </FloatingFocusManager>
+                )}
+            </FloatingPortal>
         </div>
     )
+}
+
+// 主组件 - 智能切换器
+interface InputDatalistProps
+    extends BaseInputDatalistProps,
+        Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps> {}
+
+export function InputDatalist(props: InputDatalistProps) {
+    const [isMobile, setIsMobile] = useState(false)
+
+    // 检测设备类型
+    useEffect(() => {
+        const checkMobile = () => {
+            const userAgent = navigator.userAgent.toLowerCase()
+            const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)
+            const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0
+            const isSmallScreen = window.innerWidth <= 768
+
+            // 综合判断：移动设备 或 触摸设备 或 小屏幕
+            setIsMobile(isMobileDevice || (isTouchDevice && isSmallScreen))
+        }
+
+        checkMobile()
+
+        // 监听窗口大小变化
+        window.addEventListener("resize", checkMobile)
+        return () => window.removeEventListener("resize", checkMobile)
+    }, [])
+
+    // 根据设备类型渲染不同的组件
+    if (isMobile) {
+        return <MobileInputDatalist {...props} />
+    } else {
+        return <DesktopInputDatalist {...props} />
+    }
 }
 
 // 新增：混合输入选择组件
@@ -1032,10 +981,7 @@ interface HybridInputSelectProps {
     /** 是否使用input替代textarea做输入框，依然无法激活datalist的自动记忆功能 */
     sing?: boolean
 }
-/**手机需要多一次点击切换模式的，在电脑上若配列表初始化模式的感觉罗嗦。
- * 替换，旧的组件InputDatalist 和 BlobInputList；
- * 问题：底下的<datalist id={listId}>根本就无法生效,可选择列表不能自己输入之后记住并增加的。
- * */
+
 export function HybridInputSelect({
                                       value = "",
                                       onChange,
@@ -1351,7 +1297,7 @@ export function HybridInputSelect({
     )
 }
 
-//[淘汰！] 简易版本，台式机还好得，但苹果手机就没法用。
+// 简易版本（保留用于向后兼容）
 export function InputSimplelist({
                                     fullWidth = true,
                                     datalist = [],
@@ -1363,10 +1309,14 @@ export function InputSimplelist({
                                     id,
                                     unit,
                                     ...other
-                                }: InputDatalistProps) {
-    const [inputValue, setInputValue] = useState(value || "")
-    const uid = id //useId()避免不会记住用户输入文字
-    const listId = `list-${uid}`
+                                }: BaseInputDatalistProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps>) {
+    const [inputValue, setInputValue] = useState(String(value || ""))
+    const uid = id || useId()
+    const listId = `simple-list-${uid}`
+
+    useEffect(() => {
+        setInputValue(String(value || ""))
+    }, [value])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value
