@@ -240,10 +240,12 @@ export function BlobInputList({
                                   onListChange,
                                   onChange,
                                   listClassName,
-                                  unit, autoComplete, rows=2,
+                                  unit,
+                                  autoComplete,
+                                  rows = 2,
                                   ...other
                               }: BlobInputListProps) {
-    const ComInp=rows>1? "textarea" : "input";
+    const ComInp = rows > 1 ? "textarea" : "input"
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState(value)
     const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -334,7 +336,7 @@ export function BlobInputList({
         <div className="w-full inline-flex items-center">
             {isSmallHeight ? (
                 // 小屏幕高度模式：使用按钮切换
-                <div className="w-full relative">
+                <div className="w-full flex items-center gap-1">
                     {isSelectMode ? (
                         <div className="relative flex-1">
                             <Select
@@ -348,7 +350,7 @@ export function BlobInputList({
                                     if (onListChange) onListChange(value)
                                 }}
                             >
-                                <SelectTrigger className="w-full pr-20">
+                                <SelectTrigger className="w-full pr-20 pl-1">
                                     <SelectValue placeholder={placeholder} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -365,20 +367,17 @@ export function BlobInputList({
                                     )}
                                 </SelectContent>
                             </Select>
-                            {/* 控制按钮组 */}
-                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                <button
-                                    type="button"
+                            {/* 控制按钮组 - 上下布局 */}
+                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
+                                <button type="button"
                                     onClick={() => setIsSelectMode(false)}
                                     className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                                    aria-label="切换到输入模式"
-                                    title="切换到输入模式"
+                                    aria-label="切换到输入模式" title="切换到输入模式"
                                 >
-                                    <Type size={16} className="text-muted-foreground" />
+                                    <Type size={18} className="text-muted-foreground" />
                                 </button>
                                 {inputValue && (
-                                    <button
-                                        type="button"
+                                    <button type="button"
                                         onClick={() => {
                                             setInputValue("")
                                             if (onChange) {
@@ -388,44 +387,38 @@ export function BlobInputList({
                                             if (onListChange) onListChange("")
                                         }}
                                         className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                                        aria-label="清除内容"
-                                        title="清除内容"
+                                        aria-label="清除内容" title="清除内容"
                                     >
-                                        <X size={16} className="text-muted-foreground" />
+                                        <X size={18} className="text-muted-foreground" />
                                     </button>
                                 )}
                             </div>
                         </div>
                     ) : (
                         // 输入模式：使用 textarea
-                        <div className="relative w-full">
-              <ComInp
-                  className={cn(
-                      "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input pr-20",
-                      className,
-                  )}
-                  {...other}
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  placeholder={placeholder}
-                  autoComplete={autoComplete ?? "on"}
-              />
-                            {/* 控制按钮组 */}
-                            <div className="absolute right-1 top-1 flex items-center gap-1">
-                                {/* 切换到选择模式按钮 */}
-                                <button
-                                    type="button"
+                        <div className="relative flex-1">
+                            <ComInp
+                                className={cn(
+                                    "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input pr-20 pl-1",
+                                    className,
+                                )}
+                                {...other}
+                                value={inputValue}
+                                onChange={handleInputChange}
+                                placeholder={placeholder}
+                                autoComplete={autoComplete ?? "on"}
+                            />
+                            {/* 控制按钮组 - 上下布局 */}
+                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
+                                <button type="button"
                                     onClick={() => setIsSelectMode(true)}
                                     className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                                    aria-label="切换到选择模式"
-                                    title="切换到选择模式"
+                                    aria-label="切换到选择模式" title="切换到选择模式"
                                 >
-                                    <List size={16} className="text-muted-foreground" />
+                                    <List size={18} className="text-muted-foreground" />
                                 </button>
-                                {/* 清除按钮 */}
                                 {inputValue && (
-                                    <button
-                                        type="button"
+                                    <button type="button"
                                         onClick={() => {
                                             setInputValue("")
                                             if (onChange) {
@@ -435,50 +428,50 @@ export function BlobInputList({
                                             if (onListChange) onListChange("")
                                         }}
                                         className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                                        aria-label="清除内容"
-                                        title="清除内容"
+                                        aria-label="清除内容" title="清除内容"
                                     >
-                                        <X size={16} className="text-muted-foreground" />
+                                        <X size={18} className="text-muted-foreground" />
                                     </button>
                                 )}
                             </div>
                         </div>
                     )}
-                    {unit}
+                    {/* 单位显示 - 与输入框同行 */}
+                    {unit && <div className="whitespace-nowrap flex-shrink-0">{unit}</div>}
                 </div>
             ) : (
                 // 原有的 Floating UI 模式（屏幕高度 >= 600px）
-                <>
-          <ComInp
-              className={cn(
-                  "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-                  className,
-              )}
-              {...other}
-              {...getReferenceProps({
-                  ref: refs.setReference,
-                  onChange: handleInputChange,
-                  value: inputValue,
-                  placeholder: placeholder,
-                  "aria-autocomplete": "list",
-                  onKeyDown(event) {
-                      if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
-                          event.preventDefault()
-                          setInputValue(items[activeIndex])
-                          if (onListChange) {
-                              onListChange(items[activeIndex])
-                          }
-                          setActiveIndex(null)
-                          setOpen(false)
-                      }
-                  },
-                  onPointerDown() {
-                      setOpen(true)
-                  },
-              })}
-              autoComplete={autoComplete ?? "on"}
-          />
-                    {unit}
+                <div className="w-full flex items-center gap-1">
+                    <ComInp
+                        className={cn(
+                            "w-full pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                            className,
+                        )}
+                        {...other}
+                        {...getReferenceProps({
+                            ref: refs.setReference,
+                            onChange: handleInputChange,
+                            value: inputValue,
+                            placeholder: placeholder,
+                            "aria-autocomplete": "list",
+                            onKeyDown(event) {
+                                if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
+                                    event.preventDefault()
+                                    setInputValue(items[activeIndex])
+                                    if (onListChange) {
+                                        onListChange(items[activeIndex])
+                                    }
+                                    setActiveIndex(null)
+                                    setOpen(false)
+                                }
+                            },
+                            onPointerDown() {
+                                setOpen(true)
+                            },
+                        })}
+                        autoComplete={autoComplete ?? "on"}
+                    />
+                    {unit && <div className="whitespace-nowrap flex-shrink-0">{unit}</div>}
                     <FloatingPortal>
                         {open && items.length > 0 && (
                             <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
@@ -518,7 +511,7 @@ export function BlobInputList({
                             </FloatingFocusManager>
                         )}
                     </FloatingPortal>
-                </>
+                </div>
             )}
         </div>
     )
@@ -531,7 +524,7 @@ interface SuffixInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     unit: any
 }
 export function SuffixInput({ fullWidth = true, className, style, value, onChange, unit, ...other }: SuffixInputProps) {
-    //确保unit不是函数
+    //ensure unit is not a function
     const unitDisplay = typeof unit === "function" ? "" : unit
     return (
         <div className={cn("text-left inline-flex items-center gap-0.5", fullWidth ? "w-full" : "w-auto")} style={style}>
@@ -818,8 +811,11 @@ function DesktopInputDatalist({
                                   onListChange,
                                   value,
                                   onChange,
-                                  id, rows,
-                                  unit, autoComplete, listClassName,
+                                  id,
+                                  rows,
+                                  unit,
+                                  autoComplete,
+                                  listClassName,
                                   ...other
                               }: BaseInputDatalistProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps>) {
     const [inputValue, setInputValue] = useState(String(value || ""))
@@ -916,7 +912,9 @@ function MobileInputDatalist({
                                  value,
                                  onChange,
                                  id,
-                                 unit, autoComplete,listClassName,
+                                 unit,
+                                 autoComplete,
+                                 listClassName,
                                  ...other
                              }: BaseInputDatalistProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps>) {
     const [open, setOpen] = useState(false)
@@ -1142,10 +1140,10 @@ export function HybridInputSelect({
                                       disabled,
                                       id,
                                       defaultMode = "select",
-                                      rows=1,
+                                      rows = 1,
                                       ...other
                                   }: HybridInputSelectProps) {
-    const CompInp = rows>1 ? "textarea" : "input";
+    const CompInp = rows > 1 ? "textarea" : "input"
     const [inputValue, setInputValue] = useState(value)
     const [isInputMode, setIsInputMode] = useState(defaultMode === "input")
     const [isOpen, setIsOpen] = useState(false)
@@ -1437,6 +1435,64 @@ export function HybridInputSelect({
                     </FloatingFocusManager>
                 )}
             </FloatingPortal>
+        </div>
+    )
+}
+
+// 简易版本（保留用于向后兼容）
+export function InputSimplelist({
+                                    fullWidth = true,
+                                    datalist = [],
+                                    className,
+                                    style,
+                                    onListChange,
+                                    value,
+                                    onChange,
+                                    id,
+                                    unit,
+                                    ...other
+                                }: BaseInputDatalistProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps>) {
+    const [inputValue, setInputValue] = useState(String(value || ""))
+    const uid = id || useId()
+    const listId = `simple-list-${uid}`
+
+    useEffect(() => {
+        setInputValue(String(value || ""))
+    }, [value])
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value
+        setInputValue(newValue)
+
+        if (onChange) {
+            onChange(e)
+        }
+        if (onListChange) {
+            onListChange(newValue)
+        }
+    }
+
+    return (
+        <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
+            <datalist id={listId}>
+                {datalist.map((option, i) => (
+                    <option key={i} value={option} />
+                ))}
+            </datalist>
+
+            <input
+                className={cn(
+                    "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                    fullWidth ? "w-full" : "w-auto",
+                    className,
+                )}
+                value={inputValue}
+                onChange={handleChange}
+                list={listId}
+                id={id}
+                {...other}
+            />
+            {unit}
         </div>
     )
 }

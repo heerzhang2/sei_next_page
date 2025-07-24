@@ -37,7 +37,7 @@ const setConfig结论 =(orc:any,edit:boolean)=> [
 ] as OmniPref[];
 
 const specificationOptions = ["DN50 PN16", "DN80 PN25", "基本符合要求", "DN150 PN25",
-    `sdfsdfdsf
+    `sdfsdf符合要dsf
     会讲故事的方法关键时刻的方法
     士大夫地方`,
     "DN200 PN16"]
@@ -130,7 +130,7 @@ export const ConcAppendix = ({
                                             <FormItem className="pt-2 w-full break-inside-avoid">
                                                 <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <BlobInputList datalist={等级评定选} {...field} unit={"吨"}/>
+                                                    <BlobInputList datalist={specificationOptions} {...field} rows={2}/>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
