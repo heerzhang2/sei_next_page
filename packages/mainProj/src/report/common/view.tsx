@@ -434,7 +434,7 @@ export const CfootMensLine = ({
         </TableRow>
     </>
     return (
-        <FlexibleTable className="text-sm" columnWidths={columnWidths ?? ["8.6%","%","9%","38.5%","5.3%","11.3%"] }>
+        <FlexibleTable className="text-sm print-avoid-break" columnWidths={columnWidths ?? ["8.6%","%","9%","38.5%","5.3%","11.3%"] }>
             <TableBody>
                 {children}
                 {href ? (

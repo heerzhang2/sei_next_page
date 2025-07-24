@@ -232,7 +232,9 @@ interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
     unit?: any
 }
 
-/**支持多行输入的；  缺点：textarea无法记住用户的历史输入；没有清空按钮在手机上不方便。
+/**全兼容自适应版本：
+ * 台式机+触摸屏屏幕高度高的还好，但苹果手机横屏手机高度太窄的就没法用。
+ * 支持多行输入的；  缺点：textarea无法记住用户的历史输入；没有清空按钮在手机上不方便。
  * 若是放入FormItem底下的情况：不要自行去设置id的，不一致；<FormItem会转换的。
  */
 export function BlobInputList({
@@ -660,7 +662,7 @@ interface InputDatalistProps extends React.InputHTMLAttributes<HTMLInputElement>
     onListChange?: (value: string) => void
     unit?: any
 }
-
+//[列表优先版本]：台式机还好得，但苹果手机上面定位偏离。
 export function InputDatalist({
                                   fullWidth = true,
                                   datalist = [],
@@ -1010,7 +1012,8 @@ interface HybridInputSelectProps {
     /** 是否使用input替代textarea做输入框，依然无法激活datalist的自动记忆功能 */
     sing?: boolean
 }
-/**替换，旧的组件InputDatalist 和 BlobInputList；
+/**手机需要多一次点击切换模式的，在电脑上若配列表初始化模式的感觉罗嗦。
+ * 替换，旧的组件InputDatalist 和 BlobInputList；
  * 问题：底下的<datalist id={listId}>根本就无法生效,可选择列表不能自己输入之后记住并增加的。
 * */
 export function HybridInputSelect({
@@ -1323,7 +1326,7 @@ export function HybridInputSelect({
     )
 }
 
-//最为简易的版本，台式机可用，手机的表现就不好了。 InputDatalist的原始版本；
+//[淘汰！] 简易版本，台式机还好得，但苹果手机就没法用。
 export function InputSimplelist({
                                   fullWidth = true,
                                   datalist = [],
