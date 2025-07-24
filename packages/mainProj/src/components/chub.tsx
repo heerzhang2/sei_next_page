@@ -229,6 +229,9 @@ interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
     unit?: any
 }
 
+/**支持多行输入的；  缺点：textarea无法记住用户的历史输入；没有清空按钮在手机上不方便。
+ * 若是放入FormItem底下的情况：不要自行去设置id的，不一致；<FormItem会转换的。
+ */
 export function BlobInputList({
                                   value,
                                   className,
@@ -237,12 +240,14 @@ export function BlobInputList({
                                   onListChange,
                                   onChange,
                                   listClassName,
-                                  unit, autoComplete,
+                                  unit,
                                   ...other
                               }: BlobInputListProps) {
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState(value)
     const [activeIndex, setActiveIndex] = useState<number | null>(null)
+    const [isSmallHeight, setIsSmallHeight] = useState(false)
+    const [isSelectMode, setIsSelectMode] = useState(false)
 
     useEffect(() => {
         setInputValue(value)
@@ -301,80 +306,210 @@ export function BlobInputList({
         }
         if (onListChange) onListChange(item)
     }
+    const filtItems=inputValue ? datalist.filter((item) => item.toLowerCase().includes(inputValue.toLowerCase())) : datalist
+    const items = filtItems.length===0? datalist : filtItems
 
-    const items = inputValue ? datalist.filter((item) => item.toLowerCase().includes(inputValue.toLowerCase())) : datalist
+    // 检测屏幕高度
+    useEffect(() => {
+        const checkScreenHeight = () => {
+            const height = window.innerHeight
+            const isSmall = height < 600
+            setIsSmallHeight(isSmall)
+        }
+
+        checkScreenHeight()
+        window.addEventListener("resize", checkScreenHeight)
+        window.addEventListener("orientationchange", checkScreenHeight)
+
+        return () => {
+            window.removeEventListener("resize", checkScreenHeight)
+            window.removeEventListener("orientationchange", checkScreenHeight)
+        }
+    }, [isSelectMode])
 
     return (
         <div className="w-full inline-flex items-center">
-      <textarea
-          className={cn(
-              "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-              className,
-          )}
-          {...other}
-          {...getReferenceProps({
-              ref: refs.setReference,
-              onChange: handleInputChange,
-              value: inputValue,
-              placeholder: placeholder,
-              "aria-autocomplete": "list",
-              onKeyDown(event) {
-                  if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
-                      event.preventDefault()
-                      setInputValue(items[activeIndex])
-                      if (onListChange) {
-                          onListChange(items[activeIndex])
-                      }
-                      setActiveIndex(null)
-                      setOpen(false)
-                  }
-              },
-              onPointerDown() {
-                  setOpen(true)
-              },
-          })}
-          autoComplete={autoComplete ?? "on"}
-      />
-            {unit}
-            <FloatingPortal>
-                {open && items.length > 0 && (
-                    <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
-                        <div
-                            {...getFloatingProps({
-                                ref: refs.setFloating,
-                                className: cn(
-                                    "z-50 bg-white border border-slate-200 shadow-md rounded-md overflow-y-auto",
-                                    listClassName,
-                                ),
-                                style: {
-                                    position: strategy,
-                                    left: x ?? 0,
-                                    top: y ?? 0,
-                                },
-                            })}
-                        >
-                            {items.map((item, index) => (
-                                <Item
-                                    key={item}
-                                    index={index}
-                                    {...getItemProps({
-                                        ref(node) {
-                                            listRef.current[index] = node
-                                        },
-                                        onClick() {
-                                            handleSelectItem(item)
-                                            setOpen(false)
+            {isSmallHeight ? (
+                // 小屏幕高度模式：使用按钮切换
+                <div className="w-full relative">
+                    {isSelectMode ? (
+                        <div className="relative flex-1">
+                            <Select
+                                value={inputValue || ""}
+                                onValueChange={(value) => {
+                                    setInputValue(value)
+                                    if (onChange) {
+                                        // @ts-ignore
+                                        onChange(value)
+                                    }
+                                    if (onListChange) onListChange(value)
+                                }}
+                            >
+                                <SelectTrigger className="flex-1">
+                                    <SelectValue placeholder={placeholder} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {items.map((item, index) => (
+                                        <SelectItem key={index} value={item}>
+                                            {item}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {/* 控制按钮组 */}
+                            <div className="absolute right-2 top-[-0.5rem] flex flex-col gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsSelectMode(false)}
+                                    className="p-2 rounded-md border border-input bg-background hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                                    aria-label="切换到输入模式"
+                                    title="切换到输入模式"
+                                >
+                                    <Type size={16} className="text-muted-foreground" />
+                                </button>
+                                {inputValue && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setInputValue("")
+                                            if (onChange) {
+                                                // @ts-ignore
+                                                onChange("")
+                                            }
+                                            if (onListChange) onListChange("")
+                                        }}
+                                        className="p-2 rounded-md border border-input bg-background hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                                        aria-label="清除内容"
+                                        title="清除内容"
+                                    >
+                                        <X size={16} className="text-muted-foreground" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        // 输入模式：使用 textarea
+                       <div className="flex items-start gap-2">
+                          <textarea
+                              className={cn(
+                                  "flex-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                                  className,
+                              )}
+                              {...other}
+                              value={inputValue}
+                              onChange={handleInputChange}
+                              placeholder={placeholder}
+                              autoComplete="on"
+                          />
+                        <div className="absolute right-2 top-[-0.5rem] flex flex-col gap-1">
+                            {/* 切换到选择模式按钮 */}
+                            <button
+                                type="button"
+                                onClick={() => setIsSelectMode(true)}
+                                className="p-2 rounded-md border border-input bg-background hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                                aria-label="切换到选择模式"
+                                title="切换到选择模式"
+                            >
+                                <List size={16} className="text-muted-foreground" />
+                            </button>
+                            {/* 清除按钮 */}
+                            {inputValue && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setInputValue("")
+                                        if (onChange) {
+                                            // @ts-ignore
+                                            onChange("")
+                                        }
+                                        if (onListChange) onListChange("")
+                                    }}
+                                    className="p-2 rounded-md border border-input bg-background hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                                    aria-label="清除内容"
+                                    title="清除内容"
+                                >
+                                    <X size={16} className="text-muted-foreground" />
+                                </button>
+                            )}
+                        </div>
+                      </div>
+                    )}
+                    {unit}
+                </div>
+            ) : (
+                // 原有的 Floating UI 模式（屏幕高度 >= 600px）
+                <>
+                  <textarea
+                      className={cn(
+                          "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                          className,
+                      )}
+                      {...other}
+                      {...getReferenceProps({
+                          ref: refs.setReference,
+                          onChange: handleInputChange,
+                          value: inputValue,
+                          placeholder: placeholder,
+                          "aria-autocomplete": "list",
+                          onKeyDown(event) {
+                              if (event.key === "Enter" && activeIndex != null && items[activeIndex]) {
+                                  event.preventDefault()
+                                  setInputValue(items[activeIndex])
+                                  if (onListChange) {
+                                      onListChange(items[activeIndex])
+                                  }
+                                  setActiveIndex(null)
+                                  setOpen(false)
+                              }
+                          },
+                          onPointerDown() {
+                              setOpen(true)
+                          },
+                      })}
+                      autoComplete="on"
+                  />
+                    {unit}
+                    <FloatingPortal>
+                        {open && items.length > 0 && (
+                            <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
+                                <div
+                                    {...getFloatingProps({
+                                        ref: refs.setFloating,
+                                        className: cn(
+                                            "z-50 bg-white border border-slate-200 shadow-md rounded-md overflow-y-auto",
+                                            listClassName,
+                                        ),
+                                        style: {
+                                            position: strategy,
+                                            left: x ?? 0,
+                                            top: y ?? 0,
                                         },
                                     })}
-                                    active={activeIndex === index}
                                 >
-                                    {item}
-                                </Item>
-                            ))}
-                        </div>
-                    </FloatingFocusManager>
-                )}
-            </FloatingPortal>
+                                    {items.map((item, index) => (
+                                        <Item
+                                            key={item}
+                                            index={index}
+                                            {...getItemProps({
+                                                ref(node) {
+                                                    listRef.current[index] = node
+                                                },
+                                                onClick() {
+                                                    handleSelectItem(item)
+                                                    setOpen(false)
+                                                },
+                                            })}
+                                            active={activeIndex === index}
+                                        >
+                                            {item}
+                                        </Item>
+                                    ))}
+                                </div>
+                            </FloatingFocusManager>
+                        )}
+                    </FloatingPortal>
+                </>
+            )}
         </div>
     )
 }
@@ -664,7 +799,7 @@ interface BaseInputDatalistProps {
     disabled?: boolean
 }
 
-// 桌面端组件 - 使用原生 datalist
+// 桌面端组件 - 使用原生 datalist; 但不能支持rows>1多行录入框的。因为datalist不配合textarea啊。
 function DesktopInputDatalist({
                                   fullWidth = true,
                                   datalist = [],
@@ -673,7 +808,7 @@ function DesktopInputDatalist({
                                   onListChange,
                                   value,
                                   onChange,
-                                  id,
+                                  id, rows,
                                   unit, autoComplete, listClassName,
                                   ...other
                               }: BaseInputDatalistProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps>) {
@@ -740,6 +875,7 @@ function DesktopInputDatalist({
                     spellCheck={false}
                     {...other}
                     autoComplete={autoComplete ?? "on"}
+                    rows={rows}
                 />
 
                 {/* 清除按钮 */}
@@ -844,6 +980,7 @@ function MobileInputDatalist({
               "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
               className,
           )}
+          id={id}
           {...other}
           {...getReferenceProps({
               ref: refs.setReference,

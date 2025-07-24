@@ -130,7 +130,7 @@ export const ConcAppendix = ({
                                             <FormItem className="pt-2 w-full break-inside-avoid">
                                                 <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <InputDatalist datalist={等级评定选} {...field} />
+                                                    <BlobInputList datalist={等级评定选} {...field}/>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
