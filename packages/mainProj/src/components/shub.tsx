@@ -197,15 +197,13 @@ interface FormHybridSelectProps extends HybridInputSelectProps{
     unit?: any
     rows?: number
     defSel?: boolean    //默认选择模式的：
-    /** 是否使用input替代textarea做输入框框，没法用多行的 */
-    sing?: boolean
     //启用 autoComplete="on" 等；
     autoComplete?: string
 }
 /*配套 useForm， 简化嵌套的形式；
  * */
 export function FormHybridSelect({field, label,options, defSel, rows=1, unit,
-                                     placeholder="选择或输入", sing, autoComplete
+                                     placeholder="选择或输入", autoComplete
                                  }: FormHybridSelectProps) {
     const id = useId()
     return (
@@ -220,7 +218,6 @@ export function FormHybridSelect({field, label,options, defSel, rows=1, unit,
                     rows={rows}
                     defaultMode={defSel? "select" : "input"}
                     unit={unit}
-                    sing={sing}
                     autoComplete={autoComplete}
                 />
             </FormControl>

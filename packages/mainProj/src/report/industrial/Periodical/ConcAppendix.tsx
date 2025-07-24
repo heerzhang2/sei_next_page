@@ -121,7 +121,7 @@ export const ConcAppendix = ({
                                     /> autoComplete="on"
                                     */}
                                     <FormField name={`${name}.r`} control={form.control} render={({ field }) => (
-                                        <FormHybridSelect field={field} label='检验结果' options={检验结果选} sing autoComplete="on"/>
+                                        <FormHybridSelect field={field} label='检验结果' options={检验结果选} autoComplete="on"/>
                                     )}/>
                                     <FormField
                                         control={form.control}
@@ -130,7 +130,7 @@ export const ConcAppendix = ({
                                             <FormItem className="pt-2 w-full break-inside-avoid">
                                                 <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <BlobInputList datalist={等级评定选} {...field}/>
+                                                    <BlobInputList datalist={等级评定选} {...field} unit={"吨"}/>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
