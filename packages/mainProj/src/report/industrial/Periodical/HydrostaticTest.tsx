@@ -1,76 +1,50 @@
 "use client"
 import * as React from "react"
-import { CollapsibleFormSection } from "@/components/chub"
-import { Card, CardContent, } from "@/components/ui"
+import {BlobInputList, CollapsibleFormSection} from "@/components/chub"
+import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui"
 import { initFormTable, useFormFramework, } from "@/report/hook/useFormFramework"
 import { type InternalItemProps, RepLink, type RepVwProps } from "@/report/common/base"
 import { useStorage } from "@/report/StorageContext"
 import { PrintReserveLeast } from "@/components/print-reserve-least"
-import { CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow } from "@/components/flexible-table"
-import { JumpTab } from "@/report/common/JumpTab"
-import {CfootMensLine, FootMensLine,} from "@/report/common/view"
-import { ImageComponent } from "@/components/shub"
-import { cn } from "@/lib/utils"
+import { CCell, FlexibleTable, TableBody, TableHeader, TableRow,TableCell } from "@/components/flexible-table"
+import { FootMensLine,} from "@/report/common/view"
 import { useCallback } from "react"
-import { CollapseFx } from "@/report/common/collapse"
-import { useThreeColumnSurvey} from "@/report/hook/usePrefixData"
 import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
 import { z } from "zod"
 import type { UseFormReturn } from "react-hook-form"
-import {mergeToThreeColumn} from "@/report/common/survey";
 
 //耐压试验: 可选分项， 但不是可重复的分项：
 export const HydrostaticTestVw = ({
-                              orc,
-                              rep,
-                              title = "耐压试验报告",
-                              subrid,
-                              redId,
-                              parOrc,
-                              apxid,
-                              useh2,
-                              printMode,
-                              children,unfold,
+                              orc, rep, title = "耐压试验报告",
+                              parOrc, printMode, children,
                           }: RepVwProps) => {
-    const apds = `${subrid ? "&subrid=" + subrid : ""}`
-    const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
-
   return (
-    <PrintReserveLeast
-        reserve="6rem"
-        title={
-            <>
-                <h2 id={'HydrostaticTest'} className="text-2xl text-center mt-4">
+    <PrintReserveLeast reserve="6rem"
+        title={<>
+                <h2 id={'HydrostaticTest'} className="text-2xl text-center mt-4 mb-2">
                     {title}
-                    <span className="text-base">{apxid}</span>
                 </h2>
-                <span className="block text-center text-xs">FJB/JK 1045-0-2018</span>
-                <div className="flex justify-between">
-                    &nbsp;
-                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
-                </div>
-            </>
-        }
+       </>}
     >
         <FlexibleTable  className="text-sm border-collapse"
-                       columnWidths={ ["17%", "18%", "10.2%", "10.2%", "16%", "7.2%", "%"] }>
+                       columnWidths={ ["5%", "%", "30%", "16%", "22%"] }>
             <TableHeader>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/MangPartSummary?original=1${apds}${apdr}#MangPartSummary_${redId}`}>
-                    <TableRow>
-                        {config耐压试验.map(([title, _2, _1], i: number) => {
-                            return (
-                                <CCell key={i} className={(i===5)? "text-xs leading-[1] p-0" :''}>
-                                    {title}
-                                </CCell>
-                            )
-                        })}
-                    </TableRow>
-                </JumpTab>
+                <TableRow>
+                    <CCell className="text-xs leading-[1] p-0">序号</CCell>
+                    {config耐压试验.map(([title, _2, _1], i: number) => {
+                        return (
+                            <CCell key={i} className={(i===5)? "text-xs leading-[1] p-0" :''}>
+                                {title}
+                            </CCell>
+                        )
+                    })}
+                </TableRow>
             </TableHeader>
             <TableBody>
                 <RepLink ori rep={rep} tag={"HydrostaticTest"}>
                     {orc?.耐压验表?.map((o: any, i: React.Key) => (
                         <TableRow key={i}>
+                            <CCell>{i+1}</CCell>
                             {config耐压试验.map(([_1, tag, _3], k: number) => {
                                 return (
                                     <CCell key={k} className="break-all text-sm">
@@ -81,17 +55,19 @@ export const HydrostaticTestVw = ({
                         </TableRow>
                     ))}
                     {!(orc?.耐压验表?.length > 0)  && (
-                        <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
+                        <TableRow><CCell colSpan={5}>空的</CCell></TableRow>
                     )}
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        <FlexibleTable columnWidths={["17%", "%"]} className="text-sm border-collapse">
+        <FlexibleTable columnWidths={["%"]} className="text-sm border-collapse">
             <TableBody>
                 <RepLink ori rep={rep} tag={"HydrostaticTest"}>
                     <TableRow>
-                        <CCell>检测结果：</CCell>
-                        <CCell>{orc.结果 || '／'}</CCell>
+                        <TableCell split={true} colSpan={6} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                            <span className="block">试验结果：</span>
+                            <span className="block indent-[2rem] text-left">{orc.耐压验结 || '／'}</span>
+                        </TableCell>
                     </TableRow>
                 </RepLink>
             </TableBody>
@@ -101,17 +77,15 @@ export const HydrostaticTestVw = ({
     )
 }
 
-
 export const config耐压试验=[['单位内编号','n',120],
-    ['试验介质','m',80, {t:'B',l:['水','油']}],
+    ['试验介质','m',80, {t:'B',l:['水','油'],s:1}],
     ['试验压力','P',85, {u:'MPa'}],
     ['试验日期','d',120, {t:'M'}]
 ] as Each_ZdSetting[];
-
 interface ThkPartSummaryProps extends InternalItemProps {
     config?: Each_ZdSetting[]
 }
-
+export const itemA耐压验 = ['耐压验结', "耐压验表"];
 export const HydrostaticTest = ({
                                     children,
                                     show,
@@ -122,7 +96,6 @@ export const HydrostaticTest = ({
                                     redId,modType
                                 }: ThkPartSummaryProps) => {
     const { storage, } = useStorage()
-    const subStore = storage?.[`_${modType}_${redId}`]
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
         const schemaTab = {} as any
@@ -130,12 +103,14 @@ export const HydrostaticTest = ({
             schemaTab[field] = z.string().optional()
         })
         schemaFields["耐压验表"] = z.array(z.object(schemaTab))
+        schemaFields['耐压验结'] = z.string().optional()
         return z.object(schemaFields)
     }, [])
     const defaultValues = React.useMemo(() => {
-        const fields = initFormTable(subStore, "耐压验表", config)
+        const fields = initFormTable(storage, "耐压验表", config)
+        fields['耐压验结'] = storage['耐压验结'] ?? ""
         return fields
-    }, [subStore, config])
+    }, [storage, config])
     const arrayFields = React.useMemo(() => {
         const itemTemplate = {} as any
         return [{ name: "耐压验表", itemTemplate }]
@@ -152,14 +127,13 @@ export const HydrostaticTest = ({
         redId,
         modType: modType,
     })
-
     const [nestRenderer] = useTableEdit({
         form,
         arrayControls,
         config: config,
         table: "耐压验表",
         onConfirm,
-        externalData: subStore,
+        externalData: storage,
         defFixedLay: true,
         headview,
         pageSize: 10,
@@ -169,6 +143,25 @@ export const HydrostaticTest = ({
             <>
                 <Card className="py-1 gap-1">
                     <CardContent className="px-1">{nestRenderer}</CardContent>
+                </Card>
+                <Card className="py-1 mb-2 gap-1 m-auto">
+                    <CardHeader>
+                        <CardTitle>耐压试验结果</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-1">
+                        <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
+                            <FormField name={`耐压验结`} control={form.control}
+                                render={({ field }) => (
+                                    <FormItem className="pt-2 w-full break-inside-avoid col-span-2 @5xl:col-span-4 @5xl:row-span-2">
+                                        <FormLabel className="select-text">试验结果:</FormLabel>
+                                        <FormControl className="w-full">
+                                            <BlobInputList datalist={["合格。" ]} {...field} autoComplete="on"/>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                            )}/>
+                        </div>
+                    </CardContent>
                 </Card>
                 {children}
             </>

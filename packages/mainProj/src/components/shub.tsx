@@ -174,7 +174,7 @@ interface FormSwitchProps {
 export function FormSwitch({ field, label, className, switchClass }: FormSwitchProps) {
     const id = useId() + "-" + field.name
     return (
-        <FormItem className={cn("pt-2 w-full break-inside-avoid", className)}>
+        <FormItem className={cn("w-full break-inside-avoid flex flex-col justify-center gap-1", className)}>
             <FormLabel htmlFor={id} className="select-text">{label}</FormLabel>
             <FormControl>
                 <Switch  id={id}
@@ -207,7 +207,7 @@ export function FormHybridSelect({field, label,options, defSel, rows=1, unit,
                                  }: FormHybridSelectProps) {
     const id = useId()
     return (
-        <FormItem>
+        <FormItem className="w-full break-inside-avoid flex flex-col justify-center gap-1">
             <FormLabel htmlFor={id}>{label}</FormLabel>
             <FormControl>
                 <HybridInputSelect id={id}

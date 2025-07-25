@@ -100,7 +100,7 @@ export const ConcAppendix = ({
                             if(!canAdd)  return null;
                             return <div key={i} className="mb-2">
                                 {titNode[i]}&nbsp;
-                                <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
+                                <div className="pt-1 grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
                                     {name.startsWith('结论它') && <FormField control={form.control} name={`${name}.T`}
                                                render={({ field }) => (
                                                    <FormItem className="pt-2 w-full break-inside-avoid">

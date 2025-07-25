@@ -152,16 +152,11 @@ export function MemoDatesInput({
     const dateWidth = typeof dateInputWidth === "number" ? `${dateInputWidth}px` : dateInputWidth
 
     return (
-        <div
-            className={cn(
-                "@container w-full", // 设置容器查询上下文
-                className,
-            )}
+        <div className={cn("@container w-full", className,)}
             {...other}
         >
             <div className="flex flex-col @[500px]:flex-row gap-2 w-full">
-                <Textarea
-                    value={value}
+                <Textarea value={value}
                     onChange={handleTextChange}
                     rows={rows}
                     placeholder={placeholder}
@@ -173,13 +168,14 @@ export function MemoDatesInput({
                             "--date-input-width": dateWidth,
                         } as React.CSSProperties
                     }
+                    name={ other.name }
                 />
-                <Input
-                    type="date"
+                <Input type="date"
                     className="w-full @[500px]:w-auto @[500px]:flex-shrink-0"
                     style={{ width: dateWidth }}
                     onChange={handleDateChange}
                     aria-label="选择日期"
+                    id={id}
                 />
             </div>
         </div>
