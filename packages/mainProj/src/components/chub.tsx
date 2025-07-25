@@ -207,7 +207,10 @@ function Item({
             id={id}
             aria-selected={active}
             {...rest}
-            className={cn("cursor-default p-2", active ? "bg-blue-200" : index % 2 === 0 ? "" : "bg-slate-100")}
+            className={cn(
+                "cursor-default p-2 whitespace-normal break-words h-auto py-2", // Added classes here
+                active ? "bg-blue-200" : index % 2 === 0 ? "" : "bg-slate-100",
+            )}
         >
             {children}
         </div>
@@ -245,7 +248,7 @@ export function BlobInputList({
                                   rows,
                                   ...other
                               }: BlobInputListProps) {
-    const ComInp = rows===1? "input" : Textarea;
+    const ComInp = rows === 1 ? "input" : Textarea
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState(value)
     const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -349,21 +352,24 @@ export function BlobInputList({
                                     }
                                     if (onListChange) onListChange(value)
                                 }}
+                                name={ other.name }
                             >
-                                <SelectTrigger className="w-full pr-5 pl-1 h-auto min-h-[2.5rem] py-2 break-words text-left leading-tight whitespace-normal"
-                                      style={{height: "unset"}}
+                                <SelectTrigger
+                                    className="w-full pr-5 pl-1 h-auto min-h-[2.5rem] py-2 break-words text-left leading-tight whitespace-normal"
+                                    style={{ height: "unset" }}
+                                    id={ other.id }
                                 >
-                                    <SelectValue placeholder={placeholder}/>
+                                    <SelectValue placeholder={placeholder} className="whitespace-normal break-words" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="max-w-md w-auto">
                                     {items.length > 0 ? (
                                         items.map((item, index) => (
-                                            <SelectItem key={index} value={item}>
+                                            <SelectItem key={index} value={item} className="whitespace-normal break-words h-auto py-2">
                                                 {item}
                                             </SelectItem>
                                         ))
                                     ) : (
-                                        <SelectItem value="" disabled>
+                                        <SelectItem value="" disabled className="whitespace-normal break-words h-auto py-2">
                                             暂无选项
                                         </SelectItem>
                                     )}
@@ -408,7 +414,7 @@ export function BlobInputList({
                                     "w-full pr-5 pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                                     className,
                                 )}
-                                style={{maxHeight: rows>1? `${rows}rem`:undefined, }}
+                                style={{ maxHeight: rows > 1 ? `${rows}rem` : undefined }}
                                 {...other}
                                 value={inputValue}
                                 onChange={handleInputChange}
@@ -459,7 +465,7 @@ export function BlobInputList({
                             "w-full pr-1 pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                             className,
                         )}
-                        style={{maxHeight: rows>1? `${rows}rem`:undefined, }}
+                        style={{ maxHeight: rows > 1 ? `${rows}rem` : undefined }}
                         {...other}
                         {...getReferenceProps({
                             ref: refs.setReference,
@@ -493,7 +499,7 @@ export function BlobInputList({
                                     {...getFloatingProps({
                                         ref: refs.setFloating,
                                         className: cn(
-                                            "z-50 bg-white border border-slate-200 shadow-md rounded-md overflow-y-auto",
+                                            "z-50 bg-white border border-slate-200 shadow-md rounded-md overflow-y-auto max-w-md w-auto",
                                             listClassName,
                                         ),
                                         style: {
