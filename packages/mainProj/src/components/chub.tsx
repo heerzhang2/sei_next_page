@@ -242,10 +242,10 @@ export function BlobInputList({
                                   listClassName,
                                   unit,
                                   autoComplete,
-                                  rows = 2,
+                                  rows,
                                   ...other
                               }: BlobInputListProps) {
-    const ComInp = rows > 1 ? "textarea" : "input"
+    const ComInp = rows===1? "input" : Textarea;
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState(value)
     const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -350,7 +350,9 @@ export function BlobInputList({
                                     if (onListChange) onListChange(value)
                                 }}
                             >
-                                <SelectTrigger className="w-full pr-5 pl-1 h-auto min-h-[2.5rem] py-2 break-words text-left leading-tight whitespace-normal">
+                                <SelectTrigger className="w-full pr-5 pl-1 h-auto min-h-[2.5rem] py-2 break-words text-left leading-tight whitespace-normal"
+                                      style={{height: "unset"}}
+                                >
                                     <SelectValue placeholder={placeholder}/>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -406,11 +408,13 @@ export function BlobInputList({
                                     "w-full pr-5 pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                                     className,
                                 )}
+                                style={{maxHeight: rows>1? `${rows}rem`:undefined, }}
                                 {...other}
                                 value={inputValue}
                                 onChange={handleInputChange}
                                 placeholder={placeholder}
                                 autoComplete={autoComplete ?? "on"}
+                                rows={rows}
                             />
                             {/* 控制按钮组 - 上下布局 */}
                             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
@@ -455,6 +459,7 @@ export function BlobInputList({
                             "w-full pr-1 pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                             className,
                         )}
+                        style={{maxHeight: rows>1? `${rows}rem`:undefined, }}
                         {...other}
                         {...getReferenceProps({
                             ref: refs.setReference,
@@ -478,6 +483,7 @@ export function BlobInputList({
                             },
                         })}
                         autoComplete={autoComplete ?? "on"}
+                        rows={rows}
                     />
                     {unit && <div className="whitespace-nowrap flex-shrink-0">{unit}</div>}
                     <FloatingPortal>

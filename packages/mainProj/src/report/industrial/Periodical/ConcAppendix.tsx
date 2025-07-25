@@ -122,7 +122,7 @@ export const ConcAppendix = ({
                                             <FormItem className="pt-2 w-full break-inside-avoid">
                                                 <FormLabel className="select-text">安全状况等级:</FormLabel>
                                                 <FormControl className="w-full">
-                                                    <BlobInputList datalist={等级评定选} {...field} rows={4} autoComplete={`${name}.c`}/>
+                                                    <BlobInputList datalist={等级评定选} {...field} rows={2} autoComplete={`${name}.c`} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

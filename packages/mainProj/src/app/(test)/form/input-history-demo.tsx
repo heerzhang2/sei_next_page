@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import {BlobInputList} from "@/components/chub";
+import {等级评定选} from "@/report/industrial/Periodical/ConcAppendix";
+import {Textarea} from "@/components/ui";
 
 export default function Component() {
     const [searchHistory, setSearchHistory] = useState<string[]>([])
@@ -90,19 +93,27 @@ export default function Component() {
                 <CardContent className="space-y-4">
                     <form className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="othernotI">搜索</Label>
-                            <Input
-                                id="othernotI"
-                                name="othernotI"
-                                type="text"
-                                placeholder="输入搜索关键词"
-                                autoComplete="on"
-                                className="w-full"
-                            />
+                            <Label htmlFor="othernotI">搜BLOB索</Label>
+                            <BlobInputList id="othernotI" datalist={等级评定选}
+                                           value={ "4\n和v\n4\nsdfs\nd好、了\r\n多个的" }
+                                           rows={20} autoComplete="on"/>
                             <p className="text-sm text-muted-foreground">使用 type="search" 和 name="q"，浏览器通常会记住搜索历史</p>
                         </div>
                         <Button type="submit">搜索</Button>
                     </form>
+                    <div className="grid grid-cols-1 gap-1">
+                        <div className="space-y-2">
+                            <Label htmlFor="page" className="select-text">
+                                一部分文字
+                            </Label>
+                            <Textarea
+                                rows={20}
+                                id="page"
+                                value={ "4\n和v\n4\nsdfs\nd好、了\r\n多个的" }
+                                onChange={(e) => updateFormField(e.target.value)}
+                            />
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 
