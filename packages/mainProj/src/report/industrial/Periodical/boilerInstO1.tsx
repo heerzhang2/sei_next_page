@@ -84,6 +84,12 @@ const recordPrintList =[
         createItem('SoniEvaluation', <SoniEvaluation label='焊接接头超声检测-结果评定表'/>),
         createItem('SoniConclusion', <FxSimpConclus label={'超声波检测-检测结果'} clc="结果" clist={soni结果选}/>),
     ]),
+    aggregateProj('硬度检测', 'HARD_TS', [
+        createItem('MangInstrument', <DeviceSurveyFx config={config磁粉仪概} label='磁粉检测-概要仪器'/>),
+        createItem('MangDiagram', <FxDiagram label="检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={mang示说选}/>),
+        createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
+        createItem('MangConclusion', <FxSimpConclus label={'磁粉检测-检测结果'} clc="结果" clist={["1级"]}/>),
+    ]),
     createItem('HydrostaticTest', <HydrostaticTest label='耐压试验报告'/>),
 ];
 

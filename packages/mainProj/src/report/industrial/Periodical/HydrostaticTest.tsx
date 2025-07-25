@@ -13,7 +13,7 @@ import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
 import { z } from "zod"
 import type { UseFormReturn } from "react-hook-form"
 
-//耐压试验: 可选分项， 但不是可重复的分项：
+//耐压试验: 可选分项， 但不是可重复分项：
 export const HydrostaticTestVw = ({
                               orc, rep, title = "耐压试验报告",
                               parOrc, printMode, children,
@@ -173,13 +173,3 @@ export const HydrostaticTest = ({
         </CollapsibleFormSection>
     )
 }
-
-export const cat_Magne=[
-    {title: "磁粉检测-概要仪器", url: "#MangInstrument"},
-    {title: "检测部位缺陷示意图", url: "#MangDiagram"},
-    {title: "磁粉检测评定表", url: "#MangPartSummary"},
-    {title: '磁粉检测-检测结果', url: "#MangConclusion"},
-];
-
-export const mang示说选=['见单线图','对单线图中1-6 号焊缝外表面进行100%磁粉检测，未见超标缺陷。',
-];

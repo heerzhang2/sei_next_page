@@ -102,4 +102,12 @@ export function customPrefI(
     }
     return tmpAr;
 }
-
+/**动态加主报告的目录列表的: 承压可选的分项报告。
+ * */
+export function caseMapFx<T extends Array<{ title: string; url: string }>>(
+    mapFxian: Map<string, PressureLayout>,
+    key: string,
+    pairs: T
+): T {
+    return mapFxian.get(key)?.do ? pairs : [];
+}

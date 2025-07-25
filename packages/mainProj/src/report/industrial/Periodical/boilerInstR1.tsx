@@ -10,7 +10,7 @@ import { createPdfJob } from "@/report/footer/job"
 import { RepFootLink } from "@/report/common/repFootLink"
 import { RepHeadLink } from "@/report/common/repHeadLink"
 import { JumpTab } from "@/report/common/JumpTab"
-import {redoProjHash, subRepHash, useItemsMapPressure} from "@/report/common/pressure"
+import {caseMapFx, redoProjHash, subRepHash, useItemsMapPressure} from "@/report/common/pressure"
 import { DirectoryPagePress } from "@/report/common/directory"
 import { ExplanatoryVw } from "@/report/power/boilInstall/Explanatory"
 import { CertificatePage } from "@/report/power/boilInstall/CertificatePage"
@@ -30,6 +30,7 @@ import {ConcAppendixVw} from "@/report/industrial/Periodical/ConcAppendix";
 import {注意事项IndPl, 首页设备IndPer} from "@/report/industrial/Periodical/rarelyVary";
 import {cat_Sonic, UltrasoundVw} from "@/report/cm/sonic/Ultrasound1";
 import {HydrostaticTestVw} from "@/report/industrial/Periodical/HydrostaticTest";
+import {HardnessVw} from "@/report/cm/hardness/Hardness1";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -49,6 +50,10 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
         component: UltrasoundVw,
         //【不要复制这个】报错Encountered two children with the same key, `#MangInstrument_1`. Keys should be unique
         cat: cat_Sonic
+    },
+    HARD_TS: {
+        catKey: "硬度检测",
+        component: HardnessVw,
     },
 }
 
@@ -171,6 +176,8 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {renderSub('MAGNT_TS')}
 
                 {renderSub('SONIC_TS')}
+                {renderSub('HARD_TS')}
+
                 {mapFxian.get('耐压试验')?.do && <HydrostaticTestVw orc={orc} rep={rep}/>}
                 {mapFxian.get('管道特性表')?.do &&
                     <PipelineCharacteristics orc={orc} rep={rep}/>
@@ -212,6 +219,7 @@ export function useCatalog() {
             { title: "1.3锅炉安装施工及监督检验过程概述", url: "#Explanatory" },
         ]
         return [...head, ...mainReportDirs, ...subRepHash(SUBREP_CONFIG,mapFxian,storage),
+            ...caseMapFx(mapFxian,'耐压试验',[{ title: "耐压试验报告", url: "#HydrostaticTest" }]),
             { title: "特性表-管道单元", url: "#Characteristics" },
             { title: "管道单线图", url: "#LineDiagram" },
         ].filter(Boolean)
