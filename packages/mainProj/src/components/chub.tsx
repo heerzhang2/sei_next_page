@@ -228,8 +228,7 @@ interface BlobInputListProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
     unit?: any
 }
 
-/**支持多行输入的；  缺点：textarea无法记住用户的历史输入；没有清空按钮在手机上不方便。
- * 若是放入FormItem底下的情况：不要自行去设置id的，不一致；<FormItem会转换的。
+/**录入优先的。支持多行输入的；  缺点：多行的textarea无法记住用户的历史输入；
  */
 export function BlobInputList({
                                   value,
@@ -816,9 +815,10 @@ interface BaseInputDatalistProps {
     required?: boolean
     /** Whether input is disabled */
     disabled?: boolean
+    listClassName?: string
 }
 
-// 桌面端组件 - 使用原生 datalist; 但不能支持rows>1多行录入框的。因为datalist不配合textarea啊。
+//桌面端组件 - 使用原生 datalist; 但不能支持rows>1多行录入框的。因为datalist不配合textarea啊。手机不能用列表无法弹出
 function DesktopInputDatalist({
                                   fullWidth = true,
                                   datalist = [],
@@ -828,7 +828,6 @@ function DesktopInputDatalist({
                                   value,
                                   onChange,
                                   id,
-                                  rows,
                                   unit,
                                   autoComplete,
                                   listClassName,
@@ -897,7 +896,6 @@ function DesktopInputDatalist({
                     spellCheck={false}
                     {...other}
                     autoComplete={autoComplete ?? "on"}
-                    rows={rows}
                 />
 
                 {/* 清除按钮 */}
@@ -936,6 +934,8 @@ function MobileInputDatalist({
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState(value)
     const [activeIndex, setActiveIndex] = useState<number | null>(null)
+    const uid = id || useId()
+    const listId = `list-${uid}`
 
     useEffect(() => {
         setInputValue(value)
@@ -999,7 +999,12 @@ function MobileInputDatalist({
 
     return (
         <div className="w-full inline-flex items-center">
-      <textarea
+            <datalist id={listId} className={listClassName}>
+                {datalist.map((option, i) => (
+                    <option key={i} value={option} />
+                ))}
+            </datalist>
+      <input
           className={cn(
               "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
               className,
@@ -1026,6 +1031,7 @@ function MobileInputDatalist({
                   setOpen(true)
               },
           })}
+          list={listId}
           autoComplete={autoComplete ?? "on"}
       />
             {unit}
@@ -1076,10 +1082,11 @@ function MobileInputDatalist({
 interface InputDatalistProps
     extends BaseInputDatalistProps,
         Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps> {}
-
+/**单1行的，优先使用列表的。
+ * 根据手机电脑区分两个分别的组件：只能录入一行文字的。
+* */
 export function InputDatalist(props: InputDatalistProps) {
     const [isMobile, setIsMobile] = useState(false)
-
     // 检测设备类型
     useEffect(() => {
         const checkMobile = () => {
@@ -1087,20 +1094,16 @@ export function InputDatalist(props: InputDatalistProps) {
             const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)
             const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0
             const isSmallScreen = window.innerWidth <= 768
-
             // 综合判断：移动设备 或 触摸设备 或 小屏幕
             setIsMobile(isMobileDevice || (isTouchDevice && isSmallScreen))
         }
-
         checkMobile()
-
         // 监听窗口大小变化
         window.addEventListener("resize", checkMobile)
         return () => window.removeEventListener("resize", checkMobile)
     }, [])
-
     // 根据设备类型渲染不同的组件
-    if (isMobile) {
+    if(isMobile) {
         return <MobileInputDatalist {...props} />
     } else {
         return <DesktopInputDatalist {...props} />
@@ -1140,7 +1143,8 @@ interface HybridInputSelectProps {
     /** 默认模式：'input' | 'select' */
     defaultMode?: "input" | "select"
 }
-
+/**手动切换列表和输入， 缺点：显示图标很多。
+* */
 export function HybridInputSelect({
                                       value = "",
                                       onChange,
@@ -1451,64 +1455,6 @@ export function HybridInputSelect({
                     </FloatingFocusManager>
                 )}
             </FloatingPortal>
-        </div>
-    )
-}
-
-// 简易版本（保留用于向后兼容）
-export function InputSimplelist({
-                                    fullWidth = true,
-                                    datalist = [],
-                                    className,
-                                    style,
-                                    onListChange,
-                                    value,
-                                    onChange,
-                                    id,
-                                    unit,
-                                    ...other
-                                }: BaseInputDatalistProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseInputDatalistProps>) {
-    const [inputValue, setInputValue] = useState(String(value || ""))
-    const uid = id || useId()
-    const listId = `simple-list-${uid}`
-
-    useEffect(() => {
-        setInputValue(String(value || ""))
-    }, [value])
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value
-        setInputValue(newValue)
-
-        if (onChange) {
-            onChange(e)
-        }
-        if (onListChange) {
-            onListChange(newValue)
-        }
-    }
-
-    return (
-        <div className={cn("text-left inline-flex items-center", fullWidth ? "w-full" : "w-auto")} style={style}>
-            <datalist id={listId}>
-                {datalist.map((option, i) => (
-                    <option key={i} value={option} />
-                ))}
-            </datalist>
-
-            <input
-                className={cn(
-                    "rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
-                    fullWidth ? "w-full" : "w-auto",
-                    className,
-                )}
-                value={inputValue}
-                onChange={handleChange}
-                list={listId}
-                id={id}
-                {...other}
-            />
-            {unit}
         </div>
     )
 }
