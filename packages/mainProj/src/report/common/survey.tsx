@@ -102,7 +102,7 @@ interface DeviceSurveyFxProps extends DeviceSurveyDProps {
 /**支持可重复分项的，但是不支持modType为空的 普通 情形。
  * 兼容位于主报告，兼容可独立流转子报告； 允许编辑器2列的但报告展示需改为3列的mergeToThreeColumn()；
 * */
-export const DeviceSurveyFx = ({children, show, label, config, itemA, rep,subrid,redId,modType,verId}: DeviceSurveyFxProps) => {
+export const DeviceSurveyFx = ({children, show, label, config, itemA, rep,subrid,redId,modType,comment}: DeviceSurveyFxProps) => {
     //分项目：modType有的，但是subrType却不一定有的： 处于独立流转分项编辑才有的。
     const { storage, subrType, parrepfs } = useStorage()
     if(!modType || redId===undefined){
@@ -180,7 +180,7 @@ export const DeviceSurveyFx = ({children, show, label, config, itemA, rep,subrid
     })
 
     // 将 usePrefixDataEdit 移到组件顶层
-    const [renderEditor] = usePrefixDataEdit({ config: config || [], form })
+    const [renderEditor] = usePrefixDataEdit({ config: config || [], form,comment})
 
     //替代原本的contentRendererFactory()的位置; 创建内容渲染器函数，但不再调用 hooks
     const content = (
@@ -218,5 +218,23 @@ export function mergeToThreeColumn(originalConfig: any[][][]) {
         newConfig.push(group);
     }
 
+    return newConfig;
+}
+/**将原配置的每行最多3列合并为每组最多2列的新配置
+ */
+export function three2TwoColumn(originalConfig: any[][][]) {
+    // 步骤1：提取所有列到一维数组
+    const allColumns = [];
+    for (const row of originalConfig) {
+        // 遍历原配置的每一行，将行内的所有列加入总数组
+        allColumns.push(...row);
+    }
+    // 步骤2：按每2列一组分组
+    const newConfig = [];
+    for (let i = 0; i < allColumns.length; i += 2) {
+        // 截取当前组的3列（或剩余列）
+        const group = allColumns.slice(i, i + 2);
+        newConfig.push(group);
+    }
     return newConfig;
 }

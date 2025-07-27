@@ -9,10 +9,10 @@ type EditCommentPart= {
     survey: any[];
     comment: any;
 };
-/**给usePrefixDataTable配套的， 2排编辑器。 【缺点】只能最多支持2排的布局的。支持配置方式的pr:""前缀列。不支持直接拆分的。 不支持分项报告；
+/**给usePrefixDataTable配套的， 2排编辑器。 只能最多支持2排的布局的。【特殊点】支持配置方式的pr:""前缀列。不支持配置方式直接拆分多个部分的。
  * 对比（useThreeColumnView、）它是支持直接拆分支持3排的布局；
  * 类似设备概况的：支持'_$'开头的字段：无需编辑输入的配置情形。`
- * @param config  范式模型配置; 基础配置统一为[desc, name, cb] 3元组合的。`
+ * @param config  范式模型配置; 基础配置统一为[desc{pr:, t:, view:(,)}, name, cb｛edit:｝] 3元组合的。`【配置】模型也兼容非前缀的hook；text改成t:统一字段;
  * @param itemA  外部需要的在inp体现字段。  inp:any,setInp:React.Dispatch<React.SetStateAction<any>>,
  * @param form  配套于useForm的表单；
  * @param comment 在某一个行位置遣返注入某个分段的描述，断开布局的，序号基数为1的。
@@ -45,13 +45,13 @@ export const usePrefixDataEdit= ({ config,itemA, form, comment={}}  :
             let [desc2, name2, cb2] = add2p || [];
             if (typeof desc === 'object'){
                 oldPref1= desc?.pr===null? '' : desc?.pr? desc?.pr : oldPref1;
-                desc=oldPref1 +' > '+ desc?.t;
+                desc=(oldPref1? oldPref1 +' > ' :'')+ desc?.t;
             }else{
                 oldPref1='';         //继承性中断
             }
             if (typeof desc2 === 'object'){
                 oldPref2= desc2?.pr===null? '' : desc2?.pr? desc2?.pr : oldPref2;
-                desc2=oldPref2 +' > '+ desc2?.t;
+                desc2=(oldPref2? oldPref2 +' > ' :'')+ desc2?.t;
             }else{
                 oldPref2='';         //继承性中断
             }

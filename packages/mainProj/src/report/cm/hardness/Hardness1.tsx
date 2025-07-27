@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import {BlobInputList, CollapsibleFormSection} from "@/components/chub"
+import {BlobInputList, CollapsibleFormSection, InputDatalist} from "@/components/chub"
 import {
     Card,
     CardContent,
@@ -19,7 +19,7 @@ import { PrintReserveLeast } from "@/components/print-reserve-least"
 import { CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow } from "@/components/flexible-table"
 import { JumpTab } from "@/report/common/JumpTab"
 import {CfootMensLine,} from "@/report/common/view"
-import { ImageComponent } from "@/components/shub"
+import {FormHybridSelect, ImageComponent} from "@/components/shub"
 import { cn } from "@/lib/utils"
 import { useCallback } from "react"
 import { CollapseFx } from "@/report/common/collapse"
@@ -27,7 +27,7 @@ import { useThreeColumnSurvey} from "@/report/hook/usePrefixData"
 import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
 import {z} from "zod"
 import type { UseFormReturn } from "react-hook-form"
-import {mergeToThreeColumn} from "@/report/common/survey";
+import {mergeToThreeColumn, three2TwoColumn} from "@/report/common/survey";
 import {useThreeColumnSubr} from "@/report/hook/useThreeColumnSubr";
 
 
@@ -44,7 +44,7 @@ export const HardnessVw = ({
                               children,unfold,
                           }: RepVwProps) => {
     const TComponent = useh2 ? "h2" : "div"
-    const [upperNode,_S] = useThreeColumnSubr({config: config测量仪, orc, parentOrc: parOrc, slash: true,split:[5]})
+    const [upperNode,_S] = useThreeColumnSubr({config: config硬度测仪, orc, parentOrc: parOrc, slash: true,split:[5]})
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
     //{title}这里不加上id； id需上一层的div统一做添加的。
@@ -60,7 +60,7 @@ export const HardnessVw = ({
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        {/*<FlexibleTable id={'HardEvaluation_'+redId} columnWidths={ ["17%","11%","11%","11%","%","11%","11%","11%"] } className="text-sm border-collapse">
+        <FlexibleTable id={'HardEvaluation_'+redId} columnWidths={ ["17%","11%","11%","11%","%","11%","11%","11%"] } className="text-sm border-collapse">
             <TableHeader>
                 <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardEvaluation?original=1${apds}${apdr}#HardEvaluation_${redId}`}>
                     <TableRow>
@@ -105,7 +105,7 @@ export const HardnessVw = ({
                         {orc?._FILE_S部位?.map(({ name, url }: any, i: number) => {
                             return (
                                 <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
-                                    {i > 0 && <hr />}
+                                    {i > 0 && <hr className="my-[1px] border-blue-900"/>}
                                     <JumpTab
                                         key={i}
                                         href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardDiagram?original=1${apds}${apdr}#FxDiagram_pf${i}`}
@@ -129,8 +129,8 @@ export const HardnessVw = ({
                     </TableCell>
                 </TableRow>
             </TableBody>
-        </FlexibleTable>*/}
-        {/*<FlexibleTable id={'HardPartSummary_'+redId} className="text-sm border-collapse"
+        </FlexibleTable>
+        <FlexibleTable id={'HardPartSummary_'+redId} className="text-sm border-collapse"
                        columnWidths={ ["17%", "18%", "10.2%", "10.2%", "16%", "7.2%", "%"] }>
             <TableHeader>
                 <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardPartSummary?original=1${apds}${apdr}#HardPartSummary_${redId}`}>
@@ -164,6 +164,8 @@ export const HardnessVw = ({
                 </JumpTab>
             </TableBody>
         </FlexibleTable>
+
+
         <FlexibleTable id={'HardConclusion_'+redId} columnWidths={["17%", "%"]} className="text-sm border-collapse">
             <TableBody>
                 <RepLink ori rep={rep} tag={"HardConclusion"} subrid={subrid} redId={redId}>
@@ -173,7 +175,7 @@ export const HardnessVw = ({
                     </TableRow>
                 </RepLink>
             </TableBody>
-        </FlexibleTable>*/}
+        </FlexibleTable>
         <CfootMensLine href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
         />
     </>
@@ -219,25 +221,11 @@ const 磁悬液选=['低粘度油基' ];
 const 磁化方法选=['磁轭法' ];
 const 提升力选=['≥45N' ];
 
-export const config磁粉仪概 = [
-    [["设备名称", "_$设备名称"], ['设备编号', {n:'设备编',t:'l',l:['见特性表']}], ],
-    [['设备类别', {n:'设备类',t:'l',l:设备类别选}], ["部件名称", "部件"], ],
-    [["部件编号", "部件号"], ['材质', {n:'材质',t:'l',l:材质选}] ],
-    [['规格尺寸',{n:'规格',t:'l',l:规格尺寸选}], ['表面状态', {n:'表面',t:'l',l:表面状态选}], ],
-    [['热处理状态', {n:'热处',t:'l',l:热处理状态选}], ['检测标准', {n:'检标准',t:'l',l:检测标准选}], ],
-    [['检测比例', {n:'检比例',t:'l',l:['27.3%（抽查）']} ], ['灵敏度试片', {n:'灵试',t:'l',l:灵敏度试片选}] ],
-    [['检测时机', {n:'时机',t:'l',l:检测时机选}], ['合格级别', {n:'合级别',t:'l',l:合格级别选} ], ],
-    [['检测方法', {n:'检法',t:'l',l:检测方法选}], ['磁粉类型', {n:'粉类',t:'l',l:磁粉类型选}] ],
-    [['磁悬液', {n:'悬液',t:'l',l:磁悬液选}], ['磁化方法', {n:'磁化法',t:'l',l:磁化方法选}] ],
-    [['提升力/磁化电流', {n:'升力',t:'l',l:提升力选}], ['施加方法','施法'],],
-    [['电流类型', {n:'电类',t:'l',l:["交流" ]}] , ]
-]
-
 const render试材质={
     view:(orc:any, parentOrc:any)=>{
-        return <span >试样材质/标准</span>
+        return <span>试样材质/标准</span>
     },
-    text: '试样材质/标准',
+    t: '试样材质/标准水电费',
 };
 export const 现场结果选=["符合要求","不符合要求"];
 const 部件名称选=['工艺管道' ];
@@ -247,7 +235,7 @@ const 试样材质选=['20' ];
 const 热处理选=['原始状态' ];
 const 耦合方式选=['刚性支承' ];
 const 冲击方向选=['水平' ];
-export const config测量仪 = [
+const config硬度测仪 = [
     [['设备名称', '_$设备名称'],  ['部件名称', {n:'部件',t:'l',l:部件名称选}] ],
     [['测量仪器名称', '仪器名'],  ['测量仪器编号', '仪器编'] ],
     [['测量仪器型号',{n:'仪器型',t:'l',l:仪器型号选}], ['冲击装置类型',{n:'冲击',t:'l',l:冲击装置选}], ['检测日期',{n:'测日',t:'d'}] ],
@@ -257,8 +245,8 @@ export const config测量仪 = [
     [['试验环境条件',{n:'环境',t:'l',l:现场结果选}] ]
 ];
 
-//编辑器2列；显示需改为3列的：
-export const config磁粉概要 = mergeToThreeColumn(config磁粉仪概);
+//编辑器需改为2列的：
+export const config硬度仪 = three2TwoColumn(config硬度测仪);
 
 //配置第四个位置的{ t: type, l: list, u: unit, s: size }
 export const config磁粉评定=[['部位编号','n',120],
@@ -299,7 +287,7 @@ export const HardEvaluation = ({
     }, [])
     const defaultValues = React.useMemo(() => {
         const fields = initFormTable(subStore, "部位表", config)
-        fields['单位'] = storage['单位'] ?? ""
+        fields['单位'] = subStore['单位'] ?? ""
         return fields
     }, [subStore, config])
     const arrayFields = React.useMemo(() => {
@@ -335,23 +323,19 @@ export const HardEvaluation = ({
             <>
                 <Card className="py-1 gap-1">
                     <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
-{/*                        <FormField name={`单位`} control={form.control}
-                                   render={({ field }) => (
-                                       <FormItem className="pt-2 w-full break-inside-avoid col-span-1">
-                                           <FormLabel className="select-text">硬度值的单位:</FormLabel>
-                                           <FormControl className="w-full">
-                                               <BlobInputList {...field} rows={1} datalist={["HB" ]} autoComplete="on"/>
-                                           </FormControl>
-                                           <FormMessage />
-                                       </FormItem>
-                                   )}/>*/}
-
-
-                        <FormField name={`单位`} control={form.control} render={({ field }) => (
-                            <FormItem className="pt-2 w-full break-inside-avoid">
-                                <FormLabel className="select-text">硬度值的单位</FormLabel>
-                                <FormControl><Input {...field} /></FormControl><FormMessage />
-                            </FormItem>
+{/*                        <FormField name={`单位`} control={form.control} render={({ field }) => (
+                            <FormHybridSelect field={field} label='硬度值的单位:' options={["HB"]} autoComplete="on"/>
+                        )}/>*/}
+                        <FormField name={`单位`} control={form.control}
+                           render={({ field }) => (
+                               <FormItem className="pt-2 w-full break-inside-avoid col-span-1">
+                                   <FormLabel className="select-text">硬度值的单位:</FormLabel>
+                                   <FormControl className="w-full">
+                                       <InputDatalist datalist={["HB"]} {...field} autoComplete="on"/>
+                                       {/*<BlobInputList {...field} rows={1} datalist={["HB"]} autoComplete="on"/>*/}
+                                   </FormControl>
+                                   <FormMessage />
+                               </FormItem>
                         )}/>
                     </div>
                     <Separator className="my-2"/>
