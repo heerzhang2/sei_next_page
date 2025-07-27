@@ -30,7 +30,7 @@ import {ConcAppendixVw} from "@/report/industrial/Periodical/ConcAppendix";
 import {注意事项IndPl, 首页设备IndPer} from "@/report/industrial/Periodical/rarelyVary";
 import {cat_Sonic, UltrasoundVw} from "@/report/cm/sonic/Ultrasound1";
 import {HydrostaticTestVw} from "@/report/industrial/Periodical/HydrostaticTest";
-import {HardnessVw} from "@/report/cm/hardness/Hardness1";
+import {cat_Hard, HardnessVw} from "@/report/cm/hardness/Hardness1";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -54,6 +54,7 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     HARD_TS: {
         catKey: "硬度检测",
         component: HardnessVw,
+        cat: cat_Hard
     },
 }
 

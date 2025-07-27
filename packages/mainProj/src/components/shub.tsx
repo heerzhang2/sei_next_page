@@ -6,7 +6,7 @@ import {usePageSectionOrientation} from "@/components/page-section-orientation";
 import * as React from "react";
 import type {ControllerRenderProps} from "react-hook-form";
 import {FormControl, FormItem, FormLabel, FormMessage, Switch} from "@/components/ui";
-import {ClearableSelect, HybridInputSelect} from "@/components/chub";
+import {ClearableSelect, HybridInputSelect, HybridInputSelectProps} from "@/components/chub";
 import {useFormField} from "@/components/ui/form";
 
 

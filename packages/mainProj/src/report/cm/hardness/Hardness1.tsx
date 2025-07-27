@@ -1,7 +1,17 @@
 "use client"
 import * as React from "react"
-import { CollapsibleFormSection } from "@/components/chub"
-import { Card, CardContent, } from "@/components/ui"
+import {BlobInputList, CollapsibleFormSection} from "@/components/chub"
+import {
+    Card,
+    CardContent,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+    Input,
+    Separator,
+} from "@/components/ui"
 import { initFormTable, useFormFramework, } from "@/report/hook/useFormFramework"
 import { type InternalItemProps, RepLink, type RepVwProps } from "@/report/common/base"
 import { useStorage } from "@/report/StorageContext"
@@ -15,9 +25,10 @@ import { useCallback } from "react"
 import { CollapseFx } from "@/report/common/collapse"
 import { useThreeColumnSurvey} from "@/report/hook/usePrefixData"
 import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
-import { z } from "zod"
+import {z} from "zod"
 import type { UseFormReturn } from "react-hook-form"
 import {mergeToThreeColumn} from "@/report/common/survey";
+import {useThreeColumnSubr} from "@/report/hook/useThreeColumnSubr";
 
 
 export const HardnessVw = ({
@@ -33,23 +44,57 @@ export const HardnessVw = ({
                               children,unfold,
                           }: RepVwProps) => {
     const TComponent = useh2 ? "h2" : "div"
-    const renderUpper = useThreeColumnSurvey({ config: config测量仪, orc, rep, slash: true })
+    const [upperNode,_S] = useThreeColumnSubr({config: config测量仪, orc, parentOrc: parOrc, slash: true,split:[5]})
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
     //{title}这里不加上id； id需上一层的div统一做添加的。
     const render=()=><>
-        <FlexibleTable id={'MangInstrument_'+redId} columnWidths={ ["5%", "5%", "25%", "5%", "4%","22%", "6%","5%", "%"] } className="text-sm border-collapse">
+        <FlexibleTable id={'HardInstrument_'+redId} columnWidths={ ["12%","27%","13%","18%","9%","%"] } className="text-sm border-collapse">
             <TableBody>
-                <RepLink ori rep={rep} tag={"MangInstrument"} subrid={subrid} redId={redId}>
-                    {renderUpper}
+                <RepLink ori rep={rep} tag={"HardInstrument"} subrid={subrid} redId={redId}>
+                    {upperNode}
+                    <TableRow>
+                        <CCell>试验环境条件</CCell><CCell>{orc?.环境}</CCell>
+                        <CCell>检测标准</CCell><CCell colSpan={3}>GB/T17394.1-2014《金属材料里氏硬度试验第1部分试验方法》</CCell>
+                    </TableRow>
                 </RepLink>
+            </TableBody>
+        </FlexibleTable>
+        {/*<FlexibleTable id={'HardEvaluation_'+redId} columnWidths={ ["17%","11%","11%","11%","%","11%","11%","11%"] } className="text-sm border-collapse">
+            <TableHeader>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardEvaluation?original=1${apds}${apdr}#HardEvaluation_${redId}`}>
+                    <TableRow>
+                        <CCell rowSpan={2}>试验部位编号</CCell><CCell colSpan={3}>硬度值(单位: {orc?.单位??'HB'} )</CCell>
+                        <CCell rowSpan={2}>试验部位编号</CCell><CCell colSpan={3}>硬度值(单位: {orc?.单位??'HB'} )</CCell>
+                    </TableRow>
+                    <TableRow><CCell>母材</CCell><CCell>热影响区</CCell><CCell>焊缝</CCell><CCell>母材</CCell><CCell>热影响区</CCell><CCell>焊缝</CCell>
+                    </TableRow>
+                </JumpTab>
+            </TableHeader>
+            <TableBody>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardEvaluation?original=1${apds}${apdr}#HardEvaluation_${redId}`}>
+                    {orc?.部位表?.map((o: any, i: React.Key) => (
+                        <TableRow key={i}>
+                            {config评定.map(([_1, tag, _3], k: number) => {
+                                return (
+                                    <CCell key={k} className="break-all text-sm">
+                                        {o?.[tag] || "／"}
+                                    </CCell>
+                                )
+                            })}
+                        </TableRow>
+                    ))}
+                    {!(orc?.部位表?.length > 0)  && (
+                        <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
+                    )}
+                </JumpTab>
             </TableBody>
         </FlexibleTable>
         <FlexibleTable columnWidths={["%"]}>
             <TableBody>
-                <TableRow id={'MangDiagram_'+redId}  className="border border-gray-700">
+                <TableRow id={'HardDiagram_'+redId}  className="border border-gray-700">
                     <TableCell  className="border border-gray-700">
-                        <RepLink ori rep={rep} tag={"MangDiagram"} subrid={subrid} redId={redId}>
+                        <RepLink ori rep={rep} tag={"HardDiagram"} subrid={subrid} redId={redId}>
                             <div className="text-sm">检测部位、缺陷位置示意图：&nbsp;
                                 {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
                                 {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
@@ -63,7 +108,7 @@ export const HardnessVw = ({
                                     {i > 0 && <hr />}
                                     <JumpTab
                                         key={i}
-                                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/MangDiagram?original=1${apds}${apdr}#FxDiagram_pf${i}`}
+                                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardDiagram?original=1${apds}${apdr}#FxDiagram_pf${i}`}
                                     >
                                         <div className="flex justify-around items-center my-0.5">
                                             {url && (
@@ -84,11 +129,11 @@ export const HardnessVw = ({
                     </TableCell>
                 </TableRow>
             </TableBody>
-        </FlexibleTable>
-        <FlexibleTable id={'MangPartSummary_'+redId} className="text-sm border-collapse"
+        </FlexibleTable>*/}
+        {/*<FlexibleTable id={'HardPartSummary_'+redId} className="text-sm border-collapse"
                        columnWidths={ ["17%", "18%", "10.2%", "10.2%", "16%", "7.2%", "%"] }>
             <TableHeader>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/MangPartSummary?original=1${apds}${apdr}#MangPartSummary_${redId}`}>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardPartSummary?original=1${apds}${apdr}#HardPartSummary_${redId}`}>
                     <TableRow>
                         {config磁粉评定.map(([title, _2, _1], i: number) => {
                             return (
@@ -101,7 +146,7 @@ export const HardnessVw = ({
                 </JumpTab>
             </TableHeader>
             <TableBody>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/MangPartSummary?original=1${apds}${apdr}#MangPartSummary_${redId}`}>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardPartSummary?original=1${apds}${apdr}#HardPartSummary_${redId}`}>
                     {orc?.部位表?.map((o: any, i: React.Key) => (
                         <TableRow key={i}>
                             {config磁粉评定.map(([_1, tag, _3], k: number) => {
@@ -119,16 +164,16 @@ export const HardnessVw = ({
                 </JumpTab>
             </TableBody>
         </FlexibleTable>
-        <FlexibleTable id={'MangConclusion_'+redId} columnWidths={["17%", "%"]} className="text-sm border-collapse">
+        <FlexibleTable id={'HardConclusion_'+redId} columnWidths={["17%", "%"]} className="text-sm border-collapse">
             <TableBody>
-                <RepLink ori rep={rep} tag={"MangConclusion"} subrid={subrid} redId={redId}>
+                <RepLink ori rep={rep} tag={"HardConclusion"} subrid={subrid} redId={redId}>
                     <TableRow>
                         <CCell>检测结果：</CCell>
                         <CCell>{orc.结果 || '／'}</CCell>
                     </TableRow>
                 </RepLink>
             </TableBody>
-        </FlexibleTable>
+        </FlexibleTable>*/}
         <CfootMensLine href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
         />
     </>
@@ -223,20 +268,23 @@ export const config磁粉评定=[['部位编号','n',120],
     ['缺陷性质','Q',120, {t:'B',l:['未焊透/整条']}],
     ['评定级别','C',55, {t:'B',l:['Ⅳ级','Ⅲ级','Ⅱ级','Ⅰ级']}],
     ['备 注','m',105] ] as Each_ZdSetting[];
+export const config评定=[ ['试验部位编号1','n1',90],['母材','M1',60],['热影响区','R1',60], ['焊缝','f1',60],
+    ['试验部位编号2','n2',90],['母材','M2',60],['热影响区','R2',60], ['焊缝','f2',60]
+] as Each_ZdSetting[];
 
-interface ThkPartSummaryProps extends InternalItemProps {
+interface HardEvaluationProps extends InternalItemProps {
     config?: Each_ZdSetting[]
 }
 
-export const HardPartSummary = ({
+export const HardEvaluation = ({
                                     children,
                                     show,
                                     label,
                                     rep,
-                                    config = config磁粉评定,
+                                    config = config评定,
                                     subrid,
                                     redId,modType
-                                }: ThkPartSummaryProps) => {
+                                }: HardEvaluationProps) => {
     const { storage, } = useStorage()
     const subStore = storage?.[`_${modType}_${redId}`]
     const schema = React.useMemo(() => {
@@ -246,10 +294,12 @@ export const HardPartSummary = ({
             schemaTab[field] = z.string().optional()
         })
         schemaFields["部位表"] = z.array(z.object(schemaTab))
+        schemaFields['单位'] = z.string().optional()
         return z.object(schemaFields)
     }, [])
     const defaultValues = React.useMemo(() => {
         const fields = initFormTable(subStore, "部位表", config)
+        fields['单位'] = storage['单位'] ?? ""
         return fields
     }, [subStore, config])
     const arrayFields = React.useMemo(() => {
@@ -284,12 +334,33 @@ export const HardPartSummary = ({
         return (
             <>
                 <Card className="py-1 gap-1">
+                    <div className="grid grid-cols-1 @xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 gap-2">
+{/*                        <FormField name={`单位`} control={form.control}
+                                   render={({ field }) => (
+                                       <FormItem className="pt-2 w-full break-inside-avoid col-span-1">
+                                           <FormLabel className="select-text">硬度值的单位:</FormLabel>
+                                           <FormControl className="w-full">
+                                               <BlobInputList {...field} rows={1} datalist={["HB" ]} autoComplete="on"/>
+                                           </FormControl>
+                                           <FormMessage />
+                                       </FormItem>
+                                   )}/>*/}
+
+
+                        <FormField name={`单位`} control={form.control} render={({ field }) => (
+                            <FormItem className="pt-2 w-full break-inside-avoid">
+                                <FormLabel className="select-text">硬度值的单位</FormLabel>
+                                <FormControl><Input {...field} /></FormControl><FormMessage />
+                            </FormItem>
+                        )}/>
+                    </div>
+                    <Separator className="my-2"/>
                     <CardContent className="px-1">{nestRenderer}</CardContent>
                 </Card>
                 {children}
             </>
         )
-    }, [children, nestRenderer])
+    }, [form, children, nestRenderer])
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
             {render(content)}
@@ -297,12 +368,12 @@ export const HardPartSummary = ({
     )
 }
 
-export const cat_Magne=[
-    {title: "磁粉检测-概要仪器", url: "#MangInstrument"},
-    {title: "检测部位缺陷示意图", url: "#MangDiagram"},
-    {title: "磁粉检测评定表", url: "#MangPartSummary"},
-    {title: '磁粉检测-检测结果', url: "#MangConclusion"},
+export const cat_Hard=[
+    // {title: "磁粉检测-概要仪器", url: "#HardInstrument"},
+    // {title: "检测部位缺陷示意图", url: "#HardDiagram"},
+    // {title: "磁粉检测评定表", url: "#HardPartSummary"},
+    // {title: '磁粉检测-检测结果', url: "#HardConclusion"},
 ];
 
-export const mang示说选=['见单线图','对单线图中1-6 号焊缝外表面进行100%磁粉检测，未见超标缺陷。',
+export const Hard示说选=['见单线图','对单线图中1-6 号焊缝外表面进行100%磁粉检测，未见超标缺陷。',
 ];

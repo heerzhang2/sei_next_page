@@ -5,7 +5,21 @@ import {useStorage} from "../StorageContext";
 import {RecordInputConfig} from "./config";
 import {itemResultUnqualifiedOmni, useItemsMapOmni} from "./omni";
 import {undefined, z} from "zod";
-import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
+import {
+    Button,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+    Input,
+    Separator
+} from "@/components/ui";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {BlobInputList, CollapsibleFormSection, CommonSelect, FormSelectField} from "@/components/chub";
 import {clcOptions} from "@/report/common/ActionMapItem";
@@ -438,6 +452,78 @@ export const itemA技术见证 = ['资料编号', '大备注'];
 /**通用见证材料3项的： 约定：children [] 可以嵌入俩个儿子DOM节点，分别代表两个段落插入一个div块;
  * */
 export const WitnessSimple = ({
+                                  tails, show, label, rep,
+                                  titles, nowit, memolist, witlist
+                              }: WitnessParkDjProps) => {
+    const {storage,} = useStorage();
+    const schema = React.useMemo(() => {
+        const schemaFields = {} as any
+        itemA技术见证.forEach((name) => {
+            schemaFields[name] = z.string().optional()
+        })
+        return z.object(schemaFields)
+    }, [])
+    const defaultValues = React.useMemo(() => {
+        const fields = {} as any
+        itemA技术见证.forEach((name) => {
+            fields[name] = storage[name] ?? ""
+        })
+        return fields
+    }, [storage])
+    const {render, form, } = useFormFramework({schema, defaultValues, rep})
+
+    const content = React.useMemo(() => {
+        return (
+            <>
+                {!nowit && <Card className="py-1 gap-1">
+                    <CardHeader>
+                        <CardTitle>{titles![0]}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-1">
+                        <FormField control={form.control} name="资料编号"
+                                   render={({field}) => (
+                                       <FormItem className="pt-2 w-full break-inside-avoid">
+                                           <FormLabel className="select-text">资料及编号:</FormLabel>
+                                           <FormControl className="w-full">
+                                               <BlobInputList rows={6} datalist={witlist}  {...field}  />
+                                           </FormControl>
+                                           <FormMessage/>
+                                       </FormItem>
+                                   )}
+                        />
+                        {(tails as any[])?.[0]}
+                    </CardContent>
+                </Card>
+                }
+                <Card className="py-1 mb-2 gap-2">
+                    <CardHeader>
+                        <CardTitle>{titles![1]}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-1">
+                        <FormField control={form.control} name="大备注"
+                                   render={({field}) => (
+                                       <FormItem className="pt-2 w-full break-inside-avoid">
+                                           <FormLabel className="select-text">备注:</FormLabel>
+                                           <FormControl className="w-full">
+                                               <BlobInputList rows={6} datalist={memolist}  {...field}  />
+                                           </FormControl>
+                                           <FormMessage/>
+                                       </FormItem>
+                                   )}
+                        />
+                        {(tails as any[])?.[1]}
+                    </CardContent>
+                </Card>
+            </>
+        )
+    }, [tails, form, ])
+
+    return <CollapsibleFormSection title={label!} defaultOpen={show}>
+        {render(content)}
+    </CollapsibleFormSection>;
+};
+
+export const WitnessSimple删除2 = ({
                                   tails, show, alone = true, redId, nestMd, label, rep,
                                   titles, nowit, memolist, witlist
                               }: WitnessParkDjProps) => {

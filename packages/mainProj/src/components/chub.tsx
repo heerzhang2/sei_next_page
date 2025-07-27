@@ -1111,7 +1111,7 @@ export function InputDatalist(props: InputDatalistProps) {
 }
 
 // 新增：混合输入选择组件
-interface HybridInputSelectProps {
+export interface HybridInputSelectProps {
     /** 当前值 */
     value?: string
     /** 值变化回调 */
@@ -1142,8 +1142,10 @@ interface HybridInputSelectProps {
     id?: string
     /** 默认模式：'input' | 'select' */
     defaultMode?: "input" | "select"
+    autoComplete?: string
 }
-/**手动切换列表和输入， 缺点：显示图标很多。
+/**@Deprecated   淘汰了！
+ * 手动切换列表和输入， 缺点：显示图标很多。
 * */
 export function HybridInputSelect({
                                       value = "",
@@ -1301,15 +1303,12 @@ export function HybridInputSelect({
     return (
         <div className={cn("w-full", className)}>
             <div className={cn("text-left inline-flex items-start", fullWidth ? "w-full" : "w-auto")}>
-                {/* 桌面端原生 datalist 支持 */}
-                {!isMobile && (
+                    {/* 桌面端原生 datalist 支持 */}
                     <datalist id={listId}>
                         {allOptions.map((option, i) => (
                             <option key={i} value={option} />
                         ))}
                     </datalist>
-                )}
-
                 <div className="relative flex-1">
                     {isInputMode ? (
                         // 输入模式：多行文本输入
@@ -1323,7 +1322,7 @@ export function HybridInputSelect({
                             placeholder={placeholder}
                             required={required}
                             disabled={disabled}
-                            list={!isMobile ? listId : undefined}
+                            list={ listId }
                             className={cn(
                                 "w-full rounded-md border border-input bg-background p-2 pr-20 resize-vertical focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
                                 inputClassName,
