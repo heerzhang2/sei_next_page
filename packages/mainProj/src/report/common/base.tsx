@@ -96,7 +96,7 @@ export interface RepVwProps{
     subrid?: string;
     //分项报告里面的可重复分项的编号。
     redId?: number;
-    //可重复分项目的附加后缀： 【定位】hash页面路由使用的，确保主报告中唯一性。
+    //可重复分项目的附加后缀序号的表达：和redId分离没关系，【定位】hash页面路由使用的，确保主报告中唯一性。
     apxid?: string;
     //避免pdf书签太多：
     useh2?: boolean;

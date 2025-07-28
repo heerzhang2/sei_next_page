@@ -86,7 +86,7 @@ export const EntranceSetup = ({show,redId, nestMd,rep}: InternalItemProps) => {
                             <FormItem className="pt-2 w-full break-inside-avoid">
                                 <FormLabel className="select-text">设置待测试表格的各列宽度：</FormLabel>
                                 <FormControl className="w-full">
-                                    <BlobInputList rows={2} {...field} datalist={["[\"4%\",\"5%\",\"4%\",\"6%\",\"%\",\"23%\"]"]}/>
+                                    <BlobInputList rows={2} {...field} autoComplete="off"/>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

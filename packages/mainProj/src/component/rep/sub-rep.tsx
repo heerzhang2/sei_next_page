@@ -95,7 +95,7 @@ export default function SubRep({
                 const subStore=storage?.[`_${modType}_${seq}`] || {};
                 //区分若没有任一个独立流转分项的情况：
                 const head=subreps.length > 0? '1' : '';
-                const apxid=head+`-${k+1}`;
+                const apxid=localIdx?.length>1? (head+`-${k+1}`) :'';
                 const hash="_"+modType+"_1-"+seq;       //本地id固定都有_1的；
                 const needCollapse=collapse || (localIdx?.length >1)
                 return (<div key={k} id={hash}>

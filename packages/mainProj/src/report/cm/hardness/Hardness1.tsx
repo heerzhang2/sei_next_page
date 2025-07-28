@@ -1,33 +1,22 @@
 "use client"
 import * as React from "react"
-import {BlobInputList, CollapsibleFormSection, InputDatalist} from "@/components/chub"
-import {
-    Card,
-    CardContent,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-    Input,
-    Separator,
-} from "@/components/ui"
+import {CollapsibleFormSection, InputDatalist} from "@/components/chub"
+import {Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage, Separator,} from "@/components/ui"
 import { initFormTable, useFormFramework, } from "@/report/hook/useFormFramework"
 import { type InternalItemProps, RepLink, type RepVwProps } from "@/report/common/base"
 import { useStorage } from "@/report/StorageContext"
 import { PrintReserveLeast } from "@/components/print-reserve-least"
 import { CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow } from "@/components/flexible-table"
 import { JumpTab } from "@/report/common/JumpTab"
-import {CfootMensLine,} from "@/report/common/view"
-import {FormHybridSelect, ImageComponent} from "@/components/shub"
+import {FootMensLine,} from "@/report/common/view"
+import {ImageComponent} from "@/components/shub"
 import { cn } from "@/lib/utils"
 import { useCallback } from "react"
 import { CollapseFx } from "@/report/common/collapse"
-import { useThreeColumnSurvey} from "@/report/hook/usePrefixData"
 import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
 import {z} from "zod"
 import type { UseFormReturn } from "react-hook-form"
-import {mergeToThreeColumn, three2TwoColumn} from "@/report/common/survey";
+import {three2TwoColumn} from "@/report/common/survey";
 import {useThreeColumnSubr} from "@/report/hook/useThreeColumnSubr";
 
 
@@ -49,7 +38,7 @@ export const HardnessVw = ({
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
     //{title}这里不加上id； id需上一层的div统一做添加的。
     const render=()=><>
-        <FlexibleTable id={'HardInstrument_'+redId} columnWidths={ ["12%","27%","13%","18%","9%","%"] } className="text-sm border-collapse">
+        <FlexibleTable id={'HardInstrument_'+redId} columnWidths={ ["13.6%","25%","12.9%","18%","9%","%"] } className="text-sm border-collapse">
             <TableBody>
                 <RepLink ori rep={rep} tag={"HardInstrument"} subrid={subrid} redId={redId}>
                     {upperNode}
@@ -60,42 +49,12 @@ export const HardnessVw = ({
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        <FlexibleTable id={'HardEvaluation_'+redId} columnWidths={ ["17%","11%","11%","11%","%","11%","11%","11%"] } className="text-sm border-collapse">
-            <TableHeader>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardEvaluation?original=1${apds}${apdr}#HardEvaluation_${redId}`}>
-                    <TableRow>
-                        <CCell rowSpan={2}>试验部位编号</CCell><CCell colSpan={3}>硬度值(单位: {orc?.单位??'HB'} )</CCell>
-                        <CCell rowSpan={2}>试验部位编号</CCell><CCell colSpan={3}>硬度值(单位: {orc?.单位??'HB'} )</CCell>
-                    </TableRow>
-                    <TableRow><CCell>母材</CCell><CCell>热影响区</CCell><CCell>焊缝</CCell><CCell>母材</CCell><CCell>热影响区</CCell><CCell>焊缝</CCell>
-                    </TableRow>
-                </JumpTab>
-            </TableHeader>
-            <TableBody>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardEvaluation?original=1${apds}${apdr}#HardEvaluation_${redId}`}>
-                    {orc?.部位表?.map((o: any, i: React.Key) => (
-                        <TableRow key={i}>
-                            {config评定.map(([_1, tag, _3], k: number) => {
-                                return (
-                                    <CCell key={k} className="break-all text-sm">
-                                        {o?.[tag] || "／"}
-                                    </CCell>
-                                )
-                            })}
-                        </TableRow>
-                    ))}
-                    {!(orc?.部位表?.length > 0)  && (
-                        <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
-                    )}
-                </JumpTab>
-            </TableBody>
-        </FlexibleTable>
         <FlexibleTable columnWidths={["%"]}>
             <TableBody>
                 <TableRow id={'HardDiagram_'+redId}  className="border border-gray-700">
                     <TableCell  className="border border-gray-700">
                         <RepLink ori rep={rep} tag={"HardDiagram"} subrid={subrid} redId={redId}>
-                            <div className="text-sm">检测部位、缺陷位置示意图：&nbsp;
+                            <div className="text-sm">测点位置示意图：&nbsp;
                                 {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
                                 {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
                                     <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
@@ -130,26 +89,22 @@ export const HardnessVw = ({
                 </TableRow>
             </TableBody>
         </FlexibleTable>
-        <FlexibleTable id={'HardPartSummary_'+redId} className="text-sm border-collapse"
-                       columnWidths={ ["17%", "18%", "10.2%", "10.2%", "16%", "7.2%", "%"] }>
+        <FlexibleTable id={'HardEvaluation_'+redId} columnWidths={ ["17%","11%","11%","11%","%","11%","11%","11%"] } className="text-sm border-collapse">
             <TableHeader>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardPartSummary?original=1${apds}${apdr}#HardPartSummary_${redId}`}>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardEvaluation?original=1${apds}${apdr}#HardEvaluation_${redId}`}>
                     <TableRow>
-                        {config磁粉评定.map(([title, _2, _1], i: number) => {
-                            return (
-                                <CCell key={i} className={(i===5)? "text-xs leading-[1] p-0" :''}>
-                                    {title}
-                                </CCell>
-                            )
-                        })}
+                        <CCell rowSpan={2}>试验部位编号</CCell><CCell colSpan={3}>硬度值(单位: {orc?.单位??'HB'} )</CCell>
+                        <CCell rowSpan={2}>试验部位编号</CCell><CCell colSpan={3}>硬度值(单位: {orc?.单位??'HB'} )</CCell>
+                    </TableRow>
+                    <TableRow><CCell>母材</CCell><CCell>热影响区</CCell><CCell>焊缝</CCell><CCell>母材</CCell><CCell>热影响区</CCell><CCell>焊缝</CCell>
                     </TableRow>
                 </JumpTab>
             </TableHeader>
             <TableBody>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardPartSummary?original=1${apds}${apdr}#HardPartSummary_${redId}`}>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/HardEvaluation?original=1${apds}${apdr}#HardEvaluation_${redId}`}>
                     {orc?.部位表?.map((o: any, i: React.Key) => (
                         <TableRow key={i}>
-                            {config磁粉评定.map(([_1, tag, _3], k: number) => {
+                            {config评定.map(([_1, tag, _3], k: number) => {
                                 return (
                                     <CCell key={k} className="break-all text-sm">
                                         {o?.[tag] || "／"}
@@ -164,39 +119,43 @@ export const HardnessVw = ({
                 </JumpTab>
             </TableBody>
         </FlexibleTable>
-
-
-        <FlexibleTable id={'HardConclusion_'+redId} columnWidths={["17%", "%"]} className="text-sm border-collapse">
+        <FlexibleTable id={'HardConclusion_'+redId} columnWidths={["%"]} className="text-sm border-collapse">
             <TableBody>
                 <RepLink ori rep={rep} tag={"HardConclusion"} subrid={subrid} redId={redId}>
                     <TableRow>
-                        <CCell>检测结果：</CCell>
-                        <CCell>{orc.结果 || '／'}</CCell>
+                        <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                            <span className="block">备注：</span>
+                            <span className="block indent-[2rem] text-left">{orc.备注 || '／'}</span>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                            <p>检测结果：</p>
+                            <span className="block indent-[2rem] text-left">{orc.结果 || '／'}</span>
+                        </TableCell>
                     </TableRow>
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        <CfootMensLine href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
+        <FootMensLine  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
         />
     </>
 
   return (
-    <PrintReserveLeast
-        reserve="6rem"
+    <PrintReserveLeast reserve="6rem"
         title={
             <>
                 <TComponent className="text-2xl text-center mt-4">
                     {title}
                     <span className="text-base">{apxid}</span>
                 </TComponent>
-                <span className="block text-center text-xs">FJB/JK 1045-0-2018</span>
+                <span className="block text-center text-xs">FJB/JK 1047-0-2018</span>
                 <div className="flex justify-between">
-                    &nbsp;
+                    <span className="text-sm">单位内部编号：{orc.单位内部编号}</span>
                     <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
                 </div>
             </>
-        }
-    >
+    }>
         {unfold ? render() :
             <CollapseFx printMode={printMode} subrid={subrid}>
                 {render()}
@@ -205,21 +164,6 @@ export const HardnessVw = ({
     </PrintReserveLeast>
     )
 }
-
-const 设备类别选=['GC2','工艺管道' ];
-const 材质选=['20' ];
-const 表面状态选=['经表面处理后' ];
-const 热处理状态选=['处理' ];
-const 规格尺寸选=['见管道特性表' ];
-const 检测标准选=["NB/T47013.4-2015" ];
-const 灵敏度试片选=['A1:30/100' ];
-const 检测时机选=['宏观检验后' ];
-const 合格级别选=['Ⅰ级' ];
-const 检测方法选=['连续法','湿法/连续法' ];
-const 磁粉类型选=['非荧光磁粉' ];
-const 磁悬液选=['低粘度油基' ];
-const 磁化方法选=['磁轭法' ];
-const 提升力选=['≥45N' ];
 
 const render试材质={
     view:(orc:any, parentOrc:any)=>{
@@ -248,14 +192,6 @@ const config硬度测仪 = [
 //编辑器需改为2列的：
 export const config硬度仪 = three2TwoColumn(config硬度测仪);
 
-//配置第四个位置的{ t: type, l: list, u: unit, s: size }
-export const config磁粉评定=[['部位编号','n',120],
-    ['缺陷编号','h',90],
-    ['缺陷位置','p',80, {t:'B',l:['0位']}],
-    ['长度(mm)','l',85],
-    ['缺陷性质','Q',120, {t:'B',l:['未焊透/整条']}],
-    ['评定级别','C',55, {t:'B',l:['Ⅳ级','Ⅲ级','Ⅱ级','Ⅰ级']}],
-    ['备 注','m',105] ] as Each_ZdSetting[];
 export const config评定=[ ['试验部位编号1','n1',90],['母材','M1',60],['热影响区','R1',60], ['焊缝','f1',60],
     ['试验部位编号2','n2',90],['母材','M2',60],['热影响区','R2',60], ['焊缝','f2',60]
 ] as Each_ZdSetting[];
@@ -263,7 +199,6 @@ export const config评定=[ ['试验部位编号1','n1',90],['母材','M1',60],[
 interface HardEvaluationProps extends InternalItemProps {
     config?: Each_ZdSetting[]
 }
-
 export const HardEvaluation = ({
                                     children,
                                     show,
@@ -287,7 +222,7 @@ export const HardEvaluation = ({
     }, [])
     const defaultValues = React.useMemo(() => {
         const fields = initFormTable(subStore, "部位表", config)
-        fields['单位'] = subStore['单位'] ?? ""
+        fields['单位'] = subStore?.['单位'] ?? ""
         return fields
     }, [subStore, config])
     const arrayFields = React.useMemo(() => {
@@ -353,11 +288,9 @@ export const HardEvaluation = ({
 }
 
 export const cat_Hard=[
-    // {title: "磁粉检测-概要仪器", url: "#HardInstrument"},
-    // {title: "检测部位缺陷示意图", url: "#HardDiagram"},
-    // {title: "磁粉检测评定表", url: "#HardPartSummary"},
-    // {title: '磁粉检测-检测结果', url: "#HardConclusion"},
+    {title: "硬度检测测点位置图", url: "#HardDiagram"},
+    {title: "硬度检测分析结果表", url: "#HardEvaluation"},
 ];
 
-export const Hard示说选=['见单线图','对单线图中1-6 号焊缝外表面进行100%磁粉检测，未见超标缺陷。',
+export const hard示说选=['见硬度检测附图。',
 ];

@@ -21,17 +21,21 @@ interface FxSimpConclusProps  extends InternalItemProps{
     memo?: string;
     //结果可以选择的
     clist?: string[];
+    //备注也能选
+    mlist?: string[];
     //替换标题文字
     ticlc?: string;
     timemo?: string;
 }
-/**常见的编辑器：结果 备注； 加上参数，增加可复用的特征
+/**可重复分项模式的做法： 通用的；
+ * 常见的编辑器：结果 备注； 加上参数，增加可复用的特征
  * */
 export const FxSimpConclus =
 ({  rep,
     children,
     show = false,
-    label, clc, memo, modType, subrid,redId, clist,ticlc,timemo,
+    label, modType, subrid,redId,
+    clc, memo, clist,mlist, ticlc,timemo,
 }:FxSimpConclusProps) => {
     const { storage } = useStorage()
     const subStore = storage?.[`_${modType}_${redId}`]
@@ -67,18 +71,28 @@ export const FxSimpConclus =
                                                     <Label htmlFor="memo" className="select-text">
                                                         {timemo ??'记录备注'}：
                                                     </Label>
-                                                    <Textarea
-                                                        className="min-h-[14rem] resize-y"
-                                                        id="memo"
-                                                        value={editForm?.[memo] || ""}
-                                                        onChange={(e) =>
-                                                            setEditForm({
-                                                                ...editForm,
-                                                                [memo]: e.target.value,
-                                                            })
-                                                        }
-                                                        placeholder="输入更多文字"
-                                                    />
+                                                    { mlist?
+                                                        <BlobInputList className="w-full min-h-[10rem] resize-y"
+                                                                       id="memo"
+                                                                       datalist={mlist}
+                                                                       value={editForm?.[memo] || ""}
+                                                                       onChange={(val) => updateFormField(memo, val)}
+                                                                       autoComplete="on"
+                                                        />
+                                                        :
+                                                        <Textarea
+                                                            className="min-h-[14rem] resize-y"
+                                                            id="memo"
+                                                            value={editForm?.[memo] || ""}
+                                                            onChange={(e) =>
+                                                                setEditForm({
+                                                                    ...editForm,
+                                                                    [memo]: e.target.value,
+                                                                })
+                                                            }
+                                                            placeholder="输入更多文字"
+                                                        />
+                                                    }
                                                 </>}
                                                 <Label htmlFor="clc" className="select-text">
                                                     {ticlc ??'检测结果'}：
@@ -88,6 +102,7 @@ export const FxSimpConclus =
                                                            datalist={clist}
                                                            value={editForm?.[clc] || ""}
                                                            onChange={(val) => updateFormField(clc, val)}
+                                                           autoComplete="on"
                                                 />
                                                 {editErr && <p className="text-sm text-red-600">{editErr}</p>}
                                             </div>
