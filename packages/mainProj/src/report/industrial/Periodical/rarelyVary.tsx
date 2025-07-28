@@ -28,6 +28,8 @@ export const titleRenders ={
   "MAGNT_TS": (store: any,i: number) => <>[{store?.['_MAGNT_TS_'+i]?.['部件'] ?? ``}]</>,
   "SONIC_TS": (store: any,i: number) => <>[{store?.['_SONIC_TS_'+i]?.['部件'] ?? ``}]</>,
   "HARD_TS": (store: any,i: number) => <>[{store?.['_HARD_TS_'+i]?.['部件'] ?? ``}]</>,
+  "OPTIC_TS": (store: any,i: number) => <>[{store?.['_OPTIC_TS_'+i]?.['部件'] ?? ``}]</>,
+  "CPSTR_VR": (store: any,i: number) => <>[{store?.['_CPSTR_VR_'+i]?.['部件'] ?? ``}]</>,
 }
 
 

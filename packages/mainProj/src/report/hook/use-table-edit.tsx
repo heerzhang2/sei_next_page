@@ -722,7 +722,7 @@ export function useTableEdit({
                                                             )}
                                                         />
                                                     )
-                                                else if (type === "H")
+                                                else if (type === "H")      //淘汰的
                                                     return (
                                                         <FormField
                                                             key={i}
@@ -750,7 +750,7 @@ export function useTableEdit({
                                                             )}
                                                         />
                                                     )
-                                                else if (type === "L")
+                                                else if (type === "l")
                                                     return (
                                                         <FormField
                                                             key={i}

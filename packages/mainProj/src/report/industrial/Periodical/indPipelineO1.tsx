@@ -22,6 +22,8 @@ import {ConclusionIndPer} from "@/report/industrial/Periodical/Conclusion";
 import {config超声仪概, SoniEvaluation, soni结果选} from "@/report/cm/sonic/Ultrasound1";
 import {HydrostaticTest} from "@/report/industrial/Periodical/HydrostaticTest";
 import {config硬度仪, HardEvaluation, hard示说选} from "@/report/cm/hardness/Hardness1";
+import {config光谱测仪, OptcEvaluation, optc示说选} from "@/report/cm/optical/Optical1";
+import {config强度核概, CpsvCalculation, optc结果选} from "@/report/cm/cpStrength/csVerification1";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -76,21 +78,33 @@ const recordPrintList =[
     ]),
     aggregateProj('磁粉检测', 'MAGNT_TS', [
         createItem('MangInstrument', <DeviceSurveyFx config={config磁粉仪概} label='磁粉检测-概要仪器'/>),
-        createItem('MangDiagram', <FxDiagram label="检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={mang示说选}/>),
+        createItem('MangDiagram', <FxDiagram label="磁粉检测部位缺陷位置图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={mang示说选}/>),
         createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
         createItem('MangConclusion', <FxSimpConclus label={'磁粉检测-检测结果'} clc="结果" clist={["1级"]}/>),
     ]),
     aggregateProj('超声波检测', 'SONIC_TS', [
         createItem('SoniInstrument', <DeviceSurveyFx config={config超声仪概} label='超声波检测-概要仪器'/>),
-        createItem('SoniEvaluation', <SoniEvaluation label='焊接接头超声检测-结果评定表'/>),
+        createItem('SoniEvaluation', <SoniEvaluation label='焊接接头超声检测结果评定'/>),
         createItem('SoniConclusion', <FxSimpConclus label={'超声波检测-检测结果'} clc="结果" clist={soni结果选}/>),
     ]),
     aggregateProj('硬度检测', 'HARD_TS', [
         createItem('HardInstrument', <DeviceSurveyFx config={config硬度仪} label='磁粉检测-概要仪器'/>),
-        createItem('HardDiagram', <FxDiagram label="检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={10} dlist={hard示说选}/>),
+        createItem('HardDiagram', <FxDiagram label="磁粉检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={10} dlist={hard示说选}/>),
         createItem('HardEvaluation', <HardEvaluation label='硬度检测分析结果表'/>),
         createItem('HardConclusion', <FxSimpConclus label={'硬度检测-备注检测结果'} clc="结果" memo='备注'
                                                     clist={['所检项目未见异常。']} mlist={['试验部位为硬度检测附图中编号处的管件。']}/>),
+    ]),
+    aggregateProj('光谱检测', 'OPTIC_TS', [
+        createItem('OptcInstrument', <DeviceSurveyFx config={config光谱测仪} label='光谱检测-概要仪器'/>),
+        createItem('OptcEvaluation', <OptcEvaluation label='光谱检测分析结果表'/>),
+        createItem('OptcDiagram', <FxDiagram label="光谱检测位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={10} dlist={optc示说选}/>),
+        createItem('OptcConclusion', <FxSimpConclus label={'光谱检测-检测结果'} clc="结果"
+                                                    clist={['对管件进行光谱复核，经检测，管件的Mn元素含量符合母材20钢的标准范围。']} />),
+    ]),
+    aggregateProj('耐压强度校核', 'CPSTR_VR', [
+        createItem('CpsvInstrument', <DeviceSurveyFx config={config强度核概} label='耐压强度校核-概要'/>),
+        createItem('CpsvCalculation', <CpsvCalculation label='耐压强度校核-计算'/>),
+        createItem('CpsvConclusion', <FxSimpConclus label={'强度校核-校核结果'} clc="结果" clist={optc结果选} ticlc='校核结果'/>),
     ]),
     createItem('HydrostaticTest', <HydrostaticTest label='耐压试验报告'/>),
 ];

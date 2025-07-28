@@ -7,7 +7,7 @@ import PageSectionOrientation from "@/components/page-section-orientation";
 import BrowsingPattern from "@/component/rep/browsingPattern";
 import {useParams, useSearchParams} from "next/navigation";
 import {EditControlProvider} from "@/component/rep/editControl-provider";
-import {ReportView, useCatalog} from "@/report/industrial/Periodical/boilerInstR1";
+import {ReportView, useCatalog} from "@/report/industrial/Periodical/indPipelineR1";
 import ReportMakeable from "@/common/ReportMakeable";
 
 export default function Layout({children}: Readonly<{children: React.ReactNode}>) {

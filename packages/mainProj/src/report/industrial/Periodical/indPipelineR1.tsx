@@ -31,6 +31,8 @@ import {注意事项IndPl, 首页设备IndPer} from "@/report/industrial/Periodi
 import {cat_Sonic, UltrasoundVw} from "@/report/cm/sonic/Ultrasound1";
 import {HydrostaticTestVw} from "@/report/industrial/Periodical/HydrostaticTest";
 import {cat_Hard, HardnessVw} from "@/report/cm/hardness/Hardness1";
+import {cat_Optc, OpticalVw} from "@/report/cm/optical/Optical1";
+import {CsVerificationVw} from "@/report/cm/cpStrength/csVerification1";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -48,13 +50,22 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     SONIC_TS: {
         catKey: "超声波检测",
         component: UltrasoundVw,
-        //【不要复制这个】报错Encountered two children with the same key, `#MangInstrument_1`. Keys should be unique
+        //【不要复制这个】报错Encountered two children with the same key, `#MangInstrument_1`. Keys should be unique冲突的ID
         cat: cat_Sonic
     },
     HARD_TS: {
         catKey: "硬度检测",
         component: HardnessVw,
         cat: cat_Hard
+    },
+    OPTIC_TS: {
+        catKey: "光谱检测",
+        component: OpticalVw,
+        cat: cat_Optc
+    },
+    CPSTR_VR: {
+        catKey: "耐压强度校核",
+        component: CsVerificationVw,
     },
 }
 
@@ -174,7 +185,10 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 <MacroscopicVw orc={orc} rep={rep}/>
                 {mapFxian.get('安全附件与仪表检验')?.do && <AccessoriesVw orc={orc} rep={rep}/>}
                 {renderSub('THICK_MS')}
+                {renderSub('CPSTR_VR')}
+
                 {renderSub('MAGNT_TS')}
+                {renderSub('OPTIC_TS')}
 
                 {renderSub('SONIC_TS')}
                 {renderSub('HARD_TS')}

@@ -545,7 +545,7 @@ export function SuffixInput({ fullWidth = true, className, style, value, onChang
         <div className={cn("text-left inline-flex items-center gap-0.5", fullWidth ? "w-full" : "w-auto")} style={style}>
             <input
                 className={cn(
-                    "rounded-md border border-input bg-background flex-1 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                    "rounded-md border border-input bg-background flex-1 focus:outline-none focus:ring-2 focus:ring-ring focus:border-input text-center",
                     className,
                 )}
                 value={value || ""}
@@ -883,7 +883,7 @@ function DesktopInputDatalist({
             <div className="relative flex-1">
                 <input
                     className={cn(
-                        "min-h-8 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full",
+                        "pl-1 min-h-8 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full",
                         showClearButton ? "pr-8" : "pr-2",
                         className,
                     )}
@@ -1006,7 +1006,7 @@ function MobileInputDatalist({
             </datalist>
       <input
           className={cn(
-              "w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+              "pl-1 w-full rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
               className,
           )}
           id={id}

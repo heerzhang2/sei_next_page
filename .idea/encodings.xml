@@ -97,8 +97,8 @@
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/HydrostaticTest.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/Macroscopic.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/MaterialReview.tsx" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/indPielineO1.tsx" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/indPielineR1.tsx" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/indPipelineO1.tsx" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/indPipelineR1.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/orcBase.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/Periodical/rarelyVary.tsx" charset="GBK" />
     <file url="file://$PROJECT_DIR$/packages/mainProj/src/report/industrial/diagram-manager.tsx" charset="GBK" />
