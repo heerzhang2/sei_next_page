@@ -216,7 +216,7 @@ export function useFormFramework({
   // 使用contentRendererFactory创建内容渲染器
   const contentRenderer = contentRendererFactory ? contentRendererFactory(form, arrayControls) : null
 
-  // 创建渲染函数 把@container上移给CollapsibleFormSection
+  // 创建渲染函数 把@container上移给CollapsibleFormSection;这里node和contentRendererFactory其中之一必须有注入的，因为Form必须在最外面。
   const render = (node: any) => (
       <>
         <Form {...form}>

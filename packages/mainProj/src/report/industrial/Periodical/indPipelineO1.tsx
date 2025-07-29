@@ -24,6 +24,7 @@ import {HydrostaticTest} from "@/report/industrial/Periodical/HydrostaticTest";
 import {config硬度仪, HardEvaluation, hard示说选} from "@/report/cm/hardness/Hardness1";
 import {config光谱测仪, OptcEvaluation, optc示说选} from "@/report/cm/optical/Optical1";
 import {config强度核概, CpsvCalculation, optc结果选} from "@/report/cm/cpStrength/csVerification1";
+import {LongArticleFx} from "@/report/cm/cpStrength/LongArticleFx";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -104,6 +105,7 @@ const recordPrintList =[
     aggregateProj('耐压强度校核', 'CPSTR_VR', [
         createItem('CpsvInstrument', <DeviceSurveyFx config={config强度核概} label='耐压强度校核-概要'/>),
         createItem('CpsvCalculation', <CpsvCalculation label='耐压强度校核-计算'/>),
+        createItem('LongArticleFx', <LongArticleFx label={'耐压强度校核-计算'} />),
         createItem('CpsvConclusion', <FxSimpConclus label={'强度校核-校核结果'} clc="结果" clist={optc结果选} ticlc='校核结果'/>),
     ]),
     createItem('HydrostaticTest', <HydrostaticTest label='耐压试验报告'/>),

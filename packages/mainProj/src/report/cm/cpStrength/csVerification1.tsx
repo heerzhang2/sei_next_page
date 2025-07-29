@@ -30,6 +30,7 @@ import type { UseFormReturn } from "react-hook-form"
 import {useThreeColumnSubr} from "@/report/hook/useThreeColumnSubr";
 import {three2TwoColumn} from "@/report/common/survey";
 import {X} from "lucide-react";
+import {LongArticleContent} from "@/report/cm/cpStrength/LongArticleFx";
 
 //耐压强度校核： 上一代没做这个模板
 export const CsVerificationVw = ({
@@ -65,13 +66,15 @@ export const CsVerificationVw = ({
                             <span className="block indent-[2rem] text-left">{orc.说明 || '／'}</span>
                         </TableCell>
                     </TableRow>
-                    <TableRow>
-                        <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
-                            <p>壁厚校核计算：</p>
-                            <span className="block indent-[2rem] text-left">{orc.校核计算 || '／'}</span>
-                        </TableCell>
-                    </TableRow>
                 </RepLink>
+                <TableRow>
+                    <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                        <span className="block indent-[2rem] text-left">{orc.校核计算 || '／'}</span>
+                        <hr/>
+                        <p>壁厚校核计算：</p>
+                        <LongArticleContent orc={orc} rep={rep} printMode={printMode}/>
+                    </TableCell>
+                </TableRow>
                 <RepLink ori rep={rep} tag={"CpsvConclusion"} subrid={subrid} redId={redId}>
                     <TableRow>
                         <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
@@ -120,6 +123,7 @@ const config强度概况 = [
 ];
 
 export const config强度核概 = three2TwoColumn(config强度概况);
+
 const 说明选=[
     `校核压力P= 1.0 MPa；校核温度：184 ℃；取 10 材料许用应力[б]t= 103MPa；
 主管外径D0=76mm；主管实测最小厚度Ttn=3.55mm； 
@@ -127,19 +131,20 @@ const 说明选=[
 α1= 90 °，sinα1= 1 ；主管厚度减薄负偏差的附加量C1m=0.5325 mm； 支管厚度减薄负偏差的附
 加量C1t=0.5265 mm；系数Y=0.4；焊接接头系数Ej取 0.6 ，腐蚀裕量C2取1.0mm`,
 ];
+
 const 计算选=[
     `Φ159管：
- Pw Do 1.0×159
+         Pw Do                        1.0×159
 Ts1= -------------------- +C2 = ------------------------------- +1.0 =2.28mm ＜T1
-2 ([σ]tEj+PwY) 2（103×0.6+1.0×0.4）
+     2 ([σ]tEj+PwY)                2（103×0.6+1.0×0.4）
 Φ133管：
  Pw Do 1.0×133
 Ts1= -------------------- +C2 = ------------------------------- +1.0 =2.07mm ＜T2
 2 ([σ]tEj+PwY) 2（103×0.6+1.0×0.4）
 Φ108管：
- Pw Do 1.0×108
+           Pw Do                      1.0×108
 Ts1= -------------------- +C2 = ------------------------------- +1.0 =1.87mm ＜T3
-2 ([σ]tEj+PwY) 2（103×0.6+1.0×0.4）
+          2 ([σ]tEj+PwY)            2（103×0.6+1.0×0.4）
 Φ89管：
  Pw Do 1.0×89
 Ts1= -------------------- +C2 = ------------------------------- +1.0 =1.72mm ＜T4
@@ -153,6 +158,7 @@ Ts2= -------------------- +C2 = ------------------------------- +1.0 =1.61mm ＜
 Ts1= -------------------- +C2 = ------------------------------- +1.0 =1.46mm ＜T6
 2 ([σ]tEj+PwY) 2（103×0.6+1.0×0.4）`,
 ];
+
 
 export const CpsvCalculation = ({
                                     children,
