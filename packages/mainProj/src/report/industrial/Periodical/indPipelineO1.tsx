@@ -105,7 +105,7 @@ const recordPrintList =[
     aggregateProj('耐压强度校核', 'CPSTR_VR', [
         createItem('CpsvInstrument', <DeviceSurveyFx config={config强度核概} label='耐压强度校核-概要'/>),
         createItem('CpsvCalculation', <CpsvCalculation label='耐压强度校核-计算'/>),
-        createItem('LongArticleFx', <LongArticleFx label={'耐压强度校核-计算'} />),
+        createItem('LongArticleFx', <LongArticleFx label={'耐压强度校核-计算'} wsPre/>),
         createItem('CpsvConclusion', <FxSimpConclus label={'强度校核-校核结果'} clc="结果" clist={optc结果选} ticlc='校核结果'/>),
     ]),
     createItem('HydrostaticTest', <HydrostaticTest label='耐压试验报告'/>),

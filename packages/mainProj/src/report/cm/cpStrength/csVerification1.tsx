@@ -69,10 +69,8 @@ export const CsVerificationVw = ({
                 </RepLink>
                 <TableRow>
                     <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
-                        <span className="block indent-[2rem] text-left">{orc.校核计算 || '／'}</span>
-                        <hr/>
                         <p>壁厚校核计算：</p>
-                        <LongArticleContent orc={orc} rep={rep} printMode={printMode}/>
+                        <LongArticleContent orc={orc} rep={rep} subrid={subrid} redId={redId} wsPre printMode={printMode}/>
                     </TableCell>
                 </TableRow>
                 <RepLink ori rep={rep} tag={"CpsvConclusion"} subrid={subrid} redId={redId}>
