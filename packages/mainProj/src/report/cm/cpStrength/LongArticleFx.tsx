@@ -118,12 +118,13 @@ export const LongArticleFx = ({
 
     React.useEffect(() => {
         if (jumpProjIdx) {
-            startEdit(Number(jumpProjIdx))
+            startEdit(null, Number(jumpProjIdx))
         }
     }, [jumpProjIdx])
 
     // 开始编辑
-    const startEdit = (index: number) => {
+    const startEdit = (e, index: number) => {
+        e?.preventDefault()
         setEditingIndex(index)
         setIsAddingNew(false)
         setIsInserting(false)
@@ -183,11 +184,19 @@ export const LongArticleFx = ({
         }
     }
 
-    // 取消编辑
+    // 取消编辑 react-hook-form在对付非表格的数组是空值情况的意外删除下一条
     const cancelEdit = () => {
         if (editingIndex !== null && !isInserting && !isAddingNew) {
-            // 普通编辑模式：恢复原值
+            const nowVal=projects[editingIndex]
             const originalValue = getInitialData()[editingIndex] || ""
+            if(nowVal===""){        //特殊情况的处理，否则会直接删除下一条
+                let currentProjects = [...projects];
+                currentProjects[editingIndex]=originalValue;
+                replace(currentProjects)
+                setEditingIndex(null)
+                return
+            }
+            // 普通编辑模式：恢复原值
             update(editingIndex, originalValue)
             setEditingIndex(null)
         } else if (isAddingNew) {
@@ -204,19 +213,22 @@ export const LongArticleFx = ({
     }
 
     // 删除项目
-    const deleteProject = (index: number) => {
+    const deleteProject = (e,index: number) => {
+        e?.preventDefault()
         remove(index)
         handleConfirm()
     }
 
     // 开始移动操作
-    const startMove = (index: number) => {
+    const startMove = (e,index: number) => {
+        e?.preventDefault()
         setSelectedForMove(index)
         setShowMoveTargets(true)
     }
 
     // 取消移动操作
-    const cancelMove = () => {
+    const cancelMove = (e) => {
+        e?.preventDefault()
         setSelectedForMove(null)
         setShowMoveTargets(false)
     }
@@ -283,7 +295,7 @@ export const LongArticleFx = ({
         </Card>
     )
 
-    // 渲染插入按钮
+    // 渲染插入按钮，等4个按钮
     const renderInsertButton = (position: number) => (
         <div className="flex justify-center py-1">
             <Button
@@ -296,6 +308,50 @@ export const LongArticleFx = ({
                 <ChevronDown className="w-3 h-3 mr-1" />
                 在此处插入
             </Button>
+            {!showMoveTargets ? (
+                <>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => startEdit(e,position)}
+                        disabled={isAnyEditing}
+                        className="@md:size-9 px-1 has-[>svg]:px-1"
+                        aria-label="修改"
+                    >
+                        <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => startMove(e,position)}
+                        disabled={isAnyEditing}
+                        className="@md:size-9 px-1 has-[>svg]:px-1 text-blue-600 hover:text-blue-700"
+                        aria-label="移动"
+                    >
+                        <Move className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => deleteProject(e,position)}
+                        disabled={isAnyEditing}
+                        className="@md:size-9 px-1 has-[>svg]:px-1 text-red-600 hover:text-red-700"
+                        aria-label="删除"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                </>
+            ) : selectedForMove === position ? (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={cancelMove}
+                    className="@md:size-9 px-1 has-[>svg]:px-1 text-gray-600"
+                    aria-label="取消移动"
+                >
+                    <X className="w-4 h-4" />
+                </Button>
+            ) : null}
         </div>
     )
 
@@ -357,7 +413,7 @@ export const LongArticleFx = ({
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => startEdit(index)}
+                                            onClick={(e) => startEdit(e,index)}
                                             disabled={isAnyEditing}
                                             className="@md:size-9 px-1 has-[>svg]:px-1"
                                             aria-label="修改"
@@ -367,7 +423,7 @@ export const LongArticleFx = ({
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => startMove(index)}
+                                            onClick={(e) => startMove(e,index)}
                                             disabled={isAnyEditing}
                                             className="@md:size-9 px-1 has-[>svg]:px-1 text-blue-600 hover:text-blue-700"
                                             aria-label="移动"
@@ -377,7 +433,7 @@ export const LongArticleFx = ({
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => deleteProject(index)}
+                                            onClick={(e) => deleteProject(e,index)}
                                             disabled={isAnyEditing}
                                             className="@md:size-9 px-1 has-[>svg]:px-1 text-red-600 hover:text-red-700"
                                             aria-label="删除"
