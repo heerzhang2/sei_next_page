@@ -52,7 +52,7 @@ export const LongArticleFx = ({
                                   subrid,
                                   wsPre,
                               }: LongArticleFxProps) => {
-    const { screenHeight, } = useWindowSize()
+    const { screenHeight } = useWindowSize()
     const searchParams = useSearchParams()
     const jumpProjIdx = searchParams?.get("from")
     const { storage } = useStorage()
@@ -70,8 +70,8 @@ export const LongArticleFx = ({
 
     // 定义新的文本块Schema
     const textBlockSchema = z.object({
-        t: z.string().min(1, "内容是必填的"),  // 文本内容
-        a: z.boolean().optional(),   // 避免分页
+        t: z.string().min(1, "内容是必填的"), // 文本内容
+        a: z.boolean().optional(), // 避免分页
     })
 
     const explanatorySchema = z.object({
@@ -243,7 +243,8 @@ export const LongArticleFx = ({
     const toggleAvoidPageBreak = (index: number) => {
         const currentItem = projects[index]
         if (currentItem) {
-            update(index, { ...currentItem, a: !currentItem.a })
+            //避免布尔字段数据库存储false的做法：
+            update(index, { ...currentItem, a: currentItem.a ? undefined : true })
             handleConfirm()
         }
     }
@@ -282,10 +283,17 @@ export const LongArticleFx = ({
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        name={`${stname}.${index}.a`}
-                        control={form.control}
-                        render={({ field }) => <FormSwitch field={field} label="避免分页" desc="打印时避免在此处分页" />}
+                    {/* 使用外部控制的 FormSwitch */}
+                    <FormSwitch
+                        label="避免分页"
+                        desc="打印时避免在此处分页"
+                        checked={projects[index]?.a === true}
+                        onChange={(checked) => {
+                            const currentItem = projects[index]
+                            if (currentItem) {
+                                update(index, { ...currentItem, a: checked ? true : undefined })
+                            }
+                        }}
                     />
                 </div>
                 <div className="flex justify-end space-x-2 pt-4 border-t">
