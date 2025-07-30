@@ -286,11 +286,11 @@ export const LongArticleFx = ({
             )}
             <CardContent className="space-y-1 px-2">
                 <div className="grid grid-cols-1 gap-1">
-                    <FormField
+                    <FormField className="max-h-2/3"
                         control={form.control}
                         name={`${stname}.${index}.t`}
                         render={({ field }) => (
-                            <FormItem className="space-y-2">
+                            <FormItem className="max-h-2/3 space-y-2">
                                 <FormLabel htmlFor={`page-${index}`} className="select-text">
                                     一部分文字
                                 </FormLabel>
@@ -298,9 +298,9 @@ export const LongArticleFx = ({
                                     <Textarea
                                         {...field}
                                         ref={textareaRef}
-                                        rows={20}
+                                        rows={isTinyHeightScr? 5: 10}
                                         id={`page-${index}`}
-                                        className={cn(wsPre ? "whitespace-pre" : "")}
+                                        className={cn( wsPre ? "whitespace-pre" : "")}
                                         placeholder="输入更多文字"
                                         // 移除 autoFocus，改用受控的聚焦逻辑
                                     />
@@ -373,7 +373,7 @@ export const LongArticleFx = ({
                             <Edit className="w-3 h-3" />
                         </Button>
                     </div>
-                    <div className="flex items-center justify-center gap-0 py-0 bg-gray-50 rounded-t-lg border-b">
+                    <div className="mt-3 flex items-center justify-center gap-0 py-0 bg-gray-50 rounded-t-lg border-b">
                         {/* 第二行：删除、避免分页、空位 */}
                         <Button
                             variant="ghost"
@@ -531,12 +531,6 @@ export const LongArticleFx = ({
                                             uniqueKey={`project-${index}-ml`}
                                             containerClassName="w-full"
                                         />
-                                    )}
-                                    {projects[index]?.a && (
-                                        <div className="text-xs text-green-600 mt-1 flex items-center">
-                                            <Printer className="w-3 h-3 mr-1" />
-                                            避免分页
-                                        </div>
                                     )}
                                 </div>
                             </div>
