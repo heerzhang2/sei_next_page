@@ -310,7 +310,7 @@ export const LongArticleFx = ({
                         )}
                     />
                      {/*使用外部控制的 FormSwitch */}
-                    <FormSwitch  ngrid  className={"@lg:min-w-[30rem] max-w-full mx-auto"}
+                    <FormSwitch  ngrid  className={"@lg:min-w-[30rem] max-w-full mx-auto px-3 py-1"}
                         label="避免分页"
                         checked={projects[index]?.a === true}
                         onChange={(checked) => {

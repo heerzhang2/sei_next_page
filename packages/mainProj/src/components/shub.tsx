@@ -170,6 +170,7 @@ interface FormSwitchProps {
     field?: any // react-hook-form field
     label?: string
     desc?: string
+    //受react-hook-form控，非受控：两个模式的存储差异; #非受控可以把false直接都改成undefined ;
     onChange?: (value: boolean) => void // 外部控制的回调函数
     checked?: boolean // 外部传入的当前值
     disabled?: boolean // 是否禁用
@@ -177,12 +178,14 @@ interface FormSwitchProps {
     switchClass?: string
     ngrid?: boolean     // 是否不是常见的grid布局底下的情况
 }
-
+/**非受控状态有问题： 重置时刻无法恢复状态的显示，看起来不一致的样子。还是尽量不用非受控状态。
+ * 但是用field注入的控制方式毛病就是无法把false直接都改成undefined给上一级的表单组件。
+* */
 export const FormSwitch = ({ field,
                                className, switchClass,ngrid,
                                label, desc, onChange, checked, disabled }: FormSwitchProps) => {
     const id = useId() + "-" + (field?.name || "switch")
-    // 如果提供了外部控制，则使用外部控制
+    // 如果提供了外部控制，则使用外部控制（非受react-hook-form控模式的）
     const isExternallyControlled = onChange !== undefined
 
     // 获取当前值
@@ -194,8 +197,8 @@ export const FormSwitch = ({ field,
             // 外部控制：直接调用外部回调
             onChange(newValue)
         } else if (field) {
-            // react-hook-form 控制：将 false 转换为 undefined
-            field.onChange(newValue ? true : undefined)
+            // react-hook-form 控制：将 false 转换为 undefined；【因为】重置无法一致显示，还是改成用false存储的。放弃受控模式的存储简化想法了。
+            field.onChange(newValue)
         }
     }
 
@@ -229,7 +232,8 @@ export const FormSwitch = ({ field,
             }
 
             <FormControl>
-                <Switch checked={currentValue}
+                <Switch  checked={ currentValue }
+                        defaultChecked={isExternallyControlled?  undefined : currentValue}
                         id={id}  name={field?.name | id}
                         onCheckedChange={handleChange} disabled={disabled}
                         className={cn(
