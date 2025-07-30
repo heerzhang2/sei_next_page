@@ -117,7 +117,7 @@ export interface CustomSwitchProps {
     className?: string;
     id?: string;
 }
-/**替代原本Switch； 避免useForm配合情况下的出现多余滚动条毛病。【参数】俩版本是不一样的！
+/**替代原本shadcn里Switch； 避免useForm配合情况下的出现多余滚动条毛病。【参数】俩版本是不一样的！
     <CustomSwitch value={field.value || false} onChange={field.onChange}
         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
     />
@@ -168,14 +168,25 @@ interface FormSwitchProps {
     label: any
     className?: string
     switchClass?: string
+    //更多的，描述文字区域
+    desc?: any
 }
 /*配套 useForm， 简化嵌套的形式；
  * */
-export function FormSwitch({ field, label, className, switchClass }: FormSwitchProps) {
+export function FormSwitch({ field, label, className, switchClass, desc}: FormSwitchProps) {
     const id = useId() + "-" + field.name
     return (
-        <FormItem className={cn("w-full break-inside-avoid flex flex-col justify-center gap-1", className)}>
-            <FormLabel htmlFor={id} className="select-text">{label}</FormLabel>
+        <FormItem className={cn(desc ?
+                        "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" :
+                        "w-full break-inside-avoid flex flex-col justify-center gap-1",
+                    className)}>
+            {desc ? <div className="space-y-0.5">
+                    <FormLabel htmlFor={id} className="select-text">{label}</FormLabel>
+                    <div className="text-sm text-muted-foreground">{desc}</div>
+                </div>
+                :
+                <FormLabel htmlFor={id} className="select-text">{label}</FormLabel>
+            }
             <FormControl>
                 <Switch  id={id}
                          checked={field.value || false}
