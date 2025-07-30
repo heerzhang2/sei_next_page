@@ -119,14 +119,39 @@ export const LongArticleFx = ({
     const [selectedForMove, setSelectedForMove] = React.useState<number | null>(null)
     const [showMoveTargets, setShowMoveTargets] = React.useState(false)
 
+    // 用于控制是否需要自动聚焦的状态
+    const [shouldAutoFocus, setShouldAutoFocus] = React.useState(false)
+    const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+
     const projects = form.watch(stname) || []
     const { fields, append, remove, insert, update, replace } = arrayControls[stname]
 
+    // 处理跳转到指定项的逻辑
     React.useEffect(() => {
         if (jumpProjIdx) {
-            startEdit(null, Number(jumpProjIdx))
+            const targetIndex = Number(jumpProjIdx)
+            startEdit(null, targetIndex)
+            setShouldAutoFocus(true) // 标记需要自动聚焦
         }
     }, [jumpProjIdx])
+
+    // 当编辑状态改变且需要自动聚焦时，聚焦到 textarea
+    React.useEffect(() => {
+        if (shouldAutoFocus && editingIndex !== null && textareaRef.current) {
+            // 延迟聚焦，确保元素已经渲染
+            const timer = setTimeout(() => {
+                textareaRef.current?.focus()
+                // 滚动到视图中
+                textareaRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                })
+                setShouldAutoFocus(false) // 重置标记
+            }, 100)
+
+            return () => clearTimeout(timer)
+        }
+    }, [shouldAutoFocus, editingIndex])
 
     const startEdit = (e, index: number) => {
         e?.preventDefault()
@@ -272,21 +297,21 @@ export const LongArticleFx = ({
                                 <FormControl>
                                     <Textarea
                                         {...field}
+                                        ref={textareaRef}
                                         rows={20}
                                         id={`page-${index}`}
                                         className={cn(wsPre ? "whitespace-pre" : "")}
                                         placeholder="输入更多文字"
-                                        autoFocus
+                                        // 移除 autoFocus，改用受控的聚焦逻辑
                                     />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    {/* 使用外部控制的 FormSwitch */}
-                    <FormSwitch
+                     {/*使用外部控制的 FormSwitch */}
+                    <FormSwitch  ngrid  className={"@lg:min-w-[30rem] max-w-full mx-auto"}
                         label="避免分页"
-                        desc="打印时避免在此处分页"
                         checked={projects[index]?.a === true}
                         onChange={(checked) => {
                             const currentItem = projects[index]

@@ -1,13 +1,10 @@
 "use client"
 
-import { FormDescription } from "@/components/ui/form"
-
-import type React from "react"
-
 import { type ReactNode, useId } from "react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { usePageSectionOrientation } from "@/components/page-section-orientation"
+import type * as React from "react"
 import type { ControllerRenderProps } from "react-hook-form"
 import { FormControl, FormItem, FormLabel, FormMessage, Switch } from "@/components/ui"
 import { HybridInputSelect, type HybridInputSelectProps } from "@/components/chub"
@@ -107,7 +104,7 @@ export const ImageComponent: React.FC<ImageProps> = ({
          请求失败: http://192.168.171.3:9000/ywmast/202506/2012/37a9f6f6-36b0-45bd-add1-d59baa777b6e，状态码: net::ERR_BLOCKED_BY_ORB
 * */
 
-interface CustomSwitchProps {
+export interface CustomSwitchProps {
     value: boolean
     onChange: (value: boolean) => void
     onBlur?: (e: React.FocusEvent) => void
@@ -167,77 +164,83 @@ export const CustomSwitch = ({
 }
 
 interface FormSwitchProps {
-    field?: any // react-hook-form field
-    label?: string
-    desc?: string
-    onChange?: (value: boolean) => void // 外部控制的回调函数
-    checked?: boolean // 外部传入的当前值
-    disabled?: boolean // 是否禁用
+    field?: ControllerRenderProps<any, any>
+    label: any
     className?: string
     switchClass?: string
-    ngrid?: boolean     // 是否不是常见的grid布局底下的情况
+    //更多的，描述文字区域
+    desc?: any
+    //外部控制的回调函数，优先级高于 field.onChange
+    onChange?: (value: boolean) => void
+    //当前值，如果提供则不使用 field.value
+    checked?: boolean
+    //是否禁用
+    disabled?: boolean
 }
-
-export const FormSwitch = ({ field,
-                               className, switchClass,ngrid,
-                               label, desc, onChange, checked, disabled }: FormSwitchProps) => {
+/*配套 useForm， 简化嵌套的形式；现在支持外部控制
+也支持完全不用 field 来传递控制的情况的。
+ * */
+export function FormSwitch({
+                               field,
+                               label,
+                               className,
+                               switchClass,
+                               desc,
+                               onChange,
+                               checked,
+                               disabled = false,
+                           }: FormSwitchProps) {
     const id = useId() + "-" + (field?.name || "switch")
-    // 如果提供了外部控制，则使用外部控制
-    const isExternallyControlled = onChange !== undefined
 
-    // 获取当前值
-    const currentValue = isExternallyControlled ? (checked ?? false) : field?.value === true // 只有明确为 true 时才显示为选中
+    // 获取当前值：优先使用外部传入的 checked，否则使用 field.value
+    const currentValue = checked !== undefined ? checked : field?.value === true
 
-    // 处理值变化
-    const handleChange = (newValue: boolean) => {
-        if (isExternallyControlled) {
-            // 外部控制：直接调用外部回调
-            onChange(newValue)
+    // 处理切换事件
+    const handleCheckedChange = (newChecked: boolean) => {
+        if (onChange) {
+            // 使用外部控制函数
+            onChange(newChecked)
         } else if (field) {
-            // react-hook-form 控制：将 false 转换为 undefined
-            field.onChange(newValue ? true : undefined)
+            // 使用 react-hook-form 控制，将 false 转换为 undefined
+            field.onChange(newChecked ? true : undefined)
         }
     }
 
     return (
-        <FormItem className={cn(
-                (desc || ngrid)
+        <FormItem
+            className={cn(
+                desc
                     ? "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"
                     : "w-full break-inside-avoid flex flex-col justify-center gap-1",
                 className,
             )}
         >
-            { ngrid ? <div className="space-y-0.5">
-                    {label && <FormLabel htmlFor={id} className="select-text">{label}</FormLabel>}
-                    {desc && <FormDescription>{desc}</FormDescription>}
+            {desc ? (
+                <div className="space-y-0.5">
+                    <FormLabel htmlFor={id} className="select-text">
+                        {label}
+                    </FormLabel>
+                    <div className="text-sm text-muted-foreground">{desc}</div>
                 </div>
-                :
-                <>
-                    {desc ? (
-                        <div className="space-y-0.5">
-                            <FormLabel htmlFor={id} className="select-text">
-                                {label}
-                            </FormLabel>
-                            <div className="text-sm text-muted-foreground">{desc}</div>
-                        </div>
-                    ) : (
-                        <FormLabel htmlFor={id} className="select-text">
-                            {label}
-                        </FormLabel>
-                    )}
-                </>
-            }
-
+            ) : (
+                <FormLabel htmlFor={id} className="select-text">
+                    {label}
+                </FormLabel>
+            )}
             <FormControl>
-                <Switch checked={currentValue}
-                        id={id}  name={field?.name | id}
-                        onCheckedChange={handleChange} disabled={disabled}
-                        className={cn(
-                            "h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px] ml-8",
-                            switchClass,
-                        )}
+                <Switch
+                    id={id}
+                    checked={currentValue}
+                    name={field?.name | id}
+                    onCheckedChange={handleCheckedChange}
+                    disabled={disabled}
+                    className={cn(
+                        "h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px] ml-8",
+                        switchClass,
+                    )}
                 />
             </FormControl>
+            <FormMessage />
         </FormItem>
     )
 }
