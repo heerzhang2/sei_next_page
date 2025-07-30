@@ -15,7 +15,6 @@ import {
     FormLabel,
     FormControl,
     FormMessage,
-    Switch,
 } from "@/components/ui"
 import { cn } from "@/lib/utils"
 import { useFormFramework } from "@/report/hook/useFormFramework"
@@ -25,7 +24,8 @@ import { Edit, Trash2, Plus, X, ChevronDown, Move, Target, Printer } from "lucid
 import { useSearchParams } from "next/navigation"
 import { JumpTab } from "@/report/common/JumpTab"
 import { z } from "zod"
-import {FormSwitch} from "@/components/shub";
+import { FormSwitch } from "@/components/shub"
+import { useWindowSize } from "@/hooks/use-window-size"
 
 interface LongArticleFxProps {
     rep?: any
@@ -52,9 +52,13 @@ export const LongArticleFx = ({
                                   subrid,
                                   wsPre,
                               }: LongArticleFxProps) => {
+    const { screenHeight, } = useWindowSize()
     const searchParams = useSearchParams()
     const jumpProjIdx = searchParams?.get("from")
     const { storage } = useStorage()
+
+    // 判断是否为小屏幕（横屏手机）
+    const isTinyHeightScr = screenHeight < 500
 
     // Get initial data from storage - NO LONGER COMPATIBLE WITH OLD STRING FORMAT
     const getInitialData = React.useCallback(() => {
@@ -66,8 +70,8 @@ export const LongArticleFx = ({
 
     // 定义新的文本块Schema
     const textBlockSchema = z.object({
-        t: z.string().min(1, "内容是必填的"), // 文本内容
-        a: z.boolean().default(false), // 避免分页 (avoid page break)
+        t: z.string().min(1, "内容是必填的"),  // 文本内容
+        a: z.boolean().optional(),   // 避免分页
     })
 
     const explanatorySchema = z.object({
@@ -143,7 +147,7 @@ export const LongArticleFx = ({
         setOriginalDataBeforeInsert([])
         setSelectedForMove(null)
         setShowMoveTargets(false)
-        append({ t: "", a: false })
+        append({ t: "" })
     }
 
     const startInsert = (position: number) => {
@@ -154,7 +158,7 @@ export const LongArticleFx = ({
         setIsAddingNew(false)
         setSelectedForMove(null)
         setShowMoveTargets(false)
-        insert(position, { t: "", a: false })
+        insert(position, { t: "" })
     }
 
     const saveEdit = () => {
@@ -186,15 +190,7 @@ export const LongArticleFx = ({
 
     const cancelEdit = () => {
         if (editingIndex !== null && !isInserting && !isAddingNew) {
-            // const nowVal = projects[editingIndex]
             const originalItem = getInitialData()[editingIndex] || { t: "", a: false }
-            // if (nowVal.t === "") {       有对象的不是简单数组的情况旧不需要了。
-            //     const currentProjects = [...projects]
-            //     currentProjects[editingIndex] = originalItem
-            //     replace(currentProjects)
-            //     setEditingIndex(null)
-            //     return
-            // }
             update(editingIndex, originalItem)
             setEditingIndex(null)
         } else if (isAddingNew) {
@@ -286,9 +282,11 @@ export const LongArticleFx = ({
                             </FormItem>
                         )}
                     />
-                    <FormField name={`${stname}.${index}.a`} control={form.control} render={({ field }) => (
-                        <FormSwitch field={field} label='避免分页' desc='打印时避免在此处分页'/>
-                    )}/>
+                    <FormField
+                        name={`${stname}.${index}.a`}
+                        control={form.control}
+                        render={({ field }) => <FormSwitch field={field} label="避免分页" desc="打印时避免在此处分页" />}
+                    />
                 </div>
                 <div className="flex justify-end space-x-2 pt-4 border-t">
                     <Button variant="outline" onClick={cancelEdit}>
@@ -303,69 +301,145 @@ export const LongArticleFx = ({
         </Card>
     )
 
-    // 渲染操作按钮组 - 放在每行内容上方，水平布局
-    const renderActionButtons = (index: number) => (
-        <div className="flex items-center justify-center gap-0 py-0 bg-gray-50 rounded-t-lg border-b">
-            {/* 修改按钮 */}
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => startEdit(e, index)}
-                disabled={isAnyEditing}
-                className="h-8 px-2 text-xs"
-                title="修改"
-            >
-                <Edit className="w-4 h-4" />
-            </Button>
-            {/* 插入按钮 */}
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => startInsert(index)}
-                disabled={isAnyEditing}
-                className="h-8 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                title="在此处插入"
-            >
-                <ChevronDown className="w-4 h-4" />
-            </Button>
-            {/* 移动按钮 */}
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => startMove(e, index)}
-                disabled={isAnyEditing}
-                className="h-8 px-2 text-xs text-blue-600 hover:text-blue-700"
-                title="移动"
-            >
-                <Move className="w-4 h-4" />
-            </Button>
-            {/* 删除按钮 */}
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => deleteProject(e, index)}
-                disabled={isAnyEditing}
-                className="ml-8 mr-8 h-8 px-2 text-xs text-red-600 hover:text-red-700"
-                title="删除"
-            >
-                <Trash2 className="w-4 h-4" />
-            </Button>
-            {/* 避免分页切换按钮 */}
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleAvoidPageBreak(index)}
-                disabled={isAnyEditing}
-                className={cn(
-                    "h-8 px-2 text-xs",
-                    projects[index]?.a ? "text-green-600 hover:text-green-700 bg-green-50" : "text-gray-600 hover:text-gray-700",
-                )}
-                title={projects[index]?.a ? "已启用避免分页" : "点击启用避免分页"}
-            >
-                <Printer className="w-4 h-4" />
-            </Button>
-        </div>
-    )
+    // 渲染操作按钮组 - 根据屏幕大小决定布局
+    const renderActionButtons = (index: number) => {
+        if (isTinyHeightScr) {
+            // 小屏幕：3x2布局，放在右侧
+            return (
+                <div className="flex-col">
+                    <div className="flex items-center justify-center gap-0 py-0 bg-gray-50 rounded-t-lg border-b">
+                        {/* 第一行：修改、插入、移动 */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startInsert(index)}
+                            disabled={isAnyEditing}
+                            className="h-6 w-8 p-0 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            title="在此处插入"
+                        >
+                            <ChevronDown className="w-3 h-3" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => startMove(e, index)}
+                            disabled={isAnyEditing}
+                            className="h-6 w-8 p-0 text-xs text-blue-600 hover:text-blue-700"
+                            title="移动"
+                        >
+                            <Move className="w-3 h-3" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => startEdit(e, index)}
+                            disabled={isAnyEditing}
+                            className="h-6 w-8 p-0 text-xs"
+                            title="修改"
+                        >
+                            <Edit className="w-3 h-3" />
+                        </Button>
+                    </div>
+                    <div className="flex items-center justify-center gap-0 py-0 bg-gray-50 rounded-t-lg border-b">
+                        {/* 第二行：删除、避免分页、空位 */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => deleteProject(e, index)}
+                            disabled={isAnyEditing}
+                            className="mr-2 h-6 w-8 p-0 text-xs text-red-600 hover:text-red-700"
+                            title="删除"
+                        >
+                            <Trash2 className="w-3 h-3" />
+                        </Button>
+                        {/* 空位 */}
+                        <div></div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleAvoidPageBreak(index)}
+                            disabled={isAnyEditing}
+                            className={cn(
+                                "h-6 w-8 p-0 text-xs",
+                                projects[index]?.a
+                                    ? "text-green-600 hover:text-green-700 bg-green-50"
+                                    : "text-gray-600 hover:text-gray-700",
+                            )}
+                            title={projects[index]?.a ? "已启用避免分页" : "点击启用避免分页"}
+                        >
+                            <Printer className="w-3 h-3" />
+                        </Button>
+                    </div>
+                </div>
+            )
+        } else {
+            // 大屏幕或竖屏：水平布局，放在上方
+            return (
+                <div className="flex items-center justify-center gap-0 py-0 bg-gray-50 rounded-t-lg border-b">
+                    {/* 修改按钮 */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => startEdit(e, index)}
+                        disabled={isAnyEditing}
+                        className="mr-4 h-8 px-2 text-xs"
+                        title="修改"
+                    >
+                        <Edit className="w-4 h-4" />
+                    </Button>
+                    {/* 插入按钮 */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startInsert(index)}
+                        disabled={isAnyEditing}
+                        className="mr-1 h-8 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        title="在此处插入"
+                    >
+                        <ChevronDown className="w-4 h-4" />
+                    </Button>
+                    {/* 移动按钮 */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => startMove(e, index)}
+                        disabled={isAnyEditing}
+                        className="h-8 px-2 text-xs text-blue-600 hover:text-blue-700"
+                        title="移动"
+                    >
+                        <Move className="w-4 h-4" />
+                    </Button>
+                    {/* 删除按钮 */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => deleteProject(e, index)}
+                        disabled={isAnyEditing}
+                        className="ml-8 mr-8 h-8 px-2 text-xs text-red-600 hover:text-red-700"
+                        title="删除"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                    {/* 避免分页切换按钮 */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleAvoidPageBreak(index)}
+                        disabled={isAnyEditing}
+                        className={cn(
+                            "h-8 px-2 text-xs",
+                            projects[index]?.a
+                                ? "text-green-600 hover:text-green-700 bg-green-50"
+                                : "text-gray-600 hover:text-gray-700",
+                        )}
+                        title={projects[index]?.a ? "已启用避免分页" : "点击启用避免分页"}
+                    >
+                        <Printer className="w-4 h-4" />
+                    </Button>
+                </div>
+            )
+        }
+    }
 
     // 渲染移动目标按钮
     const renderMoveTarget = (position: number, label: string) => (
@@ -390,8 +464,8 @@ export const LongArticleFx = ({
 
                 {fields.map((field, index) => (
                     <div key={field.id}>
-                        {/* 统一的操作按钮组 - 放在内容展示区上方 */}
-                        {!showMoveTargets && renderActionButtons(index)}
+                        {/* 大屏幕：操作按钮组放在内容展示区上方 */}
+                        {!isTinyHeightScr && !showMoveTargets && renderActionButtons(index)}
 
                         {/* 移动目标位置 - 在当前项之前显示 */}
                         {showMoveTargets &&
@@ -403,7 +477,8 @@ export const LongArticleFx = ({
                         {/* 项目展示行 */}
                         <div
                             className={cn(
-                                "flex items-center justify-between py-3 @md:px-3 rounded-b-lg border transition-colors",
+                                "flex items-center justify-between py-3 @md:px-3 transition-colors",
+                                isTinyHeightScr ? "rounded-lg border" : "rounded-b-lg border",
                                 editingIndex === index && !isInserting
                                     ? "bg-blue-50 border-blue-200"
                                     : selectedForMove === index
@@ -432,6 +507,9 @@ export const LongArticleFx = ({
                                     )}
                                 </div>
                             </div>
+
+                            {/* 高度很小屏幕：操作按钮组放在内容行右侧 */}
+                            {isTinyHeightScr && !showMoveTargets && renderActionButtons(index)}
 
                             {/* 移动模式下的取消按钮 */}
                             {showMoveTargets && selectedForMove === index && (
@@ -523,10 +601,6 @@ interface LongArticleContentProps {
     printMode?: boolean
 }
 
-/**跳编辑器，分页，
- *框架引进的useMediaPrint(true,true)只能确保hx+div 不会被断开打印纸张页的，但是这里是三个元素 h2+div+table没法子确保的？
- *因为长文本 string 改成数组类型 string[]的。可能报错 _orc_stname1.map is not a function；
- * */
 export const LongArticleContent = ({
                                        orc,
                                        rep,
