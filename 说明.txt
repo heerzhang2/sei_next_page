@@ -7,7 +7,7 @@ CSS不能直接添加/删除类名，
 grid布局对于配置要求很高，一点毛病导致不达到预期。默认1X1行列；@5xl:row-span-3元素其位置前已布局的水平对齐空白区还是会保留的，其后面空间才会紧凑地利用。
 ort { fetchQuery, commitMutation, graphql } from 'relay-runtime';
 fjseireport seiadmin
-【表格打印调整】 JSON.parse(orc?._tblFixed??'[]') 编辑器3段式窗口总宽度 1595 px；["4%","%","8%"] { JSON.parse(parOrc?._tblFixed??'[]') }可重复分项
+【表格打印调整】 JSON.parse(orc?._tblFixed??'[]') 编辑器3段式窗口总宽度 1595 px；["%","8%"] JSON.parse(parOrc?._tblFixed??'[]') 可重复分项
 http://192.168.171.3:8673/teacher/globalId/ajHsj9GMRL6wzZ-QJAz7zElzcA
 3. 使用fetchQuery执行查询
 fetchQuery函数允许你执行一个GraphQL查询并获取结果。你需要提供查询定义、变量、Relay环境和回调函数。
@@ -493,37 +493,6 @@ http://192.168.171.3:3765/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/5.1
 2. Tailwind CSS 4.0 中的 `touch-pan-y` 和 `touch-pan-x` 类是处理触摸滚动的推荐方式
 3. 如果遇到特定的 iOS 滚动问题，可能需要结合其他技术，如自定义滚动处理或使用专门的滚动库
 touch-pan-y touch-pinch-zoom 手机横屏的
-
-
-壁厚校核计算：
-Φ159管：
-         Pw  Do                                   1.0×159
- Ts1= --------------------  +C2 = -------------------------------  +1.0 =2.28mm ＜T1
-         2 ([σ]tEj+PwY)                2（103×0.6+1.0×0.4）
-Φ133管：
-         Pw  Do                                  1.0×133
- Ts1= --------------------  +C2 = -------------------------------  +1.0 =2.07mm ＜T2
-        2 ([σ]tEj+PwY)                 2（103×0.6+1.0×0.4）
-Φ108管：
-         Pw  Do                                1.0×108
- Ts1= --------------------  +C2 = -------------------------------  +1.0 =1.87mm ＜T3
-         2 ([σ]tEj+PwY)                2（103×0.6+1.0×0.4）
-Φ89管：
-         Pw  Do                                1.0×89
- Ts1= --------------------  +C2 = -------------------------------  +1.0 =1.72mm ＜T4
-         2 ([σ]tEj+PwY)                2（103×0.6+1.0×0.4）
-Φ76管：
-         Pw  Do                                1.0×76
- Ts2= --------------------  +C2 = -------------------------------  +1.0 =1.61mm ＜T5
-        2 ([σ]tEj+PwY)                 2（103×0.6+1.0×0.4）
-Φ57管：
-         Pw  Do                               1.0×57
- Ts1= --------------------  +C2 = -------------------------------  +1.0 =1.46mm ＜T6
-        2 ([σ]tEj+PwY)                 2（103×0.6+1.0×0.4）
-校核结果：
-1、经校核，剩余厚度满足强度要求。
-注：本校核不代替设计计算，不能免除设计者责任。
-rep
 c8012af2-1bde-49af-995e-05322871041d   yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA
 sub1 ,2,
 29071b80-317d-44ed-b50e-003dd87ded41
@@ -539,28 +508,3 @@ sub1 ,2,
 "_THICK_MS_0":{"设备编号":"fghfgh"} parOrc
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subrid=KQcbgDF9RO21DgA92H3tQlJlcG9ydA
-
-<div class="w-full inline-flex items-center"><div class="w-full flex items-center gap-1"><textarea data-slot="form-control" class="placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pr-1 pl-1 rounded-md border border-input bg-background resize-vertical overflow-auto focus:outline-none focus:ring-2 focus:ring-ring focus:border-input w-full" name="校核计算" id="«r1n»-form-item" aria-describedby="«r1n»-form-item-description" aria-invalid="false" aria-autocomplete="list" aria-expanded="true" aria-haspopup="listbox" role="combobox" autocomplete="off" aria-controls="«r1o»">Φ159管：
-         Pw Do                        1.0×159
-Ts1= -------------------- +C2 = ------------------------------- +1.0 =2.28mm ＜T1
-     2 ([σ]tEj+PwY)                2（103×0.6+1.0×0.4）
-Φ133管：
- Pw Do 1.0×133
-Ts1= -------------------- +C2 = ------------------------------- +1.0 =2.07mm ＜T2
-2 ([σ]tEj+PwY) 2（103×0.6+1.0×0.4）
-Φ108管：
-            Pw Do                                    1.0×108
-Ts1= -------------------- +C2 = ------------------------------- +1.0 =1.87mm ＜T3
-           2 ([σ]tEj+PwY)                   2（103×0.6+1.0×0.4）
-Φ89管：
- Pw Do 1.0×89
-Ts1= -------------------- +C2 = ------------------------------- +1.0 =1.72mm ＜T4
-2 ([σ]tEj+PwY) 2（103×0.6+1.0×0.4）
-Φ76管：
- Pw Do 1.0×76
-Ts2= -------------------- +C2 = ------------------------------- +1.0 =1.61mm ＜T5
-2 ([σ]tEj+PwY) 2（103×0.6+1.0×0.4）
-Φ57管：
- Pw Do 1.0×57
-Ts1= -------------------- +C2 = ------------------------------- +1.0 =1.46mm ＜T6
-2 ([σ]tEj+PwY) 2（103×0.6+1.0×0.4）</textarea><span tabindex="-1" aria-hidden="true" data-floating-ui-inert="" style="border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; margin: -1px; overflow: hidden; padding: 0px; position: fixed; white-space: nowrap; width: 1px; top: 0px; left: 0px;"></span></div></div>

@@ -1,116 +1,187 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import React, {useCallback, useState} from "react"
-import {ProjectListFormField, } from "@/component/project-list-form";
+// components/VerticalHeaderTable.tsx
+import React from 'react';
 
-// 模拟项目数据
-const mockProjects = {
-  1: { title: "用户认证系统", description: "实现用户登录注册功能" },
-  2: { title: "数据库设计", description: "设计用户和权限表结构" },
-  3: { title: "API 接口开发", description: "开发 RESTful API" },
-  4: { title: "前端界面", description: "React 组件开发" },
-  5: { title: "测试用例", description: "单元测试和集成测试" },
-  6: { title: "部署配置", description: "Docker 和 CI/CD 配置" },
-  7: { title: "文档编写", description: "API 文档和用户手册" },
-  8: { title: "性能优化", description: "数据库和前端性能优化" },
-  9: { title: "安全加固", description: "安全漏洞检查和修复" },
-  10: { title: "监控告警", description: "系统监控和告警配置" },
+interface Record {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: 'active' | 'inactive';
+  joinDate: string;
+  location: string;
+  projects: number;
 }
 
-export default function ProjectListEditorDemo() {
-  const [modelredos, setModelredos] = useState<number[]>([2, 4, 6])
-  const [formData, setFormData] = useState({ projectId: modelredos });
-  // 渲染项目标题
-  const renderProjectTitle = (index: number) => {
-    const project = mockProjects[index as keyof typeof mockProjects]
-    if (!project) return `项目 ${index}`
+interface Field {
+  label: string;
+  key: keyof Record;
+  render?: (value: any) => React.ReactNode;
+}
 
-    return (
-        <div>
-          <div className="font-medium">{project.title}</div>
-          <div className="text-sm text-gray-500">{project.description}</div>
-        </div>
-    )
-  }
-  // 获取项目链接
-  const getProjectLink = (index: number) => {
-    return `/project/${index}`
-  }
-  // 处理项目点击
-  const handleProjectClick = (index: number) => {
-    console.log(`点击了项目 ${index}`)
-    // 这里可以实现路由跳转或其他逻辑
-  }
-  // 模拟表单提交
-  const handleSubmit = async (e) => {
-      e.preventDefault()
-      // setFormData({ ...formData, projectId: modelredos });
-      console.log("提交的项目索引:", formData, "旧的",modelredos )
-      // alert(`提交成功！项目索引: [${formData.join(", ")}]`)
-  };
-  const onItemChanged = useCallback((ids: any) => {
-    setFormData({ ...formData, projectId: ids })
-  }, [setFormData])
-  //renderTitle={function(index: number): React.ReactNode {
-  //                       throw new Error("Function not implemented."+index)
-  //                   } }
+const VerticalHeaderTable = () => {
+  // 模拟数据（最多4条）
+  const data: Record[] = [
+    { id: 1, name: '张明', email: 'zhang@example.com', role: '管理员', status: 'active', joinDate: '2023-01-15', location: '北京', projects: 12 },
+    { id: 3, name: '王芳', email: 'wang@example.com', role: '开发工程师', status: 'inactive', joinDate: '2023-05-30', location: '广州', projects: 15 },
+    { id: 4, name: '赵伟', email: 'zhao@example.com', role: '产品经理', status: 'active', joinDate: '2023-07-11', location: '深圳', projects: 6 },
+  ];
+
+  // 定义要显示的字段（标签和键名）
+  const fields: Field[] = [
+    { label: 'ID', key: 'id' },
+    { label: '姓名', key: 'name' },
+    { label: '邮箱', key: 'email' },
+    { label: '角色', key: 'role' },
+    {
+      label: '状态',
+      key: 'status',
+      render: (value) => (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              value === 'active'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+          }`}>
+          {value === 'active' ? '活跃' : '未激活'}
+        </span>
+      )
+    },
+    { label: '加入日期', key: 'joinDate' },
+    { label: '地点', key: 'location' },
+    {
+      label: '项目数',
+      key: 'projects',
+      render: (value) => (
+          <div className="flex items-center">
+            <span className="mr-2">{value}</span>
+            <div className="w-16 bg-gray-200 rounded-full h-2">
+              <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: `${Math.min(value * 6, 100)}%` }}
+              ></div>
+            </div>
+          </div>
+      )
+    },
+  ];
+
   return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">分项项目列表编辑器</h1>
-          <p className="text-gray-600">支持增删改查、拖拽排序、点击跳转的项目管理组件</p>
-        </div>
-        <form  className="mt-8 space-y-6">
-          {/* 表单集成示例 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>表单集成示例</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ProjectListFormField  name={"testajhde"}
-                  renderTitle={renderProjectTitle}
-                  value={formData.projectId}
-                  onChange={onItemChanged}
-                  availableProjects={Object.keys(mockProjects).map(Number)}
-              />
-              <div className="flex justify-between items-center pt-4 border-t">
-                <div className="text-sm text-gray-600">已选择 个项目</div>
-                <Button onClick={handleSubmit} >
-                  提交表单
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </form>
-        {/* 使用说明 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>功能说明</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-medium mb-2">基础功能:</h4>
-                <ul className="space-y-1 text-gray-600">
-                  <li>• 添加/删除项目</li>
-                  <li>• 上移/下移项目</li>
-                  <li>• 点击跳转链接</li>
-                  <li>• 清空所有项目</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">高级功能:</h4>
-                <ul className="space-y-1 text-gray-600">
-                  <li>• 拖拽排序 (可选)</li>
-                  <li>• 自定义标题渲染</li>
-                  <li>• 最大项目数限制</li>
-                  <li>• 表单数据集成</li>
-                </ul>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 p-4 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">垂直表头表格布局</h1>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              这种布局将表头垂直排列在左侧，数据记录水平排列在右侧，特别适合字段较多的数据展示。
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {/* 顶部标题栏 */}
+            <div className="bg-gradient-to-r from-indigo-500 to-blue-600 p-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">团队成员信息</h2>
+                <div className="flex space-x-3">
+                  <button className="px-3 py-1 bg-white/20 text-white rounded-lg hover:bg-white/30 transition">
+                    导出
+                  </button>
+                  <button className="px-3 py-1 bg-white text-indigo-600 rounded-lg hover:bg-gray-100 transition">
+                    添加成员
+                  </button>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* 表格容器 */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <tbody>
+                {fields.map((field) => (
+                    <tr key={field.key} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      {/* 垂直表头单元格 */}
+                      <th
+                          scope="row"
+                          className="py-3 px-4 text-left font-semibold text-gray-700 bg-gray-50 whitespace-nowrap border-r border-gray-100"
+                      >
+                        {field.label}
+                      </th>
+
+                      {/* 数据单元格 - 水平排列 */}
+                      {data.map((record) => (
+                          <td key={`${field.key}-${record.id}`} className="py-3 px-4">
+                            {field.render
+                                ? field.render(record[field.key])
+                                : record[field.key] as React.ReactNode
+                            }
+                          </td>
+                      ))}
+
+                      {/* 当记录不足4条时，用空单元格填充 */}
+                      {Array.from({ length: 4 - data.length }).map((_, idx) => (
+                          <td key={`empty-${field.key}-${idx}`} className="py-3 px-4 bg-gray-50"> / </td>
+                      ))}
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 表格底部信息 */}
+            <div className="p-4 bg-gray-50 flex justify-between items-center border-t border-gray-100">
+              <div className="text-sm text-gray-600">
+                显示 {data.length} 条记录（最多4条）
+              </div>
+              <div className="flex space-x-2">
+                <button className="px-3 py-1 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+                  上一页
+                </button>
+                <button className="px-3 py-1 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+                  下一页
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 布局说明 */}
+          <div className="mt-8 p-6 bg-white rounded-xl shadow-md">
+            <h3 className="text-xl font-bold text-gray-800 mb-3">垂直表头布局特点</h3>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <li className="flex items-start">
+                <div className="bg-blue-100 text-blue-800 rounded-full p-1 mr-2 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-gray-700">垂直排列表头便于在移动设备上阅读</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-blue-100 text-blue-800 rounded-full p-1 mr-2 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-gray-700">每条记录水平排列，便于比较</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-blue-100 text-blue-800 rounded-full p-1 mr-2 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-gray-700">支持自定义渲染函数显示复杂数据</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-blue-100 text-blue-800 rounded-full p-1 mr-2 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-gray-700">自动填充空单元格保持布局一致</span>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
-  )
-}
+  );
+};
+
+export default VerticalHeaderTable;

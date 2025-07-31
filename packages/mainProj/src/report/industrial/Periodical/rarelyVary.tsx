@@ -21,7 +21,7 @@ export const 首页设备IndPer= (orc:any, rep:any, original?:boolean
 };
 
 
-/*较为通用的配置： 可重复的分项标题。 不加报错callback is not a function
+/*较为通用的配置： 可重复的分项标题。
 * */
 export const titleRenders ={
   "THICK_MS": (store: any,i: number) => <>[{store?.['_THICK_MS_'+i]?.['设备编号'] ?? ``}]</>,
@@ -30,6 +30,7 @@ export const titleRenders ={
   "HARD_TS": (store: any,i: number) => <>[{store?.['_HARD_TS_'+i]?.['部件'] ?? ``}]</>,
   "OPTIC_TS": (store: any,i: number) => <>[{store?.['_OPTIC_TS_'+i]?.['部件'] ?? ``}]</>,
   "CPSTR_VR": (store: any,i: number) => <>[{store?.['_CPSTR_VR_'+i]?.['部件'] ?? ``}]</>,
+  "RADIO_TS": (store: any,i: number) => <>[{store?.['_RADIO_TS_'+i]?.['部件'] ?? ``}]</>,
 }
 
 

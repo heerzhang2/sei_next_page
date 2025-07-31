@@ -32,7 +32,7 @@ export const CsVerificationVw = ({
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
     const render=()=><>
-        <FlexibleTable id={'CpsvInstrument_'+redId} columnWidths={ ["11%","28%","12.9%","11%","9%","%"] } className="text-sm border-collapse">
+        <FlexibleTable id={'CpsvInstrument_'+redId} columnWidths={ ["12.8%","23%","12.8%","19%","12%","%"] } className="text-sm border-collapse">
             <TableBody>
                 <RepLink ori rep={rep} tag={"CpsvInstrument"} subrid={subrid} redId={redId}>
                     {upperNode}

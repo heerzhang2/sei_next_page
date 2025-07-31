@@ -750,7 +750,7 @@ export function useTableEdit({
                                                             )}
                                                         />
                                                     )
-                                                else if (type === "l")
+                                                else if (type === 'l' || (list!==undefined && type===undefined))
                                                     return (
                                                         <FormField
                                                             key={i}

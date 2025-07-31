@@ -101,6 +101,7 @@ interface DeviceSurveyFxProps extends DeviceSurveyDProps {
 }
 /**支持可重复分项的，但是不支持modType为空的 普通 情形。
  * 兼容位于主报告，兼容可独立流转子报告； 允许编辑器2列的但报告展示需改为3列的mergeToThreeColumn()；
+ * 【默认值】如何注入？ 整个分包项为空对象，创建分项报告时刻去填充默认值，根据字段+索引名称。
 * */
 export const DeviceSurveyFx = ({children, show, label, config, itemA, rep,subrid,redId,modType,comment}: DeviceSurveyFxProps) => {
     //分项目：modType有的，但是subrType却不一定有的： 处于独立流转分项编辑才有的。

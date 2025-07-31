@@ -55,10 +55,15 @@ export const usePrefixDataEdit= ({ config,itemA, form, comment={}}  :
             }else{
                 oldPref2='';         //继承性中断
             }
-            if (typeof name === 'string' && !name?.startsWith('_$')) surveyItems.push({name, desc, cb});
-            else if (typeof name === 'object' && name.n && !name.r && !name.n.startsWith('_$')) surveyItems.push({name: name.n, desc, cb, type: name.t, unit: name.u, list: name.l});
-            if (typeof name2 === 'string' && name2 && !name2.startsWith('_$')) surveyItems.push({name: name2, desc: desc2, cb: cb2});
-            else if (typeof name2 === 'object' && name2.n && !name2.r && !name2.n.startsWith('_$')) surveyItems.push({name: name2.n, desc: desc2, cb: cb2, type: name2.t, unit: name2.u, list: name2.l});
+            //可实际上的name:可能是对象的类型{n: ,t: type, l: list, u: unit, s: size, a: autoComplete}
+            if (typeof name === 'string' && !name?.startsWith('_$'))
+                surveyItems.push({name, desc, cb});
+            else if (typeof name === 'object' && name.n && !name.r && !name.n.startsWith('_$'))
+                surveyItems.push({name: name.n, desc, cb, type: name.t, unit: name.u, list: name.l});
+            if (typeof name2 === 'string' && name2 && !name2.startsWith('_$'))
+                surveyItems.push({name: name2, desc: desc2, cb: cb2});
+            else if (typeof name2 === 'object' && name2.n && !name2.r && !name2.n.startsWith('_$'))
+                surveyItems.push({name: name2.n, desc: desc2, cb: cb2, type: name2.t, unit: name2.u, list: name2.l});
         });
         if(sumRow>0){
             const part={ survey:[...surveyItems], comment:transferNode }
@@ -96,7 +101,7 @@ export const usePrefixDataEdit= ({ config,itemA, form, comment={}}  :
                                         toTailNodes.push(aNode);
                                         return null;
                                     }
-                                } else if (type === 'l') return <FormField
+                                } else if (type === 'l' || (list!==undefined && type===undefined)) return <FormField
                                     key={name}
                                     control={form.control}
                                     name={name  as any}

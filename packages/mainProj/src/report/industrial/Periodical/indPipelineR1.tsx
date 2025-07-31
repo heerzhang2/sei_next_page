@@ -33,6 +33,7 @@ import {HydrostaticTestVw} from "@/report/industrial/Periodical/HydrostaticTest"
 import {cat_Hard, HardnessVw} from "@/report/cm/hardness/Hardness1";
 import {cat_Optc, OpticalVw} from "@/report/cm/optical/Optical1";
 import {cat_Cpsv, CsVerificationVw} from "@/report/cm/cpStrength/csVerification1";
+import {cat_Rado, RadiographyVw} from "@/report/cm/radio/Radiography1";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -68,6 +69,12 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
         component: CsVerificationVw,
         cat: cat_Cpsv
     },
+    RADIO_TS: {
+        catKey: "射线检测",
+        component: RadiographyVw,
+        cat: cat_Rado
+    },
+
 }
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
@@ -187,7 +194,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {mapFxian.get('安全附件与仪表检验')?.do && <AccessoriesVw orc={orc} rep={rep}/>}
                 {renderSub('THICK_MS')}
                 {renderSub('CPSTR_VR')}
-
+                {renderSub('RADIO_TS')}
                 {renderSub('MAGNT_TS')}
                 {renderSub('OPTIC_TS')}
 

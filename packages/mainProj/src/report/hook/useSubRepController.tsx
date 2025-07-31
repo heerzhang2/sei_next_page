@@ -7,6 +7,7 @@ import {useFrameEditorBar} from "@/report/hook/useFormFramework";
 import {usePathname, useRouter, useSearchParams} from "next/navigation";
 import {undefined} from "zod";
 import {EditorAreaConfig, subrType2ProjTitle} from "@/report/common/eHelper";
+import {accountingCateMap} from "@/dict/financeComm";
 
 const suffixToRemove = "_Controller";
 export const findNodeIndex = <T extends { node: { id: string } }>(
@@ -34,6 +35,7 @@ export function useSubRepController(recordPrintList: EditorAreaConfig[],modelkey
     const projTitles = subrType2ProjTitle(recordPrintList, modelkey);
     const title=projTitles?.[0] ??'';
     const renderProjectTitle = (index: number) => {
+        if(!callback)  throw new Error(`${modelkey}:没定义分项标签回调`);
         return (
             <div>
                 <div className="font-medium">{callback(storage,index)}</div>
