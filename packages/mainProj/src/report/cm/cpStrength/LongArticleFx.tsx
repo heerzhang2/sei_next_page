@@ -60,6 +60,11 @@ export const LongArticleFx = ({
     // 判断是否为小屏幕（横屏手机）
     const isTinyHeightScr = screenHeight < 500
 
+    // 计算 Textarea 的最大高度（屏幕高度的 3/4）
+    const maxTextareaHeight = React.useMemo(() => {
+        return screenHeight ? Math.floor(screenHeight * 0.75) : 600
+    }, [screenHeight])
+
     // Get initial data from storage - NO LONGER COMPATIBLE WITH OLD STRING FORMAT
     const getInitialData = React.useCallback(() => {
         if (subrid || (modType && redId !== undefined)) {
@@ -285,12 +290,12 @@ export const LongArticleFx = ({
                 </CardHeader>
             )}
             <CardContent className="space-y-1 px-2">
-                <div className="grid grid-cols-1 gap-1">
-                    <FormField className="max-h-2/3"
+                <div className="flex flex-col gap-1">
+                    <FormField
                         control={form.control}
                         name={`${stname}.${index}.t`}
                         render={({ field }) => (
-                            <FormItem className="max-h-2/3 space-y-2">
+                            <FormItem className="space-y-2">
                                 <FormLabel htmlFor={`page-${index}`} className="select-text">
                                     一部分文字
                                 </FormLabel>
@@ -298,19 +303,24 @@ export const LongArticleFx = ({
                                     <Textarea
                                         {...field}
                                         ref={textareaRef}
-                                        rows={isTinyHeightScr? 5: 10}
+                                        rows={isTinyHeightScr ? 5 : 10}
                                         id={`page-${index}`}
-                                        className={cn( wsPre ? "whitespace-pre" : "")}
+                                        className={cn(wsPre ? "whitespace-pre" : "")}
                                         placeholder="输入更多文字"
-                                        // 移除 autoFocus，改用受控的聚焦逻辑
+                                        style={{
+                                            maxHeight: `${maxTextareaHeight}px`,
+                                            resize: "vertical",
+                                        }}
                                     />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                     {/*使用外部控制的 FormSwitch */}
-                    <FormSwitch  ngrid  className={"@lg:min-w-[30rem] max-w-full mx-auto px-3 py-1"}
+                    {/* 使用外部控制的 FormSwitch */}
+                    <FormSwitch
+                        ngrid
+                        className={"@lg:min-w-[30rem] max-w-full mx-auto px-3 py-1"}
                         label="避免分页"
                         checked={projects[index]?.a === true}
                         onChange={(checked) => {
@@ -532,6 +542,12 @@ export const LongArticleFx = ({
                                             containerClassName="w-full"
                                         />
                                     )}
+                                    {projects[index]?.a && (
+                                        <div className="text-xs text-green-600 mt-1 flex items-center">
+                                            <Printer className="w-3 h-3 mr-1" />
+                                            避免分页
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -646,7 +662,7 @@ export const LongArticleContent = ({
             <div
                 className={cn(
                     "text-sm min-h-8",
-                    wsPre && !printMode ? "whitespace-pre overflow-x-auto" : "whitespace-pre-wrap",
+                    (wsPre && !printMode) ? "whitespace-pre overflow-x-auto" : "whitespace-pre-wrap",
                     className,
                 )}
             >
