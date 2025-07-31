@@ -655,16 +655,27 @@ export const LongArticleContent = ({
                                        printMode,
                                        className,
                                    }: LongArticleContentProps) => {
+    const { screenHeight } = useWindowSize()
+
+    // 计算最大高度（屏幕高度的 70%，确保水平滚动条可见）
+    const maxContentHeight = React.useMemo(() => {
+        return screenHeight ? Math.floor(screenHeight * 0.7) : 500
+    }, [screenHeight])
+
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
+
     return (
         <>
             <div
                 className={cn(
-                    "text-sm min-h-8",
-                    (wsPre && !printMode) ? "whitespace-pre overflow-x-auto" : "whitespace-pre-wrap",
+                    "overflow-auto",
+                    wsPre && !printMode ? "whitespace-pre" : "whitespace-pre-wrap",
                     className,
                 )}
+                style={{
+                    maxHeight: printMode ? "none" : `${maxContentHeight}px`,
+                }}
             >
                 {orc?.[stname]?.length > 0 ? (
                     <>
@@ -679,7 +690,16 @@ export const LongArticleContent = ({
                                         key={i}
                                         href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LongArticleFx?original=1${apds}${apdr}&from=${i}#LongArticleFx_${i}`}
                                     >
-                                        <div className={cn("block", avoidPageBreak && "break-inside-avoid-page")}>{textContent}</div>
+                                        <div
+                                            className={cn(
+                                                "block",
+                                                avoidPageBreak && "break-inside-avoid-page",
+                                                // 在非打印模式下，如果是 wsPre 模式，添加水平滚动
+                                                wsPre && !printMode && "overflow-x-auto",
+                                            )}
+                                        >
+                                            {textContent}
+                                        </div>
                                     </JumpTab>
                                 )
                             )

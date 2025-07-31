@@ -75,7 +75,7 @@ export const CsVerificationVw = ({
                 </TableRow>
                 <RepLink ori rep={rep} tag={"CpsvConclusion"} subrid={subrid} redId={redId}>
                     <TableRow>
-                        <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                        <TableCell split={false} className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
                             <p>校核结果：</p>
                             <span className="block indent-[2rem] text-left">{orc.结果 || '／'}</span>
                         </TableCell>
