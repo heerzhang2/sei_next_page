@@ -41,6 +41,7 @@ interface LongArticleFxProps {
     wsPre?: boolean
 }
 
+//通用的特殊长文本编辑：允许水平长度超长的。
 export const LongArticleFx = ({
                                   rep,
                                   children,
@@ -542,12 +543,6 @@ export const LongArticleFx = ({
                                             containerClassName="w-full"
                                         />
                                     )}
-                                    {projects[index]?.a && (
-                                        <div className="text-xs text-green-600 mt-1 flex items-center">
-                                            <Printer className="w-3 h-3 mr-1" />
-                                            避免分页
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 
@@ -632,6 +627,7 @@ export const LongArticleFx = ({
 interface LongArticleContentProps {
     orc: any
     rep: any
+    //不同的模板都能一起用的，用于区分滚动定位；也等于action;
     hash?: string
     stname?: string
     //分项报告id
@@ -643,11 +639,11 @@ interface LongArticleContentProps {
     className?: string
     printMode?: boolean
 }
-
+//正式报告的显示，长文本
 export const LongArticleContent = ({
                                        orc,
                                        rep,
-                                       hash,
+                                       hash="LongArticleFx",
                                        stname = "长文",
                                        subrid,
                                        redId,
@@ -670,7 +666,7 @@ export const LongArticleContent = ({
             <div
                 className={cn(
                     "overflow-auto",
-                    wsPre && !printMode ? "whitespace-pre" : "whitespace-pre-wrap",
+                    (wsPre && !printMode) ? "whitespace-pre" : "whitespace-pre-wrap",
                     className,
                 )}
                 style={{
@@ -686,10 +682,7 @@ export const LongArticleContent = ({
 
                             return (
                                 textContent && (
-                                    <JumpTab
-                                        key={i}
-                                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LongArticleFx?original=1${apds}${apdr}&from=${i}#LongArticleFx_${i}`}
-                                    >
+                                    <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${hash}?original=1${apds}${apdr}&from=${i}#${hash}_${i}`}>
                                         <div
                                             className={cn(
                                                 "block",
@@ -709,9 +702,7 @@ export const LongArticleContent = ({
                     "／"
                 )}
                 {!(orc?.[stname]?.length > 0) && (
-                    <JumpTab
-                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LongArticleFx?original=1${apds}${apdr}&from=0#LongArticleFx_0`}
-                    >
+                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${hash}?original=1${apds}${apdr}&from=0#${hash}_0`}>
                         <div className="text-lg ml-4 print:hidden">还没有内容，先编辑</div>
                     </JumpTab>
                 )}

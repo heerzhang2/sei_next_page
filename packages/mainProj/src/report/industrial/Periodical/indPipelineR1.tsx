@@ -32,7 +32,7 @@ import {cat_Sonic, UltrasoundVw} from "@/report/cm/sonic/Ultrasound1";
 import {HydrostaticTestVw} from "@/report/industrial/Periodical/HydrostaticTest";
 import {cat_Hard, HardnessVw} from "@/report/cm/hardness/Hardness1";
 import {cat_Optc, OpticalVw} from "@/report/cm/optical/Optical1";
-import {CsVerificationVw} from "@/report/cm/cpStrength/csVerification1";
+import {cat_Cpsv, CsVerificationVw} from "@/report/cm/cpStrength/csVerification1";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -66,6 +66,7 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     CPSTR_VR: {
         catKey: "耐压强度校核",
         component: CsVerificationVw,
+        cat: cat_Cpsv
     },
 }
 
