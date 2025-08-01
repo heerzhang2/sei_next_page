@@ -31,6 +31,7 @@ export const titleRenders ={
   "OPTIC_TS": (store: any,i: number) => <>[{store?.['_OPTIC_TS_'+i]?.['部件'] ?? ``}]</>,
   "CPSTR_VR": (store: any,i: number) => <>[{store?.['_CPSTR_VR_'+i]?.['部件'] ?? ``}]</>,
   "RADIO_TS": (store: any,i: number) => <>[{store?.['_RADIO_TS_'+i]?.['部件'] ?? ``}]</>,
+  "PERME_TS": (store: any,i: number) => <>[{store?.['_PERME_TS_'+i]?.['设备编'] ?? ``}]</>,
 }
 
 

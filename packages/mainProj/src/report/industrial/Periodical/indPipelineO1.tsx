@@ -32,6 +32,7 @@ import {
     RadoWorkpiece, rado示说选,
     rado结果选
 } from "@/report/cm/radio/Radiography1";
+import {config渗透仪概, PermEvaluation, perm示说选, perm结果选} from "@/report/cm/permeation/PermTest1";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -123,9 +124,14 @@ const recordPrintList =[
         createItem('RadoDiagram', <FxDiagram label="检测部位（布片示意图）" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={rado示说选}/>),
         createItem('RadoConclusion', <FxSimpConclus label={'射线检测-检测结果'} clc="结果" clist={rado结果选} />),
     ]),
-    //光谱分析报告 , 渗透检测报告
+    aggregateProj('渗透检测', 'PERME_TS', [
+        createItem('PermInstrument', <DeviceSurveyFx config={config渗透仪概} label='渗透检测-概要仪器'/>),
+        createItem('PermDiagram', <FxDiagram label="渗透检测部位及缺陷位置图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={perm示说选}/>),
+        createItem('PermEvaluation', <PermEvaluation label='渗透检测结果评定表'/>),
+        createItem('PermConclusion', <FxSimpConclus label={'渗透检测-检测结果'} clc="结果" clist={perm结果选} />),
+    ]),
+    //光谱分析报告 ,
 ];
-
 
 
 export const OriginalView=({action, verId, rep}:OriginalViewProps)=>{

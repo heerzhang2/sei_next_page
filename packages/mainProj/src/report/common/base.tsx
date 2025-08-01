@@ -331,27 +331,32 @@ export const CCellUnit = ({
         </CCell>
     );
 };
+
 /**目的：避免代码重复性质的字符串的出现太多了：   通常报告表格的点击转编辑器
  * @param ori 是原始记录页面的
  * 注意DirectLink：主动把直接儿子的 div或span改成了 <a>标签。
  */
-export const RepLink= ( {rep, children, tag, ori, subrid,redId}
-                        : {rep:any, children:React.ReactNode, tag:string,ori?:boolean,subrid?:string,redId?:number}
+export const RepLink= ( {rep, children, tag, ori, subrid,redId,hash}
+                        : {rep:any, children:React.ReactNode, tag:string,ori?:boolean,subrid?:string,redId?:number,hash?:string}
 ) => {
     const apds=`${subrid ? '&subrid='+subrid : ''}`
     const apdr=`${redId!==undefined ? '&redId='+redId : ''}`
     if(ori)
-        return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1${apds}${apdr}#${tag}`}>
+        return <JumpTab  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1${apds}${apdr}#${hash??tag}`}>
             {children}
         </JumpTab>;
     else if(tag)
-        return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?${apds}${apdr}#${tag}`}>
+        return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?${apds}${apdr}#${hash??tag}`}>
+            {children}
+        </JumpTab>;
+    else if(hash) return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?${apds}${apdr}#${hash}`}>
             {children}
         </JumpTab>;
     else return <JumpTab tab="preview" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?${apds}${apdr}`}>
             {children}
         </JumpTab>;
 };
+
 /*修改打印的默认文件名
 * */
 export function RepTitleUpdate({code,original}: {code:string,original?:boolean}) {
