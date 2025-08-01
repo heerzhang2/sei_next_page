@@ -33,6 +33,7 @@ import {
     rado结果选
 } from "@/report/cm/radio/Radiography1";
 import {config渗透仪概, PermEvaluation, perm示说选, perm结果选} from "@/report/cm/permeation/PermTest1";
+import {config光析仪概, SpetElementSet, spet示说选} from "@/report/cm/spectr/SpetrAnalys1";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -130,7 +131,14 @@ const recordPrintList =[
         createItem('PermEvaluation', <PermEvaluation label='渗透检测结果评定表'/>),
         createItem('PermConclusion', <FxSimpConclus label={'渗透检测-检测结果'} clc="结果" clist={perm结果选} />),
     ]),
-    //光谱分析报告 ,
+    aggregateProj('光谱分析', 'SPECTR_AL', [
+        createItem('SpetInstrument', <DeviceSurveyFx config={config光析仪概} label='光谱分析-概要仪器'/>),
+        createItem('SpetDiagram', <FxDiagram label="光谱分析-检测部位图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={spet示说选}/>),
+        createItem('SpetElementSet', <SpetElementSet label='光谱分析-录入元素集'/>),
+        createItem('SpetEvaluation', <PermEvaluation label='光谱分析结果评定表'/>),
+        createItem('SpetConclusion', <FxSimpConclus label={'光谱分析-检测结果'} clc="结果" clist={perm结果选} />),
+    ]),
+
 ];
 
 

@@ -12,11 +12,6 @@ import { RepHeadLink } from "@/report/common/repHeadLink"
 import { JumpTab } from "@/report/common/JumpTab"
 import {caseMapFx, redoProjHash, subRepHash, useItemsMapPressure} from "@/report/common/pressure"
 import { DirectoryPagePress } from "@/report/common/directory"
-import { ExplanatoryVw } from "@/report/power/boilInstall/Explanatory"
-import { CertificatePage } from "@/report/power/boilInstall/CertificatePage"
-import { BoilerDiagramVw } from "@/report/power/boilInstall/BoilerDiagram"
-import { 注意事项GasC } from "@/report/gas/rarelyVary"
-import { 首页设备概况BoilI } from "@/report/power/boilInstall/rarelyVary"
 import { ConclusionVw } from "@/report/industrial/Periodical/Conclusion"
 import { cat_Thickms, ThickMsVw } from "@/report/cm/thickm/ThickMs1"
 import SubRep, {SingeSubRep, SubReportConfig} from "@/component/rep/sub-rep"
@@ -35,6 +30,7 @@ import {cat_Optc, OpticalVw} from "@/report/cm/optical/Optical1";
 import {cat_Cpsv, CsVerificationVw} from "@/report/cm/cpStrength/csVerification1";
 import {cat_Rado, RadiographyVw} from "@/report/cm/radio/Radiography1";
 import {cat_Perm, PermeationVw} from "@/report/cm/permeation/PermTest1";
+import {cat_Spet, SpetrAnalysVw} from "@/report/cm/spectr/SpetrAnalys1";
 
 //确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -80,7 +76,11 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
         component: PermeationVw,
         cat: cat_Perm
     },
-
+    SPECTR_AL: {
+        catKey: "光谱分析",
+        component: SpetrAnalysVw,
+        cat: cat_Spet
+    },
 }
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
@@ -203,6 +203,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {renderSub('PERME_TS')}
                 {renderSub('RADIO_TS')}
                 {renderSub('MAGNT_TS')}
+                {renderSub('SPECTR_AL')}
                 {renderSub('OPTIC_TS')}
 
                 {renderSub('SONIC_TS')}
