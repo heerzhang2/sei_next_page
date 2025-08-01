@@ -46,7 +46,7 @@ export interface Each_ZdSetting extends Array<any> {
     n1: string //字段标题名
     f2: string //数据库标签
     l3: number //定长布局的像素宽度
-    extend?: any //扩充配置解析对象： 编辑器的: { t:编辑框类别, u:单位, l：预定的列表数组, s输入框行大小 }}
+    extend?: any //扩充配置解析对象： 编辑器的: { t:编辑框类别, u:单位, l：预定的列表数组, s输入框行大小, a:autoComplete }}
     park?: string //对于比如svp{},pa{}的嵌套字段的编辑直接支持，直接保存为嵌套的对象字段；只能支持1层的嵌套对象： 对于Row.{m. sgm {name,username}}无法支持的。
 }
 

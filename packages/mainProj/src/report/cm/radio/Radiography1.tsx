@@ -1,14 +1,14 @@
 "use client"
 import * as React from "react"
 import {CollapsibleFormSection, InputDatalist, SuffixInput,} from "@/components/chub"
-import {Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage, Separator,} from "@/components/ui"
+import {Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui"
 import { initFormTable, useFormFramework, } from "@/report/hook/useFormFramework"
-import { type InternalItemProps, RepLink, type RepVwProps } from "@/report/common/base"
+import {CCellUnit, type InternalItemProps, RepLink, type RepVwProps} from "@/report/common/base"
 import { useStorage } from "@/report/StorageContext"
 import { PrintReserveLeast } from "@/components/print-reserve-least"
 import { CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow } from "@/components/flexible-table"
 import { JumpTab } from "@/report/common/JumpTab"
-import {FootMensLine,} from "@/report/common/view"
+import {CfootMensLine, } from "@/report/common/view"
 import {ImageComponent} from "@/components/shub"
 import { cn } from "@/lib/utils"
 import { useCallback } from "react"
@@ -19,11 +19,8 @@ import type { UseFormReturn } from "react-hook-form"
 import {useThreeColumnSubr} from "@/report/hook/useThreeColumnSubr";
 import {three2TwoColumn} from "@/report/common/survey";
 
-/*
-{Array.from({ length: 4 - data.length }).map((_, idx) => (
-    <td key={`empty-${field.key}-${idx}`} className="py-3 px-4 bg-gray-50"> / </td>
-))}
-* */
+const Items射线源=[{t:'管电压：',n:'管压',u:'KV'},{t:'源活度',n:'源活',u:'Ci'},{t:'管电流',n:'管电',u:'mA'}];
+//实际有点像特性表的做法：再做分解为4个工件的组合在一块的。
 export const RadiographyVw = ({
                               orc,
                               rep,
@@ -41,84 +38,39 @@ export const RadiographyVw = ({
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
     const render=()=><>
-        <FlexibleTable id={'RadoInstrument_'+redId} columnWidths={ JSON.parse(parOrc?._tblFixed??'[]') } className="text-sm border-collapse">
+        <FlexibleTable id={'RadoInstrument_'+redId} columnWidths={ ["11.2%","24%","9%","18%","10.9%","%"] } className="text-sm border-collapse">
             <TableBody>
                 <RepLink ori rep={rep} tag={"RadoInstrument"} subrid={subrid} redId={redId}>
                     {upperNode}
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        <FlexibleTable id={'RadoWorkpiece_'+redId} columnWidths={ ["11.2%","25%","9%","17%","10.9%","%"] } className="text-sm border-collapse">
-            <TableHeader>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/RadoWorkpiece?original=1${apds}${apdr}#RadoWorkpiece_${redId}`}>
-                    <TableRow>
-                        <CCell rowSpan={2}>序号</CCell><CCell rowSpan={2}>检测部位</CCell><CCell rowSpan={2}>试件规格</CCell>
-                        <CCell colSpan={2}>设计材质</CCell>
-                        <CCell rowSpan={2}>检查数量</CCell><CCell rowSpan={2}>分析结果</CCell>
-                    </TableRow>
-                    <TableRow><CCell>母材</CCell><CCell>焊材</CCell></TableRow>
-                </JumpTab>
-            </TableHeader>
+        <FlexibleTable id={'RadoWorkpiece_'+redId} columnWidths={ ["15.3%","%","9%","12%","12%","9%","21%"] } className="text-sm border-collapse">
             <TableBody>
                 <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/RadoWorkpiece?original=1${apds}${apdr}#RadoWorkpiece_${redId}`}>
-                    { config射线件1.map(([orgDesc,nameObj,cb]: any, i:number)=> {
-                        const {n: name} = nameObj as NameFiledAs;
-                        const desc = typeof orgDesc === 'string' ? orgDesc : orgDesc?.view;         //这个view 和 text分别针对是报告和编辑器的标题
-                        return <React.Fragment key={i}>
-                            <TableRow key={i}>
-                                <CCell key={0}>{desc}</CCell>
+                    { config射线件1.map(([title,name,_]: any, i:number)=> {
+                        return <TableRow key={i}>
+                                <CCell>{title}</CCell>
                                 {Array.from({length: 4}).map(( _,  w:number) => {
                                     return <CCell key={w+1} colSpan={(w===1 ||w===2)? 2:1}>{orc?.工件表?.[w]?.[name]??'／'}</CCell>;
                                 }) }
-                            </TableRow>
-                        </React.Fragment>;
+                            </TableRow>;
                     }) }
-
-
-                    {orc?.工件表?.map((o: any, i: React.Key) => (
-                        <TableRow key={i}>
-                            {config射线工件.map(([_1, tag, _3], k: number) => {
-                                return (
-                                    <CCell key={k} className="break-all text-sm">
-                                        {o?.[tag] || "／"}
-                                    </CCell>
-                                )
-                            })}
-                        </TableRow>
-                    ))}
-                    {!(orc?.工件表?.length > 0)  && (
-                        <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
-                    )}
-                </JumpTab>
-            </TableBody>
-        </FlexibleTable>
-        <FlexibleTable id={'RadoEvaluation_'+redId} columnWidths={ ["11.2%","25%","9%","17%","10.9%","%"] } className="text-sm border-collapse">
-            <TableHeader>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/RadoEvaluation?original=1${apds}${apdr}#RadoEvaluation_${redId}`}>
                     <TableRow>
-                        <CCell rowSpan={2}>序号</CCell><CCell rowSpan={2}>检测部位</CCell><CCell rowSpan={2}>试件规格</CCell>
-                        <CCell colSpan={2}>设计材质</CCell>
-                        <CCell rowSpan={2}>检查数量</CCell><CCell rowSpan={2}>分析结果</CCell>
+                        { Items射线源.map(({t,n,u}, i:number)=> {
+                            return <React.Fragment key={i}>
+                                <CCell>{t}</CCell><CCellUnit colSpan={1===i? 2:1} unit={u}>{orc?.[n]??'／'}</CCellUnit>
+                            </React.Fragment>;
+                        })}
                     </TableRow>
-                    <TableRow><CCell>母材</CCell><CCell>焊材</CCell></TableRow>
-                </JumpTab>
-            </TableHeader>
-            <TableBody>
-                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/RadoEvaluation?original=1${apds}${apdr}#RadoEvaluation_${redId}`}>
-                    {orc?.部位表?.map((o: any, i: React.Key) => (
-                        <TableRow key={i}>
-                            {config评定.map(([_1, tag, _3], k: number) => {
-                                return (
-                                    <CCell key={k} className="break-all text-sm">
-                                        {o?.[tag] || "／"}
-                                    </CCell>
-                                )
-                            })}
-                        </TableRow>
-                    ))}
-                    {!(orc?.部位表?.length > 0)  && (
-                        <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
-                    )}
+                    { config射线件2.map(([title,name,_]: any, i:number)=> {
+                        return <TableRow key={i}>
+                            <CCell><span className={cn(i===3? "text-xs" : "")}>{title}</span></CCell>
+                            {Array.from({length: 4}).map(( _,  w:number) => {
+                                return <CCell key={w+1} colSpan={(w===1 ||w===2)? 2:1}>{orc?.工件表?.[w]?.[name]??'／'}</CCell>;
+                            }) }
+                        </TableRow>;
+                    }) }
                 </JumpTab>
             </TableBody>
         </FlexibleTable>
@@ -127,7 +79,7 @@ export const RadiographyVw = ({
                 <TableRow id={'RadoDiagram_'+redId}  className="border border-gray-700">
                     <TableCell  className="border border-gray-700">
                         <RepLink ori rep={rep} tag={"RadoDiagram"} subrid={subrid} redId={redId}>
-                            <div className="text-sm">测点位置示意图：&nbsp;
+                            <div className="text-sm">检测部位（布片示意图）：&nbsp;
                                 {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
                                 {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
                                     <span className="block m-4 text-xl text-center">空的，进入上传吧</span>
@@ -162,6 +114,34 @@ export const RadiographyVw = ({
                 </TableRow>
             </TableBody>
         </FlexibleTable>
+        <FlexibleTable id={'RadoEvaluation_'+redId} columnWidths={ ["11.2%","16%","17%","19.6%","9%","%"] } className="text-sm border-collapse">
+            <TableHeader>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/RadoEvaluation?original=1${apds}${apdr}#RadoEvaluation_${redId}`}>
+                    <TableRow><CCell colSpan={6}><span className={"text-xs"}>射 线 检 测 底 片 评 定 表</span></CCell></TableRow>
+                    <TableRow><CCell>底片编号</CCell><CCell className={"text-xs"}>一次透照长度(mm)</CCell>
+                        <CCell>缺陷位置</CCell><CCell>缺陷性质及尺寸(mm)</CCell>
+                        <CCell>评定级别</CCell><CCell>备 注</CCell></TableRow>
+                </JumpTab>
+            </TableHeader>
+            <TableBody>
+                <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/RadoEvaluation?original=1${apds}${apdr}#RadoEvaluation_${redId}`}>
+                    {orc?.评定表?.map((o: any, i: React.Key) => (
+                        <TableRow key={i}>
+                            {config评定.map(([_1, tag, _3], k: number) => {
+                                return (
+                                    <CCell key={k} className="break-all text-sm">
+                                        {o?.[tag] || "／"}
+                                    </CCell>
+                                )
+                            })}
+                        </TableRow>
+                    ))}
+                    {!(orc?.评定表?.length > 0)  && (
+                        <TableRow><CCell colSpan={7}>空的</CCell></TableRow>
+                    )}
+                </JumpTab>
+            </TableBody>
+        </FlexibleTable>
         <FlexibleTable id={'RadoConclusion_'+redId} columnWidths={["%"]} className="text-sm border-collapse">
             <TableBody>
                 <RepLink ori rep={rep} tag={"RadoConclusion"} subrid={subrid} redId={redId}>
@@ -174,7 +154,7 @@ export const RadiographyVw = ({
                 </RepLink>
             </TableBody>
         </FlexibleTable>
-        <FootMensLine  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
+        <CfootMensLine cap="检测" href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}
         />
     </>
 
@@ -182,15 +162,10 @@ export const RadiographyVw = ({
     <PrintReserveLeast reserve="6rem"
         title={
             <>
-                <TComponent className="text-2xl text-center mt-4">
+                <TComponent className="text-2xl text-center mt-4 mb-1">
                     {title}
                     <span className="text-base">{apxid}</span>
                 </TComponent>
-                <span className="block text-center text-xs">FJB/JK 1047-0-2018</span>
-                <div className="flex justify-between">
-                    <span className="text-sm">单位内部编号：{orc.单位内部编号}</span>
-                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
-                </div>
             </>
     }>
         {unfold ? render() :
@@ -227,20 +202,7 @@ export const config射线仪概 = three2TwoColumn(config射线测仪);
 
 const 合格级别选=['Ⅰ级' ];
 const 透照方式选=['双壁单影'];
-/**固定行数的表格， 报告上面可能像特性表那样地行列做倒置。 表格不能增加删除的，各行排序不能变的。表的字段数多，表的行数少而固定的。
- * 类比改款的配置方式;   '规格尺寸(mm)' ；尽量不用类型t:'n'宽度编辑框不能用w来控制。
- * */
-export const model工件 = [
-    ['工件编号', {n:'n',w:10} ], [{view:'规格尺寸(mm)',text:'规格尺寸'}, {n:'g',w:22,u:'mm'} ], ['材 质', {n:'c',w:8} ],
-    ['透照方式', {n:'tz',w:12,t:'l',l:透照方式选} ], [{view:'焦距:F(mm)',text:'焦距:F'}, {n:'F',w:13,u:'mm'} ],
-    //中间被通用的固定字段”管电压：“分开了：
-    [{view:'曝光时间(min)',text:'曝光时间'}, {n:'b', w:1,u:'min'} ], ['像质指数', {n:'X',w:5} ],
-    [{view:'焊缝长度(mm)',text:'焊缝长度'}, {n:'L', w:4,u:'mm'} ], [{view:'一次透照长度(mm)',text:'一次透照长度'}, {n:'Y', w:8,u:'mm'} ],
-    [{view:'焊口总数量(个)',text:'焊口总数量'}, {n:'K', w:2,u:'个'} ], [{view:'检测数量(个)',text:'检测数量'}, {n:'T', w:1,u:'个'} ],
-    [{view:'拍片数量(张)',text:'拍片数量'}, {n:'s', w:1,u:'张'} ], ['合格级别', {n:'C',w:5,t:'l',l:合格级别选} ],
-    ['要求检测比例', {n:'P', w:1,u:'%'} ], ['实际检测比例', {n:'p', w:2,u:'%'} ]
-];
-const config射线工件=[['工件编号','n',90],
+const config射线工件=[ ['工件编号','n',90],
     ['规格尺寸(mm)','g',90], ['材 质','c',60],
     ['透照方式','T',70,{l:透照方式选}], ['焦距:F(mm)','F',70],
     ['曝光时间(min)','b',60], ['像质指数','X',50],
@@ -249,8 +211,8 @@ const config射线工件=[['工件编号','n',90],
     ['拍片数量(张)','p',70], ['合格级别','C',60,{l:合格级别选}],
     ['要求检测比例','d',60,{u:'%'}], ['实际检测比例','A',60,{u:'%'}]
 ] as Each_ZdSetting[];
-const config射线件1= model工件.slice(0,5);
-const config射线件2= model工件.slice(5);
+const config射线件1= config射线工件.slice(0,5);
+const config射线件2= config射线工件.slice(5);
 
 interface EvaluationProps extends InternalItemProps {
     config?: Each_ZdSetting[]
@@ -367,14 +329,12 @@ export const RadoWorkpiece = ({
     )
 }
 
-const 焊材选=['20','不明'];
-export const config评定=[['序号','n',80],['检测部位','B',180],['试件规格','G',90],
-    ['母材','c',70,{t:'l',l:焊材选}],
-    ['焊材','h',70,{t:'l',l:焊材选}], ['检查数量','s',55],
-    ['分析结果','r',90, {t:'l',l:['符合要求']} ]
+const config评定=[['底片编号','n',60], ['一次透照长度(mm)','l',80],
+    ['缺陷位置','f',65, {l:['0位','70-80mm']}],
+    ['缺陷性质及尺寸(mm)','s',130, {l:['未焊透/整条','圆形缺陷/5点','未焊透/20mm']}],
+    ['评定级别','C',55, {l:['Ⅳ级','Ⅲ级','Ⅱ级','Ⅰ级']}],
+    ['备 注','m',95, {l:['H≈0.6','H≈1.0','位置受限','Ф159×4.5H≈0.6']}]
 ] as Each_ZdSetting[];
-
-
 
 export const RadoEvaluation = ({
                                     children,
@@ -393,15 +353,15 @@ export const RadoEvaluation = ({
         config.forEach(([t, field, s, o, park]) => {
             schemaTab[field] = z.string().optional()
         })
-        schemaFields["部位表"] = z.array(z.object(schemaTab))
+        schemaFields["评定表"] = z.array(z.object(schemaTab))
         return z.object(schemaFields)
     }, [])
     const defaultValues = React.useMemo(() => {
-        const fields = initFormTable(subStore, "部位表", config)
+        const fields = initFormTable(subStore, "评定表", config)
         return fields
     }, [subStore, config])
     const arrayFields = React.useMemo(() => {
-        return [{ name: "部位表", itemTemplate:{} }]
+        return [{ name: "评定表", itemTemplate:{} }]
     }, [])
     const headview = <h5>{label}：</h5>
     const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
@@ -418,12 +378,12 @@ export const RadoEvaluation = ({
         form,
         arrayControls,
         config: config,
-        table: "部位表",
+        table: "评定表",
         onConfirm,
         externalData: subStore,
         defFixedLay: true,
         headview,
-        pageSize: 10,
+        pageSize: 20,
     })
     const content = React.useMemo(() => {
         return (
@@ -443,9 +403,16 @@ export const RadoEvaluation = ({
 }
 
 export const cat_Rado=[
-    {title: "射线检测测点位置图", url: "#RadoDiagram"},
-    {title: "射线检测分析结果表", url: "#RadoEvaluation"},
+    {title: "射线检测-工件编号", url: "#RadoWorkpiece"},
+    {title: "射线检测底片评定表", url: "#RadoEvaluation"},
 ];
 
-export const rado示说选=['见光谱检测附图。',
+export const rado示说选=[`1、该装置管道焊接接头射线检测抽查部位见管道单线图所示。
+2、备注中H为缺陷自身高度。`,
 ];
+
+export const rado结果选=[`该装置各管道焊接接头经射线检测抽查，发现存在未焊透和气孔等缺陷，和 2020 年 3 月（报告编号：
+SM2020FDC00004）定期检验相比未见异常。根据TSG D7005-2018《压力管道定期检验规则－工业管道》第
+3.2.6.2（4）条和3.2.4条进行评级，安全状况等级评为 3 级。`,
+];
+

@@ -25,7 +25,13 @@ import {config硬度仪, HardEvaluation, hard示说选} from "@/report/cm/hardne
 import {config光谱测仪, OptcEvaluation, optc示说选} from "@/report/cm/optical/Optical1";
 import {config强度核概, CpsvCalculation, cpsv结果选} from "@/report/cm/cpStrength/csVerification1";
 import {LongArticleFx} from "@/report/cm/cpStrength/LongArticleFx";
-import {config射线仪概, config射线测仪, RadoWorkpiece} from "@/report/cm/radio/Radiography1";
+import {
+    config射线仪概,
+    config射线测仪,
+    RadoEvaluation,
+    RadoWorkpiece, rado示说选,
+    rado结果选
+} from "@/report/cm/radio/Radiography1";
 
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
@@ -113,10 +119,9 @@ const recordPrintList =[
     aggregateProj('射线检测', 'RADIO_TS', [
         createItem('RadoInstrument', <DeviceSurveyFx config={config射线仪概} label='射线检测-概要仪器'/>),
         createItem('RadoWorkpiece', <RadoWorkpiece label='射线检测-工件编号'/>),
-        createItem('RadoEvaluation', <OptcEvaluation label='光谱检测分析结果表'/>),
-        createItem('RadoDiagram', <FxDiagram label="光谱检测位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={10} dlist={optc示说选}/>),
-        createItem('RadoConclusion', <FxSimpConclus label={'光谱检测-检测结果'} clc="结果"
-                                                    clist={['对管件进行光谱复核，经检测，管件的Mn元素含量符合母材20钢的标准范围。']} />),
+        createItem('RadoEvaluation', <RadoEvaluation label='射线检测底片评定表'/>),
+        createItem('RadoDiagram', <FxDiagram label="检测部位（布片示意图）" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={rado示说选}/>),
+        createItem('RadoConclusion', <FxSimpConclus label={'射线检测-检测结果'} clc="结果" clist={rado结果选} />),
     ]),
     //光谱分析报告 , 渗透检测报告
 ];
