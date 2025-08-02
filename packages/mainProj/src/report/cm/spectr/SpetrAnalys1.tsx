@@ -19,8 +19,9 @@ import type { UseFormReturn } from "react-hook-form"
 import { useThreeColumnSubr } from "@/report/hook/useThreeColumnSubr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Trash2, Plus } from "lucide-react"
+import { Trash2, Plus, AlertTriangle } from "lucide-react"
 import { useFieldArray } from "react-hook-form"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export const SpetrAnalysVw = ({
                                   orc,
@@ -39,6 +40,24 @@ export const SpetrAnalysVw = ({
     const [upperNode] = useThreeColumnSubr({ config: config光析仪概, orc, parentOrc: parOrc, slash: true })
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
+    const elsSize = orc?.元素?.length || 0
+    //纯粹动态的 config评定 配置表：  # 新改动元素符号的要保存后才会同步左边页面的。
+    const { configNew, fixedWidth } = React.useMemo(() => {
+        const addings = new Array(Number(orc?._YSN_) || 1).fill(null).map((_, w: number) => {
+            const title = orc?.元素?.[w] || "元素" + (w + 1)
+            return [title, "e" + w, 55] as Each_ZdSetting
+        })
+        const configNew = [...config评定.slice(0, 2), ...addings, ...config评定.slice(2)]
+        const likePct = WIDTH_YSN[orc?._YSN_ > 8 ? 3 : orc?._YSN_ > 5 ? 2 : orc?._YSN_ > 2 ? 1 : 0]
+        const ysEach = likePct[2] / (orc?._YSN_ || 1)
+        const fixedWidth = [likePct[0] + "%", likePct[1] + "%"]
+        for (let e = 0; e < (orc?._YSN_ || 1); e++) {
+            fixedWidth.push(ysEach + "%")
+        }
+        fixedWidth.push("%") //剩下都算是备注那列的 100%--；
+        return { configNew, fixedWidth }
+    }, [elsSize, orc?.元素, config评定])
+
     const render = () => (
         <>
             <FlexibleTable
@@ -93,7 +112,7 @@ export const SpetrAnalysVw = ({
                     </TableRow>
                 </TableBody>
             </FlexibleTable>
-            {!orc?.元素?.length > 0 ? (
+            {!(elsSize > 0) ? (
                 <RepLink ori rep={rep} tag={"SpetElementSet"} subrid={subrid} redId={redId}>
                     <p className={"text-xl font-bold text-center w-full"}>空的，必须首先确定元素集合！</p>
                 </RepLink>
@@ -104,22 +123,20 @@ export const SpetrAnalysVw = ({
                     className="text-sm border-collapse"
                 >
                     <TableHeader>
-                        <JumpTab
-                            href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/PermEvaluation?original=1${apds}${apdr}#PermEvaluation_${redId}`}
-                        >
+                        <RepLink ori rep={rep} tag={"SpetElementSet"} subrid={subrid} redId={redId}>
                             <TableRow>
-                                <CCell colSpan={7}>渗 透 检 测 结 果 评 定 表</CCell>
+                                <CCell rowSpan={2}>序号</CCell>
+                                <CCell rowSpan={2}>标称材质</CCell>
+                                <CCell colSpan={elsSize || 1}>元素及含量（％）</CCell>
+                                <CCell rowSpan={2}>备注</CCell>
                             </TableRow>
                             <TableRow>
-                                <CCell>部位编号</CCell>
-                                <CCell>缺陷编号</CCell>
-                                <CCell>缺陷位置</CCell>
-                                <CCell>长度(mm)</CCell>
-                                <CCell>缺陷性质</CCell>
-                                <CCell className="leading-[1] p-0">评定级别</CCell>
-                                <CCell>备 注</CCell>
+                                {configNew.map(([title, _2, _1], i: number) => {
+                                    if (i <= 1 || i >= 2 + (elsSize || 1)) return null
+                                    return <CCell key={i}>{title}</CCell>
+                                })}
                             </TableRow>
-                        </JumpTab>
+                        </RepLink>
                     </TableHeader>
                     <TableBody>
                         <RepLink
@@ -197,6 +214,14 @@ export const SpetrAnalysVw = ({
 const 部件名称选 = ["工艺管道"]
 const 仪器型号选 = ["PMI-MASTER Pro2"]
 const 取样方法选 = ["光谱"]
+
+const WIDTH_YSN = [
+    [15, 20, 50], // 0-2个元素
+    [12, 18, 45], // 3-5个元素
+    [10, 15, 40], // 6-8个元素
+    [8, 12, 35], // 9+个元素
+]
+
 /**原来的第一项：使用单位； ？？
  * */
 export const config光析仪概 = [
@@ -215,17 +240,44 @@ export const config光析仪概 = [
 ]
 
 const config评定 = [
-    ["部位编号", "n", 100],
-    ["缺陷编号", "h", 90],
-    ["缺陷位置", "p", 80, { l: ["0位"] }],
-    ["长度（mm）", "l", 85],
-    ["缺陷性质", "Q", 130, { l: ["未焊透/整条"] }],
-    ["评定级别", "C", 55, { l: ["Ⅳ级", "Ⅲ级", "Ⅱ级", "Ⅰ级"] }],
-    ["备 注", "m", 105],
+    ["序号", "n", 70],
+    ["标称材质", "b", 90, { l: ["20"] }],
+    ["备注", "m", 110, { l: ["Φ108弯头"] }],
 ] as Each_ZdSetting[]
 
 // 常用元素选项
-const 常用元素选项 = ["C", "Si", "Mn", "P", "S", "Cr", "Ni", "Mo", "Cu", "Al", "Ti", "V", "Nb", "W", "Co", "Fe", "Mg", "Ca", "Zn", "Pb", "Sn", "As", "Sb", "Bi",]
+const 常用元素选项 = [
+    "C",
+    "Si",
+    "Mn",
+    "P",
+    "S",
+    "Cr",
+    "Ni",
+    "Mo",
+    "Cu",
+    "Al",
+    "Ti",
+    "V",
+    "Nb",
+    "W",
+    "Co",
+    "Fe",
+    "Mg",
+    "Ca",
+    "Zn",
+    "Pb",
+    "Sn",
+    "As",
+    "Sb",
+    "Bi",
+    "N",
+    "O",
+    "Cd",
+]
+
+// 禁止输入的元素
+const 禁止元素 = ["n", "b", "m"]
 
 interface EvaluationProps extends InternalItemProps {
     config?: Each_ZdSetting[]
@@ -297,36 +349,46 @@ export const SpetEvaluation = ({
     )
 }
 
-//录入元素表
-export const SpetElementSet = ({
-                                   children,
-                                   show,
-                                   label,
-                                   rep,
-                                   config = config评定,
-                                   subrid,
-                                   redId,
-                                   modType,
-                               }: EvaluationProps) => {
+//录入元素表 ，但是'n','b','m'三个除外。
+export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modType }: EvaluationProps) => {
     const { storage } = useStorage()
     const subStore = storage?.[`_${modType}_${redId}`]
+
+    // 检查初始数据长度是否超过12个
+    const initialDataError = React.useMemo(() => {
+        const initialElements = subStore?.元素 || []
+        if (initialElements.length > 12) {
+            return `检测到数据异常：当前元素数量为 ${initialElements.length} 个，超过了最大限制 12 个。请删除多余的元素。`
+        }
+        return null
+    }, [subStore?.元素])
+
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
-        schemaFields["元素"] = z.array(z.string().min(1, "元素名称不能为空")).max(12, "最多只能添加12个元素")
+        schemaFields["元素"] = z
+            .array(
+                z
+                    .string()
+                    .min(1, "元素名称不能为空")
+                    .refine((value) => !禁止元素.includes(value.toLowerCase()), {
+                        message: `不允许输入元素: ${禁止元素.join(", ")}`,
+                    }),
+            )
+            .max(12, "最多只能添加12个元素")
         return z.object(schemaFields)
     }, [])
 
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
-        fields.元素 = subStore?.元素 || []
+        const initialElements = subStore?.元素 || []
+        // 如果初始数据超过12个，只取前12个
+        fields.元素 = initialElements.length > 12 ? initialElements.slice(0, 12) : initialElements
         return fields
     }, [subStore])
 
     const arrayFields = React.useMemo(() => {
         return [{ name: "元素", itemTemplate: "" }]
     }, [])
-
-    const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
 
     const { render, handleConfirm, form, arrayControls } = useFormFramework({
         schema,
@@ -362,6 +424,10 @@ export const SpetElementSet = ({
     const handleQuickAdd = useCallback(
         (element: string) => {
             if (fields.length < 12 && !form.getValues("元素").includes(element)) {
+                // 检查是否为禁止元素
+                if (禁止元素.includes(element.toLowerCase())) {
+                    return
+                }
                 append(element)
             }
         },
@@ -371,6 +437,14 @@ export const SpetElementSet = ({
     const elementEditor = React.useMemo(() => {
         return (
             <div className="space-y-4">
+                {/* 初始数据错误警告 */}
+                {initialDataError && (
+                    <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>{initialDataError}</AlertDescription>
+                    </Alert>
+                )}
+
                 <div className="flex items-center justify-between">
                     <h5 className="text-sm font-medium">元素设置 ({fields.length}/12)</h5>
                     <Button
@@ -386,22 +460,31 @@ export const SpetElementSet = ({
                     </Button>
                 </div>
 
+                {/* 禁止元素提示 */}
+                <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    <p>
+                        注意：禁止输入以下元素：<span className="font-mono text-red-500">{禁止元素.join(", ")}</span>
+                    </p>
+                </div>
+
                 {/* 常用元素快速添加 */}
                 <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">常用元素快速添加：</p>
                     <div className="flex flex-wrap gap-1">
                         {常用元素选项.map((element) => {
                             const isAdded = form.watch("元素")?.includes(element)
-                            const canAdd = fields.length < 12 && !isAdded
+                            const isForbidden = 禁止元素.includes(element.toLowerCase())
+                            const canAdd = fields.length < 12 && !isAdded && !isForbidden
                             return (
                                 <Button
                                     key={element}
                                     type="button"
-                                    variant={isAdded ? "secondary" : "outline"}
+                                    variant={isAdded ? "secondary" : isForbidden ? "destructive" : "outline"}
                                     size="sm"
                                     onClick={() => handleQuickAdd(element)}
                                     disabled={!canAdd}
-                                    className="h-7 px-2 text-xs"
+                                    className="h-8 px-4 text-sm"
+                                    title={isForbidden ? "禁止添加此元素" : undefined}
                                 >
                                     {element}
                                 </Button>
@@ -422,8 +505,8 @@ export const SpetElementSet = ({
                                 <div key={field.id} className="flex items-center gap-2">
                                     <div className="flex-1">
                                         <Input {...form.register(`元素.${index}`)} placeholder={`元素 ${index + 1}`} className="h-8" />
-                                        {form.formState.errors.元素?.[index] && (
-                                            <p className="text-xs text-red-500 mt-1">{form.formState.errors.元素[index]?.message}</p>
+                                        {Array.isArray(form.formState.errors.元素) && form.formState.errors.元素[index]?.message && (
+                                            <p className="text-xs text-red-500 mt-1">{String(form.formState.errors.元素[index]?.message)}</p>
                                         )}
                                     </div>
                                     <Button
@@ -442,12 +525,12 @@ export const SpetElementSet = ({
                 </div>
 
                 {/* 错误信息 */}
-                {form.formState.errors.元素?.root && (
-                    <p className="text-sm text-red-500">{form.formState.errors.元素.root.message}</p>
+                {form.formState.errors.元素?.root?.message && (
+                    <p className="text-sm text-red-500">{String(form.formState.errors.元素.root.message)}</p>
                 )}
             </div>
         )
-    }, [fields, form, handleAddElement, handleRemoveElement, handleQuickAdd])
+    }, [fields, form, handleAddElement, handleRemoveElement, handleQuickAdd, initialDataError])
 
     const content = React.useMemo(() => {
         return (
