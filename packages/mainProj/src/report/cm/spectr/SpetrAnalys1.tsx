@@ -8,7 +8,7 @@ import { useStorage } from "@/report/StorageContext"
 import { PrintReserveLeast } from "@/components/print-reserve-least"
 import { CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow } from "@/components/flexible-table"
 import { JumpTab } from "@/report/common/JumpTab"
-import { CfootMensLine } from "@/report/common/view"
+import {FootMensLine} from "@/report/common/view"
 import { ImageComponent } from "@/components/shub"
 import { cn } from "@/lib/utils"
 import { useCallback } from "react"
@@ -23,6 +23,13 @@ import { Trash2, Plus, AlertTriangle } from "lucide-react"
 import { useFieldArray } from "react-hook-form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
+const MAX_ELMS_SIZE=12;
+const WIDTH_YSN=[
+    [13, 17, 40, ],     //小于3个 化学 元素：
+    [12, 14, 50, ],     //小于6个元素的：
+    [10, 12, 58, ],     //小于9个元素的：
+    [5.5, 9, 69, ],      //超多个的元素的：
+];
 export const SpetrAnalysVw = ({
                                   orc,
                                   rep,
@@ -43,15 +50,15 @@ export const SpetrAnalysVw = ({
     const elsSize = orc?.元素?.length || 0
     //纯粹动态的 config评定 配置表：  # 新改动元素符号的要保存后才会同步左边页面的。
     const { configNew, fixedWidth } = React.useMemo(() => {
-        const addings = new Array(Number(orc?._YSN_) || 1).fill(null).map((_, w: number) => {
-            const title = orc?.元素?.[w] || "元素" + (w + 1)
-            return [title, "e" + w, 55] as Each_ZdSetting
+        const addings = new Array(elsSize || 1).fill(null).map((_, w: number) => {
+            const title = orc?.元素?.[w];
+            return [title, title, 55] as Each_ZdSetting
         })
         const configNew = [...config评定.slice(0, 2), ...addings, ...config评定.slice(2)]
-        const likePct = WIDTH_YSN[orc?._YSN_ > 8 ? 3 : orc?._YSN_ > 5 ? 2 : orc?._YSN_ > 2 ? 1 : 0]
-        const ysEach = likePct[2] / (orc?._YSN_ || 1)
+        const likePct = WIDTH_YSN[elsSize > 8 ? 3 : elsSize > 5 ? 2 : elsSize > 2 ? 1 : 0]
+        const ysEach = likePct[2] / (elsSize || 1)
         const fixedWidth = [likePct[0] + "%", likePct[1] + "%"]
-        for (let e = 0; e < (orc?._YSN_ || 1); e++) {
+        for (let e = 0; e < (elsSize || 1); e++) {
             fixedWidth.push(ysEach + "%")
         }
         fixedWidth.push("%") //剩下都算是备注那列的 100%--；
@@ -60,11 +67,7 @@ export const SpetrAnalysVw = ({
 
     const render = () => (
         <>
-            <FlexibleTable
-                id={"SpetInstrument_" + redId}
-                columnWidths={["10.9%", "24%", "10.9%", "23%", "10.8%", "%"]}
-                className="text-sm border-collapse"
-            >
+            <FlexibleTable id={"SpetInstrument_" + redId} columnWidths={ ["9.3%", "32%", "10.9%", "9.3%", "9%", "%"] } className="text-sm border-collapse">
                 <TableBody>
                     <RepLink ori rep={rep} tag={"SpetInstrument"} subrid={subrid} redId={redId} hash={"SpetInstrument_" + redId}>
                         {upperNode}
@@ -117,11 +120,7 @@ export const SpetrAnalysVw = ({
                     <p className={"text-xl font-bold text-center w-full"}>空的，必须首先确定元素集合！</p>
                 </RepLink>
             ) : (
-                <FlexibleTable
-                    id={"PermEvaluation_" + redId}
-                    columnWidths={["%", "14%", "14%", "10%", "20%", "7%", "19%"]}
-                    className="text-sm border-collapse"
-                >
+                <FlexibleTable id={"SpetChemicCompo_" + redId} columnWidths={ fixedWidth } className="text-sm border-collapse">
                     <TableHeader>
                         <RepLink ori rep={rep} tag={"SpetElementSet"} subrid={subrid} redId={redId}>
                             <TableRow>
@@ -139,17 +138,10 @@ export const SpetrAnalysVw = ({
                         </RepLink>
                     </TableHeader>
                     <TableBody>
-                        <RepLink
-                            ori
-                            rep={rep}
-                            tag={"PermEvaluation"}
-                            subrid={subrid}
-                            redId={redId}
-                            hash={"PermEvaluation_" + redId}
-                        >
-                            {orc?.评定表?.map((o: any, i: React.Key) => (
+                        <RepLink ori rep={rep} tag={"SpetChemicCompo"} subrid={subrid} redId={redId} hash={"SpetChemicCompo_" + redId}>
+                            {orc?.含量表?.map((o: any, i: React.Key) => (
                                 <TableRow key={i}>
-                                    {config评定.map(([_1, tag, _3], k: number) => {
+                                    {configNew.map(([_1, tag, _3], k: number) => {
                                         return (
                                             <CCell key={k} className="break-all text-sm">
                                                 {o?.[tag] || "／"}
@@ -158,28 +150,34 @@ export const SpetrAnalysVw = ({
                                     })}
                                 </TableRow>
                             ))}
-                            {!(orc?.评定表?.length > 0) && (
+                            {!(orc?.含量表?.length > 0) && (
                                 <TableRow>
-                                    <CCell colSpan={7}>空的</CCell>
+                                    <CCell colSpan={elsSize+3}>空的</CCell>
                                 </TableRow>
                             )}
                         </RepLink>
                     </TableBody>
                 </FlexibleTable>
             )}
-            <FlexibleTable id={"PermConclusion_" + redId} columnWidths={["%"]} className="text-sm border-collapse">
+            <FlexibleTable id={"SpetConclusion_" + redId} columnWidths={["%"]} className="text-sm border-collapse">
                 <TableBody>
-                    <RepLink ori rep={rep} tag={"PermConclusion"} subrid={subrid} redId={redId} hash={"PermConclusion_" + redId}>
+                    <RepLink ori rep={rep} tag={"SpetConclusion"} subrid={subrid} redId={redId} hash={"SpetConclusion_" + redId}>
                         <TableRow>
                             <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
-                                <p>检测结果：</p>
-                                <span className="block indent-[2rem] text-left font-bold">{orc.结果 || "／"}</span>
+                                <span className="block">备注：</span>
+                                <span className="block indent-[2rem] text-left">{orc.备注 || '／'}</span>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell className={"border border-gray-700 min-h-4 whitespace-pre-wrap"}>
+                                <p>分析结果：</p>
+                                <span className="block indent-[2rem] text-left">{orc.结果 || "／"}</span>
                             </TableCell>
                         </TableRow>
                     </RepLink>
                 </TableBody>
             </FlexibleTable>
-            <CfootMensLine href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`} />
+            <FootMensLine cap='检测' href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}/>
         </>
     )
 
@@ -215,13 +213,6 @@ const 部件名称选 = ["工艺管道"]
 const 仪器型号选 = ["PMI-MASTER Pro2"]
 const 取样方法选 = ["光谱"]
 
-const WIDTH_YSN = [
-    [15, 20, 50], // 0-2个元素
-    [12, 18, 45], // 3-5个元素
-    [10, 15, 40], // 6-8个元素
-    [8, 12, 35], // 9+个元素
-]
-
 /**原来的第一项：使用单位； ？？
  * */
 export const config光析仪概 = [
@@ -234,7 +225,7 @@ export const config光析仪概 = [
         ["仪器编号", "仪器编"],
     ],
     [
-        ["执行标准", "检标准"],
+        ["执行标准", {n:"检标准",l:['GB/T 4336-2016'] }],
         ["取样方法", { n: "取样", t: "l", l: 取样方法选 }],
     ],
 ]
@@ -247,42 +238,17 @@ const config评定 = [
 
 // 常用元素选项
 const 常用元素选项 = [
-    "C",
-    "Si",
-    "Mn",
-    "P",
-    "S",
-    "Cr",
-    "Ni",
-    "Mo",
-    "Cu",
-    "Al",
-    "Ti",
-    "V",
-    "Nb",
-    "W",
-    "Co",
-    "Fe",
-    "Mg",
-    "Ca",
-    "Zn",
-    "Pb",
-    "Sn",
-    "As",
-    "Sb",
-    "Bi",
-    "N",
-    "O",
-    "Cd",
+    "C", "Si", "Mn", "P", "S", "Cr", "Ni", "Mo", "Cu", "Al", "Ti", "V", "Nb", "W",
+    "Co", "Fe", "Mg", "Ca", "Zn", "Pb", "Sn", "As", "Sb", "Bi", "N", "O", "Cd",
 ]
 
 // 禁止输入的元素
 const 禁止元素 = ["n", "b", "m"]
 
-interface EvaluationProps extends InternalItemProps {
+interface SpetChemicCompoProps extends InternalItemProps {
     config?: Each_ZdSetting[]
 }
-export const SpetEvaluation = ({
+export const SpetChemicCompo = ({
                                    children,
                                    show,
                                    label,
@@ -291,24 +257,33 @@ export const SpetEvaluation = ({
                                    subrid,
                                    redId,
                                    modType,
-                               }: EvaluationProps) => {
+                               }: SpetChemicCompoProps) => {
     const { storage } = useStorage()
     const subStore = storage?.[`_${modType}_${redId}`]
+    const elsSize = subStore?.元素?.length || 0
+    const configNew = React.useMemo(() => {
+        const addings = new Array(elsSize || 1).fill(null).map((_, w: number) => {
+            const title = subStore?.元素?.[w];
+            return [title, title, 55] as Each_ZdSetting
+        })
+        const configNew = [...config.slice(0, 2), ...addings, ...config.slice(2)]
+        return configNew
+    }, [elsSize, subStore?.元素, config])
     const schema = React.useMemo(() => {
         const schemaFields = {} as any
         const schemaTab = {} as any
-        config.forEach(([t, field, s, o, park]) => {
+        configNew.forEach(([t, field, s, o, park]) => {
             schemaTab[field] = z.string().optional()
         })
-        schemaFields["评定表"] = z.array(z.object(schemaTab))
+        schemaFields["含量表"] = z.array(z.object(schemaTab))
         return z.object(schemaFields)
-    }, [])
+    }, [configNew])
     const defaultValues = React.useMemo(() => {
-        const fields = initFormTable(subStore, "评定表", config)
+        const fields = initFormTable(subStore, "含量表", configNew)
         return fields
-    }, [subStore, config])
+    }, [subStore, configNew])
     const arrayFields = React.useMemo(() => {
-        return [{ name: "评定表", itemTemplate: {} }]
+        return [{ name: "含量表", itemTemplate: {} }]
     }, [])
     const headview = <h5>{label}：</h5>
     const onConfirm = useCallback((form: UseFormReturn<any, any, any>) => handleConfirm(), [])
@@ -324,8 +299,8 @@ export const SpetEvaluation = ({
     const [nestRenderer] = useTableEdit({
         form,
         arrayControls,
-        config: config,
-        table: "评定表",
+        config: configNew,
+        table: "含量表",
         onConfirm,
         externalData: subStore,
         defFixedLay: true,
@@ -350,15 +325,15 @@ export const SpetEvaluation = ({
 }
 
 //录入元素表 ，但是'n','b','m'三个除外。
-export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modType }: EvaluationProps) => {
+export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modType }: InternalItemProps) => {
     const { storage } = useStorage()
     const subStore = storage?.[`_${modType}_${redId}`]
 
     // 检查初始数据长度是否超过12个
     const initialDataError = React.useMemo(() => {
         const initialElements = subStore?.元素 || []
-        if (initialElements.length > 12) {
-            return `检测到数据异常：当前元素数量为 ${initialElements.length} 个，超过了最大限制 12 个。请删除多余的元素。`
+        if (initialElements.length > MAX_ELMS_SIZE) {
+            return `检测到数据异常：当前元素数量为 ${initialElements.length} 个，超过了最大限制 ${MAX_ELMS_SIZE} 个。请删除多余的元素。`
         }
         return null
     }, [subStore?.元素])
@@ -370,19 +345,18 @@ export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modT
                 z
                     .string()
                     .min(1, "元素名称不能为空")
-                    .refine((value) => !禁止元素.includes(value.toLowerCase()), {
+                    .refine((value) => !禁止元素.includes(value), {
                         message: `不允许输入元素: ${禁止元素.join(", ")}`,
                     }),
             )
-            .max(12, "最多只能添加12个元素")
+            .max(MAX_ELMS_SIZE, `最多只能添加${MAX_ELMS_SIZE}个元素`)
         return z.object(schemaFields)
     }, [])
 
     const defaultValues = React.useMemo(() => {
         const fields = {} as any
         const initialElements = subStore?.元素 || []
-        // 如果初始数据超过12个，只取前12个
-        fields.元素 = initialElements.length > 12 ? initialElements.slice(0, 12) : initialElements
+        fields.元素 = initialElements
         return fields
     }, [subStore])
 
@@ -407,7 +381,7 @@ export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modT
 
     // 添加元素
     const handleAddElement = useCallback(() => {
-        if (fields.length < 12) {
+        if (fields.length < MAX_ELMS_SIZE) {
             append("")
         }
     }, [append, fields.length])
@@ -423,7 +397,7 @@ export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modT
     // 快速添加常用元素
     const handleQuickAdd = useCallback(
         (element: string) => {
-            if (fields.length < 12 && !form.getValues("元素").includes(element)) {
+            if (fields.length < MAX_ELMS_SIZE && !form.getValues("元素").includes(element)) {
                 // 检查是否为禁止元素
                 if (禁止元素.includes(element.toLowerCase())) {
                     return
@@ -446,13 +420,13 @@ export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modT
                 )}
 
                 <div className="flex items-center justify-between">
-                    <h5 className="text-sm font-medium">元素设置 ({fields.length}/12)</h5>
+                    <h5 className="text-sm font-medium">元素设置 ({fields.length}/{MAX_ELMS_SIZE})</h5>
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handleAddElement}
-                        disabled={fields.length >= 12}
+                        disabled={fields.length >= MAX_ELMS_SIZE}
                         className="flex items-center gap-1"
                     >
                         <Plus className="h-4 w-4" />
@@ -474,7 +448,7 @@ export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modT
                         {常用元素选项.map((element) => {
                             const isAdded = form.watch("元素")?.includes(element)
                             const isForbidden = 禁止元素.includes(element.toLowerCase())
-                            const canAdd = fields.length < 12 && !isAdded && !isForbidden
+                            const canAdd = fields.length < MAX_ELMS_SIZE && !isAdded && !isForbidden
                             return (
                                 <Button
                                     key={element}
@@ -550,8 +524,8 @@ export const SpetElementSet = ({ children, show, label, rep, subrid, redId, modT
     )
 }
 
-export const cat_Spet = [{ title: "光谱分析-元素含量表", url: "#SpetEvaluation" }]
+export const cat_Spet = [{ title: "光谱分析-元素含量表", url: "#SpetChemicCompo" }]
 
 export const spet示说选 = [`详见单线图。`]
 
-export const spet结果选 = [`所测部位未见可记录缺陷显示，安全状况等级1级。`]
+export const spet结果选 = [`所测样品化学成份符合20 (GB/T 8163-2008) 的要求`]
