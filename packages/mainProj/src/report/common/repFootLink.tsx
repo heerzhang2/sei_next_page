@@ -52,7 +52,7 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
     const inputRef = useRef<HTMLInputElement>(null)
     // 状态管理
     const [retentionValue, setRetentionValue] = useState("1")
-    const [retentionUnit, setRetentionUnit] = useState<TimeUnit>("month")
+    const [retentionUnit, setRetentionUnit] = useState<TimeUnit>("year")
     const [pdfStatus, setPdfStatus] = useState<"idle" | "loading" | "success" | "redo">("idle")
     const pdfUri = original ? rep?.link?.ori : rep?.link?.rep
     const [isProcessing, setIsProcessing] = useState(false)

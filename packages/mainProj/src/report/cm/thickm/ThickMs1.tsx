@@ -43,7 +43,7 @@ export const ThickMsVw = ({
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
     //{title}这里不加上id； id需上一层的div统一做添加的。
     const render=()=><>
-        <FlexibleTable columnWidths={["9.9%", "6.8%", "37%", "12.1%", "4%", "%"]} className="text-sm border-collapse">
+        <FlexibleTable columnWidths={ ["6%", "4%", "45%", "6%", "4%", "%"] } className="text-sm border-collapse">
             <TableBody>
                 <RepLink ori rep={rep} tag={"TkmsInstrument"} subrid={subrid} redId={redId}>
                     {renderUpper}
