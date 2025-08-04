@@ -1,7 +1,6 @@
 import * as React from "react";
-import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
-import {multilines2Html} from "../tools";
-import {CCellUnit, InternalItemProps} from "../common/base";
+import {CCell, TableRow} from "@/components/flexible-table";
+import {CCellUnit, } from "../common/base";
 
 
 /**可用于分项报告模板的非主报告版本；【局限性】分项报告版； 三列组合的 可编辑 检验概况 ，适合1-3俩列的设备概况布局。 约束性：表格各列外部限制了各列排版比例！

@@ -1,7 +1,7 @@
 "use client"
 import React, {} from "react"
 import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/components/flexible-table";
-import {type InternalItemProps, RepLink} from "@/report/common/base";
+import {customPrefI, type InternalItemProps, RepLink} from "@/report/common/base";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
@@ -9,7 +9,6 @@ import { useFormFramework} from "@/report/hook/useFormFramework";
 import {Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage, Textarea} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, InputDatalist,} from "@/components/chub";
 import {OmniPref, useOmnipotentPref, useOmniPrefTitle} from "@/report/hook/useOmnipotentPref";
-import {customPrefI} from "@/report/common/pressure";
 import {FormHybridSelect} from "@/components/shub";
 
 const setConfig结论 =(orc:any,edit:boolean)=> [

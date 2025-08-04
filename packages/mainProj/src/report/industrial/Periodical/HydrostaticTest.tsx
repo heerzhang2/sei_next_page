@@ -13,7 +13,7 @@ import { type Each_ZdSetting, useTableEdit } from "@/report/hook/use-table-edit"
 import { z } from "zod"
 import type { UseFormReturn } from "react-hook-form"
 
-//耐压试验: 可选分项， 但不是可重复分项：
+//耐压试验: 可选分项（比较特别的）； 但不是可重复分项（管道报告很常用的模式）：可重复分项无需考虑管理存储唯一性。
 export const HydrostaticTestVw = ({
                               orc, rep, title = "耐压试验报告",
                               parOrc, printMode, children,

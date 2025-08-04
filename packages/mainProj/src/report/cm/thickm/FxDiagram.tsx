@@ -139,16 +139,17 @@ interface FxDiagramVwProps{
     rep: any;
     title?: string;
     children?: React.ReactNode
+    tag?: string;
 }
 /** #还 未 用？
  * 简图 ，可复用性？
  * */
-export const FxDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', children}: FxDiagramVwProps
+export const FxDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', children,tag='FxDiagram'}: FxDiagramVwProps
 ) => {
     return (<>
         <PrintReserveLeast reserve="6rem"
                            title={<>
-                               <h2 id={"BoilerDiagram"} className="text-2xl text-center mt-4">{title}</h2>
+                               <h2 id={tag} className="text-2xl text-center mt-4">{title}</h2>
                                <div className="flex justify-between">
                                    <span className="text-sm">工程名称：{orc?.工程名称}</span>
                                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
@@ -158,7 +159,7 @@ export const FxDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', children}:
                 <TableBody>
                     <TableRow className="border border-gray-700">
                         <TableCell colSpan={2} className="border border-gray-700">
-                            <RepLink ori rep={rep} tag={'BoilerDiagram'}>
+                            <RepLink ori rep={rep} tag={tag}>
                               <div>
                                 {orc.简图说明 &&
                                     <span className="text-sm whitespace-pre-wrap">

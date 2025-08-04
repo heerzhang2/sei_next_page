@@ -20,22 +20,6 @@ export const 首页设备IndPer= (orc:any, rep:any, original?:boolean
   </FlexibleTable>;
 };
 
-
-/*较为通用的配置： 可重复的分项标题。
-* */
-export const titleRenders ={
-  "THICK_MS": (store: any,i: number) => <>[{store?.['_THICK_MS_'+i]?.['设备编号'] ?? ``}]</>,
-  "MAGNT_TS": (store: any,i: number) => <>[{store?.['_MAGNT_TS_'+i]?.['部件'] ?? ``}]</>,
-  "SONIC_TS": (store: any,i: number) => <>[{store?.['_SONIC_TS_'+i]?.['部件'] ?? ``}]</>,
-  "HARD_TS": (store: any,i: number) => <>[{store?.['_HARD_TS_'+i]?.['部件'] ?? ``}]</>,
-  "OPTIC_TS": (store: any,i: number) => <>[{store?.['_OPTIC_TS_'+i]?.['部件'] ?? ``}]</>,
-  "CPSTR_VR": (store: any,i: number) => <>[{store?.['_CPSTR_VR_'+i]?.['部件'] ?? ``}]</>,
-  "RADIO_TS": (store: any,i: number) => <>[{store?.['_RADIO_TS_'+i]?.['部件'] ?? ``}]</>,
-  "PERME_TS": (store: any,i: number) => <>[{store?.['_PERME_TS_'+i]?.['设备编'] ?? ``}]</>,
-  "SPECTR_AL": (store: any,i: number) => <>[{store?.['_SPECTR_AL_'+i]?.['部件'] ?? ``}]</>,
-}
-
-
 export const 管道级别=['GA1','GA2','GB1','GB2','GC1','GC2','GC3','GD1','GD2'];
 export const 工作介质选=['蒸汽','导热油','见管道特性表'];
 export const 安全评定选 = [
@@ -63,3 +47,19 @@ export const 注意事项IndPl= ( {comply, rep} :{comply: any, rep: any}
     8．
   </AttentionPoint>;
 };
+
+/*较为通用的配置： 可重复的分项标题。
+允许复用，较为固定的：
+* */
+export const titleRenders ={
+  "THICK_MS": (store: any,i: number) => <>[{store?.['_THICK_MS_'+i]?.['设备编号'] ?? ``}]</>,
+  "MAGNT_TS": (store: any,i: number) => <>[{store?.['_MAGNT_TS_'+i]?.['部件'] ?? ``}]</>,
+  "SONIC_TS": (store: any,i: number) => <>[{store?.['_SONIC_TS_'+i]?.['部件'] ?? ``}]</>,
+  "HARD_TS": (store: any,i: number) => <>[{store?.['_HARD_TS_'+i]?.['部件'] ?? ``}]</>,
+  "OPTIC_TS": (store: any,i: number) => <>[{store?.['_OPTIC_TS_'+i]?.['部件'] ?? ``}]</>,
+  "CPSTR_VR": (store: any,i: number) => <>[{store?.['_CPSTR_VR_'+i]?.['部件'] ?? ``}]</>,
+  "RADIO_TS": (store: any,i: number) => <>[{store?.['_RADIO_TS_'+i]?.['部件'] ?? ``}]</>,
+  "PERME_TS": (store: any,i: number) => <>[{store?.['_PERME_TS_'+i]?.['设备编'] ?? ``}]</>,
+  "SPECTR_AL": (store: any,i: number) => <>[{store?.['_SPECTR_AL_'+i]?.['部件'] ?? ``}]</>,
+}
+

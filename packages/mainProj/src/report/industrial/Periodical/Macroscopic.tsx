@@ -1,5 +1,5 @@
 "use client"
-import React, {useCallback} from "react"
+import React, { } from "react"
 import {CCell, FlexibleTable, TableBody, TableCell, TableHeader, TableRow} from "@/components/flexible-table";
 import {type InternalItemProps, RepLink} from "@/report/common/base";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
@@ -11,6 +11,59 @@ import {Card, CardContent, FormControl, FormField, FormItem, FormLabel, FormMess
 import {BlobInputList, CollapsibleFormSection, InputDatalist} from "@/components/chub";
 import {OmniPref, useOmnipotentPref, useOmniPrefTitle} from "@/report/hook/useOmnipotentPref";
 import {cn} from "@/lib/utils";
+
+const tailRender = (orc: any, name: string, i: number, unit: any) => {
+    return <>
+        <CCell>{orc?.[name]?.r ?? '／'}</CCell>
+        <CCell>{orc?.[name]?.m ?? '／'}</CCell>
+        <CCell>{orc?.[name]?.c ?? '／'}</CCell>
+    </>;
+}
+interface ViewProps {
+    orc: any
+    rep: any
+    children?: React.ReactNode
+    config?: (orc:any,edit:boolean)=>OmniPref[]
+}
+export const MacroscopicVw = ({orc, rep, children,config=setConfig宏观 }: ViewProps) => {
+    const configN = React.useMemo(() => {
+        return config(orc,false)
+    }, [orc])
+    const [render ]=useOmnipotentPref({orc, config: configN, tag: 'Macroscopic', tailRender, pcols:1, noNo:false, unitCel:false});
+    return <PrintReserveLeast reserve="6rem"
+                              title={<>
+                                  <h2 id='Macroscopic' className="block text-center leading-[0.9] text-3xl font-normal mt-4">工业管道宏观检验报告</h2>
+                                  <div className="flex justify-between text-sm">
+                                      <span>单位内部编号：{orc.单位内部编号}</span>
+                                      <span className="@3xl:mr-4"></span>
+                                  </div>
+                              </>}
+    >
+        <FlexibleTable  columnWidths={["3.5%", "6%", "29%", "13%", "%", "8%"]} className="text-sm border-collapse">
+            <TableHeader>
+                <TableRow>
+                    <CCell className="text-xs leading-[1] p-0">序号</CCell>
+                    <CCell colSpan={2}>检 验 项 目</CCell><CCell>检验结果</CCell><CCell>备注</CCell>
+                    <CCell className="text-xs leading-[1] p-0">等级评定</CCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                <RepLink ori rep={rep} tag={'Macroscopic'}>
+                    {render}
+                    <TableRow>
+                        <TableCell colSpan={6} className="border border-gray-700">
+                            结果：表中检验项目备注无法说明清楚的，可在本栏中进一步将缺陷（问题）情况描述清楚。<br/>
+                            <div className="min-h-[4rem] whitespace-pre-wrap mt-[0.2rem] p-[0.2rem] text-indent-[2rem] overflow-auto">
+                                {orc?.宏观结果 || '／'}
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </RepLink>
+            </TableBody>
+        </FlexibleTable>
+        <FootMensLine />
+    </PrintReserveLeast>
+}
 
 const setConfig宏观 =(orc:any,edit:boolean)=> [
     ['道布置', [{t: '结构检验', s: 5},], '管道布置',],
@@ -78,12 +131,7 @@ export const Macroscopic = ({
         const itemTemplate = {} as any
         return [ ]
     }, [])
-    const { render, handleConfirm, form, arrayControls } = useFormFramework({
-        schema,
-        defaultValues,
-        arrayFields,
-        rep,
-    })
+    const { render, form, } = useFormFramework({schema, defaultValues, arrayFields, rep,})
     const titNode=useOmniPrefTitle({config:configN,});
     const content = React.useMemo(() => {
         return (
@@ -178,58 +226,4 @@ export const Macroscopic = ({
             {render(content)}
         </CollapsibleFormSection>
     )
-}
-
-const tailRender = (orc: any, name: string, i: number, unit: any) => {
-    return <>
-        <CCell>{orc?.[name]?.r ?? '／'}</CCell>
-        <CCell>{orc?.[name]?.m ?? '／'}</CCell>
-        <CCell>{orc?.[name]?.c ?? '／'}</CCell>
-    </>;
-}
-interface ViewProps {
-    orc: any
-    rep: any
-    children?: React.ReactNode
-    config?: (orc:any,edit:boolean)=>OmniPref[]
-}
-
-export const MacroscopicVw = ({orc, rep, children,config=setConfig宏观 }: ViewProps) => {
-    const configN = React.useMemo(() => {
-        return config(orc,false)
-    }, [orc])
-    const [render ]=useOmnipotentPref({orc, config: configN, tag: 'Macroscopic', tailRender, pcols:1, noNo:false, unitCel:false});
-    return <PrintReserveLeast reserve="6rem"
-            title={<>
-                    <h2 id='Macroscopic' className="block text-center leading-[0.9] text-3xl font-normal mt-4">工业管道宏观检验报告</h2>
-                    <div className="flex justify-between text-sm">
-                        <span>单位内部编号：{orc.单位内部编号}</span>
-                        <span className="@3xl:mr-4"></span>
-                    </div>
-                </>}
-    >
-        <FlexibleTable  columnWidths={["3.5%", "6%", "29%", "13%", "%", "8%"]} className="text-sm border-collapse">
-            <TableHeader>
-                <TableRow>
-                    <CCell className="text-xs leading-[1] p-0">序号</CCell>
-                    <CCell colSpan={2}>检 验 项 目</CCell><CCell>检验结果</CCell><CCell>备注</CCell>
-                    <CCell className="text-xs leading-[1] p-0">等级评定</CCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                <RepLink ori rep={rep} tag={'Macroscopic'}>
-                    {render}
-                    <TableRow>
-                        <TableCell colSpan={6} className="border border-gray-700">
-                            结果：表中检验项目备注无法说明清楚的，可在本栏中进一步将缺陷（问题）情况描述清楚。<br/>
-                            <div className="min-h-[4rem] whitespace-pre-wrap mt-[0.2rem] p-[0.2rem] text-indent-[2rem] overflow-auto">
-                                {orc?.宏观结果 || '／'}
-                            </div>
-                        </TableCell>
-                    </TableRow>
-                </RepLink>
-            </TableBody>
-        </FlexibleTable>
-        <FootMensLine />
-    </PrintReserveLeast>
 }

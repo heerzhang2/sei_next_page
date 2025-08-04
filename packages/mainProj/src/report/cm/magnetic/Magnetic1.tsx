@@ -273,10 +273,8 @@ export const MangPartSummary = ({
 }
 
 export const cat_Magne=[
-    {title: "磁粉检测-概要仪器", url: "#MangInstrument"},
-    {title: "检测部位缺陷示意图", url: "#MangDiagram"},
+    {title: "磁粉检测部位缺陷示意图", url: "#MangDiagram"},
     {title: "磁粉检测评定表", url: "#MangPartSummary"},
-    {title: '磁粉检测-检测结果', url: "#MangConclusion"},
 ];
 
 export const mang示说选=['见单线图','对单线图中1-6 号焊缝外表面进行100%磁粉检测，未见超标缺陷。',

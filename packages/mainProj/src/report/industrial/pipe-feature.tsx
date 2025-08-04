@@ -1,7 +1,5 @@
 "use client"
-
 import * as React from "react"
-import Link from "next/link"
 import { FootMensLine } from "@/report/common/view"
 import { FlexibleTable, TableBody, TableCell, TableHeader, TableRow } from "@/components/flexible-table"
 import { useFoldForList, useFoldGenerate, useSplitSubCapacity } from "@/report/hook/use-fold-gen"

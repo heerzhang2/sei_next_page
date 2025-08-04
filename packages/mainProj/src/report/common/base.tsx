@@ -1,16 +1,10 @@
 import * as React from "react";
-import {CCell, } from "@/components/flexible-table";
-import { Dispatch, SetStateAction } from "react";
-import {gql, } from '@urql/next';
+import {Dispatch, SetStateAction} from "react";
+import {CCell,} from "@/components/flexible-table";
+import {gql,} from '@urql/next';
 import {JumpTab} from "@/report/common/JumpTab";
 import {PressureLayout} from "@/report/common/pressure";
-
-//公共的复用性好的组件。
-//各个检验单项子组件暴露给父组件的接口数据。
-// export interface InternalItemHandResult {
-//     inp: any;
-//     doConfirm: ()=>{};
-// }
+import {cn} from "@/lib/utils";
 
 //各个检验单项
 export interface InternalItemProps{
@@ -124,39 +118,8 @@ export const OriginalDataMutation =gql`
     }
 `;
 
-export interface RepSureButtonProps {
-    ref: React.Ref<any>;
-    //局部化变量存储
-    inp:  any;
-    //嵌入分项报告的模板号,
-    nestMd?: string;
-    //可重复加的报告实例id
-    redId?: string;
-}
-//分离”确认修改“的按钮：有些记录编辑器显示太长的就需要附加更多的此按钮。一整个编辑器的inp都会被确认到全局storage;
-// export　function useRepSureButton({ ref, nestMd, redId, inp} : RepSureButtonProps
-// ) {
-//     React.useImperativeHandle( ref,() => ({ inp }), [inp] );
-//     const {storage, setStorage, modified,setModified,} =React.useContext(EditStorageContext) as any;
-//     const rskey= (nestMd? ('_'+nestMd+'_'+redId) : undefined ) as string;
-//     const onSure = React.useCallback(async(newinp: any) => {
-//         await  setStorage({ ...storage, ...(rskey? {[rskey]: {...storage[rskey], ...newinp}} : newinp) });
-//     }, [storage,setStorage,rskey]);
-//
-//     return (<div css={{textAlign: 'right',padding:'0.2rem'}}>
-//             <Button size="lg" intent={'primary'}
-//                     onPress={ async () =>  {
-//                         await onSure(inp);
-//                         !modified && setModified(true);
-//                     }}>
-//                 修改确认
-//             </Button>
-//         </div>);
-// }
-
 
 export type SelectValDescPair = [string, string];    //一对的，转义说明和存储用字。
-
 
 export interface AntCheckProps
             extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -242,49 +205,6 @@ export　function useItemInputControl({ ref,
 }
 
 
-export interface InputReproducibleProps {
-    //可重复分项报告的基础表：
-    table: string;
-    //可重复分项报告编辑器的”序号“，0开始的
-    index: number;
-    inp: any;
-    setInp: React.Dispatch<React.SetStateAction<any>>;
-    // ref: React.Ref<any>;
-    //接受par输入的过滤器，回调 过滤有用数据。
-    //filter: (par: any) => {};
-    //可重复加的报告实例id
-    redId?: string;
-    //嵌入分项报告的模板号,
-    nestMd?: string;
-}
-//只处理可重复分项报告编辑器的：【特殊替代】inp, setInp;  除了删除自己这个分项子报告。
-// export　function useInputReproducible({table,index, inp, setInp} : InputReproducibleProps
-// ) {
-//     const setInpr = React.useCallback(async(newinpr: any) => {
-//         //也不能@处理删除这一行!
-//         if(!(inp[table]))   inp[table]=[];
-//         inp[table][index]=newinpr;
-//         await setInp({...inp});
-//     }, [table,index,inp,setInp]);
-//     return {inpr:inp?.[table]?.[index],  setInpr};
-// }
-
-//Hook编译报错，不允许直接套数组()=> 回调函数模式创建；需要包裹一层Component()规避检查。
-//若本组件没有重新加载，{count}数组长度变化，会导致ｈｏｏｋ报错。  重命名也逃不掉报错。
-//count=下拉组件亦即独立展示项目个数；
-//HOOK机制要求，useXXX() 次数与顺序都不允许变化。HOOK报错。
-//外部采用路由模式，组件进入后采取根据入口参数来调节count的就没问题，count不会因为两次render表现出个数差异。
-// export function useProjectListAs({count} :{count:number}) {
-//   const array= new Array(count).fill(null);
-//   function WrappedComp(i: number) {
-//         return React.useRef<InternalItemHandResult>(null);
-//   };
-//   return React.useRef<MutableRefObject<InternalItemHandResult>[] | null>(array.map((i) => WrappedComp(i) ) as any);
-// }
-
-
-
-
 
 export const 现场结果选=["符合要求","不符合要求"];
 export const 现场条件选=[["✔","符合"],["✘","不符合"]] as SelectValDescPair[];
@@ -364,4 +284,24 @@ export function RepTitleUpdate({code,original}: {code:string,original?:boolean})
         document.title = `${code}-${original? '原始记录':'报告'}`
     }, [code, original])
     return null
+}
+
+/**配置项 :动态加的 自主添加检验项：前缀模式， 多行,
+ * */
+export function customPrefI(
+    nhead: string,  //存储名字开头部分的
+    count: number,  //总共几个存储量
+    storage: any,
+    edit?: boolean,  //显示编辑器中的
+): Array<[string, any[], any]> {
+    let tmpAr: Array<[string, any[], any]> = [];
+    for (let i = 0; i < count; i++) {
+        const title = storage?.[`${nhead}${i + 1}`]?.T
+        if (edit || !!title) {
+            tmpAr.push(
+                [`${nhead}${i + 1}`, [{}], <span className={cn(edit ? "text-base" : "text-sm")}>{title ?? '／'}</span>]
+            );
+        }
+    }
+    return tmpAr;
 }

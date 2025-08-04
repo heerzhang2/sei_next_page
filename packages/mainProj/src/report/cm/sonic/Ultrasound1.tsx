@@ -221,7 +221,6 @@ export const SoniEvaluation = ({
 export const cat_Sonic=[
     {title: "接头超声-概要仪器", url: "#SoniInstrument"},
     {title: "接头超声评定表", url: "#SoniEvaluation"},
-    {title: '接头超声-检测结果', url: "#SoniConclusion"},
 ];
 
 export const soni结果选=['未见超标缺陷，检测结果为1级。',

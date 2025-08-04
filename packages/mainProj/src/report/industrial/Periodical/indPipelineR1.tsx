@@ -32,7 +32,7 @@ import {cat_Rado, RadiographyVw} from "@/report/cm/radio/Radiography1";
 import {cat_Perm, PermeationVw} from "@/report/cm/permeation/PermTest1";
 import {cat_Spet, SpetrAnalysVw} from "@/report/cm/spectr/SpetrAnalys1";
 
-//确保预定的渲染顺序: 这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
+//可重复分项：这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     THICK_MS: {
         catKey: "壁厚测定",
@@ -83,16 +83,14 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     },
 }
 
-/**原始记录 模板缺失，可能是*.doc补充的附件。
- * */
 export const ReportView = ({ rep, printMode }: ReportEntryProps) => {
     const searchParams = useSearchParams()
-    const original = "1" === searchParams!.get("original")
+    // const original = "1" === searchParams!.get("original")
     const { storage, parrepfs } = useStorage()
     const Component = OfficialReport
     const [mapFxian] = useItemsMapPressure({ projects: storage.Projects })
     //若目录页的页号不计算的：需要判别mapFxian.get('目录')?.do来剔除； #且满足目录页预计只打印一张纸；干脆用户录入?
-    const pdf_job = createPdfJob(rep, original, 4)
+    const pdf_job = createPdfJob(rep, false, 4)
     const subrid = searchParams!.get("subrid")
     return (
         <>
@@ -193,7 +191,6 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 <ConclusionVw orc={orc} rep={rep}/>
                 {检验核准WaterJj({ orc, rep, jyt: "编制" })}
 
-
                 <ConcAppendixVw orc={orc} rep={rep}/>
                 <MaterialReviewVw orc={orc} rep={rep}/>
                 <MacroscopicVw orc={orc} rep={rep}/>
@@ -226,7 +223,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
     )
 }
 
-//原始记录的导航该放在后面：
+//原始记录专用的导航项放在最后：
 //因为Collapse没有显示出来的情况下，会导致无法跳转到导航锚点，所以还是不要添加导航项了。
 export function useCatalog() {
     const { storage, subrType: mod } = useStorage()
@@ -241,18 +238,19 @@ export function useCatalog() {
         }
         // 主报告的目录
         const mainReportDirs = [
-            { title: "检验证书", url: "#Certificate" },
             { title: "目录", url: "#ProjectList" },
             { title: "设备概况", url: "#Survey" },
-            { title: "1.1锅炉安装监督检验结论报告", url: "#Conclusion" },
+            { title: "工业管道定期检验结论报告", url: "#Conclusion" },
+            { title: "检验结论报告附页", url: "#ConcAppendix" },
+            { title: "资料审查报告", url: "#MaterialReview" },
             { title: "宏观检验报告", url: "#Macroscopic" },
-            { title: "安全附件与仪表检验", url: "#Accessories" },
-            { title: "1.3锅炉安装施工及监督检验过程概述", url: "#Explanatory" },
         ]
-        return [...head, ...mainReportDirs, ...subRepHash(SUBREP_CONFIG,mapFxian,storage),
+        return [...head, ...mainReportDirs,
+            ...caseMapFx(mapFxian,'安全附件与仪表检验',[{ title: "安全附件与仪表检验", url: "#Accessories" }]),
+            ...subRepHash(SUBREP_CONFIG,mapFxian,storage),
             ...caseMapFx(mapFxian,'耐压试验',[{ title: "耐压试验报告", url: "#HydrostaticTest" }]),
-            { title: "特性表-管道单元", url: "#Characteristics" },
-            { title: "管道单线图", url: "#LineDiagram" },
+            ...caseMapFx(mapFxian,'管道特性表',[{ title: "特性表-管道单元", url: "#Characteristics" }]),
+            ...caseMapFx(mapFxian,'管道单线图',[{ title: "管道单线图", url: "#LineDiagram" }]),
         ].filter(Boolean)
     }, [mod, storage, mapFxian])
     return dirs

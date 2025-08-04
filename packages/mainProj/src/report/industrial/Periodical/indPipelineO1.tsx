@@ -2,10 +2,9 @@ import * as React from "react";
 import {OriginalViewProps} from "@/report/common/base";
 import {aggregateProj, createItem} from "@/report/common/eHelper";
 import {DeviceSurveyD, DeviceSurveyFx} from "@/report/common/survey";
-import {EntranceSetup, config设备概况, config证书概要,} from "./orcBase";
+import {EntranceSetup, config设备概况,} from "./orcBase";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
-import {CertMemo} from "@/report/power/boilInstall/CertMemo";
 import {config壁厚测仪, TkmsConclusion, TkmsMeasurement, TkmsPartSummary} from "@/report/cm/thickm/ThickMs1";
 import {titleRenders} from "@/report/industrial/Periodical/rarelyVary";
 import {FxDiagram} from "@/report/cm/thickm/FxDiagram";
@@ -25,16 +24,9 @@ import {config硬度仪, HardEvaluation, hard示说选} from "@/report/cm/hardne
 import {config光谱测仪, OptcEvaluation, optc示说选} from "@/report/cm/optical/Optical1";
 import {config强度核概, CpsvCalculation, cpsv结果选} from "@/report/cm/cpStrength/csVerification1";
 import {LongArticleFx} from "@/report/cm/cpStrength/LongArticleFx";
-import {
-    config射线仪概,
-    config射线测仪,
-    RadoEvaluation,
-    RadoWorkpiece, rado示说选,
-    rado结果选
-} from "@/report/cm/radio/Radiography1";
+import {config射线仪概, config射线测仪, RadoEvaluation, RadoWorkpiece, rado示说选, rado结果选} from "@/report/cm/radio/Radiography1";
 import {config渗透仪概, PermEvaluation, perm示说选, perm结果选} from "@/report/cm/permeation/PermTest1";
 import {config光析仪概, SpetChemicCompo, SpetElementSet, spet示说选, spet结果选} from "@/report/cm/spectr/SpetrAnalys1";
-
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
  *  因为模板已经里另外做一个ConcAppendix附页编辑器了，参数na:不需要再设置了 ha:也不要用;
@@ -67,9 +59,6 @@ const recordPrintList =[
     createItem('Entrance', <EntranceSetup/>),
     createItem('ProjectList', <ProjectR nRec defaultProj={Projects记录} label={'记录的目录页'}/>),
     createItem('Survey', <DeviceSurveyD config={config设备概况} label={'检验结论报告-概况'} comment={{8:"以下8个性能参数"}}/>),
-    createItem('CertificateSummary', <DeviceSurveyD config={config证书概要} label={'证书的设备概况部分'}/>),
-    createItem('CertMemo', <CertMemo label={'证书-说明'} />),
-
     createItem('Conclusion', <ConclusionIndPer startd cjry label={'检验结论报告-下结论'}/>),
     createItem('ConcAppendix', <ConcAppendix label="工业管道定期检验结论报告附页"/>),
     createItem('MaterialReview', <MaterialReview label="工业管道资料审查报告"/>),

@@ -7,10 +7,102 @@ import {useStorage} from "@/report/StorageContext";
 import {z} from "zod";
 import { useFormFramework} from "@/report/hook/useFormFramework";
 import {FootMensLine, } from "@/report/common/view";
-import {Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input, Separator, Textarea} from "@/components/ui";
-import {BlobInputList, CollapsibleFormSection, FormSelectField, SuffixInput} from "@/components/chub";
+import {Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Separator, Textarea} from "@/components/ui";
+import {BlobInputList, CollapsibleFormSection, FormSelectField, } from "@/components/chub";
 import {FormSwitch} from "@/components/shub";
 import {cn} from "@/lib/utils";
+
+interface ViewProps {
+    orc: any
+    rep: any
+    children?: React.ReactNode
+}
+export const MaterialReviewVw = ({orc, rep, children }: ViewProps) => {
+    return <PrintReserveLeast reserve="6rem"
+                              title={<>
+                                  <h2 id='MaterialReview' className="block text-center leading-[0.9] text-3xl font-normal mt-4">工业管道资料审查报告</h2>
+                                  <div className="flex justify-between text-sm">
+                                      <span>单位内部编号：{orc.单位内部编号}</span>
+                                      <span className="@3xl:mr-4"></span>
+                                  </div>
+                              </>}
+    >
+        <FlexibleTable columnWidths={["13%","9%","9%","9%","%"]} className="text-sm border-collapse">
+            <TableHeader>
+                <TableRow>
+                    <CCell>审查项目</CCell><CCell colSpan={3}>审查结果</CCell><CCell>缺失情况</CCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                <RepLink ori rep={rep} tag={'MaterialReview'}>
+                    <TableRow>
+                        <CCell rowSpan={2}>设计资料</CCell>
+                        <CCell>( {'齐全'===orc?.设资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.设资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.设资料?.r&&'✔'} )无资料</CCell>
+                        <CCell rowSpan={2} className="whitespace-pre-wrap">
+                            {orc?.设资料?.L || '／'}
+                        </CCell>
+                    </TableRow>
+                    <TableRow>
+                        <CCell colSpan={3}>( {orc?.设资料?.s&&'✔'} )非首次定期检验</CCell>
+                    </TableRow>
+                    <TableRow>
+                        <CCell rowSpan={2}>安装资料</CCell>
+                        <CCell>( {'齐全'===orc?.安资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.安资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.安资料?.r&&'✔'} )无资料</CCell>
+                        <CCell rowSpan={2} className="whitespace-pre-wrap">
+                            {orc?.安资料?.L || '／'}
+                        </CCell>
+                    </TableRow>
+                    <TableRow>
+                        <CCell colSpan={3}>( {orc?.安资料?.s&&'✔'} )非首次定期检验</CCell>
+                    </TableRow>
+                    <TableRow>
+                        <CCell rowSpan={2}>改造或者重大修理资料</CCell>
+                        <CCell>( {'齐全'===orc?.改资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.改资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.改资料?.r&&'✔'} )无资料</CCell>
+                        <CCell rowSpan={2} className="whitespace-pre-wrap">
+                            {orc?.改资料?.L || '／'}
+                        </CCell>
+                    </TableRow>
+                    <TableRow>
+                        <CCell colSpan={2}>( {orc?.改资料?.s&&'✔'} )非首次定期检验</CCell><CCell>( {orc?.改资料?.X&&'✔'} )无此项</CCell>
+                    </TableRow>
+                    <TableRow>
+                        <CCell>使用管理资料</CCell>
+                        <CCell>( {'齐全'===orc?.使资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.使资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.使资料?.r&&'✔'} )无资料</CCell>
+                        <CCell className="whitespace-pre-wrap">
+                            {orc?.使资料?.L || '／'}
+                        </CCell>
+                    </TableRow>
+                    <TableRow>
+                        <CCell>检验、检查资料</CCell>
+                        <CCell>( {'齐全'===orc?.检资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.检资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.检资料?.r&&'✔'} )无资料</CCell>
+                        <CCell className="whitespace-pre-wrap">
+                            {orc?.检资料?.L || '／'}
+                        </CCell>
+                    </TableRow>
+                </RepLink>
+            </TableBody>
+        </FlexibleTable>
+        <FlexibleTable columnWidths={["13%","%"]} className="text-sm border-collapse">
+            <TableBody>
+                <RepLink ori rep={rep} tag={'MaterialReview'}>
+                    <TableRow>
+                        <CCell rowSpan={2}>上次定期检验问题记载</CCell>
+                        <CCell>上次定期检验报告编号： {orc.上次报告 || '／'}<br/>
+                            上次定期检验安全状况等级评为： {orc.上次评级 || '／'} 级。
+                        </CCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="border border-gray-700 min-h-[4rem] whitespace-pre-wrap mt-[0.2rem] p-[0.2rem] text-indent-[2rem]">
+                            <div className={cn("min-h-[5rem]", orc.上次缺处?.length>20 ? "" : "text-center mt-4",)}
+                            >{orc.上次缺处 || '／'}</div>
+                        </TableCell>
+                    </TableRow>
+                </RepLink>
+            </TableBody>
+        </FlexibleTable>
+        <FootMensLine />
+    </PrintReserveLeast>
+}
 
 export const ReviewSels = [
     { value: "齐全" },
@@ -203,96 +295,4 @@ export const MaterialReview = ({
             {render(content)}
         </CollapsibleFormSection>
     )
-}
-
-interface ViewProps {
-    orc: any
-    rep: any
-    children?: React.ReactNode
-}
-export const MaterialReviewVw = ({orc, rep, children }: ViewProps) => {
-    return <PrintReserveLeast reserve="6rem"
-                              title={<>
-                                  <h2 id='MaterialReview' className="block text-center leading-[0.9] text-3xl font-normal mt-4">工业管道资料审查报告</h2>
-                                  <div className="flex justify-between text-sm">
-                                      <span>单位内部编号：{orc.单位内部编号}</span>
-                                      <span className="@3xl:mr-4"></span>
-                                  </div>
-                              </>}
-    >
-        <FlexibleTable columnWidths={["13%","9%","9%","9%","%"]} className="text-sm border-collapse">
-            <TableHeader>
-                <TableRow>
-                    <CCell>审查项目</CCell><CCell colSpan={3}>审查结果</CCell><CCell>缺失情况</CCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                <RepLink ori rep={rep} tag={'MaterialReview'}>
-                    <TableRow>
-                        <CCell rowSpan={2}>设计资料</CCell>
-                        <CCell>( {'齐全'===orc?.设资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.设资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.设资料?.r&&'✔'} )无资料</CCell>
-                        <CCell rowSpan={2} className="whitespace-pre-wrap">
-                           {orc?.设资料?.L || '／'}
-                        </CCell>
-                    </TableRow>
-                    <TableRow>
-                        <CCell colSpan={3}>( {orc?.设资料?.s&&'✔'} )非首次定期检验</CCell>
-                    </TableRow>
-                    <TableRow>
-                        <CCell rowSpan={2}>安装资料</CCell>
-                        <CCell>( {'齐全'===orc?.安资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.安资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.安资料?.r&&'✔'} )无资料</CCell>
-                        <CCell rowSpan={2} className="whitespace-pre-wrap">
-                            {orc?.安资料?.L || '／'}
-                        </CCell>
-                    </TableRow>
-                    <TableRow>
-                        <CCell colSpan={3}>( {orc?.安资料?.s&&'✔'} )非首次定期检验</CCell>
-                    </TableRow>
-                    <TableRow>
-                        <CCell rowSpan={2}>改造或者重大修理资料</CCell>
-                        <CCell>( {'齐全'===orc?.改资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.改资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.改资料?.r&&'✔'} )无资料</CCell>
-                        <CCell rowSpan={2} className="whitespace-pre-wrap">
-                            {orc?.改资料?.L || '／'}
-                        </CCell>
-                    </TableRow>
-                    <TableRow>
-                        <CCell colSpan={2}>( {orc?.改资料?.s&&'✔'} )非首次定期检验</CCell><CCell>( {orc?.改资料?.X&&'✔'} )无此项</CCell>
-                    </TableRow>
-                    <TableRow>
-                        <CCell>使用管理资料</CCell>
-                        <CCell>( {'齐全'===orc?.使资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.使资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.使资料?.r&&'✔'} )无资料</CCell>
-                        <CCell className="whitespace-pre-wrap">
-                            {orc?.使资料?.L || '／'}
-                        </CCell>
-                    </TableRow>
-                    <TableRow>
-                        <CCell>检验、检查资料</CCell>
-                        <CCell>( {'齐全'===orc?.检资料?.r&&'✔'} )齐全</CCell><CCell>( {'缺失'===orc?.检资料?.r&&'✔'} )缺失</CCell><CCell>( {'无资料'===orc?.检资料?.r&&'✔'} )无资料</CCell>
-                        <CCell className="whitespace-pre-wrap">
-                            {orc?.检资料?.L || '／'}
-                        </CCell>
-                    </TableRow>
-                </RepLink>
-            </TableBody>
-        </FlexibleTable>
-        <FlexibleTable columnWidths={["13%","%"]} className="text-sm border-collapse">
-            <TableBody>
-                <RepLink ori rep={rep} tag={'MaterialReview'}>
-                    <TableRow>
-                        <CCell rowSpan={2}>上次定期检验问题记载</CCell>
-                        <CCell>上次定期检验报告编号： {orc.上次报告 || '／'}<br/>
-                            上次定期检验安全状况等级评为： {orc.上次评级 || '／'} 级。
-                        </CCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell className="border border-gray-700 min-h-[4rem] whitespace-pre-wrap mt-[0.2rem] p-[0.2rem] text-indent-[2rem]">
-                            <div className={cn("min-h-[5rem]", orc.上次缺处?.length>20 ? "" : "text-center mt-4",)}
-                            >{orc.上次缺处 || '／'}</div>
-                        </TableCell>
-                    </TableRow>
-                </RepLink>
-            </TableBody>
-        </FlexibleTable>
-        <FootMensLine />
-    </PrintReserveLeast>
 }

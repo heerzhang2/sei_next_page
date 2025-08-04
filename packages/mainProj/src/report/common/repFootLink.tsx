@@ -190,7 +190,7 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                     processId: "genRepPdf",
                     variables: {
                         pdfJob: pdf_job,
-                        pdfType: original ? "ori" : "rep",
+                        pdfType: !single && original ? "ori" : "rep",
                         repId,
                         expiration: isoDate,
                     },
@@ -215,7 +215,7 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                 setIsProcessing(false)
             }
         },
-        [isProcessing, getExpirationDate, retentionValue, retentionUnit, displayText, pdf_job, original, repId],
+        [isProcessing, getExpirationDate, retentionValue, retentionUnit, displayText, pdf_job, original, repId,single],
     )
 
     // 数值输入组件
