@@ -11,7 +11,7 @@ import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {usePrefixDataTable} from "@/report/hook/usePrefixData";
 import {安全评定选, 结论选} from "@/report/industrial/Periodical/rarelyVary";
 import {FormHybridSelect} from "@/components/shub";
-import {config设备概况} from "@/report/industrial/Periodical/indPipelineO1";
+// import {config设备概况} from "@/report/industrial/Periodical/indPipelineO1";
 
 interface ConclusionProps  extends InternalItemProps{
     startd?: boolean;
@@ -172,12 +172,13 @@ export const mapBoilerResult = (input: "符合要求" | "基本符合要求" | "
             return "不符合";
     }
 };
-const config设备上=config设备概况.slice(0, 7);
-const config设备下=config设备概况.slice(7);
-export const ConclusionVw= ({ orc, rep} : { orc: any,rep:any}
+//[报错]Cannot access 'config设备概况' before initialization不能把config设备概况放入到indPipelineO1.tsx文件做初始化，循环依赖初始化错误。配套的这里const config设备上=config设备概况.slice(0, 7);
+//不能放在这里做！ const config设备上=config设备概况.slice(0, 7);       const config设备下=config设备概况.slice(7); 循环依赖的初始化错误！改成第三方注入了。
+export const ConclusionVw= ({orc,rep,config1,config2}
+                            : { orc: any,rep:any,config1:any[],config2:any[]}
 ) => {
-    const renderUpper=usePrefixDataTable({config: config设备上, orc, rep, slash:true});
-    const [performant]=useThreeColumnView({orc, config:config设备下,slash:true,
+    const renderUpper=usePrefixDataTable({config: config1, orc, rep, slash:true});
+    const [performant]=useThreeColumnView({orc, config:config2,slash:true,
                                         embedCol: [ <CCell key='1' rowSpan={4}>性能参数</CCell> ] });
     const result1=mapBoilerResult(orc?.检验结论)
     return <React.Fragment>

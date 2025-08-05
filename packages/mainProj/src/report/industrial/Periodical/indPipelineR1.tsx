@@ -31,6 +31,7 @@ import {cat_Cpsv, CsVerificationVw} from "@/report/cm/cpStrength/csVerification1
 import {cat_Rado, RadiographyVw} from "@/report/cm/radio/Radiography1";
 import {cat_Perm, PermeationVw} from "@/report/cm/permeation/PermTest1";
 import {cat_Spet, SpetrAnalysVw} from "@/report/cm/spectr/SpetrAnalys1";
+import {config设备概况} from "@/report/industrial/Periodical/indPipelineO1";
 
 //可重复分项：这里不要用数字的key； 避免用整数键（或可转换为整数的字符串）;
 export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
@@ -129,6 +130,9 @@ export const ReportView = ({ rep, printMode }: ReportEntryProps) => {
     )
 }
 
+//避免循环依赖初始化错误，采用在这注入配置。 不能反过来的方向做依赖注入。
+const config设备上=config设备概况.slice(0, 7);
+const config设备下=config设备概况.slice(7);
 const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                                                                         source: orc,
                                                                         rep,
@@ -188,7 +192,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 })}
                 <DirectoryPagePress orc={orc} rep={rep} nApxc suffix/>
 
-                <ConclusionVw orc={orc} rep={rep}/>
+                <ConclusionVw orc={orc} rep={rep} config1={config设备上} config2={config设备下}/>
                 {检验核准WaterJj({ orc, rep, jyt: "编制" })}
 
                 <ConcAppendixVw orc={orc} rep={rep}/>
