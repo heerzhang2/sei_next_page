@@ -34,7 +34,7 @@ export const 等级评定选=['1级','2级','3级','4级'];
 interface Props extends InternalItemProps {
     config?: (orc:any,edit:boolean)=>OmniPref[]
 }
-export const itemA结论附: string[] = ['宏观结果'];
+export const itemA结论附: string[] = [ ];
 const itemE检验项 =setConfig结论(undefined,true);
 itemE检验项.forEach(([name, ], i: number) => {
     itemA结论附.push(name);

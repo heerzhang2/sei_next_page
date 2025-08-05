@@ -112,7 +112,7 @@ export const ReviewSels = [
 const jgwtLst=[`1、系统中压力表、安全阀经校验合格；
 2、所检项目未见异常。`,
 ]
-export const itemA安全附件: string[]=['设资料','安资料','改资料','使资料','检资料', '压表检'];
+export const itemA资审查: string[]=['设资料','安资料','改资料','使资料','检资料', '上次报告','上次评级','上次缺处'];
 export const MaterialReview = ({
                                 children,
                                 show,

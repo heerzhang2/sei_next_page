@@ -1,6 +1,6 @@
 import * as React from "react";
 import {InternalItemProps, OriginalViewProps} from "@/report/common/base";
-import {aggregateProj, assertNamesUnique, createItem} from "@/report/common/eHelper";
+import {aggregateProj, createItem} from "@/report/common/eHelper";
 import {DeviceSurveyD, DeviceSurveyFx} from "@/report/common/survey";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
@@ -9,16 +9,16 @@ import {titleRenders, 工作介质选, 管道级别} from "@/report/industrial/P
 import {FxDiagram} from "@/report/cm/thickm/FxDiagram";
 import {config磁粉仪概, MangPartSummary, mang示说选} from "@/report/cm/magnetic/Magnetic1";
 import {FxSimpConclus} from "@/report/cm/magnetic/FxSimpConclus";
-import {PropertySolidify} from "@/report/industrial/property-solidify";
+import {itemA单特性, PropertySolidify} from "@/report/industrial/property-solidify";
 import {SingleLineDiagram} from "@/report/industrial/diagram-manager";
 import {LineDiagramFile} from "@/report/industrial/diagram-file";
-import {Macroscopic} from "@/report/industrial/Periodical/Macroscopic";
-import {Accessories} from "@/report/industrial/Periodical/Accessories";
-import {MaterialReview} from "@/report/industrial/Periodical/MaterialReview";
-import {ConcAppendix} from "@/report/industrial/Periodical/ConcAppendix";
-import {ConclusionIndPer} from "@/report/industrial/Periodical/Conclusion";
+import {itemA宏观检验, Macroscopic} from "@/report/industrial/Periodical/Macroscopic";
+import {Accessories, itemA安全附件} from "@/report/industrial/Periodical/Accessories";
+import {itemA资审查, MaterialReview} from "@/report/industrial/Periodical/MaterialReview";
+import {ConcAppendix, itemA结论附} from "@/report/industrial/Periodical/ConcAppendix";
+import {ConclusionIndPer, itemA结论} from "@/report/industrial/Periodical/Conclusion";
 import {config超声仪概, SoniEvaluation, soni结果选} from "@/report/cm/sonic/Ultrasound1";
-import {HydrostaticTest} from "@/report/industrial/Periodical/HydrostaticTest";
+import {HydrostaticTest, itemA耐压验} from "@/report/industrial/Periodical/HydrostaticTest";
 import {config硬度仪, HardEvaluation, hard示说选} from "@/report/cm/hardness/Hardness1";
 import {config光谱测仪, OptcEvaluation, optc示说选} from "@/report/cm/optical/Optical1";
 import {config强度核概, CpsvCalculation, cpsv结果选} from "@/report/cm/cpStrength/csVerification1";
@@ -26,14 +26,10 @@ import {LongArticleFx} from "@/report/cm/cpStrength/LongArticleFx";
 import {config射线仪概, config射线测仪, RadoEvaluation, RadoWorkpiece, rado示说选, rado结果选} from "@/report/cm/radio/Radiography1";
 import {config渗透仪概, PermEvaluation, perm示说选, perm结果选} from "@/report/cm/permeation/PermTest1";
 import {config光析仪概, SpetChemicCompo, SpetElementSet, spet示说选, spet结果选} from "@/report/cm/spectr/SpetrAnalys1";
-import {useStorage} from "@/report/StorageContext";
-import {z} from "zod";
-import {itemA结论} from "@/report/power/boilInstall/Conclusion";
-import {itemA简图} from "@/report/power/boilInstall/BoilerDiagram";
-import {toast} from "sonner";
-import {Button, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
-import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
+import {CardContent} from "@/components/ui";
+import {CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
+import {DevToolsSection, useEntranceSetup} from "@/report/hook/useEntranceSetup"
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
  *  因为模板已经里另外做一个ConcAppendix附页编辑器了，参数na:不需要再设置了 ha:也不要用;
@@ -63,11 +59,7 @@ export const Projects记录 = [
 
 export const config设备概况 = [
     [['管道名称', '_$管道设备名'], ['单位内编号', {n: '单位内编号', t: 'B', l: ['见管道特性表']}],],
-    [['管道级别', {n: '管道级别', t: 'l', l: 管道级别}], ['起始—终止位置', {
-        n: '起始终止',
-        t: 'B',
-        l: ['见管道特性表']
-    }]],
+    [['管道级别', {n: '管道级别', t: 'l', l: 管道级别}], ['起始—终止位置', {n: '起始终止', t: 'B', l: ['见管道特性表']}]],
     [['使用单位名称', '_$使用单位'], ['使用登记证编号', '_$使用证号'],],
     [['使用单位地址', '_$使用单位地址'],],
     [['使用单位统一社会信用代码', '_$使用单位信用码'], ['邮政编码', '_$使用单位邮编'],],
@@ -81,65 +73,23 @@ export const config设备概况 = [
     [['工作温度', {n: '工作温', u: '℃'}], ['工作介质', {n: '工作介', t: 'l', l: 工作介质选}]],
 ];
 
-
 export const EntranceSetup = ({show, redId, nestMd, rep}: InternalItemProps) => {
-    const {storage,} = useStorage();
-    const schema = React.useMemo(() => {
-        const schemaFields = {} as any;
-        schemaFields["_tblFixed"] = z.string().optional().refine(
-            (value) => {
-                if (!value) return true;
-                try {
-                    JSON.parse(value);
-                    return true;
-                } catch {
-                    return false;
-                }
-            }, {message: "字段必须为有效的 JSON 字符串"}
-        );
-        return z.object(schemaFields);
-    }, []);
-    const defaultValues = React.useMemo(() => {
-        const fields = {} as any
-        fields["_tblFixed"] = storage["_tblFixed"]
-        return fields
-    }, [storage])
-    //可重复分项目的部分很少冲突：每个分项手动唯一性检查，不在这里再集中检查。
-    const doCheckNames = React.useCallback((e: React.MouseEvent, rep: any) => {
-        const result = assertNamesUnique([{value: rep?.tzFields},
-            {value: config设备概况, type: 'esnt'},
-            {value: [...itemA结论, ...itemA简图,]},
-            {value: ['Projects', '证书说明', "长文字页"]}]);
-        if (result) toast.success("完成", {description: "没冲突",})
-        else toast.error("完成", {description: "冲突",})
-        e.preventDefault()
-    }, [toast]);
-    const contentRendererFactory = React.useCallback(
-        (form: any) => {
-            return <CardContent>
-                {process.env.NEXT_PUBLIC_APP_TEST === 'true' && <div>
-                    <h5>构建开发模板时的工具：校验模板的存储name冲突；</h5>
-                    <Button onClick={(e) => doCheckNames(e, rep)}>校验模板name唯一性</Button>
-                    <FormField control={form.control} name={"_tblFixed"}
-                               render={({field}) => (
-                                   <FormItem className="pt-2 w-full break-inside-avoid">
-                                       <FormLabel className="select-text">设置待测试表格的各列宽度：</FormLabel>
-                                       <FormControl className="w-full">
-                                           <BlobInputList rows={2} {...field} autoComplete="off"/>
-                                       </FormControl>
-                                       <FormMessage/>
-                                   </FormItem>
-                               )}/>
-                </div>
-                }
-            </CardContent>
-        }, [])
-    const {render} = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
-    return <CollapsibleFormSection title={'初始化本报告，默认值配置等'} defaultOpen={show}>
-        {render(null)}
-    </CollapsibleFormSection>;
-};
-
+    const {schema, defaultValues, doCheckNames} = useEntranceSetup(rep)
+    const handleCheckNames = React.useCallback((e: React.MouseEvent) => {
+            doCheckNames(e, rep, [{ value: config设备概况, type: "esnt" }, { value: [...itemA结论,...itemA结论附, ...itemA资审查] },
+                { value: [...itemA宏观检验,...itemA安全附件, ...itemA单特性, ...itemA耐压验] },
+                { value: ["Projects", ] },
+         ])}, [doCheckNames, rep],)
+    const contentRendererFactory = React.useCallback((form: any) => (
+            <CardContent>
+                <DevToolsSection form={form} onCheckNames={handleCheckNames} />
+            </CardContent>),
+       [handleCheckNames],)
+    const {render}= useFormFramework({schema, defaultValues, contentRendererFactory, rep})
+    return <CollapsibleFormSection title="初始化本报告，默认值配置等" defaultOpen={show}>
+            {render(null)}
+        </CollapsibleFormSection>
+}
 
 const createRecordList =()=>[
     createItem('Entrance', <EntranceSetup/>),
