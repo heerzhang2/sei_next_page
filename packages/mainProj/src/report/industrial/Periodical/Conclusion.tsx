@@ -5,13 +5,13 @@ import {z} from "zod";
 import {Card, CardContent, CardFooter, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input, Textarea} from "@/components/ui";
 import {CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {config设备概况} from "@/report/industrial/Periodical/orcBase";
 import {useThreeColumnView} from "@/report/hook/useThreeColumnSubr";
 import {CCell, FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {usePrefixDataTable} from "@/report/hook/usePrefixData";
 import {安全评定选, 结论选} from "@/report/industrial/Periodical/rarelyVary";
 import {FormHybridSelect} from "@/components/shub";
+import {config设备概况} from "@/report/industrial/Periodical/indPipelineO1";
 
 interface ConclusionProps  extends InternalItemProps{
     startd?: boolean;
