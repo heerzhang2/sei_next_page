@@ -5,7 +5,6 @@ import {z} from "zod";
 import {Card, CardContent, CardHeader, CardTitle, FormControl, FormField, FormItem, FormLabel, FormMessage, Input} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection, FormSelectField} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
-import {config设备概况} from "@/report/power/boilInstall/orcBase";
 import {useThreeColumnView} from "@/report/hook/useThreeColumnSubr";
 import {CCell, FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexible-table";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
@@ -130,9 +129,9 @@ export const mapBoilerResult = (input: "符合要求" | "基本符合要求" | "
     }
 };
 
-export const ConclusionVw= ({ orc, rep } : { orc: any,rep:any}
+export const ConclusionVw= ({ orc, rep,config } : { orc: any,rep:any,config:any[]}
 ) => {
-    const [_,renderUpper,render2]=useThreeColumnView({orc, config:config设备概况,slash:true,split:[1,9]});
+    const [_,renderUpper,render2]=useThreeColumnView({orc, config, slash:true,split:[1,9]});
     const result1=mapBoilerResult(orc?.检验结论)
     return <React.Fragment>
         <PrintReserveLeast reserve="10rem"

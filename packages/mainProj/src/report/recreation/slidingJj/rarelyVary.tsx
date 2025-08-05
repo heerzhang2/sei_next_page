@@ -55,3 +55,6 @@ export const 首页概况recr= (orc:any, rep:any, original?:boolean
     </TableBody>
   </FlexibleTable>;
 };
+
+export const 施工许可证子项选 = [''];
+export const 设用方式选 = ["固定式", "移动式", "y固定式", "9移动式", "固7定式", "移动6式", "固5定式", "移6动式",];

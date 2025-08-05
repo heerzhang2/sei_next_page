@@ -1,6 +1,5 @@
 "use client"
 import * as React from "react"
-import {useSearchParams} from "next/navigation"
 import {useStorage} from "@/report/StorageContext";
 import {RepLink, ReportEntryProps, ReportViewFxProps, RepTitleUpdate} from "@/report/common/base"
 import { 落款单位地址 } from "@/report/common/rarelyVary"
@@ -18,22 +17,21 @@ import {BoilerDiagramVw} from "@/report/power/boilInstall/BoilerDiagram";
 import {注意事项GasC} from "@/report/gas/rarelyVary";
 import {首页设备概况BoilI} from "@/report/power/boilInstall/rarelyVary";
 import {ConclusionVw} from "@/report/power/boilInstall/Conclusion";
+import {config设备概况, config证书概要} from "@/report/power/boilInstall/boilerInstO1";
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
 * */
 export const ReportView = ({ rep }: ReportEntryProps) => {
-    const searchParams = useSearchParams()
-    const original = "1" === searchParams!.get("original")
     const { storage } = useStorage()
     const Component = OfficialReport
     const [mapFxian]=useItemsMapPressure({projects: storage.Projects});
     //若目录页的页号不计算的：需要判别mapFxian.get('目录')?.do来剔除； #且满足目录页预计只打印一张纸；干脆用户录入?
-    const pdf_job = createPdfJob(rep, original,4);
+    const pdf_job = createPdfJob(rep, false, 4);
     return (
         <>
             <div id="PHEAD" />
             <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
-            <RepTitleUpdate code={storage?.eqpcod} original={original} />
+            <RepTitleUpdate code={storage?.eqpcod} />
             <Component source={storage} rep={rep} mapFxian={mapFxian}/>
             <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
                          pdf_job={pdf_job} single/>
@@ -46,7 +44,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
     return (
         <>
             <div className="not-print:my-4">
-                <CertificatePage orc={orc} rep={rep}/>
+                <CertificatePage orc={orc} rep={rep} config={config证书概要}/>
 
                 <div className="print:h-screen">
                     {ReportFirstPageHeadNmaNmbm({rep })}
@@ -66,7 +64,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
                 })}
                 {mapFxian.get('目录')?.do && <DirectoryPagePress orc={orc} rep={rep}/>}
 
-                <ConclusionVw orc={orc} rep={rep}/>
+                <ConclusionVw orc={orc} rep={rep} config={config设备概况}/>
                 {检验核准WaterJj({orc, rep, jyt:'编制'})}
 
                 {mapFxian.get('锅炉简图')?.do && <BoilerDiagramVw orc={orc} rep={rep}/>}

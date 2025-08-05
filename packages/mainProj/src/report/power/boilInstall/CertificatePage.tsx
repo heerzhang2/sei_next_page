@@ -4,17 +4,17 @@ import {FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexib
 import {ReportFirstPageHeadCyCert} from "@/report/common/head";
 import {JumpTab} from "@/report/common/JumpTab";
 import {usePrefixDataTable} from "@/report/hook/usePrefixData";
-import {config证书概要} from "@/report/power/boilInstall/orcBase";
 import {RepLink} from "@/report/common/base";
 
 interface CertificatePageProps {
     orc: any
     rep: any
     children?: React.ReactNode
+    config: any[]
 }
 
-export const CertificatePage = ({ orc, rep, children }: CertificatePageProps) => {
-    const renderUpper=usePrefixDataTable({config: config证书概要, orc, rep, slash:true});
+export const CertificatePage = ({ orc, rep, children,config }: CertificatePageProps) => {
+    const renderUpper=usePrefixDataTable({config, orc, rep, slash:true});
     const callback = () => {
         return (
             <div className="print:h-screen print:overflow-y-hidden">

@@ -5,6 +5,8 @@ import {gql,} from '@urql/next';
 import {JumpTab} from "@/report/common/JumpTab";
 import {PressureLayout} from "@/report/common/pressure";
 import {cn} from "@/lib/utils";
+import Head from 'next/head';
+import {useSearchParams} from "next/navigation";
 
 //各个检验单项
 export interface InternalItemProps{
@@ -278,11 +280,14 @@ export const RepLink= ( {rep, children, tag, ori, subrid,redId,hash}
 };
 
 /*修改打印的默认文件名
+document.title 实际上nextjs 多层次的app路由会合并影响的
 * */
-export function RepTitleUpdate({code,original}: {code:string,original?:boolean}) {
+export function RepTitleUpdate({code}: {code:string}) {
+    const searchParams = useSearchParams()
     React.useEffect(() => {
+        const original = "1" === searchParams!.get("original")
         document.title = `${code}-${original? '原始记录':'报告'}`
-    }, [code, original])
+    }, [code, searchParams])
     return null
 }
 

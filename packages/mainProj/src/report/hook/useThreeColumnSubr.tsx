@@ -127,6 +127,7 @@ interface ThreeColumnViewProps {
  * */
 export function useThreeColumnView({orc, config, split, slash,embedCol}: ThreeColumnViewProps
 ) {
+    if(!config?.length>0)   throw new Error(`config空的`);
     const newCfgs= React.useMemo( () => {
         const MaxIdx=config.length-1;
         if(split && split.length>0){

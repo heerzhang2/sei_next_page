@@ -3,6 +3,8 @@ import {CCell, FlexibleTable, TableBody, TableHeader, TableRow} from "@/componen
 import {crtOmni, omniCalculateDefault, pushOmni} from "@/report/common/omni";
 import {JumpMeasure} from "@/report/common/general";
 
+/**适用版本范围：
+ * */
 //id标签需要规范原来5.1的改为T5-1的才能路由。
 export const setupItemAreaRoute= ({rep, orc, noDefault} :{rep:any,orc?:any,noDefault?:boolean}
 ) => {

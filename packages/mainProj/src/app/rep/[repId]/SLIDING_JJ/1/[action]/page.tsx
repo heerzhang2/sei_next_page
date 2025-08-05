@@ -1,7 +1,7 @@
 "use client"
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from "react"
-import {OriginalView} from "@/report/recreation/slidingJj/Regular.O-1";
+import {OriginalView} from "@/report/recreation/slidingJj/slidingJjO1";
 import * as React from "react";
 import {useQuery} from "@urql/next";
 import {ReportQuery} from "@/component/rep/report-data";
