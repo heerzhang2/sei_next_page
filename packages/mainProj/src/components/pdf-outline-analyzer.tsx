@@ -1,14 +1,14 @@
 "use client"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, RefreshCw, Trash2 } from "lucide-react"
-import {usePageMarkinfo, usePageMarkLocal} from "@/hooks/usePrintPdf"
+import { Loader2 } from "lucide-react"
+import { usePageMarkinfo, usePageMarkLocal } from "@/hooks/usePrintPdf"
 import { createPdfJob } from "@/report/footer/job"
 import { PdfOutlineCacheManager, type PdfOutlineCacheItem } from "@/lib/indexeddb-cache"
-import {toast} from "sonner";
-import {cn} from "@/lib/utils";
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 interface OutlineItem {
     title: string
@@ -27,13 +27,15 @@ interface PdfOutlineAnalyzerProps {
     //报告或原始记录区分的标记
     slug: string
     inline?: boolean
+    // 新增：用于向父组件报告加载状态的回调
+    onLoadingChange?: (isLoading: boolean) => void
 }
 
 /**提取web转换成的 pdf书签；
  * 仅仅适合单一个URL的生成Pdf情况：
-* */
-export default function PdfOutlineAnalyzer({ rep,slug,inline }: PdfOutlineAnalyzerProps) {
-    const dbkvId = rep?.id+"-"+slug;        //唯一性保证
+ * */
+export default function PdfOutlineAnalyzer({ rep, slug, inline, onLoadingChange }: PdfOutlineAnalyzerProps) {
+    const dbkvId = rep?.id + "-" + slug //唯一性保证
     const pdf_job = createPdfJob(rep, true)
     // 初始化缓存管理器
     const [cacheManager] = useState(
@@ -68,8 +70,17 @@ export default function PdfOutlineAnalyzer({ rep,slug,inline }: PdfOutlineAnalyz
     const [isGetMarking, handleSubmit] = usePageMarkinfo(pdf_job, handleCacheSuccess)
     //本机浏览器客户端 提取办法的
     const [localGetMarking, handleSubmitLocal] = usePageMarkLocal(pdf_job, handleCacheSuccess)
+
+    // 计算总的加载状态
+    const isLoading = isGetMarking || localGetMarking
+
+    // 当加载状态改变时通知父组件
+    useEffect(() => {
+        onLoadingChange?.(isLoading)
+    }, [isLoading, onLoadingChange])
+
     const handleMarkGeneration = async () => {
-        if(!handleSubmitLocal)
+        if (!handleSubmitLocal)
             toast.error("操作失败", {
                 description: "请确认文书打印转换器在运行" + error,
             })
@@ -144,7 +155,7 @@ export default function PdfOutlineAnalyzer({ rep,slug,inline }: PdfOutlineAnalyz
             console.error("Failed to clear all cache:", error)
         }
     }
-    if(!initialized)   return <span>在初始化indexDB...</span>
+    if (!initialized) return <span>在初始化indexDB...</span>
     // 渲染大纲树结构
     const renderOutlineTree = (items: OutlineItem[]) => {
         return items.map((item, index) => (
@@ -176,25 +187,39 @@ export default function PdfOutlineAnalyzer({ rep,slug,inline }: PdfOutlineAnalyz
                                     <strong>总页数:</strong> {currentOutline.totalPages || ""}
                                 </div>
                             </div>
-                            { (currentOutline?.outline?.length! > 0) &&
+                            {currentOutline?.outline?.length! > 0 && (
                                 <div className="space-y-0">{renderOutlineTree(currentOutline.outline)}</div>
-                            }
+                            )}
                         </CardContent>
                     </Card>
                 </div>
-                ) :
+            ) : (
                 <div className="w-full max-w-[35rem] min-w-screen">还没有数据!</div>
-            }
-            {!inline &&
+            )}
+            {!inline && (
                 <div className="text-center">
-                    <Button onClick={handleMarkGeneration} disabled={isGetMarking || localGetMarking} className="mb-6">
-                        {isGetMarking ? "本地目录生成..." : "🎯 本机提取书签"}
+                    <Button onClick={handleMarkGeneration} disabled={isLoading} className="mb-6">
+                        {localGetMarking ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                本地目录生成...
+                            </>
+                        ) : (
+                            "🎯 本机提取书签"
+                        )}
                     </Button>
-                    <Button onClick={handleSubmit} disabled={isGetMarking || localGetMarking} className="ml-4 mb-6">
-                        {isGetMarking ? "分析中..." : "服务端提取书签"}
+                    <Button onClick={handleSubmit} disabled={isLoading} className="ml-4 mb-6">
+                        {isGetMarking ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                分析中...
+                            </>
+                        ) : (
+                            "服务端提取书签"
+                        )}
                     </Button>
                 </div>
-            }
+            )}
         </>
     )
 }

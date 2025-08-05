@@ -1,17 +1,31 @@
 "use client"
-import React, {useEffect} from "react"
+import React, { useEffect } from "react"
 import type { InternalItemProps } from "@/report/common/base"
-import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Badge, Label, Switch,Collapsible, CollapsibleContent, CollapsibleTrigger,} from "@/components/ui"
+import {
+    Button,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    Input,
+    Badge,
+    Label,
+    Switch,
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import { CollapsibleFormSection } from "@/components/chub"
 import { useStorage } from "@/report/StorageContext"
-import { Edit, Trash2, Plus, X, AlertCircleIcon, ChevronUp, ChevronDown } from 'lucide-react'
+import { Edit, Trash2, Plus, X, AlertCircleIcon, ChevronUp, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertTitle } from "@/components/ui"
 import { SmartTruncatedText } from "@/components/smart-truncated-text"
-import {useSearchParams} from "next/navigation";
-import PdfOutlineAnalyzer from "@/components/pdf-outline-analyzer";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import { useSearchParams } from "next/navigation"
+import PdfOutlineAnalyzer from "@/components/pdf-outline-analyzer"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // export declare type InputMoreCallback = (inp: any, setInp: React.Dispatch<React.SetStateAction<any>>) => React.ReactNode
 interface ProjectItem {
@@ -36,19 +50,17 @@ interface ProjectRProps extends InternalItemProps {
 /*
 这里表格布局类似于手机上原生的APP用的图片Card方块布局有点类似的，都是无法通用的做法，只能为特定表格做特殊布局，Grid配置也不通用，屏幕适应性差。
 * */
-export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,nRec}: ProjectRProps) => {
+export const ProjectR = ({ children, show, defaultProj: defPrj, label, rep, nApx, nRec }: ProjectRProps) => {
     const searchParams = useSearchParams()
-    const jumpProjIdx =searchParams!.get("from")
+    const jumpProjIdx = searchParams!.get("from")
     const { storage } = useStorage()
     const defaultProj = React.useMemo(() => {
         //仅仅页面上用的路由hash字段 "ha": 不需要存储数据库给报告的。
-        return defPrj.map(
-            one=>{
-                const { ha, ...other}=one;
-                return {...other}
-            }
-        );
-    }, [defPrj]);
+        return defPrj.map((one) => {
+            const { ha, ...other } = one
+            return { ...other }
+        })
+    }, [defPrj])
     const [projects, setProjects] = React.useState<ProjectItem[]>(storage?.Projects ?? defaultProj)
     const fixItemLen = defaultProj.length
     if (fixItemLen <= 0) throw new Error("目录表非法")
@@ -141,15 +153,18 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
     // 渲染编辑表单
     const renderEditForm = (item: ProjectItem, isNew = false) => (
         <Card className="mt-1 border-l-4 border-l-blue-500 gap-1 py-1">
-            {isNew && <CardHeader className="pb-0">
-                <CardTitle>新增目录项</CardTitle>
-            </CardHeader>
-            }
+            {isNew && (
+                <CardHeader className="pb-0">
+                    <CardTitle>新增目录项</CardTitle>
+                </CardHeader>
+            )}
             <CardContent className="space-y-1 px-2">
                 <div className="grid grid-cols-1 @md:grid-cols-2 @5xl:grid-cols-3 gap-1">
                     {isNew && (
                         <div className="space-y-2">
-                            <Label htmlFor="name" className="select-text">检验项目名称 *</Label>
+                            <Label htmlFor="name" className="select-text">
+                                检验项目名称 *
+                            </Label>
                             <Input
                                 id="name"
                                 value={item.name}
@@ -160,7 +175,9 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                         </div>
                     )}
                     <div className="space-y-2">
-                        <Label htmlFor="page" className="select-text">页号</Label>
+                        <Label htmlFor="page" className="select-text">
+                            页号
+                        </Label>
                         <Input
                             id="page"
                             value={item.page || ""}
@@ -168,40 +185,51 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                             placeholder="输入页号"
                         />
                     </div>
-                    {!nApx && <div className="space-y-2">
-                        <Label htmlFor="apx" className="select-text">附页、附图</Label>
-                        <Input
-                            id="apx"
-                            value={item.apx || ""}
-                            onChange={(e) => updateFormField("apx", e.target.value)}
-                            placeholder="输入附页、附图"
-                        />
-                    </div>
-                    }
-                    {!nRec && <>
+                    {!nApx && (
                         <div className="space-y-2">
-                            <Label htmlFor="op" className="select-text">记录-页号</Label>
+                            <Label htmlFor="apx" className="select-text">
+                                附页、附图
+                            </Label>
                             <Input
-                                id="op"
-                                value={item.op || ""}
-                                onChange={(e) => updateFormField("op", e.target.value)}
-                                placeholder="输入记录-页号"
+                                id="apx"
+                                value={item.apx || ""}
+                                onChange={(e) => updateFormField("apx", e.target.value)}
+                                placeholder="输入附页、附图"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="oa" className="select-text">记录-附图附页</Label>
-                            <Input
-                                id="oa"
-                                value={item.oa || ""}
-                                onChange={(e) => updateFormField("oa", e.target.value)}
-                                placeholder="输入记录-附图附页"
-                            />
-                        </div>
-                    </>}
+                    )}
+                    {!nRec && (
+                        <>
+                            <div className="space-y-2">
+                                <Label htmlFor="op" className="select-text">
+                                    记录-页号
+                                </Label>
+                                <Input
+                                    id="op"
+                                    value={item.op || ""}
+                                    onChange={(e) => updateFormField("op", e.target.value)}
+                                    placeholder="输入记录-页号"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="oa" className="select-text">
+                                    记录-附图附页
+                                </Label>
+                                <Input
+                                    id="oa"
+                                    value={item.oa || ""}
+                                    onChange={(e) => updateFormField("oa", e.target.value)}
+                                    placeholder="输入记录-附图附页"
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <div className="space-y-1">
-                    <Label htmlFor="ml" className="select-text">目录显示标题</Label>
+                    <Label htmlFor="ml" className="select-text">
+                        目录显示标题
+                    </Label>
                     <Input
                         id="ml"
                         value={item.ml || ""}
@@ -212,20 +240,22 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
 
                 <div className="grid grid-cols-2 @5xl:grid-cols-4 gap-1">
                     <div className="flex items-center space-x-2">
-                        <Switch id="do"
-                                checked={item.do || false}
-                                onCheckedChange={(checked) => updateFormField("do", checked)}
-                                className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
+                        <Switch
+                            id="do"
+                            checked={item.do || false}
+                            onCheckedChange={(checked) => updateFormField("do", checked)}
+                            className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
                         />
                         <Label htmlFor="do" className="text-sm select-text">
                             有做该项目
                         </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <Switch id="na"
-                                checked={item.na || false}
-                                onCheckedChange={(checked) => updateFormField("na", checked)}
-                                className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
+                        <Switch
+                            id="na"
+                            checked={item.na || false}
+                            onCheckedChange={(checked) => updateFormField("na", checked)}
+                            className="h-[25px] w-[42px] [&>span]:h-[21px] [&>span]:w-[21px] [&>span]:data-[state=checked]:translate-x-[17px]"
                         />
                         <Label htmlFor="na" className="text-sm select-text">
                             不在目录中显示
@@ -245,7 +275,7 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                     </Button>
                     <Button onClick={isNew ? saveAdd : saveEdit}>确认当前项</Button>
                 </div>
-                {item.do && <CollapsibleMarkTabs rep={rep} inline/>}
+                {item.do && <CollapsibleMarkTabs rep={rep} inline />}
             </CardContent>
         </Card>
     )
@@ -320,18 +350,26 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                                                 )}
                                             </div>
                                             <div className="col-span-2 flex-1 grid grid-cols-4 gap-2 items-center">
-                                                <div className="text-xs font-medium border-transparent bg-white text-gray-900">{project.page && `页: ${project.page}`}</div>
+                                                <div className="text-xs font-medium border-transparent bg-white text-gray-900">
+                                                    {project.page && `页: ${project.page}`}
+                                                </div>
 
-                                                {!nApx && <div className="text-xs font-medium border-transparent bg-gray-50 text-secondary-foreground">{project.apx && `附图: ${project.apx}`}</div>}
-
-                                                {!nRec && <>
-                                                    <div className="text-xs font-medium border-transparent bg-white text-gray-900">
-                                                        {project.op && `记录页: ${project.op}`}
-                                                    </div>
+                                                {!nApx && (
                                                     <div className="text-xs font-medium border-transparent bg-gray-50 text-secondary-foreground">
-                                                        {project.oa && `记录附图: ${project.oa}`}
+                                                        {project.apx && `附图: ${project.apx}`}
                                                     </div>
-                                                </>}
+                                                )}
+
+                                                {!nRec && (
+                                                    <>
+                                                        <div className="text-xs font-medium border-transparent bg-white text-gray-900">
+                                                            {project.op && `记录页: ${project.op}`}
+                                                        </div>
+                                                        <div className="text-xs font-medium border-transparent bg-gray-50 text-secondary-foreground">
+                                                            {project.oa && `记录附图: ${project.oa}`}
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
 
@@ -405,9 +443,9 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
                     </CardContent>
                     <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2">
                         <div>
-                          <span className="text-sm">
-                            有些是不在附页中体现的但却在目录中有的其页号需设定。想清空所有项目（分项）和目录的配置（谨慎使用！）
-                          </span>
+              <span className="text-sm">
+                有些是不在附页中体现的但却在目录中有的其页号需设定。想清空所有项目（分项）和目录的配置（谨慎使用！）
+              </span>
                             <Button size="sm" onClick={clearProjectCatalog}>
                                 重新初始化
                             </Button>
@@ -421,35 +459,52 @@ export const ProjectR = ({ children, show, defaultProj:defPrj, label, rep,nApx,n
     )
 }
 /*书签复用部分
-* */
-function CollapsibleMarkTabs({rep ,inline }:{rep:any,inline?:boolean }) {
+ * */
+function CollapsibleMarkTabs({ rep, inline }: { rep: any; inline?: boolean }) {
     const [isOpen, setIsOpen] = React.useState(false)
+    // 用于跟踪两个 PdfOutlineAnalyzer 组件的加载状态
+    const [reportLoading, setReportLoading] = React.useState(false)
+    const [recordLoading, setRecordLoading] = React.useState(false)
+
+    // 计算是否有任何组件正在加载
+    const isAnyLoading = reportLoading || recordLoading
+
     return (
         <Collapsible
             open={isOpen}
             onOpenChange={setIsOpen}
-            className={cn("flex w-full flex-col gap-0", inline? "@md:relative @md:-top-8 pointer-events-none":"")}
+            className={cn("flex w-full flex-col gap-0", inline ? "@md:relative @md:-top-8 pointer-events-none" : "")}
         >
-            <div className={cn("flex gap-4 px-4", inline? "":"mx-auto items-center")}>
+            <div className={cn("flex gap-4 px-4", inline ? "" : "mx-auto items-center")}>
                 <CollapsibleTrigger asChild>
                     <Button variant="ghost" className="font-semibold pointer-events-auto" aria-label="展开切换">
                         <span>打印在第几页</span>
-                        { isOpen? <ChevronUp /> : <ChevronDown />}
+                        {isOpen ? <ChevronUp /> : <ChevronDown />}
                     </Button>
                 </CollapsibleTrigger>
             </div>
             <CollapsibleContent className="flex flex-col gap-0">
                 <div className="w-full max-w-[35rem] mx-auto @md:px-6 py-0 space-y-0">
                     <Tabs defaultValue="generate" className="w-full pointer-events-auto">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="generate">报告的书签</TabsTrigger>
-                            <TabsTrigger value="analyze">原始记录的书签</TabsTrigger>
+                        <TabsList className={cn("grid w-full grid-cols-2", isAnyLoading && "pointer-events-none opacity-50")}>
+                            <TabsTrigger
+                                value="generate"
+                                disabled={isAnyLoading}
+                                className={cn(isAnyLoading && "cursor-not-allowed")}
+                            >
+                                报告的书签
+                                {reportLoading && <span className="ml-1 text-xs">(处理中...)</span>}
+                            </TabsTrigger>
+                            <TabsTrigger value="analyze" disabled={isAnyLoading} className={cn(isAnyLoading && "cursor-not-allowed")}>
+                                原始记录的书签
+                                {recordLoading && <span className="ml-1 text-xs">(处理中...)</span>}
+                            </TabsTrigger>
                         </TabsList>
                         <TabsContent value="generate" className="space-y-0">
-                            <PdfOutlineAnalyzer inline={inline} rep={rep} slug='R'/>
+                            <PdfOutlineAnalyzer inline={inline} rep={rep} slug="R" onLoadingChange={setReportLoading} />
                         </TabsContent>
                         <TabsContent value="analyze" className="space-y-0">
-                            <PdfOutlineAnalyzer inline={inline} rep={rep} slug='O'/>
+                            <PdfOutlineAnalyzer inline={inline} rep={rep} slug="O" onLoadingChange={setRecordLoading} />
                         </TabsContent>
                     </Tabs>
                 </div>
