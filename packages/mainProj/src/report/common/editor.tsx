@@ -439,12 +439,14 @@ export const RecheckEditor = ({ children, show, label, rep
 };
 
 interface WitnessParkDjProps extends InternalItemProps {
+    //2个区域的标题：
     titles?: any[];      //可能是Node[]，不一定纯粹string;  可变的多个标题编码的。
     nowit?: boolean;    //没有必要输入见证材料
-    //大备注  列表框方式的
+    //大备注  录入列表
     memolist?: any[];
-    //见证资料  默认可选择录入
+    //见证资料  录入列表
     witlist?: any[];
+    //2个区域的尾巴说明：
     tails?: any[];
 }
 

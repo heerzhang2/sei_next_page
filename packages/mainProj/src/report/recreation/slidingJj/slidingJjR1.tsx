@@ -11,8 +11,8 @@ import {useOfficialOmni} from "@/report/common/useOfficialOmni"
 import {UnqualifiedIspTable} from "@/report/common/general"
 import {useItemsMapOmni} from "@/report/common/omni"
 import {检验核准WaterJj, 注意事项WaterJj} from "@/report/recreation/waterJj/rarelyVary"
-import {RepDeviceDetail} from "./repView"
-import {填写须知recr, 首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
+import {RepDeviceDetail} from "./RepDeviceDetail"
+import {tItems现场, 填写须知recr, 首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
 import {ReportFirstPageHeadJd} from "@/report/common/head";
 import {createPdfJob} from "@/report/footer/job";
 import {RepFootLink} from "@/report/common/repFootLink";
@@ -23,14 +23,7 @@ import PageSectionOrientation from "@/components/page-section-orientation";
 import {config主技术, tail主技} from "@/report/recreation/slidingJj/MainTechnical";
 import {StrainStressVw} from "@/report/recreation/waterJj/StrainStress";
 import {AccelerationVw} from "@/report/recreation/waterJj/Acceleration";
-import {
-    config观测数据,
-    config观测数据2,
-    config设备概况,
-    setupItemAreaRoute,
-    tail观测,
-    tItems现场
-} from "@/report/recreation/slidingJj/slidingJjO1";
+import {config观测数据, config观测数据2, config设备概况, setupItemAreaRoute, tail观测} from "@/report/recreation/slidingJj/slidingJjO1";
 
 export const ReportView = ({ rep }: ReportEntryProps) => {
     const searchParams = useSearchParams()
@@ -56,11 +49,7 @@ const 检验结果替换 = (orc: { [x: string]: any }) => {
     // if(undefined!==orc?.绝缘阻o)  out.绝缘阻检=<div>电阻值{floatInterception(orc?.绝缘阻o,1)}MΩ</div>;
     return out
 }
-const config报告: Column_Setting[] = [
-    {n: "", x: "检验结果"},
-    {n: null, x: "结论"},
-    {n: "M", x: "备注", m: true},
-]
+const config报告: Column_Setting[] = [{n: "", x: "检验结果"}, {n: null, x: "结论"}, {n: "M", x: "备注", m: true},]
 
 /*有些内容放页眉页脚：<span>报告编号：{rep.isp.no}</span>页号安排放入页眉页脚。
 * */
@@ -163,9 +152,8 @@ export function useCatalog() {
     return dirs
 }
 
-
 export const config记录: Column_Setting[] = [{n: '', x: '检验结果',}, {n: null, x: '结论'},
-        {n: 'M', x: '备注', t: 'B', m: true}, {n: 'D', x: '不合格内容', t: 'B'}];
+          {n: 'M', x: '备注', t: 'B', m: true}, {n: 'D', x: '不合格内容', t: 'B'}];
 export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
                                                                              source: orc, rep,
                                                                          }) => {

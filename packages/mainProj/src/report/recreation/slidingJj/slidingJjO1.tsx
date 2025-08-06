@@ -15,52 +15,21 @@ import {Acceleration, itemA加速} from "../waterJj/Acceleration";
 import {config主技术, tail主技} from "./MainTechnical";
 import {config记录} from "@/report/recreation/slidingJj/slidingJjR1";
 import {cbK2_12_3, cbK2_12_4, cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21} from "@/report/recreation/waterJj/cbComm";
-import {施工许可证子项选, 设用方式选} from "@/report/recreation/slidingJj/rarelyVary";
+import {tItems现场, 施工许可证子项选, 设用方式选} from "@/report/recreation/slidingJj/rarelyVary";
 import {z} from "zod";
 import {toast} from "sonner";
 import {Button, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {AreaConfig, generateAreaItems, omniCalculateDefault, pushOmni} from "@/report/common/omni";
-import {
-    create2_12Area,
-    create3_6_1Area,
-    create4_9Area,
-    create5_5_1Area,
-    create6_4Area,
-    createT1_1Area,
-    createT2_1Area,
-    createT3_1Area,
-    createT4_1Area,
-    createT5_1Area,
-    createT6_14Area,
-    createT6_1Area,
-    createT7_1Area
+import {create2_12Area, create3_6_1Area, create4_9Area, create5_5_1Area, create6_4Area, createT1_1Area, createT2_1Area,
+    createT3_1Area, createT4_1Area, createT5_1Area, createT6_14Area, createT6_1Area, createT7_1Area
 } from "@/report/recreation/slidingJj/areas1v";
+import {DevToolsSection, useEntranceSetup} from "@/report/hook/useEntranceSetup";
+import {itemA简图} from "@/report/power/boilInstall/BoilerDiagram";
+import {config证书概要} from "@/report/power/boilInstall/boilerInstO1";
 
-const defFrameM={
-    'CmnTowerCrane': `{ "mg":2, "dcl":"K","cl":"K",
-        "sk":[ {"pr":"※","no":"5.5.1","r":0,"bs":[3],"ss":[3],"ts":[1]}, 0,0
-     ] }`,
-};
-//复制项目描述的核心栏目，但是不包含项目区前缀标题栏目的。
-const defaultTitle=`安全距离
-进出口距站台高度
-转动平台台面及其间隙
-`;
-
-export const tItems现场=[
-    ['1、温度、湿度、照明及气候',{f:'T',
-        N: <span>1、温度、湿度、照明及室外气候条件能满足游乐设施正常运行及检验作业要求；</span>},],
-    ['2、供电电压波动',{f:'V',
-        N: <span>2、输入电气系统的电压正常，电压波动在允许值以内；</span>},],
-    ['3、现场不应有与检验无关的',{f:'x',
-        N: <span>3、检验现场不应有与游乐设施工作无关的物品和设备，并应放置表明现场正在进行检验的警示牌。</span>},],
-];
-
-const 记事选=["检验过程共开出《特种设备检验意见通知书》xx份： 第x份编号为xxxxxx，整改确认时间为xxxx-xx-xx；第x份编号为xxxxxx，整改确认时间为xxxx-xx-xx。",
-];
-
+//原始记录使用的：
 export const config设备概况 = [
     [['使用单位统一社会信用代码', '_$使用单位信用码'], ['设备所在区域', '_$使用地区域']],
     [['使用登记证编号', '_$使用证号'], ['注册代码', '_$注册代码'],],
@@ -93,6 +62,7 @@ export const config设备概况 = [
     [['下次检验日期', '_$新下检日'],],
     [['检验依据', {r: '《大型游乐设施安全技术规程》（TSG 71-2023）'}]],
 ];
+
 export const config观测数据: ((orc: any) => EachObserveConfig[][]) = (orc: any) => {
     return [
         [{
@@ -190,6 +160,7 @@ export const config观测数据: ((orc: any) => EachObserveConfig[][]) = (orc: a
         [{check: '3.5.5',}],
     ] as EachObserveConfig[][]
 };
+
 export const config观测数据2: ((orc: any) => EachObserveConfig[][]) = (orc: any) => {
     return [
         [{
@@ -352,67 +323,42 @@ export const setupItemAreaRoute = ({rep, orc, noDefault}: { rep: any, orc?: any,
     return {Item: ari,} as { [key: string]: any[] };
 };
 
-//【表格打印调整】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
-export const EntranceSetup = ({show, redId, nestMd, rep}: InternalItemProps) => {
-    const {storage,} = useStorage();
-    const schema = React.useMemo(() => {
-        const schemaFields = {} as any;
-        schemaFields["_tblFixed"] = z.string().optional().refine(
-            (value) => {
-                if (!value) return true;
-                try {
-                    JSON.parse(value);
-                    return true;
-                } catch {
-                    return false;
-                }
-            }, {message: "字段必须为有效的 JSON 字符串"}
-        );
-        return z.object(schemaFields);
-    }, []);
-    const defaultValues = React.useMemo(() => {
-        const fields = {} as any
-        fields["_tblFixed"] = storage["_tblFixed"]
-        return fields
-    }, [storage])
-    const doCheckNames = React.useCallback((e: React.MouseEvent, rep: any) => {
+export const EntranceSetup = ({show,rep}: InternalItemProps) => {
+    const {schema, defaultValues, doCheckNames} = useEntranceSetup(rep)
+    const handleCheckNames = React.useCallback((e: React.MouseEvent) => {
         const impressionismAs = setupItemAreaRoute({rep, noDefault: true});
-        const result = assertNamesUnique([{value: rep?.tzFields}, {value: impressionismAs?.Item, type: 'impr'},
+        doCheckNames(e, rep, [{value: impressionismAs?.Item, type: 'impr'},
             {value: config设备概况, type: 'esnt'}, {value: [...itemA结论, ...itemA技术见证,]},
             {value: config观测数据({}), type: 'mesB'}, {value: config观测数据2({}), type: 'mesB'},
             {value: config主技术, type: 'mesB'},
             {value: [...itemA应变应力, ...itemA加速,]},
-            {value: ['unq', '仪器表', '检验条件', '观备注', '主技备注']}]);
-        if (result) toast.success("完成", {description: "没冲突",})
-        else toast.error("完成", {description: "冲突",})
-        e.preventDefault()
-    }, [toast]);
-    const contentRendererFactory = React.useCallback(
-        (form: any) => {
-            return <CardContent>
-                {process.env.NEXT_PUBLIC_APP_TEST === 'true' && <div>
-                    <h5>构建开发模板时的工具：校验模板的存储name冲突；</h5>
-                    <Button onClick={(e) => doCheckNames(e, rep)}>校验模板name唯一性</Button>
-                    <FormField control={form.control} name={"_tblFixed"}
-                               render={({field}) => (
-                                   <FormItem className="pt-2 w-full break-inside-avoid">
-                                       <FormLabel className="select-text">设置待测试表格的各列宽度：</FormLabel>
-                                       <FormControl className="w-full">
-                                           <BlobInputList rows={2} {...field}
-                                                          datalist={["[\"4%\",\"5%\",\"4%\",\"6%\",\"%\",\"23%\"]"]}/>
-                                       </FormControl>
-                                       <FormMessage/>
-                                   </FormItem>
-                               )}/>
-                </div>
-                }
-            </CardContent>
-        }, [])
-    const {render} = useFormFramework({schema, defaultValues, contentRendererFactory, rep})
-    return <CollapsibleFormSection title={'初始化本报告，默认值配置等'} defaultOpen={show}>
+            {value: ['unq', '仪器表', '检验条件', '观备注', '主技备注']}
+        ])}, [doCheckNames, rep],)
+    const contentRendererFactory = React.useCallback((form: any) => (
+            <CardContent>
+                <DevToolsSection form={form} onCheckNames={handleCheckNames} />
+            </CardContent>),
+        [handleCheckNames],)
+    const {render}= useFormFramework({schema, defaultValues, contentRendererFactory, rep})
+    return <CollapsibleFormSection title="初始化本报告，默认值配置等" defaultOpen={show}>
         {render(null)}
-    </CollapsibleFormSection>;
+    </CollapsibleFormSection>
+}
+
+const defFrameM={
+    'CmnTowerCrane': `{ "mg":2, "dcl":"K","cl":"K",
+        "sk":[ {"pr":"※","no":"5.5.1","r":0,"bs":[3],"ss":[3],"ts":[1]}, 0,0
+     ] }`,
 };
+//复制项目描述的核心栏目，但是不包含项目区前缀标题栏目的。
+const defaultTitle=`安全距离
+进出口距站台高度
+转动平台台面及其间隙
+`;
+
+const 记事选=["检验过程共开出《特种设备检验意见通知书》xx份： 第x份编号为xxxxxx，整改确认时间为xxxx-xx-xx；第x份编号为xxxxxx，整改确认时间为xxxx-xx-xx。",
+];
+
 const recordPrintList =[
     createItem('Entrance', <EntranceSetup/>),
     createItem('Instrument', <ItemInstrumentTable label={'一、主要测量设备性能检查'} />),
@@ -422,7 +368,7 @@ const recordPrintList =[
     createItem('Conclusion', <ConclusionWaterJj startd label={'五、现场检验意见'}/>),
     createItem('Witness', <WitnessSimple label={'六、 备注 七、记事'} titles={['七、记事','六、备注']} witlist={记事选}
                                          tails={[null,
-                             <React.Fragment key={12}>注：特殊情况，应在备注中说明检验人员所负责检验的项目编号。</React.Fragment>
+                             <React.Fragment key={2}>注：特殊情况，应在备注中说明检验人员所负责检验的项目编号。</React.Fragment>
                          ]}
                     />),
     createItem('Measure', <ObserveEdit memoF config={config观测数据} mem={'观备注'} label={'八、观测数据及测量结果记录(上)'}>{tail观测}</ObserveEdit>),
@@ -436,8 +382,7 @@ if(process.env.NEXT_PUBLIC_APP_TEST==='true')  recordPrintList.splice(0,0,create
 
 
 export const OriginalView=({action, verId, rep}:OriginalViewProps)=>{
-    const {storage, setStorage} =useStorage();
-    // console.log("OriginalViewaction=", action);
+    const {storage,} =useStorage();
     const recordPrintListNow =React.useMemo(() => {
       let routeAreas=[] as any[];
       const impressionismAs =setupItemAreaRoute({rep, orc:storage});
