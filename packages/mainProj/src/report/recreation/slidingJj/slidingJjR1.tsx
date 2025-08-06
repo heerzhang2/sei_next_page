@@ -76,12 +76,10 @@ const config报告: Column_Setting[] = [
     {n: "M", x: "备注", m: true},
 ]
 
-/**适用版本范围：
- * */
 //id标签需要规范原来5.1的改为T5-1的才能路由。
 export const setupItemAreaRoute = ({rep, orc, noDefault}: { rep: any, orc?: any, noDefault?: boolean }
 ) => {
-    // 所有编辑区的默认配置
+    // 所有编辑区的默认配置，但不能放在外部，会报错 Cannot access 'setupItemAreaRoute' before initialization ；
     const ispItemAreas: AreaConfig[] = [
         createT1_1Area(),
         createT2_1Area({ver:'1'}),
