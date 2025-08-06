@@ -724,34 +724,27 @@ export const resTranslOmni = (et:ItemOmniConfig, orc:any, itRes:any, conseq?:str
         else return result;
     }
 }
-
 // 简化的版本定义
-export interface AreaVersion {
-    //编辑区域的配置版本号： 约定等同于主报告模板的app路由中版本号的。
-    ver: string;
-    //版本修改备注
-    description?: string;
-}
-
+// export interface AreaVersion {
+//     //编辑区域的配置版本号： 约定等同于主报告模板的app路由中版本号的。
+//     ver: string;
+//     //版本修改备注
+//     description?: string;
+// }
 // 编辑区配置接口
 export interface AreaConfig {
     id: string;
-    version: AreaVersion;
+    //version: AreaVersion; 没意义
     generator: (params: { rep: any, orc?: any }) => any[];
     title: string;
-} // 生成指定编辑区的配置
+}
 // 简单的版本管理函数
-const getAreaByVersion = (areas: AreaConfig[], areaId: string, version?: string): AreaConfig | undefined => {
+const getAreaByVersion = (areas: AreaConfig[], areaId: string): AreaConfig | undefined => {
     const area = areas.find(a => a.id === areaId);
     if (!area) return undefined;
-
-    // 如果指定了版本且与当前版本不同，可以在这里实现版本切换逻辑
-    if (version && version !== area.version.ver) {
-        console.warn(`Area ${areaId} version ${version} not found, using default ${area.version.ver}`);
-    }
-
     return area;
 };
+// 生成指定编辑区的配置
 export const generateAreaItems = (areas: AreaConfig[], areaId: string, params: { rep: any, orc?: any }): any[] => {
     const area = getAreaByVersion(areas, areaId);
     if (!area) {

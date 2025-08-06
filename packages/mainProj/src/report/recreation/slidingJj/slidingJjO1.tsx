@@ -1,6 +1,6 @@
 import * as React from "react";
 import {InternalItemProps, OriginalViewProps} from "@/report/common/base";
-import {assertNamesUnique, createItem} from "@/report/common/eHelper";
+import {createItem} from "@/report/common/eHelper";
 import {useRecordList} from "@/report/hook/useRecordList";
 import {useStorage} from "@/report/StorageContext";
 import {ItemInstrumentTable} from "@/report/common/Instrument";
@@ -16,18 +16,14 @@ import {config主技术, tail主技} from "./MainTechnical";
 import {config记录} from "@/report/recreation/slidingJj/slidingJjR1";
 import {cbK2_12_3, cbK2_12_4, cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21} from "@/report/recreation/waterJj/cbComm";
 import {tItems现场, 施工许可证子项选, 设用方式选} from "@/report/recreation/slidingJj/rarelyVary";
-import {z} from "zod";
-import {toast} from "sonner";
-import {Button, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
-import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
+import {CardContent,} from "@/components/ui";
+import {CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {AreaConfig, generateAreaItems, omniCalculateDefault, pushOmni} from "@/report/common/omni";
 import {create2_12Area, create3_6_1Area, create4_9Area, create5_5_1Area, create6_4Area, createT1_1Area, createT2_1Area,
     createT3_1Area, createT4_1Area, createT5_1Area, createT6_14Area, createT6_1Area, createT7_1Area
 } from "@/report/recreation/slidingJj/areas1v";
 import {DevToolsSection, useEntranceSetup} from "@/report/hook/useEntranceSetup";
-import {itemA简图} from "@/report/power/boilInstall/BoilerDiagram";
-import {config证书概要} from "@/report/power/boilInstall/boilerInstO1";
 
 //原始记录使用的：
 export const config设备概况 = [
@@ -298,7 +294,7 @@ export const tail观测 = <div className={"text-[0.75rem]"}>
 //所有编辑区的默认配置
 const IspItemAreas: AreaConfig[] = [
     createT1_1Area(),
-    createT2_1Area({ver: '1'}),
+    createT2_1Area(),
     create2_12Area(),
     createT3_1Area(),
     create3_6_1Area(),
@@ -379,7 +375,6 @@ const recordPrintList =[
     createItem('SiteCondition', <SiteConditionSund config={tItems现场} label={'附录D：现场检验条件确认'}/>),
 ];
 if(process.env.NEXT_PUBLIC_APP_TEST==='true')  recordPrintList.splice(0,0,createItem('GenCode', <GenCode type='CmnTowerCrane' frameMod={defFrameM} defTitle={defaultTitle}/>));
-
 
 export const OriginalView=({action, verId, rep}:OriginalViewProps)=>{
     const {storage,} =useStorage();
