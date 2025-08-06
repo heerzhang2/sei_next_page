@@ -13,7 +13,7 @@ import {ConclusionWaterJj, itemA结论} from "../waterJj/Conclusion";
 import {itemA应变应力, StrainStress} from "../waterJj/StrainStress";
 import {Acceleration, itemA加速} from "../waterJj/Acceleration";
 import {config主技术, tail主技} from "./MainTechnical";
-import {config记录, setupItemAreaRoute} from "@/report/recreation/slidingJj/slidingJjR1";
+import {config记录} from "@/report/recreation/slidingJj/slidingJjR1";
 import {cbK2_12_3, cbK2_12_4, cbK2_4, cbK2_6, cbK3_55, cbK4_6, cbK5_21} from "@/report/recreation/waterJj/cbComm";
 import {施工许可证子项选, 设用方式选} from "@/report/recreation/slidingJj/rarelyVary";
 import {z} from "zod";
@@ -21,6 +21,22 @@ import {toast} from "sonner";
 import {Button, CardContent, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui";
 import {BlobInputList, CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
+import {AreaConfig, generateAreaItems, omniCalculateDefault, pushOmni} from "@/report/common/omni";
+import {
+    create2_12Area,
+    create3_6_1Area,
+    create4_9Area,
+    create5_5_1Area,
+    create6_4Area,
+    createT1_1Area,
+    createT2_1Area,
+    createT3_1Area,
+    createT4_1Area,
+    createT5_1Area,
+    createT6_14Area,
+    createT6_1Area,
+    createT7_1Area
+} from "@/report/recreation/slidingJj/areas1v";
 
 const defFrameM={
     'CmnTowerCrane': `{ "mg":2, "dcl":"K","cl":"K",
@@ -307,6 +323,34 @@ export const tail观测 = <div className={"text-[0.75rem]"}>
         3、其他需记录的测量值和结果值填在备注栏中。
     </div>
 </div>;
+
+//所有编辑区的默认配置
+const IspItemAreas: AreaConfig[] = [
+    createT1_1Area(),
+    createT2_1Area({ver: '1'}),
+    create2_12Area(),
+    createT3_1Area(),
+    create3_6_1Area(),
+    createT4_1Area(),
+    create4_9Area(),
+    createT5_1Area(),
+    create5_5_1Area(),
+    createT6_1Area(),
+    create6_4Area(),
+    createT6_14Area(),
+    createT7_1Area(),
+];
+//不能放在slidingJjR1.tsx中，会产生循环依赖导致的报错 Cannot access 'setupItemAreaRoute' before initialization；
+export const setupItemAreaRoute = ({rep, orc, noDefault}: { rep: any, orc?: any, noDefault?: boolean }
+) => {
+    let ari: any[] = [];
+    IspItemAreas.forEach(area => {
+        const items = generateAreaItems(IspItemAreas, area.id, {rep, orc});
+        pushOmni(ari, area.id, items, area.title);
+    });
+    if (!noDefault) ari = omniCalculateDefault(ari, {iclasDefault: "K", displayDefault: true});
+    return {Item: ari,} as { [key: string]: any[] };
+};
 
 //【表格打印调整】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
 export const EntranceSetup = ({show, redId, nestMd, rep}: InternalItemProps) => {

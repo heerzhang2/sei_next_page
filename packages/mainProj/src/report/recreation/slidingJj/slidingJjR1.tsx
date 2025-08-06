@@ -9,7 +9,7 @@ import {落款单位地址} from "@/report/common/rarelyVary"
 import {Column_Setting, useFormatOmni} from "@/report/common/useFormatOmni"
 import {useOfficialOmni} from "@/report/common/useOfficialOmni"
 import {UnqualifiedIspTable} from "@/report/common/general"
-import {AreaConfig, generateAreaItems, omniCalculateDefault, pushOmni, useItemsMapOmni} from "@/report/common/omni"
+import {useItemsMapOmni} from "@/report/common/omni"
 import {检验核准WaterJj, 注意事项WaterJj} from "@/report/recreation/waterJj/rarelyVary"
 import {RepDeviceDetail} from "./repView"
 import {填写须知recr, 首页概况recr} from "@/report/recreation/slidingJj/rarelyVary";
@@ -27,24 +27,10 @@ import {
     config观测数据,
     config观测数据2,
     config设备概况,
+    setupItemAreaRoute,
     tail观测,
     tItems现场
 } from "@/report/recreation/slidingJj/slidingJjO1";
-import {
-    create2_12Area,
-    create3_6_1Area,
-    create4_9Area,
-    create5_5_1Area,
-    create6_4Area,
-    createT1_1Area,
-    createT2_1Area,
-    createT3_1Area,
-    createT4_1Area,
-    createT5_1Area,
-    createT6_14Area,
-    createT6_1Area,
-    createT7_1Area
-} from "@/report/recreation/slidingJj/areas1v";
 
 export const ReportView = ({ rep }: ReportEntryProps) => {
     const searchParams = useSearchParams()
@@ -75,35 +61,6 @@ const config报告: Column_Setting[] = [
     {n: null, x: "结论"},
     {n: "M", x: "备注", m: true},
 ]
-
-//id标签需要规范原来5.1的改为T5-1的才能路由。
-export const setupItemAreaRoute = ({rep, orc, noDefault}: { rep: any, orc?: any, noDefault?: boolean }
-) => {
-    // 所有编辑区的默认配置，但不能放在外部，会报错 Cannot access 'setupItemAreaRoute' before initialization ；
-    const ispItemAreas: AreaConfig[] = [
-        createT1_1Area(),
-        createT2_1Area({ver:'1'}),
-        create2_12Area(),
-        createT3_1Area(),
-        create3_6_1Area(),
-        createT4_1Area(),
-        create4_9Area(),
-        createT5_1Area(),
-        create5_5_1Area(),
-        createT6_1Area(),
-        create6_4Area(),
-        createT6_14Area(),
-        createT7_1Area(),
-    ];
-    let ari: any[] = [];
-    // 使用本地定义的编辑区配置
-    ispItemAreas.forEach(area => {
-        const items = generateAreaItems(ispItemAreas, area.id, {rep, orc});
-        pushOmni(ari, area.id, items, area.title);
-    });
-    if (!noDefault) ari = omniCalculateDefault(ari, {iclasDefault: "K", displayDefault: true});
-    return {Item: ari,} as { [key: string]: any[] };
-};
 
 /*有些内容放页眉页脚：<span>报告编号：{rep.isp.no}</span>页号安排放入页眉页脚。
 * */
