@@ -1,11 +1,8 @@
 import * as React from "react";
 import {InternalItemProps, OriginalViewProps} from "@/report/common/base";
 import {createItem} from "@/report/common/eHelper";
-import {useRecordList} from "@/report/hook/useRecordList";
-import {useStorage} from "@/report/StorageContext";
 import {ItemInstrumentTable} from "@/report/common/Instrument";
 import {GenCode} from "@/report/common/GenCode";
-import {ActionMapItem} from "@/report/common/ActionMapItem";
 import {DeviceSurveyD} from "@/report/common/survey";
 import {config检验复检表, itemA技术见证, RecheckEditor, SiteConditionSund, WitnessSimple} from "@/report/common/editor";
 import {EachObserveConfig, ObserveEdit} from "@/report/hook/useObserve";
@@ -24,6 +21,7 @@ import {create2_12Area, create3_6_1Area, create4_9Area, create5_5_1Area, create6
     createT3_1Area, createT4_1Area, createT5_1Area, createT6_14Area, createT6_1Area, createT7_1Area
 } from "@/report/recreation/slidingJj/areas1v";
 import {DevToolsSection, useEntranceSetup} from "@/report/hook/useEntranceSetup";
+import {CommonOriginal} from "@/report/common/original";
 
 //原始记录使用的：
 export const config设备概况 = [
@@ -376,38 +374,6 @@ const recordPrintList =[
 ];
 if(process.env.NEXT_PUBLIC_APP_TEST==='true')  recordPrintList.splice(0,0,createItem('GenCode', <GenCode type='CmnTowerCrane' frameMod={defFrameM} defTitle={defaultTitle}/>));
 
-export const OriginalView=({action, verId, rep}:OriginalViewProps)=>{
-    const {storage,} =useStorage();
-    const recordPrintListNow =React.useMemo(() => {
-      let routeAreas=[] as any[];
-      const impressionismAs =setupItemAreaRoute({rep, orc:storage});
-      let extendTags =Reflect.ownKeys(impressionismAs) as string[];
-      const oldItCount=recordPrintList.length;
-      let prevpos=0;
-      for(let p=0; p<oldItCount; p++){
-          //机电常用的会遇到：规定好的标签记号： 关键的标签匹配 extendTags：[ 'Item', ]
-        if(extendTags.indexOf(recordPrintList[p].itemArea)>=0){
-            routeAreas=routeAreas.concat(recordPrintList.slice(prevpos,p));
-            const itemConfigs= impressionismAs?.[recordPrintList[p].itemArea];
-            let seq = 0;
-            let moreItems = [] as any;
-            itemConfigs.forEach((area, x) => {
-              seq += 1;
-              const rowHead =<ActionMapItem key={seq} repId={rep?.id} alone={false} editAreasConf={itemConfigs}
-                                                    index={x} sureD editIts={config记录} />;
-              moreItems.push(createItem(area.tag, rowHead));
-            });
-            //机电impressionismAs项目列表形式的，需要展开 扩充的标签 createItem('Item', null),
-            routeAreas=routeAreas.concat(moreItems);
-            prevpos=p+1;
-        }
-      }
-      routeAreas=routeAreas.concat(recordPrintList.slice(prevpos));
-      return routeAreas;
-    }, [verId, rep, storage?._Oitems]);
-
-    const {list}=useRecordList(rep,recordPrintListNow,action,verId);
-    return <React.Fragment>
-            {list}
-    </React.Fragment>;
+export const OriginalView=({action,verId,rep}:OriginalViewProps)=>{
+    return <CommonOriginal action={action} rep={rep} config={config记录} areaFn={setupItemAreaRoute} rlist={recordPrintList} verId={verId}/>
 }
