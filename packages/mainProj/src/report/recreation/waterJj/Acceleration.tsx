@@ -321,16 +321,16 @@ export const Acceleration = ({ children, show, label, rep,stnum=3 }: Props) => {
                             control={form.control}
                             name={"加速结论"}
                             render={({ field }) => (
-                                <FormItem className="pt-2 w-full break-inside-avoid">
-                                     <FormLabel className="select-text">结果判定</FormLabel>
-                                    <FormControl>
-                                        <ClearableSelect
-                                            field={field}
-                                            options={clcOptions}
-                                            onClear={() => {form.setValue("加速结论", "")}}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
+                                <FormItem className="pt-2 w-full break-inside-avoid flex flex-col">
+                                        <FormLabel className="select-text">结果判定</FormLabel>
+                                        <FormControl>
+                                            <ClearableSelect
+                                                field={field}
+                                                options={clcOptions}
+                                                onClear={() => {form.setValue("加速结论", "")}}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
                                 </FormItem>
                             )}
                         />

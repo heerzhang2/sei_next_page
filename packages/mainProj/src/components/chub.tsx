@@ -688,7 +688,6 @@ export function ClearableSelect({
                     ))}
                 </SelectContent>
             </Select>
-
             {/* 清除按钮 - 仅在有值时显示 */}
             {hasValue && (
                 <button
