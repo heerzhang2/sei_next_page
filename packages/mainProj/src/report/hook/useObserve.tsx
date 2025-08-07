@@ -178,7 +178,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                         const labelCheck=check??bigLabel;
                         if(resultName===undefined)    throw new Error("没提供测seqLineName");
                         let resulTag=sync??(resultName + 'r');
-                        let lcNode=<div className="grid grid-cols-[repeat(auto-fit,minmax(18rem,50%))]">
+                        let lcNode=<div className="grid grid-cols-[repeat(auto-fit,minmax(18rem,50%))] mt-4">
                                     <FormField key={i} control={form.control} name={resulTag}
                                         render={({ field }) => (
                                             <FormSelectField label={labelCheck+`-结果判定:`}

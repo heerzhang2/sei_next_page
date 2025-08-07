@@ -32,9 +32,9 @@ export const genCBoAvAl = (nmar: string[], resvDg: number, unit: string, title?:
                         />
                         <FormField control={form.control} name={nmar[0] + 'a'}
                                    render={({field}) => (
-                                       <FormItem>
+                                       <FormItem className="gap-1 pt-1 break-inside-avoid">
                                            <FormLabel className="select-text">设计值</FormLabel>
-                                           <FormControl>
+                                           <FormControl className="text-center">
                                                <Input  {...field}/>
                                            </FormControl>
                                            <FormMessage/>

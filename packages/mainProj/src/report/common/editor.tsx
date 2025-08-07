@@ -677,7 +677,7 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
                             </TableBody>
                         </Table>
                     </div>
-                    <div className="w-full flex justify-center mb-1 items-center gap-1">
+                    <div className="w-full flex justify-center mb-1 items-center gap-1 mt-2">
                         <h4>选择编辑行</h4>
                         <CommonSelect id={"selectedIndex"} value={selectedIndex?.toString()} options={seqOptions}
                                       onValueChange={(v) => {
@@ -693,7 +693,7 @@ export const SiteConditionSund = ({children, show, alone = true, config, label, 
                             <CardHeader>
                                 <CardTitle>{selectedIndex === null ? '新增' : '修改'}一条</CardTitle>
                             </CardHeader>
-                            <CardContent className="p-0 space-y-1">
+                            <CardContent className="p-0 space-y-1 px-1">
                                 {/* 新增选择器和编辑区 */}
                                 <div className="mt-4 space-y-4">
                                     {selectedIndex !== null && (

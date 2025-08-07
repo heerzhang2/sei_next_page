@@ -720,7 +720,7 @@ export function FormSelectField({ field, label, options, className, selectClass,
     const id = useId() + "-" + field.name // 使用 field.name 生成唯一ID
     return (
         <FormItem className={`w-full break-inside-avoid flex flex-col justify-center gap-1 ${className || ""}`}>
-            <FormLabel htmlFor={id} className="select-text">
+            <FormLabel htmlFor={id} className="select-text leading-5">
                 {label}
             </FormLabel>
             <FormControl>
