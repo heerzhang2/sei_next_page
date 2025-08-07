@@ -13,7 +13,13 @@ const nextConfig: NextConfig = {
     images: {
         unoptimized: true,
     },
-    // 添加缓存控制配置
+
+    // PWA 相关配置
+    experimental: {
+        webpackBuildWorker: true,
+    },
+
+    // 添加缓存控制配置 + PWA 头部配置
     headers: async () => {
         return [
             {
@@ -52,8 +58,48 @@ const nextConfig: NextConfig = {
                     },
                 ],
             },
+            // PWA Service Worker 配置
+            {
+                source: '/sw.js',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=0, must-revalidate',
+                    },
+                    {
+                        key: 'Service-Worker-Allowed',
+                        value: '/',
+                    },
+                ],
+            },
+            // PWA Manifest 配置
+            {
+                source: '/manifest.json',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable',
+                    },
+                ],
+            },
         ]
     },
+
+    // PWA 重写规则
+    async rewrites() {
+        return [
+            {
+                source: '/sw.js',
+                destination: '/sw.js',
+            },
+            // 健康检查端点
+            {
+                source: '/health',
+                destination: '/api/health'
+            }
+        ]
+    },
+
     webpack: (config, { isServer }) => {
         // 排除所有 .node 二进制文件
         config.module.rules.push({

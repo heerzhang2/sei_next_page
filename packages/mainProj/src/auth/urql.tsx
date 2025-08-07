@@ -7,19 +7,21 @@ import { authExchange } from '@urql/exchange-auth';
 import { auth } from '@/app/auth';
 import schema from './urql-schema.json';
 
-
 const epoint = process.env.NEXT_PUBLIC_BACK_END;
 const url=`${epoint}/graphql`;
 const ssr = ssrExchange({
   isClient: typeof window !== 'undefined',
 });
+
 let storage;
 if (typeof window !== 'undefined') {
+  // 客户端使用 IndexedDB 存储，与 PWA 协调
   storage = makeDefaultStorage({
-    idbName: 'graphcache-v3', // The name of the IndexedDB database
+    idbName: 'graphcache-v3', // 与 PWA 使用不同的数据库名避免冲突
     maxAge: 7, // The maximum age of the persisted data in days
   });
-} else {          //[避免报错] 在SSR服务器端， 用 空存储或内存存储
+} else {
+  // [避免报错] 在SSR服务器端， 用 空存储或内存存储
   const some: SerializedEntries={};
   storage = {
     writeData: (data:any) => Promise.resolve(),
@@ -28,12 +30,39 @@ if (typeof window !== 'undefined') {
     readMetadata: () => Promise.resolve(null),
   };
 }
+
 const cache = offlineExchange({
   schema,
   storage,
-  updates: {},
-  optimistic: {},
+  // 与 Service Worker 协调的错误处理
+  resolverExchange: false, // 让网络错误能够传播到 Service Worker
+  updates: {
+    Mutation: {
+      // 处理变更操作的缓存更新
+      modifyOriginalRecordData: (result, args, cache, info) => {
+        console.log('URQL 缓存更新:', result, args);
+        // 通知 Service Worker 有数据更新
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'DATA_UPDATED',
+            data: { result, args }
+          });
+        }
+      },
+    },
+  },
+  optimistic: {
+    modifyOriginalRecordData(args, cache, info) {
+      // 乐观更新
+      return {
+        __typename: "Report",
+        id: args.id,
+        data: args.data,
+      }
+    },
+  },
 });
+
 /*全局使用的：SSR服务端可用的。不需要"use client"客户端的use context就能使用的模式的=不需要在UrqlProvider组件包裹之下的就能使用。
 没有考虑到hydrating的。
 In a server component we registerUrql  import from @urql/next/rsc
@@ -44,7 +73,12 @@ export function urqlClient(accessToken:string|null) {
   const makeClient = () => {
     return createClient({
       url,
-      exchanges: [cache, ssr, fetchExchange],
+      exchanges: [
+        cache,
+        ssr,
+        // 添加错误处理，与 Service Worker 协调
+        fetchExchange
+      ],
       suspense: true,
       fetchOptions: () => {
         return {
@@ -57,7 +91,6 @@ export function urqlClient(accessToken:string|null) {
   const clientSetup = registerUrql(makeClient);
   return clientSetup.getClient();
 }
-
 
 /*
 在urql中，通常需要将fragments和查询定义在一起，因为GraphQL服务器需要知道fragments的上下文

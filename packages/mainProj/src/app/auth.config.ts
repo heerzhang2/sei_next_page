@@ -13,53 +13,41 @@ export const authConfig = {
   pages: {
     signIn: '/login',
   },
-	// adapter: DrizzleAdapter(db),
-  providers: [
-    // added later in auth.ts since it requires bcrypt which is only compatible with Node.js
-    // while this file is also used in non-Node.js environments
-  ],
+  // adapter: DrizzleAdapter(db),
+  providers: [], // Add providers with an empty array for now
   session: { strategy: "jwt" },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isLoginPage = nextUrl.pathname.startsWith('/login');
       const isRegisterPage = nextUrl.pathname.startsWith('/register');
+      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
 
-			if (!isLoggedIn && !(isLoginPage || isRegisterPage)) {
-				return false;
-			}
+      if (isOnDashboard) {
+        if (isLoggedIn) return true;
+        return false; // Redirect unauthenticated users to login page
+      } else if (isLoggedIn) {
+        return Response.redirect(new URL('/dashboard', nextUrl));
+      }
+
+      if (!isLoggedIn && !(isLoginPage || isRegisterPage)) {
+        return false;
+      }
       return true;
     },
-	async session(params) {
-      const { session, token }=params as any;
-       // console.log("提供者session的回调:", params);
-			session.user.image = token.picture
-			session.user.id = token.sub ?? ''
-            // session.user.accessToken = token
-      if (token && token.accessToken) {
-        session.user.accessToken = token.accessToken; // 将 accessToken 添加到 session 的 user 对象中
+    jwt({ token, user }) {
+      if (user) {
+        // 将 accessToken 和 refreshToken 保存到 JWT token 中
+        token.accessToken = (user as any).accessToken;
+        token.refreshToken = (user as any).refreshToken;
       }
-      // 返回修改后的 session 对象
-      return session;
+      return token;
     },
-    async jwt(params) {
-      const { token, trigger, session, account, user } =params as any;
-        // console.log("提供者jwt的回调:",params);
-        if(trigger === "update")
-          token.name = session.user.name
-        if(trigger=== 'signIn'){
-          let expNumber=Number(Date.now()) + Token_expiresInSec;
-          // session.accessToken=  user?.accessToken;
-          return { ...token,
-            accessToken: user?.accessToken,
-            refreshToken: user?.refreshToken,
-            accessTokenExpires: expNumber,
-          }
-        }
-      if(token.accessToken && Date.now() < (token.accessTokenExpires as number)) {
-        return token
-      }
-      return await refreshAccessToken(token);
+    session({ session, token }) {
+      // 将 accessToken 传递到 session 中
+      (session as any).accessToken = token.accessToken;
+      (session as any).refreshToken = token.refreshToken;
+      return session;
     },
   },
 } satisfies NextAuthConfig;
@@ -77,12 +65,12 @@ async function refreshAccessToken(token: JWT) {
   try {
     let loginresp =null;
     try {
-        //loginresp = await doRefreshToken({refreshToken:token.refreshToken, userId:token?.id});
-        loginresp = await urqlClient(null).mutation(refreshToken_MUTATION, {
-              refreshToken: token.refreshToken,
-              userId: token?.sub    //==session.user?.id
-            });
-        // loginresp =await refreshToken(token.user?.refreshToken, token?.user?.id);
+      //loginresp = await doRefreshToken({refreshToken:token.refreshToken, userId:token?.id});
+      loginresp = await urqlClient(null).mutation(refreshToken_MUTATION, {
+        refreshToken: token.refreshToken,
+        userId: token?.sub    //==session.user?.id
+      });
+      // loginresp =await refreshToken(token.user?.refreshToken, token?.user?.id);
       if (!loginresp) {
         console.log("refreshAccessToken: 前面loginresp的=", loginresp);  //没连上？重新登录
         throw loginresp
@@ -127,13 +115,13 @@ export const getUserinfoQuery = gql`
  * @param userId 不一定就是调用者自己的id
  * */
 export async function getUserInfo(userId: string,accessToken?:string) {
-    const result = await urqlClient(accessToken || null).query(getUserinfoQuery, {
-          id: userId
-        }).toPromise();
-    if (result.error) {
-      throw result.error;
-    }
-    return result.data.getUser;
+  const result = await urqlClient(accessToken || null).query(getUserinfoQuery, {
+    id: userId
+  }).toPromise();
+  if (result.error) {
+    throw result.error;
+  }
+  return result.data.getUser;
 }
 
 
@@ -143,11 +131,13 @@ export async function getUserInfo(userId: string,accessToken?:string) {
 declare module "next-auth" {
   interface Session {
     accessToken?: string
+    refreshToken?: string
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string
+    refreshToken?: string
   }
 }

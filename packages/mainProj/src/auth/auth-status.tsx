@@ -1,32 +1,45 @@
 "use client"
 
-import { useSession } from "next-auth/react"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useSession } from 'next-auth/react'
+import { Loader2, User, LogOut } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { signOut } from 'next-auth/react'
 
-export default function AuthStatus() {
-    const { data: session } = useSession()
-    const router = useRouter()
-    console.log("AuthStatus: session=", session);
-    //interface DefaultSession {
-    //   user?: User
-    //   expires: ISODateString
-    // }        没有error字段？
-    useEffect(() => {
-        if(!session || (session as any)?.error === "RefreshAccessTokenError") {
-           //SSR服务端报错之后，需要最终在客户端 重新登录
-            router.push("/api/auth/signout")
-        }
-    }, [session, router])
+export function AuthStatus() {
+    const { data: session, status } = useSession()
 
-    if (!session) {
-        return <div>@-#     Not signed in  -未登录？</div>
+    if (status === 'loading') {
+        return (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>加载中...</span>
+            </div>
+        )
+    }
+
+    if (status === 'authenticated' && session?.user) {
+        return (
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4" />
+                    <span>{session.user.name || session.user.email}</span>
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => signOut()}
+                    className="flex items-center gap-2"
+                >
+                    <LogOut className="w-4 h-4" />
+                    退出
+                </Button>
+            </div>
+        )
     }
 
     return (
-        <div>
-            @-#  Signed in as {session.user?.email}
-            Access Token: {session.accessToken?.slice(0, 20)}..AuthStatus不能随便加，必须登录用户产能访问
+        <div className="text-sm text-gray-600">
+            未登录
         </div>
     )
 }
