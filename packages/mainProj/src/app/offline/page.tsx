@@ -97,6 +97,14 @@ export default function OfflinePage() {
                             <li>• 返回上一页或导航到编辑页可继续工作</li>
                         </ul>
                     </div>
+
+                    {isOnline && (
+                        <main className="min-h-[60vh] flex flex-col items-center justify-center gap-3 p-6 text-center">
+                            <h1 className="text-xl font-semibold">{'离线模式'}</h1>
+                            <p className="text-muted-foreground">{'您的设备当前未连接网络。您仍可继续浏览缓存内容与编辑，网络恢复后将自动同步。'}</p>
+                            <a href="/" className="text-primary underline">{'返回首页'}</a>
+                        </main>
+                    )}
                 </CardContent>
             </Card>
         </div>

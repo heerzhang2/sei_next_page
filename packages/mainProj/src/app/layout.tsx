@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { SessionProvider } from 'next-auth/react';
 import {auth} from "@/app/auth";
-// import {connection} from "next/server";
-import { Provider, atom, useAtom } from "jotai";
+import { Provider, } from "jotai";
 import {GraphQLProvider} from "@/auth/graphql-component";
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from "sonner"
@@ -11,7 +10,6 @@ import {PrintSettingsProvider} from "@/contexts/print-settings-context";
 import type React from "react"
 import { notoSans, notoSerif } from '@/styles/fonts';
 import "./globals.css"
-import {SiteMainbar} from "@/components/site-mainbar";
 import HeaderWrapper from "@/component/header-wrapper"
 import { PWAInstaller } from '@/components/pwa-installer'
 import { ServiceWorkerUpdater } from '@/components/service-worker-updater'

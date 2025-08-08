@@ -1,21 +1,24 @@
 /*
-  自定义 Service Worker
-  - 静态资源：cache-first
-  - 导航：network-first + 离线回退
-  - GraphQL：network-first，失败时返回 { extensions.offline: true }，交由 URQL graphcache 兜底
-  - 安装时预缓存 rep 入口（动态 ID 无法预缓存）
+  Custom Service Worker for PWA shell + GraphQL coordination
+  - Static assets: cache-first
+  - Navigation: network-first + offline fallback
+  - GraphQL: network-first; on failure return { extensions.offline: true } for urql graphcache
+  - Install-time precache of rep entry routes
 */
-const STATIC_CACHE = "report-static-v2"
-const DYNAMIC_CACHE = "report-dynamic-v2"
+const STATIC_CACHE = "report-static-v3"
+const DYNAMIC_CACHE = "report-dynamic-v3"
 
-const STATIC_ASSETS = ["/", "/offline", "/manifest.json", "/icon-192x192.png", "/icon-512x512.png"]
-
-// 安装时对 rep 目录的入口做预缓存（可按需扩展/修改）
-const PRECACHE_REP_URLS = [
-    "/rep", // 入口或列表页（如存在）
-    // 你可以将常用的子路由加入预缓存，例如：
-    // "/rep/guide", "/rep/intro"
+const STATIC_ASSETS = [
+    "/",
+    "/offline",
+    "/manifest.json",
+    "/icon-192x192.png",
+    "/icon-512x512.png",
 ]
+
+// Install-time precache for rep entry.
+// Dynamic IDs can't be enumerated; rely on runtime caching for deep routes.
+const PRECACHE_REP_URLS = ["/rep"]
 
 self.addEventListener("install", (event) => {
     event.waitUntil(
@@ -44,11 +47,8 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
     const req = event.request
     const url = new URL(req.url)
-
-    // 仅处理同源
     if (url.origin !== self.location.origin) return
 
-    // 非 GET 直连网络
     if (req.method !== "GET") {
         event.respondWith(
             fetch(req).catch(
@@ -62,25 +62,21 @@ self.addEventListener("fetch", (event) => {
         return
     }
 
-    // 静态资源 cache-first
     if (isStatic(url)) {
         event.respondWith(cacheFirst(req))
         return
     }
 
-    // GraphQL：network-first，失败时标记 offline
     if (isGraphQL(req)) {
         event.respondWith(networkFirstGraphQL(req))
         return
     }
 
-    // 导航：network-first + offline fallback
     if (isNavigation(req)) {
         event.respondWith(networkFirstPage(req))
         return
     }
 
-    // 其他 GET：SWR
     event.respondWith(staleWhileRevalidate(req))
 })
 
@@ -109,10 +105,7 @@ function isGraphQL(request) {
 }
 
 function isNavigation(request) {
-    return (
-        request.mode === "navigate" ||
-        (request.method === "GET" && (request.headers.get("accept") || "").includes("text/html"))
-    )
+    return request.mode === "navigate" || (request.method === "GET" && (request.headers.get("accept") || "").includes("text/html"))
 }
 
 async function cacheFirst(request) {

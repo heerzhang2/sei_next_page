@@ -499,3 +499,69 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subrid=KQcbgDF9RO21DgA92H3tQlJlcG9ydA
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 
+我问的是既然Java后端明确指出token过期： catch (ExpiredJwtException | IllegalArgumentException | UnsupportedJwtException e) {
+    log.info("过期token");
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.getWriter().write("Token has expired. Please log in again.");
+    return;
+}      可是我的nextjs服务端和浏览器端都没有进行重定向/login页面，refresh_token access_token我都有提供能，哪一个步骤没验证到位，nextsjs服务器console都是打印：网络连接错误: [Error [CombinedError]: [Network] Internal Server Error] {
+
+  graphQLErrors: [],
+
+  networkError: [Error: Internal Server Error],
+
+  response: Response {
+
+    status: 500,
+
+    statusText: 'Internal Server Error',
+
+    headers: Headers {
+
+      expires: '0',
+
+      accept: 'application/json, application/*+json, application/yaml',
+
+      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+
+      'x-xss-protection': '0',
+
+      pragma: 'no-cache',
+
+      'x-frame-options': 'DENY',
+
+      date: 'Fri, 08 Aug 2025 07:31:04 GMT',
+
+      connection: 'keep-alive',
+
+      vary: 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers',
+
+      'access-control-allow-credentials': 'true',
+
+      'x-content-type-options': 'nosniff',
+
+      'content-type': 'application/graphql-response+json; charset=ISO-8859-1',
+
+      'content-length': '0'
+
+    },
+
+    body: undefined,
+
+    bodyUsed: true,
+
+    ok: false,
+
+    redirected: false,
+
+    type: 'basic',
+
+    url: 'http://192.168.171.3:8673/graphql'
+
+  },
+
+  isNetworkError: true
+
+}
+
+为什么不能发起refresh token 请求包或者让用户那一侧跳转/login页面？
