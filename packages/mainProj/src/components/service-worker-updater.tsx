@@ -2,80 +2,110 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 export function ServiceWorkerUpdater() {
-    const [needsRefresh, setNeedsRefresh] = useState(false)
+    const [updateAvailable, setUpdateAvailable] = useState(false)
+    const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
     const router = useRouter()
 
     useEffect(() => {
-        if (!("serviceWorker" in navigator)) return
+        if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+            // 注册 Service Worker
+            navigator.serviceWorker
+                .register("/sw.js")
+                .then((reg) => {
+                    setRegistration(reg)
+                    console.log("Service Worker registered:", reg)
 
-        let registration: ServiceWorkerRegistration | null = null
-
-        const onControllerChange = () => {
-            // A new SW has taken control, reload to get latest assets.
-            if (needsRefresh) {
-                router.refresh()
-                setNeedsRefresh(false)
-            }
-        }
-
-        const register = async () => {
-            try {
-                registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" })
-
-                if (!registration) return
-
-                // Listen for new worker installing
-                registration.addEventListener("updatefound", () => {
-                    const newWorker = registration!.installing
-                    if (!newWorker) return
-                    newWorker.addEventListener("statechange", () => {
-                        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                            setNeedsRefresh(true)
+                    // 检查更新
+                    reg.addEventListener("updatefound", () => {
+                        const newWorker = reg.installing
+                        if (newWorker) {
+                            newWorker.addEventListener("statechange", () => {
+                                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                                    setUpdateAvailable(true)
+                                    toast.info("应用有新版本可用", {
+                                        description: "点击刷新按钮更新到最新版本",
+                                        duration: 10000,
+                                    })
+                                }
+                            })
                         }
                     })
                 })
+                .catch((error) => {
+                    console.error("Service Worker registration failed:", error)
+                })
 
-                navigator.serviceWorker.addEventListener("controllerchange", onControllerChange)
-            } catch (e) {
-                console.warn("ServiceWorker register failed:", e)
+            // 监听离线事件
+            const handleOffline = (event: CustomEvent) => {
+                toast.warning("网络连接失败", {
+                    description: "正在使用离线模式，数据将在网络恢复后同步",
+                    duration: 5000,
+                })
+            }
+
+            // 监听未授权事件
+            const handleUnauthorized = () => {
+                toast.error("登录已过期", {
+                    description: "正在跳转到登录页面...",
+                    duration: 3000,
+                })
+                setTimeout(() => {
+                    router.push("/login")
+                }, 1000)
+            }
+
+            // 监听网络恢复事件
+            const handleOnline = () => {
+                toast.success("网络已恢复", {
+                    description: "离线数据正在同步...",
+                    duration: 3000,
+                })
+            }
+
+            window.addEventListener("urql:offline", handleOffline as EventListener)
+            window.addEventListener("urql:unauthorized", handleUnauthorized)
+            window.addEventListener("online", handleOnline)
+
+            return () => {
+                window.removeEventListener("urql:offline", handleOffline as EventListener)
+                window.removeEventListener("urql:unauthorized", handleUnauthorized)
+                window.removeEventListener("online", handleOnline)
             }
         }
+    }, [router])
 
-        register()
-
-        return () => {
-            navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange)
+    const handleUpdate = () => {
+        if (registration?.waiting) {
+            registration.waiting.postMessage({ type: "SKIP_WAITING" })
+            registration.waiting.addEventListener("statechange", (e) => {
+                const target = e.target as ServiceWorker
+                if (target.state === "activated") {
+                    window.location.reload()
+                }
+            })
         }
-    }, [needsRefresh, router])
+    }
 
-    // Global URQL auth/offline event listeners
-    useEffect(() => {
-        const onUnauthorized = () => {
-            // Redirect to login on a separate microtask to avoid interfering with React transitions
-            setTimeout(() => {
-                window.location.href = "/login"
-            }, 0)
-        }
-        const onOffline = () => {
-            // no-op, you can integrate a toast here if desired
-        }
-
-        window.addEventListener("urql:unauthorized" as any, onUnauthorized)
-        window.addEventListener("urql:offline" as any, onOffline)
-
-        return () => {
-            window.removeEventListener("urql:unauthorized" as any, onUnauthorized)
-            window.removeEventListener("urql:offline" as any, onOffline)
-        }
-    }, [])
-
-    if (!needsRefresh) return null
+    if (!updateAvailable) return null
 
     return (
-        <div className="fixed bottom-4 right-4 z-50 rounded bg-amber-500 text-white px-3 py-2 shadow">
-            有新版本可用。正在为你刷新…
+        <div className="fixed bottom-4 right-4 z-50">
+            <div className="bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-sm">
+                <h3 className="font-semibold mb-2">应用更新可用</h3>
+                <p className="text-sm mb-3">发现新版本，点击更新获得最新功能</p>
+                <div className="flex gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => setUpdateAvailable(false)}>
+                        稍后
+                    </Button>
+                    <Button size="sm" onClick={handleUpdate}>
+                        立即更新
+                    </Button>
+                </div>
+            </div>
         </div>
     )
 }

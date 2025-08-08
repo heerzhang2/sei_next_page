@@ -1,7 +1,8 @@
 import { NextAuthConfig } from "next-auth"
 import "next-auth/jwt"
 import { JWT } from "@auth/core/jwt"
-import { urqlClient } from "@/auth/urql"
+import { createClient } from "@urql/core"
+import { fetchExchange } from "urql"
 import { gql } from "@urql/core"
 
 // 令牌有效期（秒）=> 毫秒
@@ -22,7 +23,7 @@ export const authConfig = {
             return true
         },
 
-        // 每次生成/读取 JWT 时调用，在这里做“过期检查与刷新”
+        // 每次生成/读取 JWT 时调用，在这里做"过期检查与刷新"
         async jwt({ token, user, trigger, session }) {
             // 初次登录：将后端返回的 tokens 放入 JWT
             if (user) {
@@ -54,6 +55,7 @@ export const authConfig = {
         async session({ session, token }) {
             ;(session as any).accessToken = token.accessToken
             ;(session as any).refreshToken = token.refreshToken
+            ;(session as any).error = token.error
             return session
         },
     },
@@ -76,7 +78,20 @@ async function refreshAccessToken(token: JWT) {
     try {
         if (!token.refreshToken) throw new Error("No refresh token")
 
-        const client = urqlClient(null) // 服务端用，无需客户端 headers 透传
+        const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
+        const url = `${endpoint}/graphql`
+
+        // 直接创建服务端 URQL 客户端，不依赖外部函数
+        const client = createClient({
+            url,
+            exchanges: [fetchExchange],
+            fetchOptions: {
+                headers: {
+                    // 刷新时不需要 Authorization header，使用 refreshToken
+                },
+            },
+        })
+
         const resp = await client
             .mutation(REFRESH_MUTATION, {
                 refreshToken: token.refreshToken,
@@ -88,6 +103,7 @@ async function refreshAccessToken(token: JWT) {
         const payload = (resp.data as any)?.refreshToken
         if (!payload?.accessToken) throw new Error("No access token returned")
 
+        console.log("Token refreshed successfully")
         return {
             ...token,
             accessToken: payload.accessToken,
@@ -107,6 +123,7 @@ declare module "next-auth" {
     interface Session {
         accessToken?: string
         refreshToken?: string
+        error?: string
     }
 }
 declare module "next-auth/jwt" {

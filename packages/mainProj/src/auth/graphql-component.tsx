@@ -9,6 +9,9 @@ import { offlineExchange } from "@urql/exchange-graphcache"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import { pipe, tap } from "wonka"
 import { useAccessToken } from "./use-access-token"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 // 可选：如果有 schema.json 可以启用
 // import schema from "./urql-schema.json"
 
@@ -31,8 +34,8 @@ const networkStatusExchange: Exchange = ({ forward }) => (ops$) =>
         })
     )
 
-// 检测“未授权”并在客户端发起刷新
-function makeAuthExchange(getAccessToken: () => string | null) {
+// 检测"未授权"并在客户端发起刷新
+function makeAuthExchange(getAccessToken: () => string | null, onAuthError: () => void) {
     return authExchange(async (utils) => {
         let token = getAccessToken()
 
@@ -52,7 +55,13 @@ function makeAuthExchange(getAccessToken: () => string | null) {
                 // 2) 网络层：HTTP 状态
                 const status = (error as any)?.response?.status
                 const has401 = status === 401 || status === 403
-                return hasUnauthCode || has401
+
+                // 3) 特殊情况：Java 后端返回 500 但实际是 token 过期
+                const is500WithEmptyBody = status === 500 &&
+                    (error as any)?.response?.headers?.get?.('content-length') === '0' &&
+                    (error as any)?.response?.headers?.get?.('content-type')?.includes('application/graphql-response+json')
+
+                return hasUnauthCode || has401 || is500WithEmptyBody
             },
 
             async refreshAuth() {
@@ -66,14 +75,14 @@ function makeAuthExchange(getAccessToken: () => string | null) {
                     const data = await resp.json()
                     if (data?.accessToken) {
                         token = data.accessToken
+                        toast.success("登录状态已刷新")
                         return
                     }
                     throw new Error("No accessToken in response")
                 } catch (e) {
-                    // 刷新失败，通知 UI 跳转登录
-                    if (typeof window !== "undefined") {
-                        window.dispatchEvent(new CustomEvent("urql:unauthorized"))
-                    }
+                    console.error("Token refresh failed:", e)
+                    toast.error("登录已过期，请重新登录")
+                    onAuthError()
                 }
             },
         }
@@ -82,6 +91,22 @@ function makeAuthExchange(getAccessToken: () => string | null) {
 
 export function GraphQLProvider({ children }: { children: React.ReactNode }) {
     const accessToken = useAccessToken()
+    const { data: session } = useSession()
+    const router = useRouter()
+
+    // 处理认证错误
+    const handleAuthError = () => {
+        // 如果 session 中有错误标记，直接跳转
+        if ((session as any)?.error === "RefreshAccessTokenError") {
+            router.push("/login")
+            return
+        }
+
+        // 否则派发事件让 ServiceWorkerUpdater 处理
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("urql:unauthorized"))
+        }
+    }
 
     const [client, ssr] = useMemo(() => {
         const storage =
@@ -97,8 +122,24 @@ export function GraphQLProvider({ children }: { children: React.ReactNode }) {
         const graphcache = offlineExchange({
             // schema,
             storage,
-            optimistic: {},
-            updates: {},
+            optimistic: {
+                modifyOriginalRecordData(args) {
+                    return {
+                        __typename: "Report",
+                        id: (args as any).id,
+                        data: (args as any).data,
+                    }
+                },
+            },
+            updates: {
+                Mutation: {
+                    modifyOriginalRecordData: (_result, _args, _cache) => {
+                        if (typeof window !== "undefined" && navigator.serviceWorker?.controller) {
+                            navigator.serviceWorker.controller.postMessage({ type: "DATA_UPDATED" })
+                        }
+                    },
+                },
+            },
         })
 
         const ssr = ssrExchange({ isClient: typeof window !== "undefined" })
@@ -107,7 +148,13 @@ export function GraphQLProvider({ children }: { children: React.ReactNode }) {
             url,
             suspense: false, // 避免 SSR/CSR hydration 抖动
             requestPolicy: "cache-and-network",
-            exchanges: [graphcache, makeAuthExchange(() => accessToken), networkStatusExchange, ssr, fetchExchange],
+            exchanges: [
+                graphcache,
+                makeAuthExchange(() => accessToken, handleAuthError),
+                networkStatusExchange,
+                ssr,
+                fetchExchange
+            ],
             fetchOptions: () => ({
                 headers: {
                     authorization: accessToken ? `Bearer ${accessToken}` : "",
@@ -115,7 +162,7 @@ export function GraphQLProvider({ children }: { children: React.ReactNode }) {
             }),
         })
         return [client, ssr]
-    }, [accessToken])
+    }, [accessToken, session, router])
 
     return <UrqlProvider client={client} ssr={ssr}>{children}</UrqlProvider>
 }
