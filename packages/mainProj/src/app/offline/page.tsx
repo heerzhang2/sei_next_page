@@ -46,12 +46,12 @@ export default function OfflinePage() {
                         )}
                     </div>
                     <CardTitle className="text-xl">
-                        {isOnline ? '连接已恢复' : '离线模式'}
+                        {isOnline ? '连接已恢复' : '当前处于离线模式'}
                     </CardTitle>
                     <CardDescription>
                         {isOnline
                             ? '网络连接已恢复，您可以继续使用所有功能'
-                            : '当前处于离线状态，但您仍可以继续编辑报告'
+                            : '仍可继续编辑报告；网络恢复后，我们会自动同步到服务器。'
                         }
                     </CardDescription>
                 </CardHeader>
@@ -92,6 +92,9 @@ export default function OfflinePage() {
                             <li>• 继续编辑报告内容</li>
                             <li>• 本地数据自动保存</li>
                             <li>• 网络恢复后自动同步</li>
+                            <li>• 已缓存的页面与静态资源仍可访问</li>
+                            <li>• 编辑表单会本地保存（URQL Graphcache 持久化）</li>
+                            <li>• 返回上一页或导航到编辑页可继续工作</li>
                         </ul>
                     </div>
                 </CardContent>

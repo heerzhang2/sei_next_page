@@ -1,66 +1,83 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { RefreshCw, X } from 'lucide-react'
-import { useServiceWorker } from '@/hooks/use-service-worker'
+import { useEffect, useRef, useState } from "react"
 
 export function ServiceWorkerUpdater() {
-    const { hasUpdate, updateServiceWorker } = useServiceWorker()
-    const [showUpdatePrompt, setShowUpdatePrompt] = useState(false)
+    const [updateReady, setUpdateReady] = useState(false)
+    const waitingSW = useRef<ServiceWorker | null>(null)
 
     useEffect(() => {
-        if (hasUpdate) {
-            setShowUpdatePrompt(true)
+        if (!("serviceWorker" in navigator)) return
+        let mounted = true
+
+        const register = async () => {
+            try {
+                const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" })
+
+                // 已有 waiting 的新 SW
+                if (reg.waiting) {
+                    waitingSW.current = reg.waiting
+                    if (mounted) setUpdateReady(true)
+                }
+
+                // 新版本发现
+                reg.addEventListener("updatefound", () => {
+                    const sw = reg.installing
+                    if (!sw) return
+                    sw.addEventListener("statechange", () => {
+                        if (sw.state === "installed" && navigator.serviceWorker.controller) {
+                            waitingSW.current = reg.waiting
+                            if (mounted) setUpdateReady(true)
+                        }
+                    })
+                })
+
+                // 当 skipWaiting 发生接管后刷新页面
+                navigator.serviceWorker.addEventListener("controllerchange", () => {
+                    window.location.reload()
+                })
+            } catch (err) {
+                // 静默失败
+                console.warn("SW register failed:", err)
+            }
         }
-    }, [hasUpdate])
 
-    const handleUpdate = () => {
-        updateServiceWorker()
-        setShowUpdatePrompt(false)
+        register()
+        return () => {
+            mounted = false
+        }
+    }, [])
+
+    // 监听来自 URQL 的离线事件，显示轻量提示（可按需改为 toast）
+    useEffect(() => {
+        const onOffline = () => {
+            // 这里可以集成你项目里的 toast / 信息条
+            console.info("离线模式下运行：GraphQL 请求由本地缓存提供")
+        }
+        window.addEventListener("urql:offline", onOffline as EventListener)
+        return () => window.removeEventListener("urql:offline", onOffline as EventListener)
+    }, [])
+
+    const applyUpdate = () => {
+        waitingSW.current?.postMessage({ type: "SKIP_WAITING" })
     }
 
-    const handleDismiss = () => {
-        setShowUpdatePrompt(false)
-    }
-
-    if (!showUpdatePrompt) {
-        return null
-    }
+    if (!updateReady) return null
 
     return (
-        <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
-            <Card className="shadow-lg border-2 border-blue-200 bg-blue-50">
-                <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg text-blue-900">应用更新</CardTitle>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleDismiss}
-                            className="h-6 w-6 p-0 text-blue-700 hover:text-blue-900"
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <CardDescription className="text-blue-700">
-                        发现新版本，建议立即更新以获得最佳体验
-                    </CardDescription>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                    <div className="flex space-x-2">
-                        <Button onClick={handleUpdate} className="flex-1">
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            立即更新
-                        </Button>
-                        <Button variant="outline" onClick={handleDismiss}>
-                            稍后
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+        <div
+            role="status"
+            aria-live="polite"
+            className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 rounded-full bg-black text-white px-4 py-2 shadow-lg flex items-center gap-3"
+        >
+            <span>有新的离线更新可用</span>
+            <button
+                onClick={applyUpdate}
+                className="bg-white text-black rounded-full px-3 py-1 text-sm font-medium"
+                aria-label="应用更新并刷新"
+            >
+                立即更新
+            </button>
         </div>
     )
 }

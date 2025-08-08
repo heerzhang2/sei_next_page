@@ -1,98 +1,110 @@
-import { registerUrql } from '@urql/next/rsc';
-import {Client, ssrExchange, cacheExchange, fetchExchange, createClient } from '@urql/next';
-//离线保存支持的：
-import {offlineExchange, SerializedEntries} from '@urql/exchange-graphcache';
-import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
-import { authExchange } from '@urql/exchange-auth';
-import { auth } from '@/app/auth';
-import schema from './urql-schema.json';
+import { registerUrql } from "@urql/next/rsc"
+import { createClient, ssrExchange } from "@urql/next"
+import { offlineExchange } from "@urql/exchange-graphcache"
+import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
+import { retryExchange } from "@urql/exchange-retry"
+import { fetchExchange } from "@urql/core"
+import { pipe, tap } from "wonka"
+import { type Exchange, type CombinedError } from "urql"
+// 注意：你的 introspection schema JSON 应已存在于该路径
+import schema from "./urql-schema.json"
 
-const epoint = process.env.NEXT_PUBLIC_BACK_END;
-const url=`${epoint}/graphql`;
+const endpoint = process.env.NEXT_PUBLIC_BACK_END
+const url = `${endpoint}/graphql`
+
 const ssr = ssrExchange({
-  isClient: typeof window !== 'undefined',
-});
+  isClient: typeof window !== "undefined",
+})
 
-let storage;
-if (typeof window !== 'undefined') {
-  // 客户端使用 IndexedDB 存储，与 PWA 协调
-  storage = makeDefaultStorage({
-    idbName: 'graphcache-v3', // 与 PWA 使用不同的数据库名避免冲突
-    maxAge: 7, // The maximum age of the persisted data in days
-  });
-} else {
-  // [避免报错] 在SSR服务器端， 用 空存储或内存存储
-  const some: SerializedEntries={};
-  storage = {
-    writeData: (data:any) => Promise.resolve(),
-    readData: () => Promise.resolve(some),
-    writeMetadata: (data:any) => Promise.resolve(),
-    readMetadata: () => Promise.resolve(null),
-  };
-}
+// 仅在浏览器使用 IndexedDB 持久化，SSR 用内存空存储
+const storage =
+    typeof window !== "undefined"
+        ? makeDefaultStorage({
+          idbName: "graphcache-v3",
+          maxAge: 7,
+        })
+        : {
+          writeData: async (_d: unknown) => {},
+          readData: async () => ({}),
+          writeMetadata: async (_d: unknown) => {},
+          readMetadata: async () => null,
+        }
 
-const cache = offlineExchange({
+// 自定义错误/离线上报 exchange：配合 ServiceWorker 返回的 extensions.offline
+const networkStatusExchange: Exchange = ({ forward }) => (ops$) =>
+    pipe(
+        forward(ops$),
+        tap((result) => {
+          const err = result.error as CombinedError | undefined
+          if (!err) return
+          const hasOfflineFlag =
+              !!err.networkError ||
+              err.graphQLErrors.some((ge) => (ge.extensions as any)?.offline === true)
+          if (hasOfflineFlag && typeof window !== "undefined") {
+            window.dispatchEvent(
+                new CustomEvent("urql:offline", {
+                  detail: { error: { message: err.message } },
+                })
+            )
+          }
+        })
+    )
+
+// 轻量重试（仅在线时对网络错误进行退避重试）
+const retry = retryExchange({
+  initialDelayMs: 500,
+  maxDelayMs: 10_000,
+  randomDelay: true,
+  maxNumberAttempts: 5,
+  retryIf: (err) => {
+    if (!err) return false
+    const online = typeof navigator !== "undefined" ? navigator.onLine : true
+    const isNetwork = !!err.networkError
+    return online && isNetwork
+  },
+})
+
+const graphcache = offlineExchange({
   schema,
   storage,
-  // 与 Service Worker 协调的错误处理
-  resolverExchange: false, // 让网络错误能够传播到 Service Worker
   updates: {
+    // 根据你的 mutation 名称定制更新
     Mutation: {
-      // 处理变更操作的缓存更新
-      modifyOriginalRecordData: (result, args, cache, info) => {
-        console.log('URQL 缓存更新:', result, args);
-        // 通知 Service Worker 有数据更新
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      modifyOriginalRecordData: (_result, _args, _cache, _info) => {
+        // 可触发 UI 或跨 tab 通知
+        if (typeof window !== "undefined" && navigator.serviceWorker?.controller) {
           navigator.serviceWorker.controller.postMessage({
-            type: 'DATA_UPDATED',
-            data: { result, args }
-          });
+            type: "DATA_UPDATED",
+          })
         }
       },
     },
   },
   optimistic: {
-    modifyOriginalRecordData(args, cache, info) {
-      // 乐观更新
+    modifyOriginalRecordData(args) {
       return {
         __typename: "Report",
-        id: args.id,
-        data: args.data,
+        id: (args as any).id,
+        data: (args as any).data,
       }
     },
   },
-});
+})
 
-/*全局使用的：SSR服务端可用的。不需要"use client"客户端的use context就能使用的模式的=不需要在UrqlProvider组件包裹之下的就能使用。
-没有考虑到hydrating的。
-In a server component we registerUrql  import from @urql/next/rsc
-   只考虑是在服务端SSR场合下的API请求：
-服务端的也用？ const cache = offlineExchange({schema,storage,}) ？不是客户端才有特性吗。
-* */
-export function urqlClient(accessToken:string|null) {
-  const makeClient = () => {
-    return createClient({
-      url,
-      exchanges: [
-        cache,
-        ssr,
-        // 添加错误处理，与 Service Worker 协调
-        fetchExchange
-      ],
-      suspense: true,
-      fetchOptions: () => {
-        return {
-          headers: {authorization: accessToken ? `Bearer ${accessToken}` : ''},
-        };
-      },
-    });
-  };
-  //因为用registerUrql的，所以必须再次运行clientSetup.getClient()获取最终的client;
-  const clientSetup = registerUrql(makeClient);
-  return clientSetup.getClient();
+export function urqlClient(accessToken: string | null) {
+  const makeClient = () =>
+      createClient({
+        url,
+        // 注意顺序：graphcache -> 自定义错误/离线 -> 重试 -> ssr -> fetch
+        exchanges: [graphcache, networkStatusExchange, retry, ssr, fetchExchange],
+        fetchOptions: () => ({
+          headers: {
+            authorization: accessToken ? `Bearer ${accessToken}` : "",
+          },
+        }),
+        suspense: true,
+      })
+
+  const setup = registerUrql(makeClient)
+  return setup.getClient()
 }
-
-/*
-在urql中，通常需要将fragments和查询定义在一起，因为GraphQL服务器需要知道fragments的上下文
-（即它们应用于哪个类型）。因此，在上面的示例中，我们将userFields fragment与查询一起定义在了一个字符串模板中
-* */
