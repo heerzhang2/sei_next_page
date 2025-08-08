@@ -1,5 +1,5 @@
 import { Redis } from "ioredis"
-import {getUserInfo} from "@/app/auth.config";
+import {getUserInfo} from "./user-roles";
 
 class RedisClient {
   private static instance: Redis | null = null

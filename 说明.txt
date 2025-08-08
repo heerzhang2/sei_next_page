@@ -499,69 +499,36 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subrid=KQcbgDF9RO21DgA92H3tQlJlcG9ydA
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 
-我问的是既然Java后端明确指出token过期： catch (ExpiredJwtException | IllegalArgumentException | UnsupportedJwtException e) {
-    log.info("过期token");
-    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-    response.getWriter().write("Token has expired. Please log in again.");
-    return;
-}      可是我的nextjs服务端和浏览器端都没有进行重定向/login页面，refresh_token access_token我都有提供能，哪一个步骤没验证到位，nextsjs服务器console都是打印：网络连接错误: [Error [CombinedError]: [Network] Internal Server Error] {
 
-  graphQLErrors: [],
 
-  networkError: [Error: Internal Server Error],
+运行报错 nextjs服务器上的错： refreshAccessToken error: Error: Attempted to call urqlClient() from the server but urqlClient is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.
 
-  response: Response {
+    at <unknown> (D:\home\sei_next_page\packages\mainProj\.next\server\app\deptask\page.js:226:20)
 
-    status: 500,
+    at refreshAccessToken (src\app\auth.config.ts:79:34)
 
-    statusText: 'Internal Server Error',
+    at Object.jwt (src\app\auth.config.ts:50:25)
 
-    headers: Headers {
+    at async RootLayout (src\app\layout.tsx:39:20)
 
-      expires: '0',
+  77 |         if (!token.refreshToken) throw new Error("No refresh token")
 
-      accept: 'application/json, application/*+json, application/yaml',
+  78 |
 
-      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+> 79 |         const client = urqlClient(null) // 服务端用，无需客户端 headers 透传
 
-      'x-xss-protection': '0',
+     |                                  ^
 
-      pragma: 'no-cache',
+  80 |         const resp = await client
 
-      'x-frame-options': 'DENY',
+  81 |             .mutation(REFRESH_MUTATION, {
 
-      date: 'Fri, 08 Aug 2025 07:31:04 GMT',
+  82 |                 refreshToken: token.refreshToken,
 
-      connection: 'keep-alive',
+{
 
-      vary: 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers',
+  user: { name: 'herzhang' },
 
-      'access-control-allow-credentials': 'true',
+  expires: '2025-09-07T08:59:17.408Z',
 
-      'x-content-type-options': 'nosniff',
-
-      'content-type': 'application/graphql-response+json; charset=ISO-8859-1',
-
-      'content-length': '0'
-
-    },
-
-    body: undefined,
-
-    bodyUsed: true,
-
-    ok: false,
-
-    redirected: false,
-
-    type: 'basic',
-
-    url: 'http://192.168.171.3:8673/graphql'
-
-  },
-
-  isNetworkError: true
-
-}
-
-为什么不能发起refresh token 请求包或者让用户那一侧跳转/login页面？
+  refreshToken:     。 另外，要说的是：我原本代码时SSR也能够使用URQL从Java后端获取报告数据的。 现在看来这个特性也变成无用了， 我需要PWA 离线编辑，但是我还是想保留客户端没有登录情况下允许用户查看报告数据的能力。但是SSR就不一定有，不一定需要nextjs服务端发起urql提取java端的报告数据，只需要浏览器做这个urql就可以忍受。
