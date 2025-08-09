@@ -11,6 +11,8 @@ interface StorageContextType {
     setParrepfs: (data: any) => void
     offline: boolean
     setOffline: (offline: boolean) => void
+    modified: boolean | undefined
+    setModified: (data: boolean | undefined) => void
 }
 
 const StorageContext = createContext<StorageContextType | undefined>(undefined)
@@ -20,6 +22,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [subrType, setSubrType] = useState<string | undefined>(undefined)
     const [parrepfs, setParrepfs] = useState<any>({})
     const [offline, setOfflineState] = useState<boolean>(false)
+    const [modified, setModified] = useState<boolean | undefined>();
 
     const setStorage = useCallback((data: any) => {
         console.log("StorageContext: Setting storage data", data)
@@ -66,6 +69,8 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         setParrepfs,
         offline,
         setOffline,
+        modified,
+        setModified,
     }
 
     return <StorageContext.Provider value={value}>{children}</StorageContext.Provider>
