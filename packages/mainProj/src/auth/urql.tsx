@@ -6,13 +6,12 @@ import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import { retryExchange } from "@urql/exchange-retry"
 import { fetchExchange, type Exchange, type CombinedError } from "urql"
 import { pipe, tap } from "wonka"
-// If you have a schema.json for graphcache normalization, import it here.
-// import schema from "@/auth/urql-schema.json"
+import schema from "@/auth/urql-schema.json"
 
 const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
 const url = `${endpoint}/graphql`
 
-// SSR exchange is safe to enable but we set suspense: false to avoid hydration mismatch [^1]
+// SSR exchange is safe to enable but we set suspense: false to avoid hydration mismatch
 const ssr = ssrExchange({ isClient: typeof window !== "undefined" })
 
 const storage =
@@ -26,32 +25,34 @@ const storage =
         }
 
 // Custom exchange to surface offline and unauthorized events to the UI
-const networkStatusExchange: Exchange = ({ forward }) => (ops$) =>
-    pipe(
-        forward(ops$),
-        tap((result) => {
-            const err = result.error as CombinedError | undefined
-            if (!err) return
+const networkStatusExchange: Exchange =
+    ({ forward }) =>
+        (ops$) =>
+            pipe(
+                forward(ops$),
+                tap((result) => {
+                    const err = result.error as CombinedError | undefined
+                    if (!err) return
 
-            const offlineFlag =
-                !!err.networkError ||
-                err.graphQLErrors.some((ge) => (ge.extensions as any)?.offline === true)
+                    const offlineFlag =
+                        !!err.networkError || err.graphQLErrors.some((ge) => (ge.extensions as any)?.offline === true)
 
-            const status = (err as any)?.response?.status as number | undefined
-            const unauth =
-                status === 401 ||
-                err.graphQLErrors.some((ge) => (ge.extensions as any)?.code === "UNAUTHENTICATED")
+                    const status = (err as any)?.response?.status as number | undefined
+                    const unauth =
+                        status === 401 || err.graphQLErrors.some((ge) => (ge.extensions as any)?.code === "UNAUTHENTICATED")
 
-            if (typeof window !== "undefined") {
-                if (offlineFlag) {
-                    window.dispatchEvent(new CustomEvent("urql:offline", { detail: { error: { message: err.message } } }))
-                }
-                if (unauth) {
-                    window.dispatchEvent(new CustomEvent("urql:unauthorized", { detail: { message: "登录已过期或无效，请重新登录" } }))
-                }
-            }
-        })
-    )
+                    if (typeof window !== "undefined") {
+                        if (offlineFlag) {
+                            window.dispatchEvent(new CustomEvent("urql:offline", { detail: { error: { message: err.message } } }))
+                        }
+                        if (unauth) {
+                            window.dispatchEvent(
+                                new CustomEvent("urql:unauthorized", { detail: { message: "登录已过期或无效，请重新登录" } }),
+                            )
+                        }
+                    }
+                }),
+            )
 
 const retry = retryExchange({
     initialDelayMs: 500,
@@ -69,11 +70,11 @@ const retry = retryExchange({
 })
 
 const graphcache = offlineExchange({
-    // schema, // optionally enable for normalized caching
+    schema,
     storage,
     updates: {
         Mutation: {
-            // Example mutation name; adapt to your schema/mutations
+            // Update for the correct mutation name from schema
             modifyOriginalRecordData: (_result, _args, _cache) => {
                 if (typeof window !== "undefined" && navigator.serviceWorker?.controller) {
                     navigator.serviceWorker.controller.postMessage({ type: "DATA_UPDATED" })
@@ -93,7 +94,7 @@ const graphcache = offlineExchange({
     },
 })
 
-// 用于“服务端”环境（RSC、API 路由、NextAuth 回调等）
+// 用于"服务端"环境（RSC、API 路由、NextAuth 回调等）
 // 仅最小依赖：无 offlineExchange、无 suspense
 export function urqlClient(accessToken: string | null) {
     return createSSRClient({

@@ -4,50 +4,37 @@ import * as React from "react"
 import Link from "next/link"
 import { useActionState, useEffect, useRef, useState } from "react"
 import { signIn } from "next-auth/react"
-import {redirect, useRouter} from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-//密码hash 防止在服务后台泄密
-// var sha256 = require('hash.js/lib/hash/sha/256');
 
 export default function SignInForm() {
     const router = useRouter()
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
     const [username, setUsername] = useState("")
-    //http://192.168.0.100:3765/api/auth/callback/credentials?   表单数据
-    // username: undefined
-    // email: herzhang@163.com
-    // password:
-    // csrfToken: e2...a
-    // callbackUrl: http://192.168.0.100:3765/login?error=CredentialsSignin&code=credentials
+    const [password, setPassword] = useState("")
+
     const signInAction = async (_prevState: string | undefined, formData: FormData) => {
-        // 正确的方式：使用 FormData.get() 方法获取表单数据
         const username = formData.get("username") as string
-        const email = formData.get("email") as string
         const password = formData.get("password") as string
 
-        console.log("signInAction录入formData:", { username, email, password })
+        console.log("signInAction 录入formData:", { username, password: "***" })
 
         try {
             const result = await signIn("credentials", {
                 username: username,
-                email: email || "herzhang@163.com", // 使用实际的 email 或默认值
-                password: password,
-                redirect: true,     // 设置为 false 以便处理错误
-                redirectTo: "/"
+                password: password, // Send plain password, hashing will be done server-side
+                redirect: false,
             })
 
-            console.log("signIn完成", result)
+            console.log("signIn 完成", result)
 
             if (result?.error) {
                 return `登录失败: ${result.error}`
             } else {
                 // 登录成功，重定向到用户页面
-                router.push("/user")
-                redirect("/user")
+                router.push("/")
                 return "登录成功"
             }
         } catch (error) {
@@ -68,7 +55,7 @@ export default function SignInForm() {
 
     // 当 response 有错误信息时显示
     useEffect(() => {
-        if (response && response !== "登录成功" && response !== "signOK") {
+        if (response && response !== "登录成功") {
             setError(response)
         } else {
             setError("")
@@ -89,7 +76,7 @@ export default function SignInForm() {
                             <Label htmlFor="username">账户</Label>
                             <Input
                                 id="username"
-                                name="username" // 重要：添加 name 属性
+                                name="username"
                                 ref={usernameRef}
                                 required
                                 onChange={(e) => setUsername(e.currentTarget.value)}
@@ -99,23 +86,11 @@ export default function SignInForm() {
                                 className="mt-1"
                             />
                         </div>
-{/*                        <div className="mb-4">
-                            <Label htmlFor="email">邮箱</Label>
-                            <Input
-                                id="email"
-                                name="email"
-                                onChange={(e) => setEmail(e.currentTarget.value)}
-                                value={email}
-                                type="email"
-                                placeholder="邮箱地址"
-                                className="mt-1"
-                            />
-                        </div>*/}
                         <div className="mt-4">
                             <Label htmlFor="password">密码</Label>
                             <Input
                                 id="password"
-                                name="password" // 重要：添加 name 属性
+                                name="password"
                                 required
                                 onChange={(e) => setPassword(e.currentTarget.value)}
                                 value={password}
