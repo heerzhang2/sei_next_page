@@ -1,8 +1,9 @@
-import type { ReactNode } from "react"
+import React from "react"
 import ReportData from "@/component/rep/report-data"
 import { StorageProvider } from "@/report/StorageContext"
 import { ModificationIndicator } from "@/report/hook/useFormFramework"
 import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
+import {ServiceWorkerUpdater} from "@/components/service-worker-updater";
 
 /*报告和编制都用到的部分：能支持不要用登录看报告。
 只提供静态化（保障SessionProvider不提供客户端user也能Build的情形），不考虑鉴别用户context认证才能使用的。
@@ -14,7 +15,7 @@ export default async function ReportRootLayout({
                                                    children,
                                                }: {
     params: Promise<{ repId: string }>
-    children: ReactNode
+    children: React.ReactNode
 }) {
     const { repId } = await params
     //假如把SiteMainbar<ReportMainbar repId={repId} />放这,会出现告警Skipping auto-scroll behavior due to `position: sticky` or `position: fixed` on element;
@@ -26,6 +27,8 @@ export default async function ReportRootLayout({
                     <div>{children}</div>
                 </ReportData>
                 <ModificationIndicator />
+
+                <ServiceWorkerUpdater />
             </StorageProvider>
         </ErrorBoundaryWrapper>
     )

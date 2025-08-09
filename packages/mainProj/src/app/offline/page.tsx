@@ -1,38 +1,56 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { WifiOff, RefreshCw, CheckCircle } from 'lucide-react'
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { WifiOff, RefreshCw, CheckCircle } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { useStorage } from "@/report/StorageContext"
+import { useOfflineStorage } from "@/hooks/use-offline-storage"
 
 export default function OfflinePage() {
     const [isOnline, setIsOnline] = useState(false)
     const [retryCount, setRetryCount] = useState(0)
+    const { data: session, status } = useSession()
+    const { offline: isAppOffline } = useStorage() // Get offline status from StorageContext
+    const { data: offlineUserData, setData: setOfflineUserData } = useOfflineStorage({ key: "offline_user_data" })
 
     useEffect(() => {
         const updateOnlineStatus = () => {
             setIsOnline(navigator.onLine)
         }
 
-        window.addEventListener('online', updateOnlineStatus)
-        window.addEventListener('offline', updateOnlineStatus)
+        window.addEventListener("online", updateOnlineStatus)
+        window.addEventListener("offline", updateOnlineStatus)
         updateOnlineStatus()
 
-        return () => {
-            window.removeEventListener('online', updateOnlineStatus)
-            window.removeEventListener('offline', updateOnlineStatus)
+        // Store basic user data when online and session is available
+        if (navigator.onLine && status === "authenticated" && session?.user) {
+            setOfflineUserData({
+                name: session.user.name,
+                email: session.user.email,
+                username: session.user.username,
+                id: session.user.id,
+            })
         }
-    }, [])
+
+        return () => {
+            window.removeEventListener("online", updateOnlineStatus)
+            window.removeEventListener("offline", updateOnlineStatus)
+        }
+    }, [status, session, setOfflineUserData])
 
     const handleRetry = () => {
-        setRetryCount(prev => prev + 1)
+        setRetryCount((prev) => prev + 1)
         window.location.reload()
     }
 
     const handleGoHome = () => {
-        window.location.href = '/'
+        window.location.href = "/"
     }
+
+    const displayUserName = offlineUserData?.name || offlineUserData?.username || "用户"
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -45,14 +63,11 @@ export default function OfflinePage() {
                             <WifiOff className="w-8 h-8 text-gray-500" />
                         )}
                     </div>
-                    <CardTitle className="text-xl">
-                        {isOnline ? '连接已恢复' : '当前处于离线模式'}
-                    </CardTitle>
+                    <CardTitle className="text-xl">{isOnline ? "连接已恢复" : "当前处于离线模式"}</CardTitle>
                     <CardDescription>
                         {isOnline
-                            ? '网络连接已恢复，您可以继续使用所有功能'
-                            : '仍可继续编辑报告；网络恢复后，我们会自动同步到服务器。'
-                        }
+                            ? "网络连接已恢复，您可以继续使用所有功能"
+                            : `欢迎回来，${displayUserName}！仍可继续编辑报告；网络恢复后，我们会自动同步到服务器。`}
                     </CardDescription>
                 </CardHeader>
 
@@ -62,25 +77,19 @@ export default function OfflinePage() {
                             <WifiOff className="h-4 w-4" />
                             <AlertDescription>
                                 您的编辑内容会自动保存到本地，网络恢复后将自动同步到服务器。
+                                {status === "unauthenticated" && isAppOffline && (
+                                    <p className="mt-2 text-sm text-red-600">无法连接到认证服务器。您可能无法访问需要实时认证的功能。</p>
+                                )}
                             </AlertDescription>
                         </Alert>
                     )}
 
                     <div className="space-y-2">
-                        <Button
-                            onClick={handleGoHome}
-                            className="w-full"
-                            variant={isOnline ? "default" : "outline"}
-                        >
-                            {isOnline ? '返回应用' : '继续离线编辑'}
+                        <Button onClick={handleGoHome} className="w-full" variant={isOnline ? "default" : "outline"}>
+                            {isOnline ? "返回应用" : "继续离线编辑"}
                         </Button>
 
-                        <Button
-                            onClick={handleRetry}
-                            variant="outline"
-                            className="w-full"
-                            disabled={isOnline}
-                        >
+                        <Button onClick={handleRetry} variant="outline" className="w-full bg-transparent" disabled={isOnline}>
                             <RefreshCw className="w-4 h-4 mr-2" />
                             重试连接 {retryCount > 0 && `(${retryCount})`}
                         </Button>
@@ -100,9 +109,13 @@ export default function OfflinePage() {
 
                     {isOnline && (
                         <main className="min-h-[60vh] flex flex-col items-center justify-center gap-3 p-6 text-center">
-                            <h1 className="text-xl font-semibold">{'离线模式'}</h1>
-                            <p className="text-muted-foreground">{'您的设备当前未连接网络。您仍可继续浏览缓存内容与编辑，网络恢复后将自动同步。'}</p>
-                            <a href="/" className="text-primary underline">{'返回首页'}</a>
+                            <h1 className="text-xl font-semibold">{"离线模式"}</h1>
+                            <p className="text-muted-foreground">
+                                {"您的设备当前未连接网络。您仍可继续浏览缓存内容与编辑，网络恢复后将自动同步。"}
+                            </p>
+                            <a href="/" className="text-primary underline">
+                                {"返回首页"}
+                            </a>
                         </main>
                     )}
                 </CardContent>

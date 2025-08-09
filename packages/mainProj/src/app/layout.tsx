@@ -15,6 +15,8 @@ import { PWAInstaller } from '@/components/pwa-installer'
 import { ServiceWorkerUpdater } from '@/components/service-worker-updater'
 import { OfflineIndicator } from '@/components/offline-indicator'
 import type { Viewport } from 'next'
+import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
+import { Suspense } from "react"
 
 export const metadata: Metadata = {
     title: "报告编制系统",
@@ -66,10 +68,12 @@ export default async function RootLayout({
                                 <OfflineIndicator />
                             </div>
                             <HeaderWrapper />
-                            {children}
+                            <ErrorBoundaryWrapper>
+                                <Suspense fallback={<div>Loading session...</div>}>{children}</Suspense>
+                            </ErrorBoundaryWrapper>
                             {/* PWA 组件 */}
                             <PWAInstaller />
-                            <ServiceWorkerUpdater />
+
                             <Toaster richColors position="top-right" />
                         </GraphQLProvider>
                     </Provider>
