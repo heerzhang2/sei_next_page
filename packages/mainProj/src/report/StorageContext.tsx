@@ -1,45 +1,76 @@
 "use client"
 
-import React, { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
-// Define the shape of your context data
-type StorageContextType = {
+interface StorageContextType {
     storage: any
     setStorage: (data: any) => void
-    modified: boolean | undefined
-    setModified: (data: boolean | undefined) => void
+    subrType: string | undefined
+    setSubrType: (type: string | undefined) => void
     parrepfs: any
     setParrepfs: (data: any) => void
-    subrType: any
-    setSubrType: (data: any) => void
+    offline: boolean
+    setOffline: (offline: boolean) => void
 }
 
-// Create the context with a default value
 const StorageContext = createContext<StorageContextType | undefined>(undefined)
 
-// Create a provider component
 export function StorageProvider({ children }: { children: ReactNode }) {
-    const [storage, setStorage] = React.useState<any>({});
-    const [modified, setModified] = React.useState<boolean | undefined>();
-    //可流转分项报告
-    const [parrepfs, setParrepfs] = React.useState<any>({});
-    //不是独立流转的，其它情形（可重复分项的）就没有这个！
-    const [subrType, setSubrType] = React.useState<string | undefined>();
-    //复用app路由带来的【问题】流转分项与主报告的状态管理，交叉？。
-    const value = {
+    const [storage, setStorageState] = useState<any>({})
+    const [subrType, setSubrType] = useState<string | undefined>(undefined)
+    const [parrepfs, setParrepfs] = useState<any>({})
+    const [offline, setOfflineState] = useState<boolean>(false)
+
+    const setStorage = (data: any) => {
+        console.log("StorageContext: Setting storage data", data)
+        setStorageState(data)
+    }
+
+    const setOffline = (isOffline: boolean) => {
+        console.log("StorageContext: Setting offline status", isOffline)
+        setOfflineState(isOffline)
+    }
+
+    // 监听网络状态变化
+    useEffect(() => {
+        const handleOnline = () => {
+            console.log("StorageContext: Network online detected")
+            setOffline(false)
+        }
+
+        const handleOffline = () => {
+            console.log("StorageContext: Network offline detected")
+            setOffline(true)
+        }
+
+        if (typeof window !== "undefined") {
+            window.addEventListener("online", handleOnline)
+            window.addEventListener("offline", handleOffline)
+
+            // 初始化网络状态
+            setOffline(!navigator.onLine)
+
+            return () => {
+                window.removeEventListener("online", handleOnline)
+                window.removeEventListener("offline", handleOffline)
+            }
+        }
+    }, [])
+
+    const value: StorageContextType = {
         storage,
         setStorage,
-        modified,
-        setModified,
-        parrepfs,
-        setParrepfs,
         subrType,
         setSubrType,
+        parrepfs,
+        setParrepfs,
+        offline,
+        setOffline,
     }
+
     return <StorageContext.Provider value={value}>{children}</StorageContext.Provider>
 }
 
-// Create a custom hook to use the context
 export function useStorage() {
     const context = useContext(StorageContext)
     if (context === undefined) {

@@ -1,136 +1,196 @@
-import { NextAuthConfig } from "next-auth"
-import "next-auth/jwt"
-import { JWT } from "@auth/core/jwt"
+import type { NextAuthConfig } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 import { createClient } from "@urql/core"
 import { fetchExchange } from "urql"
-import { gql } from "@urql/core"
 
-// 令牌有效期（秒）=> 毫秒
-const TOKEN_EXPIRE_SEC = Number(process.env.NEXT_PUBLIC_TOKEN_EXPIRESEC ?? "3000")
-const TOKEN_EXPIRE_MS = isFinite(TOKEN_EXPIRE_SEC) ? TOKEN_EXPIRE_SEC * 1000 : 3000 * 1000
-const CLOCK_SKEW_MS = 10 * 1000 // 提前 10s 刷新，避免边界抖动
+const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
+const url = `${endpoint}/graphql`
 
-export const authConfig = {
-    pages: { signIn: "/login" },
-    providers: [], // 你的 Providers 配置
-    session: { strategy: "jwt" },
-    callbacks: {
-        // 受保护页面路由控制（可按需调整）
-        authorized({ auth, request: { nextUrl } }) {
-            const isLoggedIn = !!auth?.user
-            const isLoginPage = nextUrl.pathname.startsWith("/login")
-            if (!isLoggedIn && !isLoginPage) return false
-            return true
-        },
-
-        // 每次生成/读取 JWT 时调用，在这里做"过期检查与刷新"
-        async jwt({ token, user, trigger, session }) {
-            // 初次登录：将后端返回的 tokens 放入 JWT
-            if (user) {
-                const u = user as any
-                token.accessToken = u.accessToken
-                token.refreshToken = u.refreshToken
-                token.accessTokenExpires = Date.now() + TOKEN_EXPIRE_MS - CLOCK_SKEW_MS
-                return token
-            }
-
-            // 手动更新会话时可覆盖
-            if (trigger === "update" && session) {
-                const s = session as any
-                if (s.accessToken) token.accessToken = s.accessToken
-                if (s.refreshToken) token.refreshToken = s.refreshToken
-                return token
-            }
-
-            // 访问时：若未过期，直接返回
-            if (token.accessToken && typeof token.accessTokenExpires === "number" && Date.now() < token.accessTokenExpires) {
-                return token
-            }
-
-            // 已过期：刷新
-            return await refreshAccessToken(token)
-        },
-
-        // 将 JWT 中的 accessToken / refreshToken 暴露给 session
-        async session({ session, token }) {
-            ;(session as any).accessToken = token.accessToken
-            ;(session as any).refreshToken = token.refreshToken
-            ;(session as any).error = token.error
-            return session
-        },
-    },
-} satisfies NextAuthConfig
-
-const REFRESH_MUTATION = gql`
-  mutation refreshToken($refreshToken: String!, $userId: ID) {
-    refreshToken(refreshToken: $refreshToken, userId: $userId) {
+// GraphQL mutations
+const LOGIN_MUTATION = `
+  mutation Login($username: String!, $password: String!) {
+    login(username: $username, password: $password) {
       accessToken
       refreshToken
       user {
         id
-        username
+        name
+        email
       }
     }
   }
 `
 
-async function refreshAccessToken(token: JWT) {
+const REFRESH_MUTATION = `
+  mutation RefreshToken($refreshToken: String!) {
+    refreshToken(refreshToken: $refreshToken) {
+      accessToken
+      refreshToken
+      user {
+        id
+        name
+        email
+      }
+    }
+  }
+`
+
+// 创建服务端 URQL 客户端
+function createServerClient() {
+    return createClient({
+        url,
+        exchanges: [fetchExchange],
+    })
+}
+
+// 刷新 access token
+async function refreshAccessToken(token: any) {
     try {
-        if (!token.refreshToken) throw new Error("No refresh token")
+        console.log("开始刷新 token...")
 
-        const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
-        const url = `${endpoint}/graphql`
+        if (!token.refreshToken) {
+            throw new Error("No refresh token available")
+        }
 
-        // 直接创建服务端 URQL 客户端，不依赖外部函数
-        const client = createClient({
-            url,
-            exchanges: [fetchExchange],
-            fetchOptions: {
-                headers: {
-                    // 刷新时不需要 Authorization header，使用 refreshToken
-                },
-            },
-        })
-
-        const resp = await client
+        const client = createServerClient()
+        const result = await client
             .mutation(REFRESH_MUTATION, {
                 refreshToken: token.refreshToken,
-                userId: token?.sub,
             })
             .toPromise()
 
-        if (resp.error) throw resp.error
-        const payload = (resp.data as any)?.refreshToken
-        if (!payload?.accessToken) throw new Error("No access token returned")
+        if (result.error) {
+            console.error("Token refresh GraphQL error:", result.error)
+            throw new Error("Token refresh failed")
+        }
 
-        console.log("Token refreshed successfully")
+        if (!result.data?.refreshToken) {
+            throw new Error("No refresh token data returned")
+        }
+
+        const refreshData = result.data.refreshToken
+        console.log("Token 刷新成功")
+
         return {
             ...token,
-            accessToken: payload.accessToken,
-            refreshToken: payload.refreshToken ?? token.refreshToken,
-            accessTokenExpires: Date.now() + TOKEN_EXPIRE_MS - CLOCK_SKEW_MS,
-            error: undefined,
-        } as JWT
-    } catch (err) {
-        console.error("refreshAccessToken error:", err)
-        // 刷新失败：让前端重登
-        return { ...token, error: "RefreshAccessTokenError", accessToken: undefined } as JWT
+            accessToken: refreshData.accessToken,
+            refreshToken: refreshData.refreshToken,
+            accessTokenExpires: Date.now() + 60 * 60 * 1000, // 1 hour from now
+            user: {
+                ...token.user,
+                ...refreshData.user,
+            },
+        }
+    } catch (error) {
+        console.error("refreshAccessToken error:", error)
+        return {
+            ...token,
+            error: "RefreshAccessTokenError",
+        }
     }
 }
 
-// 扩展类型
-declare module "next-auth" {
-    interface Session {
-        accessToken?: string
-        refreshToken?: string
-        error?: string
-    }
-}
-declare module "next-auth/jwt" {
-    interface JWT {
-        accessToken?: string
-        refreshToken?: string
-        accessTokenExpires?: number
-        error?: string
-    }
+export const authConfig: NextAuthConfig = {
+    providers: [
+        CredentialsProvider({
+            name: "credentials",
+            credentials: {
+                username: { label: "用户名", type: "text" },
+                password: { label: "密码", type: "password" },
+            },
+            async authorize(credentials) {
+                if (!credentials?.username || !credentials?.password) {
+                    return null
+                }
+
+                try {
+                    const client = createServerClient()
+                    const result = await client
+                        .mutation(LOGIN_MUTATION, {
+                            username: credentials.username,
+                            password: credentials.password,
+                        })
+                        .toPromise()
+
+                    if (result.error) {
+                        console.error("Login GraphQL error:", result.error)
+                        return null
+                    }
+
+                    if (!result.data?.login) {
+                        return null
+                    }
+
+                    const loginData = result.data.login
+                    return {
+                        id: loginData.user.id,
+                        name: loginData.user.name,
+                        email: loginData.user.email,
+                        accessToken: loginData.accessToken,
+                        refreshToken: loginData.refreshToken,
+                        accessTokenExpires: Date.now() + 60 * 60 * 1000, // 1 hour from now
+                    }
+                } catch (error) {
+                    console.error("Login error:", error)
+                    return null
+                }
+            },
+        }),
+    ],
+    callbacks: {
+        async jwt({ token, user }) {
+            // 初次登录时，将用户信息保存到 token
+            if (user) {
+                return {
+                    ...token,
+                    accessToken: user.accessToken,
+                    refreshToken: user.refreshToken,
+                    accessTokenExpires: user.accessTokenExpires,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                    },
+                }
+            }
+
+            // 检查 access token 是否即将过期（提前 5 分钟刷新）
+            const shouldRefresh =
+                token.accessTokenExpires && Date.now() > (token.accessTokenExpires as number) - 5 * 60 * 1000
+
+            if (shouldRefresh) {
+                console.log("Token 即将过期，开始刷新...")
+                return await refreshAccessToken(token)
+            }
+
+            return token
+        },
+        async session({ session, token }) {
+            // 将 token 信息传递给 session
+            if (token) {
+                session.user = {
+                    ...session.user,
+                    id: token.user?.id as string,
+                    accessToken: token.accessToken as string,
+                    refreshToken: token.refreshToken as string,
+                    accessTokenExpires: token.accessTokenExpires as number,
+                }
+
+                // 如果有刷新错误，也传递给 session
+                if (token.error) {
+                    ;(session as any).error = token.error
+                }
+            }
+
+            return session
+        },
+    },
+    pages: {
+        signIn: "/login",
+    },
+    session: {
+        strategy: "jwt",
+        maxAge: 24 * 60 * 60, // 24 hours
+    },
+    secret: process.env.NEXTAUTH_SECRET,
 }

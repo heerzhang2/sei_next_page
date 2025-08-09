@@ -1,10 +1,10 @@
 "use client"
 
-import { useSession } from 'next-auth/react'
+import { useSession } from "next-auth/react"
 
 export function useAccessToken(): string | null {
     const { data: session } = useSession()
 
     // 从 session 中获取 accessToken
-    return (session as any)?.accessToken || null
+    return session?.user?.accessToken || null
 }

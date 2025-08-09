@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Download, X } from 'lucide-react'
+import { Download, X } from "lucide-react"
 
 interface BeforeInstallPromptEvent extends Event {
     prompt(): Promise<void>
@@ -53,39 +53,29 @@ export function PWAInstaller() {
 
     const handleDismiss = () => {
         setShowInstallPrompt(false)
-        // 24小时后再次显示
-        setTimeout(() => {
-            if (deferredPrompt) {
-                setShowInstallPrompt(true)
-            }
-        }, 24 * 60 * 60 * 1000)
     }
 
     if (!showInstallPrompt) return null
 
     return (
-        <div className="fixed bottom-4 left-4 z-50">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-sm">
-                <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                        <Download className="h-5 w-5 text-blue-600" />
-                        <h3 className="font-semibold text-sm">安装应用</h3>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={handleDismiss} className="h-6 w-6 p-0">
-                        <X className="h-4 w-4" />
-                    </Button>
+        <div className="fixed bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 max-w-sm mx-auto">
+            <div className="flex items-start justify-between">
+                <div className="flex-1">
+                    <h3 className="font-semibold text-sm">安装应用</h3>
+                    <p className="text-xs text-gray-600 mt-1">将此应用安装到您的设备以获得更好的体验</p>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                    将报告系统安装到桌面，支持离线使用
-                </p>
-                <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={handleDismiss}>
-                        稍后
-                    </Button>
-                    <Button size="sm" onClick={handleInstallClick}>
-                        安装
-                    </Button>
-                </div>
+                <Button variant="ghost" size="sm" onClick={handleDismiss} className="p-1 h-auto">
+                    <X className="h-4 w-4" />
+                </Button>
+            </div>
+            <div className="flex gap-2 mt-3">
+                <Button onClick={handleInstallClick} size="sm" className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />
+                    安装
+                </Button>
+                <Button variant="outline" onClick={handleDismiss} size="sm">
+                    稍后
+                </Button>
             </div>
         </div>
     )

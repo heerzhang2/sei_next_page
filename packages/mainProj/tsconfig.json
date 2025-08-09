@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "es2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -18,12 +19,35 @@
         "name": "next"
       }
     ],
-    "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/auth/*": ["./src/auth/*"],
+      "@/report/*": ["./src/report/*"],
+      "@/pipeline/*": ["./pipeline/*"],
+      "@/comp/*": ["./comp/*"],
+      "@/component/*": ["./src/component/*"]
     }
   },
   "include": [
-    "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "middleware.ts",
+    "pipeline/**/*.ts",
+    "pipeline/**/*.tsx",
+    "comp/**/*.ts",
+    "comp/**/*.tsx",
+    "report/**/*.ts",
+    "report/**/*.tsx"
+  ],
   "exclude": ["node_modules"]
 }

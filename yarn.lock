@@ -5087,7 +5087,7 @@ graphql@^14.0.2:
   dependencies:
     iterall "^1.2.2"
 
-graphql@^16.10.0:
+graphql@^16.10.0, graphql@^16.11.0:
   version "16.11.0"
   resolved "https://registry.npmjs.org/graphql/-/graphql-16.11.0.tgz"
   integrity sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw==

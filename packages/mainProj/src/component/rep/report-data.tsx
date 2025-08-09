@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useQuery, gql } from "@urql/next"
 import { useStorage } from "@/report/StorageContext"
 import Link from "next/link"
@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation"
 import { subscribeToNetworkStatus, getNetworkStatus } from "@/auth/graphql-component"
 
 // NOTE: Removed nested Suspense wrappers to avoid server/client mismatch.
-// We also gate first render with a "mounted" flag to keep HTML stable across SSR/CSR and prevent hydration errors [^1].
+// We also gate first render with a "mounted" flag to keep HTML stable across SSR/CSR and prevent hydration errors.
 
 export interface ReportParams {
     repId: string
@@ -157,7 +157,10 @@ function isNetworkError(error: any) {
         "err_network",
         "err_internet_disconnected",
     ]
-    return networkErrorKeywords.some((k) => errorMessage.includes(k)) || (error.name === "TypeError" && errorMessage.includes("fetch"))
+    return (
+        networkErrorKeywords.some((k) => errorMessage.includes(k)) ||
+        (error.name === "TypeError" && errorMessage.includes("fetch"))
+    )
 }
 
 function CommonReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
@@ -192,25 +195,30 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     }, [report, setStorage, setSubrType])
 
     useEffect(() => {
-        if (isNetworkFailure) setOffline(true)
-        else if (dataSource === "network" || dataSource === "network-loading" || networkState.isOnline) setOffline(false)
+        if (isNetworkFailure) {
+            console.log("Setting offline to true due to network failure")
+            setOffline(true)
+        } else if (dataSource === "network" || dataSource === "network-loading" || networkState.isOnline) {
+            console.log("Setting offline to false due to network success")
+            setOffline(false)
+        }
     }, [dataSource, isNetworkFailure, networkState, setOffline])
 
     // Stable initial HTML to avoid hydration mismatch
     if (!mounted) {
-        return <div className="p-4 text-sm text-muted-foreground">{'正在准备编辑环境...'}</div>
+        return <div className="p-4 text-sm text-muted-foreground">{"正在准备编辑环境..."}</div>
     }
 
-    if (fetching && !data) return <div className="p-4">{'加载中...'}</div>
+    if (fetching && !data) return <div className="p-4">{"加载中..."}</div>
 
     if (error || !networkState.isOnline) {
         if (isNetworkFailure || !networkState.isOnline) {
             return (
                 <div className="text-center p-4">
-                    <div className="text-red-500 mb-2">{'后端服务器离线'}</div>
+                    <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
                     <div className="text-sm text-gray-600">{isFromCache || data ? "正在使用缓存数据" : "无法连接到服务器"}</div>
                     <div className="text-xs text-gray-500 mt-2">{`错误: ${error?.message || networkState.lastError?.message || "网络连接失败"}`}</div>
-                    {data && <div className="text-xs text-blue-600 mt-2">{'已加载缓存数据，功能可能受限'}</div>}
+                    {data && <div className="text-xs text-blue-600 mt-2">{"已加载缓存数据，功能可能受限"}</div>}
                 </div>
             )
         } else {
@@ -222,7 +230,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     if (!report)
         return (
             <div className="content-center text-center h-screen w-screen">
-                <Link href="/">{'没有找到该份报告，返回首页'}</Link>
+                <Link href="/">{"没有找到该份报告，返回首页"}</Link>
             </div>
         )
 
@@ -240,7 +248,11 @@ export const ReportSubQuery = gql`
   }
 `
 
-function CommonReportDataSub({ repId, subrid, children }: { repId: string; subrid: string; children: React.ReactNode }) {
+function CommonReportDataSub({
+                                 repId,
+                                 subrid,
+                                 children,
+                             }: { repId: string; subrid: string; children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false)
     useEffect(() => setMounted(true), [])
 
@@ -294,17 +306,17 @@ function CommonReportDataSub({ repId, subrid, children }: { repId: string; subri
         else if (hasNetworkSuccess) setOffline(false)
     }, [mainDataSource, subDataSource, isMainNetworkError, isSubNetworkError, networkState, setOffline])
 
-    if (!mounted) return <div className="p-4 text-sm text-muted-foreground">{'正在准备编辑环境...'}</div>
+    if (!mounted) return <div className="p-4 text-sm text-muted-foreground">{"正在准备编辑环境..."}</div>
 
-    if (fetching || fetchingSub) return <div>{'加载中...'}</div>
+    if (fetching || fetchingSub) return <div>{"加载中..."}</div>
 
     if (error || errorSub || !networkState.isOnline) {
         const hasNetworkError = isMainNetworkError || isSubNetworkError || !networkState.isOnline
         if (hasNetworkError) {
             return (
                 <div className="text-center p-4">
-                    <div className="text-red-500 mb-2">{'后端服务器离线'}</div>
-                    <div className="text-sm text-gray-600">{'正在使用缓存数据'}</div>
+                    <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
+                    <div className="text-sm text-gray-600">{"正在使用缓存数据"}</div>
                     <div className="text-xs text-gray-500 mt-2">{`${error?.message || ""} ${errorSub?.message || ""} ${networkState.lastError?.message || ""}`}</div>
                 </div>
             )
@@ -317,13 +329,13 @@ function CommonReportDataSub({ repId, subrid, children }: { repId: string; subri
     if (!report)
         return (
             <div className="content-center text-center h-screen w-screen">
-                <Link href="/">{'没有找到该份报告，返回首页'}</Link>
+                <Link href="/">{"没有找到该份报告，返回首页"}</Link>
             </div>
         )
     if (!reportSub)
         return (
             <div className="content-center text-center h-screen w-screen">
-                <Link href="/">{'没有该独立流转子报告，返回首页'}</Link>
+                <Link href="/">{"没有该独立流转子报告，返回首页"}</Link>
             </div>
         )
 
@@ -334,5 +346,11 @@ function CommonReportDataSub({ repId, subrid, children }: { repId: string; subri
 export default function ReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const searchParams = useSearchParams()
     const subrid = searchParams?.get("subrid")
-    return subrid ? <CommonReportDataSub repId={repId} subrid={subrid}>{children}</CommonReportDataSub> : <CommonReportData repId={repId}>{children}</CommonReportData>
+    return subrid ? (
+        <CommonReportDataSub repId={repId} subrid={subrid}>
+            {children}
+        </CommonReportDataSub>
+    ) : (
+        <CommonReportData repId={repId}>{children}</CommonReportData>
+    )
 }

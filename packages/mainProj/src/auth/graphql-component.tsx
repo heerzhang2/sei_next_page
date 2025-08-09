@@ -1,168 +1,342 @@
 "use client"
 
+import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/next"
 import { UrqlProvider } from "@urql/next"
-import { useMemo } from "react"
-import { ssrExchange, createClient } from "@urql/next"
-import { fetchExchange, type CombinedError, type Exchange, type OperationResult } from "urql"
+import { useAccessToken } from "./use-access-token"
 import { authExchange } from "@urql/exchange-auth"
+import { type ReactNode, useMemo } from "react"
+//离线保存支持的：
 import { offlineExchange } from "@urql/exchange-graphcache"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
-import { pipe, tap } from "wonka"
-import { useAccessToken } from "./use-access-token"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import schema from "./urql-schema.json"
+import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
-// 可选：如果有 schema.json 可以启用
-// import schema from "./urql-schema.json"
+import type { Exchange, Operation, OperationResult } from "@urql/core"
+import { pipe, tap, map } from "wonka"
 
-const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
-const url = `${endpoint}/graphql`
+// 创建网络状态管理:全局的。
+const networkStatus = {
+    isOnline: true,
+    lastError: null as Error | null,
+    listeners: new Set<(status: { isOnline: boolean; lastError: Error | null }) => void>(),
+}
 
-// 网络状态广播（可供你的 UI 监听）
-const networkStatusExchange: Exchange = ({ forward }) => (ops$) =>
-    pipe(
-        forward(ops$),
-        tap((result: OperationResult) => {
-            const err = result.error as CombinedError | undefined
-            if (!err) return
-            const offline =
-                !!err.networkError ||
-                err.graphQLErrors.some((ge) => (ge.extensions as any)?.offline === true)
-            if (offline && typeof window !== "undefined") {
-                window.dispatchEvent(new CustomEvent("urql:offline", { detail: { message: err.message } }))
-            }
-        })
+// 网络状态监听器
+export const subscribeToNetworkStatus = (
+    callback: (status: { isOnline: boolean; lastError: Error | null }) => void,
+) => {
+    networkStatus.listeners.add(callback)
+    return () => networkStatus.listeners.delete(callback)
+}
+
+// 获取当前网络状态
+export const getNetworkStatus = () => ({
+    isOnline: networkStatus.isOnline,
+    lastError: networkStatus.lastError,
+})
+
+// 更新网络状态
+export const updateNetworkStatus = (isOnline: boolean, error: Error | null = null) => {
+    networkStatus.isOnline = isOnline
+    networkStatus.lastError = error
+    networkStatus.listeners.forEach((callback) => callback({ isOnline, lastError: error }))
+}
+
+// 检查是否为网络错误
+export const isNetworkError = (error: any): boolean => {
+    if (!error) return false
+
+    const errorMessage = error.message?.toLowerCase() || ""
+    const networkErrorKeywords = [
+        "network error",
+        "fetch failed",
+        "connection refused",
+        "timeout",
+        "network request failed",
+        "failed to fetch",
+        "err_connection_refused",
+        "err_network",
+        "err_internet_disconnected",
+    ]
+
+    return (
+        networkErrorKeywords.some((keyword) => errorMessage.includes(keyword)) ||
+        (error.name === "TypeError" && errorMessage.includes("fetch"))
     )
+}
 
-// 检测"未授权"并在客户端发起刷新
-function makeAuthExchange(getAccessToken: () => string | null, onAuthError: () => void) {
+// 自定义网络错误处理 Exchange
+const networkErrorExchange: Exchange = ({ forward }) => {
+    return (operations$) => {
+        return pipe(
+            operations$,
+            forward,
+            tap((result: OperationResult) => {
+                if (result.error) {
+                    const hasNetworkError =
+                        result.error.networkError ||
+                        result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
+                        isNetworkError(result.error)
+
+                    if (hasNetworkError) {
+                        console.error("网络错误检测到:", result.error)
+                        updateNetworkStatus(false, result.error)
+
+                        // 确保错误能被 useQuery 捕获
+                        result.error.isNetworkError = true
+                    } else {
+                        // 如果有成功的响应，说明网络恢复了
+                        if (result.data && !networkStatus.isOnline) {
+                            console.log("网络已恢复")
+                            updateNetworkStatus(true)
+                        }
+                    }
+                } else if (result.data) {
+                    // 成功获取数据，网络正常
+                    if (!networkStatus.isOnline) {
+                        console.log("网络已恢复")
+                        updateNetworkStatus(true)
+                    }
+                }
+            }),
+        )
+    }
+}
+
+// 自定义 fetch exchange 来更好地处理网络错误
+const customFetchExchange: Exchange = ({ forward }) => {
+    return (operations$) => {
+        return pipe(
+            operations$,
+            map((operation: Operation) => {
+                // 为每个操作添加超时和错误处理
+                const controller = new AbortController()
+                const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
+
+                return {
+                    ...operation,
+                    context: {
+                        ...operation.context,
+                        fetchOptions: {
+                            ...operation.context.fetchOptions,
+                            signal: controller.signal,
+                        },
+                    },
+                }
+            }),
+            forward,
+            tap((result: OperationResult) => {
+                // 清理超时
+                if (result.operation.context.fetchOptions?.signal) {
+                    clearTimeout(result.operation.context.timeoutId)
+                }
+            }),
+        )
+    }
+}
+
+// 创建认证交换器
+const makeAuthExchange = (accessToken: string | null) => {
     return authExchange(async (utils) => {
-        let token = getAccessToken()
-
         return {
             addAuthToOperation(operation) {
-                const accessToken = token || getAccessToken()
-                if (!accessToken) return operation
-                return utils.appendHeaders(operation, { Authorization: `Bearer ${accessToken}` })
-            },
-
-            didAuthError(error) {
-                // 1) GraphQL 层：扩展码
-                const hasUnauthCode = error.graphQLErrors.some((e) => {
-                    const code = (e.extensions as any)?.code
-                    return code === "UNAUTHENTICATED" || code === "FORBIDDEN" || code === "UNAUTHORIZED"
+                if (!accessToken) {
+                    return operation
+                }
+                return utils.appendHeaders(operation, {
+                    Authorization: `Bearer ${accessToken}`,
                 })
-                // 2) 网络层：HTTP 状态
-                const status = (error as any)?.response?.status
-                const has401 = status === 401 || status === 403
-
-                // 3) 特殊情况：Java 后端返回 500 但实际是 token 过期
-                const is500WithEmptyBody = status === 500 &&
-                    (error as any)?.response?.headers?.get?.('content-length') === '0' &&
-                    (error as any)?.response?.headers?.get?.('content-type')?.includes('application/graphql-response+json')
-
-                return hasUnauthCode || has401 || is500WithEmptyBody
             },
+            didAuthError(error) {
+                // 检查 GraphQL 错误
+                const hasGraphQLAuthError = error.graphQLErrors?.some(
+                    (e) => e.extensions?.code === "UNAUTHORIZED" || e.extensions?.code === "UNAUTHENTICATED",
+                )
 
+                // 检查网络错误状态码
+                const response = error.response
+                const hasNetworkAuthError = response && (response.status === 401 || response.status === 403)
+
+                // 检查特殊的 Java 后端 500 错误（实际是 token 过期）
+                const isSpecial500 =
+                    response &&
+                    response.status === 500 &&
+                    response.headers?.get("content-length") === "0" &&
+                    response.headers?.get("content-type")?.includes("application/graphql-response+json")
+
+                return hasGraphQLAuthError || hasNetworkAuthError || isSpecial500
+            },
             async refreshAuth() {
-                // 通过 Next.js API 调用服务端 session 刷新（jwt 回调会自动尝试 refresh）
                 try {
-                    const resp = await fetch("/api/refresh-token", {
+                    console.log("尝试刷新 token...")
+                    const response = await fetch("/api/refresh-token", {
                         method: "POST",
                         credentials: "include",
                     })
-                    if (!resp.ok) throw new Error(`refresh failed: ${resp.status}`)
-                    const data = await resp.json()
-                    if (data?.accessToken) {
-                        token = data.accessToken
-                        toast.success("登录状态已刷新")
-                        return
+
+                    if (!response.ok) {
+                        throw new Error("Token refresh failed")
                     }
-                    throw new Error("No accessToken in response")
-                } catch (e) {
-                    console.error("Token refresh failed:", e)
-                    toast.error("登录已过期，请重新登录")
-                    onAuthError()
+
+                    const data = await response.json()
+                    if (data.success) {
+                        console.log("Token 刷新成功")
+                        toast.success("登录已刷新", {
+                            description: "会话已自动续期",
+                            duration: 3000,
+                        })
+                        return
+                    } else {
+                        throw new Error(data.error || "Token refresh failed")
+                    }
+                } catch (error) {
+                    console.error("Token 刷新失败:", error)
+                    toast.error("登录已过期", {
+                        description: "请重新登录",
+                        duration: 5000,
+                    })
+
+                    // 派发未授权事件
+                    if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                            new CustomEvent("urql:unauthorized", {
+                                detail: { error },
+                            }),
+                        )
+                    }
+
+                    // 延迟跳转，给用户看到提示的时间
+                    setTimeout(() => {
+                        if (typeof window !== "undefined") {
+                            window.location.href = "/login"
+                        }
+                    }, 2000)
                 }
             },
         }
     })
 }
 
-export function GraphQLProvider({ children }: { children: React.ReactNode }) {
+export function GraphQLProvider({ children }: { children: ReactNode }) {
     const accessToken = useAccessToken()
-    const { data: session } = useSession()
-    const router = useRouter()
-
-    // 处理认证错误
-    const handleAuthError = () => {
-        // 如果 session 中有错误标记，直接跳转
-        if ((session as any)?.error === "RefreshAccessTokenError") {
-            router.push("/login")
-            return
-        }
-
-        // 否则派发事件让 ServiceWorkerUpdater 处理
-        if (typeof window !== "undefined") {
-            window.dispatchEvent(new CustomEvent("urql:unauthorized"))
-        }
-    }
 
     const [client, ssr] = useMemo(() => {
-        const storage =
-            typeof window !== "undefined"
-                ? makeDefaultStorage({ idbName: "graphcache-v3", maxAge: 7 })
-                : {
-                    writeData: async (_d: unknown) => {},
-                    readData: async () => ({}),
-                    writeMetadata: async (_d: unknown) => {},
-                    readMetadata: async () => null,
-                }
+        //离线保存支持的：只在客户端代码中使用 indexedDB。
+        let storage
+        if (typeof window !== "undefined") {
+            storage = makeDefaultStorage({
+                idbName: "graphcache-v3", // The name of the IndexedDB database
+                maxAge: 7, // The maximum age of the persisted data in days
+            })
+        } else {
+            //[避免报错] 在SSR服务器端， 用 空存储或内存存储
+            storage = {
+                writeData: (data: any) => Promise.resolve(),
+                readData: () => Promise.resolve(null),
+                writeMetadata: (data: any) => Promise.resolve(),
+                readMetadata: () => Promise.resolve(null),
+            }
+        }
 
-        const graphcache = offlineExchange({
-            // schema,
-            storage,
+        const cache = offlineExchange({
+            logger(severity: "debug" | "error" | "warn", message: string) {
+                console.log("offlineExchange:", severity, "消息", message)
+            },
+            schema,
+            keys: {
+                RepLink: () => null, //不需要生成缓存键
+            },
+            storage: {
+                ...storage,
+                // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，不需要做storage.readMetadata!().then(existing;
+                writeMetadata: (json: SerializedRequest[]) => {
+                    if (json?.length !== 0) {
+                        const newMetadata = [...(json || [])]
+                        const thisIndex = newMetadata.length - 1 //[假设前提]最后一条是最新发送失败的变更mutation操作。
+                        if (thisIndex > 0) {
+                            //删除所有同样接口的未成功的pending操作（按操作类型）？不是同一份的检验报告 +json[thisIndex].variables id &&条件? 来区分吗。业务层面事务性锁定的。
+                            newMetadata.forEach(({ query }, index) => {
+                                if (index !== thisIndex && query === json[thisIndex].query) {
+                                    delete newMetadata[index]
+                                }
+                            })
+                        }
+                        const out = [...newMetadata.filter((a) => a !== undefined)]
+                        storage.writeMetadata!(out)
+                    } else storage.writeMetadata!(json)
+                },
+            } as any,
+            // 修改 offlineExchange 配置，确保网络错误能正确传播
+            resolverExchange: false, // 禁用解析器交换，让网络错误能够传播
             optimistic: {
-                modifyOriginalRecordData(args) {
+                modifyOriginalRecordData(args, cache, info) {
+                    //没断网情况也会执行。
                     return {
                         __typename: "Report",
-                        id: (args as any).id,
-                        data: (args as any).data,
+                        id: args.id,
+                        data: args.data,
                     }
                 },
             },
-            updates: {
-                Mutation: {
-                    modifyOriginalRecordData: (_result, _args, _cache) => {
-                        if (typeof window !== "undefined" && navigator.serviceWorker?.controller) {
-                            navigator.serviceWorker.controller.postMessage({ type: "DATA_UPDATED" })
+        })
+
+        const ssr = ssrExchange({
+            isClient: typeof window !== "undefined",
+        })
+
+        //must be prefixed with NEXT_PUBLIC_.
+        const epoint = process.env.NEXT_PUBLIC_BACK_END
+        const client = createClient({
+            url: `${epoint}/graphql`,
+            exchanges: [
+                // 错误处理 exchange 应该在最前面
+                errorExchange({
+                    onError: (error, operation) => {
+                        console.error("GraphQL 错误:", error)
+
+                        // 检查是否为网络错误
+                        const hasNetworkError =
+                            error.networkError ||
+                            error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
+                            isNetworkError(error)
+
+                        if (hasNetworkError) {
+                            console.error("网络连接错误:", error)
+                            updateNetworkStatus(false, error)
+
+                            // 显示用户友好的错误提示
+                            if (typeof window !== "undefined") {
+                                toast.error("网络连接失败", {
+                                    description: "后端服务器无法连接，正在使用缓存数据",
+                                    duration: 5000,
+                                })
+                            }
                         }
                     },
-                },
+                }),
+                cache,
+                makeAuthExchange(accessToken),
+                networkErrorExchange, // 自定义网络错误处理
+                ssr,
+                customFetchExchange, // 自定义 fetch exchange
+                fetchExchange,
+            ],
+            suspense: true,
+            fetchOptions: () => {
+                return {
+                    headers: {
+                        authorization: accessToken ? `Bearer ${accessToken}` : "",
+                    },
+                }
             },
         })
 
-        const ssr = ssrExchange({ isClient: typeof window !== "undefined" })
-
-        const client = createClient({
-            url,
-            suspense: false, // 避免 SSR/CSR hydration 抖动
-            requestPolicy: "cache-and-network",
-            exchanges: [
-                graphcache,
-                makeAuthExchange(() => accessToken, handleAuthError),
-                networkStatusExchange,
-                ssr,
-                fetchExchange
-            ],
-            fetchOptions: () => ({
-                headers: {
-                    authorization: accessToken ? `Bearer ${accessToken}` : "",
-                },
-            }),
-        })
         return [client, ssr]
-    }, [accessToken, session, router])
+    }, [accessToken])
 
-    return <UrqlProvider client={client} ssr={ssr}>{children}</UrqlProvider>
+    return (
+        <UrqlProvider client={client} ssr={ssr}>
+            {children}
+        </UrqlProvider>
+    )
 }

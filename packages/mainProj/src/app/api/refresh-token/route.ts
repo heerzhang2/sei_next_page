@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
 import { auth, update } from "@/app/auth"
+import { NextResponse } from "next/server"
 
-export async function POST(request: NextRequest) {
+export async function POST() {
     try {
         const session = await auth()
 
@@ -9,25 +9,26 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
         }
 
-        // 如果 session 中有错误标记，说明刷新已经失败了
-        if ((session as any)?.error === "RefreshAccessTokenError") {
+        // 检查是否有刷新错误
+        if ((session as any).error === "RefreshAccessTokenError") {
             return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
         }
 
-        // 触发 session 更新，这会调用 NextAuth 的 jwt 回调
-        // jwt 回调会检查 token 是否过期并自动刷新
-        const updatedSession = await update({})
+        // 触发 session 更新，这会调用 jwt 回调并可能刷新 token
+        const updatedSession = await update({
+            user: session.user,
+        })
 
-        if (!updatedSession || (updatedSession as any)?.error) {
-            return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
+        if (!updatedSession?.user?.accessToken) {
+            return NextResponse.json({ error: "Failed to get access token" }, { status: 401 })
         }
 
         return NextResponse.json({
-            accessToken: (updatedSession as any)?.accessToken,
-            refreshToken: (updatedSession as any)?.refreshToken,
+            success: true,
+            accessToken: updatedSession.user.accessToken,
         })
     } catch (error) {
-        console.error("Refresh token error:", error)
+        console.error("Refresh token API error:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
 }

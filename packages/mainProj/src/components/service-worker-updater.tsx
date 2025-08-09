@@ -1,14 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
 export function ServiceWorkerUpdater() {
     const [updateAvailable, setUpdateAvailable] = useState(false)
     const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
-    const router = useRouter()
 
     useEffect(() => {
         if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -16,8 +13,8 @@ export function ServiceWorkerUpdater() {
             navigator.serviceWorker
                 .register("/sw.js")
                 .then((reg) => {
-                    setRegistration(reg)
                     console.log("Service Worker registered:", reg)
+                    setRegistration(reg)
 
                     // 检查更新
                     reg.addEventListener("updatefound", () => {
@@ -26,8 +23,12 @@ export function ServiceWorkerUpdater() {
                             newWorker.addEventListener("statechange", () => {
                                 if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
                                     setUpdateAvailable(true)
-                                    toast.info("应用有新版本可用", {
-                                        description: "点击刷新按钮更新到最新版本",
+                                    toast.info("应用更新可用", {
+                                        description: "点击刷新以获取最新版本",
+                                        action: {
+                                            label: "刷新",
+                                            onClick: () => window.location.reload(),
+                                        },
                                         duration: 10000,
                                     })
                                 }
@@ -40,72 +41,60 @@ export function ServiceWorkerUpdater() {
                 })
 
             // 监听离线事件
-            const handleOffline = (event: CustomEvent) => {
-                toast.warning("网络连接失败", {
-                    description: "正在使用离线模式，数据将在网络恢复后同步",
+            const handleOffline = () => {
+                toast.warning("网络连接已断开", {
+                    description: "您现在处于离线模式，数据将保存在本地",
                     duration: 5000,
                 })
             }
 
-            // 监听未授权事件
-            const handleUnauthorized = () => {
+            // 监听在线事件
+            const handleOnline = () => {
+                toast.success("网络连接已恢复", {
+                    description: "正在同步离线数据...",
+                    duration: 3000,
+                })
+            }
+
+            // 监听 URQL 离线事件
+            const handleUrqlOffline = (event: CustomEvent) => {
+                toast.error("服务器连接失败", {
+                    description: "正在使用缓存数据，功能可能受限",
+                    duration: 5000,
+                })
+            }
+
+            // 监听 URQL 未授权事件
+            const handleUrqlUnauthorized = () => {
                 toast.error("登录已过期", {
                     description: "正在跳转到登录页面...",
                     duration: 3000,
                 })
                 setTimeout(() => {
-                    router.push("/login")
-                }, 1000)
+                    window.location.href = "/login"
+                }, 2000)
             }
 
-            // 监听网络恢复事件
-            const handleOnline = () => {
-                toast.success("网络已恢复", {
-                    description: "离线数据正在同步...",
-                    duration: 3000,
-                })
-            }
-
-            window.addEventListener("urql:offline", handleOffline as EventListener)
-            window.addEventListener("urql:unauthorized", handleUnauthorized)
+            window.addEventListener("offline", handleOffline)
             window.addEventListener("online", handleOnline)
+            window.addEventListener("urql:offline", handleUrqlOffline as EventListener)
+            window.addEventListener("urql:unauthorized", handleUrqlUnauthorized)
 
             return () => {
-                window.removeEventListener("urql:offline", handleOffline as EventListener)
-                window.removeEventListener("urql:unauthorized", handleUnauthorized)
+                window.removeEventListener("offline", handleOffline)
                 window.removeEventListener("online", handleOnline)
+                window.removeEventListener("urql:offline", handleUrqlOffline as EventListener)
+                window.removeEventListener("urql:unauthorized", handleUrqlUnauthorized)
             }
         }
-    }, [router])
+    }, [])
 
     const handleUpdate = () => {
         if (registration?.waiting) {
             registration.waiting.postMessage({ type: "SKIP_WAITING" })
-            registration.waiting.addEventListener("statechange", (e) => {
-                const target = e.target as ServiceWorker
-                if (target.state === "activated") {
-                    window.location.reload()
-                }
-            })
+            window.location.reload()
         }
     }
 
-    if (!updateAvailable) return null
-
-    return (
-        <div className="fixed bottom-4 right-4 z-50">
-            <div className="bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-sm">
-                <h3 className="font-semibold mb-2">应用更新可用</h3>
-                <p className="text-sm mb-3">发现新版本，点击更新获得最新功能</p>
-                <div className="flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => setUpdateAvailable(false)}>
-                        稍后
-                    </Button>
-                    <Button size="sm" onClick={handleUpdate}>
-                        立即更新
-                    </Button>
-                </div>
-            </div>
-        </div>
-    )
+    return null // 这个组件不渲染任何 UI，只处理 Service Worker 逻辑
 }

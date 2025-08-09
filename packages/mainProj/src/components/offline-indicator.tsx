@@ -1,83 +1,29 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Wifi, WifiOff, AlertCircle } from 'lucide-react'
-import { cn } from "@/lib/utils"
-
-interface NetworkStatus {
-    isOnline: boolean
-    lastError: Error | null
-}
+import { useNetworkStatus } from "@/hooks/use-network-status"
+import { AlertCircle, Wifi, WifiOff } from "lucide-react"
 
 export function OfflineIndicator() {
-    const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
-        isOnline: navigator?.onLine ?? true,
-        lastError: null,
-    })
-    const [showIndicator, setShowIndicator] = useState(false)
+    const { isOnline, lastError } = useNetworkStatus()
 
-    useEffect(() => {
-        const handleOnline = () => {
-            setNetworkStatus({ isOnline: true, lastError: null })
-            setShowIndicator(true)
-            // 3秒后隐藏"已恢复"提示
-            setTimeout(() => setShowIndicator(false), 3000)
-        }
-
-        const handleOffline = () => {
-            setNetworkStatus({ isOnline: false, lastError: null })
-            setShowIndicator(true)
-        }
-
-        const handleUrqlOffline = (event: CustomEvent) => {
-            setNetworkStatus({
-                isOnline: false,
-                lastError: new Error(event.detail?.message || "网络连接失败")
-            })
-            setShowIndicator(true)
-        }
-
-        window.addEventListener("online", handleOnline)
-        window.addEventListener("offline", handleOffline)
-        window.addEventListener("urql:offline", handleUrqlOffline as EventListener)
-
-        // 初始状态检查
-        if (!navigator.onLine) {
-            setShowIndicator(true)
-        }
-
-        return () => {
-            window.removeEventListener("online", handleOnline)
-            window.removeEventListener("offline", handleOffline)
-            window.removeEventListener("urql:offline", handleUrqlOffline as EventListener)
-        }
-    }, [])
-
-    if (!showIndicator && networkStatus.isOnline) return null
+    if (isOnline) {
+        return (
+            <div className="flex items-center gap-2 text-green-600 text-sm">
+                <Wifi className="h-4 w-4" />
+                <span>在线</span>
+            </div>
+        )
+    }
 
     return (
-        <div
-            className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300",
-                networkStatus.isOnline
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-            )}
-        >
-            {networkStatus.isOnline ? (
-                <>
-                    <Wifi className="h-4 w-4" />
-                    <span>网络已恢复</span>
-                </>
-            ) : (
-                <>
-                    {networkStatus.lastError ? (
-                        <AlertCircle className="h-4 w-4" />
-                    ) : (
-                        <WifiOff className="h-4 w-4" />
-                    )}
-                    <span>离线模式</span>
-                </>
+        <div className="flex items-center gap-2 text-red-600 text-sm">
+            <WifiOff className="h-4 w-4" />
+            <span>离线模式</span>
+            {lastError && (
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <AlertCircle className="h-3 w-3" />
+                    <span title={lastError.message}>连接错误</span>
+                </div>
             )}
         </div>
     )
