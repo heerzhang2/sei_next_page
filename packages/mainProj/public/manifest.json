@@ -1,12 +1,12 @@
 {
   "name": "报告编制系统",
   "short_name": "报告系统",
-  "description": "在线检验报告编制与离线编辑系统 - 支持 PWA 离线功能",
+  "description": "支持离线编辑的在线检验报告编制系统",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#000000",
+  "orientation": "portrait-primary",
   "scope": "/",
   "lang": "zh-CN",
   "dir": "ltr",
@@ -16,8 +16,7 @@
       "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "form_factor": "wide",
-      "label": "应用主界面"
+      "form_factor": "wide"
     }
   ],
   "icons": [
@@ -34,12 +33,14 @@
       "purpose": "any maskable"
     }
   ],
+  "prefer_related_applications": false,
+  "related_applications": [],
   "shortcuts": [
     {
       "name": "新建报告",
       "short_name": "新建",
-      "description": "快速创建新的检验报告",
-      "url": "/rep?action=new",
+      "description": "创建新的检验报告",
+      "url": "/rep/new",
       "icons": [
         {
           "src": "/icon-192x192.png",
@@ -50,7 +51,7 @@
     {
       "name": "离线模式",
       "short_name": "离线",
-      "description": "查看离线功能和缓存状态",
+      "description": "查看离线功能",
       "url": "/offline",
       "icons": [
         {
@@ -59,10 +60,5 @@
         }
       ]
     }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+  ]
 }

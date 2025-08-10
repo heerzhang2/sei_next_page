@@ -1,62 +1,149 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
     Wifi,
     WifiOff,
     Smartphone,
     Monitor,
     Apple,
-    Chrome,
     CheckCircle,
     XCircle,
     AlertCircle,
     RefreshCw,
-    Settings,
-    Info,
+    Database,
+    Globe,
 } from "lucide-react"
 import { toast } from "sonner"
 
 interface PWAStatus {
     isInstalled: boolean
     isOnline: boolean
-    serviceWorkerStatus: "active" | "installing" | "waiting" | "none"
-    platform: "ios" | "android" | "desktop" | "unknown"
-    browser: "safari" | "chrome" | "firefox" | "edge" | "unknown"
-    cacheStatus: {
-        staticCache: boolean
-        dynamicCache: boolean
-        totalSize: string
-    }
-    capabilities: {
-        notifications: boolean
-        backgroundSync: boolean
-        pushMessaging: boolean
-    }
+    serviceWorkerActive: boolean
+    cacheAvailable: boolean
+    platform: string
+    browser: string
+    installable: boolean
+    storageQuota: number
+    storageUsed: number
 }
 
 export function PWAStatusChecker() {
-    const [status, setStatus] = useState<PWAStatus | null>(null)
-    const [isExpanded, setIsExpanded] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
+    const [status, setStatus] = useState<PWAStatus>({
+        isInstalled: false,
+        isOnline: navigator.onLine,
+        serviceWorkerActive: false,
+        cacheAvailable: false,
+        platform: "unknown",
+        browser: "unknown",
+        installable: false,
+        storageQuota: 0,
+        storageUsed: 0,
+    })
+    const [showStatus, setShowStatus] = useState(false)
 
-    const detectBrowser = () => {
-        const userAgent = navigator.userAgent.toLowerCase()
-        if (userAgent.includes("chrome") && !userAgent.includes("edg")) return "chrome"
-        if (userAgent.includes("safari") && !userAgent.includes("chrome")) return "safari"
-        if (userAgent.includes("firefox")) return "firefox"
-        if (userAgent.includes("edg")) return "edge"
-        return "unknown"
+    useEffect(() => {
+        const checkPWAStatus = async () => {
+            // 检测平台
+            const userAgent = navigator.userAgent.toLowerCase()
+            let platform = "desktop"
+            if (/iphone|ipad|ipod/.test(userAgent)) platform = "ios"
+            else if (/android/.test(userAgent)) platform = "android"
+
+            // 检测浏览器
+            let browser = "other"
+            if (userAgent.includes("chrome") && !userAgent.includes("edg")) browser = "chrome"
+            else if (userAgent.includes("safari") && !userAgent.includes("chrome")) browser = "safari"
+            else if (userAgent.includes("firefox")) browser = "firefox"
+            else if (userAgent.includes("edg")) browser = "edge"
+
+            // 检查是否已安装
+            const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+            const isFullscreen = window.matchMedia("(display-mode: fullscreen)").matches
+            const isMinimalUI = window.matchMedia("(display-mode: minimal-ui)").matches
+            const isIOSStandalone = (window.navigator as any).standalone === true
+            const isInstalled = isStandalone || isFullscreen || isMinimalUI || isIOSStandalone
+
+            // 检查 Service Worker
+            const serviceWorkerActive = "serviceWorker" in navigator && navigator.serviceWorker.controller !== null
+
+            // 检查缓存
+            let cacheAvailable = false
+            if ("caches" in window) {
+                try {
+                    const cacheNames = await caches.keys()
+                    cacheAvailable = cacheNames.length > 0
+                } catch (error) {
+                    console.error("Cache check failed:", error)
+                }
+            }
+
+            // 检查存储配额
+            let storageQuota = 0
+            let storageUsed = 0
+            if ("storage" in navigator && "estimate" in navigator.storage) {
+                try {
+                    const estimate = await navigator.storage.estimate()
+                    storageQuota = estimate.quota || 0
+                    storageUsed = estimate.usage || 0
+                } catch (error) {
+                    console.error("Storage estimate failed:", error)
+                }
+            }
+
+            // 检查是否可安装
+            const installable =
+                !isInstalled &&
+                ((platform === "android" && browser === "chrome") ||
+                    (platform === "ios" && browser === "safari") ||
+                    platform === "desktop")
+
+            setStatus({
+                isInstalled,
+                isOnline: navigator.onLine,
+                serviceWorkerActive,
+                cacheAvailable,
+                platform,
+                browser,
+                installable,
+                storageQuota,
+                storageUsed,
+            })
+        }
+
+        checkPWAStatus()
+
+        // 监听网络状态变化
+        const handleOnline = () => setStatus((prev) => ({ ...prev, isOnline: true }))
+        const handleOffline = () => setStatus((prev) => ({ ...prev, isOnline: false }))
+
+        window.addEventListener("online", handleOnline)
+        window.addEventListener("offline", handleOffline)
+
+        return () => {
+            window.removeEventListener("online", handleOnline)
+            window.removeEventListener("offline", handleOffline)
+        }
+    }, [])
+
+    const getStatusIcon = (condition: boolean) => {
+        return condition ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />
     }
 
-    const detectPlatform = () => {
-        const userAgent = navigator.userAgent.toLowerCase()
-        if (/iphone|ipad|ipod/.test(userAgent)) return "ios"
-        if (/android/.test(userAgent)) return "android"
-        return "desktop"
+    const getPlatformIcon = () => {
+        switch (status.platform) {
+            case "ios":
+                return <Apple className="w-4 h-4" />
+            case "android":
+                return <Smartphone className="w-4 h-4" />
+            case "desktop":
+                return <Monitor className="w-4 h-4" />
+            default:
+                return <Globe className="w-4 h-4" />
+        }
     }
 
     const formatBytes = (bytes: number) => {
@@ -67,331 +154,142 @@ export function PWAStatusChecker() {
         return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
     }
 
-    const checkCacheStatus = async () => {
+    const testOfflineCapability = async () => {
         try {
-            const cacheNames = await caches.keys()
-            let totalSize = 0
-            let hasStaticCache = false
-            let hasDynamicCache = false
-
-            for (const cacheName of cacheNames) {
-                const cache = await caches.open(cacheName)
-                const requests = await cache.keys()
-
-                if (cacheName.includes("static")) hasStaticCache = true
-                if (cacheName.includes("dynamic")) hasDynamicCache = true
-
-                for (const request of requests) {
-                    try {
-                        const response = await cache.match(request)
-                        if (response) {
-                            const blob = await response.blob()
-                            totalSize += blob.size
-                        }
-                    } catch (error) {
-                        console.warn("Error calculating cache size for:", request.url)
-                    }
-                }
-            }
-
-            return {
-                staticCache: hasStaticCache,
-                dynamicCache: hasDynamicCache,
-                totalSize: formatBytes(totalSize),
+            // 尝试访问缓存
+            if ("caches" in window) {
+                const cache = await caches.open("test-cache")
+                toast.success("离线缓存功能正常")
+            } else {
+                toast.error("浏览器不支持缓存 API")
             }
         } catch (error) {
-            console.error("Error checking cache status:", error)
-            return {
-                staticCache: false,
-                dynamicCache: false,
-                totalSize: "0 B",
-            }
+            toast.error("离线功能测试失败")
         }
     }
 
-    const checkCapabilities = async () => {
-        const capabilities = {
-            notifications: "Notification" in window && Notification.permission !== "denied",
-            backgroundSync: "serviceWorker" in navigator && "sync" in window.ServiceWorkerRegistration.prototype,
-            pushMessaging: "serviceWorker" in navigator && "PushManager" in window,
-        }
-
-        return capabilities
+    const refreshStatus = () => {
+        window.location.reload()
     }
 
-    const updateStatus = async () => {
-        setIsLoading(true)
-
-        try {
-            const isInstalled =
-                window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true
-
-            const serviceWorkerStatus = await (async () => {
-                if (!("serviceWorker" in navigator)) return "none"
-
-                const registration = await navigator.serviceWorker.getRegistration()
-                if (!registration) return "none"
-
-                if (registration.active) return "active"
-                if (registration.installing) return "installing"
-                if (registration.waiting) return "waiting"
-                return "none"
-            })()
-
-            const cacheStatus = await checkCacheStatus()
-            const capabilities = await checkCapabilities()
-
-            setStatus({
-                isInstalled,
-                isOnline: navigator.onLine,
-                serviceWorkerStatus,
-                platform: detectPlatform(),
-                browser: detectBrowser(),
-                cacheStatus,
-                capabilities,
-            })
-        } catch (error) {
-            console.error("Error updating PWA status:", error)
-            toast.error("状态检查失败", {
-                description: "无法获取 PWA 状态信息",
-            })
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    useEffect(() => {
-        updateStatus()
-
-        // 监听网络状态变化
-        const handleOnline = () => updateStatus()
-        const handleOffline = () => updateStatus()
-
-        window.addEventListener("online", handleOnline)
-        window.addEventListener("offline", handleOffline)
-
-        // 监听 Service Worker 状态变化
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.addEventListener("controllerchange", updateStatus)
-        }
-
-        return () => {
-            window.removeEventListener("online", handleOnline)
-            window.removeEventListener("offline", handleOffline)
-            if ("serviceWorker" in navigator) {
-                navigator.serviceWorker.removeEventListener("controllerchange", updateStatus)
-            }
-        }
-    }, [])
-
-    const handleTestOffline = () => {
-        toast.info("离线测试", {
-            description: "请断开网络连接后尝试浏览已访问的页面",
-        })
-    }
-
-    const handleClearCache = async () => {
-        try {
-            const cacheNames = await caches.keys()
-            await Promise.all(cacheNames.map((name) => caches.delete(name)))
-
-            toast.success("缓存已清理", {
-                description: "所有缓存数据已删除，页面将重新加载",
-            })
-
-            setTimeout(() => {
-                window.location.reload()
-            }, 1000)
-        } catch (error) {
-            toast.error("清理失败", {
-                description: "无法清理缓存数据",
-            })
-        }
-    }
-
-    const getStatusIcon = (isGood: boolean) => {
-        return isGood ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />
-    }
-
-    const getPlatformIcon = () => {
-        switch (status?.platform) {
-            case "ios":
-                return <Apple className="h-4 w-4" />
-            case "android":
-                return <Smartphone className="h-4 w-4" />
-            case "desktop":
-                return <Monitor className="h-4 w-4" />
-            default:
-                return <Settings className="h-4 w-4" />
-        }
-    }
-
-    const getBrowserIcon = () => {
-        switch (status?.browser) {
-            case "chrome":
-                return <Chrome className="h-4 w-4" />
-            case "safari":
-                return <Apple className="h-4 w-4" />
-            default:
-                return <Settings className="h-4 w-4" />
-        }
-    }
-
-    if (!status) {
+    if (!showStatus) {
         return (
             <div className="fixed bottom-4 right-4 z-40">
-                <Card className="w-64">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
-                            <RefreshCw className="h-4 w-4 animate-spin" />
-                            <span className="text-sm">检查 PWA 状态...</span>
-                        </div>
-                    </CardContent>
-                </Card>
+                <Button variant="outline" size="sm" onClick={() => setShowStatus(true)} className="shadow-lg">
+                    <Database className="w-4 h-4 mr-1" />
+                    PWA 状态
+                </Button>
             </div>
         )
     }
 
     return (
-        <div className="fixed bottom-4 right-4 z-40">
-            <Card className={`transition-all duration-300 ${isExpanded ? "w-80" : "w-64"}`}>
-                <CardHeader className="pb-2">
+        <div className="fixed bottom-4 right-4 z-40 max-w-sm">
+            <Card className="shadow-lg border-2">
+                <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
                             {getPlatformIcon()}
-                            <CardTitle className="text-sm">PWA 状态</CardTitle>
-                            {getBrowserIcon()}
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="h-6 w-6 p-0">
-                            <Info className="h-3 w-3" />
+                            PWA 状态检查
+                        </CardTitle>
+                        <Button variant="ghost" size="sm" onClick={() => setShowStatus(false)} className="h-6 w-6 p-0">
+                            ×
                         </Button>
                     </div>
+                    <CardDescription className="text-xs">
+                        平台: {status.platform} | 浏览器: {status.browser}
+                    </CardDescription>
                 </CardHeader>
-
-                <CardContent className="pt-0 space-y-3">
-                    {/* 基本状态 */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600">安装状态</span>
-                            <div className="flex items-center gap-1">
-                                {getStatusIcon(status.isInstalled)}
-                                <Badge variant={status.isInstalled ? "default" : "secondary"} className="text-xs">
-                                    {status.isInstalled ? "已安装" : "未安装"}
-                                </Badge>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600">网络状态</span>
-                            <div className="flex items-center gap-1">
-                                {status.isOnline ? (
-                                    <Wifi className="h-4 w-4 text-green-500" />
-                                ) : (
-                                    <WifiOff className="h-4 w-4 text-red-500" />
-                                )}
-                                <Badge variant={status.isOnline ? "default" : "destructive"} className="text-xs">
-                                    {status.isOnline ? "在线" : "离线"}
-                                </Badge>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600">Service Worker</span>
-                            <div className="flex items-center gap-1">
-                                {getStatusIcon(status.serviceWorkerStatus === "active")}
-                                <Badge variant={status.serviceWorkerStatus === "active" ? "default" : "secondary"} className="text-xs">
-                                    {status.serviceWorkerStatus === "active"
-                                        ? "运行中"
-                                        : status.serviceWorkerStatus === "installing"
-                                            ? "安装中"
-                                            : status.serviceWorkerStatus === "waiting"
-                                                ? "等待中"
-                                                : "未激活"}
-                                </Badge>
-                            </div>
+                <CardContent className="space-y-3">
+                    {/* 安装状态 */}
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm">应用安装</span>
+                        <div className="flex items-center gap-2">
+                            {getStatusIcon(status.isInstalled)}
+                            <Badge variant={status.isInstalled ? "default" : "secondary"} className="text-xs">
+                                {status.isInstalled ? "已安装" : "未安装"}
+                            </Badge>
                         </div>
                     </div>
 
-                    {/* iOS Safari 特殊提示 */}
-                    {status.platform === "ios" && (
-                        <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-xs">
-                            <div className="flex items-start gap-2">
-                                <AlertCircle className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
-                                <div>
-                                    <p className="text-blue-800 dark:text-blue-200 font-medium">iOS 系统说明</p>
-                                    <p className="text-blue-700 dark:text-blue-300 mt-1">
-                                        PWA 使用 Safari WebKit 引擎运行，这是 Apple 的系统限制
-                                    </p>
-                                </div>
+                    {/* 网络状态 */}
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm">网络连接</span>
+                        <div className="flex items-center gap-2">
+                            {status.isOnline ? (
+                                <Wifi className="w-4 h-4 text-green-500" />
+                            ) : (
+                                <WifiOff className="w-4 h-4 text-red-500" />
+                            )}
+                            <Badge variant={status.isOnline ? "default" : "destructive"} className="text-xs">
+                                {status.isOnline ? "在线" : "离线"}
+                            </Badge>
+                        </div>
+                    </div>
+
+                    {/* Service Worker 状态 */}
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm">Service Worker</span>
+                        <div className="flex items-center gap-2">
+                            {getStatusIcon(status.serviceWorkerActive)}
+                            <Badge variant={status.serviceWorkerActive ? "default" : "secondary"} className="text-xs">
+                                {status.serviceWorkerActive ? "活跃" : "未激活"}
+                            </Badge>
+                        </div>
+                    </div>
+
+                    {/* 缓存状态 */}
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm">离线缓存</span>
+                        <div className="flex items-center gap-2">
+                            {getStatusIcon(status.cacheAvailable)}
+                            <Badge variant={status.cacheAvailable ? "default" : "secondary"} className="text-xs">
+                                {status.cacheAvailable ? "可用" : "不可用"}
+                            </Badge>
+                        </div>
+                    </div>
+
+                    {/* 存储信息 */}
+                    {status.storageQuota > 0 && (
+                        <div className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                                <span>存储使用</span>
+                                <span>
+                  {formatBytes(status.storageUsed)} / {formatBytes(status.storageQuota)}
+                </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                                <div
+                                    className="bg-blue-600 h-1.5 rounded-full"
+                                    style={{ width: `${(status.storageUsed / status.storageQuota) * 100}%` }}
+                                ></div>
                             </div>
                         </div>
                     )}
 
-                    {/* 展开的详细信息 */}
-                    {isExpanded && (
-                        <div className="space-y-3 border-t pt-3">
-                            <div>
-                                <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">缓存状态</h4>
-                                <div className="space-y-1">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span>静态缓存</span>
-                                        {getStatusIcon(status.cacheStatus.staticCache)}
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span>动态缓存</span>
-                                        {getStatusIcon(status.cacheStatus.dynamicCache)}
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span>缓存大小</span>
-                                        <span className="text-gray-600">{status.cacheStatus.totalSize}</span>
-                                    </div>
-                                </div>
-                            </div>
+                    {/* 操作按钮 */}
+                    <div className="flex gap-2 pt-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={testOfflineCapability}
+                            className="flex-1 text-xs bg-transparent"
+                        >
+                            <Database className="w-3 h-3 mr-1" />
+                            测试离线
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={refreshStatus} className="flex-1 text-xs bg-transparent">
+                            <RefreshCw className="w-3 h-3 mr-1" />
+                            刷新状态
+                        </Button>
+                    </div>
 
-                            <div>
-                                <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">功能支持</h4>
-                                <div className="space-y-1">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span>通知</span>
-                                        {getStatusIcon(status.capabilities.notifications)}
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span>后台同步</span>
-                                        {getStatusIcon(status.capabilities.backgroundSync)}
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span>推送消息</span>
-                                        {getStatusIcon(status.capabilities.pushMessaging)}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={updateStatus}
-                                    disabled={isLoading}
-                                    className="flex-1 text-xs bg-transparent"
-                                >
-                                    {isLoading ? <RefreshCw className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleTestOffline}
-                                    className="flex-1 text-xs bg-transparent"
-                                >
-                                    测试离线
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleClearCache}
-                                    className="flex-1 text-xs bg-transparent"
-                                >
-                                    清理缓存
-                                </Button>
+                    {/* 安装提示 */}
+                    {status.installable && (
+                        <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                            <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300">
+                                <AlertCircle className="w-3 h-3" />
+                                <span>此应用可以安装到您的设备</span>
                             </div>
                         </div>
                     )}

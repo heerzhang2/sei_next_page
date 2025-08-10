@@ -1,30 +1,25 @@
 "use client"
 
-import { useNetworkStatus } from "@/hooks/use-network-status"
-import { AlertCircle, Wifi, WifiOff } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { WifiOff } from "lucide-react"
+import { useStorage } from "@/report/StorageContext"
 
 export function OfflineIndicator() {
-    const { isOnline, lastError } = useNetworkStatus()
+    const { offline } = useStorage()
+    const [showIndicator, setShowIndicator] = useState(false)
 
-    if (isOnline) {
-        return (
-            <div className="flex items-center gap-2 text-green-600 text-sm">
-                <Wifi className="h-4 w-4" />
-                <span>在线</span>
-            </div>
-        )
-    }
+    useEffect(() => {
+        // 只在离线时显示指示器
+        setShowIndicator(offline)
+    }, [offline])
+
+    if (!showIndicator) return null
 
     return (
-        <div className="flex items-center gap-2 text-red-600 text-sm">
-            <WifiOff className="h-4 w-4" />
-            <span>离线模式</span>
-            {lastError && (
-                <div className="flex items-center gap-1 text-xs text-gray-500">
-                    <AlertCircle className="h-3 w-3" />
-                    <span title={lastError.message}>连接错误</span>
-                </div>
-            )}
-        </div>
+        <Badge variant="destructive" className="flex items-center gap-1 animate-pulse">
+            <WifiOff className="w-3 h-3" />
+            <span className="text-xs">离线模式</span>
+        </Badge>
     )
 }
