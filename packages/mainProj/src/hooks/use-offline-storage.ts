@@ -2,244 +2,284 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-interface OfflineStorageOptions {
+interface UseOfflineStorageOptions {
     key: string
     defaultValue?: any
-    syncInterval?: number
+    storage?: "localStorage" | "sessionStorage" | "indexedDB"
 }
 
-interface StorageInfo {
-    used: number
-    quota: number
-    percentage: number
+interface UseOfflineStorageReturn<T> {
+    data: T | null
+    setData: (data: T) => void
+    removeData: () => void
+    isLoading: boolean
+    error: string | null
 }
 
-export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }: OfflineStorageOptions) {
-    const [data, setData] = useState<T>(defaultValue)
+export function useOfflineStorage<T = any>({
+                                               key,
+                                               defaultValue = null,
+                                               storage = "localStorage",
+                                           }: UseOfflineStorageOptions): UseOfflineStorageReturn<T> {
+    const [data, setDataState] = useState<T | null>(defaultValue)
     const [isLoading, setIsLoading] = useState(true)
-    const [lastSaved, setLastSaved] = useState<Date | null>(null)
-    const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
-    // 从本地存储加载数据
-    const loadData = useCallback(async () => {
+    // 检查是否在客户端环境
+    const isClient = typeof window !== "undefined"
+
+    // IndexedDB 操作
+    const openDB = useCallback(async () => {
+        if (!isClient || !("indexedDB" in window)) {
+            throw new Error("IndexedDB not supported")
+        }
+
+        return new Promise<IDBDatabase>((resolve, reject) => {
+            const request = indexedDB.open("OfflineStorage", 1)
+
+            request.onerror = () => reject(request.error)
+            request.onsuccess = () => resolve(request.result)
+
+            request.onupgradeneeded = () => {
+                const db = request.result
+                if (!db.objectStoreNames.contains("data")) {
+                    db.createObjectStore("data", { keyPath: "key" })
+                }
+            }
+        })
+    }, [isClient])
+
+    const getFromIndexedDB = useCallback(
+        async (key: string) => {
+            try {
+                const db = await openDB()
+                const transaction = db.transaction(["data"], "readonly")
+                const store = transaction.objectStore("data")
+
+                return new Promise<any>((resolve, reject) => {
+                    const request = store.get(key)
+                    request.onerror = () => reject(request.error)
+                    request.onsuccess = () => {
+                        const result = request.result
+                        resolve(result ? result.value : null)
+                    }
+                })
+            } catch (error) {
+                console.error("IndexedDB get error:", error)
+                return null
+            }
+        },
+        [openDB],
+    )
+
+    const setToIndexedDB = useCallback(
+        async (key: string, value: any) => {
+            try {
+                const db = await openDB()
+                const transaction = db.transaction(["data"], "readwrite")
+                const store = transaction.objectStore("data")
+
+                return new Promise<void>((resolve, reject) => {
+                    const request = store.put({ key, value, timestamp: Date.now() })
+                    request.onerror = () => reject(request.error)
+                    request.onsuccess = () => resolve()
+                })
+            } catch (error) {
+                console.error("IndexedDB set error:", error)
+                throw error
+            }
+        },
+        [openDB],
+    )
+
+    const removeFromIndexedDB = useCallback(
+        async (key: string) => {
+            try {
+                const db = await openDB()
+                const transaction = db.transaction(["data"], "readwrite")
+                const store = transaction.objectStore("data")
+
+                return new Promise<void>((resolve, reject) => {
+                    const request = store.delete(key)
+                    request.onerror = () => reject(request.error)
+                    request.onsuccess = () => resolve()
+                })
+            } catch (error) {
+                console.error("IndexedDB remove error:", error)
+                throw error
+            }
+        },
+        [openDB],
+    )
+
+    // 通用存储操作
+    const getData = useCallback(async () => {
+        if (!isClient) return defaultValue
+
         try {
             setIsLoading(true)
+            setError(null)
 
-            // 尝试从 IndexedDB 加载
-            if (typeof window !== "undefined" && "indexedDB" in window) {
-                const stored = await getFromIndexedDB(key)
-                if (stored !== null) {
-                    setData(stored)
-                    setLastSaved(new Date(stored._timestamp || Date.now()))
-                    return
-                }
+            let result = null
+
+            switch (storage) {
+                case "localStorage":
+                    if ("localStorage" in window) {
+                        const stored = localStorage.getItem(key)
+                        result = stored ? JSON.parse(stored) : defaultValue
+                    }
+                    break
+
+                case "sessionStorage":
+                    if ("sessionStorage" in window) {
+                        const stored = sessionStorage.getItem(key)
+                        result = stored ? JSON.parse(stored) : defaultValue
+                    }
+                    break
+
+                case "indexedDB":
+                    result = await getFromIndexedDB(key)
+                    if (result === null) result = defaultValue
+                    break
+
+                default:
+                    result = defaultValue
             }
 
-            // 回退到 localStorage
-            if (typeof window !== "undefined") {
-                const stored = localStorage.getItem(key)
-                if (stored) {
-                    const parsed = JSON.parse(stored)
-                    setData(parsed.data || defaultValue)
-                    setLastSaved(new Date(parsed.timestamp || Date.now()))
-                } else {
-                    setData(defaultValue)
-                }
-            } else {
-                setData(defaultValue) // For SSR, default to initial value
-            }
-        } catch (error) {
-            console.error("加载离线数据失败:", error)
-            setData(defaultValue)
+            setDataState(result)
+            return result
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Storage error"
+            setError(errorMessage)
+            console.error("Get data error:", err)
+            return defaultValue
         } finally {
             setIsLoading(false)
         }
-    }, [key, defaultValue])
+    }, [key, defaultValue, storage, isClient, getFromIndexedDB])
 
-    // 保存数据到本地存储
-    const saveData = useCallback(
+    const setData = useCallback(
         async (newData: T) => {
+            if (!isClient) return
+
             try {
-                const timestamp = Date.now()
-                const dataWithTimestamp = {
-                    ...newData,
-                    _timestamp: timestamp,
+                setError(null)
+
+                switch (storage) {
+                    case "localStorage":
+                        if ("localStorage" in window) {
+                            localStorage.setItem(key, JSON.stringify(newData))
+                        }
+                        break
+
+                    case "sessionStorage":
+                        if ("sessionStorage" in window) {
+                            sessionStorage.setItem(key, JSON.stringify(newData))
+                        }
+                        break
+
+                    case "indexedDB":
+                        await setToIndexedDB(key, newData)
+                        break
                 }
 
-                if (typeof window !== "undefined") {
-                    // 优先使用 IndexedDB
-                    if ("indexedDB" in window) {
-                        await saveToIndexedDB(key, dataWithTimestamp)
-                    } else {
-                        // 回退到 localStorage
-                        localStorage.setItem(
-                            key,
-                            JSON.stringify({
-                                data: newData,
-                                timestamp,
-                            }),
-                        )
-                    }
-                }
-
-                setData(newData)
-                setLastSaved(new Date(timestamp))
-            } catch (error) {
-                console.error("保存离线数据失败:", error)
+                setDataState(newData)
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : "Storage error"
+                setError(errorMessage)
+                console.error("Set data error:", err)
             }
         },
-        [key],
+        [key, storage, isClient, setToIndexedDB],
     )
 
-    // 获取存储信息
-    const updateStorageInfo = useCallback(async () => {
-        if (typeof window !== "undefined" && "storage" in navigator && "estimate" in navigator.storage) {
-            try {
-                const estimate = await navigator.storage.estimate()
-                setStorageInfo({
-                    used: estimate.usage || 0,
-                    quota: estimate.quota || 0,
-                    percentage: estimate.quota ? ((estimate.usage || 0) / estimate.quota) * 100 : 0,
-                })
-            } catch (error) {
-                console.error("获取存储信息失败:", error)
-            }
-        }
-    }, [])
-
-    // 清理过期数据
-    const cleanupExpiredData = useCallback(async () => {
-        const expireTime = Date.now() - 7 * 24 * 60 * 60 * 1000 // 7天前
+    const removeData = useCallback(async () => {
+        if (!isClient) return
 
         try {
-            if (typeof window !== "undefined" && "indexedDB" in window) {
-                await cleanupIndexedDB(expireTime)
-            }
+            setError(null)
 
-            // 清理 localStorage 中的过期数据
-            if (typeof window !== "undefined") {
-                Object.keys(localStorage).forEach((storageKey) => {
-                    if (storageKey.startsWith("offline_")) {
-                        try {
-                            const stored = JSON.parse(localStorage.getItem(storageKey) || "{}")
-                            if (stored.timestamp && stored.timestamp < expireTime) {
-                                localStorage.removeItem(storageKey)
-                            }
-                        } catch (error) {
-                            // 忽略解析错误，删除无效数据
-                            localStorage.removeItem(storageKey)
-                        }
+            switch (storage) {
+                case "localStorage":
+                    if ("localStorage" in window) {
+                        localStorage.removeItem(key)
                     }
-                })
+                    break
+
+                case "sessionStorage":
+                    if ("sessionStorage" in window) {
+                        sessionStorage.removeItem(key)
+                    }
+                    break
+
+                case "indexedDB":
+                    await removeFromIndexedDB(key)
+                    break
             }
-        } catch (error) {
-            console.error("清理过期数据失败:", error)
+
+            setDataState(defaultValue)
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Storage error"
+            setError(errorMessage)
+            console.error("Remove data error:", err)
         }
-    }, [])
+    }, [key, defaultValue, storage, isClient, removeFromIndexedDB])
 
+    // 初始化数据
     useEffect(() => {
-        loadData()
-        updateStorageInfo()
-        cleanupExpiredData()
+        getData()
+    }, [getData])
 
-        // 定期更新存储信息
-        const interval = setInterval(() => {
-            updateStorageInfo()
-        }, syncInterval)
+    // 监听存储变化（仅适用于 localStorage 和 sessionStorage）
+    useEffect(() => {
+        if (!isClient || storage === "indexedDB") return
 
-        return () => clearInterval(interval)
-    }, [loadData, updateStorageInfo, cleanupExpiredData, syncInterval])
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === key) {
+                try {
+                    const newValue = e.newValue ? JSON.parse(e.newValue) : defaultValue
+                    setDataState(newValue)
+                } catch (err) {
+                    console.error("Storage change parse error:", err)
+                }
+            }
+        }
+
+        window.addEventListener("storage", handleStorageChange)
+        return () => window.removeEventListener("storage", handleStorageChange)
+    }, [key, defaultValue, storage, isClient])
+
+    // 检查存储配额（如果支持）
+    useEffect(() => {
+        if (!isClient || !("navigator" in window) || !("storage" in navigator)) return
+
+        const checkStorageQuota = async () => {
+            try {
+                if ("estimate" in navigator.storage) {
+                    const estimate = await navigator.storage.estimate()
+                    const usedMB = (estimate.usage || 0) / (1024 * 1024)
+                    const quotaMB = (estimate.quota || 0) / (1024 * 1024)
+
+                    console.log(`Storage used: ${usedMB.toFixed(2)}MB / ${quotaMB.toFixed(2)}MB`)
+
+                    // 如果使用超过 80%，发出警告
+                    if (estimate.usage && estimate.quota && estimate.usage / estimate.quota > 0.8) {
+                        console.warn("Storage quota nearly full")
+                    }
+                }
+            } catch (err) {
+                console.error("Storage quota check error:", err)
+            }
+        }
+
+        checkStorageQuota()
+    }, [isClient])
 
     return {
         data,
-        setData: saveData,
+        setData,
+        removeData,
         isLoading,
-        lastSaved,
-        storageInfo,
-        refresh: loadData,
-        cleanup: cleanupExpiredData,
+        error,
     }
-}
-
-// IndexedDB 辅助函数
-async function getFromIndexedDB(key: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open("OfflineStorage", 1)
-
-        request.onerror = () => reject(request.error)
-
-        request.onsuccess = () => {
-            const db = request.result
-            const transaction = db.transaction(["data"], "readonly")
-            const store = transaction.objectStore("data")
-            const getRequest = store.get(key)
-
-            getRequest.onsuccess = () => {
-                resolve(getRequest.result?.data || null)
-            }
-
-            getRequest.onerror = () => reject(getRequest.error)
-        }
-
-        request.onupgradeneeded = () => {
-            const db = request.result
-            if (!db.objectStoreNames.contains("data")) {
-                db.createObjectStore("data", { keyPath: "key" })
-            }
-        }
-    })
-}
-
-async function saveToIndexedDB(key: string, data: any): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open("OfflineStorage", 1)
-
-        request.onerror = () => reject(request.error)
-
-        request.onsuccess = () => {
-            const db = request.result
-            const transaction = db.transaction(["data"], "readwrite")
-            const store = transaction.objectStore("data")
-            const putRequest = store.put({ key, data, timestamp: Date.now() })
-
-            putRequest.onsuccess = () => resolve()
-            putRequest.onerror = () => reject(putRequest.error)
-        }
-
-        request.onupgradeneeded = () => {
-            const db = request.result
-            if (!db.objectStoreNames.contains("data")) {
-                db.createObjectStore("data", { keyPath: "key" })
-            }
-        }
-    })
-}
-
-async function cleanupIndexedDB(expireTime: number): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open("OfflineStorage", 1)
-
-        request.onerror = () => reject(request.error)
-
-        request.onsuccess = () => {
-            const db = request.result
-            const transaction = db.transaction(["data"], "readwrite")
-            const store = transaction.objectStore("data")
-            const cursorRequest = store.openCursor()
-
-            cursorRequest.onsuccess = (event) => {
-                const cursor = (event.target as IDBRequest).result
-                if (cursor) {
-                    if (cursor.value.timestamp < expireTime) {
-                        cursor.delete()
-                    }
-                    cursor.continue()
-                } else {
-                    resolve()
-                }
-            }
-
-            cursorRequest.onerror = () => reject(cursorRequest.error)
-        }
-    })
 }

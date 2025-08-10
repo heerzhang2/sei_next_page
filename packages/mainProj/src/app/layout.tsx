@@ -1,49 +1,67 @@
-import type { Metadata } from "next";
-import { SessionProvider } from 'next-auth/react';
-import {auth} from "@/app/auth";
-import { Provider, } from "jotai";
-import {GraphQLProvider} from "@/auth/graphql-component";
-import { ThemeProvider } from 'next-themes'
-import { Toaster } from "sonner"
-import "@/styles/print-styles.css" // 导入打印样式
-import {PrintSettingsProvider} from "@/contexts/print-settings-context";
 import type React from "react"
-import { notoSans, notoSerif } from '@/styles/fonts';
+import type { Metadata, Viewport } from "next"
+import { Inter } from "next/font/google"
 import "./globals.css"
-import HeaderWrapper from "@/component/header-wrapper"
-import { PWAInstaller } from '@/components/pwa-installer'
-import { ServiceWorkerUpdater } from '@/components/service-worker-updater'
-import { OfflineIndicator } from '@/components/offline-indicator'
-import type { Viewport } from 'next'
-import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
+import { SessionProvider } from "next-auth/react"
 import { Suspense } from "react"
+import { Toaster } from "sonner"
+import { PWAInstaller } from "@/components/pwa-installer"
+import { PWAStatusChecker } from "@/components/pwa-status-checker"
+import { ServiceWorkerUpdater } from "@/components/service-worker-updater"
+import { OfflineIndicator } from "@/components/offline-indicator"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
     title: "报告编制系统",
-    description: "支持离线编辑的报告编制系统",
+    description: "在线检验报告编制与离线编辑系统",
     manifest: "/manifest.json",
     appleWebApp: {
         capable: true,
         statusBarStyle: "default",
-        title: "报告系统"
-    }
-};
-export const viewport: Viewport = {
-    themeColor: "#000000",
-    viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+        title: "报告系统",
+        startupImage: [
+            {
+                url: "/icon-512x512.png",
+                media: "(device-width: 768px) and (device-height: 1024px)",
+            },
+        ],
+    },
+    formatDetection: {
+        telephone: false,
+    },
+    other: {
+        "mobile-web-app-capable": "yes",
+        "apple-mobile-web-app-capable": "yes",
+        "apple-mobile-web-app-status-bar-style": "default",
+        "apple-mobile-web-app-title": "报告系统",
+        "application-name": "报告系统",
+        "msapplication-TileColor": "#000000",
+        "msapplication-tap-highlight": "no",
+    },
 }
 
-export default async function RootLayout({
-                                             children,
-                                         }: {
+export const viewport: Viewport = {
+    themeColor: [
+        { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+        { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    ],
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+}
+
+export default function RootLayout({
+                                       children,
+                                   }: {
     children: React.ReactNode
 }) {
-    const session = await auth();
     return (
-        <html suppressHydrationWarning lang="zh-CN">
+        <html lang="zh-CN">
         <head>
-            <link rel="icon" href="/favicon.ico" />
-            {/* PWA 相关 meta 标签 */}
+            <link rel="icon" href="/icon-192x192.png" />
             <link rel="apple-touch-icon" href="/icon-192x192.png" />
             <meta name="apple-mobile-web-app-capable" content="yes" />
             <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -54,33 +72,16 @@ export default async function RootLayout({
             <meta name="msapplication-TileColor" content="#000000" />
             <meta name="msapplication-tap-highlight" content="no" />
         </head>
-        <body
-            className={`${notoSans.variable} ${notoSerif.variable} antialiased
-             bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 @container
-            `}
-        >
-        <ThemeProvider>
-            <PrintSettingsProvider>
-                <SessionProvider session={session}>
-                    <Provider>
-                        <GraphQLProvider>
-                            <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-                                <OfflineIndicator />
-                            </div>
-                            <HeaderWrapper />
-                            <ErrorBoundaryWrapper>
-                                <Suspense fallback={<div>Loading session...</div>}>{children}</Suspense>
-                            </ErrorBoundaryWrapper>
-                            {/* PWA 组件 */}
-                            <PWAInstaller />
-
-                            <Toaster richColors position="top-right" />
-                        </GraphQLProvider>
-                    </Provider>
-                </SessionProvider>
-            </PrintSettingsProvider>
-        </ThemeProvider>
+        <body className={inter.className}>
+        <SessionProvider>
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+            <Toaster position="top-center" />
+            <OfflineIndicator />
+            <PWAInstaller />
+            <PWAStatusChecker />
+            <ServiceWorkerUpdater />
+        </SessionProvider>
         </body>
         </html>
-    );
+    )
 }

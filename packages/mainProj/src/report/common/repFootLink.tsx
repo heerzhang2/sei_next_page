@@ -15,20 +15,20 @@ import { startPdfCvtProcess } from "@/actions/camunda-actions"
 import { useState, useRef, useCallback, useMemo } from "react"
 import type React from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
-import {useWindowSize} from "@/hooks/use-window-size";
-import {ReportPanelType, useEditControlContext} from "@/component/rep/editControl-provider";
-import {RepLink} from "@/report/common/base";
+import { useWindowSize } from "@/hooks/use-window-size"
+import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider"
+import { RepLink } from "@/report/common/base"
+import { ExternalLink, FileText, Share2 } from "lucide-react"
 
 interface RepFootLinkProps {
-    template: string
-    verId: string
-    repId: string
-    rep: any
-    pdf_job: ConfigRoot<FileTransform>
+    template?: string
+    verId?: string
+    repId?: string
+    className?: string
+    rep?: any
+    pdf_job?: ConfigRoot<FileTransform>
     onLocalCvtFin?: () => void
-    //单独正式报告的，就没有原始记录的展示模式的。
     single?: boolean
-    //只显示独立流转的分项报告模式形态的。
     subrid?: string
 }
 
@@ -36,7 +36,17 @@ type TimeUnit = "day" | "month" | "year"
 /**报告底部的功能区：
  * v0dev帮忙解决fiexed元素scroll的告警问题
  * */
-export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin,single,subrid}: RepFootLinkProps) {
+export default function RepFootLink({
+                                        template,
+                                        verId,
+                                        repId,
+                                        rep,
+                                        pdf_job,
+                                        onLocalCvtFin,
+                                        single,
+                                        subrid,
+                                        className = "",
+                                    }: RepFootLinkProps) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
     const createQueryString = useCreateQueryString()
@@ -56,7 +66,7 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
     const [pdfStatus, setPdfStatus] = useState<"idle" | "loading" | "success" | "redo">("idle")
     const pdfUri = original ? rep?.link?.ori : rep?.link?.rep
     const [isProcessing, setIsProcessing] = useState(false)
-    const {activeTab,setActiveTab } = useEditControlContext()
+    const { activeTab, setActiveTab } = useEditControlContext()
 
     // 根据屏幕宽度确定 Popover 宽度和布局
     const getPopoverConfig = useMemo(() => {
@@ -89,30 +99,34 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
 
     // 处理导航，禁用自动滚动
     const handleNavigation = useCallback(
-        (url: string, closePopover = true,toTab?: ReportPanelType) => {
+        (url: string, closePopover = true, toTab?: ReportPanelType) => {
             if (closePopover) {
                 setPopoverOpen(false)
             }
             // 使用 scroll: false 禁用自动滚动行为
             router.push(url, { scroll: false })
-            if(setActiveTab!==null && toTab){
-                setActiveTab(toTab!);
+            if (setActiveTab !== null && toTab) {
+                setActiveTab(toTab!)
             }
         },
         [router],
     )
 
-    const handlePDFGeneration = async () => {
-        try {
-            if (!handleSubmit) throw new Error("空pdf_job")
-            else {
-                const result = await handleSubmit()
-                onLocalCvtFin?.()
-            }
-        } catch (error) {
+    const handlePDFGeneration = () => {
+        if (!handleSubmit) {
             toast.error("操作失败", {
-                description: "请确认文书打印转换器在运行" + error,
+                description: "请确认文书打印转换器在运行",
             })
+        } else {
+            handleSubmit()
+                .then(() => {
+                    onLocalCvtFin?.()
+                })
+                .catch((error) => {
+                    toast.error("操作失败", {
+                        description: "请确认文书打印转换器在运行" + error,
+                    })
+                })
         }
     }
 
@@ -215,13 +229,69 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                 setIsProcessing(false)
             }
         },
-        [isProcessing, getExpirationDate, retentionValue, retentionUnit, displayText, pdf_job, original, repId,single],
+        [isProcessing, getExpirationDate, retentionValue, retentionUnit, displayText, pdf_job, original, repId, single],
     )
+
+    const handleShareReport = async () => {
+        if (!repId) {
+            toast.error("无法分享", { description: "报告ID不存在" })
+            return
+        }
+
+        const shareUrl = `${window.location.origin}/rep/${repId}`
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "报告分享",
+                    text: `查看报告: ${template || "未知模板"} v${verId || "1.0"}`,
+                    url: shareUrl,
+                })
+                toast.success("分享成功")
+            } catch (error) {
+                if ((error as Error).name !== "AbortError") {
+                    console.error("分享失败:", error)
+                    fallbackShare(shareUrl)
+                }
+            }
+        } else {
+            fallbackShare(shareUrl)
+        }
+    }
+
+    const fallbackShare = (url: string) => {
+        navigator.clipboard
+            .writeText(url)
+            .then(() => {
+                toast.success("链接已复制到剪贴板")
+            })
+            .catch(() => {
+                toast.error("复制失败", { description: "请手动复制链接" })
+            })
+    }
+
+    const handleViewTemplate = () => {
+        if (!template) {
+            toast.error("模板信息不存在")
+            return
+        }
+
+        toast.info("模板信息", {
+            description: `模板: ${template}, 版本: ${verId || "1.0"}`,
+            duration: 3000,
+        })
+    }
+
+    const handlePrintReport = () => {
+        window.print()
+        toast.info("正在准备打印...")
+    }
 
     // 数值输入组件
     const NumberInput = useMemo(
         () => (
-            <Input name="_retds"
+            <Input
+                name="_retds"
                 ref={inputRef}
                 type="text"
                 value={retentionValue}
@@ -267,12 +337,8 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
     // Popover 内容 - 响应式布局
     const PopoverContent_All = useMemo(
         () => (
-            <ScrollArea
-                className={cn("h-full overflow-auto", getPopoverConfig.maxHeight)}
-                scrollHideDelay={0}
-                type="always"
-            >
-                <div className="viewport"  style={{ scrollBehavior: "auto" }}>
+            <ScrollArea className={cn("h-full overflow-auto", getPopoverConfig.maxHeight)} scrollHideDelay={0} type="always">
+                <div className="viewport" style={{ scrollBehavior: "auto" }}>
                     <div className="space-y-4 p-2 mb-1">
                         {/* 主要功能按钮 - 响应式网格布局 */}
                         <div className="space-y-3">
@@ -280,10 +346,10 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                                 <Button
                                     variant="outline"
                                     onClick={() => {
-                                        const newUrl =`/rep/${repId}/${template}/${verId}/?${print? "":"print=1"}${original ? "&original=1" : ""}`
+                                        const newUrl = `/rep/${repId}/${template}/${verId}/?${print ? "" : "print=1"}${original ? "&original=1" : ""}`
                                         if (!print) {
                                             // 切换到打印模式时保持 popover 打开
-                                            handleNavigation(newUrl,true)
+                                            handleNavigation(newUrl, true)
                                         } else {
                                             // 切换到浏览模式时关闭 popover
                                             handleNavigation(newUrl, false)
@@ -305,7 +371,7 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                                             variant="outline"
                                             onClick={handlePDFGeneration}
                                             disabled={isMutating}
-                                            className="text-xs h-8"
+                                            className="text-xs h-8 bg-transparent"
                                             size="sm"
                                         >
                                             {isMutating ? "生成中..." : "本机转pdf"}
@@ -334,14 +400,14 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                                 >
                                     回首页
                                 </button>
-                                {!subrid &&
+                                {!subrid && (
                                     <button
-                                            onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`,true,"editor")}
-                                            className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
+                                        onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`, true, "editor")}
+                                        className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
                                     >
-                                     原始记录列表
+                                        原始记录列表
                                     </button>
-                                }
+                                )}
                             </div>
                         </div>
 
@@ -349,29 +415,29 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                         {print && !action && (
                             <div className="space-y-3 border-t pt-3">
                                 {pdfStatus === "idle" && pdfUri ? (
-                                        <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-5" : "grid-cols-3")}>
-                                            <div className={cn(screenWidth! >= 768 ? "col-span-3" : "col-span-2")}>
-                                                <Link
-                                                    href={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${pdfUri}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-lime-200 text-red-500 hover:bg-gray-200 h-8 px-3 py-1 w-full"
-                                                    onClick={() => setPopoverOpen(false)}
-                                                >
-                                                    有Pdf版
-                                                </Link>
-                                            </div>
-                                            <div className={cn(screenWidth! >= 768 ? "col-span-2" : "col-span-1")}>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setPdfStatus("redo")}
-                                                    className="w-full text-xs h-6"
-                                                >
-                                                    后端再转
-                                                </Button>
-                                            </div>
+                                    <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-5" : "grid-cols-3")}>
+                                        <div className={cn(screenWidth! >= 768 ? "col-span-3" : "col-span-2")}>
+                                            <Link
+                                                href={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${pdfUri}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-lime-200 text-red-500 hover:bg-gray-200 h-8 px-3 py-1 w-full"
+                                                onClick={() => setPopoverOpen(false)}
+                                            >
+                                                有Pdf版
+                                            </Link>
                                         </div>
+                                        <div className={cn(screenWidth! >= 768 ? "col-span-2" : "col-span-1")}>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setPdfStatus("redo")}
+                                                className="w-full text-xs h-6"
+                                            >
+                                                后端再转
+                                            </Button>
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
                                         <div className="text-xs text-gray-600 text-center font-medium">设置Pdf保留期</div>
@@ -384,7 +450,7 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                                                     variant="outline"
                                                     onClick={handlePdfFlow}
                                                     disabled={isProcessing}
-                                                    className="w-full text-xs h-8"
+                                                    className="w-full text-xs h-8 bg-transparent"
                                                     size="sm"
                                                 >
                                                     {isProcessing ? "发起申请中..." : "后端转pdf"}
@@ -411,11 +477,9 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
             verId,
             action,
             isMutating,
-            handlePDFGeneration,
             pdfStatus,
             pdfUri,
             isProcessing,
-            handlePdfFlow,
             NumberInput,
             UnitSelect,
             screenWidth,
@@ -423,26 +487,30 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
     )
 
     return (
-        <div id="EndOfRep" className="print:hidden text-center mb-4 md:mb-0">
+        <div id="EndOfRep" className={`print:hidden text-center mb-4 md:mb-0 ${className}`}>
             {/* 返回首页链接 */}
             <div className="text-right border-b pb-4 mb-8">
-                { subrid &&
+                {subrid && (
                     <RepLink rep={rep} tag="">
                         <div className="mr-8 text-blue-600 hover:text-blue-800 text-sm font-medium">-返回主报告-</div>
                     </RepLink>
-                }
+                )}
                 <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    -{(!single && original)? '原始记录':'报告'}完毕,返回-
+                    -{!single && original ? "原始记录" : "报告"}完毕,返回-
                 </Link>
             </div>
-            <div className={cn("flex justify-center", "fixed bottom-4 -translate-x-1/2 z-50",
-                screenHeight!<500? "left-20": screenWidth!<500? "left-8 bottom-8":"left-1/2" )
-            }>
+            <div
+                className={cn(
+                    "flex justify-center",
+                    "fixed bottom-4 -translate-x-1/2 z-50",
+                    screenHeight! < 500 ? "left-20" : screenWidth! < 500 ? "left-8 bottom-8" : "left-1/2",
+                )}
+            >
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
-                            size="sm"   // 新增：缩小按钮尺寸
+                            size="sm" // 新增：缩小按钮尺寸
                             className={cn(
                                 "shadow-sm", // 修改：减小阴影
                                 "px-2 py-1", // 修改：缩小内边距
@@ -452,7 +520,11 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                                 "hover:bg-slate-500/30", // 新增：半透明悬停效果
                                 "transition-all duration-200", // 新增：过渡动画
                                 "opacity-90", // 新增：基础透明度
-                                screenHeight!<500? "h-4 w-10 rounded-xs gap-1 px-1 has-[>svg]:px-1.5": screenWidth!<500? "h-6 w-6 rounded-xs gap-1 px-1 has-[>svg]:px-1.5":"",
+                                screenHeight! < 500
+                                    ? "h-4 w-10 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
+                                    : screenWidth! < 500
+                                        ? "h-6 w-6 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
+                                        : "",
                             )}
                             data-scroll-ignore="true"
                         >
@@ -468,18 +540,19 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                     >
                         {PopoverContent_All}
                         <div className={cn("grid gap-2", screenWidth! >= 768 ? "grid-cols-7" : "grid-cols-5")}>
-                            <Button disabled={single}
+                            <Button
+                                disabled={single}
                                 variant="outline"
                                 onClick={() => {
-                                    const newUrl = pathname + "?" + createQueryString("original", original ? "" : "1");
-                                    handleNavigation(newUrl, true);
+                                    const newUrl = pathname + "?" + createQueryString("original", original ? "" : "1")
+                                    handleNavigation(newUrl, true)
                                 }}
-                                className={cn("text-xs h-8",screenWidth! >= 768 ? "col-span-2 col-end-4" : "col-span-2")}
+                                className={cn("text-xs h-8", screenWidth! >= 768 ? "col-span-2 col-end-4" : "col-span-2")}
                                 size="sm"
                             >
                                 {original ? "正式报告" : "原始记录"}
                             </Button>
-                            <div className={cn("text-center border-b",screenWidth! >= 768 ? "col-span-3 col-end-8" : "col-span-3")}>
+                            <div className={cn("text-center border-b", screenWidth! >= 768 ? "col-span-3 col-end-8" : "col-span-3")}>
                                 <Link href="#PHEAD" className="text-blue-600 hover:text-blue-800 text-sm font-medium mr-6">
                                     -头部-
                                 </Link>
@@ -490,6 +563,28 @@ export function RepFootLink({template, verId, repId, rep, pdf_job, onLocalCvtFin
                         </div>
                     </PopoverContent>
                 </Popover>
+            </div>
+            <div className="flex items-center justify-between p-4 border-t bg-gray-50 dark:bg-gray-800">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <FileText className="h-4 w-4" />
+                    <span>{template ? `${template} v${verId || "1.0"}` : "报告模板"}</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={handleViewTemplate} className="text-xs">
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        模板信息
+                    </Button>
+
+                    <Button variant="ghost" size="sm" onClick={handlePrintReport} className="text-xs">
+                        打印
+                    </Button>
+
+                    <Button variant="ghost" size="sm" onClick={handleShareReport} className="text-xs">
+                        <Share2 className="h-3 w-3 mr-1" />
+                        分享
+                    </Button>
+                </div>
             </div>
         </div>
     )
