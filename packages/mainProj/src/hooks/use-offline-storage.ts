@@ -5,39 +5,96 @@ import { useState, useEffect, useCallback } from "react"
 interface UseOfflineStorageOptions {
     key: string
     defaultValue?: any
-    storage?: "localStorage" | "sessionStorage" | "indexedDB"
+    storage?: "localStorage" | "sessionStorage" | "indexedDB" | "auto"
+    syncInterval?: number
 }
 
 interface UseOfflineStorageReturn<T> {
     data: T | null
-    setData: (data: T) => void
-    removeData: () => void
+    setData: (data: T) => Promise<void>
+    removeData: () => Promise<void>
     isLoading: boolean
     error: string | null
+    storageType: string
+    isSupported: boolean
 }
 
 export function useOfflineStorage<T = any>({
                                                key,
                                                defaultValue = null,
-                                               storage = "localStorage",
+                                               storage = "auto",
+                                               syncInterval = 30000,
                                            }: UseOfflineStorageOptions): UseOfflineStorageReturn<T> {
     const [data, setDataState] = useState<T | null>(defaultValue)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [storageType, setStorageType] = useState<string>("none")
+    const [isSupported, setIsSupported] = useState(false)
 
     // 检查是否在客户端环境
     const isClient = typeof window !== "undefined"
 
-    // IndexedDB 操作
-    const openDB = useCallback(async () => {
-        if (!isClient || !("indexedDB" in window)) {
-            throw new Error("IndexedDB not supported")
+    // 检测最佳存储方案
+    const detectBestStorage = useCallback(() => {
+        if (!isClient) return "none"
+
+        if (storage !== "auto") {
+            // 用户指定了存储类型，检查是否支持
+            switch (storage) {
+                case "localStorage":
+                    try {
+                        const testKey = "__test_localStorage__"
+                        localStorage.setItem(testKey, "test")
+                        localStorage.removeItem(testKey)
+                        return "localStorage"
+                    } catch {
+                        return "none"
+                    }
+                case "sessionStorage":
+                    try {
+                        const testKey = "__test_sessionStorage__"
+                        sessionStorage.setItem(testKey, "test")
+                        sessionStorage.removeItem(testKey)
+                        return "sessionStorage"
+                    } catch {
+                        return "none"
+                    }
+                case "indexedDB":
+                    return "indexedDB" in window ? "indexedDB" : "none"
+                default:
+                    return "none"
+            }
         }
 
-        return new Promise<IDBDatabase>((resolve, reject) => {
+        // 自动检测最佳存储方案
+        // 优先级：IndexedDB > localStorage > sessionStorage
+        if ("indexedDB" in window) {
+            return "indexedDB"
+        }
+
+        try {
+            const testKey = "__test_localStorage__"
+            localStorage.setItem(testKey, "test")
+            localStorage.removeItem(testKey)
+            return "localStorage"
+        } catch {
+            try {
+                const testKey = "__test_sessionStorage__"
+                sessionStorage.setItem(testKey, "test")
+                sessionStorage.removeItem(testKey)
+                return "sessionStorage"
+            } catch {
+                return "none"
+            }
+        }
+    }, [isClient, storage])
+
+    // IndexedDB 操作
+    const openDB = useCallback(async (): Promise<IDBDatabase> => {
+        return new Promise((resolve, reject) => {
             const request = indexedDB.open("OfflineStorage", 1)
 
-            request.onerror = () => reject(request.error)
+            request.onerror = () => reject(new Error("IndexedDB 打开失败"))
             request.onsuccess = () => resolve(request.result)
 
             request.onupgradeneeded = () => {
@@ -47,18 +104,18 @@ export function useOfflineStorage<T = any>({
                 }
             }
         })
-    }, [isClient])
+    }, [])
 
     const getFromIndexedDB = useCallback(
-        async (key: string) => {
+        async (key: string): Promise<any> => {
             try {
                 const db = await openDB()
                 const transaction = db.transaction(["data"], "readonly")
                 const store = transaction.objectStore("data")
 
-                return new Promise<any>((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const request = store.get(key)
-                    request.onerror = () => reject(request.error)
+                    request.onerror = () => reject(new Error("IndexedDB 读取失败"))
                     request.onsuccess = () => {
                         const result = request.result
                         resolve(result ? result.value : null)
@@ -66,22 +123,22 @@ export function useOfflineStorage<T = any>({
                 })
             } catch (error) {
                 console.error("IndexedDB get error:", error)
-                return null
+                throw error
             }
         },
         [openDB],
     )
 
     const setToIndexedDB = useCallback(
-        async (key: string, value: any) => {
+        async (key: string, value: any): Promise<void> => {
             try {
                 const db = await openDB()
                 const transaction = db.transaction(["data"], "readwrite")
                 const store = transaction.objectStore("data")
 
-                return new Promise<void>((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const request = store.put({ key, value, timestamp: Date.now() })
-                    request.onerror = () => reject(request.error)
+                    request.onerror = () => reject(new Error("IndexedDB 写入失败"))
                     request.onsuccess = () => resolve()
                 })
             } catch (error) {
@@ -93,15 +150,15 @@ export function useOfflineStorage<T = any>({
     )
 
     const removeFromIndexedDB = useCallback(
-        async (key: string) => {
+        async (key: string): Promise<void> => {
             try {
                 const db = await openDB()
                 const transaction = db.transaction(["data"], "readwrite")
                 const store = transaction.objectStore("data")
 
-                return new Promise<void>((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const request = store.delete(key)
-                    request.onerror = () => reject(request.error)
+                    request.onerror = () => reject(new Error("IndexedDB 删除失败"))
                     request.onsuccess = () => resolve()
                 })
             } catch (error) {
@@ -113,8 +170,17 @@ export function useOfflineStorage<T = any>({
     )
 
     // 通用存储操作
-    const getData = useCallback(async () => {
+    const getData = useCallback(async (): Promise<T | null> => {
         if (!isClient) return defaultValue
+
+        const bestStorage = detectBestStorage()
+        setStorageType(bestStorage)
+        setIsSupported(bestStorage !== "none")
+
+        if (bestStorage === "none") {
+            setError("没有可用的存储方案")
+            return defaultValue
+        }
 
         try {
             setIsLoading(true)
@@ -122,24 +188,44 @@ export function useOfflineStorage<T = any>({
 
             let result = null
 
-            switch (storage) {
+            switch (bestStorage) {
                 case "localStorage":
-                    if ("localStorage" in window) {
+                    try {
                         const stored = localStorage.getItem(key)
                         result = stored ? JSON.parse(stored) : defaultValue
+                    } catch (parseError) {
+                        console.error("localStorage parse error:", parseError)
+                        localStorage.removeItem(key) // 清除损坏的数据
+                        result = defaultValue
                     }
                     break
 
                 case "sessionStorage":
-                    if ("sessionStorage" in window) {
+                    try {
                         const stored = sessionStorage.getItem(key)
                         result = stored ? JSON.parse(stored) : defaultValue
+                    } catch (parseError) {
+                        console.error("sessionStorage parse error:", parseError)
+                        sessionStorage.removeItem(key) // 清除损坏的数据
+                        result = defaultValue
                     }
                     break
 
                 case "indexedDB":
-                    result = await getFromIndexedDB(key)
-                    if (result === null) result = defaultValue
+                    try {
+                        result = await getFromIndexedDB(key)
+                        if (result === null) result = defaultValue
+                    } catch (dbError) {
+                        console.error("IndexedDB error, fallback to localStorage:", dbError)
+                        // IndexedDB 失败时回退到 localStorage
+                        try {
+                            const stored = localStorage.getItem(key)
+                            result = stored ? JSON.parse(stored) : defaultValue
+                            setStorageType("localStorage")
+                        } catch {
+                            result = defaultValue
+                        }
+                    }
                     break
 
                 default:
@@ -149,81 +235,94 @@ export function useOfflineStorage<T = any>({
             setDataState(result)
             return result
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Storage error"
+            const errorMessage = err instanceof Error ? err.message : "存储读取失败"
             setError(errorMessage)
             console.error("Get data error:", err)
             return defaultValue
         } finally {
             setIsLoading(false)
         }
-    }, [key, defaultValue, storage, isClient, getFromIndexedDB])
+    }, [key, defaultValue, isClient, detectBestStorage, getFromIndexedDB])
 
     const setData = useCallback(
-        async (newData: T) => {
-            if (!isClient) return
+        async (newData: T): Promise<void> => {
+            if (!isClient || storageType === "none") {
+                setError("存储不可用")
+                return
+            }
 
             try {
                 setError(null)
 
-                switch (storage) {
+                switch (storageType) {
                     case "localStorage":
-                        if ("localStorage" in window) {
-                            localStorage.setItem(key, JSON.stringify(newData))
-                        }
+                        localStorage.setItem(key, JSON.stringify(newData))
                         break
 
                     case "sessionStorage":
-                        if ("sessionStorage" in window) {
-                            sessionStorage.setItem(key, JSON.stringify(newData))
-                        }
+                        sessionStorage.setItem(key, JSON.stringify(newData))
                         break
 
                     case "indexedDB":
-                        await setToIndexedDB(key, newData)
+                        try {
+                            await setToIndexedDB(key, newData)
+                        } catch (dbError) {
+                            console.error("IndexedDB error, fallback to localStorage:", dbError)
+                            // IndexedDB 失败时回退到 localStorage
+                            localStorage.setItem(key, JSON.stringify(newData))
+                            setStorageType("localStorage")
+                        }
                         break
                 }
 
                 setDataState(newData)
             } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : "Storage error"
+                const errorMessage = err instanceof Error ? err.message : "存储写入失败"
                 setError(errorMessage)
                 console.error("Set data error:", err)
+                throw err
             }
         },
-        [key, storage, isClient, setToIndexedDB],
+        [key, storageType, isClient, setToIndexedDB],
     )
 
-    const removeData = useCallback(async () => {
-        if (!isClient) return
+    const removeData = useCallback(async (): Promise<void> => {
+        if (!isClient || storageType === "none") {
+            setError("存储不可用")
+            return
+        }
 
         try {
             setError(null)
 
-            switch (storage) {
+            switch (storageType) {
                 case "localStorage":
-                    if ("localStorage" in window) {
-                        localStorage.removeItem(key)
-                    }
+                    localStorage.removeItem(key)
                     break
 
                 case "sessionStorage":
-                    if ("sessionStorage" in window) {
-                        sessionStorage.removeItem(key)
-                    }
+                    sessionStorage.removeItem(key)
                     break
 
                 case "indexedDB":
-                    await removeFromIndexedDB(key)
+                    try {
+                        await removeFromIndexedDB(key)
+                    } catch (dbError) {
+                        console.error("IndexedDB error, fallback to localStorage:", dbError)
+                        localStorage.removeItem(key)
+                        setStorageType("localStorage")
+                    }
                     break
             }
 
             setDataState(defaultValue)
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Storage error"
+            const errorMessage = err instanceof Error ? err.message : "存储删除失败"
             setError(errorMessage)
             console.error("Remove data error:", err)
+            throw err
         }
-    }, [key, defaultValue, storage, isClient, removeFromIndexedDB])
+    }, [key, defaultValue, storageType, isClient, removeFromIndexedDB])
 
     // 初始化数据
     useEffect(() => {
@@ -232,7 +331,7 @@ export function useOfflineStorage<T = any>({
 
     // 监听存储变化（仅适用于 localStorage 和 sessionStorage）
     useEffect(() => {
-        if (!isClient || storage === "indexedDB") return
+        if (!isClient || storageType === "indexedDB" || storageType === "none") return
 
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === key) {
@@ -247,33 +346,19 @@ export function useOfflineStorage<T = any>({
 
         window.addEventListener("storage", handleStorageChange)
         return () => window.removeEventListener("storage", handleStorageChange)
-    }, [key, defaultValue, storage, isClient])
+    }, [key, defaultValue, storageType, isClient])
 
-    // 检查存储配额（如果支持）
+    // 定期同步数据（可选）
     useEffect(() => {
-        if (!isClient || !("navigator" in window) || !("storage" in navigator)) return
+        if (!syncInterval || syncInterval <= 0) return
 
-        const checkStorageQuota = async () => {
-            try {
-                if ("estimate" in navigator.storage) {
-                    const estimate = await navigator.storage.estimate()
-                    const usedMB = (estimate.usage || 0) / (1024 * 1024)
-                    const quotaMB = (estimate.quota || 0) / (1024 * 1024)
+        const interval = setInterval(() => {
+            // 这里可以添加与服务器同步的逻辑
+            console.log(`Sync check for key: ${key}`)
+        }, syncInterval)
 
-                    console.log(`Storage used: ${usedMB.toFixed(2)}MB / ${quotaMB.toFixed(2)}MB`)
-
-                    // 如果使用超过 80%，发出警告
-                    if (estimate.usage && estimate.quota && estimate.usage / estimate.quota > 0.8) {
-                        console.warn("Storage quota nearly full")
-                    }
-                }
-            } catch (err) {
-                console.error("Storage quota check error:", err)
-            }
-        }
-
-        checkStorageQuota()
-    }, [isClient])
+        return () => clearInterval(interval)
+    }, [key, syncInterval])
 
     return {
         data,
@@ -281,5 +366,7 @@ export function useOfflineStorage<T = any>({
         removeData,
         isLoading,
         error,
+        storageType,
+        isSupported,
     }
 }

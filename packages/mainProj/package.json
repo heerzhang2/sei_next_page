@@ -13,7 +13,7 @@
     "dev": "next dev -p 3765",
     "build": "next build",
     "build-mono不能用": "next build --turbopack",
-    "start": "next start --turbopack -p 3765",
+    "start": "next start -p 3765",
     "dev但css毛病": "next dev --turbopack -p 3765",
     "start生产版Node.js server": "next start -p 3765",
     "lint": "next lint",

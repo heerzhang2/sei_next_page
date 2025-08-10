@@ -36,7 +36,7 @@ type TimeUnit = "day" | "month" | "year"
 /**报告底部的功能区：
  * v0dev帮忙解决fiexed元素scroll的告警问题
  * */
-export default function RepFootLink({
+export function RepFootLink({
                                         template,
                                         verId,
                                         repId,
