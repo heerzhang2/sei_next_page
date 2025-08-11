@@ -1,13 +1,31 @@
-import { NextResponse } from "next/server"
 import { auth } from "@/app/auth"
+import { NextResponse } from "next/server"
 
-// 依赖 NextAuth jwt 回调自动刷新。如已过期，会在 auth() 内触发 refresh。
 export async function POST() {
-    const session = await auth()
+    try {
+        const session = await auth()
 
-    if (!session?.user || !(session as any).accessToken) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        if (!session?.user) {
+            return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+        }
+
+        // 检查是否有刷新错误
+        if ((session as any).error === "RefreshAccessTokenError") {
+            return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
+        }
+
+        // NextAuth 5.0 中，token 刷新在 jwt 回调中自动处理
+        // 这里只需要返回当前的 accessToken
+        if (!session.user.accessToken) {
+            return NextResponse.json({ error: "No access token available" }, { status: 401 })
+        }
+
+        return NextResponse.json({
+            success: true,
+            accessToken: session.user.accessToken,
+        })
+    } catch (error) {
+        console.error("Refresh token API error:", error)
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
-
-    return NextResponse.json({ accessToken: (session as any).accessToken })
 }

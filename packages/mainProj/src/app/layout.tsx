@@ -14,14 +14,9 @@ import HeaderWrapper from "@/component/header-wrapper"
 import { PWAInstaller } from "@/components/pwa-installer"
 import { ServiceWorkerUpdater } from "@/components/service-worker-updater"
 import { OfflineIndicator } from "@/components/offline-indicator"
+import { SafariViewportFix } from "@/components/safari-viewport-fix"
+import { AuthErrorBoundary } from "@/components/auth-error-boundary"
 import type { Viewport } from "next"
-import { useSafariViewportFix } from "@/hooks/use-safari-viewport-fix"
-
-// 创建一个客户端组件来使用 hook
-function SafariViewportFix() {
-    useSafariViewportFix()
-    return null
-}
 
 export const metadata: Metadata = {
     title: "报告编制系统",
@@ -76,6 +71,10 @@ export default async function RootLayout({
                 dangerouslySetInnerHTML={{
                     __html: `
                     /* Safari 特定修复 */
+                    :root {
+                        --vh: 1vh;
+                    }
+                    
                     @supports (-webkit-touch-callout: none) {
                         .safari-fix {
                             -webkit-overflow-scrolling: touch;
@@ -85,6 +84,7 @@ export default async function RootLayout({
                         @media screen and (orientation: landscape) {
                             body {
                                 height: 100vh;
+                                height: calc(var(--vh, 1vh) * 100);
                                 height: -webkit-fill-available;
                             }
                         }
@@ -92,22 +92,39 @@ export default async function RootLayout({
                         @media screen and (orientation: portrait) {
                             body {
                                 height: 100vh;
+                                height: calc(var(--vh, 1vh) * 100);
                                 height: -webkit-fill-available;
                             }
                         }
                         
                         /* 防止 Safari 的橡皮筋效果 */
-                        body {
-                            position: fixed;
-                            overflow: hidden;
+                        html, body {
+                            position: relative;
                             width: 100%;
-                            height: 100%;
+                            min-height: 100vh;
+                            min-height: -webkit-fill-available;
+                            overflow-x: hidden;
                         }
                         
                         #__next {
-                            height: 100%;
-                            overflow: auto;
+                            min-height: 100vh;
+                            min-height: -webkit-fill-available;
                             -webkit-overflow-scrolling: touch;
+                        }
+                        
+                        /* 强制重新渲染以修复方向变化问题 */
+                        @media screen and (orientation: landscape) {
+                            * {
+                                -webkit-transform: translateZ(0);
+                                transform: translateZ(0);
+                            }
+                        }
+                        
+                        @media screen and (orientation: portrait) {
+                            * {
+                                -webkit-transform: translateZ(0);
+                                transform: translateZ(0);
+                            }
                         }
                     }
                 `,
@@ -123,19 +140,21 @@ export default async function RootLayout({
         <ThemeProvider>
             <PrintSettingsProvider>
                 <SessionProvider session={session}>
-                    <Provider>
-                        <GraphQLProvider>
-                            <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-                                <OfflineIndicator />
-                            </div>
-                            <HeaderWrapper />
-                            {children}
-                            {/* PWA 组件 */}
-                            <PWAInstaller />
-                            <ServiceWorkerUpdater />
-                            <Toaster richColors position="top-right" />
-                        </GraphQLProvider>
-                    </Provider>
+                    <AuthErrorBoundary>
+                        <Provider>
+                            <GraphQLProvider>
+                                <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+                                    <OfflineIndicator />
+                                </div>
+                                <HeaderWrapper />
+                                {children}
+                                {/* PWA 组件 */}
+                                <PWAInstaller />
+                                <ServiceWorkerUpdater />
+                                <Toaster richColors position="top-right" />
+                            </GraphQLProvider>
+                        </Provider>
+                    </AuthErrorBoundary>
                 </SessionProvider>
             </PrintSettingsProvider>
         </ThemeProvider>

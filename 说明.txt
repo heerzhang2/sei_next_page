@@ -1,5 +1,6 @@
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :9872
-证书"generate-ssl": "bash scripts/generate-ssl-cert.sh",在linux系统跑的。
+证书"generate-ssl": "bash scripts/generate-ssl-cert.sh",在linux系统跑的。 不用windows自带openssl64窗口的。
+双击 `ssl\localhost.crt`选择"安装证书"选择"本地计算机"选择"将所有证书都放入下列存储" > "受信任的根证书颁发机构"》 windows服务器。
 CMD \sei_next_page\mainProj>  yarn sei_code_tools --help
 PowerShell 执行 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 生产部署 PS D:\home\sei_next_page\mainProj> npm start       光标导致运行暂停

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { useStorage } from "@/report/StorageContext"
+import {useStorage, useStorageSafe} from "@/report/StorageContext"
 
 export function ServiceWorkerUpdater() {
     const [updateAvailable, setUpdateAvailable] = useState(false)
     const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
-    const { offline: isAppOffline } = useStorage()
+    const { offline: isAppOffline } = useStorageSafe()
 
     useEffect(() => {
         if (typeof window !== "undefined" && "serviceWorker" in navigator) {

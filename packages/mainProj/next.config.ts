@@ -1,6 +1,4 @@
 import type { NextConfig } from "next"
-import { readFileSync } from "fs"
-import { join } from "path"
 
 const nextConfig: NextConfig = {
     /* config options here */
@@ -21,22 +19,7 @@ const nextConfig: NextConfig = {
         webpackBuildWorker: true,
     },
 
-    // HTTPS 配置
-    ...(process.env.NODE_ENV === "development" && {
-        server: {
-            https: (() => {
-                try {
-                    return {
-                        key: readFileSync(join(process.cwd(), "ssl/localhost.key")),
-                        cert: readFileSync(join(process.cwd(), "ssl/localhost.crt")),
-                    }
-                } catch (error) {
-                    console.warn("HTTPS certificates not found, falling back to HTTP")
-                    return undefined
-                }
-            })(),
-        },
-    }),
+    // 移除 server 配置，我们将使用自定义服务器
 
     // 添加缓存控制配置 + PWA 头部配置
     headers: async () => {
