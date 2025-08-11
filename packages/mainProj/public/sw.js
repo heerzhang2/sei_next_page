@@ -1,6 +1,6 @@
-const CACHE_NAME = "report-system-v1.2"
-const STATIC_CACHE = "static-v1.2"
-const DYNAMIC_CACHE = "dynamic-v1.2"
+const CACHE_NAME = "report-system-v1.3"
+const STATIC_CACHE = "static-v1.3"
+const DYNAMIC_CACHE = "dynamic-v1.3"
 
 // 需要缓存的静态资源
 const STATIC_ASSETS = ["/", "/offline", "/login", "/manifest.json", "/icon-192x192.png", "/icon-512x512.png"]
@@ -11,6 +11,166 @@ const CACHEABLE_ROUTES = [/^\/rep\/[^/]+\/INDPL_DJ\/1/, /^\/profile/, /^\/user/]
 // 检查 Cache API 是否可用
 const isCacheAPISupported = () => {
     return typeof caches !== "undefined"
+}
+
+// 检查是否为认证相关的请求
+const isAuthRequest = (url) => {
+    return (
+        url.pathname.includes("/login") ||
+        url.pathname.includes("/auth") ||
+        url.pathname.includes("/api/auth") ||
+        url.searchParams.has("callbackUrl")
+    )
+}
+
+// 检查是否为受保护的页面
+const isProtectedPage = (url) => {
+    const protectedPaths = ["/rep/", "/profile", "/dashboard", "/settings"]
+    return protectedPaths.some((path) => url.pathname.startsWith(path))
+}
+
+// 创建离线页面响应
+const createOfflinePageResponse = (request) => {
+    const url = new URL(request.url)
+
+    // 如果是受保护的页面，返回带有离线提示的页面
+    if (isProtectedPage(url)) {
+        return new Response(
+            `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>离线模式 - 报告系统</title>
+                <style>
+                    body { 
+                        font-family: system-ui, -apple-system, sans-serif; 
+                        margin: 0; 
+                        padding: 2rem; 
+                        background: #f5f5f5; 
+                        color: #333;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                    }
+                    .container { 
+                        background: white; 
+                        padding: 2rem; 
+                        border-radius: 8px; 
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        text-align: center;
+                        max-width: 500px;
+                    }
+                    .icon { font-size: 3rem; margin-bottom: 1rem; }
+                    h1 { color: #e74c3c; margin-bottom: 1rem; }
+                    p { margin-bottom: 1rem; line-height: 1.6; }
+                    .actions { margin-top: 2rem; }
+                    button, a { 
+                        display: inline-block;
+                        padding: 0.75rem 1.5rem; 
+                        margin: 0.5rem; 
+                        background: #3498db; 
+                        color: white; 
+                        text-decoration: none; 
+                        border-radius: 4px; 
+                        border: none;
+                        cursor: pointer;
+                        font-size: 1rem;
+                    }
+                    button:hover, a:hover { background: #2980b9; }
+                    .secondary { background: #95a5a6; }
+                    .secondary:hover { background: #7f8c8d; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="icon">📱</div>
+                    <h1>离线模式</h1>
+                    <p>您当前处于离线状态，无法访问此页面的最新内容。</p>
+                    <p>您可以：</p>
+                    <ul style="text-align: left; margin: 1rem 0;">
+                        <li>继续浏览已缓存的内容</li>
+                        <li>编辑本地保存的报告</li>
+                        <li>等待网络恢复后自动同步</li>
+                    </ul>
+                    <div class="actions">
+                        <a href="/">返回首页</a>
+                        <button onclick="window.location.reload()" class="secondary">重试连接</button>
+                    </div>
+                </div>
+                <script>
+                    // 监听网络恢复
+                    window.addEventListener('online', () => {
+                        window.location.reload();
+                    });
+                    
+                    // 定期检查网络状态
+                    setInterval(() => {
+                        if (navigator.onLine) {
+                            fetch('/', { method: 'HEAD', cache: 'no-cache' })
+                                .then(() => window.location.reload())
+                                .catch(() => {});
+                        }
+                    }, 30000);
+                </script>
+            </body>
+            </html>
+        `,
+            {
+                status: 200,
+                headers: {
+                    "Content-Type": "text/html; charset=utf-8",
+                    "Cache-Control": "no-cache",
+                },
+            },
+        )
+    }
+
+    // 对于其他页面，返回简单的离线提示
+    return new Response(
+        `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>离线 - 报告系统</title>
+            <style>
+                body { 
+                    font-family: system-ui, -apple-system, sans-serif; 
+                    margin: 0; 
+                    padding: 2rem; 
+                    text-align: center; 
+                    background: #f5f5f5; 
+                }
+                .container { 
+                    background: white; 
+                    padding: 2rem; 
+                    border-radius: 8px; 
+                    display: inline-block;
+                    margin-top: 2rem;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🌐 离线模式</h1>
+                <p>当前无网络连接</p>
+                <a href="/">返回首页</a>
+            </div>
+        </body>
+        </html>
+    `,
+        {
+            status: 200,
+            headers: {
+                "Content-Type": "text/html; charset=utf-8",
+                "Cache-Control": "no-cache",
+            },
+        },
+    )
 }
 
 // 备用存储方案（使用 IndexedDB）
@@ -89,7 +249,6 @@ const getFromBackupDB = async (url) => {
 // 安装事件
 self.addEventListener("install", (event) => {
     console.log("Service Worker: Installing...")
-    console.log("Service Worker: 路由：都做缓存Cache API")
     event.waitUntil(
         (async () => {
             try {
@@ -99,7 +258,6 @@ self.addEventListener("install", (event) => {
                     await cache.addAll(STATIC_ASSETS)
                 } else {
                     console.log("Service Worker: Cache API not supported, using backup storage")
-                    // 使用备用存储方案预缓存关键资源
                     for (const asset of STATIC_ASSETS) {
                         try {
                             const response = await fetch(asset)
@@ -198,13 +356,17 @@ self.addEventListener("fetch", (event) => {
                             return cachedResponse
                         }
 
-                        // 返回离线页面
-                        if (isCacheAPISupported()) {
-                            return (await caches.match("/offline")) || new Response("Offline", { status: 503 })
-                        } else {
-                            const offlineResponse = await getFromBackupDB("/offline")
-                            return offlineResponse || new Response("Offline", { status: 503 })
-                        }
+                        // API 请求失败时返回错误响应，不重定向
+                        return new Response(
+                            JSON.stringify({
+                                error: "API unavailable offline",
+                                offline: true,
+                            }),
+                            {
+                                status: 503,
+                                headers: { "Content-Type": "application/json" },
+                            },
+                        )
                     }
                 }
 
@@ -249,8 +411,7 @@ self.addEventListener("fetch", (event) => {
                 const fetchPromise = fetch(request)
                     .then(async (networkResponse) => {
                         if (networkResponse.ok) {
-                            const shouldCache =true;
-                             //   CACHEABLE_ROUTES.some((pattern) => pattern.test(url.pathname)) || STATIC_ASSETS.includes(url.pathname)
+                            const shouldCache = true
 
                             if (shouldCache) {
                                 if (isCacheAPISupported()) {
@@ -270,14 +431,35 @@ self.addEventListener("fetch", (event) => {
                             return cachedResponse
                         }
 
-                        // 返回离线页面
+                        // 页面请求失败时的处理
                         if (request.headers.get("accept")?.includes("text/html")) {
+                            // 检查是否为认证请求，如果是则不重定向到登录页
+                            if (isAuthRequest(url)) {
+                                console.log("Auth request failed offline, returning offline page instead of redirect")
+                                return createOfflinePageResponse(request)
+                            }
+
+                            // 对于受保护的页面，返回离线页面而不是重定向到登录
+                            if (isProtectedPage(url)) {
+                                console.log("Protected page failed offline, returning offline page")
+                                return createOfflinePageResponse(request)
+                            }
+
+                            // 尝试返回缓存的离线页面
                             if (isCacheAPISupported()) {
-                                return (await caches.match("/offline")) || new Response("Offline", { status: 503 })
+                                const offlineResponse = await caches.match("/offline")
+                                if (offlineResponse) {
+                                    return offlineResponse
+                                }
                             } else {
                                 const offlineResponse = await getFromBackupDB("/offline")
-                                return offlineResponse || new Response("Offline", { status: 503 })
+                                if (offlineResponse) {
+                                    return offlineResponse
+                                }
                             }
+
+                            // 最后返回自定义离线页面
+                            return createOfflinePageResponse(request)
                         }
 
                         throw error
@@ -293,6 +475,12 @@ self.addEventListener("fetch", (event) => {
                 return await fetchPromise
             } catch (error) {
                 console.error("Service Worker fetch error:", error)
+
+                // 如果是 HTML 请求，返回离线页面
+                if (request.headers.get("accept")?.includes("text/html")) {
+                    return createOfflinePageResponse(request)
+                }
+
                 return new Response("Service Worker Error", { status: 500 })
             }
         })(),

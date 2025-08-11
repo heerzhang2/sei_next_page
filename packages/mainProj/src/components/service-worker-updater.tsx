@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import {useStorage, useStorageSafe} from "@/report/StorageContext"
+import { useStorageSafe } from "@/report/StorageContext"
+import { useNetworkStatus } from "@/hooks/use-network-status"
 
 export function ServiceWorkerUpdater() {
     const [updateAvailable, setUpdateAvailable] = useState(false)
     const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
     const { offline: isAppOffline } = useStorageSafe()
+    const networkStatus = useNetworkStatus()
 
     useEffect(() => {
         if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -66,18 +68,39 @@ export function ServiceWorkerUpdater() {
                 })
             }
 
-            // 监听 URQL 未授权事件
+            // 监听 URQL 未授权事件 - 修改逻辑
             const handleUrqlUnauthorized = () => {
-                // Only redirect to login if truly online and unauthorized, otherwise it's a network issue
-                if (!isAppOffline) {
-                    toast.error("登录已过期", {
-                        description: "正在跳转到登录页面...",
-                        duration: 3000,
-                    })
-                    setTimeout(() => {
-                        window.location.href = "/login"
-                    }, 2000)
+                // 检查网络状态，只有在真正在线且非网络错误时才重定向到登录
+                if (networkStatus.isOnline && !isAppOffline) {
+                    // 再次确认不是网络问题
+                    fetch("/api/health", { method: "HEAD", cache: "no-cache" })
+                        .then((response) => {
+                            if (response.ok) {
+                                // 确实是认证问题，不是网络问题
+                                toast.error("登录已过期", {
+                                    description: "正在跳转到登录页面...",
+                                    duration: 3000,
+                                })
+                                setTimeout(() => {
+                                    window.location.href = "/login"
+                                }, 2000)
+                            } else {
+                                // 服务器有问题，不重定向
+                                toast.warning("服务器暂时不可用", {
+                                    description: "请稍后再试，或继续离线操作。",
+                                    duration: 5000,
+                                })
+                            }
+                        })
+                        .catch(() => {
+                            // 网络请求失败，说明是网络问题，不是认证问题
+                            toast.warning("网络连接不稳定", {
+                                description: "请检查网络连接，或继续离线操作。",
+                                duration: 5000,
+                            })
+                        })
                 } else {
+                    // 离线状态下不重定向到登录页
                     toast.warning("离线状态下无法验证登录", {
                         description: "请检查网络连接，或继续离线操作。",
                         duration: 5000,
@@ -97,7 +120,7 @@ export function ServiceWorkerUpdater() {
                 window.removeEventListener("urql:unauthorized", handleUrqlUnauthorized)
             }
         }
-    }, [isAppOffline]) // Add isAppOffline to dependencies
+    }, [isAppOffline, networkStatus.isOnline])
 
     const handleUpdate = () => {
         if (registration?.waiting) {
