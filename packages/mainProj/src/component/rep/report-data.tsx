@@ -1,14 +1,11 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { useQuery, gql } from "@urql/next"
 import { useStorage } from "@/report/StorageContext"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { subscribeToNetworkStatus, getNetworkStatus } from "@/auth/graphql-component"
-
-// NOTE: Removed nested Suspense wrappers to avoid server/client mismatch.
-// We also gate first render with a "mounted" flag to keep HTML stable across SSR/CSR and prevent hydration errors.
 
 export interface ReportParams {
     repId: string
@@ -188,6 +185,10 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const isFromCache = dataSource === "cache" || dataSource === "stale-cache"
     const isNetworkFailure = isNetworkError(error) || !networkState.isOnline
 
+    // 使用 ref 来跟踪上一次的状态，避免重复设置
+    const prevDataRef = useRef<any>(null)
+    const prevOfflineRef = useRef<boolean | null>(null)
+
     // 如果有缓存数据，延迟一段时间后强制显示内容
     useEffect(() => {
         if (data && report && isNetworkFailure) {
@@ -198,21 +199,47 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         }
     }, [data, report, isNetworkFailure])
 
+    // 只在数据真正变化时更新 storage
     useEffect(() => {
-        const snap = report?.snapshot && JSON.parse(report.snapshot)
-        const dat = report?.data && JSON.parse(report.data || "{}")
-        if (dat) setStorage({ ...dat, ...snap, _version: report?.version })
-        else setStorage({ ...(snap || {}), _version: report?.version })
-        setSubrType(undefined)
+        if (!report) return
+
+        const snap = report.snapshot && JSON.parse(report.snapshot)
+        const dat = report.data && JSON.parse(report.data || "{}")
+        const newData = dat ? { ...dat, ...snap, _version: report.version } : { ...(snap || {}), _version: report.version }
+
+        // 比较数据是否真的变化了
+        const dataChanged = JSON.stringify(newData) !== JSON.stringify(prevDataRef.current)
+
+        if (dataChanged) {
+            console.log("StorageContext: Setting storage data", newData)
+            setStorage(newData)
+            setSubrType(undefined)
+            prevDataRef.current = newData
+        }
     }, [report, setStorage, setSubrType])
 
+    // 只在离线状态真正变化时更新
     useEffect(() => {
+        let newOfflineState: boolean
+
         if (isNetworkFailure) {
-            console.log("Setting offline to true due to network failure")
-            setOffline(true)
+            newOfflineState = true
         } else if (dataSource === "network" || dataSource === "network-loading" || networkState.isOnline) {
-            console.log("Setting offline to false due to network success")
-            setOffline(false)
+            newOfflineState = false
+        } else {
+            return // 不确定的状态，不更新
+        }
+
+        // 只在状态真正变化时更新
+        if (prevOfflineRef.current !== newOfflineState) {
+            console.log(
+                "Setting offline to",
+                newOfflineState,
+                "due to",
+                isNetworkFailure ? "network failure" : "network success",
+            )
+            setOffline(newOfflineState)
+            prevOfflineRef.current = newOfflineState
         }
     }, [dataSource, isNetworkFailure, networkState, setOffline])
 
@@ -246,7 +273,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     if (!report)
         return (
             <div className="content-center text-center h-screen w-screen">
-                <Link href="/">{"没有找到该份报告，返回首页"}</Link>
+                <Link href="/">{"没有找到��份报告，返回首页"}</Link>
             </div>
         )
 
@@ -300,26 +327,58 @@ function CommonReportDataSub({
     const isMainNetworkError = isNetworkError(error)
     const isSubNetworkError = isNetworkError(errorSub)
 
+    // 使用 ref 来跟踪上一次的状态，避免重复设置
+    const prevDataRef = useRef<any>(null)
+    const prevParrepfsRef = useRef<any>(null)
+    const prevOfflineRef = useRef<boolean | null>(null)
+
     useEffect(() => {
-        const snap = report?.snapshot && JSON.parse(report.snapshot)
-        if (reportSub) {
-            const subdat = reportSub.data && JSON.parse(reportSub.data || "{}")
-            if (subdat) setStorage({ ...subdat, _version: reportSub?.version })
-            else setStorage({ _version: reportSub?.version })
+        if (!report || !reportSub) return
+
+        const snap = report.snapshot && JSON.parse(report.snapshot)
+        const subdat = reportSub.data && JSON.parse(reportSub.data || "{}")
+        const dat = report.data && JSON.parse(report.data || "{}")
+
+        // 更新子报告数据
+        const newSubData = subdat ? { ...subdat, _version: reportSub.version } : { _version: reportSub.version }
+        const subDataChanged = JSON.stringify(newSubData) !== JSON.stringify(prevDataRef.current)
+
+        if (subDataChanged) {
+            setStorage(newSubData)
             setSubrType(reportSub.modeltype)
+            prevDataRef.current = newSubData
         }
-        const dat = report?.data && JSON.parse(report.data || "{}")
-        if (reportSub) {
-            if (dat) setParrepfs({ ...dat, ...(snap || {}), _version: report?.version })
-            else setParrepfs({ ...(snap || {}), _version: report?.version })
+
+        // 更新父报告数据
+        const newParData = dat
+            ? { ...dat, ...(snap || {}), _version: report.version }
+            : { ...(snap || {}), _version: report.version }
+        const parDataChanged = JSON.stringify(newParData) !== JSON.stringify(prevParrepfsRef.current)
+
+        if (parDataChanged) {
+            setParrepfs(newParData)
+            prevParrepfsRef.current = newParData
         }
     }, [reportSub, report, setStorage, setParrepfs, setSubrType])
 
     useEffect(() => {
         const hasNetworkError = isMainNetworkError || isSubNetworkError || !networkState.isOnline
         const hasNetworkSuccess = (mainDataSource === "network" || subDataSource === "network") && networkState.isOnline
-        if (hasNetworkError) setOffline(true)
-        else if (hasNetworkSuccess) setOffline(false)
+
+        let newOfflineState: boolean
+        if (hasNetworkError) {
+            newOfflineState = true
+        } else if (hasNetworkSuccess) {
+            newOfflineState = false
+        } else {
+            return // 不确定的状态，不更新
+        }
+
+        // 只在状态真正变化时更新
+        if (prevOfflineRef.current !== newOfflineState) {
+            setOffline(newOfflineState)
+            prevOfflineRef.current = newOfflineState
+        }
     }, [mainDataSource, subDataSource, isMainNetworkError, isSubNetworkError, networkState, setOffline])
 
     if (!mounted) return <div className="p-4 text-sm text-muted-foreground">{"正在准备编辑环境..."}</div>

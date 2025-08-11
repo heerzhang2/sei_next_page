@@ -391,16 +391,16 @@ interface UseFrameEditorBarProps {
     root?: boolean
 }
 
-export function useFrameEditorBarLegacy({
-                                            rep,
-                                            values,
-                                            onReset,
-                                            onVerify,
-                                            subrid,
-                                            redId,
-                                            modType,
-                                            root,
-                                        }: UseFrameEditorBarProps) {
+export function useFrameEditorBar({
+                                      rep,
+                                      values,
+                                      onReset,
+                                      onVerify,
+                                      subrid,
+                                      redId,
+                                      modType,
+                                      root,
+                                  }: UseFrameEditorBarProps) {
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified } = useStorage()
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)

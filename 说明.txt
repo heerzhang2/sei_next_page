@@ -501,15 +501,4 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subrid=KQcbgDF9RO21DgA92H3tQlJlcG9ydA
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
-
-
-src/component/rep/report-data.tsx里面代码         if (isNetworkFailure || !networkState.isOnline) {
-                                                  return (<>
-                                                      <div className="text-center p-4">
-                                                          <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
-                                                          <div className="text-sm text-gray-600">{isFromCache || data ? "正在使用缓存数据" : "无法连接到服务器"}</div>
-                                                          <div className="text-xs text-gray-500 mt-2">{`错误: ${error?.message || networkState.lastError?.message || "网络连接失败"}`}</div>
-                                                          {data && <div className="text-xs text-blue-600 mt-2">{"已加载缓存数据，功能可能受限"}</div>}
-                                                      </div>
-                                                      {report && data && children}    这里后面的{report && data && children}才是报告内容；
-在PWA离线状态下，报告内容必须让windows窗口切换其它窗口之后再回来浏览器这里后才会显示出{report && data && children}里面的内容。
+Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.

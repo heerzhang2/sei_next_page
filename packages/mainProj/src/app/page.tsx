@@ -33,7 +33,7 @@ export default function Home() {
                             </div>
                             <div className="mt-10">
                                 <Link
-                                    href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1">查阅当前1份报告</Link>
+                                    href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1">查阅当前1份报告-管道的</Link>
                             </div>
                             <div className="mt-10">
                                 <Link
@@ -52,6 +52,9 @@ export default function Home() {
                             <div className="mt-10">
                                 <Link
                                     href="rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?#T6-14">分项报告的一第2份报告</Link>
+                            </div>
+                           <div className="mt-10">
+                                <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">滑行车类大型游乐设施监督检验</Link>
                             </div>
                             <div className="mt-10">
                                 <Link href="/process-start">例子的 入口</Link>

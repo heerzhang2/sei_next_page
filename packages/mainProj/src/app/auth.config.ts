@@ -14,9 +14,6 @@ const AUTHENTICATE_MUTATION = `
       refreshToken
       user {
         id
-        name
-        email
-        username
       }
     }
   }
@@ -29,9 +26,6 @@ const REFRESH_MUTATION = `
       refreshToken
       user {
         id
-        name
-        email
-        username
       }
     }
   }
