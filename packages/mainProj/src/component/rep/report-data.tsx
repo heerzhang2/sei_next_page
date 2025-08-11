@@ -165,6 +165,8 @@ function isNetworkError(error: any) {
 
 function CommonReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false)
+    const [forceShowContent, setForceShowContent] = useState(false)
+
     useEffect(() => setMounted(true), [])
 
     const [result] = useQuery({
@@ -185,6 +187,16 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const dataSource = getDataSource(result)
     const isFromCache = dataSource === "cache" || dataSource === "stale-cache"
     const isNetworkFailure = isNetworkError(error) || !networkState.isOnline
+
+    // 如果有缓存数据，延迟一段时间后强制显示内容
+    useEffect(() => {
+        if (data && report && isNetworkFailure) {
+            const timer = setTimeout(() => {
+                setForceShowContent(true)
+            }, 1000) // 1秒后强制显示
+            return () => clearTimeout(timer)
+        }
+    }, [data, report, isNetworkFailure])
 
     useEffect(() => {
         const snap = report?.snapshot && JSON.parse(report.snapshot)
@@ -214,12 +226,16 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     if (error || !networkState.isOnline) {
         if (isNetworkFailure || !networkState.isOnline) {
             return (
-                <div className="text-center p-4">
-                    <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
-                    <div className="text-sm text-gray-600">{isFromCache || data ? "正在使用缓存数据" : "无法连接到服务器"}</div>
-                    <div className="text-xs text-gray-500 mt-2">{`错误: ${error?.message || networkState.lastError?.message || "网络连接失败"}`}</div>
-                    {data && <div className="text-xs text-blue-600 mt-2">{"已加载缓存数据，功能可能受限"}</div>}
-                </div>
+                <>
+                    <div className="text-center p-4">
+                        <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
+                        <div className="text-sm text-gray-600">{isFromCache || data ? "正在使用缓存数据" : "无法连接到服务器"}</div>
+                        <div className="text-xs text-gray-500 mt-2">{`错误: ${error?.message || networkState.lastError?.message || "网络连接失败"}`}</div>
+                        {data && <div className="text-xs text-blue-600 mt-2">{"已加载缓存数据，功能可能受限"}</div>}
+                    </div>
+                    {/* 立即显示内容，或者在强制显示标志设置后显示 */}
+                    {report && data && (isFromCache || forceShowContent) && children}
+                </>
             )
         } else {
             return <div>{`报告取数据错: ${error?.message}`}</div>
@@ -314,11 +330,14 @@ function CommonReportDataSub({
         const hasNetworkError = isMainNetworkError || isSubNetworkError || !networkState.isOnline
         if (hasNetworkError) {
             return (
-                <div className="text-center p-4">
-                    <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
-                    <div className="text-sm text-gray-600">{"正在使用缓存数据"}</div>
-                    <div className="text-xs text-gray-500 mt-2">{`${error?.message || ""} ${errorSub?.message || ""} ${networkState.lastError?.message || ""}`}</div>
-                </div>
+                <>
+                    <div className="text-center p-4">
+                        <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
+                        <div className="text-sm text-gray-600">{"正在使用缓存数据"}</div>
+                        <div className="text-xs text-gray-500 mt-2">{`${error?.message || ""} ${errorSub?.message || ""} ${networkState.lastError?.message || ""}`}</div>
+                    </div>
+                    {report && reportSub && children}
+                </>
             )
         } else {
             return <div>{`报告取数据错: ${error?.message || ""} ${errorSub?.message || ""}`}</div>

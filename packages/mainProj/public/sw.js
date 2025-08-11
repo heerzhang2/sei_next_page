@@ -89,7 +89,7 @@ const getFromBackupDB = async (url) => {
 // 安装事件
 self.addEventListener("install", (event) => {
     console.log("Service Worker: Installing...")
-
+    console.log("Service Worker: 路由：都做缓存Cache API")
     event.waitUntil(
         (async () => {
             try {
@@ -249,8 +249,8 @@ self.addEventListener("fetch", (event) => {
                 const fetchPromise = fetch(request)
                     .then(async (networkResponse) => {
                         if (networkResponse.ok) {
-                            const shouldCache =
-                                CACHEABLE_ROUTES.some((pattern) => pattern.test(url.pathname)) || STATIC_ASSETS.includes(url.pathname)
+                            const shouldCache =true;
+                             //   CACHEABLE_ROUTES.some((pattern) => pattern.test(url.pathname)) || STATIC_ASSETS.includes(url.pathname)
 
                             if (shouldCache) {
                                 if (isCacheAPISupported()) {

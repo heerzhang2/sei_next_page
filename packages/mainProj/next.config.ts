@@ -1,4 +1,6 @@
 import type { NextConfig } from "next"
+import { readFileSync } from "fs"
+import { join } from "path"
 
 const nextConfig: NextConfig = {
     /* config options here */
@@ -18,6 +20,23 @@ const nextConfig: NextConfig = {
     experimental: {
         webpackBuildWorker: true,
     },
+
+    // HTTPS 配置
+    ...(process.env.NODE_ENV === "development" && {
+        server: {
+            https: (() => {
+                try {
+                    return {
+                        key: readFileSync(join(process.cwd(), "ssl/localhost.key")),
+                        cert: readFileSync(join(process.cwd(), "ssl/localhost.crt")),
+                    }
+                } catch (error) {
+                    console.warn("HTTPS certificates not found, falling back to HTTP")
+                    return undefined
+                }
+            })(),
+        },
+    }),
 
     // 添加缓存控制配置 + PWA 头部配置
     headers: async () => {
@@ -60,25 +79,25 @@ const nextConfig: NextConfig = {
             },
             // PWA Service Worker 配置
             {
-                source: '/sw.js',
+                source: "/sw.js",
                 headers: [
                     {
-                        key: 'Cache-Control',
-                        value: 'public, max-age=0, must-revalidate',
+                        key: "Cache-Control",
+                        value: "public, max-age=0, must-revalidate",
                     },
                     {
-                        key: 'Service-Worker-Allowed',
-                        value: '/',
+                        key: "Service-Worker-Allowed",
+                        value: "/",
                     },
                 ],
             },
             // PWA Manifest 配置
             {
-                source: '/manifest.json',
+                source: "/manifest.json",
                 headers: [
                     {
-                        key: 'Cache-Control',
-                        value: 'public, max-age=31536000, immutable',
+                        key: "Cache-Control",
+                        value: "public, max-age=31536000, immutable",
                     },
                 ],
             },
@@ -89,14 +108,14 @@ const nextConfig: NextConfig = {
     async rewrites() {
         return [
             {
-                source: '/sw.js',
-                destination: '/sw.js',
+                source: "/sw.js",
+                destination: "/sw.js",
             },
             // 健康检查端点
             {
-                source: '/health',
-                destination: '/api/health'
-            }
+                source: "/health",
+                destination: "/api/health",
+            },
         ]
     },
 
@@ -106,9 +125,6 @@ const nextConfig: NextConfig = {
             test: /\.node$/,
             use: "ignore-loader",
         })
-
-        // 如果你需要使用这些模块，可以使用 node-loader 代替 ignore-loader
-        // 但这通常只在 Node.js 环境中有效，不适用于浏览器
 
         return config
     },

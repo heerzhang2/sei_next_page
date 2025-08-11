@@ -7,7 +7,6 @@ import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
 import "@/styles/print-styles.css" // 导入打印样式
 import { PrintSettingsProvider } from "@/contexts/print-settings-context"
-import { StorageProvider } from "@/report/StorageContext"
 import type React from "react"
 import { notoSans, notoSerif } from "@/styles/fonts"
 import "./globals.css"
@@ -15,10 +14,14 @@ import HeaderWrapper from "@/component/header-wrapper"
 import { PWAInstaller } from "@/components/pwa-installer"
 import { ServiceWorkerUpdater } from "@/components/service-worker-updater"
 import { OfflineIndicator } from "@/components/offline-indicator"
-import { PWAStatusChecker } from "@/components/pwa-status-checker"
 import type { Viewport } from "next"
-import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
-import { Suspense } from "react"
+import { useSafariViewportFix } from "@/hooks/use-safari-viewport-fix"
+
+// 创建一个客户端组件来使用 hook
+function SafariViewportFix() {
+    useSafariViewportFix()
+    return null
+}
 
 export const metadata: Metadata = {
     title: "报告编制系统",
@@ -55,32 +58,83 @@ export default async function RootLayout({
             <meta name="msapplication-config" content="/browserconfig.xml" />
             <meta name="msapplication-TileColor" content="#000000" />
             <meta name="msapplication-tap-highlight" content="no" />
+
+            {/* Safari 特定优化 */}
+            <meta name="apple-touch-fullscreen" content="yes" />
+            <meta name="apple-mobile-web-app-orientations" content="portrait-any landscape-any" />
+
+            {/* 防止 Safari 缩放 */}
+            <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+            />
+
+            {/* Safari PWA 启动画面 */}
+            <link rel="apple-touch-startup-image" href="/icon-512x512.png" />
+
+            <style
+                dangerouslySetInnerHTML={{
+                    __html: `
+                    /* Safari 特定修复 */
+                    @supports (-webkit-touch-callout: none) {
+                        .safari-fix {
+                            -webkit-overflow-scrolling: touch;
+                        }
+                        
+                        /* 修复 Safari 横竖屏切换问题 */
+                        @media screen and (orientation: landscape) {
+                            body {
+                                height: 100vh;
+                                height: -webkit-fill-available;
+                            }
+                        }
+                        
+                        @media screen and (orientation: portrait) {
+                            body {
+                                height: 100vh;
+                                height: -webkit-fill-available;
+                            }
+                        }
+                        
+                        /* 防止 Safari 的橡皮筋效果 */
+                        body {
+                            position: fixed;
+                            overflow: hidden;
+                            width: 100%;
+                            height: 100%;
+                        }
+                        
+                        #__next {
+                            height: 100%;
+                            overflow: auto;
+                            -webkit-overflow-scrolling: touch;
+                        }
+                    }
+                `,
+                }}
+            />
         </head>
         <body
             className={`${notoSans.variable} ${notoSerif.variable} antialiased
-             bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 @container
+             bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 @container safari-fix
             `}
         >
+        <SafariViewportFix />
         <ThemeProvider>
             <PrintSettingsProvider>
                 <SessionProvider session={session}>
                     <Provider>
-                        <StorageProvider>
-                            <GraphQLProvider>
-                                <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-                                    <OfflineIndicator />
-                                </div>
-                                <HeaderWrapper />
-                                <ErrorBoundaryWrapper>
-                                    <Suspense fallback={<div>Loading session...</div>}>{children}</Suspense>
-                                </ErrorBoundaryWrapper>
-                                {/* PWA 组件 */}
-                                <PWAInstaller />
-                                <ServiceWorkerUpdater />
-                                <PWAStatusChecker />
-                                <Toaster richColors position="top-right" />
-                            </GraphQLProvider>
-                        </StorageProvider>
+                        <GraphQLProvider>
+                            <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+                                <OfflineIndicator />
+                            </div>
+                            <HeaderWrapper />
+                            {children}
+                            {/* PWA 组件 */}
+                            <PWAInstaller />
+                            <ServiceWorkerUpdater />
+                            <Toaster richColors position="top-right" />
+                        </GraphQLProvider>
                     </Provider>
                 </SessionProvider>
             </PrintSettingsProvider>
