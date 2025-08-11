@@ -14,6 +14,7 @@ import HeaderWrapper from "@/component/header-wrapper"
 import { PWAInstaller } from "@/components/pwa-installer"
 import { ServiceWorkerUpdater } from "@/components/service-worker-updater"
 import { OfflineIndicator } from "@/components/offline-indicator"
+import { OfflineStatusIndicator } from "@/components/offline-status-indicator"
 import { SafariViewportFix } from "@/components/safari-viewport-fix"
 import { AuthErrorBoundary } from "@/components/auth-error-boundary"
 import type { Viewport } from "next"
@@ -143,6 +144,9 @@ export default async function RootLayout({
                     <AuthErrorBoundary>
                         <Provider>
                             <GraphQLProvider>
+                                {/* 离线状态指示器 */}
+                                <OfflineStatusIndicator />
+
                                 <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
                                     <OfflineIndicator />
                                 </div>
