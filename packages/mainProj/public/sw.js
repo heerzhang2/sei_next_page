@@ -5,8 +5,14 @@ const DYNAMIC_CACHE = "dynamic-v1.4"
 // 需要缓存的静态资源
 const STATIC_ASSETS = ["/", "/offline", "/login", "/manifest.json", "/icon-192x192.png", "/icon-512x512.png"]
 
-// 需要缓存的路由模式
-const CACHEABLE_ROUTES = [/^\/rep\/[^/]+\/INDPL_DJ\/1/, /^\/profile/, /^\/user/]
+// 需要缓存的路由模式 - 扩展支持所有报告路径
+const CACHEABLE_ROUTES = [
+    /^\/rep\//, // 缓存所有 /rep/ 开头的路径
+    /^\/profile/,
+    /^\/user/,
+    /^\/dashboard/,
+    /^\/settings/,
+]
 
 // 检查 Cache API 是否可用
 const isCacheAPISupported = () => {
@@ -164,6 +170,22 @@ const getFromBackupDB = async (url) => {
     }
 }
 
+const shouldCacheRoute = (url) => {
+    const pathname = new URL(url).pathname
+    return CACHEABLE_ROUTES.some((pattern) => pattern.test(pathname))
+}
+
+const isAuthRequest = (url) => {
+    const pathname = new URL(url).pathname
+    return pathname.includes("/login") || pathname.includes("/auth/") || pathname.includes("/api/auth/")
+}
+
+const isProtectedPage = (url) => {
+    const pathname = new URL(url).pathname
+    const protectedPaths = ["/rep/", "/profile", "/dashboard", "/settings"]
+    return protectedPaths.some((path) => pathname.startsWith(path))
+}
+
 // 安装事件
 self.addEventListener("install", (event) => {
     console.log("Service Worker: Installing...")
@@ -243,18 +265,114 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
         (async () => {
             try {
+                if (isAuthRequest(request.url)) {
+                    try {
+                        return await fetch(request)
+                    } catch (networkError) {
+                        console.log("Auth request failed offline, allowing access to cached content")
+                        if (isProtectedPage(request.url)) {
+                            const cachedResponse = await findCachedResponse(request)
+                            if (cachedResponse) {
+                                return cachedResponse
+                            }
+                        }
+
+                        // 只有在访问登录页面本身时才返回离线登录页面
+                        if (url.pathname === "/login") {
+                            return new Response(
+                                `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>离线模式 - 报告系统</title>
+                    <style>
+                        body { 
+                            font-family: system-ui, -apple-system, sans-serif; 
+                            margin: 0; 
+                            padding: 2rem; 
+                            background: #f5f5f5; 
+                            color: #333;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            min-height: 100vh;
+                        }
+                        .container { 
+                            background: white; 
+                            padding: 2rem; 
+                            border-radius: 8px; 
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            text-align: center;
+                            max-width: 400px;
+                        }
+                        .icon { font-size: 2rem; margin-bottom: 1rem; }
+                        h1 { color: #3498db; margin-bottom: 1rem; font-size: 1.5rem; }
+                        p { margin-bottom: 1rem; line-height: 1.6; }
+                        .actions { margin-top: 1.5rem; }
+                        button, a { 
+                            display: inline-block;
+                            padding: 0.5rem 1rem; 
+                            margin: 0.25rem; 
+                            background: #3498db; 
+                            color: white; 
+                            text-decoration: none; 
+                            border-radius: 4px; 
+                            border: none;
+                            cursor: pointer;
+                            font-size: 0.9rem;
+                        }
+                        button:hover, a:hover { background: #2980b9; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="icon">📱</div>
+                        <h1>离线模式</h1>
+                        <p>当前处于离线状态，无法进行登录验证。</p>
+                        <p>您可以继续浏览已缓存的内容。</p>
+                        <div class="actions">
+                            <a href="/">浏览缓存内容</a>
+                            <button onclick="window.location.reload()">重试连接</button>
+                        </div>
+                    </div>
+                    <script>
+                        window.addEventListener('online', () => {
+                            window.location.reload();
+                        });
+                    </script>
+                </body>
+                </html>
+                `,
+                                {
+                                    status: 200,
+                                    headers: {
+                                        "Content-Type": "text/html; charset=utf-8",
+                                        "Cache-Control": "no-cache",
+                                    },
+                                },
+                            )
+                        }
+
+                        throw networkError
+                    }
+                }
+
                 // API 请求策略
                 if (url.pathname.startsWith("/api/")) {
                     try {
                         const networkResponse = await fetch(request)
 
-                        // 缓存成功的非认证 API 响应
                         if (networkResponse.ok && !url.pathname.includes("/auth/")) {
-                            if (isCacheAPISupported()) {
-                                const cache = await caches.open(DYNAMIC_CACHE)
-                                cache.put(request, networkResponse.clone())
-                            } else {
-                                await saveToBackupDB(request.url, networkResponse.clone())
+                            // 对于报告相关的 API，积极缓存
+                            if (url.pathname.includes("/rep/") || shouldCacheRoute(request.url)) {
+                                if (isCacheAPISupported()) {
+                                    const cache = await caches.open(DYNAMIC_CACHE)
+                                    cache.put(request, networkResponse.clone())
+                                } else {
+                                    await saveToBackupDB(request.url, networkResponse.clone())
+                                }
                             }
                         }
 
@@ -305,24 +423,30 @@ self.addEventListener("fetch", (event) => {
                     }
                 }
 
-                // 页面请求策略：优先返回缓存
                 const cachedResponse = await findCachedResponse(request)
 
                 const fetchPromise = fetch(request)
                     .then(async (networkResponse) => {
-                        if (networkResponse.ok) {
-                            // 使用标准化的 URL 进行缓存
-                            const cacheKey = normalizeUrlForCache(request.url)
-                            const cacheRequest = new Request(cacheKey, {
-                                method: request.method,
-                                headers: request.headers,
-                            })
+                        const contentType = networkResponse.headers.get("content-type") || ""
+                        const isHtmlResponse = contentType.includes("text/html")
 
-                            if (isCacheAPISupported()) {
-                                const cache = await caches.open(DYNAMIC_CACHE)
-                                cache.put(cacheRequest, networkResponse.clone())
-                            } else {
-                                await saveToBackupDB(cacheKey, networkResponse.clone())
+                        if (networkResponse.ok && isHtmlResponse) {
+                            if (shouldCacheRoute(request.url)) {
+                                console.log("Caching route:", request.url)
+
+                                // 使用标准化的 URL 进行缓存
+                                const cacheKey = normalizeUrlForCache(request.url)
+                                const cacheRequest = new Request(cacheKey, {
+                                    method: request.method,
+                                    headers: request.headers,
+                                })
+
+                                if (isCacheAPISupported()) {
+                                    const cache = await caches.open(DYNAMIC_CACHE)
+                                    cache.put(cacheRequest, networkResponse.clone())
+                                } else {
+                                    await saveToBackupDB(cacheKey, networkResponse.clone())
+                                }
                             }
                         }
                         return networkResponse
@@ -336,9 +460,88 @@ self.addEventListener("fetch", (event) => {
                             return cachedResponse
                         }
 
-                        // ���有在完全没有缓存且是 HTML 请求时才返回离线提示
                         if (request.headers.get("accept")?.includes("text/html")) {
-                            // 最后的离线页面，只在真正没有任何缓存时显示
+                            if (isProtectedPage(request.url)) {
+                                return new Response(
+                                    `
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                      <meta charset="utf-8">
+                      <meta name="viewport" content="width=device-width, initial-scale=1">
+                      <title>内容未缓存 - 报告系统</title>
+                      <style>
+                          body { 
+                              font-family: system-ui, -apple-system, sans-serif; 
+                              margin: 0; 
+                              padding: 2rem; 
+                              background: #f5f5f5; 
+                              color: #333;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              min-height: 100vh;
+                          }
+                          .container { 
+                              background: white; 
+                              padding: 2rem; 
+                              border-radius: 8px; 
+                              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                              text-align: center;
+                              max-width: 400px;
+                          }
+                          .icon { font-size: 2rem; margin-bottom: 1rem; }
+                          h1 { color: #f39c12; margin-bottom: 1rem; font-size: 1.5rem; }
+                          p { margin-bottom: 1rem; line-height: 1.6; }
+                          .actions { margin-top: 1.5rem; }
+                          button, a { 
+                              display: inline-block;
+                              padding: 0.5rem 1rem; 
+                              margin: 0.25rem; 
+                              background: #3498db; 
+                              color: white; 
+                              text-decoration: none; 
+                              border-radius: 4px; 
+                              border: none;
+                              cursor: pointer;
+                              font-size: 0.9rem;
+                          }
+                          button:hover, a:hover { background: #2980b9; }
+                          .secondary { background: #95a5a6; }
+                          .secondary:hover { background: #7f8c8d; }
+                      </style>
+                  </head>
+                  <body>
+                      <div class="container">
+                          <div class="icon">📋</div>
+                          <h1>内容未缓存</h1>
+                          <p>此报告页面尚未缓存，需要网络连接才能访问。</p>
+                          <p>请在有网络时先访问一次以缓存内容。</p>
+                          <div class="actions">
+                              <a href="/">返回首页</a>
+                              <button onclick="history.back()" class="secondary">返回上页</button>
+                              <button onclick="window.location.reload()" class="secondary">重试</button>
+                          </div>
+                      </div>
+                      <script>
+                          window.addEventListener('online', () => {
+                              window.location.reload();
+                          });
+                      </script>
+                  </body>
+                  </html>
+                  `,
+                                    {
+                                        status: 503,
+                                        headers: {
+                                            "Content-Type": "text/html; charset=utf-8",
+                                            "Cache-Control": "no-cache",
+                                        },
+                                    },
+                                )
+                            }
+
+                            // 其他页面的通用离线提示
                             return new Response(
                                 `
                 <!DOCTYPE html>
@@ -400,7 +603,6 @@ self.addEventListener("fetch", (event) => {
                         </div>
                     </div>
                     <script>
-                        // 监听网络恢复
                         window.addEventListener('online', () => {
                             window.location.reload();
                         });

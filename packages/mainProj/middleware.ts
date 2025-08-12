@@ -5,17 +5,33 @@ import { type NextRequest, NextResponse } from "next/server"
 // 应用 NextAuth 中间件
 const authMiddleware = NextAuth(authConfig).auth
 
-// 检查是否为离线模式的请求
 const isOfflineRequest = (request: NextRequest): boolean => {
     const userAgent = request.headers.get("user-agent") || ""
     const referer = request.headers.get("referer") || ""
+    const purpose = request.headers.get("sec-fetch-dest") || ""
 
     // 检查是否来自 Service Worker 或离线环境
     return (
         userAgent.includes("ServiceWorker") ||
         referer.includes("offline") ||
-        request.headers.get("cache-control")?.includes("no-cache")
+        request.headers.get("cache-control")?.includes("no-cache") ||
+        (purpose === "document" && !navigator.onLine) ||
+        request.headers.get("x-offline-mode") === "true"
     )
+}
+
+const isNetworkAvailable = async (): Promise<boolean> => {
+    try {
+        // 尝试访问一个轻量级的健康检查端点
+        const response = await fetch("/api/health", {
+            method: "HEAD",
+            cache: "no-cache",
+            signal: AbortSignal.timeout(3000), // 3秒超时
+        })
+        return response.ok
+    } catch {
+        return false
+    }
 }
 
 // 创建一个处理函数来添加缓存控制头
@@ -26,24 +42,46 @@ export async function middleware(request: NextRequest) {
     const protectedPaths = ["/rep/", "/profile", "/dashboard", "/settings"]
     const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
 
-    if (isProtectedPath && isOfflineRequest(request)) {
-        console.log("Offline request detected for protected path, allowing access")
-        const response = NextResponse.next()
-        addNoCacheHeaders(response.headers)
-        return response
+    if (isProtectedPath) {
+        const isOffline = isOfflineRequest(request)
+
+        if (isOffline) {
+            console.log("Offline request detected for protected path, allowing access")
+            const response = NextResponse.next()
+            response.headers.set("x-offline-mode", "true")
+            response.headers.set("x-cache-control", "max-age=86400") // 24小时缓存
+            return response
+        }
+
+        const networkAvailable = await isNetworkAvailable()
+        if (!networkAvailable && pathname.startsWith("/rep/")) {
+            console.log("Network unavailable for report path, allowing cached access")
+            const response = NextResponse.next()
+            response.headers.set("x-offline-fallback", "true")
+            return response
+        }
     }
 
     // 首先应用 NextAuth 中间件
     const response = await authMiddleware(request)
 
     if (!response) {
-        // 如果 authMiddleware 没有返回响应，创建一个新的响应
         const newResponse = NextResponse.next()
-
-        // 添加缓存控制头
         addNoCacheHeaders(newResponse.headers)
-
         return newResponse
+    }
+
+    if (pathname.startsWith("/rep/")) {
+        const newHeaders = new Headers(response.headers)
+        // 允许缓存报告页面
+        newHeaders.set("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400")
+        newHeaders.set("x-cacheable", "true")
+
+        return new NextResponse(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: newHeaders,
+        })
     }
 
     // 如果是 API 请求或数据请求，添加缓存控制头
@@ -52,11 +90,9 @@ export async function middleware(request: NextRequest) {
     const isGraphQLRequest = pathname.includes("/graphql")
 
     if (isApiRequest || isDataRequest || isGraphQLRequest) {
-        // 复制原始响应并添加缓存控制头
         const newHeaders = new Headers(response.headers)
         addNoCacheHeaders(newHeaders)
 
-        // 创建一个新的响应对象，保留原始响应的状态和正文，但使用新的头
         return new NextResponse(response.body, {
             status: response.status,
             statusText: response.statusText,
