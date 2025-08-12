@@ -526,3 +526,6 @@ src\report\industrial\Periodical\Conclusion.tsx (55:54)
 ConclusionIndPer
 src\report\industrial\Periodical\Conclusion.tsx (46:21)
 
+https://v0.app/chat/next-js-https-setup-hUAGNojzVNM
+# .env.local - 仅开发环境使用
+NODE_TLS_REJECT_UNAUTHORIZED=0
