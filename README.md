@@ -70,3 +70,13 @@ credentials: true
 
 升级Next.js和Node服务到HTTPS
 【表格打印调整】  JSON.parse(orc?._tblFixed??'[]')  ; 编辑器3段式窗口总宽度1595px；
+**生产服务器部署：**
+```shellscript
+# 1. 构建应用
+yarn build
+# 2. 使用 PM2 启动生产环境
+pm2 start ecosystem.config.js --env production
+# 3. 设置开机自启
+pm2 startup
+pm2 save
+```
