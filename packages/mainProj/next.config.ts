@@ -1,4 +1,6 @@
 import type { NextConfig } from "next"
+import fs from "fs"
+import path from "path"
 
 const nextConfig: NextConfig = {
     /* config options here */
@@ -18,6 +20,16 @@ const nextConfig: NextConfig = {
     experimental: {
         webpackBuildWorker: true,
     },
+
+    server:
+        process.env.NODE_ENV === "development"
+            ? {
+                https: {
+                    key: fs.readFileSync(path.resolve(process.cwd(), "ssl", "localhost.key")),
+                    cert: fs.readFileSync(path.resolve(process.cwd(), "ssl", "localhost.crt")),
+                },
+            }
+            : undefined,
 
     // 移除 server 配置，我们将使用自定义服务器
 

@@ -202,7 +202,7 @@ export function useFormFramework<T extends object>({
     }
 }
 
-interface UseFormFrameworkProps {
+interface UseFormFrameworkProps<T> {
     schema: z.ZodObject<any>
     defaultValues: Record<string, any>
     contentRendererFactory?: (form: any, arrays?: Record<string, any>) => React.ReactNode
@@ -215,22 +215,23 @@ interface UseFormFrameworkProps {
     subrid?: string
     redId?: number
     modType?: string
+    root?: boolean
 }
 
-export function useFormFrameworkLegacy({
-                                           schema,
-                                           defaultValues,
-                                           contentRendererFactory,
-                                           arrayFields = [],
-                                           rep,
-                                           onSubmit: customOnSubmit,
-                                           subrid,
-                                           redId,
-                                           modType,
-                                       }: UseFormFrameworkProps) {
+export function useFormFrameworkLegacy<T extends Record<string, any>>({
+                                                                          schema,
+                                                                          defaultValues,
+                                                                          contentRendererFactory,
+                                                                          arrayFields = [],
+                                                                          rep,
+                                                                          onSubmit: customOnSubmit,
+                                                                          subrid,
+                                                                          redId,
+                                                                          modType,
+                                                                          root = false,
+                                                                      }: UseFormFrameworkProps<T>) {
     const { storage, setStorage, setModified } = useStorage()
 
-    // 使用 useMemo 来稳定 defaultValues
     const stableDefaultValues = useMemo(() => {
         return defaultValues
     }, [JSON.stringify(defaultValues)])
@@ -238,7 +239,14 @@ export function useFormFrameworkLegacy({
     const form = useForm<z.infer<typeof schema>>({
         resolver: zodResolver(schema),
         defaultValues: stableDefaultValues as any,
+        mode: "onChange", // 添加模式以确保表单正确工作
     })
+
+    useEffect(() => {
+        if (!form.control) {
+            console.error("Form control is not initialized properly")
+        }
+    }, [form.control])
 
     const arrayControls = useFieldArrays(form.control, arrayFields)
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
