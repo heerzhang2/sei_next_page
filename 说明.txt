@@ -525,3 +525,4 @@ ConclusionIndPer.useMemo[content]
 src\report\industrial\Periodical\Conclusion.tsx (55:54)
 ConclusionIndPer
 src\report\industrial\Periodical\Conclusion.tsx (46:21)
+
