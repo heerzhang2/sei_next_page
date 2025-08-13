@@ -23,13 +23,22 @@ export function useNetworkStatus(): NetworkStatus {
 
     const checkServerConnectivity = useCallback(async () => {
         try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
+
             const response = await fetch("/api/health", {
                 method: "HEAD",
                 cache: "no-cache",
-                signal: AbortSignal.timeout(5000), // 5秒超时
+                signal: controller.signal,
             })
+
+            clearTimeout(timeoutId)
             return response.ok
         } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") {
+                console.warn("Server connectivity check timeout")
+                return false
+            }
             console.warn("Server connectivity check failed:", error)
             return false
         }
@@ -82,7 +91,7 @@ export function useNetworkStatus(): NetworkStatus {
                     isServerReachable,
                 }))
             }
-        }, 30000) // 每30秒检查一次
+        }, 60000) // 每60秒检查一次
 
         const handleConnectionChange = () => {
             const connectionType = getConnectionInfo()
@@ -95,7 +104,6 @@ export function useNetworkStatus(): NetworkStatus {
         window.addEventListener("online", handleOnline)
         window.addEventListener("offline", handleOffline)
 
-        // 监听连接类型变化
         if (typeof navigator !== "undefined" && "connection" in navigator) {
             const connection = (navigator as any).connection
             connection?.addEventListener("change", handleConnectionChange)
@@ -117,13 +125,11 @@ export function useNetworkStatus(): NetworkStatus {
 }
 
 export const subscribeToNetworkStatus = (callback: (status: NetworkStatus) => void) => {
-    // 这是一个兼容性函数，用于替代原来的 graphql-component 导入
     console.warn("subscribeToNetworkStatus is deprecated, use useNetworkStatus hook instead")
     return () => {} // 返回空的取消订阅函数
 }
 
 export const getNetworkStatus = (): NetworkStatus => {
-    // 这是一个兼容性函数，用于替代原来的 graphql-component 导入
     console.warn("getNetworkStatus is deprecated, use useNetworkStatus hook instead")
     return {
         isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,

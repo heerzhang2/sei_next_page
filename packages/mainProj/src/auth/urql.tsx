@@ -43,11 +43,25 @@ const networkStatusExchange: Exchange =
 
                     if (typeof window !== "undefined") {
                         if (offlineFlag) {
-                            window.dispatchEvent(new CustomEvent("urql:offline", { detail: { error: { message: err.message } } }))
+                            console.log("网络错误检测到:", err)
+
+                            // 防抖：避免短时间内重复触发
+                            const lastOfflineEvent = window.sessionStorage.getItem("lastOfflineEvent")
+                            const now = Date.now()
+                            if (!lastOfflineEvent || now - Number.parseInt(lastOfflineEvent) > 5000) {
+                                window.sessionStorage.setItem("lastOfflineEvent", now.toString())
+                                window.dispatchEvent(
+                                    new CustomEvent("urql:offline", {
+                                        detail: { error: { message: err.message } },
+                                    }),
+                                )
+                            }
                         }
                         if (unauth) {
                             window.dispatchEvent(
-                                new CustomEvent("urql:unauthorized", { detail: { message: "登录已过期或无效，请重新登录" } }),
+                                new CustomEvent("urql:unauthorized", {
+                                    detail: { message: "登录已过期或无效，请重新登录" },
+                                }),
                             )
                         }
                     }
@@ -55,16 +69,23 @@ const networkStatusExchange: Exchange =
             )
 
 const retry = retryExchange({
-    initialDelayMs: 500,
-    maxDelayMs: 8000,
+    initialDelayMs: 1000,
+    maxDelayMs: 5000,
     randomDelay: true,
-    maxNumberAttempts: 5,
+    maxNumberAttempts: 3, // 从5次减少到3次
     retryIf: (err) => {
         if (!err) return false
         const online = typeof navigator !== "undefined" ? navigator.onLine : true
         const status = (err as any)?.response?.status as number | undefined
-        // Retry on transient network errors and 5xx; do not auto-retry 401
-        const isTransient = !!err.networkError || (status !== undefined && status >= 500)
+
+        const isTransient = !!err.networkError || (status !== undefined && status >= 500 && status !== 503)
+
+        // 如果是资源不足错误，不要重试
+        if (err.message?.includes("ERR_INSUFFICIENT_RESOURCES")) {
+            console.warn("资源不足错误，停止重试:", err.message)
+            return false
+        }
+
         return online && isTransient
     },
 })

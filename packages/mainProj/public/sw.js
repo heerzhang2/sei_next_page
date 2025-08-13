@@ -85,6 +85,21 @@ const findCachedResponse = async (request) => {
     return null
 }
 
+const isNetworkAvailable = async () => {
+    try {
+        // 使用更轻量的检测方法
+        const response = await fetch("/api/health", {
+            method: "HEAD",
+            cache: "no-cache",
+            signal: AbortSignal.timeout(8000), // 8秒超时
+        })
+        return response.ok
+    } catch (error) {
+        console.log("Network check failed:", error.message)
+        return false
+    }
+}
+
 // 备用存储方案（使用 IndexedDB）
 const openBackupDB = () => {
     return new Promise((resolve, reject) => {
@@ -265,6 +280,34 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
         (async () => {
             try {
+                if (url.pathname.includes("/graphql")) {
+                    try {
+                        const networkResponse = await fetch(request)
+                        return networkResponse
+                    } catch (networkError) {
+                        console.log("GraphQL request failed:", networkError.message)
+
+                        // 返回离线响应而不是让请求失败
+                        return new Response(
+                            JSON.stringify({
+                                errors: [
+                                    {
+                                        message: "服务暂时不可用，请稍后重试",
+                                        extensions: { offline: true },
+                                    },
+                                ],
+                            }),
+                            {
+                                status: 503,
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Cache-Control": "no-cache",
+                                },
+                            },
+                        )
+                    }
+                }
+
                 if (isAuthRequest(request.url)) {
                     try {
                         return await fetch(request)
@@ -338,9 +381,30 @@ self.addEventListener("fetch", (event) => {
                         </div>
                     </div>
                     <script>
+                        let checkInterval;
+                        
+                        const checkNetwork = async () => {
+                          try {
+                            const response = await fetch('/api/health', { 
+                              method: 'HEAD', 
+                              cache: 'no-cache',
+                              signal: AbortSignal.timeout(5000)
+                            });
+                            if (response.ok) {
+                              clearInterval(checkInterval);
+                              window.location.reload();
+                            }
+                          } catch (error) {
+                            // 继续检查
+                          }
+                        };
+                        
                         window.addEventListener('online', () => {
-                            window.location.reload();
+                            setTimeout(checkNetwork, 1000); // 延迟1秒再检查
                         });
+                        
+                        // 每30秒检查一次网络状态
+                        checkInterval = setInterval(checkNetwork, 30000);
                     </script>
                 </body>
                 </html>
