@@ -74,3 +74,14 @@ Linux: 使用 Noto 字体
 合适的行高和字间距
 中英文混排优化
 这个配置确保了在所有主流操作系统上都能获得一致的显示效果，同时避免了商业字体的版权问题。
+# 开发和传统部署 需要 `node_modules` 和项目文件部署使用 `next start` 启动
+yarn build && yarn start
+# PWA 优化（实际上与build构建相同）
+yarn build:pwa
+# Docker 容器化部署
+yarn build:standalone
+# 启动生产服务器
+yarn start:cluster
+# 或使用HTTPS本机测试环境的
+yarn start:https
+

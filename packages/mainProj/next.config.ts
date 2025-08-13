@@ -22,25 +22,8 @@ const nextConfig: NextConfig = {
         ppr: false, // 可以设为 true 试验部分预渲染
     },
 
-    output:
-        process.env.BUILD_STATIC === "true" ? "export" : process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
+    output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
 
-    ...(process.env.BUILD_STATIC === "true" && {
-        trailingSlash: true,
-        skipTrailingSlashRedirect: true,
-    }),
-
-    compiler: {
-        // 移除 console.log（生产环境）
-        removeConsole:
-            process.env.NODE_ENV === "production"
-                ? {
-                    exclude: ["error", "warn"],
-                }
-                : false,
-    },
-
-    // 添加缓存控制配置 + PWA 头部配置
     headers: async () => {
         return [
             {
@@ -119,8 +102,7 @@ const nextConfig: NextConfig = {
         ]
     },
 
-    // PWA 重写规则
-    async rewrites() {
+    rewrites: async () => {
         return [
             {
                 source: "/sw.js",
