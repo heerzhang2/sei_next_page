@@ -14,9 +14,30 @@ const nextConfig: NextConfig = {
         unoptimized: true,
     },
 
-    // PWA 相关配置
     experimental: {
         webpackBuildWorker: true,
+        // 启用静态导出优化
+        optimizePackageImports: ["@/components", "@/lib"],
+        // 启用部分预渲染
+        ppr: false, // 可以设为 true 试验部分预渲染
+    },
+
+    output:
+        process.env.BUILD_STATIC === "true" ? "export" : process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
+
+    ...(process.env.BUILD_STATIC === "true" && {
+        trailingSlash: true,
+        skipTrailingSlashRedirect: true,
+    }),
+
+    compiler: {
+        // 移除 console.log（生产环境）
+        removeConsole:
+            process.env.NODE_ENV === "production"
+                ? {
+                    exclude: ["error", "warn"],
+                }
+                : false,
     },
 
     // 添加缓存控制配置 + PWA 头部配置
@@ -41,20 +62,33 @@ const nextConfig: NextConfig = {
                 ],
             },
             {
-                // 匹配所有数据请求
+                source: "/rep/:path*",
+                headers: [
+                    {
+                        key: "Cache-Control",
+                        value: "public, max-age=300, stale-while-revalidate=86400",
+                    },
+                    {
+                        key: "X-PWA-Cache",
+                        value: "report-page",
+                    },
+                ],
+            },
+            {
                 source: "/_next/data/:path*",
                 headers: [
                     {
                         key: "Cache-Control",
-                        value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+                        value: "public, max-age=60, stale-while-revalidate=300",
                     },
+                ],
+            },
+            {
+                source: "/_next/static/:path*",
+                headers: [
                     {
-                        key: "Pragma",
-                        value: "no-cache",
-                    },
-                    {
-                        key: "Expires",
-                        value: "0",
+                        key: "Cache-Control",
+                        value: "public, max-age=31536000, immutable",
                     },
                 ],
             },
@@ -106,6 +140,38 @@ const nextConfig: NextConfig = {
             test: /\.node$/,
             use: "ignore-loader",
         })
+
+        if (!isServer) {
+            // 客户端优化
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                fs: false,
+                net: false,
+                tls: false,
+            }
+
+            // 代码分割优化
+            config.optimization.splitChunks = {
+                ...config.optimization.splitChunks,
+                cacheGroups: {
+                    ...config.optimization.splitChunks?.cacheGroups,
+                    // 报告相关代码单独打包
+                    report: {
+                        test: /[\\/]src[\\/]report[\\/]/,
+                        name: "report",
+                        chunks: "all",
+                        priority: 10,
+                    },
+                    // 组件库单独打包
+                    components: {
+                        test: /[\\/]src[\\/]components[\\/]/,
+                        name: "components",
+                        chunks: "all",
+                        priority: 5,
+                    },
+                },
+            }
+        }
 
         return config
     },
