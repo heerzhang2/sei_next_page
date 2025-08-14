@@ -2,22 +2,37 @@
 
 import { useEffect, useState } from "react"
 import { useNetworkStatus } from "@/hooks/use-network-status"
-import { WifiOff } from "lucide-react"
+import { WifiOff, Server, Database } from "lucide-react"
 
 export function OfflineStatusIndicator() {
-    const { isOnline } = useNetworkStatus()
+    const { isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable } = useNetworkStatus()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
 
     useEffect(() => {
-        setShowOfflineBar(!isOnline)
-    }, [isOnline])
+        setShowOfflineBar(!isClientOnline || !isNextJSServerReachable || !isGraphQLBackendReachable)
+    }, [isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable])
 
     if (!showOfflineBar) return null
 
+    const getStatusMessage = () => {
+        if (!isClientOnline) {
+            return { icon: WifiOff, message: "客户端网络离线 - 正在使用缓存数据" }
+        }
+        if (!isNextJSServerReachable) {
+            return { icon: Server, message: "Next.js服务器无法连接 - 正在使用缓存数据" }
+        }
+        if (!isGraphQLBackendReachable) {
+            return { icon: Database, message: "后端数据库无法连接 - 正在使用缓存数据" }
+        }
+        return { icon: WifiOff, message: "离线模式 - 正在使用缓存数据" }
+    }
+
+    const { icon: Icon, message } = getStatusMessage()
+
     return (
         <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-amber-900 px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
-            <WifiOff className="h-4 w-4" />
-            <span>离线模式 - 正在使用缓存数据</span>
+            <Icon className="h-4 w-4" />
+            <span>{message}</span>
             <button
                 onClick={() => window.location.reload()}
                 className="ml-4 px-2 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700"

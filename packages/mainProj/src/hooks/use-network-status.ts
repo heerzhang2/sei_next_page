@@ -8,7 +8,9 @@ export interface NetworkStatus {
     lastOnlineTime: Date | null
     lastOfflineTime: Date | null
     connectionType: string | null
-    isServerReachable: boolean
+    isClientOnline: boolean
+    isNextJSServerReachable: boolean
+    isGraphQLBackendReachable: boolean
 }
 
 export function useNetworkStatus(): NetworkStatus {
@@ -18,13 +20,15 @@ export function useNetworkStatus(): NetworkStatus {
         lastOnlineTime: null,
         lastOfflineTime: null,
         connectionType: null,
-        isServerReachable: true,
+        isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
+        isNextJSServerReachable: true,
+        isGraphQLBackendReachable: true,
     })
 
-    const checkServerConnectivity = useCallback(async () => {
+    const checkNextJSServerConnectivity = useCallback(async () => {
         try {
             const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
+            const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
 
             const response = await fetch("/api/health", {
                 method: "HEAD",
@@ -35,11 +39,35 @@ export function useNetworkStatus(): NetworkStatus {
             clearTimeout(timeoutId)
             return response.ok
         } catch (error) {
-            if (error instanceof Error && error.name === "AbortError") {
-                console.warn("Server connectivity check timeout")
-                return false
-            }
-            console.warn("Server connectivity check failed:", error)
+            console.warn("Next.js服务器连接检查失败:", error)
+            return false
+        }
+    }, [])
+
+    const checkGraphQLBackendConnectivity = useCallback(async () => {
+        try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 8000) // 8秒超时
+
+            const backendUrl = process.env.NEXT_PUBLIC_BACK_END
+            if (!backendUrl) return false
+
+            const response = await fetch(`${backendUrl}/graphql`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    query: "{ __typename }",
+                }),
+                cache: "no-cache",
+                signal: controller.signal,
+            })
+
+            clearTimeout(timeoutId)
+            return response.ok
+        } catch (error) {
+            console.warn("GraphQL后端连接检查失败:", error)
             return false
         }
     }, [])
@@ -53,45 +81,54 @@ export function useNetworkStatus(): NetworkStatus {
     }, [])
 
     const updateNetworkStatus = useCallback(
-        async (isOnline: boolean, error: Error | null = null) => {
-            const isServerReachable = isOnline ? await checkServerConnectivity() : false
+        async (isClientOnline: boolean, error: Error | null = null) => {
+            const isNextJSServerReachable = isClientOnline ? await checkNextJSServerConnectivity() : false
+            const isGraphQLBackendReachable = isClientOnline ? await checkGraphQLBackendConnectivity() : false
             const connectionType = getConnectionInfo()
+
+            const isOnline = isClientOnline && isNextJSServerReachable
 
             setNetworkStatus((prev) => ({
                 ...prev,
                 isOnline,
+                isClientOnline,
+                isNextJSServerReachable,
+                isGraphQLBackendReachable,
                 lastError: error,
                 lastOnlineTime: isOnline ? new Date() : prev.lastOnlineTime,
                 lastOfflineTime: !isOnline ? new Date() : prev.lastOfflineTime,
                 connectionType,
-                isServerReachable,
             }))
         },
-        [checkServerConnectivity, getConnectionInfo],
+        [checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, getConnectionInfo],
     )
 
     useEffect(() => {
         updateNetworkStatus(navigator.onLine)
 
         const handleOnline = () => {
-            console.log("Network: Online event detected")
+            console.log("Network: 客户端网络在线事件检测到")
             updateNetworkStatus(true)
         }
 
         const handleOffline = () => {
-            console.log("Network: Offline event detected")
+            console.log("Network: 客户端网络离线事件检测到")
             updateNetworkStatus(false)
         }
 
         const serverCheckInterval = setInterval(async () => {
             if (navigator.onLine) {
-                const isServerReachable = await checkServerConnectivity()
+                const isNextJSReachable = await checkNextJSServerConnectivity()
+                const isGraphQLReachable = await checkGraphQLBackendConnectivity()
+
                 setNetworkStatus((prev) => ({
                     ...prev,
-                    isServerReachable,
+                    isNextJSServerReachable: isNextJSReachable,
+                    isGraphQLBackendReachable: isGraphQLReachable,
+                    isOnline: prev.isClientOnline && isNextJSReachable,
                 }))
             }
-        }, 60000) // 每60秒检查一次
+        }, 30000) // 每30秒检查一次
 
         const handleConnectionChange = () => {
             const connectionType = getConnectionInfo()
@@ -119,7 +156,7 @@ export function useNetworkStatus(): NetworkStatus {
                 connection?.removeEventListener("change", handleConnectionChange)
             }
         }
-    }, [updateNetworkStatus, checkServerConnectivity, getConnectionInfo])
+    }, [updateNetworkStatus, checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, getConnectionInfo])
 
     return networkStatus
 }
@@ -137,6 +174,8 @@ export const getNetworkStatus = (): NetworkStatus => {
         lastOnlineTime: null,
         lastOfflineTime: null,
         connectionType: null,
-        isServerReachable: true,
+        isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
+        isNextJSServerReachable: true,
+        isGraphQLBackendReachable: true,
     }
 }

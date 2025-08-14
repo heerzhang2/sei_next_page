@@ -66,6 +66,11 @@ export const isNetworkError = (error: any): boolean => {
 }
 
 // 自定义网络错误处理 Exchange
+let errorCount = 0
+let lastErrorTime = 0
+const MAX_ERRORS_PER_MINUTE = 10
+const ERROR_RESET_TIME = 60000 // 1分钟
+
 const networkErrorExchange: Exchange = ({ forward }) => {
     return (operations$) => {
         return pipe(
@@ -73,29 +78,51 @@ const networkErrorExchange: Exchange = ({ forward }) => {
             forward,
             tap((result: OperationResult) => {
                 if (result.error) {
+                    const now = Date.now()
+
+                    if (now - lastErrorTime > ERROR_RESET_TIME) {
+                        errorCount = 0
+                    }
+
                     const hasNetworkError =
                         result.error.networkError ||
                         result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
                         isNetworkError(result.error)
 
                     if (hasNetworkError) {
-                        console.error("网络错误检测到:", result.error)
-                        updateNetworkStatus(false, result.error)
+                        errorCount++
+                        lastErrorTime = now
+
+                        if (errorCount <= MAX_ERRORS_PER_MINUTE) {
+                            console.error("网络错误检测到:", result.error)
+                            updateNetworkStatus(false, result.error)
+
+                            if (errorCount <= 3 && typeof window !== "undefined") {
+                                toast.error("GraphQL后端连接失败", {
+                                    description: "正在使用缓存数据，请检查后端服务器状态",
+                                    duration: 5000,
+                                })
+                            }
+                        } else {
+                            console.warn("GraphQL错误过于频繁，暂停错误处理")
+                        }
 
                         // 确保错误能被 useQuery 捕获
                         result.error.isNetworkError = true
                     } else {
                         // 如果有成功的响应，说明网络恢复了
                         if (result.data && !networkStatus.isOnline) {
-                            console.log("网络已恢复")
+                            console.log("GraphQL后端网络已恢复")
                             updateNetworkStatus(true)
+                            errorCount = 0 // 重置错误计数
                         }
                     }
                 } else if (result.data) {
                     // 成功获取数据，网络正常
                     if (!networkStatus.isOnline) {
-                        console.log("网络已恢复")
+                        console.log("GraphQL后端网络已恢复")
                         updateNetworkStatus(true)
+                        errorCount = 0 // 重置错误计数
                     }
                 }
             }),
@@ -205,10 +232,11 @@ const makeAuthExchange = (accessToken: string | null) => {
                         )
                     }
 
-                    // 延迟跳转，给用户看到提示的时间
                     setTimeout(() => {
                         if (typeof window !== "undefined") {
-                            window.location.href = "/login"
+                            const protocol = window.location.protocol === "https:" ? "https:" : "http:"
+                            const host = window.location.host
+                            window.location.href = `${protocol}//${host}/login`
                         }
                     }, 2000)
                 }
@@ -229,7 +257,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 maxAge: 7, // The maximum age of the persisted data in days
             })
         } else {
-            //[避免报错] 在SSR服务器端， 用 空存储或内存存储
+            //[避免报错] 在SSR服务器端， 用 空存储或内存储
             storage = {
                 writeData: (data: any) => Promise.resolve(),
                 readData: () => Promise.resolve(null),

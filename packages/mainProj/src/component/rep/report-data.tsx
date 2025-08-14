@@ -1,11 +1,10 @@
 "use client"
 
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { useQuery, gql } from "@urql/next"
 import { useStorage } from "@/report/StorageContext"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { subscribeToNetworkStatus, getNetworkStatus } from "@/auth/graphql-component"
 
 export interface ReportParams {
     repId: string
@@ -162,44 +161,50 @@ function isNetworkError(error: any) {
 
 function CommonReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false)
-    const [forceShowContent, setForceShowContent] = useState(false)
+    const [queryEnabled, setQueryEnabled] = useState(true)
+    const queryCountRef = useRef(0)
+    const lastQueryTimeRef = useRef(0)
 
     useEffect(() => setMounted(true), [])
 
-    const [result] = useQuery({
+    const queryVariables = useMemo(() => ({ id: repId }), [repId])
+
+    const [result, reexecuteQuery] = useQuery({
         query: ReportQuery,
-        variables: { id: repId },
-        requestPolicy: "cache-and-network",
+        variables: queryVariables,
+        requestPolicy: "cache-first",
+        pause: !queryEnabled,
     })
+
     const { data, fetching, error } = result
     const report = data?.getReport
-    const { setStorage, setSubrType, offline, setOffline } = useStorage()
+    const { setStorage, setSubrType, setOffline } = useStorage()
 
-    const [networkState, setNetworkState] = useState(getNetworkStatus())
+    const refreshData = useCallback(() => {
+        console.log("手动刷新报告数据")
+        reexecuteQuery({ requestPolicy: "cache-and-network" })
+    }, [reexecuteQuery])
+
     useEffect(() => {
-        const unsubscribe = subscribeToNetworkStatus(setNetworkState)
-        return unsubscribe
-    }, [])
+        if (fetching) {
+            const now = Date.now()
+            queryCountRef.current++
 
-    const dataSource = getDataSource(result)
-    const isFromCache = dataSource === "cache" || dataSource === "stale-cache"
-    const isNetworkFailure = isNetworkError(error) || !networkState.isOnline
-
-    // 使用 ref 来跟踪上一次的状态，避免重复设置
-    const prevDataRef = useRef<any>(null)
-    const prevOfflineRef = useRef<boolean | null>(null)
-
-    // 如果有缓存数据，延迟一段时间后强制显示内容
-    useEffect(() => {
-        if (data && report && isNetworkFailure) {
-            const timer = setTimeout(() => {
-                setForceShowContent(true)
-            }, 1000) // 1秒后强制显示
-            return () => clearTimeout(timer)
+            if (now - lastQueryTimeRef.current < 3000 && queryCountRef.current > 3) {
+                console.warn(`检测到查询死循环，暂停查询60秒`)
+                setQueryEnabled(false)
+                setTimeout(() => {
+                    queryCountRef.current = 0
+                    setQueryEnabled(true)
+                }, 60000)
+            } else if (now - lastQueryTimeRef.current > 10000) {
+                queryCountRef.current = 1
+                lastQueryTimeRef.current = now
+            }
         }
-    }, [data, report, isNetworkFailure])
+    }, [fetching])
 
-    // 只在数据真正变化时更新 storage
+    const prevDataRef = useRef<any>(null)
     useEffect(() => {
         if (!report) return
 
@@ -207,75 +212,198 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         const dat = report.data && JSON.parse(report.data || "{}")
         const newData = dat ? { ...dat, ...snap, _version: report.version } : { ...(snap || {}), _version: report.version }
 
-        // 比较数据是否真的变化了
-        const dataChanged = JSON.stringify(newData) !== JSON.stringify(prevDataRef.current)
-
-        if (dataChanged) {
-            console.log("StorageContext: Setting storage data", newData)
+        if (JSON.stringify(newData) !== JSON.stringify(prevDataRef.current)) {
+            console.log("StorageContext: Setting storage data", { version: report.version })
             setStorage(newData)
             setSubrType(undefined)
             prevDataRef.current = newData
         }
-    }, [report, setStorage, setSubrType])
+    }, [report])
 
-    // 只在离线状态真正变化时更新
     useEffect(() => {
-        let newOfflineState: boolean
+        const hasNetworkError = isNetworkError(error)
+        setOffline(hasNetworkError)
+    }, [error, setOffline])
 
-        if (isNetworkFailure) {
-            newOfflineState = true
-        } else if (dataSource === "network" || dataSource === "network-loading" || networkState.isOnline) {
-            newOfflineState = false
-        } else {
-            return // 不确定的状态，不更新
-        }
-
-        // 只在状态真正变化时更新
-        if (prevOfflineRef.current !== newOfflineState) {
-            console.log(
-                "Setting offline to",
-                newOfflineState,
-                "due to",
-                isNetworkFailure ? "network failure" : "network success",
-            )
-            setOffline(newOfflineState)
-            prevOfflineRef.current = newOfflineState
-        }
-    }, [dataSource, isNetworkFailure, networkState, setOffline])
-
-    // Stable initial HTML to avoid hydration mismatch
     if (!mounted) {
-        return <div className="p-4 text-sm text-muted-foreground">{"正在准备编辑环境..."}</div>
+        return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     }
 
-    if (fetching && !data) return <div className="p-4">{"加载中..."}</div>
+    if (fetching && !data) return <div className="p-4">加载中...</div>
 
-    if (error || !networkState.isOnline) {
-        if (isNetworkFailure || !networkState.isOnline) {
+    if (error) {
+        if (isNetworkError(error)) {
             return (
                 <>
                     <div className="text-center p-4">
-                        <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
-                        <div className="text-sm text-gray-600">{isFromCache || data ? "正在使用缓存数据" : "无法连接到服务器"}</div>
-                        <div className="text-xs text-gray-500 mt-2">{`错误: ${error?.message || networkState.lastError?.message || "网络连接失败"}`}</div>
-                        {data && <div className="text-xs text-blue-600 mt-2">{"已加载缓存数据，功能可能受限"}</div>}
+                        <div className="text-red-500 mb-2">后端服务器离线</div>
+                        <div className="text-sm text-gray-600">{data ? "正在使用缓存数据" : "无法连接到服务器"}</div>
+                        <div className="text-xs text-gray-500 mt-2">错误: {error.message}</div>
+                        {data && <div className="text-xs text-blue-600 mt-2">已加载缓存数据，功能有限</div>}
+                        <button
+                            onClick={refreshData}
+                            className="mt-2 px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                            disabled={fetching}
+                        >
+                            {fetching ? "刷新中..." : "重试连接"}
+                        </button>
                     </div>
-                    {/* 立即显示内容，或者在强制显示标志设置后显示 */}
-                    {report && data && (isFromCache || forceShowContent) && children}
+                    {report && data && children}
                 </>
             )
         } else {
-            return <div>{`报告取数据错: ${error?.message}`}</div>
+            return <div>报告取数据错: {error.message}</div>
         }
     }
 
-    if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>
-    if (!report)
+    if (report && !report.snapshot) return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
+
+    if (!report) {
         return (
             <div className="content-center text-center h-screen w-screen">
-                <Link href="/">{"没有找到��份报告，返回首页"}</Link>
+                <Link href="/">没有找到该份报告，返回首页</Link>
             </div>
         )
+    }
+
+    return (
+        <>
+            <div className="fixed top-4 right-4 z-50 flex items-center gap-2 text-xs">
+                <button
+                    onClick={refreshData}
+                    className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    disabled={fetching}
+                    title="刷新数据"
+                >
+                    {fetching ? "⟳" : "↻"}
+                </button>
+            </div>
+            {children}
+        </>
+    )
+}
+
+function CommonReportDataSub({
+                                 repId,
+                                 subrid,
+                                 children,
+                             }: { repId: string; subrid: string; children: React.ReactNode }) {
+    const [mounted, setMounted] = useState(false)
+    const [queryEnabled, setQueryEnabled] = useState(true)
+    const queryCountRef = useRef(0)
+    const lastQueryTimeRef = useRef(0)
+
+    useEffect(() => setMounted(true), [])
+
+    const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
+    const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
+
+    const [result] = useQuery({
+        query: ReportQuery,
+        variables: mainQueryVariables,
+        requestPolicy: "cache-first",
+        pause: !queryEnabled,
+    })
+
+    const [resultSub] = useQuery({
+        query: ReportSubQuery,
+        variables: subQueryVariables,
+        requestPolicy: "cache-first",
+        pause: !queryEnabled,
+    })
+
+    const { data, fetching, error } = result
+    const { data: dataSub, fetching: fetchingSub, error: errorSub } = resultSub
+    const report = data?.getReport
+    const reportSub = dataSub?.getReport
+    const { setStorage, setSubrType, setParrepfs, setOffline } = useStorage()
+
+    useEffect(() => {
+        if (fetching || fetchingSub) {
+            const now = Date.now()
+            queryCountRef.current++
+
+            if (now - lastQueryTimeRef.current < 5000 && queryCountRef.current > 5) {
+                console.warn("检测到子报告查询死循环，暂停查询30秒")
+                setQueryEnabled(false)
+                setTimeout(() => {
+                    queryCountRef.current = 0
+                    setQueryEnabled(true)
+                }, 30000)
+            } else if (now - lastQueryTimeRef.current > 10000) {
+                queryCountRef.current = 1
+                lastQueryTimeRef.current = now
+            }
+        }
+    }, [fetching, fetchingSub])
+
+    const prevDataRef = useRef<any>(null)
+    const prevParrepfsRef = useRef<any>(null)
+
+    useEffect(() => {
+        if (!report || !reportSub) return
+
+        const snap = report.snapshot && JSON.parse(report.snapshot)
+        const subdat = reportSub.data && JSON.parse(reportSub.data || "{}")
+        const dat = report.data && JSON.parse(report.data || "{}")
+
+        const newSubData = subdat ? { ...subdat, _version: reportSub.version } : { _version: reportSub.version }
+        if (JSON.stringify(newSubData) !== JSON.stringify(prevDataRef.current)) {
+            setStorage(newSubData)
+            setSubrType(reportSub.modeltype)
+            prevDataRef.current = newSubData
+        }
+
+        const newParData = dat
+            ? { ...dat, ...(snap || {}), _version: report.version }
+            : { ...(snap || {}), _version: report.version }
+        if (JSON.stringify(newParData) !== JSON.stringify(prevParrepfsRef.current)) {
+            setParrepfs(newParData)
+            prevParrepfsRef.current = newParData
+        }
+    }, [report, reportSub])
+
+    useEffect(() => {
+        const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
+        setOffline(hasNetworkError)
+    }, [error, errorSub, setOffline])
+
+    if (!mounted) return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
+    if (fetching || fetchingSub) return <div>加载中...</div>
+
+    if (error || errorSub) {
+        const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
+        if (hasNetworkError) {
+            return (
+                <>
+                    <div className="text-center p-4">
+                        <div className="text-red-500 mb-2">后端服务器离线</div>
+                        <div className="text-sm text-gray-600">正在使用缓存数据</div>
+                        <div className="text-xs text-gray-500 mt-2">{error?.message || errorSub?.message}</div>
+                    </div>
+                    {report && reportSub && children}
+                </>
+            )
+        } else {
+            return <div>报告取数据错: {error?.message || errorSub?.message}</div>
+        }
+    }
+
+    if (report && !report.snapshot) return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
+    if (!report) {
+        return (
+            <div className="content-center text-center h-screen w-screen">
+                <Link href="/">没有找到该份报告，返回首页</Link>
+            </div>
+        )
+    }
+    if (!reportSub) {
+        return (
+            <div className="content-center text-center h-screen w-screen">
+                <Link href="/">没有该独立流转子报告，返回首页</Link>
+            </div>
+        )
+    }
 
     return <>{children}</>
 }
@@ -291,136 +419,6 @@ export const ReportSubQuery = gql`
   }
 `
 
-function CommonReportDataSub({
-                                 repId,
-                                 subrid,
-                                 children,
-                             }: { repId: string; subrid: string; children: React.ReactNode }) {
-    const [mounted, setMounted] = useState(false)
-    useEffect(() => setMounted(true), [])
-
-    const [result] = useQuery({
-        query: ReportQuery,
-        variables: { id: repId },
-        requestPolicy: "cache-and-network",
-    })
-    const { data, fetching, error } = result
-    const report = data?.getReport
-
-    const [resultSub] = useQuery({
-        query: ReportSubQuery,
-        variables: { id: subrid },
-        requestPolicy: "cache-and-network",
-    })
-    const { data: dataSub, fetching: fetchingSub, error: errorSub } = resultSub
-    const reportSub = dataSub?.getReport
-    const { setStorage, setSubrType, setParrepfs, offline, setOffline } = useStorage()
-
-    const [networkState, setNetworkState] = useState(getNetworkStatus())
-    useEffect(() => {
-        const unsubscribe = subscribeToNetworkStatus(setNetworkState)
-        return unsubscribe
-    }, [])
-
-    const mainDataSource = getDataSource(result)
-    const subDataSource = getDataSource(resultSub)
-    const isMainNetworkError = isNetworkError(error)
-    const isSubNetworkError = isNetworkError(errorSub)
-
-    // 使用 ref 来跟踪上一次的状态，避免重复设置
-    const prevDataRef = useRef<any>(null)
-    const prevParrepfsRef = useRef<any>(null)
-    const prevOfflineRef = useRef<boolean | null>(null)
-
-    useEffect(() => {
-        if (!report || !reportSub) return
-
-        const snap = report.snapshot && JSON.parse(report.snapshot)
-        const subdat = reportSub.data && JSON.parse(reportSub.data || "{}")
-        const dat = report.data && JSON.parse(report.data || "{}")
-
-        // 更新子报告数据
-        const newSubData = subdat ? { ...subdat, _version: reportSub.version } : { _version: reportSub.version }
-        const subDataChanged = JSON.stringify(newSubData) !== JSON.stringify(prevDataRef.current)
-
-        if (subDataChanged) {
-            setStorage(newSubData)
-            setSubrType(reportSub.modeltype)
-            prevDataRef.current = newSubData
-        }
-
-        // 更新父报告数据
-        const newParData = dat
-            ? { ...dat, ...(snap || {}), _version: report.version }
-            : { ...(snap || {}), _version: report.version }
-        const parDataChanged = JSON.stringify(newParData) !== JSON.stringify(prevParrepfsRef.current)
-
-        if (parDataChanged) {
-            setParrepfs(newParData)
-            prevParrepfsRef.current = newParData
-        }
-    }, [reportSub, report, setStorage, setParrepfs, setSubrType])
-
-    useEffect(() => {
-        const hasNetworkError = isMainNetworkError || isSubNetworkError || !networkState.isOnline
-        const hasNetworkSuccess = (mainDataSource === "network" || subDataSource === "network") && networkState.isOnline
-
-        let newOfflineState: boolean
-        if (hasNetworkError) {
-            newOfflineState = true
-        } else if (hasNetworkSuccess) {
-            newOfflineState = false
-        } else {
-            return // 不确定的状态，不更新
-        }
-
-        // 只在状态真正变化时更新
-        if (prevOfflineRef.current !== newOfflineState) {
-            setOffline(newOfflineState)
-            prevOfflineRef.current = newOfflineState
-        }
-    }, [mainDataSource, subDataSource, isMainNetworkError, isSubNetworkError, networkState, setOffline])
-
-    if (!mounted) return <div className="p-4 text-sm text-muted-foreground">{"正在准备编辑环境..."}</div>
-
-    if (fetching || fetchingSub) return <div>{"加载中..."}</div>
-
-    if (error || errorSub || !networkState.isOnline) {
-        const hasNetworkError = isMainNetworkError || isSubNetworkError || !networkState.isOnline
-        if (hasNetworkError) {
-            return (
-                <>
-                    <div className="text-center p-4">
-                        <div className="text-red-500 mb-2">{"后端服务器离线"}</div>
-                        <div className="text-sm text-gray-600">{"正在使用缓存数据"}</div>
-                        <div className="text-xs text-gray-500 mt-2">{`${error?.message || ""} ${errorSub?.message || ""} ${networkState.lastError?.message || ""}`}</div>
-                    </div>
-                    {report && reportSub && children}
-                </>
-            )
-        } else {
-            return <div>{`报告取数据错: ${error?.message || ""} ${errorSub?.message || ""}`}</div>
-        }
-    }
-
-    if (report && !report.snapshot) return <React.Fragment>{`该报告的基础信息未赋值`}</React.Fragment>
-    if (!report)
-        return (
-            <div className="content-center text-center h-screen w-screen">
-                <Link href="/">{"没有找到该份报告，返回首页"}</Link>
-            </div>
-        )
-    if (!reportSub)
-        return (
-            <div className="content-center text-center h-screen w-screen">
-                <Link href="/">{"没有该独立流转子报告，返回首页"}</Link>
-            </div>
-        )
-
-    return <>{children}</>
-}
-
-/** 支持子报告编辑或主报告编辑（通过 ?subrid=...） */
 export default function ReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const searchParams = useSearchParams()
     const subrid = searchParams?.get("subrid")

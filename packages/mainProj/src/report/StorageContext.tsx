@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
 
 interface StorageContextType {
     storage: any
@@ -24,41 +24,17 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [offline, setOfflineState] = useState<boolean>(false)
     const [modified, setModified] = useState<boolean>(false)
 
-    const setStorage = (data: any) => {
+    const setStorage = useCallback((data: any) => {
         console.log("StorageContext: Setting storage data", data)
         setStorageState(data)
-    }
+    }, [])
 
-    const setOffline = (isOffline: boolean) => {
+    const setOffline = useCallback((isOffline: boolean) => {
         console.log("StorageContext: Setting offline status", isOffline)
         setOfflineState(isOffline)
-    }
-
-    // 监听网络状态变化
-    useEffect(() => {
-        const handleOnline = () => {
-            console.log("StorageContext: Network online detected")
-            setOffline(false)
-        }
-
-        const handleOffline = () => {
-            console.log("StorageContext: Network offline detected")
-            setOffline(true)
-        }
-
-        if (typeof window !== "undefined") {
-            window.addEventListener("online", handleOnline)
-            window.addEventListener("offline", handleOffline)
-
-            // 初始化网络状态
-            setOffline(!navigator.onLine)
-
-            return () => {
-                window.removeEventListener("online", handleOnline)
-                window.removeEventListener("offline", handleOffline)
-            }
-        }
     }, [])
+
+    // 避免双重监听导致的状态冲突
 
     const value: StorageContextType = {
         storage,
