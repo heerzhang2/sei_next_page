@@ -20,6 +20,25 @@ export function ServiceWorkerUpdater() {
                     console.log("Service Worker registered:", reg)
                     setRegistration(reg)
 
+                    const sendEnvironmentInfo = () => {
+                        const isDevelopment = process.env.NODE_ENV === "development"
+                        if (reg.active) {
+                            reg.active.postMessage({
+                                type: "SET_ENVIRONMENT",
+                                isDevelopment,
+                            })
+                            console.log("Environment info sent to Service Worker:", isDevelopment ? "development" : "production")
+                        }
+                    }
+
+                    // 立即发送环境信息
+                    if (reg.active) {
+                        sendEnvironmentInfo()
+                    } else {
+                        // 等待 Service Worker 激活
+                        reg.addEventListener("activate", sendEnvironmentInfo)
+                    }
+
                     // 检查更新
                     reg.addEventListener("updatefound", () => {
                         const newWorker = reg.installing
@@ -35,6 +54,10 @@ export function ServiceWorkerUpdater() {
                                         },
                                         duration: 10000,
                                     })
+                                }
+
+                                if (newWorker.state === "activated") {
+                                    sendEnvironmentInfo()
                                 }
                             })
                         }

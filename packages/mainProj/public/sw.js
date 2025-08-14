@@ -2,6 +2,24 @@ const CACHE_NAME = "report-system-v1.4"
 const STATIC_CACHE = "static-v1.4"
 const DYNAMIC_CACHE = "dynamic-v1.4"
 
+let isDevelopmentMode = false
+
+// 从主线程接收环境信息
+const isDevelopment = () => {
+    return isDevelopmentMode
+}
+
+// 初始化时的简单检测作为后备
+const fallbackIsDevelopment = () => {
+    return (
+        self.location.hostname === "localhost" ||
+        self.location.hostname === "127.0.0.1"
+    )
+}
+
+// 初始化环境模式
+isDevelopmentMode = fallbackIsDevelopment()
+
 // 需要缓存的静态资源
 const STATIC_ASSETS = ["/", "/offline", "/login", "/manifest.json", "/icon-192x192.png", "/icon-512x512.png"]
 
@@ -87,11 +105,12 @@ const findCachedResponse = async (request) => {
 
 const isNetworkAvailable = async () => {
     try {
-        // 使用更轻量的检测方法
+        // 在开发环境中使用更宽松的检测
+        const timeout = isDevelopment() ? 3000 : 8000
         const response = await fetch("/api/health", {
             method: "HEAD",
             cache: "no-cache",
-            signal: AbortSignal.timeout(8000), // 8秒超时
+            signal: AbortSignal.timeout(timeout),
         })
         return response.ok
     } catch (error) {
@@ -199,6 +218,20 @@ const isProtectedPage = (url) => {
     const pathname = new URL(url).pathname
     const protectedPaths = ["/rep/", "/profile", "/dashboard", "/settings"]
     return protectedPaths.some((path) => pathname.startsWith(path))
+}
+
+const shouldCacheStaticAsset = (url) => {
+    const pathname = new URL(url).pathname
+
+    // 在开发环境中，不缓存JavaScript和CSS文件
+    if (isDevelopment()) {
+        if (pathname.match(/\.(js|css)$/)) {
+            console.log("Development mode: Skipping cache for code file:", pathname)
+            return false
+        }
+    }
+
+    return pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)
 }
 
 // 安装事件
@@ -464,8 +497,7 @@ self.addEventListener("fetch", (event) => {
                     }
                 }
 
-                // 静态资源策略
-                if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
+                if (shouldCacheStaticAsset(request.url)) {
                     const cachedResponse = await findCachedResponse(request)
                     if (cachedResponse) {
                         return cachedResponse
@@ -474,11 +506,14 @@ self.addEventListener("fetch", (event) => {
                     try {
                         const networkResponse = await fetch(request)
                         if (networkResponse.ok) {
-                            if (isCacheAPISupported()) {
-                                const cache = await caches.open(STATIC_CACHE)
-                                cache.put(request, networkResponse.clone())
-                            } else {
-                                await saveToBackupDB(request.url, networkResponse.clone())
+                            // 只在生产环境或非代码文件时缓存
+                            if (!isDevelopment() || !url.pathname.match(/\.(js|css)$/)) {
+                                if (isCacheAPISupported()) {
+                                    const cache = await caches.open(STATIC_CACHE)
+                                    cache.put(request, networkResponse.clone())
+                                } else {
+                                    await saveToBackupDB(request.url, networkResponse.clone())
+                                }
                             }
                         }
                         return networkResponse
@@ -710,10 +745,16 @@ self.addEventListener("message", (event) => {
         self.skipWaiting()
     }
 
+    if (event.data && event.data.type === "SET_ENVIRONMENT") {
+        isDevelopmentMode = event.data.isDevelopment
+        console.log("Service Worker: Environment set to", isDevelopmentMode ? "development" : "production")
+    }
+
     if (event.data && event.data.type === "GET_CACHE_STATUS") {
         event.ports[0].postMessage({
             cacheAPISupported: isCacheAPISupported(),
             indexedDBSupported: typeof indexedDB !== "undefined",
+            isDevelopment: isDevelopmentMode,
         })
     }
 })
