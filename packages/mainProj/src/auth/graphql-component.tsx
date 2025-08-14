@@ -4,7 +4,7 @@ import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/n
 import { UrqlProvider } from "@urql/next"
 import { useAccessToken } from "./use-access-token"
 import { authExchange } from "@urql/exchange-auth"
-import { type ReactNode, useMemo } from "react"
+import { type ReactNode, useMemo, useRef, useCallback } from "react"
 //离线保存支持的：
 import { offlineExchange } from "@urql/exchange-graphcache"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
@@ -147,6 +147,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
                         fetchOptions: {
                             ...operation.context.fetchOptions,
                             signal: controller.signal,
+                            timeoutId: timeoutId, // 添加超时ID到上下文中
                         },
                     },
                 }
@@ -155,7 +156,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
             tap((result: OperationResult) => {
                 // 清理超时
                 if (result.operation.context.fetchOptions?.signal) {
-                    clearTimeout(result.operation.context.timeoutId)
+                    clearTimeout(result.operation.context.fetchOptions.timeoutId)
                 }
             }),
         )
@@ -248,7 +249,21 @@ const makeAuthExchange = (accessToken: string | null) => {
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const accessToken = useAccessToken()
 
-    const [client, ssr] = useMemo(() => {
+    // 使用 useRef 来保持客户端实例的稳定性
+    const clientRef = useRef<any>(null)
+    const ssrRef = useRef<any>(null)
+    const lastTokenRef = useRef<string | null>(null)
+
+    // 防抖机制：避免频繁重新创建客户端
+    const createClientStable = useCallback(() => {
+        // 只有当 accessToken 真正发生变化时才重新创建客户端
+        if (lastTokenRef.current === accessToken && clientRef.current) {
+            return [clientRef.current, ssrRef.current]
+        }
+
+        console.log("重新创建 GraphQL 客户端，token 变化:", lastTokenRef.current, "->", accessToken)
+        lastTokenRef.current = accessToken
+
         //离线保存支持的：只在客户端代码中使用 indexedDB。
         let storage
         if (typeof window !== "undefined") {
@@ -359,8 +374,16 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
         })
 
+        // 缓存客户端实例
+        clientRef.current = client
+        ssrRef.current = ssr
+
         return [client, ssr]
     }, [accessToken])
+
+    const [client, ssr] = useMemo(() => {
+        return createClientStable()
+    }, [createClientStable])
 
     return (
         <UrqlProvider client={client} ssr={ssr}>
