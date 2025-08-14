@@ -11,10 +11,7 @@ const isDevelopment = () => {
 
 // 初始化时的简单检测作为后备
 const fallbackIsDevelopment = () => {
-    return (
-        self.location.hostname === "localhost" ||
-        self.location.hostname === "127.0.0.1"
-    )
+    return self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1"
 }
 
 // 初始化环境模式
@@ -31,6 +28,9 @@ const CACHEABLE_ROUTES = [
     /^\/dashboard/,
     /^\/settings/,
 ]
+
+let isRefreshing = false
+let refreshTimeout = null
 
 // 检查 Cache API 是否可用
 const isCacheAPISupported = () => {
@@ -105,8 +105,12 @@ const findCachedResponse = async (request) => {
 
 const isNetworkAvailable = async () => {
     try {
-        // 在开发环境中使用更宽松的检测
-        const timeout = isDevelopment() ? 3000 : 8000
+        // 刷新期间不进行网络检测，避免误判
+        if (isRefreshing) {
+            return true
+        }
+
+        const timeout = isDevelopment() ? 2000 : 5000
         const response = await fetch("/api/health", {
             method: "HEAD",
             cache: "no-cache",
@@ -114,6 +118,10 @@ const isNetworkAvailable = async () => {
         })
         return response.ok
     } catch (error) {
+        // 刷新期间的网络错误不算真正的离线
+        if (isRefreshing) {
+            return true
+        }
         console.log("Network check failed:", error.message)
         return false
     }
@@ -223,7 +231,7 @@ const isProtectedPage = (url) => {
 const shouldCacheStaticAsset = (url) => {
     const pathname = new URL(url).pathname
 
-    // 在开发环境中，不缓存JavaScript和CSS文件
+    // 在开发环境中，不缓存JavaScript���CSS文件
     if (isDevelopment()) {
         if (pathname.match(/\.(js|css)$/)) {
             console.log("Development mode: Skipping cache for code file:", pathname)
@@ -314,6 +322,11 @@ self.addEventListener("fetch", (event) => {
         (async () => {
             try {
                 if (url.pathname.includes("/graphql")) {
+                    if (isDevelopment()) {
+                        // 开发环境直接透传，不拦截
+                        return fetch(request)
+                    }
+
                     try {
                         const networkResponse = await fetch(request)
                         return networkResponse
@@ -748,6 +761,17 @@ self.addEventListener("message", (event) => {
     if (event.data && event.data.type === "SET_ENVIRONMENT") {
         isDevelopmentMode = event.data.isDevelopment
         console.log("Service Worker: Environment set to", isDevelopmentMode ? "development" : "production")
+    }
+
+    if (event.data && event.data.type === "PAGE_REFRESH_START") {
+        isRefreshing = true
+        if (refreshTimeout) {
+            clearTimeout(refreshTimeout)
+        }
+        // 3秒后重置刷新状态
+        refreshTimeout = setTimeout(() => {
+            isRefreshing = false
+        }, 3000)
     }
 
     if (event.data && event.data.type === "GET_CACHE_STATUS") {

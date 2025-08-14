@@ -164,6 +164,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const [queryEnabled, setQueryEnabled] = useState(true)
     const queryCountRef = useRef(0)
     const lastQueryTimeRef = useRef(0)
+    const pausedUntilRef = useRef(0)
 
     useEffect(() => setMounted(true), [])
 
@@ -182,22 +183,35 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     const refreshData = useCallback(() => {
         console.log("手动刷新报告数据")
+        queryCountRef.current = 0
+        lastQueryTimeRef.current = 0
+        pausedUntilRef.current = 0
+        setQueryEnabled(true)
         reexecuteQuery({ requestPolicy: "cache-and-network" })
     }, [reexecuteQuery])
 
     useEffect(() => {
         if (fetching) {
             const now = Date.now()
+
+            if (now < pausedUntilRef.current) {
+                return
+            }
+
             queryCountRef.current++
 
-            if (now - lastQueryTimeRef.current < 3000 && queryCountRef.current > 3) {
-                console.warn(`检测到查询死循环，暂停查询60秒`)
+            if (now - lastQueryTimeRef.current < 5000 && queryCountRef.current > 5) {
+                console.warn(`检测到查询死循环，暂停查询2分钟。查询次数: ${queryCountRef.current}`)
                 setQueryEnabled(false)
+                pausedUntilRef.current = now + 120000
+
                 setTimeout(() => {
+                    console.log("查询死循环暂停期结束，重新启用查询")
                     queryCountRef.current = 0
                     setQueryEnabled(true)
-                }, 60000)
-            } else if (now - lastQueryTimeRef.current > 10000) {
+                    pausedUntilRef.current = 0
+                }, 120000)
+            } else if (now - lastQueryTimeRef.current > 15000) {
                 queryCountRef.current = 1
                 lastQueryTimeRef.current = now
             }
@@ -227,6 +241,10 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     if (!mounted) {
         return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
+    }
+
+    if (fetching && !data && Date.now() < pausedUntilRef.current) {
+        return <div className="p-4 text-sm text-muted-foreground">查询已暂停，请稍后...</div>
     }
 
     if (fetching && !data) return <div className="p-4">加载中...</div>
@@ -292,6 +310,7 @@ function CommonReportDataSub({
     const [queryEnabled, setQueryEnabled] = useState(true)
     const queryCountRef = useRef(0)
     const lastQueryTimeRef = useRef(0)
+    const pausedUntilRef = useRef(0)
 
     useEffect(() => setMounted(true), [])
 
@@ -321,16 +340,25 @@ function CommonReportDataSub({
     useEffect(() => {
         if (fetching || fetchingSub) {
             const now = Date.now()
+
+            if (now < pausedUntilRef.current) {
+                return
+            }
+
             queryCountRef.current++
 
             if (now - lastQueryTimeRef.current < 5000 && queryCountRef.current > 5) {
-                console.warn("检测到子报告查询死循环，暂停查询30秒")
+                console.warn("检测到子报告查询死循环，暂停查询2分钟")
                 setQueryEnabled(false)
+                pausedUntilRef.current = now + 120000
+
                 setTimeout(() => {
+                    console.log("子报告查询死循环暂停期结束")
                     queryCountRef.current = 0
                     setQueryEnabled(true)
-                }, 30000)
-            } else if (now - lastQueryTimeRef.current > 10000) {
+                    pausedUntilRef.current = 0
+                }, 120000)
+            } else if (now - lastQueryTimeRef.current > 15000) {
                 queryCountRef.current = 1
                 lastQueryTimeRef.current = now
             }

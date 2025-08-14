@@ -128,7 +128,7 @@ export function useNetworkStatus(): NetworkStatus {
                     isOnline: prev.isClientOnline && isNextJSReachable,
                 }))
             }
-        }, 30000) // 每30秒检查一次
+        }, 60000) // 改为每60秒检查一次，减少网络请求频率
 
         const handleConnectionChange = () => {
             const connectionType = getConnectionInfo()

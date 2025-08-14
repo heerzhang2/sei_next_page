@@ -1,6 +1,6 @@
 import "next-auth/jwt"
-import {urqlClient} from "@/auth/urql";
-import {gql} from "@urql/core";
+import { urqlClient } from "@/auth/urql"
+import { gql } from "@urql/core"
 
 //用户全部的信息
 export const getUserinfoQuery = gql`
@@ -13,18 +13,20 @@ export const getUserinfoQuery = gql`
       authorities{id,name}
     }
   }
-`;
+`
 
 /**应该是在nextjs-RSC-node服务器环境中的，才能执行的，获取用户信息：【不能】切记不要在浏览器执行本函数。
  * @param accessToken  调用函数人的身份
  * @param userId 不一定就是调用者自己的id
  * */
-export async function getUserInfo(userId: string,accessToken?:string) {
-  const result = await urqlClient(accessToken || null).query(getUserinfoQuery, {
-    id: userId
-  }).toPromise();
+export async function getUserInfo(userId: string, accessToken?: string) {
+  const result = await urqlClient(accessToken || null)
+      .query(getUserinfoQuery, {
+        id: userId,
+      })
+      .toPromise()
   if (result.error) {
-    throw result.error;
+    throw result.error
   }
-  return result.data.getUser;
+  return result.data.getUser
 }

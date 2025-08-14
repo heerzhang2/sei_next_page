@@ -2,9 +2,47 @@ import { createClient, fetchExchange } from "@urql/core"
 import { cacheExchange } from "@urql/exchange-graphcache"
 import schema from "./urql-schema.json" // 确保你的 schema.json 路径正确
 import { registerUrql } from "@urql/next/rsc"
+import https from "https"
+import http from "http"
 
 const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
 const url = `${endpoint}/graphql`
+
+const createHttpAgent = () => {
+    const isHttps = url.startsWith("https")
+    const AgentClass = isHttps ? https.Agent : http.Agent
+
+    return new AgentClass({
+        keepAlive: true,
+        maxSockets: 2, // 从5减少到2，严格限制并发连接
+        maxFreeSockets: 1, // 从2减少到1
+        timeout: 20000, // 从30秒减少到20秒
+        freeSocketTimeout: 10000, // 从15秒减少到10秒
+        // HTTPS特定配置
+        ...(isHttps &&
+            process.env.NODE_ENV === "development" && {
+                rejectUnauthorized: false, // 开发环境忽略自签名证书
+            }),
+    })
+}
+
+let httpAgent: http.Agent | https.Agent | null = null
+const getHttpAgent = () => {
+    if (!httpAgent) {
+        httpAgent = createHttpAgent()
+    }
+    return httpAgent
+}
+
+const createFetchOptions = (accessToken?: string | null) => {
+    return {
+        agent: getHttpAgent(),
+        headers: {
+            ...(accessToken && { authorization: `Bearer ${accessToken}` }),
+        },
+        timeout: 20000, // 从30秒减少到20秒
+    }
+}
 
 // 服务端 URQL 客户端工厂函数
 export const { get } = registerUrql(() => {
@@ -21,11 +59,7 @@ export const { get } = registerUrql(() => {
             // 但如果需要传递 token，可以在 fetchOptions 中处理
             fetchExchange,
         ],
-        fetchOptions: () => {
-            // 在服务端，如果需要，可以从 headers 或其他上下文获取 token
-            // 但对于 NextAuth 的 jwt 回调，我们直接在回调中处理 token
-            return {}
-        },
+        fetchOptions: () => createFetchOptions(),
     })
 })
 
@@ -41,62 +75,39 @@ export function createServerUrqlClient(accessToken?: string | null) {
             }),
             fetchExchange,
         ],
-        fetchOptions: {
-            headers: {
-                authorization: accessToken ? `Bearer ${accessToken}` : "",
-            },
-        },
+        fetchOptions: createFetchOptions(accessToken),
         // 服务端不需要 suspense
         suspense: false,
     })
 }
 
-// 客户端 URQL 客户端（仅用于类型提示，实际客户端在 graphql-component.tsx 中创建）
-// export const urqlClient = (accessToken: string | null) => {
-//   return createClient({
-//     url,
-//     exchanges: [
-//       cacheExchange({
-//         schema,
-//         keys: {
-//           RepLink: () => null,
-//         },
-//       }),
-//       authExchange({
-//         getAuth: async ({ authState }) => {
-//           if (!accessToken) return null;
-//           return { token: accessToken };
-//         },
-//         addAuthToOperation: ({ operation, authState }) => {
-//           if (!authState || !(authState as any).token) {
-//             return operation;
-//           }
-//           const fetchOptions =
-//             typeof operation.context.fetchOptions === 'function'
-//               ? operation.context.fetchOptions()
-//               : operation.context.fetchOptions || {};
-//           return {
-//             ...operation,
-//             context: {
-//               ...operation.context,
-//               fetchOptions: {
-//                 ...fetchOptions,
-//                 headers: {
-//                   ...fetchOptions.headers,
-//                   Authorization: `Bearer ${(authState as any).token}`,
-//                 },
-//               },
-//             },
-//           };
-//         },
-//         didAuthError: ({ error }) => {
-//           return error.graphQLErrors.some(e => e.extensions?.code === 'UNAUTHENTICATED');
-//         },
-//         refreshAuth: async () => {
-//           // 客户端刷新逻辑
-//         },
-//       }),
-//       fetchExchange,
-//     ],
-//   });
-// };
+export const cleanupServerConnections = () => {
+    if (httpAgent) {
+        httpAgent.destroy()
+        httpAgent = null
+    }
+}
+
+if (typeof process !== "undefined") {
+    process.on("exit", cleanupServerConnections)
+    process.on("SIGINT", cleanupServerConnections)
+    process.on("SIGTERM", cleanupServerConnections)
+}
+
+export const urqlClient = (accessToken?: string | null) => {
+    return createClient({
+        url,
+        exchanges: [
+            cacheExchange({
+                schema,
+                keys: {
+                    RepLink: () => null, // 不需要生成缓存键
+                },
+            }),
+            fetchExchange,
+        ],
+        fetchOptions: createFetchOptions(accessToken),
+        // 服务端不需要 suspense
+        suspense: false,
+    })
+}

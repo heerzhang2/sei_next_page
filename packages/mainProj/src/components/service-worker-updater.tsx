@@ -68,19 +68,22 @@ export function ServiceWorkerUpdater() {
                 })
 
             const handleNetworkChange = (isOnline: boolean) => {
-                if (isOnline) {
-                    toast.success("网络连接已恢复", {
-                        description: "正在同步离线数据...",
-                        duration: 3000,
-                    })
+                // 延迟处理，避免刷新时的误判
+                setTimeout(() => {
+                    if (isOnline && !networkStatus.isOnline) {
+                        toast.success("网络连接已恢复", {
+                            description: "正在同步离线数据...",
+                            duration: 3000,
+                        })
 
-                    window.dispatchEvent(new CustomEvent("network-restored"))
-                } else {
-                    toast.warning("网络连接已断开", {
-                        description: "您现在处于离线模式，数据将保存在本地",
-                        duration: 5000,
-                    })
-                }
+                        window.dispatchEvent(new CustomEvent("network-restored"))
+                    } else if (!isOnline && networkStatus.isOnline) {
+                        toast.warning("网络连接已断开", {
+                            description: "您现在处于离线模式，数据将保存在本地",
+                            duration: 5000,
+                        })
+                    }
+                }, 1000) // 延迟1秒处理
             }
 
             // 监听离线事件
@@ -89,12 +92,23 @@ export function ServiceWorkerUpdater() {
             // 监听在线事件
             const handleOnline = () => handleNetworkChange(true)
 
+            const handleBeforeUnload = () => {
+                if (registration?.active) {
+                    registration.active.postMessage({
+                        type: "PAGE_REFRESH_START",
+                    })
+                }
+            }
+
             // 监听 URQL 离线事件
             const handleUrqlOffline = (event: CustomEvent) => {
-                toast.error("服务器连接失败", {
-                    description: "正在使用缓存数据，功能可能受限",
-                    duration: 5000,
-                })
+                // 只在真正的网络问题时显示提示
+                if (!networkStatus.isOnline) {
+                    toast.error("服务器连接失败", {
+                        description: "正在使用缓存数据，功能可能受限",
+                        duration: 5000,
+                    })
+                }
             }
 
             const handleUrqlUnauthorized = () => {
@@ -119,17 +133,19 @@ export function ServiceWorkerUpdater() {
 
             window.addEventListener("offline", handleOffline)
             window.addEventListener("online", handleOnline)
+            window.addEventListener("beforeunload", handleBeforeUnload)
             window.addEventListener("urql:offline", handleUrqlOffline as EventListener)
             window.addEventListener("urql:unauthorized", handleUrqlUnauthorized)
 
             return () => {
                 window.removeEventListener("offline", handleOffline)
                 window.removeEventListener("online", handleOnline)
+                window.removeEventListener("beforeunload", handleBeforeUnload)
                 window.removeEventListener("urql:offline", handleUrqlOffline as EventListener)
                 window.removeEventListener("urql:unauthorized", handleUrqlUnauthorized)
             }
         }
-    }, [isAppOffline, networkStatus.isOnline])
+    }, [isAppOffline, networkStatus.isOnline, registration])
 
     const handleUpdate = () => {
         if (registration?.waiting) {

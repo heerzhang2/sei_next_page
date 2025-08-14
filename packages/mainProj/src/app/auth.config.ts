@@ -1,7 +1,6 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { createClient } from "@urql/core"
-import { fetchExchange } from "urql"
+import { createServerUrqlClient } from "@/auth/urql"
 
 const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
 const url = `${endpoint}/graphql`
@@ -31,14 +30,6 @@ const REFRESH_MUTATION = `
   }
 `
 
-// 创建服务端 URQL 客户端
-function createServerClient() {
-    return createClient({
-        url,
-        exchanges: [fetchExchange],
-    })
-}
-
 // Server-side crypto function
 function sha256Sync(data: string): string {
     if (typeof window === "undefined") {
@@ -57,7 +48,7 @@ async function refreshAccessToken(token: any) {
             throw new Error("No refresh token available")
         }
 
-        const client = createServerClient()
+        const client = createServerUrqlClient()
         const result = await client
             .mutation(REFRESH_MUTATION, {
                 refreshToken: token.refreshToken,
@@ -112,7 +103,7 @@ export const authConfig: NextAuthConfig = {
                     // Hash the password on the server side
                     const hashedPassword = sha256Sync(credentials.password as string)
 
-                    const client = createServerClient()
+                    const client = createServerUrqlClient()
                     const result = await client
                         .mutation(AUTHENTICATE_MUTATION, {
                             username: credentials.username,
@@ -136,7 +127,7 @@ export const authConfig: NextAuthConfig = {
                         email: authData.user.email,
                         accessToken: authData.accessToken,
                         refreshToken: authData.refreshToken,
-                        accessTokenExpires: Date.now() + 60 * 60 * 1000, // 1 hour from now
+                        accessTokenExpires: authData.accessTokenExpires,
                     }
                 } catch (error) {
                     console.error("Authentication error:", error)
