@@ -5,6 +5,7 @@ import { useQuery, gql } from "@urql/next"
 import { useStorage } from "@/report/StorageContext"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { useNetworkStatus } from "@/hooks/use-network-status"
 
 export interface ReportParams {
     repId: string
@@ -127,6 +128,17 @@ export const ReportQuery = gql`
   }
 `
 
+export const ReportSubQuery = gql`
+  query pagegetReportQuery($id: ID!) {
+    getReport(id: $id) {
+      id
+      version
+      data
+      modeltype
+    }
+  }
+`
+
 function getDataSource(result: any) {
     const cacheOutcome = result?.operation?.context?.meta?.cacheOutcome
     if (cacheOutcome === "hit") return "cache"
@@ -166,15 +178,24 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
 
+    const { isOnline, isBackendOnline } = useNetworkStatus()
+
     useEffect(() => setMounted(true), [])
 
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
 
+    const requestPolicy = useMemo(() => {
+        if (!isOnline || !isBackendOnline) {
+            return "cache-only" // 离线时只使用缓存
+        }
+        return "cache-first" // 在线时优先使用缓存，必要时请求网络
+    }, [isOnline, isBackendOnline])
+
     const [result, reexecuteQuery] = useQuery({
         query: ReportQuery,
         variables: queryVariables,
-        requestPolicy: "cache-first",
-        pause: !queryEnabled,
+        requestPolicy,
+        pause: !queryEnabled || (!isOnline && !isBackendOnline),
     })
 
     const { data, fetching, error } = result
@@ -182,15 +203,22 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const { setStorage, setSubrType, setOffline } = useStorage()
 
     const refreshData = useCallback(() => {
+        if (!isOnline || !isBackendOnline) {
+            console.log("离线状态下无法刷新数据")
+            return
+        }
+
         console.log("手动刷新报告数据")
         queryCountRef.current = 0
         lastQueryTimeRef.current = 0
         pausedUntilRef.current = 0
         setQueryEnabled(true)
         reexecuteQuery({ requestPolicy: "cache-and-network" })
-    }, [reexecuteQuery])
+    }, [reexecuteQuery, isOnline, isBackendOnline])
 
     useEffect(() => {
+        if (!isOnline || !isBackendOnline) return
+
         if (fetching) {
             const now = Date.now()
 
@@ -216,7 +244,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
                 lastQueryTimeRef.current = now
             }
         }
-    }, [fetching])
+    }, [fetching, isOnline, isBackendOnline])
 
     const prevDataRef = useRef<any>(null)
     useEffect(() => {
@@ -236,11 +264,41 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error)
-        setOffline(hasNetworkError)
-    }, [error, setOffline])
+        const shouldBeOffline = hasNetworkError || !isOnline || !isBackendOnline
+        setOffline(shouldBeOffline)
+    }, [error, isOnline, isBackendOnline, setOffline])
 
     if (!mounted) {
         return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
+    }
+
+    if (!isOnline || !isBackendOnline) {
+        if (data && report) {
+            return (
+                <>
+                    <div className="fixed top-4 right-4 z-50 flex items-center gap-2 text-xs">
+                        <span className="px-2 py-1 bg-amber-500 text-white rounded text-xs">离线模式</span>
+                        <button
+                            onClick={refreshData}
+                            className="px-2 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 disabled:opacity-50"
+                            disabled={true}
+                            title="离线状态下无法刷新"
+                        >
+                            ↻
+                        </button>
+                    </div>
+                    {children}
+                </>
+            )
+        } else {
+            return (
+                <div className="text-center p-4">
+                    <div className="text-amber-600 mb-2">离线模式</div>
+                    <div className="text-sm text-gray-600">未找到本地缓存数据</div>
+                    <div className="text-xs text-gray-500 mt-2">请在有网络时访问此报告以缓存数据</div>
+                </div>
+            )
+        }
     }
 
     if (fetching && !data && Date.now() < pausedUntilRef.current) {
@@ -312,23 +370,32 @@ function CommonReportDataSub({
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
 
+    const { isOnline, isBackendOnline } = useNetworkStatus()
+
     useEffect(() => setMounted(true), [])
 
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
 
+    const requestPolicy = useMemo(() => {
+        if (!isOnline || !isBackendOnline) {
+            return "cache-only"
+        }
+        return "cache-first"
+    }, [isOnline, isBackendOnline])
+
     const [result] = useQuery({
         query: ReportQuery,
         variables: mainQueryVariables,
-        requestPolicy: "cache-first",
-        pause: !queryEnabled,
+        requestPolicy,
+        pause: !queryEnabled || (!isOnline && !isBackendOnline),
     })
 
     const [resultSub] = useQuery({
         query: ReportSubQuery,
         variables: subQueryVariables,
-        requestPolicy: "cache-first",
-        pause: !queryEnabled,
+        requestPolicy,
+        pause: !queryEnabled || (!isOnline && !isBackendOnline),
     })
 
     const { data, fetching, error } = result
@@ -337,7 +404,24 @@ function CommonReportDataSub({
     const reportSub = dataSub?.getReport
     const { setStorage, setSubrType, setParrepfs, setOffline } = useStorage()
 
+    const refreshData = useCallback(() => {
+        if (!isOnline || !isBackendOnline) {
+            console.log("离线状态下无法刷新数据")
+            return
+        }
+
+        console.log("手动刷新报告数据")
+        queryCountRef.current = 0
+        lastQueryTimeRef.current = 0
+        pausedUntilRef.current = 0
+        setQueryEnabled(true)
+        result.reexecuteQuery({ requestPolicy: "cache-and-network" })
+        resultSub.reexecuteQuery({ requestPolicy: "cache-and-network" })
+    }, [result, resultSub, isOnline, isBackendOnline])
+
     useEffect(() => {
+        if (!isOnline || !isBackendOnline) return
+
         if (fetching || fetchingSub) {
             const now = Date.now()
 
@@ -363,7 +447,7 @@ function CommonReportDataSub({
                 lastQueryTimeRef.current = now
             }
         }
-    }, [fetching, fetchingSub])
+    }, [fetching, fetchingSub, isOnline, isBackendOnline])
 
     const prevDataRef = useRef<any>(null)
     const prevParrepfsRef = useRef<any>(null)
@@ -393,8 +477,9 @@ function CommonReportDataSub({
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
-        setOffline(hasNetworkError)
-    }, [error, errorSub, setOffline])
+        const shouldBeOffline = hasNetworkError || !isOnline || !isBackendOnline
+        setOffline(shouldBeOffline)
+    }, [error, errorSub, isOnline, isBackendOnline, setOffline])
 
     if (!mounted) return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     if (fetching || fetchingSub) return <div>加载中...</div>
@@ -435,17 +520,6 @@ function CommonReportDataSub({
 
     return <>{children}</>
 }
-
-export const ReportSubQuery = gql`
-  query pagegetReportQuery($id: ID!) {
-    getReport(id: $id) {
-      id
-      version
-      data
-      modeltype
-    }
-  }
-`
 
 export default function ReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const searchParams = useSearchParams()

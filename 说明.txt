@@ -506,3 +506,7 @@ Maximum update depth exceeded. This can happen when a component calls setState i
 离线之后我点击访问/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ProjectList?from=3#ProjectList 就没办法正常显示出来了，实际上from参数就是内部的定位处理差别的完全是js动态调整的部分。
 
 https://v0.app/chat/fork-of-7qMRRqqXItk
+（2）Bearer%207IwGrXYhAjsRFd1ndnIor4gW
+（0）Bearer%20UfRKGZJW6vLZmtyoCIo1ztYr
+
+**静态化与PWA冲突**：`force-static` 与动态PWA功能不兼容
