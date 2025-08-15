@@ -190,10 +190,10 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     console.log("[v0] CommonReportData状态:", { mounted, isClient, repId })
 
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
-
+    //有四种策略 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
     const requestPolicy = useMemo(() => {
         if (!isOnline || !isBackendOnline) {
-            return "cache-only" // 离线时只使用缓存
+            return 'cache-first'
         }
         return "cache-first" // 在线时优先使用缓存，必要时请求网络
     }, [isOnline, isBackendOnline])
@@ -375,10 +375,9 @@ function CommonReportDataSub({
 
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
-
     const requestPolicy = useMemo(() => {
         if (!isOnline || !isBackendOnline) {
-            return "cache-only"
+            return 'cache-first'
         }
         return "cache-first"
     }, [isOnline, isBackendOnline])
