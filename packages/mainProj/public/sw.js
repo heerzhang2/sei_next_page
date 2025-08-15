@@ -353,6 +353,171 @@ const isRSCResponse = (response) => {
     return contentType.includes("text/x-component") || contentType.includes("application/rsc")
 }
 
+// 报告缓存管理
+const REPORT_CACHE_STATUS = new Map() // 存储报告缓存状态
+
+// 获取报告的所有相关页面URL
+const getReportPages = (repId, template, version) => {
+    const baseUrl = `/rep/${repId}/${template}/${version}`
+
+    // 基础页面
+    const pages = [
+        baseUrl, // 主页面
+        `${baseUrl}/Conclusion`, // 结论页面
+        `${baseUrl}/Accessories`, // 附件页面
+        `${baseUrl}/Summary`, // 摘要页面
+        `${baseUrl}/Analysis`, // 分析页面
+        `${baseUrl}/Inspection`, // 检验页面
+        `${baseUrl}/Testing`, // 测试页面
+        `${baseUrl}/Calibration`, // 校准页面
+        `${baseUrl}/Maintenance`, // 维护页面
+        `${baseUrl}/Configuration`, // 配置页面
+    ]
+
+    // 添加RSC请求URL
+    const rscPages = pages.map((page) => `${page}?_rsc=${Date.now()}`)
+
+    return [...pages, ...rscPages]
+}
+
+// 预加载报告的所有页面
+const preloadReport = async (repId, template, version) => {
+    console.log(`[v0] Starting report preload: ${repId}/${template}/${version}`)
+
+    const reportKey = `${repId}/${template}/${version}`
+    const pages = getReportPages(repId, template, version)
+    const cacheStatus = {}
+
+    let successCount = 0
+    const totalCount = pages.length
+
+    // 并发预加载所有页面
+    const preloadPromises = pages.map(async (pageUrl) => {
+        try {
+            console.log(`[v0] Preloading page: ${pageUrl}`)
+
+            const response = await fetch(pageUrl, {
+                cache: "no-cache",
+                headers: {
+                    "x-preload": "true",
+                    "x-report-cache": "true",
+                },
+            })
+
+            if (response.ok) {
+                // 强制缓存这个响应
+                const request = new Request(pageUrl)
+                await cacheResponse(request, response.clone(), true) // 使用优先级缓存
+
+                cacheStatus[pageUrl] = true
+                successCount++
+                console.log(`[v0] Successfully preloaded: ${pageUrl}`)
+            } else {
+                cacheStatus[pageUrl] = false
+                console.log(`[v0] Failed to preload (${response.status}): ${pageUrl}`)
+            }
+        } catch (error) {
+            cacheStatus[pageUrl] = false
+            console.log(`[v0] Error preloading ${pageUrl}:`, error.message)
+        }
+    })
+
+    await Promise.all(preloadPromises)
+
+    // 更新报告缓存状态
+    REPORT_CACHE_STATUS.set(reportKey, {
+        template,
+        version,
+        repId,
+        pages: cacheStatus,
+        totalPages: totalCount,
+        cachedPages: successCount,
+        lastUpdated: Date.now(),
+        isComplete: successCount === totalCount,
+    })
+
+    console.log(`[v0] Report preload complete: ${successCount}/${totalCount} pages cached`)
+
+    return {
+        success: successCount > 0,
+        totalPages: totalCount,
+        cachedPages: successCount,
+        isComplete: successCount === totalCount,
+        status: cacheStatus,
+    }
+}
+
+// 获取报告缓存状态
+const getReportCacheStatus = async (repId, template, version) => {
+    const reportKey = `${repId}/${template}/${version}`
+    const pages = getReportPages(repId, template, version)
+    const cacheStatus = {}
+
+    // 检查每个页面的缓存状态
+    for (const pageUrl of pages) {
+        try {
+            const cachedResponse = await findCachedResponse(new Request(pageUrl))
+            cacheStatus[pageUrl] = !!cachedResponse
+        } catch (error) {
+            cacheStatus[pageUrl] = false
+        }
+    }
+
+    const cachedCount = Object.values(cacheStatus).filter(Boolean).length
+    const totalCount = pages.length
+
+    // 更新状态记录
+    REPORT_CACHE_STATUS.set(reportKey, {
+        template,
+        version,
+        repId,
+        pages: cacheStatus,
+        totalPages: totalCount,
+        cachedPages: cachedCount,
+        lastUpdated: Date.now(),
+        isComplete: cachedCount === totalCount,
+    })
+
+    return {
+        totalPages: totalCount,
+        cachedPages: cachedCount,
+        isComplete: cachedCount === totalCount,
+        status: cacheStatus,
+    }
+}
+
+// 清理报告缓存
+const clearReportCache = async (repId, template, version) => {
+    const pages = getReportPages(repId, template, version)
+    let clearedCount = 0
+
+    if (isCacheAPISupported()) {
+        const cacheNames = [DYNAMIC_CACHE, PRIORITY_CACHE, STATIC_CACHE]
+
+        for (const cacheName of cacheNames) {
+            try {
+                const cache = await caches.open(cacheName)
+
+                for (const pageUrl of pages) {
+                    const deleted = await cache.delete(pageUrl)
+                    if (deleted) {
+                        clearedCount++
+                        console.log(`[v0] Cleared cache for: ${pageUrl}`)
+                    }
+                }
+            } catch (error) {
+                console.error(`Error clearing cache ${cacheName}:`, error)
+            }
+        }
+    }
+
+    // 清理状态记录
+    const reportKey = `${repId}/${template}/${version}`
+    REPORT_CACHE_STATUS.delete(reportKey)
+
+    return { clearedCount }
+}
+
 // 安装事件
 self.addEventListener("install", (event) => {
     console.log("Service Worker: Installing...")
@@ -860,6 +1025,63 @@ self.addEventListener("message", (event) => {
             indexedDBSupported: typeof indexedDB !== "undefined",
             isDevelopment: isDevelopmentMode,
         })
+    }
+
+    if (event.data && event.data.type === "PRELOAD_REPORT") {
+        const { repId, template, version } = event.data
+
+        preloadReport(repId, template, version)
+            .then((result) => {
+                event.ports[0].postMessage({
+                    success: true,
+                    ...result,
+                })
+            })
+            .catch((error) => {
+                console.error("Report preload failed:", error)
+                event.ports[0].postMessage({
+                    success: false,
+                    error: error.message,
+                })
+            })
+    }
+
+    if (event.data && event.data.type === "GET_REPORT_CACHE_STATUS") {
+        const { repId, template, version } = event.data
+
+        getReportCacheStatus(repId, template, version)
+            .then((status) => {
+                event.ports[0].postMessage({
+                    success: true,
+                    ...status,
+                })
+            })
+            .catch((error) => {
+                console.error("Get report cache status failed:", error)
+                event.ports[0].postMessage({
+                    success: false,
+                    error: error.message,
+                })
+            })
+    }
+
+    if (event.data && event.data.type === "CLEAR_REPORT_CACHE") {
+        const { repId, template, version } = event.data
+
+        clearReportCache(repId, template, version)
+            .then((result) => {
+                event.ports[0].postMessage({
+                    success: true,
+                    ...result,
+                })
+            })
+            .catch((error) => {
+                console.error("Clear report cache failed:", error)
+                event.ports[0].postMessage({
+                    success: false,
+                    error: error.message,
+                })
+            })
     }
 })
 

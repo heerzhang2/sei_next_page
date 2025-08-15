@@ -82,6 +82,7 @@ export const EntranceSetup = ({show, redId, nestMd, rep}: InternalItemProps) => 
          ])}, [doCheckNames, rep],)
     const contentRendererFactory = React.useCallback((form: any) => (
             <CardContent>
+                <ReportCacheManager repId={params.repId} template="INDPL_DJ" version="1" />
                 <DevToolsSection form={form} onCheckNames={handleCheckNames} />
             </CardContent>),
        [handleCheckNames],)
