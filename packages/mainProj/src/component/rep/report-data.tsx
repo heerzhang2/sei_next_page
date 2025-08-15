@@ -202,7 +202,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         query: ReportQuery,
         variables: queryVariables,
         requestPolicy,
-        pause: !queryEnabled || (!isOnline && !isBackendOnline) || !isClient, // 添加客户端检查
+        pause: false,
     })
 
     const { data, fetching, error } = result

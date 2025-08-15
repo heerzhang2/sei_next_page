@@ -439,7 +439,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [createClientStable, accessToken, isClient])
 
-    if (!isClient || !client) {
+    if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
 

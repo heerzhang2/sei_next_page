@@ -518,3 +518,31 @@ Close menu
 离线模式
 未找到本地缓存数据
 请在有网络时访问此报告以缓存数据
+https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1?_rsc=vusbg
+
+请求网址
+https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1?_rsc=vusbg
+请求方法
+GET
+状态代码
+200 OK （来自 service worker）
+引荐来源网址政策
+strict-origin-when-cross-origin
+cache-control
+no-store, must-revalidate
+connection
+keep-alive
+content-encoding
+gzip
+content-type
+text/x-component
+date
+Fri, 15 Aug 2025 07:41:39 GMT
+keep-alive
+timeout=5
+transfer-encoding
+chunked
+vary
+RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding
+x-pwa-cache
+report-page

@@ -1,8 +1,15 @@
-const CACHE_NAME = "report-system-v1.4"
-const STATIC_CACHE = "static-v1.4"
-const DYNAMIC_CACHE = "dynamic-v1.4"
+const CACHE_NAME = "report-system-v1.5"
+const STATIC_CACHE = "static-v1.5"
+const DYNAMIC_CACHE = "dynamic-v1.5"
+const PRIORITY_CACHE = "priority-v1.5" // 新增优先级缓存
 
 let isDevelopmentMode = false
+
+const CACHE_CONFIG = {
+    maxEntries: 200, // 增加最大缓存条目数
+    maxAgeSeconds: 30 * 24 * 60 * 60, // 30天
+    priorityMaxEntries: 50, // 优先级缓存最大条目数
+}
 
 // 从主线程接收环境信息
 const isDevelopment = () => {
@@ -58,6 +65,8 @@ const normalizeUrlForCache = (url) => {
 
 // 尝试匹配缓存，使用灵活的匹配策略
 const findCachedResponse = async (request) => {
+    console.log(`[v0] Looking for cached response: ${request.url}`)
+
     if (!isCacheAPISupported()) {
         return await getFromBackupDB(request.url)
     }
@@ -67,6 +76,7 @@ const findCachedResponse = async (request) => {
     // 首先尝试精确匹配
     let cachedResponse = await caches.match(request)
     if (cachedResponse) {
+        console.log(`[v0] Found exact match in cache: ${request.url}`)
         return cachedResponse
     }
 
@@ -75,15 +85,18 @@ const findCachedResponse = async (request) => {
         const normalizedUrl = normalizeUrlForCache(request.url)
         cachedResponse = await caches.match(normalizedUrl)
         if (cachedResponse) {
-            console.log("Found cached response with normalized URL:", normalizedUrl)
+            console.log(`[v0] Found cached response with normalized URL: ${normalizedUrl}`)
             return cachedResponse
         }
 
-        // 尝试匹配相同路径但不同查询参数的缓存
         const cacheNames = await caches.keys()
+        console.log(`[v0] Searching in ${cacheNames.length} caches for path: ${url.pathname}`)
+
         for (const cacheName of cacheNames) {
             const cache = await caches.open(cacheName)
             const cachedRequests = await cache.keys()
+
+            console.log(`[v0] Cache ${cacheName} has ${cachedRequests.length} entries`)
 
             for (const cachedRequest of cachedRequests) {
                 const cachedUrl = new URL(cachedRequest.url)
@@ -92,39 +105,28 @@ const findCachedResponse = async (request) => {
                 if (cachedUrl.pathname === url.pathname && cachedUrl.origin === url.origin) {
                     const response = await cache.match(cachedRequest)
                     if (response) {
-                        console.log("Found cached response with same path:", cachedRequest.url)
+                        console.log(`[v0] Found cached response with same path: ${cachedRequest.url}`)
+                        return response
+                    }
+                }
+
+                const requestPathWithoutFragment = url.pathname.replace(/#.*$/, "")
+                const cachedPathWithoutFragment = cachedUrl.pathname.replace(/#.*$/, "")
+
+                if (cachedPathWithoutFragment === requestPathWithoutFragment && cachedUrl.origin === url.origin) {
+                    const response = await cache.match(cachedRequest)
+                    if (response) {
+                        console.log(`[v0] Found cached response with matching path (no fragment): ${cachedRequest.url}`)
                         return response
                     }
                 }
             }
         }
+
+        console.log(`[v0] No cached response found for: ${request.url}`)
     }
 
     return null
-}
-
-const isNetworkAvailable = async () => {
-    try {
-        // 刷新期间不进行网络检测，避免误判
-        if (isRefreshing) {
-            return true
-        }
-
-        const timeout = isDevelopment() ? 2000 : 5000
-        const response = await fetch("/api/health", {
-            method: "HEAD",
-            cache: "no-cache",
-            signal: AbortSignal.timeout(timeout),
-        })
-        return response.ok
-    } catch (error) {
-        // 刷新期间的网络错误不算真正的离线
-        if (isRefreshing) {
-            return true
-        }
-        console.log("Network check failed:", error.message)
-        return false
-    }
 }
 
 // 备用存储方案（使用 IndexedDB）
@@ -176,7 +178,7 @@ const getFromBackupDB = async (url) => {
             const exactRequest = store.get(url)
             exactRequest.onsuccess = () => {
                 const result = exactRequest.result
-                if (result && Date.now() - result.timestamp <= 7 * 24 * 60 * 60 * 1000) {
+                if (result && Date.now() - result.timestamp <= CACHE_CONFIG.maxAgeSeconds * 1000) {
                     const response = new Response(result.body, {
                         status: result.status,
                         statusText: result.statusText,
@@ -191,7 +193,7 @@ const getFromBackupDB = async (url) => {
                 const normalizedRequest = store.get(normalizedUrl)
                 normalizedRequest.onsuccess = () => {
                     const normalizedResult = normalizedRequest.result
-                    if (normalizedResult && Date.now() - normalizedResult.timestamp <= 7 * 24 * 60 * 60 * 1000) {
+                    if (normalizedResult && Date.now() - normalizedResult.timestamp <= CACHE_CONFIG.maxAgeSeconds * 1000) {
                         const response = new Response(normalizedResult.body, {
                             status: normalizedResult.status,
                             statusText: normalizedResult.statusText,
@@ -231,8 +233,13 @@ const isProtectedPage = (url) => {
 const shouldCacheStaticAsset = (url) => {
     const pathname = new URL(url).pathname
 
-    // 在开发环境中，不缓存JavaScript���CSS文件
     if (isDevelopment()) {
+        // 如果是报告页面相关的资源，强制缓存
+        if (pathname.includes("/rep/") || pathname.includes("/_next/static/chunks/")) {
+            return pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)
+        }
+
+        // 其他JS和CSS文件在开发模式下不缓存
         if (pathname.match(/\.(js|css)$/)) {
             console.log("Development mode: Skipping cache for code file:", pathname)
             return false
@@ -240,6 +247,100 @@ const shouldCacheStaticAsset = (url) => {
     }
 
     return pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)
+}
+
+const manageCacheSize = async (cacheName, maxEntries) => {
+    if (!isCacheAPISupported()) return
+
+    try {
+        const cache = await caches.open(cacheName)
+        const keys = await cache.keys()
+
+        if (keys.length > maxEntries) {
+            console.log(`[v0] Cache ${cacheName} has ${keys.length} entries, cleaning up...`)
+
+            // 按时间戳排序，删除最旧的条目
+            const entriesToDelete = keys.slice(0, keys.length - maxEntries)
+            await Promise.all(entriesToDelete.map((key) => cache.delete(key)))
+
+            console.log(`[v0] Cleaned up ${entriesToDelete.length} old cache entries`)
+        }
+    } catch (error) {
+        console.error("Cache management failed:", error)
+    }
+}
+
+// 检查是否应该强制缓存（忽略 cache-control）
+const shouldForceCacheResponse = (request, response) => {
+    const url = new URL(request.url)
+
+    // 强制缓存报告页面，即使有 no-store
+    if (url.pathname.includes("/rep/")) {
+        console.log(`[v0] Force caching report page: ${request.url}`)
+        return true
+    }
+
+    // 检查自定义缓存标识
+    const pwaCacheHeader = response.headers.get("x-pwa-cache")
+    if (pwaCacheHeader) {
+        console.log(`[v0] Force caching due to x-pwa-cache header: ${pwaCacheHeader}`)
+        return true
+    }
+
+    return false
+}
+
+// 改进的缓存响应函数
+const cacheResponse = async (request, response, isPriority = false) => {
+    try {
+        const cacheName = isPriority ? PRIORITY_CACHE : DYNAMIC_CACHE
+        const maxEntries = isPriority ? CACHE_CONFIG.priorityMaxEntries : CACHE_CONFIG.maxEntries
+
+        // 检查是否应该缓存
+        const cacheControl = response.headers.get("cache-control") || ""
+        const shouldForceCache = shouldForceCacheResponse(request, response)
+
+        if (cacheControl.includes("no-store") && !shouldForceCache) {
+            console.log(`[v0] Skipping cache due to no-store: ${request.url}`)
+            return
+        }
+
+        if (isCacheAPISupported()) {
+            const cache = await caches.open(cacheName)
+
+            // 使用标准化的 URL 进行缓存
+            const cacheKey = normalizeUrlForCache(request.url)
+            const cacheRequest = new Request(cacheKey, {
+                method: request.method,
+                headers: request.headers,
+            })
+
+            // 创建新的响应，移除可能阻止缓存的头部
+            const responseToCache = new Response(response.body, {
+                status: response.status,
+                statusText: response.statusText,
+                headers: (() => {
+                    const headers = new Headers(response.headers)
+                    if (shouldForceCache) {
+                        // 移除阻止缓存的头部
+                        headers.delete("cache-control")
+                        headers.set("cache-control", "public, max-age=86400") // 24小时
+                    }
+                    return headers
+                })(),
+            })
+
+            await cache.put(cacheRequest, responseToCache)
+            console.log(`[v0] Successfully cached ${isPriority ? "priority" : "regular"} response: ${cacheKey}`)
+
+            // 管理缓存大小
+            await manageCacheSize(cacheName, maxEntries)
+        } else {
+            await saveToBackupDB(request.url, response.clone())
+        }
+    } catch (error) {
+        console.error("Failed to cache response:", error)
+    }
 }
 
 // 安装事件
@@ -286,7 +387,7 @@ self.addEventListener("activate", (event) => {
                     const cacheNames = await caches.keys()
                     await Promise.all(
                         cacheNames.map((cacheName) => {
-                            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+                            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE && cacheName !== PRIORITY_CACHE) {
                                 console.log("Service Worker: Deleting old cache:", cacheName)
                                 return caches.delete(cacheName)
                             }
@@ -469,34 +570,39 @@ self.addEventListener("fetch", (event) => {
                     }
                 }
 
-                // API 请求策略
-                if (url.pathname.startsWith("/api/")) {
+                // API 请求策略 - 改进RSC请求处理
+                if (url.pathname.startsWith("/api/") || url.searchParams.has("_rsc")) {
+                    console.log(`[v0] Handling API/RSC request: ${request.url}`)
+
                     try {
                         const networkResponse = await fetch(request)
+                        console.log(
+                            `[v0] Network response status: ${networkResponse.status}, cache-control: ${networkResponse.headers.get("cache-control")}`,
+                        )
 
-                        if (networkResponse.ok && !url.pathname.includes("/auth/")) {
-                            // 对于报告相关的 API，积极缓存
-                            if (url.pathname.includes("/rep/") || shouldCacheRoute(request.url)) {
-                                if (isCacheAPISupported()) {
-                                    const cache = await caches.open(DYNAMIC_CACHE)
-                                    cache.put(request, networkResponse.clone())
-                                } else {
-                                    await saveToBackupDB(request.url, networkResponse.clone())
-                                }
+                        if (networkResponse.ok) {
+                            const isPriorityAPI =
+                                url.pathname.includes("/rep/") || url.pathname.includes("/report") || url.searchParams.has("_rsc")
+
+                            if (isPriorityAPI) {
+                                console.log(`[v0] Caching priority API/RSC response (dev mode: ${isDevelopment()}): ${request.url}`)
+                                await cacheResponse(request, networkResponse, true)
+                            } else if (!url.pathname.includes("/auth/")) {
+                                await cacheResponse(request, networkResponse, false)
                             }
                         }
 
                         return networkResponse
                     } catch (networkError) {
-                        console.log("API network failed, trying cache:", request.url)
+                        console.log(`[v0] API/RSC network failed, trying cache: ${request.url}`)
 
-                        // 尝试从缓存获取
                         const cachedResponse = await findCachedResponse(request)
                         if (cachedResponse) {
+                            console.log(`[v0] Found cached API/RSC response: ${request.url}`)
                             return cachedResponse
                         }
 
-                        // API 请求失败时返回错误响应
+                        console.log(`[v0] No cached API/RSC response found: ${request.url}`)
                         return new Response(
                             JSON.stringify({
                                 error: "API unavailable offline",
@@ -541,203 +647,112 @@ self.addEventListener("fetch", (event) => {
                     .then(async (networkResponse) => {
                         const contentType = networkResponse.headers.get("content-type") || ""
                         const isHtmlResponse = contentType.includes("text/html")
+                        const isRSCResponse = contentType.includes("text/x-component")
 
-                        if (networkResponse.ok && isHtmlResponse) {
-                            if (shouldCacheRoute(request.url)) {
-                                console.log("Caching route:", request.url)
+                        console.log(
+                            `[v0] Network response for ${request.url}: status=${networkResponse.status}, content-type=${contentType}`,
+                        )
 
-                                // 使用标准化的 URL 进行缓存
-                                const cacheKey = normalizeUrlForCache(request.url)
-                                const cacheRequest = new Request(cacheKey, {
-                                    method: request.method,
-                                    headers: request.headers,
-                                })
+                        if (networkResponse.ok && (isHtmlResponse || isRSCResponse)) {
+                            if (shouldCacheRoute(request.url) || url.pathname.includes("/rep/")) {
+                                console.log(`[v0] Caching page response (dev mode: ${isDevelopment()}): ${request.url}`)
 
-                                if (isCacheAPISupported()) {
-                                    const cache = await caches.open(DYNAMIC_CACHE)
-                                    cache.put(cacheRequest, networkResponse.clone())
-                                } else {
-                                    await saveToBackupDB(cacheKey, networkResponse.clone())
-                                }
+                                const isPriorityRoute = url.pathname.includes("/rep/")
+                                await cacheResponse(request, networkResponse, isPriorityRoute)
                             }
                         }
                         return networkResponse
                     })
                     .catch(async (error) => {
-                        console.log("Page network failed:", request.url, error)
+                        console.log(`[v0] Page network failed: ${request.url}`, error)
 
-                        // 如果有缓存，返回缓存
                         if (cachedResponse) {
-                            console.log("Returning cached response for:", request.url)
+                            console.log(`[v0] Returning cached response for: ${request.url}`)
                             return cachedResponse
                         }
 
-                        if (request.headers.get("accept")?.includes("text/html")) {
-                            if (isProtectedPage(request.url)) {
-                                return new Response(
-                                    `
-                  <!DOCTYPE html>
-                  <html>
-                  <head>
-                      <meta charset="utf-8">
-                      <meta name="viewport" content="width=device-width, initial-scale=1">
-                      <title>内容未缓存 - 报告系统</title>
-                      <style>
-                          body { 
-                              font-family: system-ui, -apple-system, sans-serif; 
-                              margin: 0; 
-                              padding: 2rem; 
-                              background: #f5f5f5; 
-                              color: #333;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
-                              min-height: 100vh;
-                          }
-                          .container { 
-                              background: white; 
-                              padding: 2rem; 
-                              border-radius: 8px; 
-                              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                              text-align: center;
-                              max-width: 400px;
-                          }
-                          .icon { font-size: 2rem; margin-bottom: 1rem; }
-                          h1 { color: #f39c12; margin-bottom: 1rem; font-size: 1.5rem; }
-                          p { margin-bottom: 1rem; line-height: 1.6; }
-                          .actions { margin-top: 1.5rem; }
-                          button, a { 
-                              display: inline-block;
-                              padding: 0.5rem 1rem; 
-                              margin: 0.25rem; 
-                              background: #3498db; 
-                              color: white; 
-                              text-decoration: none; 
-                              border-radius: 4px; 
-                              border: none;
-                              cursor: pointer;
-                              font-size: 0.9rem;
-                          }
-                          button:hover, a:hover { background: #2980b9; }
-                          .secondary { background: #95a5a6; }
-                          .secondary:hover { background: #7f8c8d; }
-                      </style>
-                  </head>
-                  <body>
-                      <div class="container">
-                          <div class="icon">📋</div>
-                          <h1>内容未缓存</h1>
-                          <p>此报告页面尚未缓存，需要网络连接才能访问。</p>
-                          <p>请在有网络时先访问一次以缓存内容。</p>
-                          <div class="actions">
-                              <a href="/">返回首页</a>
-                              <button onclick="history.back()" class="secondary">返回上页</button>
-                              <button onclick="window.location.reload()" class="secondary">重试</button>
-                          </div>
+                        // 其他页面的通用离线提示
+                        return new Response(
+                            `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                  <meta charset="utf-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <title>页面不可用 - 报告系统</title>
+                  <style>
+                      body { 
+                          font-family: system-ui, -apple-system, sans-serif; 
+                          margin: 0; 
+                          padding: 2rem; 
+                          background: #f5f5f5; 
+                          color: #333;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          min-height: 100vh;
+                      }
+                      .container { 
+                          background: white; 
+                          padding: 2rem; 
+                          border-radius: 8px; 
+                          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                          text-align: center;
+                          max-width: 400px;
+                      }
+                      .icon { font-size: 2rem; margin-bottom: 1rem; }
+                      h1 { color: #e74c3c; margin-bottom: 1rem; font-size: 1.5rem; }
+                      p { margin-bottom: 1rem; line-height: 1.6; }
+                      .actions { margin-top: 1.5rem; }
+                      button, a { 
+                          display: inline-block;
+                          padding: 0.5rem 1rem; 
+                          margin: 0.25rem; 
+                          background: #3498db; 
+                          color: white; 
+                          text-decoration: none; 
+                          border-radius: 4px; 
+                          border: none;
+                          cursor: pointer;
+                          font-size: 0.9rem;
+                      }
+                      button:hover, a:hover { background: #2980b9; }
+                      .secondary { background: #95a5a6; }
+                      .secondary:hover { background: #7f8c8d; }
+                  </style>
+              </head>
+              <body>
+                  <div class="container">
+                      <div class="icon">⚠️</div>
+                      <h1>页面暂时不可用</h1>
+                      <p>此页面尚未缓存，且当前无网络连接。</p>
+                      <div class="actions">
+                          <a href="/">返回首页</a>
+                          <button onclick="history.back()" class="secondary">返回上页</button>
+                          <button onclick="window.location.reload()" class="secondary">重试</button>
                       </div>
-                      <script>
-                          window.addEventListener('online', () => {
-                              window.location.reload();
-                          });
-                      </script>
-                  </body>
-                  </html>
-                  `,
-                                    {
-                                        status: 503,
-                                        headers: {
-                                            "Content-Type": "text/html; charset=utf-8",
-                                            "Cache-Control": "no-cache",
-                                        },
-                                    },
-                                )
-                            }
-
-                            // 其他页面的通用离线提示
-                            return new Response(
-                                `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <title>页面不可用 - 报告系统</title>
-                    <style>
-                        body { 
-                            font-family: system-ui, -apple-system, sans-serif; 
-                            margin: 0; 
-                            padding: 2rem; 
-                            background: #f5f5f5; 
-                            color: #333;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            min-height: 100vh;
-                        }
-                        .container { 
-                            background: white; 
-                            padding: 2rem; 
-                            border-radius: 8px; 
-                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                            text-align: center;
-                            max-width: 400px;
-                        }
-                        .icon { font-size: 2rem; margin-bottom: 1rem; }
-                        h1 { color: #e74c3c; margin-bottom: 1rem; font-size: 1.5rem; }
-                        p { margin-bottom: 1rem; line-height: 1.6; }
-                        .actions { margin-top: 1.5rem; }
-                        button, a { 
-                            display: inline-block;
-                            padding: 0.5rem 1rem; 
-                            margin: 0.25rem; 
-                            background: #3498db; 
-                            color: white; 
-                            text-decoration: none; 
-                            border-radius: 4px; 
-                            border: none;
-                            cursor: pointer;
-                            font-size: 0.9rem;
-                        }
-                        button:hover, a:hover { background: #2980b9; }
-                        .secondary { background: #95a5a6; }
-                        .secondary:hover { background: #7f8c8d; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="icon">⚠️</div>
-                        <h1>页面暂时不可用</h1>
-                        <p>此页面尚未缓存，且当前无网络连接。</p>
-                        <div class="actions">
-                            <a href="/">返回首页</a>
-                            <button onclick="history.back()" class="secondary">返回上页</button>
-                            <button onclick="window.location.reload()" class="secondary">重试</button>
-                        </div>
-                    </div>
-                    <script>
-                        window.addEventListener('online', () => {
-                            window.location.reload();
-                        });
-                    </script>
-                </body>
-                </html>
-                `,
-                                {
-                                    status: 503,
-                                    headers: {
-                                        "Content-Type": "text/html; charset=utf-8",
-                                        "Cache-Control": "no-cache",
-                                    },
+                  </div>
+                  <script>
+                      window.addEventListener('online', () => {
+                          window.location.reload();
+                      });
+                  </script>
+              </body>
+              </html>
+              `,
+                            {
+                                status: 503,
+                                headers: {
+                                    "Content-Type": "text/html; charset=utf-8",
+                                    "Cache-Control": "no-cache",
                                 },
-                            )
-                        }
-
-                        throw error
+                            },
+                        )
                     })
 
                 // 如果有缓存，立即返回缓存，同时在后台更新
                 if (cachedResponse) {
-                    console.log("Serving from cache:", request.url)
+                    console.log(`[v0] Serving from cache: ${request.url}`)
                     fetchPromise.catch(() => {}) // 忽略后台更新的错误
                     return cachedResponse
                 }
