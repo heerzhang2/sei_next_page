@@ -371,7 +371,7 @@ const getReportPages = (repId, template, version) => {
         `${baseUrl}/Testing`, // 测试页面
         `${baseUrl}/Calibration`, // 校准页面
         `${baseUrl}/Maintenance`, // 维护页面
-        `${baseUrl}/Configuration`, // 配置页面
+        `${baseUrl}/LineDiagramFile`, // 配置页面
     ]
 
     // 添加RSC请求URL
