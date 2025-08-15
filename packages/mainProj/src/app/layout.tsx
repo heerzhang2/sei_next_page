@@ -12,7 +12,6 @@ import { notoSans, notoSerif } from "@/styles/fonts"
 import "./globals.css"
 import HeaderWrapper from "@/component/header-wrapper"
 import { PWAInstaller } from "@/components/pwa-installer"
-import { ServiceWorkerUpdater } from "@/components/service-worker-updater"
 import { OfflineIndicator } from "@/components/offline-indicator"
 import { OfflineStatusIndicator } from "@/components/offline-status-indicator"
 import { SafariViewportFix } from "@/components/safari-viewport-fix"
@@ -154,7 +153,6 @@ export default async function RootLayout({
                                 {children}
                                 {/* PWA 组件 */}
                                 <PWAInstaller />
-                                <ServiceWorkerUpdater />
                                 <Toaster richColors position="top-right" />
                             </GraphQLProvider>
                         </Provider>

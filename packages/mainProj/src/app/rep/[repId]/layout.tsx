@@ -1,19 +1,23 @@
 import type { ReactNode } from "react"
 import ReportData from "@/component/rep/report-data"
 import { StorageProvider } from "@/report/StorageContext"
-import {ErrorBoundaryWrapper} from "@/components/error-boundary-wrapper"
+import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
+import { ServiceWorkerUpdater } from "@/components/service-worker-updater"
 
-export default function ReportLayout({
-                                         children,
-                                         params,
-                                     }: {
+export default async function ReportLayout({
+                                               children,
+                                               params,
+                                           }: {
     children: ReactNode
-    params: { repId: string }
+    params: Promise<{ repId: string }>
 }) {
+    const { repId } = await params
+
     return (
         <ErrorBoundaryWrapper>
             <StorageProvider>
-                <ReportData repId={params.repId}>{children}</ReportData>
+                <ServiceWorkerUpdater />
+                <ReportData repId={repId}>{children}</ReportData>
             </StorageProvider>
         </ErrorBoundaryWrapper>
     )
