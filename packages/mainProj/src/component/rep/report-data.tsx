@@ -178,9 +178,16 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
 
+    const [isClient, setIsClient] = useState(false)
+
     const { isOnline, isBackendOnline } = useNetworkStatus()
 
-    useEffect(() => setMounted(true), [])
+    useEffect(() => {
+        setIsClient(true)
+        setMounted(true)
+    }, [])
+
+    console.log("[v0] CommonReportData状态:", { mounted, isClient, repId })
 
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
 
@@ -195,7 +202,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         query: ReportQuery,
         variables: queryVariables,
         requestPolicy,
-        pause: !queryEnabled || (!isOnline && !isBackendOnline),
+        pause: !queryEnabled || (!isOnline && !isBackendOnline) || !isClient, // 添加客户端检查
     })
 
     const { data, fetching, error } = result
@@ -268,7 +275,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         setOffline(shouldBeOffline)
     }, [error, isOnline, isBackendOnline, setOffline])
 
-    if (!mounted) {
+    if (!isClient || !mounted) {
         return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     }
 
@@ -289,14 +296,6 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
                     </div>
                     {children}
                 </>
-            )
-        } else {
-            return (
-                <div className="text-center p-4">
-                    <div className="text-amber-600 mb-2">离线模式</div>
-                    <div className="text-sm text-gray-600">未找到本地缓存数据</div>
-                    <div className="text-xs text-gray-500 mt-2">请在有网络时访问此报告以缓存数据</div>
-                </div>
             )
         }
     }

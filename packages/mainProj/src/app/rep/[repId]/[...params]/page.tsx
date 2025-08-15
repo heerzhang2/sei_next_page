@@ -8,6 +8,7 @@ export async function generateMetadata({
                                        }: {
     params: { repId: string; params: string[] }
 }): Promise<Metadata> {
+    throw new Error("N非预期的页面1e")
     return {
         title: `报告 - ${params.repId}`,
         description: "离线可用的报告页面",
@@ -24,5 +25,6 @@ export default function ReportPage({
                                    }: {
     params: { repId: string; params: string[] }
 }) {
+    throw new Error("N非预期的页面2e")
     return <ReportPageClient params={params} />
 }

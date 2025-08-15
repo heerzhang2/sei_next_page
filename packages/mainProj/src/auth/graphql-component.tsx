@@ -4,7 +4,7 @@ import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/n
 import { UrqlProvider } from "@urql/next"
 import { useAccessToken } from "./use-access-token"
 import { authExchange } from "@urql/exchange-auth"
-import { type ReactNode, useMemo, useRef, useCallback } from "react"
+import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
 //离线保存支持的：
 import { offlineExchange } from "@urql/exchange-graphcache"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
@@ -249,19 +249,56 @@ const makeAuthExchange = (accessToken: string | null) => {
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const accessToken = useAccessToken()
 
+    const [isClient, setIsClient] = useState(false)
+
+    useEffect(() => {
+        setIsClient(true)
+    }, [])
+
     // 使用 useRef 来保持客户端实例的稳定性
     const clientRef = useRef<any>(null)
     const ssrRef = useRef<any>(null)
     const lastTokenRef = useRef<string | null>(null)
+    const instanceIdRef = useRef(Math.random().toString(36).substr(2, 9))
+
+    const initializedRef = useRef(false)
+
+    useEffect(() => {
+        if (!initializedRef.current) {
+            console.log(`[v0] GraphQLProvider 首次挂载，实例ID: ${instanceIdRef.current}`)
+            initializedRef.current = true
+        }
+        return () => {
+            console.log(`[v0] GraphQLProvider 卸载，实例ID: ${instanceIdRef.current}`)
+        }
+    }, [])
+
+    useEffect(() => {
+        console.log(
+            `[v0] Token变化检测 - 实例ID: ${instanceIdRef.current}, accessToken: ${accessToken}, lastTokenRef.current: ${lastTokenRef.current}`,
+        )
+    }, [accessToken])
 
     // 防抖机制：避免频繁重新创建客户端
     const createClientStable = useCallback(() => {
+        if (!isClient) {
+            return [null, null]
+        }
+
+        console.log(`[v0] createClientStable调用 - 实例ID: ${instanceIdRef.current}`)
+        console.log(
+            `[v0] 当前状态 - accessToken: ${accessToken}, lastTokenRef.current: ${lastTokenRef.current}, clientRef存在: ${!!clientRef.current}`,
+        )
+
         // 只有当 accessToken 真正发生变化时才重新创建客户端
         if (lastTokenRef.current === accessToken && clientRef.current) {
+            console.log(`[v0] 复用现有客户端 - 实例ID: ${instanceIdRef.current}`)
             return [clientRef.current, ssrRef.current]
         }
 
-        console.log("重新创建 GraphQL 客户端，token 变化:", lastTokenRef.current, "->", accessToken)
+        console.log(
+            `[v0] 重新创建 GraphQL 客户端，token 变化: ${lastTokenRef.current} -> ${accessToken}, 实例ID: ${instanceIdRef.current}`,
+        )
         lastTokenRef.current = accessToken
 
         //离线保存支持的：只在客户端代码中使用 indexedDB。
@@ -379,11 +416,32 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         ssrRef.current = ssr
 
         return [client, ssr]
-    }, [accessToken])
+    }, [accessToken, isClient])
+
+    const memoizedClientRef = useRef<[any, any] | null>(null)
+    const lastAccessTokenRef = useRef(accessToken)
 
     const [client, ssr] = useMemo(() => {
-        return createClientStable()
-    }, [createClientStable])
+        if (!isClient) {
+            return [null, null]
+        }
+
+        // 如果token没有变化且已有缓存的客户端，直接返回
+        if (lastAccessTokenRef.current === accessToken && memoizedClientRef.current) {
+            console.log(`[v0] 使用memoized客户端 - 实例ID: ${instanceIdRef.current}`)
+            return memoizedClientRef.current
+        }
+
+        console.log(`[v0] 重新计算客户端 - 实例ID: ${instanceIdRef.current}`)
+        lastAccessTokenRef.current = accessToken
+        const result = createClientStable()
+        memoizedClientRef.current = result
+        return result
+    }, [createClientStable, accessToken, isClient])
+
+    if (!isClient || !client) {
+        return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
+    }
 
     return (
         <UrqlProvider client={client} ssr={ssr}>

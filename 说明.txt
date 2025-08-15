@@ -509,4 +509,12 @@ https://v0.app/chat/fork-of-7qMRRqqXItk
 （2）Bearer%207IwGrXYhAjsRFd1ndnIor4gW
 （0）Bearer%20UfRKGZJW6vLZmtyoCIo1ztYr
 
-**静态化与PWA冲突**：`force-static` 与动态PWA功能不兼容
+打开报告主菜单
+登录
+Close menu
+报告概览报告详情用户信息设置
+正在准备编辑环境...
+
+离线模式
+未找到本地缓存数据
+请在有网络时访问此报告以缓存数据
