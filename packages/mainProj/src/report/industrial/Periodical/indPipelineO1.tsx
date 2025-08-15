@@ -74,7 +74,7 @@ export const config设备概况 = [
     [['工作温度', {n: '工作温', u: '℃'}], ['工作介质', {n: '工作介', t: 'l', l: 工作介质选}]],
 ];
 
-export const EntranceSetup = ({show, redId, nestMd, rep}: InternalItemProps) => {
+export const EntranceSetup = ({show, rep}: InternalItemProps) => {
     const {schema, defaultValues, doCheckNames} = useEntranceSetup(rep)
     const handleCheckNames = React.useCallback((e: React.MouseEvent) => {
             doCheckNames(e, rep, [{ value: config设备概况, type: "esnt" }, { value: [...itemA结论,...itemA结论附, ...itemA资审查] },
@@ -83,13 +83,13 @@ export const EntranceSetup = ({show, redId, nestMd, rep}: InternalItemProps) => 
          ])}, [doCheckNames, rep],)
     const contentRendererFactory = React.useCallback((form: any) => (
             <CardContent>
-                <ReportCacheManager repId={rep.id} template="INDPL_DJ" version="1" />
                 <DevToolsSection form={form} onCheckNames={handleCheckNames} />
             </CardContent>),
        [handleCheckNames])
     const {render}= useFormFramework({schema, defaultValues, contentRendererFactory, rep})
     return <CollapsibleFormSection title="初始化本报告，默认值配置等" defaultOpen={show}>
-            {render(null)}
+                <ReportCacheManager repId={rep.id} template="INDPL_DJ" version="1" />
+                {render(null)}
         </CollapsibleFormSection>
 }
 

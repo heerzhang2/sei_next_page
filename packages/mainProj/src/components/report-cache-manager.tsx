@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { CheckCircle, Download, Wifi, WifiOff } from "lucide-react"
+import { CheckCircle, Download, Wifi, WifiOff, AlertTriangle } from "lucide-react"
+import { useServiceWorkerStatus } from "./service-worker-guard"
 
 interface ReportCacheManagerProps {
     repId: string
@@ -15,6 +16,7 @@ export function ReportCacheManager({ repId, template, version }: ReportCacheMana
     const [cacheStatus, setCacheStatus] = useState<Record<string, boolean>>({})
     const [isPreloading, setIsPreloading] = useState(false)
     const [isOnline, setIsOnline] = useState(true)
+    const isSwReady = useServiceWorkerStatus()
 
     // 检查网络状态
     useEffect(() => {
@@ -29,61 +31,67 @@ export function ReportCacheManager({ repId, template, version }: ReportCacheMana
         }
     }, [])
 
-    // 检查缓存状态
     const checkCacheStatus = async () => {
-        if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-            const messageChannel = new MessageChannel()
-
-            return new Promise((resolve) => {
-                messageChannel.port1.onmessage = (event) => {
-                    setCacheStatus(event.data.status || {})
-                    resolve(event.data.status)
-                }
-
-                navigator.serviceWorker.controller.postMessage(
-                    {
-                        type: "GET_REPORT_CACHE_STATUS",
-                        repId,
-                        template,
-                        version,
-                    },
-                    [messageChannel.port2],
-                )
-            })
+        if (!isSwReady) {
+            console.warn("[v0] Service Worker not ready, cannot check cache status")
+            return
         }
+
+        const messageChannel = new MessageChannel()
+
+        return new Promise((resolve) => {
+            messageChannel.port1.onmessage = (event) => {
+                setCacheStatus(event.data.status || {})
+                resolve(event.data.status)
+            }
+
+            navigator.serviceWorker.controller!.postMessage(
+                {
+                    type: "GET_REPORT_CACHE_STATUS",
+                    repId,
+                    template,
+                    version,
+                },
+                [messageChannel.port2],
+            )
+        })
     }
 
-    // 预加载报告
     const preloadReport = async () => {
-        if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-            setIsPreloading(true)
-            const messageChannel = new MessageChannel()
-
-            return new Promise((resolve) => {
-                messageChannel.port1.onmessage = (event) => {
-                    setIsPreloading(false)
-                    if (event.data.success) {
-                        checkCacheStatus() // 重新检查状态
-                    }
-                    resolve(event.data)
-                }
-
-                navigator.serviceWorker.controller.postMessage(
-                    {
-                        type: "PRELOAD_REPORT",
-                        repId,
-                        template,
-                        version,
-                    },
-                    [messageChannel.port2],
-                )
-            })
+        if (!isSwReady) {
+            console.warn("[v0] Service Worker not ready, cannot preload report")
+            return
         }
+
+        setIsPreloading(true)
+        const messageChannel = new MessageChannel()
+
+        return new Promise((resolve) => {
+            messageChannel.port1.onmessage = (event) => {
+                setIsPreloading(false)
+                if (event.data.success) {
+                    checkCacheStatus() // 重新检查状态
+                }
+                resolve(event.data)
+            }
+
+            navigator.serviceWorker.controller!.postMessage(
+                {
+                    type: "PRELOAD_REPORT",
+                    repId,
+                    template,
+                    version,
+                },
+                [messageChannel.port2],
+            )
+        })
     }
 
     useEffect(() => {
-        checkCacheStatus()
-    }, [repId, template, version])
+        if (isSwReady) {
+            checkCacheStatus()
+        }
+    }, [repId, template, version, isSwReady])
 
     const cachedCount = Object.values(cacheStatus).filter(Boolean).length
     const totalCount = Object.keys(cacheStatus).length
@@ -101,6 +109,7 @@ export function ReportCacheManager({ repId, template, version }: ReportCacheMana
                 </div>
 
                 {isFullyCached && <CheckCircle className="h-5 w-5 text-green-600" />}
+                {!isSwReady && <AlertTriangle className="h-5 w-5 text-amber-600" />}
             </div>
 
             <div className="space-y-2">
@@ -116,7 +125,7 @@ export function ReportCacheManager({ repId, template, version }: ReportCacheMana
             <div className="flex gap-2">
                 <Button
                     onClick={preloadReport}
-                    disabled={isPreloading || !isOnline}
+                    disabled={isPreloading || !isOnline || !isSwReady}
                     size="sm"
                     variant={isFullyCached ? "outline" : "default"}
                 >
@@ -124,13 +133,17 @@ export function ReportCacheManager({ repId, template, version }: ReportCacheMana
                     {isPreloading ? "缓存中..." : isFullyCached ? "重新缓存" : "离线缓存"}
                 </Button>
 
-                <Button onClick={checkCacheStatus} size="sm" variant="outline">
+                <Button onClick={checkCacheStatus} size="sm" variant="outline" disabled={!isSwReady}>
                     检查状态
                 </Button>
             </div>
 
             {!isOnline && (
                 <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded">当前离线模式，已缓存的页面可正常访问</div>
+            )}
+
+            {!isSwReady && (
+                <div className="text-sm text-red-600 bg-red-50 p-2 rounded">Service Worker未就绪，离线缓存功能暂不可用</div>
             )}
         </div>
     )
