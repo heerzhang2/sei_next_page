@@ -343,6 +343,16 @@ const cacheResponse = async (request, response, isPriority = false) => {
     }
 }
 
+const isRSCRequest = (request) => {
+    const url = new URL(request.url)
+    return url.searchParams.has("_rsc") || request.headers.get("RSC") === "1"
+}
+
+const isRSCResponse = (response) => {
+    const contentType = response.headers.get("content-type") || ""
+    return contentType.includes("text/x-component") || contentType.includes("application/rsc")
+}
+
 // 安装事件
 self.addEventListener("install", (event) => {
     console.log("Service Worker: Installing...")
@@ -570,39 +580,95 @@ self.addEventListener("fetch", (event) => {
                     }
                 }
 
-                // API 请求策略 - 改进RSC请求处理
-                if (url.pathname.startsWith("/api/") || url.searchParams.has("_rsc")) {
-                    console.log(`[v0] Handling API/RSC request: ${request.url}`)
+                if (isRSCRequest(request)) {
+                    console.log(`[v0] Handling RSC request: ${request.url}`)
+
+                    try {
+                        // RSC请求优先使用网络，确保获取最新的流式数据
+                        const networkResponse = await fetch(request, {
+                            cache: "no-cache", // 强制从网络获取
+                        })
+
+                        console.log(
+                            `[v0] RSC network response: ${networkResponse.status}, content-type: ${networkResponse.headers.get("content-type")}`,
+                        )
+
+                        if (networkResponse.ok && isRSCResponse(networkResponse)) {
+                            // 对于RSC响应，创建新的Response避免流式问题
+                            const responseBody = await networkResponse.text()
+                            const newResponse = new Response(responseBody, {
+                                status: networkResponse.status,
+                                statusText: networkResponse.statusText,
+                                headers: networkResponse.headers,
+                            })
+
+                            // 只在离线模式下缓存RSC响应
+                            if (url.pathname.includes("/rep/")) {
+                                console.log(`[v0] Caching RSC response for offline use: ${request.url}`)
+                                await cacheResponse(request, newResponse.clone(), true)
+                            }
+
+                            return newResponse
+                        }
+
+                        return networkResponse
+                    } catch (networkError) {
+                        console.log(`[v0] RSC network failed, trying cache: ${request.url}`)
+
+                        // 只在网络失败时使用缓存
+                        const cachedResponse = await findCachedResponse(request)
+                        if (cachedResponse) {
+                            console.log(`[v0] Found cached RSC response: ${request.url}`)
+                            return cachedResponse
+                        }
+
+                        console.log(`[v0] No cached RSC response, returning error: ${request.url}`)
+                        return new Response(
+                            JSON.stringify({
+                                error: "RSC content unavailable offline",
+                                offline: true,
+                            }),
+                            {
+                                status: 503,
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Cache-Control": "no-cache",
+                                },
+                            },
+                        )
+                    }
+                }
+
+                // API 请求策略 - 改进非RSC API请求处理
+                if (url.pathname.startsWith("/api/")) {
+                    console.log(`[v0] Handling API request: ${request.url}`)
 
                     try {
                         const networkResponse = await fetch(request)
                         console.log(
-                            `[v0] Network response status: ${networkResponse.status}, cache-control: ${networkResponse.headers.get("cache-control")}`,
+                            `[v0] API Network response status: ${networkResponse.status}, cache-control: ${networkResponse.headers.get("cache-control")}`,
                         )
 
                         if (networkResponse.ok) {
-                            const isPriorityAPI =
-                                url.pathname.includes("/rep/") || url.pathname.includes("/report") || url.searchParams.has("_rsc")
+                            const isPriorityAPI = url.pathname.includes("/rep/") || url.pathname.includes("/report")
 
-                            if (isPriorityAPI) {
-                                console.log(`[v0] Caching priority API/RSC response (dev mode: ${isDevelopment()}): ${request.url}`)
+                            if (isPriorityAPI && !url.pathname.includes("/auth/")) {
+                                console.log(`[v0] Caching priority API response: ${request.url}`)
                                 await cacheResponse(request, networkResponse, true)
-                            } else if (!url.pathname.includes("/auth/")) {
-                                await cacheResponse(request, networkResponse, false)
                             }
                         }
 
                         return networkResponse
                     } catch (networkError) {
-                        console.log(`[v0] API/RSC network failed, trying cache: ${request.url}`)
+                        console.log(`[v0] API network failed, trying cache: ${request.url}`)
 
                         const cachedResponse = await findCachedResponse(request)
                         if (cachedResponse) {
-                            console.log(`[v0] Found cached API/RSC response: ${request.url}`)
+                            console.log(`[v0] Found cached API response: ${request.url}`)
                             return cachedResponse
                         }
 
-                        console.log(`[v0] No cached API/RSC response found: ${request.url}`)
+                        console.log(`[v0] No cached API response found: ${request.url}`)
                         return new Response(
                             JSON.stringify({
                                 error: "API unavailable offline",
@@ -647,15 +713,14 @@ self.addEventListener("fetch", (event) => {
                     .then(async (networkResponse) => {
                         const contentType = networkResponse.headers.get("content-type") || ""
                         const isHtmlResponse = contentType.includes("text/html")
-                        const isRSCResponse = contentType.includes("text/x-component")
 
                         console.log(
                             `[v0] Network response for ${request.url}: status=${networkResponse.status}, content-type=${contentType}`,
                         )
 
-                        if (networkResponse.ok && (isHtmlResponse || isRSCResponse)) {
+                        if (networkResponse.ok && isHtmlResponse) {
                             if (shouldCacheRoute(request.url) || url.pathname.includes("/rep/")) {
-                                console.log(`[v0] Caching page response (dev mode: ${isDevelopment()}): ${request.url}`)
+                                console.log(`[v0] Caching HTML page response: ${request.url}`)
 
                                 const isPriorityRoute = url.pathname.includes("/rep/")
                                 await cacheResponse(request, networkResponse, isPriorityRoute)

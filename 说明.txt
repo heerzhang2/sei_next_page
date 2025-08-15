@@ -509,40 +509,4 @@ https://v0.app/chat/fork-of-7qMRRqqXItk
 （2）Bearer%207IwGrXYhAjsRFd1ndnIor4gW
 （0）Bearer%20UfRKGZJW6vLZmtyoCIo1ztYr
 
-打开报告主菜单
-登录
-Close menu
-报告概览报告详情用户信息设置
-正在准备编辑环境...
-
-离线模式
-未找到本地缓存数据
-请在有网络时访问此报告以缓存数据
-https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1?_rsc=vusbg
-
-请求网址
-https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1?_rsc=vusbg
-请求方法
-GET
-状态代码
-200 OK （来自 service worker）
-引荐来源网址政策
-strict-origin-when-cross-origin
-cache-control
-no-store, must-revalidate
-connection
-keep-alive
-content-encoding
-gzip
-content-type
-text/x-component
-date
-Fri, 15 Aug 2025 07:41:39 GMT
-keep-alive
-timeout=5
-transfer-encoding
-chunked
-vary
-RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding
-x-pwa-cache
-report-page
+RSC（React Server Components）流式响应被Service Worker错误处理导致的
