@@ -434,6 +434,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [createClientStable, accessToken, isClient])
 
+    console.log("停滞isClient:",isClient,"accessToken: ", accessToken,"client空=",client===null)
+
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
