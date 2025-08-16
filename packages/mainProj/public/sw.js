@@ -353,6 +353,13 @@ const isRSCResponse = (response) => {
     return contentType.includes("text/x-component") || contentType.includes("application/rsc")
 }
 
+const isMainReportRoute = (url) => {
+    const pathname = new URL(url).pathname
+    // 匹配主路由模式: /rep/repId/template/version (没有额外的action)
+    const mainRoutePattern = /^\/rep\/[^/]+\/[^/]+\/[^/]+\/?$/
+    return mainRoutePattern.test(pathname)
+}
+
 // 报告缓存管理
 const REPORT_CACHE_STATUS = new Map() // 存储报告缓存状态
 
@@ -748,6 +755,11 @@ self.addEventListener("fetch", (event) => {
                 if (isRSCRequest(request)) {
                     console.log(`[v0] Handling RSC request: ${request.url}`)
 
+                    const isMainRoute = isMainReportRoute(request.url)
+                    if (isMainRoute) {
+                        console.log(`[v0] This is a MAIN ROUTE RSC request: ${request.url}`)
+                    }
+
                     try {
                         // RSC请求优先使用网络，确保获取最新的流式数据
                         const networkResponse = await fetch(request, {
@@ -767,10 +779,16 @@ self.addEventListener("fetch", (event) => {
                                 headers: networkResponse.headers,
                             })
 
-                            // 只在离线模式下缓存RSC响应
                             if (url.pathname.includes("/rep/")) {
-                                console.log(`[v0] Caching RSC response for offline use: ${request.url}`)
+                                console.log(`[v0] Caching RSC response (${isMainRoute ? "MAIN ROUTE" : "SUB ROUTE"}): ${request.url}`)
                                 await cacheResponse(request, newResponse.clone(), true)
+
+                                const verifyCache = await findCachedResponse(request)
+                                if (verifyCache) {
+                                    console.log(`[v0] ✅ Cache verification successful for: ${request.url}`)
+                                } else {
+                                    console.log(`[v0] ❌ Cache verification failed for: ${request.url}`)
+                                }
                             }
 
                             return newResponse
@@ -778,20 +796,37 @@ self.addEventListener("fetch", (event) => {
 
                         return networkResponse
                     } catch (networkError) {
-                        console.log(`[v0] RSC network failed, trying cache: ${request.url}`)
+                        console.log(
+                            `[v0] RSC network failed (${isMainRoute ? "MAIN ROUTE" : "SUB ROUTE"}), trying cache: ${request.url}`,
+                        )
 
                         // 只在网络失败时使用缓存
                         const cachedResponse = await findCachedResponse(request)
                         if (cachedResponse) {
-                            console.log(`[v0] Found cached RSC response: ${request.url}`)
+                            console.log(
+                                `[v0] ✅ Found cached RSC response (${isMainRoute ? "MAIN ROUTE" : "SUB ROUTE"}): ${request.url}`,
+                            )
                             return cachedResponse
                         }
 
-                        console.log(`[v0] No cached RSC response, returning error: ${request.url}`)
+                        console.log(
+                            `[v0] ❌ No cached RSC response for ${isMainRoute ? "MAIN ROUTE" : "SUB ROUTE"}: ${request.url}`,
+                        )
+
+                        if (isMainRoute) {
+                            // 尝试查找相似的缓存响应
+                            const similarCache = await findSimilarCachedResponse(request)
+                            if (similarCache) {
+                                console.log(`[v0] Found similar cached response for main route: ${request.url}`)
+                                return similarCache
+                            }
+                        }
+
                         return new Response(
                             JSON.stringify({
-                                error: "RSC content unavailable offline",
+                                error: `RSC content unavailable offline (${isMainRoute ? "Main Route" : "Sub Route"})`,
                                 offline: true,
+                                isMainRoute: isMainRoute,
                             }),
                             {
                                 status: 503,
@@ -1115,3 +1150,34 @@ self.addEventListener("notificationclick", (event) => {
     event.notification.close()
     event.waitUntil(clients.openWindow("/"))
 })
+
+const findSimilarCachedResponse = async (request) => {
+    if (!isCacheAPISupported()) return null
+
+    const url = new URL(request.url)
+    const cacheNames = await caches.keys()
+
+    for (const cacheName of cacheNames) {
+        const cache = await caches.open(cacheName)
+        const cachedRequests = await cache.keys()
+
+        for (const cachedRequest of cachedRequests) {
+            const cachedUrl = new URL(cachedRequest.url)
+
+            // 查找相同路径但不同查询参数的缓存
+            if (
+                cachedUrl.pathname === url.pathname &&
+                cachedUrl.origin === url.origin &&
+                cachedUrl.searchParams.has("_rsc")
+            ) {
+                const response = await cache.match(cachedRequest)
+                if (response) {
+                    console.log(`[v0] Found similar cached response: ${cachedRequest.url} for ${request.url}`)
+                    return response
+                }
+            }
+        }
+    }
+
+    return null
+}

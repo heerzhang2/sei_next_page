@@ -1,0 +1,180 @@
+"use client"
+
+import type React from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { useNetworkStatus } from "@/hooks/use-network-status"
+
+// 离线认证函数
+const authenticateOffline = async (username: string, password: string) => {
+    try {
+        // 客户端密码哈希（与服务端保持一致）
+        const encoder = new TextEncoder()
+        const data = encoder.encode(password)
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        const hashedPassword = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+
+        const endpoint = process.env.NEXT_PUBLIC_BACK_END
+        if (!endpoint) throw new Error("Backend endpoint not configured")
+
+        const response = await fetch(`${endpoint}/graphql`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                query: `
+          mutation Authenticate($username: String!, $password: String!) {
+            authenticate(username: $username, password: $password) {
+              accessToken
+              refreshToken
+              user {
+                id
+              }
+            }
+          }
+        `,
+                variables: { username, password: hashedPassword },
+            }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        const result = await response.json()
+
+        if (result.errors) {
+            throw new Error(result.errors[0]?.message || "认证失败")
+        }
+
+        if (!result.data?.authenticate) {
+            throw new Error("认证失败")
+        }
+
+        return result.data.authenticate
+    } catch (error) {
+        console.error("离线认证失败:", error)
+        throw error
+    }
+}
+
+// 存储离线认证信息
+const storeOfflineAuth = (authData: any) => {
+    if (typeof window === "undefined") return
+
+    // 存储到localStorage
+    localStorage.setItem(
+        "offline_auth",
+        JSON.stringify({
+            accessToken: authData.accessToken,
+            refreshToken: authData.refreshToken,
+            user: authData.user,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24小时过期
+        }),
+    )
+
+    // 存储refreshToken用于后续刷新
+    localStorage.setItem("refresh_token", authData.refreshToken)
+
+    // 触发自定义事件通知其他组件
+    window.dispatchEvent(
+        new CustomEvent("offline:login", {
+            detail: authData,
+        }),
+    )
+}
+
+export function OfflineLoginForm() {
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const router = useRouter()
+    const networkStatus = useNetworkStatus()
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsLoading(true)
+
+        try {
+            // 检查Java后端是否可达
+            if (!networkStatus.isGraphQLBackendReachable) {
+                throw new Error("无法连接到认证服务器，请检查网络连接")
+            }
+
+            const authData = await authenticateOffline(email, password)
+
+            // 存储离线认证信息
+            storeOfflineAuth(authData)
+
+            toast.success("离线登录成功", {
+                description: "已直接与后端服务器建立连接",
+            })
+
+            // 跳转到首页
+            router.push("/")
+        } catch (error: any) {
+            console.error("离线登录失败:", error)
+            toast.error("登录失败", {
+                description: error.message || "请检查用户名和密码",
+            })
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    return (
+        <Card className="w-full max-w-sm">
+            <CardHeader>
+                <CardTitle className="text-2xl">离线登录</CardTitle>
+                <CardDescription>
+                    {networkStatus.isNextJSServerReachable
+                        ? "Next.js服务器正常，建议使用标准登录"
+                        : "Next.js服务器离线，使用直连后端登录"}
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+                <form onSubmit={handleSubmit}>
+                    <div className="grid gap-2">
+                        <Label htmlFor="email">用户名/邮箱</Label>
+                        <Input
+                            id="email"
+                            type="text"
+                            placeholder="输入用户名或邮箱"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </div>
+                    <div className="grid gap-2 mt-4">
+                        <Label htmlFor="password">密码</Label>
+                        <Input
+                            id="password"
+                            type="password"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
+                    <Button
+                        type="submit"
+                        className="w-full mt-6"
+                        disabled={isLoading || !networkStatus.isGraphQLBackendReachable}
+                    >
+                        {isLoading ? "登录中..." : "离线登录"}
+                    </Button>
+                    {!networkStatus.isGraphQLBackendReachable && (
+                        <p className="text-sm text-red-500 mt-2 text-center">后端服务器不可达，无法进行认证</p>
+                    )}
+                </form>
+            </CardContent>
+        </Card>
+    )
+}

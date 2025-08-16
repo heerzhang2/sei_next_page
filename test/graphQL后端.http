@@ -1,0 +1,16 @@
+### GraphQL Mutation 请求
+POST https://192.168.171.3:8673/graphql
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}  # 可选认证头，根据实际需求添加
+
+{
+  "operationName": "useOriginalDataMutation",
+  "query": "mutation useOriginalDataMutation($id: ID!, $operationType: Int!, $data: String, $deduction: String, $version: Int) {\n  modifyOriginalRecordData(\n    id: $id\n    operationType: $operationType\n    data: $data\n    deduction: $deduction\n    version: $version\n  ) {\n    id\n    version\n    type\n    data\n    snapshot\n    modeltype\n    modelversion\n    isp {\n      id\n      __typename\n    }\n    __typename\n  }\n}",
+  "variables": {
+    "data": "{}",
+    "id": "yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA",
+    "operationType": 1,
+    "version": 878
+  }
+}
+
