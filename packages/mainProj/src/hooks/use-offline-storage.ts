@@ -98,6 +98,7 @@ async function cleanupIndexedDB(expireTime: number): Promise<void> {
     })
 }
 
+//无效功能？
 export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }: OfflineStorageOptions) {
     const [data, setData] = useState<T>(defaultValue)
     const [isLoading, setIsLoading] = useState(true)
@@ -110,7 +111,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
     // 同步到服务器的函数
     const syncToServer = useCallback(
         async (data: T) => {
-            if (!networkStatus.isOnline || !networkStatus.isServerReachable) {
+            if (!networkStatus.isOnline || !networkStatus.isGraphQLBackendReachable) {
                 return false
             }
 
@@ -147,7 +148,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
                 return false
             }
         },
-        [key, networkStatus.isOnline, networkStatus.isServerReachable],
+        [key, networkStatus.isOnline, networkStatus.isGraphQLBackendReachable],
     )
 
     // 获取存储信息
@@ -269,7 +270,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
     }, [])
 
     const syncFromServer = useCallback(async (): Promise<T | null> => {
-        if (!networkStatus.isOnline || !networkStatus.isServerReachable) {
+        if (!networkStatus.isOnline || !networkStatus.isGraphQLBackendReachable) {
             return null
         }
 
@@ -287,7 +288,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         }
 
         return null
-    }, [key, networkStatus.isOnline, networkStatus.isServerReachable])
+    }, [key, networkStatus.isOnline, networkStatus.isGraphQLBackendReachable])
 
     useEffect(() => {
         loadData()
@@ -354,6 +355,6 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         lastSyncTime,
         syncToServer,
         syncFromServer,
-        canSync: networkStatus.isOnline && networkStatus.isServerReachable,
+        canSync: networkStatus.isOnline && networkStatus.isGraphQLBackendReachable,
     }
 }

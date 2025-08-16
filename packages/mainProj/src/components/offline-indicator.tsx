@@ -5,12 +5,12 @@ import { AlertCircle, Wifi, WifiOff } from "lucide-react"
 
 export function OfflineIndicator() {
     const { isOnline, lastError } = useNetworkStatus()
-
+    //识别标准： 依据 Nextjs 服务器是否可用的；
     if (isOnline) {
         return (
             <div className="flex items-center gap-2 text-green-600 text-sm">
                 <Wifi className="h-4 w-4" />
-                <span>在线</span>
+                <span>服务在线</span>
             </div>
         )
     }
@@ -18,7 +18,7 @@ export function OfflineIndicator() {
     return (
         <div className="flex items-center gap-2 text-red-600 text-sm">
             <WifiOff className="h-4 w-4" />
-            <span>离线模式</span>
+            <span>服务离线</span>
             {lastError && (
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                     <AlertCircle className="h-3 w-3" />

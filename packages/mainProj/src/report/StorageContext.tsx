@@ -9,7 +9,9 @@ interface StorageContextType {
     setSubrType: (type: string | undefined) => void
     parrepfs: any
     setParrepfs: (data: any) => void
+    //还没有后续利用该状态做逻辑处理的情况出现： #暂时无法成功提交给java后端的，不一定表示Java后端宕机，可能限速或者其他原因的。
     offline: boolean
+    //仅仅是在内部状态使用的， # 实际上也没用处；
     setOffline: (offline: boolean) => void
     modified?: boolean
     setModified?: (modified: boolean) => void
@@ -21,6 +23,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [storage, setStorageState] = useState<any>({})
     const [subrType, setSubrType] = useState<string | undefined>(undefined)
     const [parrepfs, setParrepfs] = useState<any>({})
+    //只能表示当前操作失败，不要连续提交，可能需要等等再试试的，并不是URQL的后端服务器真的离线。
     const [offline, setOfflineState] = useState<boolean>(false)
     const [modified, setModified] = useState<boolean>(false)
 
@@ -61,22 +64,22 @@ export function useStorage() {
 }
 
 // 安全的 useStorage hook，当在 Provider 外部使用时返回默认值
-export function useStorageSafe() {
-    const context = useContext(StorageContext)
-    if (context === undefined) {
-        // 返回默认值，不抛出错误
-        return {
-            storage: {},
-            setStorage: () => {},
-            subrType: undefined,
-            setSubrType: () => {},
-            parrepfs: {},
-            setParrepfs: () => {},
-            offline: false,
-            setOffline: () => {},
-            modified: false,
-            setModified: () => {},
-        }
-    }
-    return context
-}
+// export function useStorageSafe() {
+//     const context = useContext(StorageContext)
+//     if (context === undefined) {
+//         // 返回默认值，不抛出错误
+//         return {
+//             storage: {},
+//             setStorage: () => {},
+//             subrType: undefined,
+//             setSubrType: () => {},
+//             parrepfs: {},
+//             setParrepfs: () => {},
+//             offline: false,
+//             setOffline: () => {},
+//             modified: false,
+//             setModified: () => {},
+//         }
+//     }
+//     return context
+// }

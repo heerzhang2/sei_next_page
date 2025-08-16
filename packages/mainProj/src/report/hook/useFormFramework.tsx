@@ -303,19 +303,19 @@ export function useFormFramework({
     }
 }
 
-// 创建一个修改指示器组件
+//报告: 修改指示器组件
 export const ModificationIndicator = () => {
     const { modified } = useStorage()
     const gQLstatus = useNetworkStatus()
     return (
         <div className="fixed top-4 left-10 z-50">
             {(!gQLstatus.isClientOnline || !gQLstatus.isGraphQLBackendReachable) && (
-                <div className="relative bg-amber-500/80 border border-amber-900/80 rounded-lg p-3">
+               <div className="relative bg-amber-500/80 border border-amber-900/80 rounded-lg p-3">
                     <AlertCircle className="absolute top-0 left-0 w-6 h-6 text-amber-500 animate-pulse" style={{ zIndex: 2 }} />
                     <span className="absolute top-0 left-1/2 -translate-x-1/2 text-sm font-medium text-amber-800 z-10">
-            {!gQLstatus.isClientOnline ? "网络离线" : "后端离线"}
-          </span>
-                </div>
+                        {!gQLstatus.isClientOnline ? "网络离线" : "后端离线"}
+                    </span>
+               </div>
             )}
             {/* 修改状态图标 */}
             {modified && (

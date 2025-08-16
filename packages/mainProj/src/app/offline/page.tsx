@@ -29,6 +29,7 @@ interface OfflineUserData {
     lastSync?: string
 }
 
+//离线可能显示的状态页面？
 export default function OfflinePage() {
     const { data: session, status } = useSession()
     const [isOnline, setIsOnline] = useState(true)
@@ -37,7 +38,9 @@ export default function OfflinePage() {
         indexedDB: false,
         cacheAPI: false,
     })
-
+    if(session)
+        throw new Error("根本就没有使用到的功能？")
+    //怪了？离线状态，保存用户输入的数据？  这是根本就没有使用到的功能。 不是URQL离线存储的做法。
     const {
         data: offlineUserData,
         setData: setOfflineUserData,

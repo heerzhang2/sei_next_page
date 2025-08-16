@@ -3,6 +3,7 @@ import ReportData from "@/component/rep/report-data"
 import { StorageProvider } from "@/report/StorageContext"
 import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
 import { ServiceWorkerUpdater } from "@/components/service-worker-updater"
+import {ModificationIndicator} from "@/report/hook/useFormFramework";
 
 export default async function ReportLayout({
                                                children,
@@ -16,7 +17,7 @@ export default async function ReportLayout({
     return (
         <ErrorBoundaryWrapper>
             <StorageProvider>
-                <ServiceWorkerUpdater />
+                <ModificationIndicator/>
                 <ReportData repId={repId}>{children}</ReportData>
             </StorageProvider>
         </ErrorBoundaryWrapper>

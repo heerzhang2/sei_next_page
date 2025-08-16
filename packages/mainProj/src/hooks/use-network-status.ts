@@ -3,16 +3,23 @@
 import { useState, useEffect, useCallback } from "react"
 
 export interface NetworkStatus {
+    //客户端网络或浏览器的网络在线判别； 所以isClientOnline是下面两个状态判定的基本前提！
+    isClientOnline: boolean
+    //前端nextjs服务器是否可以连通的判定
     isOnline: boolean
+    //Java后端服务的连通性判定
+    isGraphQLBackendReachable: boolean
+
     lastError: Error | null
     lastOnlineTime: Date | null
     lastOfflineTime: Date | null
     connectionType: string | null
-    isClientOnline: boolean
+    //仅限于在内部使用的状态，nextjs服务链接可用
     isNextJSServerReachable: boolean
-    isGraphQLBackendReachable: boolean
 }
-
+/**注意 isOnline 和 isClientOnline 的意思的差别！ 后者isClientOnline才是浏览器在线与否的意思。 isOnline是前端服务器在线可用的意思。
+ * v0dev竟然没有修改相关的关联代码输出；
+ * */
 export function useNetworkStatus(): NetworkStatus {
     const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
         isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
@@ -164,18 +171,4 @@ export function useNetworkStatus(): NetworkStatus {
 export const subscribeToNetworkStatus = (callback: (status: NetworkStatus) => void) => {
     console.warn("subscribeToNetworkStatus is deprecated, use useNetworkStatus hook instead")
     return () => {} // 返回空的取消订阅函数
-}
-
-export const getNetworkStatus = (): NetworkStatus => {
-    console.warn("getNetworkStatus is deprecated, use useNetworkStatus hook instead")
-    return {
-        isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-        lastError: null,
-        lastOnlineTime: null,
-        lastOfflineTime: null,
-        connectionType: null,
-        isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-        isNextJSServerReachable: true,
-        isGraphQLBackendReachable: true,
-    }
 }

@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { useStorageSafe } from "@/report/StorageContext"
 import { useNetworkStatus } from "@/hooks/use-network-status"
 
 export function ServiceWorkerUpdater() {
     const [updateAvailable, setUpdateAvailable] = useState(false)
     const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
-    const { offline: isAppOffline } = useStorageSafe()
     const networkStatus = useNetworkStatus()
 
     useEffect(() => {
@@ -113,7 +111,7 @@ export function ServiceWorkerUpdater() {
 
             const handleUrqlUnauthorized = () => {
                 // 使用改进的网络状态检测
-                if (networkStatus.isOnline && !isAppOffline) {
+                if (networkStatus.isOnline) {
                     // 确实是认证问题，不是网络问题
                     toast.error("登录已过期", {
                         description: "正在跳转到登录页面...",
@@ -145,7 +143,7 @@ export function ServiceWorkerUpdater() {
                 window.removeEventListener("urql:unauthorized", handleUrqlUnauthorized)
             }
         }
-    }, [isAppOffline, networkStatus.isOnline, registration])
+    }, [networkStatus.isOnline, registration])
 
     const handleUpdate = () => {
         if (registration?.waiting) {

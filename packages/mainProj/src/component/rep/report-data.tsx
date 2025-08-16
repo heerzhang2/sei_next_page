@@ -6,6 +6,7 @@ import { useStorage } from "@/report/StorageContext"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useNetworkStatus } from "@/hooks/use-network-status"
+import {toast} from "sonner";
 
 export interface ReportParams {
     repId: string
@@ -179,8 +180,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const pausedUntilRef = useRef(0)
 
     const [isClient, setIsClient] = useState(false)
-
-    const { isOnline, isBackendOnline } = useNetworkStatus()
+    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatus()
 
     useEffect(() => {
         setIsClient(true)
@@ -192,11 +192,11 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
     //有四种策略 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
     const requestPolicy = useMemo(() => {
-        if (!isOnline || !isBackendOnline) {
+        if (!isClientOnline || !isGraphQLBackendReachable) {
             return 'cache-first'
         }
         return "cache-first" // 在线时优先使用缓存，必要时请求网络
-    }, [isOnline, isBackendOnline])
+    }, [isClientOnline, isGraphQLBackendReachable])
 
     const [result, reexecuteQuery] = useQuery({
         query: ReportQuery,
@@ -210,21 +210,24 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const { setStorage, setSubrType, setOffline } = useStorage()
 
     const refreshData = useCallback(() => {
-        if (!isOnline || !isBackendOnline) {
-            console.log("离线状态下无法刷新数据")
+        if (!isClientOnline || !isGraphQLBackendReachable) {
+            toast.error(`离线状态下无法刷新数据`, {
+                description: (
+                    <>{ !isClientOnline ? "终端断网中": "后端服务断了"}<br/></>
+                ),
+            })
             return
         }
-
         console.log("手动刷新报告数据")
         queryCountRef.current = 0
         lastQueryTimeRef.current = 0
         pausedUntilRef.current = 0
         setQueryEnabled(true)
         reexecuteQuery({ requestPolicy: "cache-and-network" })
-    }, [reexecuteQuery, isOnline, isBackendOnline])
+    }, [reexecuteQuery, isClientOnline, isGraphQLBackendReachable])
 
     useEffect(() => {
-        if (!isOnline || !isBackendOnline) return
+        if (!isClientOnline || !isGraphQLBackendReachable) return
 
         if (fetching) {
             const now = Date.now()
@@ -251,7 +254,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
                 lastQueryTimeRef.current = now
             }
         }
-    }, [fetching, isOnline, isBackendOnline])
+    }, [fetching, isClientOnline, isGraphQLBackendReachable])
 
     const prevDataRef = useRef<any>(null)
     useEffect(() => {
@@ -271,24 +274,24 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error)
-        const shouldBeOffline = hasNetworkError || !isOnline || !isBackendOnline
+        const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable
+        //这儿设置内部用的状态 后续也都没有用到的； 只能是猜测Java后端不可用状态，很可能被限制限速，后端太慢。
         setOffline(shouldBeOffline)
-    }, [error, isOnline, isBackendOnline, setOffline])
+    }, [error, isClientOnline, isGraphQLBackendReachable, setOffline])
 
     if (!isClient || !mounted) {
         return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     }
 
-    if (!isOnline || !isBackendOnline) {
+    if (!isClientOnline || !isGraphQLBackendReachable) {
         if (data && report) {
             return (
                 <>
-                    <div className="fixed top-4 right-4 z-50 flex items-center gap-2 text-xs">
-                        <span className="px-2 py-1 bg-amber-500 text-white rounded text-xs">离线模式</span>
+                    <div className="fixed top-7 right-7 flex items-center gap-2 text-xs">
+                        <span className="px-2 py-1 bg-amber-500 text-white rounded text-xs">离线呢{isClientOnline?"":"A"}{isGraphQLBackendReachable?"":"B"}</span>
                         <button
                             onClick={refreshData}
                             className="px-2 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 disabled:opacity-50"
-                            disabled={true}
                             title="离线状态下无法刷新"
                         >
                             ↻
@@ -369,31 +372,31 @@ function CommonReportDataSub({
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
 
-    const { isOnline, isBackendOnline } = useNetworkStatus()
+    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatus()
 
     useEffect(() => setMounted(true), [])
 
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
     const requestPolicy = useMemo(() => {
-        if (!isOnline || !isBackendOnline) {
+        if (!isClientOnline || !isGraphQLBackendReachable) {
             return 'cache-first'
         }
         return "cache-first"
-    }, [isOnline, isBackendOnline])
+    }, [isClientOnline, isGraphQLBackendReachable])
 
     const [result] = useQuery({
         query: ReportQuery,
         variables: mainQueryVariables,
         requestPolicy,
-        pause: !queryEnabled || (!isOnline && !isBackendOnline),
+        pause: !queryEnabled || (!isClientOnline && !isGraphQLBackendReachable),
     })
 
     const [resultSub] = useQuery({
         query: ReportSubQuery,
         variables: subQueryVariables,
         requestPolicy,
-        pause: !queryEnabled || (!isOnline && !isBackendOnline),
+        pause: !queryEnabled || (!isClientOnline && !isGraphQLBackendReachable),
     })
 
     const { data, fetching, error } = result
@@ -403,7 +406,7 @@ function CommonReportDataSub({
     const { setStorage, setSubrType, setParrepfs, setOffline } = useStorage()
 
     const refreshData = useCallback(() => {
-        if (!isOnline || !isBackendOnline) {
+        if (!isClientOnline || !isGraphQLBackendReachable) {
             console.log("离线状态下无法刷新数据")
             return
         }
@@ -415,10 +418,10 @@ function CommonReportDataSub({
         setQueryEnabled(true)
         result.reexecuteQuery({ requestPolicy: "cache-and-network" })
         resultSub.reexecuteQuery({ requestPolicy: "cache-and-network" })
-    }, [result, resultSub, isOnline, isBackendOnline])
+    }, [result, resultSub, isClientOnline, isGraphQLBackendReachable])
 
     useEffect(() => {
-        if (!isOnline || !isBackendOnline) return
+        if (!isClientOnline || !isGraphQLBackendReachable) return
 
         if (fetching || fetchingSub) {
             const now = Date.now()
@@ -445,7 +448,7 @@ function CommonReportDataSub({
                 lastQueryTimeRef.current = now
             }
         }
-    }, [fetching, fetchingSub, isOnline, isBackendOnline])
+    }, [fetching, fetchingSub, isClientOnline, isGraphQLBackendReachable])
 
     const prevDataRef = useRef<any>(null)
     const prevParrepfsRef = useRef<any>(null)
@@ -475,9 +478,9 @@ function CommonReportDataSub({
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
-        const shouldBeOffline = hasNetworkError || !isOnline || !isBackendOnline
+        const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable
         setOffline(shouldBeOffline)
-    }, [error, errorSub, isOnline, isBackendOnline, setOffline])
+    }, [error, errorSub, isClientOnline, isGraphQLBackendReachable, setOffline])
 
     if (!mounted) return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     if (fetching || fetchingSub) return <div>加载中...</div>

@@ -5,12 +5,12 @@ import { useNetworkStatus } from "@/hooks/use-network-status"
 import { WifiOff, Server, Database } from "lucide-react"
 
 export function OfflineStatusIndicator() {
-    const { isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable } = useNetworkStatus()
+    const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatus()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
 
     useEffect(() => {
-        setShowOfflineBar(!isClientOnline || !isNextJSServerReachable || !isGraphQLBackendReachable)
-    }, [isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable])
+        setShowOfflineBar(!isClientOnline || !isOnline || !isGraphQLBackendReachable)
+    }, [isClientOnline, isOnline, isGraphQLBackendReachable])
 
     if (!showOfflineBar) return null
 
@@ -18,7 +18,7 @@ export function OfflineStatusIndicator() {
         if (!isClientOnline) {
             return { icon: WifiOff, message: "客户端网络离线 - 正在使用缓存数据" }
         }
-        if (!isNextJSServerReachable) {
+        if (!isOnline) {
             return { icon: Server, message: "Next.js服务器无法连接 - 正在使用缓存数据" }
         }
         if (!isGraphQLBackendReachable) {
@@ -37,7 +37,7 @@ export function OfflineStatusIndicator() {
                 onClick={() => window.location.reload()}
                 className="ml-4 px-2 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700"
             >
-                重试连接
+              尝试重试连接
             </button>
         </div>
     )

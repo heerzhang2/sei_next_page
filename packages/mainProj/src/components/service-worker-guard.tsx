@@ -87,8 +87,8 @@ export function ServiceWorkerGuard({ children, showAlert = true }: ServiceWorker
                   : "Service Worker未就绪，离线功能和缓存管理将无法正常工作"}
             </span>
                         {swStatus === "not-ready" && (
-                            <Button onClick={registerServiceWorker} disabled={isRegistering} size="sm" variant="outline">
-                                <RefreshCw className={`h-4 w-4 mr-2 ${isRegistering ? "animate-spin" : ""}`} />
+                            <Button onClick={registerServiceWorker} disabled={isRegistering} size="lg" variant="outline">
+                                <RefreshCw className={`h-6 w-6 mr-8 z-[1010] ${isRegistering ? "animate-spin" : ""}`} />
                                 {isRegistering ? "注册中..." : "重新注册"}
                             </Button>
                         )}

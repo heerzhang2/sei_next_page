@@ -29,11 +29,6 @@ export const subscribeToNetworkStatus = (
     return () => networkStatus.listeners.delete(callback)
 }
 
-// 获取当前网络状态
-export const getNetworkStatus = () => ({
-    isOnline: networkStatus.isOnline,
-    lastError: networkStatus.lastError,
-})
 
 // 更新网络状态
 export const updateNetworkStatus = (isOnline: boolean, error: Error | null = null) => {
