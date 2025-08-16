@@ -50,5 +50,5 @@
     "report/**/*.ts",
     "report/**/*.tsx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "public/sw.js"]
 }

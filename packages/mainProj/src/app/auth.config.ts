@@ -65,8 +65,7 @@ async function refreshAccessToken(token: any) {
         }
 
         const refreshData = result.data.refreshToken
-        console.log("Token 刷新成功")
-
+        console.log("Token 刷新成功=", refreshData)
         return {
             ...token,
             accessToken: refreshData.accessToken,

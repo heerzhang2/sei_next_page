@@ -30,7 +30,6 @@ import {CardContent} from "@/components/ui";
 import {CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {DevToolsSection, useEntranceSetup} from "@/report/hook/useEntranceSetup"
-import {ReportCacheManager} from "@/components/report-cache-manager";
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
  *  因为模板已经里另外做一个ConcAppendix附页编辑器了，参数na:不需要再设置了 ha:也不要用;
@@ -88,7 +87,6 @@ export const EntranceSetup = ({show, rep}: InternalItemProps) => {
        [handleCheckNames])
     const {render}= useFormFramework({schema, defaultValues, contentRendererFactory, rep})
     return <CollapsibleFormSection title="初始化本报告，默认值配置等" defaultOpen={show}>
-                <ReportCacheManager repId={rep.id} template="INDPL_DJ" version="1" />
                 {render(null)}
         </CollapsibleFormSection>
 }

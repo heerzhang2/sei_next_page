@@ -10,7 +10,6 @@ import { useParams, useSearchParams } from "next/navigation"
 import { EditControlProvider } from "@/component/rep/editControl-provider"
 import { ReportView, useCatalog } from "@/report/industrial/Periodical/indPipelineR1"
 import ReportMakeable from "@/common/ReportMakeable"
-import { ServiceWorkerGuard } from "@/components/service-worker-guard"
 
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
     const params = useParams() as unknown as ReportParams
@@ -22,7 +21,6 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
     const catItems = useCatalog()
 
     return (
-        <ServiceWorkerGuard showAlert={true}>
             <EditControlProvider>
                 <PageSectionOrientation>
                     <Suspense fallback={<div>Loading...</div>}>
@@ -47,6 +45,5 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
                     </Suspense>
                 </PageSectionOrientation>
             </EditControlProvider>
-        </ServiceWorkerGuard>
     )
 }

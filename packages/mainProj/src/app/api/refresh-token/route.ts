@@ -19,7 +19,7 @@ export async function POST() {
         if (!session.user.accessToken) {
             return NextResponse.json({ error: "No access token available" }, { status: 401 })
         }
-
+        console.log("Refresh token user=", session.user)
         return NextResponse.json({
             success: true,
             accessToken: session.user.accessToken,
