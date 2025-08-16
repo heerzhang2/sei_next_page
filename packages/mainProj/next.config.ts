@@ -1,4 +1,11 @@
 import type { NextConfig } from "next"
+import withSerwistInit from "@serwist/next"
+
+const withSerwist = withSerwistInit({
+    swSrc: "src/sw.ts",
+    swDest: "public/sw.js",
+    disable: process.env.NODE_ENV === "development",
+})
 
 const nextConfig: NextConfig = {
     /* config options here */
@@ -161,4 +168,4 @@ const nextConfig: NextConfig = {
     allowedDevOrigins: ["192.168.171.3", "192.168.0.100"], // 多来源数组
 }
 
-export default nextConfig
+export default withSerwist(nextConfig)

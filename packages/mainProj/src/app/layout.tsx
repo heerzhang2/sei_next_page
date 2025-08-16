@@ -17,7 +17,6 @@ import { OfflineStatusIndicator } from "@/components/offline-status-indicator"
 import { SafariViewportFix } from "@/components/safari-viewport-fix"
 import { AuthErrorBoundary } from "@/components/auth-error-boundary"
 import type { Viewport } from "next"
-import {ServiceWorkerUpdater} from "@/components/service-worker-updater";
 
 export const metadata: Metadata = {
     title: "报告编制系统",
@@ -154,7 +153,6 @@ export default async function RootLayout({
                                 {children}
                                 {/* PWA 组件 */}
                                 <PWAInstaller />
-                                <ServiceWorkerUpdater />
                                 <Toaster richColors position="top-right" />
                             </GraphQLProvider>
                         </Provider>

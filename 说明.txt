@@ -509,4 +509,6 @@ https://v0.app/chat/fork-of-7qMRRqqXItk
 （2）Bearer%207IwGrXYhAjsRFd1ndnIor4gW
 （0）Bearer%20UfRKGZJW6vLZmtyoCIo1ztYr
 
-RSC（React Server Components）流式响应被Service Worker错误处理导致的
+
+@serwist/precaching   @serwist/sw
+serwist @serwist/sw
