@@ -1,8 +1,5 @@
 import type { NextConfig } from "next"
-const {
-    PHASE_DEVELOPMENT_SERVER,
-    PHASE_PRODUCTION_BUILD,
-} = require("next/constants");
+const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD } = require("next/constants")
 
 /** @type {(phase: string, defaultConfig: import("next").NextConfig) => Promise<import("next").NextConfig>} */
 module.exports = async (phase) => {
@@ -171,18 +168,15 @@ module.exports = async (phase) => {
 
     if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_BUILD) {
         const withSerwist = (await import("@serwist/next")).default({
-            // Note: This is only an example. If you use Pages Router,
-            // use something else that works, such as "service-worker/index.ts".
             swSrc: "src/sw.ts",
             swDest: "public/sw.js",
-            reloadOnOnline: false,
+            reloadOnOnline: true,
             disable: false,
             register: true,
-            // scope: "/rep/",
-            maximumFileSizeToCacheInBytes: 7355608,
-            cacheOnNavigation: false,
-        });
-        return withSerwist(nextConfig);
+            maximumFileSizeToCacheInBytes: 5000000, // 减小到5MB
+            cacheOnNavigation: true,
+        })
+        return withSerwist(nextConfig)
     }
-    return nextConfig;
-};
+    return nextConfig
+}

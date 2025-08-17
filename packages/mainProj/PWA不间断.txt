@@ -1,0 +1,24 @@
+serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
+D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Service worker is installing...
+D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker installed.
+D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker activated.
+D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist The registered service worker is active but not yet controlling the page. Reload or run `clients.claim()` in the service worker.
+
+[Service workers]标签页：
+   状态  O已激活 #299 次，当前正在运行 （停止）
+
+serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
+D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist A service worker with the same script URL is already controlling this page.
+
+D:\home\sei_next_pag…tallDetails.js:1553 Uncaught unsupported-route-type: The supplied 'capture' parameter was an unsupported type. Please check the docs for serwist.undefined.parseRoute for valid input types.
+    at parseRoute (webpack-internal:///../../node_modules/serwist/dist/chunks/printInstallDetails.js:1587:11)
+    at Serwist.registerCapture (webpack-internal:///../../node_modules/serwist/dist/index.js:472:88)
+    at new Serwist (webpack-internal:///../../node_modules/serwist/dist/index.js:321:22)
+    at eval (webpack-internal:///./src/sw.ts:6:17)
+    at ./src/sw.ts (https://192.168.0.100:3765/sw.js:79:1)
+    at __webpack_require__ (https://192.168.0.100:3765/sw.js:106:42)
+    at https://192.168.0.100:3765/sw.js:203:37
+    at https://192.168.0.100:3765/sw.js:205:12
+
+D:\home\sei_next_pag…ks\waitUntil.js:274 serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
+D:\home\sei_next_pag…ks\waitUntil.js:274 serwist A service worker with the same script URL is already controlling this page.
