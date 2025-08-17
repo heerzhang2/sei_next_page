@@ -15,10 +15,31 @@ export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
         if ((session as any)?.error === "RefreshAccessTokenError") {
             console.log("Auth error detected, checking network status...")
 
-            // 只有在网络正常的情况下才登出
-            if (networkStatus.isOnline) {
+            if (!networkStatus.isClientOnline) {
+                console.log("Client is offline, not signing out")
+                toast.warning("离线模式", {
+                    description: "当前处于离线状态，使用缓存数据继续操作。",
+                    duration: 5000,
+                })
+                return
+            }
+
+            if (!networkStatus.isNextJSServerReachable) {
+                console.log("Next.js server unreachable, not signing out")
+                toast.warning("服务器连接中断", {
+                    description: "前端服务器暂时不可用，请稍后再试。",
+                    duration: 5000,
+                })
+                return
+            }
+
+            if (networkStatus.isOnline && networkStatus.isNextJSServerReachable) {
                 // 再次确认网络连接
-                fetch("/api/health", { method: "HEAD", cache: "no-cache" })
+                fetch("/api/health", {
+                    method: "HEAD",
+                    cache: "no-cache",
+                    signal: AbortSignal.timeout(3000), // 3秒超时
+                })
                     .then((response) => {
                         if (response.ok) {
                             // 网络正常，确实是认证问题
@@ -39,24 +60,24 @@ export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
                             })
                         }
                     })
-                    .catch(() => {
+                    .catch((error) => {
                         // 网络请求失败，不登出
-                        console.log("Network error, not signing out")
+                        console.log("Network error, not signing out:", error)
                         toast.warning("网络连接不稳定", {
                             description: "请检查网络连接，当前使用缓存数据。",
                             duration: 5000,
                         })
                     })
             } else {
-                // 离线状态，不登出
-                console.log("Offline mode, not signing out")
-                toast.warning("离线模式下无法验证登录", {
+                // 网络状态不佳，不登出
+                console.log("Network status not optimal, not signing out")
+                toast.warning("网络连接不稳定", {
                     description: "请检查网络连接，或继续离线操作。",
                     duration: 5000,
                 })
             }
         }
-    }, [session, networkStatus.isOnline])
+    }, [session, networkStatus])
 
     return <>{children}</>
 }
