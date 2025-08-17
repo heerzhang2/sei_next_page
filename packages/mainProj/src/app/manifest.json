@@ -3,7 +3,7 @@
   "short_name": "报告系统",
   "description": "支持离线编辑的在线检验报告编制系统",
   "start_url": "/",
-  "display": "minimal-ui",
+  "display": "browser",
   "background_color": "#ffffff",
   "theme_color": "#000000",
   "orientation": "portrait-primary",

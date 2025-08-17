@@ -504,7 +504,7 @@ https://v0.dev/chat/-kzgHkcfksnz
 Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
 同一个页面地就是查询参数一点点差别的，比如离线前我已经访问/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ProjectList?from=1#ProjectList
 离线之后我点击访问/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ProjectList?from=3#ProjectList 就没办法正常显示出来了，实际上from参数就是内部的定位处理差别的完全是js动态调整的部分。
-
+manifest.json  "display": "minimal-ui",按 fullscreen → standalone → minimal-ui → browser 的顺序回退
 https://v0.app/chat/fork-of-7qMRRqqXItk
 （2）Bearer%207IwGrXYhAjsRFd1ndnIor4gW
 （0）Bearer%20UfRKGZJW6vLZmtyoCIo1ztYr

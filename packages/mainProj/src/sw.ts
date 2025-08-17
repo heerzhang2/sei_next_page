@@ -22,6 +22,7 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
+    disableDevLogs: false,
     runtimeCaching: [
         ...defaultCache,
         // 报告页面特殊缓存策略
@@ -79,6 +80,17 @@ const serwist = new Serwist({
             },
         ],
     },
+    precacheOptions: {
+        // Whether outdated caches should be removed.
+        cleanupOutdatedCaches: true,
+        concurrency: 10,
+        ignoreURLParametersMatching: [
+
+        ],
+    },
+    //urlManipulation — A function that should take a URL and return an array of alternative URLs that should be checked for precache matches.
+    offlineAnalyticsConfig: true,
+
 });
 
 serwist.addEventListeners();

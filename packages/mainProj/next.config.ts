@@ -176,6 +176,11 @@ module.exports = async (phase) => {
             swSrc: "src/sw.ts",
             swDest: "public/sw.js",
             reloadOnOnline: false,
+            disable: false,
+            register: true,
+            // scope: "/rep/",
+            maximumFileSizeToCacheInBytes: 7355608,
+            cacheOnNavigation: false,
         });
         return withSerwist(nextConfig);
     }
