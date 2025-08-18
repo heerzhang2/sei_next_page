@@ -1,6 +1,6 @@
 import { defaultCache } from "@serwist/next/worker"
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist"
-import { Serwist } from "serwist"
+import { Serwist, NetworkFirst } from "serwist"
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -16,7 +16,26 @@ const serwist = new Serwist({
     clientsClaim: true,
     navigationPreload: true,
     disableDevLogs: true,
-    runtimeCaching: defaultCache, // 只使用默认缓存策略
+    runtimeCaching: [
+        ...defaultCache,
+        {
+            matcher: /^https?:\/\/.*\/rep\/.*$/,
+            handler: new NetworkFirst({
+                cacheName: "report-pages",
+                networkTimeoutSeconds: 3,
+                plugins: [
+                    {
+                        cacheKeyWillBeUsed: async ({ request }) => {
+                            const url = new URL(request.url)
+                            // 移除from参数，使不同from值使用同一缓存条目
+                            url.searchParams.delete("from")
+                            return url.href
+                        },
+                    },
+                ],
+            }),
+        },
+    ],
 })
 
 serwist.addEventListeners()
