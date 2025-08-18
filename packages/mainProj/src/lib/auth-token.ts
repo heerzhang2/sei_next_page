@@ -37,7 +37,7 @@ export async function refreshAuthToken() {
 
     return data.accessToken
   } catch (error) {
-    console.error("Error refreshing token:", error)
+    console.error("Error refreshing token:跳转login", error)
     // 可能需要重定向到登录页面
     window.location.href = "/login"
     return null

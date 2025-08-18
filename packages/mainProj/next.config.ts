@@ -170,7 +170,7 @@ module.exports = async (phase) => {
         const withSerwist = (await import("@serwist/next")).default({
             swSrc: "src/sw.ts",
             swDest: "public/sw.js",
-            reloadOnOnline: true,
+            reloadOnOnline: false,
             disable: false,
             register: true,
             maximumFileSizeToCacheInBytes: 5000000, // 减小到5MB

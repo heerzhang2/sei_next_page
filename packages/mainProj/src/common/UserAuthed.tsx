@@ -37,7 +37,7 @@ const UserAuthed = async () => {
                 console.log("UserAuthed: 网络检查失败，跳过认证检查", error)
                 return null
             }
-
+            console.log("UserAuthed: 跳转login", session)
             redirect("/login")
         }
     } catch (error) {

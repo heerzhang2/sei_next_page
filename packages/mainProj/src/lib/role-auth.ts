@@ -10,6 +10,7 @@ import { redirect } from "next/navigation"
 export async function requireRole(requiredRoles: string[]) {
   const session = await auth()
   if (!session?.user?.id || !session?.user?.accessToken) {
+    console.log("requireRole跳转login",session)
     redirect("/login")
     //这里后面的代码实际上再浏览器调用的路数下会继续运行的？单纯服务器环境不会！ redirect也会同时做的。 应该加 return;
   }
@@ -27,6 +28,7 @@ export async function requireRole(requiredRoles: string[]) {
 export async function requireAllRole(requiredRoles: string[]) {
   const session = await auth()
   if (!session?.user?.id || !session?.user?.accessToken) {
+    console.log("requireAllRole跳转login",session)
     redirect("/login")
   }
   const userRoles = await UserInfoCache.getUserRoles(session.user.id, session?.user?.accessToken) ??[]

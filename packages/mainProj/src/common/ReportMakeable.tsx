@@ -25,7 +25,10 @@ const ReportMakeable = () => {
     // if(session && (!(session?.data?.user as any)?.accessToken || !session?.data?.user))   redirect('/login')
     if(isClientOnline && isOnline && isGraphQLBackendReachable) {
         if (!(session?.data?.user as any)?.accessToken || !session?.data?.user)
+        {
+            console.log("ReportMakeable: 跳转login", session)
             redirect('/login')
+        }
     }
     return null;
 }

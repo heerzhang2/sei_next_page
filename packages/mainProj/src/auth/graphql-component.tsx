@@ -232,6 +232,7 @@ const makeAuthExchange = (accessToken: string | null) => {
                         if (typeof window !== "undefined") {
                             const protocol = window.location.protocol === "https:" ? "https:" : "http:"
                             const host = window.location.host
+                            console.error("Token刷新失败跳转login")
                             window.location.href = `${protocol}//${host}/login`
                         }
                     }, 2000)

@@ -25,7 +25,11 @@ export default async function ClientComponent() {
     // const headersList = await headers();
     //async/await is not yet supported in Client Components, only Server Components. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.
     const session =await auth();
-    if(!session?.user || !session?.user?.accessToken)   redirect('/login')
+    if(!session?.user || !session?.user?.accessToken)
+    {
+        console.log("user: 跳转login", session?.user)
+        redirect('/login')
+    }
     //useLazyLoadQuery必须配套use client的；
 
     // const data = useLazyLoadQuery<MainContentQuery>(

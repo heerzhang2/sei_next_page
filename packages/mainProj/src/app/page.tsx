@@ -40,9 +40,6 @@ export default function Home() {
                                     href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/_Controller?modelkey=THICK_MS#ProjectList">查阅当前第1子报告</Link>
                             </div>
                             <div className="mt-10">
-                                <Link href="/login">⬅ 登录home</Link>
-                            </div>
-                            <div className="mt-10">
                                 <Link href="/process-start">⬅️ 验证rr登录</Link>
                             </div>
                             <div className="mt-10">

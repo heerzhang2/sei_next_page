@@ -15,7 +15,7 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
-    disableDevLogs: true,
+    disableDevLogs: true,      //false不正常
     runtimeCaching: [
         ...defaultCache,
         {
@@ -29,6 +29,7 @@ const serwist = new Serwist({
                             const url = new URL(request.url)
                             // 移除from参数，使不同from值使用同一缓存条目
                             url.searchParams.delete("from")
+                            console.log("删除from之后的key=", url.href, "请求自",request.url)
                             return url.href
                         },
                     },

@@ -31,6 +31,7 @@ const UserLogined = () => {
     }
 
     if (!session?.user || !session?.user?.accessToken) {
+        console.log("UserLogined: 跳转login", session)
         redirect("/login")
     }
 

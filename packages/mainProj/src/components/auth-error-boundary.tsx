@@ -49,6 +49,7 @@ export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
                             })
 
                             setTimeout(() => {
+                                console.log("AuthErrorBoundary api/health: 跳转login", response)
                                 signOut({ callbackUrl: "/login" })
                             }, 2000)
                         } else {
