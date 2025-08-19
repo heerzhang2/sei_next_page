@@ -5,6 +5,9 @@ const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD } = require("next/const
 module.exports = async (phase) => {
     /** @type {import("next").NextConfig} */
 
+    const enableSerwist = process.env.ENABLE_SERWIST !== "false"
+    const enableHMR = process.env.ENABLE_HMR !== "false"
+
     const nextConfig: NextConfig = {
         /* config options here */
         eslint: {
@@ -18,6 +21,105 @@ module.exports = async (phase) => {
         images: {
             unoptimized: true,
         },
+
+        ...(phase === PHASE_DEVELOPMENT_SERVER && {
+            reactStrictMode: false,
+            webpack: (config, { dev, isServer }) => {
+                if (dev && !enableHMR) {
+                    // 禁用热模块替换
+                    config.plugins = config.plugins.filter((plugin) => plugin.constructor.name !== "HotModuleReplacementPlugin")
+                    // 禁用文件监听
+                    config.watchOptions = {
+                        ignored: ["**/*"],
+                        poll: false,
+                    }
+                }
+
+                // 排除所有 .node 二进制文件
+                config.module.rules.push({
+                    test: /\.node$/,
+                    use: "ignore-loader",
+                })
+
+                if (!isServer) {
+                    // 客户端优化
+                    config.resolve.fallback = {
+                        ...config.resolve.fallback,
+                        fs: false,
+                        net: false,
+                        tls: false,
+                    }
+
+                    // 代码分割优化
+                    config.optimization.splitChunks = {
+                        ...config.optimization.splitChunks,
+                        cacheGroups: {
+                            ...config.optimization.splitChunks?.cacheGroups,
+                            // 报告相关代码单独打包
+                            report: {
+                                test: /[\\/]src[\\/]report[\\/]/,
+                                name: "report",
+                                chunks: "all",
+                                priority: 10,
+                            },
+                            // 组件库单独打包
+                            components: {
+                                test: /[\\/]src[\\/]components[\\/]/,
+                                name: "components",
+                                chunks: "all",
+                                priority: 5,
+                            },
+                        },
+                    }
+                }
+
+                return config
+            },
+        }),
+
+        ...(phase !== PHASE_DEVELOPMENT_SERVER && {
+            webpack: (config, { isServer }) => {
+                // 排除所有 .node 二进制文件
+                config.module.rules.push({
+                    test: /\.node$/,
+                    use: "ignore-loader",
+                })
+
+                if (!isServer) {
+                    // 客户端优化
+                    config.resolve.fallback = {
+                        ...config.resolve.fallback,
+                        fs: false,
+                        net: false,
+                        tls: false,
+                    }
+
+                    // 代码分割优化
+                    config.optimization.splitChunks = {
+                        ...config.optimization.splitChunks,
+                        cacheGroups: {
+                            ...config.optimization.splitChunks?.cacheGroups,
+                            // 报告相关代码单独打包
+                            report: {
+                                test: /[\\/]src[\\/]report[\\/]/,
+                                name: "report",
+                                chunks: "all",
+                                priority: 10,
+                            },
+                            // 组件库单独打包
+                            components: {
+                                test: /[\\/]src[\\/]components[\\/]/,
+                                name: "components",
+                                chunks: "all",
+                                priority: 5,
+                            },
+                        },
+                    }
+                }
+
+                return config
+            },
+        }),
 
         experimental: {
             webpackBuildWorker: true,
@@ -121,52 +223,12 @@ module.exports = async (phase) => {
             ]
         },
 
-        webpack: (config, { isServer }) => {
-            // 排除所有 .node 二进制文件
-            config.module.rules.push({
-                test: /\.node$/,
-                use: "ignore-loader",
-            })
-
-            if (!isServer) {
-                // 客户端优化
-                config.resolve.fallback = {
-                    ...config.resolve.fallback,
-                    fs: false,
-                    net: false,
-                    tls: false,
-                }
-
-                // 代码分割优化
-                config.optimization.splitChunks = {
-                    ...config.optimization.splitChunks,
-                    cacheGroups: {
-                        ...config.optimization.splitChunks?.cacheGroups,
-                        // 报告相关代码单独打包
-                        report: {
-                            test: /[\\/]src[\\/]report[\\/]/,
-                            name: "report",
-                            chunks: "all",
-                            priority: 10,
-                        },
-                        // 组件库单独打包
-                        components: {
-                            test: /[\\/]src[\\/]components[\\/]/,
-                            name: "components",
-                            chunks: "all",
-                            priority: 5,
-                        },
-                    },
-                }
-            }
-
-            return config
-        },
         // 允许特定开发来源;    但是生产环境推荐Nginx反向代理方案
         allowedDevOrigins: ["192.168.171.3", "192.168.0.100"], // 多来源数组
     }
 
-    if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_BUILD) {
+    if (phase === PHASE_PRODUCTION_BUILD || (phase === PHASE_DEVELOPMENT_SERVER && enableSerwist)) {
+        const revision = crypto.randomUUID();
         const withSerwist = (await import("@serwist/next")).default({
             swSrc: "src/sw.ts",
             swDest: "public/sw.js",
@@ -175,6 +237,7 @@ module.exports = async (phase) => {
             register: true,
             maximumFileSizeToCacheInBytes: 5000000, // 减小到5MB
             cacheOnNavigation: true,
+            additionalPrecacheEntries: [{ url: "/~offline", revision }],
         })
         return withSerwist(nextConfig)
     }

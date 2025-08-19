@@ -15,7 +15,7 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
-    disableDevLogs: true,      //false不正常
+    disableDevLogs: false,      //false不正常
     runtimeCaching: [
         ...defaultCache,
         {
@@ -37,6 +37,16 @@ const serwist = new Serwist({
             }),
         },
     ],
+  fallbacks: {
+    entries: [
+      {
+        url: "/~offline",
+        matcher({ request }) {
+          return request.destination === "document";
+        },
+      },
+    ],
+  },
 })
 
 serwist.addEventListeners()
