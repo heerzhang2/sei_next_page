@@ -545,3 +545,5 @@ __webpack_exec__ @ main-app.js?v=1755572883950:1845
 webpackJsonpCallback @ webpack.js:1
 （匿名） @ main-app.js?v=1755572883950:9
 waitUntil.js:291 serwist Network request for '/swe-worker-development.js' returned a response with status '200'.
+
+https://gitee.com/heerzhang/pwa-serwist-int.git
