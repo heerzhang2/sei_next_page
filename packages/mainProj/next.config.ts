@@ -1,5 +1,6 @@
 import type { NextConfig } from "next"
 const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD } = require("next/constants")
+const crypto = require("crypto")
 
 /** @type {(phase: string, defaultConfig: import("next").NextConfig) => Promise<import("next").NextConfig>} */
 module.exports = async (phase) => {
@@ -24,15 +25,37 @@ module.exports = async (phase) => {
 
         ...(phase === PHASE_DEVELOPMENT_SERVER && {
             reactStrictMode: false,
+            experimental: {
+                forceSwcTransforms: !enableHMR,
+            },
             webpack: (config, { dev, isServer }) => {
+                const enableHMR = process.env.ENABLE_HMR !== "false" // Moved declaration here
                 if (dev && !enableHMR) {
-                    // 禁用热模块替换
-                    config.plugins = config.plugins.filter((plugin) => plugin.constructor.name !== "HotModuleReplacementPlugin")
-                    // 禁用文件监听
+                    config.plugins = config.plugins.map((plugin) => {
+                        if (plugin.constructor.name === "HotModuleReplacementPlugin") {
+                            // 禁用HMR但保留插件结构
+                            return new plugin.constructor({ multiStep: false })
+                        }
+                        return plugin
+                    })
+
                     config.watchOptions = {
-                        ignored: ["**/*"],
+                        ...config.watchOptions,
                         poll: false,
+                        aggregateTimeout: 10000, // 延长聚合时间
+                        ignored: /node_modules/,
                     }
+
+                    config.module.rules.forEach((rule) => {
+                        if (rule.use && Array.isArray(rule.use)) {
+                            rule.use = rule.use.filter((loader) => {
+                                if (typeof loader === "object" && loader.loader) {
+                                    return !loader.loader.includes("react-refresh")
+                                }
+                                return true
+                            })
+                        }
+                    })
                 }
 
                 // 排除所有 .node 二进制文件
@@ -228,7 +251,7 @@ module.exports = async (phase) => {
     }
 
     if (phase === PHASE_PRODUCTION_BUILD || (phase === PHASE_DEVELOPMENT_SERVER && enableSerwist)) {
-        const revision = crypto.randomUUID();
+        const revision = crypto.randomUUID()
         const withSerwist = (await import("@serwist/next")).default({
             swSrc: "src/sw.ts",
             swDest: "public/sw.js",

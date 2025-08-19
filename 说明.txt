@@ -518,3 +518,30 @@ https://v0.app/chat/fork-of-7qMRRqqXItk
      "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NTMzMTE1OCwiZXhwIjoxNzU1MzM2NTU4fQ.GKiRVyhylLmGm2WcsU3tbJLA0hUgVvvXryn6AjA-tnc2ZQsinB7rcc10cnRKNmVQ7R4M6fyT8_mgfX82bWmC4g"
  }
 
+Found a route to handle this request: RegExpRoute {handler: NetworkOnly, method: 'GET', catchHandler: undefined, match: ƒ}
+encode-uri-path.js:30 Uncaught TypeError: Cannot read properties of undefined (reading 'data')
+    at eval (encode-uri-path.js:30:56)
+    at eval (encode-uri-path.js:77:7)
+    at (:3765/node_modules/next/dist/shared/lib/encode-uri-path.js (https://192.168.171.3:3765/_next/static/chunks/main-app.js?v=1755572883950:1489:1)
+    at __webpack_require__ (webpack.js:1:1)
+    at eval (app-webpack.js:8:24)
+    at (:3765/node_modules/next/dist/client/app-webpack.js (https://192.168.171.3:3765/_next/static/chunks/main-app.js?v=1755572883950:182:1)
+    at __webpack_require__ (webpack.js:1:1)
+    at eval (app-next-dev.js:6:1)
+    at (:3765/node_modules/next/dist/client/app-next-dev.js (https://192.168.171.3:3765/_next/static/chunks/main-app.js?v=1755572883950:171:1)
+    at __webpack_require__ (webpack.js:1:1)
+eval @ encode-uri-path.js:30
+eval @ encode-uri-path.js:77
+(app-pages-browser)/../../node_modules/next/dist/shared/lib/encode-uri-path.js @ main-app.js?v=1755572883950:1489
+__webpack_require__ @ webpack.js:1
+eval @ app-webpack.js:8
+(app-pages-browser)/../../node_modules/next/dist/client/app-webpack.js @ main-app.js?v=1755572883950:182
+__webpack_require__ @ webpack.js:1
+eval @ app-next-dev.js:6
+(app-pages-browser)/../../node_modules/next/dist/client/app-next-dev.js @ main-app.js?v=1755572883950:171
+__webpack_require__ @ webpack.js:1
+__webpack_exec__ @ main-app.js?v=1755572883950:1845
+（匿名） @ main-app.js?v=1755572883950:1846
+webpackJsonpCallback @ webpack.js:1
+（匿名） @ main-app.js?v=1755572883950:9
+waitUntil.js:291 serwist Network request for '/swe-worker-development.js' returned a response with status '200'.
