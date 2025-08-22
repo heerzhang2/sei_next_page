@@ -547,3 +547,59 @@ webpackJsonpCallback @ webpack.js:1
 waitUntil.js:291 serwist Network request for '/swe-worker-development.js' returned a response with status '200'.
 
 https://gitee.com/heerzhang/pwa-serwist-int.git
+const customCache: RuntimeCaching[] = [
+  // HTML 文档请求的缓存策略
+  // {
+  //   matcher: ({ url, request }) => {
+  //     const isReportPath = url.pathname.startsWith("/rep/")
+    {
+      matcher: ({ request, url: { pathname }, sameOrigin }) =>
+          request.headers.get("RSC") === "1" &&
+          request.headers.get("Next-Router-Prefetch") === "1" &&
+          sameOrigin &&
+          !pathname.startsWith("/api/") &&
+          !pathname.startsWith("/rep/"), // 排除 /rep/ 路径，让它们使用上面的统一缓存策略
+      handler: new NetworkFirst({
+        cacheName: PAGES_CACHE_NAME.rscPrefetch,
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          }),
+        ],
+      }),
+    },
+    {
+      matcher: ({ request, url: { pathname }, sameOrigin }) =>
+          request.headers.get("RSC") === "1" &&
+          sameOrigin &&
+          !pathname.startsWith("/api/") &&
+          !pathname.startsWith("/rep/"), // 排除 /rep/ 路径，让它们使用上面的统一缓存策略
+      handler: new NetworkFirst({
+        cacheName: PAGES_CACHE_NAME.rsc,
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          }),
+        ],
+      }),
+    },
+const serwist = new Serwist({
+  precacheEntries: self.__SW_MANIFEST,
+  skipWaiting: true,
+  clientsClaim: true,
+  navigationPreload: true,
+  disableDevLogs: false,
+  runtimeCaching: customCache,
+  fallbacks: {
+
+
+serwist.addToPrecacheList([
+  { url: "/rep/sample/INDPL_DJ/1/T607", revision: null },
+]);
+
+enableNavigationPreload();
+
+serwist.addEventListeners()
+没有额外点击PRECACHE_REPORTS 按钮的。
