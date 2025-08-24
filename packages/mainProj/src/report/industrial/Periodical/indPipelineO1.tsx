@@ -172,3 +172,14 @@ export const OriginalView = ({ action, verId, rep }: OriginalViewProps) => {
     const { list } = useRecordListSubr(rep, recordPrintList, action, verId, titleRenders)
     return <>{list}</>
 }
+
+export function registerUrl(template: string, version: string): string[] {
+    const baseUrl = `/rep/*/${template}/${version}`
+
+    // Define all action routes that need to be cached for this template
+    const actions = ["ALL", "T607", "T608", "SUMMARY", "DETAIL", "INTRO", "CONCLUSION"]
+//  `/rep/*/INDPL_DJ/1/TkmsDiagram?subrid=1&redId=1`,
+
+    // Generate URLs for each action
+    return actions.map((action) => `${baseUrl}/${action}`)
+}

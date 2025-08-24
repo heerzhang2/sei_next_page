@@ -253,13 +253,13 @@ module.exports = async (phase) => {
     if (phase === PHASE_PRODUCTION_BUILD || (phase === PHASE_DEVELOPMENT_SERVER && enableSerwist)) {
         const revision = crypto.randomUUID()
         const withSerwist = (await import("@serwist/next")).default({
-            disable: false,
             swSrc: "src/sw.ts",
             swDest: "public/sw.js",
             reloadOnOnline: false,
-            cacheOnNavigation: false,
+            disable: false,
             register: true,
             maximumFileSizeToCacheInBytes: 5000000, // 减小到5MB
+            cacheOnNavigation: true,
             additionalPrecacheEntries: [{ url: "/~offline", revision }],
         })
         return withSerwist(nextConfig)
