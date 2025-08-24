@@ -214,7 +214,7 @@ export default function Page() {
 
     const importTemplateUrls = async (templateId: string, version: string): Promise<string[]> => {
         try {
-            const templateModule = await import(`./rep/[repId]/${templateId}/${version}/config`)
+            const templateModule = await import(`../../rep/[repId]/${templateId}/${version}/config`)
 
             // Return the cacheUrls array if it exists, otherwise return empty array
             return templateModule.cacheUrls || []

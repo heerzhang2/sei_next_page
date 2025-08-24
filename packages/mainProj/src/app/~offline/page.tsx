@@ -18,7 +18,7 @@ export default function OfflinePage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>离线功能</CardTitle>
+                        <CardTitle>离线功能 ~offline: 回退的PWA</CardTitle>
                         <CardDescription>以下功能在离线状态下仍然可用</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">

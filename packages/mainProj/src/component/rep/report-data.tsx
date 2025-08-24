@@ -187,7 +187,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         setMounted(true)
     }, [])
 
-    console.log("[v0] CommonReportData状态:", { mounted, isClient, repId })
+    console.log("当前CommonReportData状态:", { mounted, isClient, repId })
 
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
     //有四种策略 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';

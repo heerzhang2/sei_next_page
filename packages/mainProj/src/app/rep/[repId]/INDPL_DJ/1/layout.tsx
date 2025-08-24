@@ -16,6 +16,7 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
     const { repId, action } = params
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
+    console.log("模板Layout刷新路由参数=", {repId,action,print})
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } })
     const { getReport: report } = result?.data
     const catItems = useCatalog()

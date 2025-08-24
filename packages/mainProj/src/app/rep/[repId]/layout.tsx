@@ -2,7 +2,6 @@ import type { ReactNode } from "react"
 import ReportData from "@/component/rep/report-data"
 import { StorageProvider } from "@/report/StorageContext"
 import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper"
-import { ServiceWorkerUpdater } from "@/components/service-worker-updater"
 import {ModificationIndicator} from "@/report/hook/useFormFramework";
 
 export default async function ReportLayout({
@@ -13,7 +12,7 @@ export default async function ReportLayout({
     params: Promise<{ repId: string }>
 }) {
     const { repId } = await params
-
+    console.log(`🚀ReportLayout running repId=${repId} `,repId)
     return (
         <ErrorBoundaryWrapper>
             <StorageProvider>
