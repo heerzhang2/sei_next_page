@@ -17,5 +17,6 @@ export default function Page() {
     console.log("模板Page刷新路由参数=", {action, params})
     const [result] = useQuery({ query: ReportQuery, variables: { id: params?.repId } });
     const {getReport: report} = result?.data;
+    console.log("模板Page准备OriginalViewr进入repId=", params?.repId,"report=",report)
     return <OriginalView action={action!} verId={'1'} rep={report}/>
 }

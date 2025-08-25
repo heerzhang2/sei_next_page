@@ -502,23 +502,11 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subr
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
 
-请求启动器链
-https://192.168.171.3:3765/_next/static/chunks/6679-9c827b9200c3bfcb.js
-https://192.168.171.3:3765/login
-https://192.168.171.3:3765/_next/static/chunks/webpack-719d424d3d745864.js
-https://192.168.171.3:3765/_next/static/chunks/87c73c54-095cf9a90cf9ee03.js
-https://192.168.171.3:3765/_next/static/chunks/6679-9c827b9200c3bfcb.js
-https://192.168.171.3:3765/login
-https://192.168.171.3:3765/?_rsc=oxr4l
-https://192.168.171.3:3765/_next/static/chunks/main-app-4762fc109c35d4b5.js
-https://192.168.171.3:3765/_next/static/chunks/components-b92da13b3ded8418.js
-https://192.168.171.3:3765/_next/static/chunks/2230-78ea042d478f0657.js
-https://192.168.171.3:3765/_next/static/chunks/7261-ee2412f9ac70ca5c.js
-https://192.168.171.3:3765/_next/static/chunks/app/~offline/page-ffa07eb620f327ad.js
-https://192.168.171.3:3765/_next/static/chunks/367-6368e805f35a3efa.js
-https://192.168.171.3:3765/_next/static/chunks/1874-41e74e3dccae2ed6.js
-https://192.168.171.3:3765/_next/static/chunks/6808-84ecefe8ec4fedd1.js
-https://192.168.171.3:3765/_next/static/chunks/4290-13c54d57ad23cc73.js
-https://192.168.171.3:3765/_next/static/chunks/app/layout-02ceb1abcac6edea.js
-https://192.168.171.3:3765/api/health
-https://192.168.171.3:3765/api/health
+
+client.js:44
+ GET https://192.168.171.3:3765/api/auth/session net::ERR_FAILED
+
+ReportMakeable: 需要登录 {data: null, status: 'unauthenticated', update: ƒ}
+ReportMakeable: 需要登录 {data: null, status: 'unauthenticated', update: ƒ}
+D:\home\sei_next_page\packages\mainProj\src\common\ReportMakeable.tsx:29 ReportMakeable: 需要登录 {data: null, status: 'unauthenticated', update: ƒ}
+D:\home\sei_next_page\packages\mainProj\src\components\ui\alert-dialog.tsx:27 Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
