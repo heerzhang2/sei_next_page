@@ -508,3 +508,4 @@ D:\home\sei_next_pag…-core-chunk.mjs:511
 fetchOperation	@	D:\home\sei_next_pag…-core-chunk.mjs:511
 eval	@	D:\home\sei_next_pag…\dist\wonka.mjs:877
 
+离线模式下因graphql失败500报错引起：refreshAuth fetch("/api/refresh-token", { 最终再跳转/login
