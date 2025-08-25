@@ -1,3 +1,4 @@
+vo-zh: 2; https://v0.app/chat/serwist-pwa-2-DwCQqFFqGIY
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :9872
 自签名证书Chrome_SSL_cert.sh,在linux系统跑的chmod +x Chrome_SSL_cert.sh  不用windows自带openssl64窗口。
 双击 `ssl\localhost.crt`选择"安装证书"选择"本地计算机"选择"将所有证书都放入下列存储" > "受信任的根证书颁发机构"》 windows服务器。
@@ -502,11 +503,8 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subr
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
 
+D:\home\sei_next_pag…-core-chunk.mjs:511
+ POST https://192.168.171.3:8673/graphql net::ERR_INTERNET_DISCONNECTED
+fetchOperation	@	D:\home\sei_next_pag…-core-chunk.mjs:511
+eval	@	D:\home\sei_next_pag…\dist\wonka.mjs:877
 
-client.js:44
- GET https://192.168.171.3:3765/api/auth/session net::ERR_FAILED
-
-ReportMakeable: 需要登录 {data: null, status: 'unauthenticated', update: ƒ}
-ReportMakeable: 需要登录 {data: null, status: 'unauthenticated', update: ƒ}
-D:\home\sei_next_page\packages\mainProj\src\common\ReportMakeable.tsx:29 ReportMakeable: 需要登录 {data: null, status: 'unauthenticated', update: ƒ}
-D:\home\sei_next_page\packages\mainProj\src\components\ui\alert-dialog.tsx:27 Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.

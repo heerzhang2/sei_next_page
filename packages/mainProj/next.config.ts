@@ -42,7 +42,7 @@ module.exports = async (phase) => {
                     config.watchOptions = {
                         ...config.watchOptions,
                         poll: false,
-                        aggregateTimeout: 10000, // 延长聚合时间
+                        aggregateTimeout: 30000, //聚合时间：设置大值会导致初始化较慢，但浏览器刷新频率减少。
                         ignored: /node_modules/,
                     }
 
