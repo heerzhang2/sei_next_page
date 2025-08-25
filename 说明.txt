@@ -501,107 +501,24 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subrid=KQcbgDF9RO21DgA92H3tQlJlcG9ydA
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
-Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
-同一个页面地就是查询参数一点点差别的，比如离线前我已经访问/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ProjectList?from=1#ProjectList
-离线之后我点击访问/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ProjectList?from=3#ProjectList 就没办法正常显示出来了，实际上from参数就是内部的定位处理差别的完全是js动态调整的部分。
-manifest.json  "display": "minimal-ui",按 fullscreen → standalone → minimal-ui → browser 的顺序回退
-https://v0.app/chat/fork-of-7qMRRqqXItk
-（2）Bearer%207IwGrXYhAjsRFd1ndnIor4gW
-（0）Bearer%20UfRKGZJW6vLZmtyoCIo1ztYr
 
- "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NTMzMTE1OCwiZXhwIjoxNzU1MzM2NTU4fQ.GKiRVyhylLmGm2WcsU3tbJLA0hUgVvvXryn6AjA-tnc2ZQsinB7rcc10cnRKNmVQ7R4M6fyT8_mgfX82bWmC4g"
-}authorization:
- Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NTMzMTE1OCwiZXhwIjoxNzU1MzM2NTU4fQ.GKiRVyhylLmGm2WcsU3tbJLA0hUgVvvXryn6AjA-tnc2ZQsinB7rcc10cnRKNmVQ7R4M6fyT8_mgfX82bWmC4g
- content-length:
- 17010
- success": true,
-     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NTMzMTE1OCwiZXhwIjoxNzU1MzM2NTU4fQ.GKiRVyhylLmGm2WcsU3tbJLA0hUgVvvXryn6AjA-tnc2ZQsinB7rcc10cnRKNmVQ7R4M6fyT8_mgfX82bWmC4g"
- }
-
-Found a route to handle this request: RegExpRoute {handler: NetworkOnly, method: 'GET', catchHandler: undefined, match: ƒ}
-encode-uri-path.js:30 Uncaught TypeError: Cannot read properties of undefined (reading 'data')
-    at eval (encode-uri-path.js:30:56)
-    at eval (encode-uri-path.js:77:7)
-    at (:3765/node_modules/next/dist/shared/lib/encode-uri-path.js (https://192.168.171.3:3765/_next/static/chunks/main-app.js?v=1755572883950:1489:1)
-    at __webpack_require__ (webpack.js:1:1)
-    at eval (app-webpack.js:8:24)
-    at (:3765/node_modules/next/dist/client/app-webpack.js (https://192.168.171.3:3765/_next/static/chunks/main-app.js?v=1755572883950:182:1)
-    at __webpack_require__ (webpack.js:1:1)
-    at eval (app-next-dev.js:6:1)
-    at (:3765/node_modules/next/dist/client/app-next-dev.js (https://192.168.171.3:3765/_next/static/chunks/main-app.js?v=1755572883950:171:1)
-    at __webpack_require__ (webpack.js:1:1)
-eval @ encode-uri-path.js:30
-eval @ encode-uri-path.js:77
-(app-pages-browser)/../../node_modules/next/dist/shared/lib/encode-uri-path.js @ main-app.js?v=1755572883950:1489
-__webpack_require__ @ webpack.js:1
-eval @ app-webpack.js:8
-(app-pages-browser)/../../node_modules/next/dist/client/app-webpack.js @ main-app.js?v=1755572883950:182
-__webpack_require__ @ webpack.js:1
-eval @ app-next-dev.js:6
-(app-pages-browser)/../../node_modules/next/dist/client/app-next-dev.js @ main-app.js?v=1755572883950:171
-__webpack_require__ @ webpack.js:1
-__webpack_exec__ @ main-app.js?v=1755572883950:1845
-（匿名） @ main-app.js?v=1755572883950:1846
-webpackJsonpCallback @ webpack.js:1
-（匿名） @ main-app.js?v=1755572883950:9
-waitUntil.js:291 serwist Network request for '/swe-worker-development.js' returned a response with status '200'.
-
-https://gitee.com/heerzhang/pwa-serwist-int.git
-const customCache: RuntimeCaching[] = [
-  // HTML 文档请求的缓存策略
-  // {
-  //   matcher: ({ url, request }) => {
-  //     const isReportPath = url.pathname.startsWith("/rep/")
-    {
-      matcher: ({ request, url: { pathname }, sameOrigin }) =>
-          request.headers.get("RSC") === "1" &&
-          request.headers.get("Next-Router-Prefetch") === "1" &&
-          sameOrigin &&
-          !pathname.startsWith("/api/") &&
-          !pathname.startsWith("/rep/"), // 排除 /rep/ 路径，让它们使用上面的统一缓存策略
-      handler: new NetworkFirst({
-        cacheName: PAGES_CACHE_NAME.rscPrefetch,
-        plugins: [
-          new ExpirationPlugin({
-            maxEntries: 32,
-            maxAgeSeconds: 24 * 60 * 60, // 24 hours
-          }),
-        ],
-      }),
-    },
-    {
-      matcher: ({ request, url: { pathname }, sameOrigin }) =>
-          request.headers.get("RSC") === "1" &&
-          sameOrigin &&
-          !pathname.startsWith("/api/") &&
-          !pathname.startsWith("/rep/"), // 排除 /rep/ 路径，让它们使用上面的统一缓存策略
-      handler: new NetworkFirst({
-        cacheName: PAGES_CACHE_NAME.rsc,
-        plugins: [
-          new ExpirationPlugin({
-            maxEntries: 32,
-            maxAgeSeconds: 24 * 60 * 60, // 24 hours
-          }),
-        ],
-      }),
-    },
-const serwist = new Serwist({
-  precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: true,
-  clientsClaim: true,
-  navigationPreload: true,
-  disableDevLogs: false,
-  runtimeCaching: customCache,
-  fallbacks: {
-
-
-serwist.addToPrecacheList([
-  { url: "/rep/sample/INDPL_DJ/1/T607", revision: null },
-]);
-
-enableNavigationPreload();
-
-serwist.addEventListeners()
-没有额外点击PRECACHE_REPORTS 按钮的。
-https://v0.app/chat/serwist-pwa-a2LelIVHRUM
-要直接从URL路径中解析repId，而不是依赖Next.js的路由参数系统
+请求启动器链
+https://192.168.171.3:3765/_next/static/chunks/6679-9c827b9200c3bfcb.js
+https://192.168.171.3:3765/login
+https://192.168.171.3:3765/_next/static/chunks/webpack-719d424d3d745864.js
+https://192.168.171.3:3765/_next/static/chunks/87c73c54-095cf9a90cf9ee03.js
+https://192.168.171.3:3765/_next/static/chunks/6679-9c827b9200c3bfcb.js
+https://192.168.171.3:3765/login
+https://192.168.171.3:3765/?_rsc=oxr4l
+https://192.168.171.3:3765/_next/static/chunks/main-app-4762fc109c35d4b5.js
+https://192.168.171.3:3765/_next/static/chunks/components-b92da13b3ded8418.js
+https://192.168.171.3:3765/_next/static/chunks/2230-78ea042d478f0657.js
+https://192.168.171.3:3765/_next/static/chunks/7261-ee2412f9ac70ca5c.js
+https://192.168.171.3:3765/_next/static/chunks/app/~offline/page-ffa07eb620f327ad.js
+https://192.168.171.3:3765/_next/static/chunks/367-6368e805f35a3efa.js
+https://192.168.171.3:3765/_next/static/chunks/1874-41e74e3dccae2ed6.js
+https://192.168.171.3:3765/_next/static/chunks/6808-84ecefe8ec4fedd1.js
+https://192.168.171.3:3765/_next/static/chunks/4290-13c54d57ad23cc73.js
+https://192.168.171.3:3765/_next/static/chunks/app/layout-02ceb1abcac6edea.js
+https://192.168.171.3:3765/api/health
+https://192.168.171.3:3765/api/health
