@@ -603,3 +603,5 @@ enableNavigationPreload();
 
 serwist.addEventListeners()
 没有额外点击PRECACHE_REPORTS 按钮的。
+https://v0.app/chat/serwist-pwa-a2LelIVHRUM
+要直接从URL路径中解析repId，而不是依赖Next.js的路由参数系统
