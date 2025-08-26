@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useNetworkStatus } from "@/hooks/use-network-status"
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
+import { useOfflineAuth } from "@/hooks/use-offline-auth"
 import { toast } from "sonner"
 
 /*报告编制的页面必须登录用户才能进去：能用编辑器不一定有权限改，真要保存后端还会控制权限。
@@ -14,6 +15,7 @@ PWA离线模式的情况下：这个控制点就失去意义了，只能事后�
 * */
 const ReportMakeable = () => {
     const session = useSession()
+    const offlineAuth = useOfflineAuth()
     const searchParams = useSearchParams()
     const [make, setMake] = useState(false)
     const [hasShownDialog, setHasShownDialog] = useState(false)
@@ -29,7 +31,7 @@ const ReportMakeable = () => {
     }, [searchParams])
 
     useEffect(() => {
-        const currentState = `${session.status}-${isClientOnline}-${isOnline}-${isGraphQLBackendReachable}-${hasShownDialog}`
+        const currentState = `${session.status}-${isClientOnline}-${isOnline}-${isGraphQLBackendReachable}-${hasShownDialog}-${offlineAuth.isAuthenticated}-${offlineAuth.isExpired}`
 
         console.log("[v0] ReportMakeable useEffect triggered", {
             isClientOnline,
@@ -39,6 +41,11 @@ const ReportMakeable = () => {
             hasShownDialog,
             hasAccessToken: !!(session?.data?.user as any)?.accessToken,
             hasUser: !!session?.data?.user,
+            offlineAuthStatus: {
+                isAuthenticated: offlineAuth.isAuthenticated,
+                isExpired: offlineAuth.isExpired,
+                hasUser: !!offlineAuth.user,
+            },
             currentState,
             lastState: lastCheckRef.current,
         })
@@ -82,9 +89,12 @@ const ReportMakeable = () => {
                 }
             }
 
+            const hasNextAuthSession = (session?.data?.user as any)?.accessToken && session?.data?.user
+            const hasOfflineAuth = offlineAuth.isAuthenticated && !offlineAuth.isExpired
+
             if (isClientOnline && isOnline && isGraphQLBackendReachable) {
-                if (!(session?.data?.user as any)?.accessToken || !session?.data?.user) {
-                    console.log("[v0] ReportMakeable: 需要登录", session)
+                if (!hasNextAuthSession && !hasOfflineAuth) {
+                    console.log("[v0] ReportMakeable: 需要登录", { session, offlineAuth })
                     setHasShownDialog(true)
                     showConfirm(
                         "需要登录",
@@ -101,6 +111,8 @@ const ReportMakeable = () => {
                             })
                         },
                     )
+                } else if (hasOfflineAuth && !hasNextAuthSession) {
+                    console.log("[v0] ReportMakeable: 使用离线认证状态")
                 }
             }
 
@@ -112,15 +124,18 @@ const ReportMakeable = () => {
                 clearTimeout(debounceTimerRef.current)
             }
         }
-    }, [session, isClientOnline, isOnline, isGraphQLBackendReachable, hasShownDialog])
+    }, [session, offlineAuth, isClientOnline, isOnline, isGraphQLBackendReachable, hasShownDialog])
 
     useEffect(() => {
-        if (session.status === "authenticated" && (session?.data?.user as any)?.accessToken) {
-            console.log("[v0] User authenticated, resetting dialog state")
+        const hasNextAuthSession = session.status === "authenticated" && (session?.data?.user as any)?.accessToken
+        const hasOfflineAuth = offlineAuth.isAuthenticated && !offlineAuth.isExpired
+
+        if (hasNextAuthSession || hasOfflineAuth) {
+            console.log("[v0] User authenticated (NextAuth or offline), resetting dialog state")
             setHasShownDialog(false)
             lastCheckRef.current = ""
         }
-    }, [session.status, session?.data?.user])
+    }, [session.status, session?.data?.user, offlineAuth.isAuthenticated, offlineAuth.isExpired])
 
     return <ConfirmDialog />
 }
