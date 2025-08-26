@@ -29,7 +29,6 @@ export const subscribeToNetworkStatus = (
     return () => networkStatus.listeners.delete(callback)
 }
 
-
 // 更新网络状态
 export const updateNetworkStatus = (isOnline: boolean, error: Error | null = null) => {
     networkStatus.isOnline = isOnline
@@ -73,6 +72,14 @@ const networkErrorExchange: Exchange = ({ forward }) => {
             forward,
             tap((result: OperationResult) => {
                 if (result.error) {
+                    console.log("[v0] networkErrorExchange - 原始错误对象:", {
+                        error: result.error,
+                        networkError: result.error.networkError,
+                        graphQLErrors: result.error.graphQLErrors,
+                        response: result.error.response,
+                        operation: result.operation.operationName,
+                    })
+
                     const now = Date.now()
 
                     if (now - lastErrorTime > ERROR_RESET_TIME) {
@@ -131,6 +138,12 @@ const customFetchExchange: Exchange = ({ forward }) => {
         return pipe(
             operations$,
             map((operation: Operation) => {
+                console.log("[v0] customFetchExchange - 发送请求:", {
+                    operationName: operation.operationName,
+                    query: operation.query.loc?.source.body.substring(0, 200) + "...",
+                    variables: operation.variables,
+                })
+
                 // 为每个操作添加超时和错误处理
                 const controller = new AbortController()
                 const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
@@ -149,6 +162,16 @@ const customFetchExchange: Exchange = ({ forward }) => {
             }),
             forward,
             tap((result: OperationResult) => {
+                console.log("[v0] customFetchExchange - 收到响应:", {
+                    operationName: result.operation.operationName,
+                    hasData: !!result.data,
+                    hasError: !!result.error,
+                    error: result.error,
+                    // 尝试获取原始HTTP响应信息
+                    response: result.error?.response || result.response,
+                    extensions: result.extensions,
+                })
+
                 // 清理超时
                 if (result.operation.context.fetchOptions?.signal) {
                     clearTimeout(result.operation.context.fetchOptions.timeoutId)
@@ -171,6 +194,20 @@ const makeAuthExchange = (accessToken: string | null) => {
                 })
             },
             didAuthError(error) {
+                console.log("[v0] authExchange.didAuthError - 详细错误信息:", {
+                    error: error,
+                    message: error.message,
+                    networkError: error.networkError,
+                    graphQLErrors: error.graphQLErrors,
+                    response: error.response,
+                    responseStatus: error.response?.status,
+                    responseStatusText: error.response?.statusText,
+                    responseHeaders: error.response?.headers ? Object.fromEntries(error.response.headers.entries()) : null,
+                    responseUrl: error.response?.url,
+                    responseType: error.response?.type,
+                    responseBodyUsed: error.response?.bodyUsed,
+                })
+
                 // 检查 GraphQL 错误
                 const hasGraphQLAuthError = error.graphQLErrors?.some(
                     (e) => e.extensions?.code === "UNAUTHORIZED" || e.extensions?.code === "UNAUTHENTICATED",
@@ -186,7 +223,14 @@ const makeAuthExchange = (accessToken: string | null) => {
                     response.status === 500 &&
                     response.headers?.get("content-length") === "0" &&
                     response.headers?.get("content-type")?.includes("application/graphql-response+json")
-                console.log("authExchange捕获didAuthError",{hasGraphQLAuthError, hasNetworkAuthError, isSpecial500})
+
+                console.log("[v0] authExchange.didAuthError - 认证错误判断结果:", {
+                    hasGraphQLAuthError,
+                    hasNetworkAuthError,
+                    isSpecial500,
+                    finalResult: hasGraphQLAuthError || hasNetworkAuthError || isSpecial500,
+                })
+
                 return hasGraphQLAuthError || hasNetworkAuthError || isSpecial500
             },
             async refreshAuth() {
@@ -368,6 +412,29 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 // 错误处理 exchange 应该在最前面
                 errorExchange({
                     onError: (error, operation) => {
+                        console.log("[v0] errorExchange.onError - 完整错误信息:", {
+                            operationName: operation.operationName,
+                            operationType: operation.kind,
+                            error: error,
+                            message: error.message,
+                            networkError: error.networkError,
+                            graphQLErrors: error.graphQLErrors,
+                            response: error.response,
+                            // 尝试获取原始HTTP响应的详细信息
+                            responseDetails: error.response
+                                ? {
+                                    status: error.response.status,
+                                    statusText: error.response.statusText,
+                                    headers: Object.fromEntries(error.response.headers?.entries() || []),
+                                    url: error.response.url,
+                                    type: error.response.type,
+                                    ok: error.response.ok,
+                                    redirected: error.response.redirected,
+                                    bodyUsed: error.response.bodyUsed,
+                                }
+                                : null,
+                        })
+
                         console.error("GraphQL 错误:", error)
 
                         // 检查是否为网络错误
@@ -435,7 +502,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [createClientStable, accessToken, isClient])
 
-    console.log("停滞isClient:",isClient,"accessToken: ", accessToken,"client空=",client===null)
+    console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
 
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>

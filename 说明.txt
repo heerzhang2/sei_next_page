@@ -509,3 +509,27 @@ fetchOperation	@	D:\home\sei_next_pag…-core-chunk.mjs:511
 eval	@	D:\home\sei_next_pag…\dist\wonka.mjs:877
 
 离线模式下因graphql失败500报错引起：refreshAuth fetch("/api/refresh-token", { 最终再跳转/login
+
+
+尝试刷新 token...
+D:\home\sei_next_page\packages\mainProj\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist No route found for: /api/refresh-token
+D:\home\sei_next_page\packages\mainProj\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist No route found for: /__nextjs_original-stack-frames
+D:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:250 Token 刷新成功
+
+{
+    "success": true,
+    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjEwODQ3NSwiZXhwIjoxNzU2MTEzODc1fQ.VDIyIjPHBSsPrD6PUgW1Kxtm3_6LXYfID2mP2MBy0dosTZqPMDczmbtufQH8FfWo8fDX4kp-dN4J2AtQ7_YDTA"
+}
+
+
+Refresh token user= {
+  id: 'rm1zs8wRRY-GtjYAD5KSUVVzZXI',
+  accessToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjEwODQ3NSwiZXhwIjoxNzU2MTEzODc1fQ.VDIyIjPHBSsPrD6PUgW1Kxtm3_6LXYfID2mP2MBy0dosTZqPMDczmbtufQH8FfWo8fDX4kp-dN4J2AtQ7_YDTA',
+  refreshToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4cCI6MTc1NjcxMzI3NX0.q9yHkEtHfkWQarleIOtal-A2VdwKWR1yfSbocctSMxBQV3I73YqjwsQv-LWcTfvgdE8K21N9muDFyKoRGUsvkg'
+}
+
+Refresh token user= {
+  id: 'rm1zs8wRRY-GtjYAD5KSUVVzZXI',
+  accessToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjEwODQ3NSwiZXhwIjoxNzU2MTEzODc1fQ.VDIyIjPHBSsPrD6PUgW1Kxtm3_6LXYfID2mP2MBy0dosTZqPMDczmbtufQH8FfWo8fDX4kp-dN4J2AtQ7_YDTA',
+  refreshToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4cCI6MTc1NjcxMzI3NX0.q9yHkEtHfkWQarleIOtal-A2VdwKWR1yfSbocctSMxBQV3I73YqjwsQv-LWcTfvgdE8K21N9muDFyKoRGUsvkg'
+}
