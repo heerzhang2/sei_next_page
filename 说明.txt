@@ -1,3 +1,7 @@
+v0.app当前= 3;  https://v0.app/chat/serwist-pwa-2-DwCQqFFqGIY
+ZH: 1;  on 09/13/2025. After that, your monthly credits will reset. $5 of usage credit per month
+: heerzhang3;
+
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :9872
 自签名证书Chrome_SSL_cert.sh,在linux系统跑的chmod +x Chrome_SSL_cert.sh  不用windows自带openssl64窗口。
 双击 `ssl\localhost.crt`选择"安装证书"选择"本地计算机"选择"将所有证书都放入下列存储" > "受信任的根证书颁发机构"》 windows服务器。
@@ -501,12 +505,57 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subrid=KQcbgDF9RO21DgA92H3tQlJlcG9ydA
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
-Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
-同一个页面地就是查询参数一点点差别的，比如离线前我已经访问/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ProjectList?from=1#ProjectList
-离线之后我点击访问/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ProjectList?from=3#ProjectList 就没办法正常显示出来了，实际上from参数就是内部的定位处理差别的完全是js动态调整的部分。
 
-https://v0.app/chat/fork-of-7qMRRqqXItk
-（2）Bearer%207IwGrXYhAjsRFd1ndnIor4gW
-（0）Bearer%20UfRKGZJW6vLZmtyoCIo1ztYr
+D:\home\sei_next_pag…-core-chunk.mjs:511
+ POST https://192.168.171.3:8673/graphql net::ERR_INTERNET_DISCONNECTED
+fetchOperation	@	D:\home\sei_next_pag…-core-chunk.mjs:511
+eval	@	D:\home\sei_next_pag…\dist\wonka.mjs:877
 
-RSC（React Server Components）流式响应被Service Worker错误处理导致的
+离线模式下因graphql失败500报错引起：refreshAuth fetch("/api/refresh-token", { 最终再跳转/login
+
+
+尝试刷新 token...
+D:\home\sei_next_page\packages\mainProj\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist No route found for: /api/refresh-token
+D:\home\sei_next_page\packages\mainProj\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist No route found for: /__nextjs_original-stack-frames
+D:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:250 Token 刷新成功
+
+{
+    "success": true,
+    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjEwODQ3NSwiZXhwIjoxNzU2MTEzODc1fQ.VDIyIjPHBSsPrD6PUgW1Kxtm3_6LXYfID2mP2MBy0dosTZqPMDczmbtufQH8FfWo8fDX4kp-dN4J2AtQ7_YDTA"
+}
+
+
+Refresh token user= {
+  id: 'rm1zs8wRRY-GtjYAD5KSUVVzZXI',
+  accessToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjEwODQ3NSwiZXhwIjoxNzU2MTEzODc1fQ.VDIyIjPHBSsPrD6PUgW1Kxtm3_6LXYfID2mP2MBy0dosTZqPMDczmbtufQH8FfWo8fDX4kp-dN4J2AtQ7_YDTA',
+  refreshToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4cCI6MTc1NjcxMzI3NX0.q9yHkEtHfkWQarleIOtal-A2VdwKWR1yfSbocctSMxBQV3I73YqjwsQv-LWcTfvgdE8K21N9muDFyKoRGUsvkg'
+}
+
+Refresh token user= {
+  id: 'rm1zs8wRRY-GtjYAD5KSUVVzZXI',
+  accessToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjEwODQ3NSwiZXhwIjoxNzU2MTEzODc1fQ.VDIyIjPHBSsPrD6PUgW1Kxtm3_6LXYfID2mP2MBy0dosTZqPMDczmbtufQH8FfWo8fDX4kp-dN4J2AtQ7_YDTA',
+  refreshToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4cCI6MTc1NjcxMzI3NX0.q9yHkEtHfkWQarleIOtal-A2VdwKWR1yfSbocctSMxBQV3I73YqjwsQv-LWcTfvgdE8K21N9muDFyKoRGUsvkg'
+}
+1756176768073
+1755962839
+1756262839
+1756176888934
+Date.now()
+1756178254925
+1756262539000
++
+eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjEwODQ3NSwiZXhwIjoxNzU2MTEzODc1fQ.VDIyIjPHBSsPrD6PUgW1Kxtm3_6LXYfID2mP2MBy0dosTZqPMDczmbtufQH8FfWo8fDX4kp-dN4J2AtQ7_YDTA
+
+accessToken
+:
+"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjE4MzM2MywiZXhwIjoxNzU2MTg4NzYzfQ.QpGThUogw-OHGBhsGjL9_HKAw1-Mx4PD0LVaYztPhLRDywKtj62O-blDMsRoDI9mpGPdqIXWfdb4uOi3UPl-2A"
+refreshToken
+:
+"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4cCI6MTc1NjcxMzI3NX0.q9yHkEtHfkWQarleIOtal-A2VdwKWR1yfSbocctSMxBQV3I73YqjwsQv-LWcTfvgdE8K21N9muDFyKoRGUsvkg"
+success
+:
+true
+        "id": "rm1zs8wRRY-GtjYAD5KSUVVzZXI",
+        "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjEwODQ3NSwiZXhwIjoxNzU2MTEzODc1fQ.VDIyIjPHBSsPrD6PUgW1Kxtm3_6LXYfID2mP2MBy0dosTZqPMDczmbtufQH8FfWo8fDX4kp-dN4J2AtQ7_YDTA",
+        "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4cCI6MTc1NjcxMzI3NX0.q9yHkEtHfkWQarleIOtal-A2VdwKWR1yfSbocctSMxBQV3I73YqjwsQv-LWcTfvgdE8K21N9muDFyKoRGUsvkg",
+        "accessTokenExpires": 1756270355
