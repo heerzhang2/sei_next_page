@@ -5,6 +5,7 @@ import { UrqlProvider } from "@urql/next"
 import { useAccessToken } from "./use-access-token"
 import { authExchange } from "@urql/exchange-auth"
 import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 //离线保存支持的：
 import { offlineExchange } from "@urql/exchange-graphcache"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
@@ -267,7 +268,7 @@ const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; j
 }
 
 // 创建认证交换器
-const makeAuthExchange = (accessToken: string | null) => {
+const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>) => {
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
@@ -346,6 +347,19 @@ const makeAuthExchange = (accessToken: string | null) => {
                             const data = await response.json()
                             if (data.success) {
                                 console.log("[v0] Next.js服务器token刷新成功")
+
+                                if (updateSession) {
+                                    try {
+                                        await updateSession({
+                                            accessToken: data.accessToken,
+                                            refreshToken: data.refreshToken,
+                                        })
+                                        console.log("[v0] Session已更新新的token")
+                                    } catch (error) {
+                                        console.error("[v0] 更新session失败:", error)
+                                    }
+                                }
+
                                 toast.success("登录已刷新", {
                                     description: "会话已自动续期",
                                     duration: 3000,
@@ -364,6 +378,18 @@ const makeAuthExchange = (accessToken: string | null) => {
 
                             // 更新存储的refreshToken
                             setStoredRefreshToken(result.refreshToken)
+
+                            if (updateSession) {
+                                try {
+                                    await updateSession({
+                                        accessToken: result.accessToken,
+                                        refreshToken: result.refreshToken,
+                                    })
+                                    console.log("[v0] 离线模式Session已更新新的token")
+                                } catch (error) {
+                                    console.error("[v0] 离线模式更新session失败:", error)
+                                }
+                            }
 
                             // 触发自定义事件通知token更新
                             if (typeof window !== "undefined") {
@@ -421,6 +447,7 @@ const makeAuthExchange = (accessToken: string | null) => {
 
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const accessToken = useAccessToken()
+    const { update } = useSession()
 
     const [isClient, setIsClient] = useState(false)
 
@@ -591,7 +618,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
                 cache,
-                makeAuthExchange(accessToken),
+                makeAuthExchange(accessToken, update),
                 networkErrorExchange, // 自定义网络错误处理
                 ssr,
                 customFetchExchange, // 自定义 fetch exchange
@@ -612,7 +639,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         ssrRef.current = ssr
 
         return [client, ssr]
-    }, [accessToken, isClient])
+    }, [accessToken, isClient, update])
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
