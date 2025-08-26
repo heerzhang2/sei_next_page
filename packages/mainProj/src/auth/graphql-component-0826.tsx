@@ -181,105 +181,12 @@ const customFetchExchange: Exchange = ({ forward }) => {
     }
 }
 
-const getStoredRefreshToken = (): string | null => {
-    if (typeof window === "undefined") return null
-    return localStorage.getItem("refresh_token")
-}
-
-const setStoredRefreshToken = (token: string | null): void => {
-    if (typeof window === "undefined") return
-    if (token) {
-        localStorage.setItem("refresh_token", token)
-    } else {
-        localStorage.removeItem("refresh_token")
-    }
-}
-
-const refreshTokenDirectly = async (
-    refreshToken: string,
-): Promise<{ accessToken: string; refreshToken: string } | null> => {
-    try {
-        const endpoint = process.env.NEXT_PUBLIC_BACK_END
-        if (!endpoint) throw new Error("Backend endpoint not configured")
-
-        const response = await fetch(`${endpoint}/graphql`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                query: `
-          mutation RefreshToken($refreshToken: String!) {
-            refreshToken(refreshToken: $refreshToken) {
-              accessToken
-              refreshToken
-              user {
-                id
-              }
-            }
-          }
-        `,
-                variables: { refreshToken },
-            }),
-        })
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-        }
-
-        const result = await response.json()
-
-        if (result.errors) {
-            throw new Error(result.errors[0]?.message || "GraphQL error")
-        }
-
-        if (!result.data?.refreshToken) {
-            throw new Error("No refresh token data returned")
-        }
-
-        return {
-            accessToken: result.data.refreshToken.accessToken,
-            refreshToken: result.data.refreshToken.refreshToken,
-        }
-    } catch (error) {
-        console.error("Direct token refresh failed:", error)
-        return null
-    }
-}
-
-const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; javaBackendReachable: boolean }> => {
-    const results = await Promise.allSettled([
-        // 检查Next.js服务器
-        fetch("/api/health", { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
-        // 检查Java后端
-        fetch(`${process.env.NEXT_PUBLIC_BACK_END}/graphql`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: "{ __typename }" }),
-            cache: "no-cache",
-        }).then((r) => r.ok),
-    ])
-
-    return {
-        nextjsReachable: results[0].status === "fulfilled" && results[0].value,
-        javaBackendReachable: results[1].status === "fulfilled" && results[1].value,
-    }
-}
-
 // 创建认证交换器
 const makeAuthExchange = (accessToken: string | null) => {
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
                 if (!accessToken) {
-                    const refreshToken = getStoredRefreshToken()
-                    if (refreshToken) {
-                        console.log("[v0] 使用refreshToken作为认证fallback")
-                        return utils.appendHeaders(operation, {
-                            Authorization: `Bearer ${refreshToken}`,
-                            "X-Auth-Type": "refresh", // 标记这是refreshToken认证
-                        })
-                    }
                     return operation
                 }
                 return utils.appendHeaders(operation, {
@@ -328,69 +235,29 @@ const makeAuthExchange = (accessToken: string | null) => {
             },
             async refreshAuth() {
                 try {
-                    console.log("[v0] 开始token刷新流程...")
+                    console.log("尝试刷新 token...")
+                    const response = await fetch("/api/refresh-token", {
+                        method: "POST",
+                        credentials: "include",
+                    })
 
-                    const connectivity = await checkNetworkConnectivity()
-                    console.log("[v0] 网络连接状态:", connectivity)
+                    if (!response.ok) {
+                        throw new Error("Token refresh failed")
+                    }
 
-                    const refreshToken = getStoredRefreshToken()
-
-                    if (connectivity.nextjsReachable) {
-                        console.log("[v0] 使用Next.js服务器刷新token...")
-                        const response = await fetch("/api/refresh-token", {
-                            method: "POST",
-                            credentials: "include",
+                    const data = await response.json()
+                    if (data.success) {
+                        console.log("Token 刷新成功")
+                        toast.success("登录已刷新", {
+                            description: "会话已自动续期",
+                            duration: 3000,
                         })
-
-                        if (response.ok) {
-                            const data = await response.json()
-                            if (data.success) {
-                                console.log("[v0] Next.js服务器token刷新成功")
-                                toast.success("登录已刷新", {
-                                    description: "会话已自动续期",
-                                    duration: 3000,
-                                })
-                                return
-                            }
-                        }
+                        return
+                    } else {
+                        throw new Error(data.error || "Token refresh failed")
                     }
-
-                    if (!connectivity.nextjsReachable && connectivity.javaBackendReachable && refreshToken) {
-                        console.log("[v0] Next.js离线，尝试直接调用Java后端刷新token...")
-
-                        const result = await refreshTokenDirectly(refreshToken)
-                        if (result) {
-                            console.log("[v0] 直接调用Java后端token刷新成功")
-
-                            // 更新存储的refreshToken
-                            setStoredRefreshToken(result.refreshToken)
-
-                            // 触发自定义事件通知token更新
-                            if (typeof window !== "undefined") {
-                                window.dispatchEvent(
-                                    new CustomEvent("token:refreshed", {
-                                        detail: {
-                                            accessToken: result.accessToken,
-                                            refreshToken: result.refreshToken,
-                                        },
-                                    }),
-                                )
-                            }
-
-                            toast.success("离线模式登录已刷新", {
-                                description: "直接与后端服务器通信成功",
-                                duration: 3000,
-                            })
-                            return
-                        }
-                    }
-
-                    throw new Error("所有token刷新方式都失败")
                 } catch (error) {
-                    console.error("[v0] Token 刷新失败:", error)
-
-                    setStoredRefreshToken(null)
-
+                    console.error("Token 刷新失败:", error)
                     toast.error("登录已过期", {
                         description: "请重新登录",
                         duration: 5000,
@@ -409,7 +276,7 @@ const makeAuthExchange = (accessToken: string | null) => {
                         if (typeof window !== "undefined") {
                             const protocol = window.location.protocol === "https:" ? "https:" : "http:"
                             const host = window.location.host
-                            console.error("[v0] Token刷新失败跳转login")
+                            console.error("Token刷新失败跳转login")
                             window.location.href = `${protocol}//${host}/login`
                         }
                     }, 2000)

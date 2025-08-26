@@ -40,7 +40,7 @@ function sha256Sync(data: string): string {
 }
 
 // 刷新 access token
-async function refreshAccessToken(token: any) {
+export async function refreshAccessToken(token: any) {
     try {
         console.log("开始刷新 token...")
 
@@ -151,16 +151,12 @@ export const authConfig: NextAuthConfig = {
                     },
                 }
             }
-
-            // 检查 access token 是否即将过期（提前 5 分钟刷新）
-            const shouldRefresh =
-                token.accessTokenExpires && Date.now() > (token.accessTokenExpires as number) - 5 * 60 * 1000
-
+            // 检查 access token 是否即将过期（提前 5 分钟刷新）  token里面没有accessTokenExpires字段，而是用exp替代的
+            const shouldRefresh = token.exp && Date.now() > ((token.exp as number) - 5 * 60) * 1000
             if (shouldRefresh) {
                 console.log("Token 即将过期，开始刷新...")
                 return await refreshAccessToken(token)
             }
-
             return token
         },
         async session({ session, token }) {
@@ -171,7 +167,7 @@ export const authConfig: NextAuthConfig = {
                     id: token.user?.id as string,
                     accessToken: token.accessToken as string,
                     refreshToken: token.refreshToken as string,
-                    accessTokenExpires: token.accessTokenExpires as number,
+                    accessTokenExpires: token.exp as number,
                 }
 
                 // 如果有刷新错误，也传递给 session
