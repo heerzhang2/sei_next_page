@@ -36,8 +36,6 @@ const authenticateOffline = async (username: string, password: string) => {
               refreshToken
               user {
                 id
-                name
-                email
               }
             }
           }
