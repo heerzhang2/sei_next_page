@@ -267,6 +267,35 @@ const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; j
     }
 }
 
+const clearServiceWorkerAuthCache = async (): Promise<void> => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+        return
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.ready
+        if (registration.active) {
+            const messageChannel = new MessageChannel()
+
+            return new Promise((resolve, reject) => {
+                messageChannel.port1.onmessage = (event) => {
+                    if (event.data.success) {
+                        console.log("[v0] Service Worker认证缓存已清除")
+                        resolve()
+                    } else {
+                        console.error("[v0] Service Worker缓存清除失败:", event.data.error)
+                        reject(new Error(event.data.error))
+                    }
+                }
+
+                registration.active!.postMessage({ type: "CLEAR_AUTH_CACHE" }, [messageChannel.port2])
+            })
+        }
+    } catch (error) {
+        console.error("[v0] 清除Service Worker缓存失败:", error)
+    }
+}
+
 // 创建认证交换器
 const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>) => {
     return authExchange(async (utils) => {
@@ -348,6 +377,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                             if (data.success) {
                                 console.log("[v0] Next.js服务器token刷新成功")
 
+                                await clearServiceWorkerAuthCache()
+
                                 if (updateSession) {
                                     try {
                                         await updateSession({
@@ -378,6 +409,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
                             // 更新存储的refreshToken
                             setStoredRefreshToken(result.refreshToken)
+
+                            await clearServiceWorkerAuthCache()
 
                             if (updateSession) {
                                 try {

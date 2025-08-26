@@ -218,12 +218,8 @@ const customCache: RuntimeCaching[] = [
         }),
     },
     {
-        // Exclude /api/auth/* to fix auth callback
-        // https://github.com/serwist/serwist/discussions/28
         matcher: /\/api\/auth\/.*/,
-        handler: new NetworkOnly({
-            networkTimeoutSeconds: 10, // fallback to cache if API does not response within 10 seconds
-        }),
+        handler: new NetworkOnly(),
     },
     {
         matcher: ({ url: { pathname }, sameOrigin }) =>
@@ -515,9 +511,65 @@ async function precacheReportPages(
 }
 
 // 监听来自主页面的消息
-// self.addEventListener("message", (event) => {
-//
-// })
+self.addEventListener("message", (event) => {
+    const { data } = event
+
+    if (data?.type === "CLEAR_AUTH_CACHE") {
+        event.waitUntil(
+            clearAuthCache()
+                .then(() => {
+                    event.ports[0]?.postMessage({ success: true })
+                })
+                .catch((error) => {
+                    event.ports[0]?.postMessage({ success: false, error: error.message })
+                }),
+        )
+        return
+    }
+
+    if (data?.type === "PRECACHE_REPORT_PAGES") {
+        const { templates } = data
+        const port = event.ports[0]
+
+        event.waitUntil(
+            precacheReportPages(templates, port)
+                .then((results) => {
+                    port?.postMessage({
+                        type: "PRECACHE_COMPLETE",
+                        success: true,
+                        results,
+                    })
+                })
+                .catch((error) => {
+                    console.error("[SW] 预缓存失败:", error)
+                    port?.postMessage({
+                        type: "PRECACHE_COMPLETE",
+                        success: false,
+                        error: error.message,
+                    })
+                }),
+        )
+    }
+})
+
+async function clearAuthCache() {
+    try {
+        // 清除可能缓存了 /api/auth/session 的缓存
+        const cacheNames = await caches.keys()
+        for (const cacheName of cacheNames) {
+            const cache = await caches.open(cacheName)
+            const requests = await cache.keys()
+            for (const request of requests) {
+                if (request.url.includes("/api/auth/")) {
+                    await cache.delete(request)
+                    console.log("[SW] 清除认证缓存:", request.url)
+                }
+            }
+        }
+    } catch (error) {
+        console.error("[SW] 清除认证缓存失败:", error)
+    }
+}
 
 self.addEventListener("install", (event) => {
     console.log("[SW] Service Worker 安装中...")
