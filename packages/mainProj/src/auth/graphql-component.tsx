@@ -186,7 +186,7 @@ const makeAuthExchange = (accessToken: string | null) => {
                     response.status === 500 &&
                     response.headers?.get("content-length") === "0" &&
                     response.headers?.get("content-type")?.includes("application/graphql-response+json")
-
+                console.log("authExchange捕获didAuthError",{hasGraphQLAuthError, hasNetworkAuthError, isSpecial500})
                 return hasGraphQLAuthError || hasNetworkAuthError || isSpecial500
             },
             async refreshAuth() {
