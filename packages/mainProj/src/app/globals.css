@@ -219,36 +219,8 @@ html {
   }
 }
 
-/* 高度相关的媒体查询 */
-@media (min-height: 410px) {
-  .h-sm-content {
-    /* 小高度屏幕的样式 */
-  }
-}
-
-@media (min-height: 610px) {
-  .h-md-content {
-    /* 中等高度屏幕的样式 */
-  }
-}
-
-@media (min-height: 900px) {
-  .h-lg-content {
-    /* 大高度屏幕的样式 */
-  }
-}
-
-@media (min-height: 1240px) {
-  .h-xl-content {
-    /* 超大高度屏幕的样式 */
-  }
-}
-
-@media (min-height: 1920px) {
-  .h-2xl-content {
-    /* 超超大高度屏幕的样式 */
-  }
-}
+/* 移除重复的高度断点媒体查询，现在由 Tailwind 配置处理 */
+/* 高度相关的媒体查询现在可以使用 h-sm:, h-md:, h-lg:, h-xl:, h-2xl: 前缀 */
 
 /*原始记录跨越2页3页的行打印*/
 body {
