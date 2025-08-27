@@ -35,7 +35,7 @@ export default function Page() {
     const [precacheResults, setPrecacheResults] = useState<PrecacheResult[]>([])
     const [failedItems, setFailedItems] = useState<PrecacheResult[]>([])
     const [swError, setSwError] = useState<string | null>(null)
-    const [showRefreshPrompt, setShowRefreshPrompt] = useState(false)
+    const [showRefreshPrompt, setShowRefreshPrompt] = useState(true)
     const [swUpdateAvailable, setSwUpdateAvailable] = useState(false)
 
     const [customUrls, setCustomUrls] = useState<CustomUrlConfig[]>([])

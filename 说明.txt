@@ -18,7 +18,7 @@ http://192.168.171.3:8673/teacher/globalId/ajHsj9GMRL6wzZ-QJAz7zElzcA
 3. 使用fetchQuery执行查询
 fetchQuery函数允许你执行一个GraphQL查询并获取结果。你需要提供查询定义、变量、Relay环境和回调函数。
 URQL宕机自动更新：若是恢复后刷新页面浏览器cache只能第一次保存提交的才能成功保存后续保存被version拒绝，若不做页面刷新恢复后直接再点保存能完整提交
-竟然因为tailwind4版本导致编译死循环：迁移了你的 Tailwind 配置到 v4 格式。主要变化包括：1）保留了所有自定义高度断点（h-sm, h-md, h-lg, h-xl, h-2xl），现在可以作为响应式前缀使用（如 `h-md:text-lg`）
+竟然因为tailwind4版本导致编译死循环：迁移了你的 Tailwind 配置到 v4 格式。变化tailwind.config.ts自定义高度断点（h-sm, h-md, h-lg, h-xl, h-2xl），现在可以作为响应式前缀使用（如 `h-md:text-lg`）
 复制代码
 async function fetchData(variables) {
   try {

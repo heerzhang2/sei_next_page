@@ -10,7 +10,8 @@ import {
     StaleWhileRevalidate,
 } from "serwist"
 import { Serwist } from "serwist"
-//不要删除！ 可以参考默认取值 import { defaultCache } from "@serwist/next/worker"
+//不要删除！来自参考 ./node_modules/@serwist/next/src/index.worker.ts 生产版本有生效的？
+import { defaultCache } from "@serwist/next/worker"
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -312,6 +313,7 @@ const customCache: RuntimeCaching[] = [
         method: "GET",
         handler: new NetworkOnly(),
     },
+    ...defaultCache,
 ]
 
 const serwist = new Serwist({
@@ -336,6 +338,7 @@ const serwist = new Serwist({
         plugins: [],
     },
 })
+console.log(`📊 Startserwist路由表规则个数`,{size: customCache.length, def: defaultCache.length, controller:navigator?.serviceWorker?.controller})
 
 serwist.addEventListeners()
 
