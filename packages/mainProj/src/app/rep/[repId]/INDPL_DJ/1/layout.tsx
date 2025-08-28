@@ -25,7 +25,7 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } })
     const { getReport: report } = result?.data
     const catItems = useCatalog()
-
+    if(repId==="*") return null;
     return (
         <EditControlProvider>
             <PageSectionOrientation>

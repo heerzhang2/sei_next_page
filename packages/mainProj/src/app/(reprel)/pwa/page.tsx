@@ -270,6 +270,7 @@ export default function Page() {
         setPrecacheProgress({ completed: 0, total: urlsToCache.length, currentItem: "" })
         setPrecacheResults([])
         setFailedItems([])
+        console.log("直接发送CACHE_URLS的链接列表=", urlsToCache)
 
         try {
             navigator.serviceWorker.controller.postMessage({

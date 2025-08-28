@@ -35,20 +35,36 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
     // 提取路径部分，移除动态的 repid
     const pathParts = url.pathname.split("/")
     if (pathParts[1] === "rep" && pathParts.length >= 4) {
-        // 重构路径：/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
-        const normalizedPath = `/rep/*/${pathParts.slice(3).join("/")}`
-        // 移除 subrid 查询参数 subrid from utm_idx #这些参数还需要在整个路由之内做协调统一的。
-        const searchParams = new URLSearchParams(url.search)
-        searchParams.delete("subrid")
-        searchParams.delete("from")
+        const hasAction=(pathParts.length>=5 && pathParts[5]!=="")       //若有编辑器的子路由
+        if(hasAction){
+            // 重构路径：/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
+            const normalizedPath = `/rep/*/${pathParts.slice(3).join("/")}`
+            // 移除 subrid 查询参数 subrid from utm_idx #这些参数还需要在整个路由之内做协调统一的。
+            const searchParams = new URLSearchParams(url.search)
+            searchParams.delete("subrid")
+            searchParams.delete("redId")
 
-        const isRSC = request.headers.get("RSC") === "1"
-        const suffix = isRSC ? "#rsc" : "#html"
+            searchParams.delete("from")
+            searchParams.delete("original")
+            searchParams.delete("unitIndex")
 
-        // 构建标准化的缓存键
-        const normalizedUrl = `${url.origin}${normalizedPath}${searchParams.toString() ? "?" + searchParams.toString() : ""}${suffix}`
-        console.log("normalizedUrl最终", normalizedUrl)
-        return normalizedUrl
+            const isRSC = request.headers.get("RSC") === "1"
+            const suffix = isRSC ? "#rsc" : "#html"
+            // 构建标准化的缓存键
+            const normalizedUrl = `${url.origin}${normalizedPath}${searchParams.toString() ? "?" + searchParams.toString() : ""}${suffix}`
+            return normalizedUrl
+        }
+        else{
+            const normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`
+            // 移除 ?print=1 查询参数
+            const searchParams = new URLSearchParams(url.search)
+            searchParams.delete("original")
+            const isRSC = request.headers.get("RSC") === "1"
+            const suffix = isRSC ? "#rsc" : "#html"
+            // 构建标准化的缓存键
+            const normalizedUrl = `${url.origin}${normalizedPath}${searchParams.toString() ? "?" + searchParams.toString() : ""}${suffix}`
+            return normalizedUrl
+        }
     }
     return request.url
 }
@@ -137,176 +153,6 @@ const serwist = new Serwist({
 
 serwist.addEventListeners()
 
-const withIndexedDBErrorHandling = (fn: Function) => {
-    return async (...args: any[]) => {
-        let retries = 3
-        while (retries > 0) {
-            try {
-                return await fn(...args)
-            } catch (error) {
-                if (
-                    error instanceof Error &&
-                    (error.name === "InvalidStateError" ||
-                        error.message.includes("database connection is closing") ||
-                        error.message.includes("transaction"))
-                ) {
-                    console.warn(`[SW] IndexedDB 错误，重试中... (剩余 ${retries - 1} 次)`, error.message)
-                    retries--
-                    if (retries > 0) {
-                        // 等待一段时间后重试
-                        await new Promise((resolve) => setTimeout(resolve, 100 * (4 - retries)))
-                        continue
-                    }
-                }
-                throw error
-            }
-        }
-    }
-}
-
-const safeCachePut = withIndexedDBErrorHandling(async (cache: Cache, request: string | Request, response: Response) => {
-    return await cache.put(request, response)
-})
-
-const safeCacheOpen = withIndexedDBErrorHandling(async (cacheName: string) => {
-    return await caches.open(cacheName)
-})
-
-// 预缓存报告页面的函数
-async function precacheReportPages(
-    templates: Array<{ templateId: string; version: string; url?: string }>,
-    port?: MessagePort,
-) {
-    console.log("[SW] 开始预缓存报告页面:", templates)
-
-    let cache: Cache
-    try {
-        cache = await safeCacheOpen("report-pages-normalized")
-    } catch (error) {
-        console.error("[SW] 无法打开缓存:", error)
-        port?.postMessage({
-            type: "PRECACHE_COMPLETE",
-            success: false,
-            error: "无法打开缓存存储，请刷新页面重试",
-        })
-        return []
-    }
-
-    const results: Array<{
-        template: { templateId: string; version: string; url?: string }
-        pageSuccess: boolean
-        rscSuccess: boolean
-        pageError?: string
-        rscError?: string
-    }> = []
-
-    let completed = 0
-    const total = templates.length * 2
-
-    for (const template of templates) {
-        const sampleRepId = "sample"
-        const baseUrl =
-            template.url || `${self.location.origin}/rep/${sampleRepId}/${template.templateId}/${template.version}/ALL`
-
-        const result = {
-            template,
-            pageSuccess: false,
-            rscSuccess: false,
-            pageError: undefined as string | undefined,
-            rscError: undefined as string | undefined,
-        }
-
-        console.log("[SW] 预缓存页面:", baseUrl)
-
-        try {
-            const htmlRequest = new Request(baseUrl, {
-                method: "GET",
-                headers: {
-                    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-                    "Cache-Control": "no-cache",
-                    "Sec-Fetch-Dest": "document",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-Site": "same-origin",
-                    "Upgrade-Insecure-Requests": "1",
-                },
-            })
-
-            const response = await fetch(htmlRequest)
-
-            if (response.ok) {
-                const contentType = response.headers.get("content-type") || ""
-                if (contentType.includes("text/html")) {
-                    const normalizedKey = await normalizeReportCacheKey({ request: htmlRequest })
-                    console.log("[SW] 缓存HTML页面到键:", normalizedKey)
-                    console.log("[SW] 响应类型:", contentType)
-                    await safeCachePut(cache, normalizedKey, response.clone())
-                    result.pageSuccess = true
-                } else {
-                    result.pageError = `响应类型错误: ${contentType}，期望 text/html`
-                    console.warn("[SW] 响应类型不是HTML:", contentType)
-                }
-            } else {
-                result.pageError = `HTTP ${response.status}: ${response.statusText}`
-            }
-        } catch (err) {
-            result.pageError = err instanceof Error ? err.message : String(err)
-            console.warn("[SW] 预缓存HTML页面失败:", baseUrl, err)
-        }
-
-        completed++
-        port?.postMessage({
-            type: "PRECACHE_PROGRESS",
-            completed,
-            total,
-            currentItem: `${template.templateId}/${template.version} (HTML页面)`,
-        })
-
-        try {
-            const rscRequest = new Request(baseUrl, {
-                method: "GET",
-                headers: {
-                    RSC: "1",
-                    Accept: "text/x-component",
-                    "Next-Router-Prefetch": "1",
-                },
-            })
-
-            const response = await fetch(rscRequest)
-
-            if (response.ok) {
-                const contentType = response.headers.get("content-type") || ""
-                if (contentType.includes("text/x-component") || contentType.includes("application/json")) {
-                    const normalizedKey = await normalizeReportCacheKey({ request: rscRequest })
-                    console.log("[SW] 缓存RSC到键:", normalizedKey)
-                    console.log("[SW] RSC响应类型:", contentType)
-                    await safeCachePut(cache, normalizedKey, response.clone())
-                    result.rscSuccess = true
-                } else {
-                    result.rscError = `RSC响应类型错误: ${contentType}`
-                    console.warn("[SW] RSC响应类型不正确:", contentType)
-                }
-            } else {
-                result.rscError = `HTTP ${response.status}: ${response.statusText}`
-            }
-        } catch (err) {
-            result.rscError = err instanceof Error ? err.message : String(err)
-            console.warn("[SW] 预缓存RSC失败:", baseUrl, err)
-        }
-
-        completed++
-        port?.postMessage({
-            type: "PRECACHE_PROGRESS",
-            completed,
-            total,
-            currentItem: `${template.templateId}/${template.version} (RSC数据)`,
-        })
-
-        results.push(result)
-    }
-
-    console.log("[SW] 预缓存完成，结果:", results)
-    return results
-}
 
 // 监听来自主页面的消息
 self.addEventListener("message", (event) => {
@@ -325,29 +171,6 @@ self.addEventListener("message", (event) => {
         return
     }
 
-    if (data?.type === "PRECACHE_REPORT_PAGES") {
-        const { templates } = data
-        const port = event.ports[0]
-
-        event.waitUntil(
-            precacheReportPages(templates, port)
-                .then((results) => {
-                    port?.postMessage({
-                        type: "PRECACHE_COMPLETE",
-                        success: true,
-                        results,
-                    })
-                })
-                .catch((error) => {
-                    console.error("[SW] 预缓存失败:", error)
-                    port?.postMessage({
-                        type: "PRECACHE_COMPLETE",
-                        success: false,
-                        error: error.message,
-                    })
-                }),
-        )
-    }
 })
 
 async function clearAuthCache() {
@@ -448,5 +271,3 @@ async function notifyClientsOfError(error: string, errorType = "CACHE_ERROR") {
         console.error("[SW] 无法通知客户端错误:", e)
     }
 }
-
-console.log(`📊 Startserwist路由表规则个数`,{size: customCache.length, def: defaultCache.length, controller:navigator?.serviceWorker?.controller})

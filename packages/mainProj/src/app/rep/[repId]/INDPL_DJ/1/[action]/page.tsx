@@ -5,8 +5,10 @@ import {OriginalView} from "@/report/industrial/Periodical/indPipelineO1";
 import * as React from "react";
 import {useQuery} from "@urql/next";
 import {ReportQuery} from "@/component/rep/report-data";
+import {useActualRepId} from "@/report/hook/use-actual-rep-id";
 
 export default function Page() {
+    const repId = useActualRepId()
     const params = useParams()
     const [action, setAction] = useState<string | null>(null)
     useEffect(() => {
@@ -14,9 +16,8 @@ export default function Page() {
             setAction(params.action as string)
         }
     }, [params])
-    console.log("模板Page刷新路由参数=", {action, params})
-    const [result] = useQuery({ query: ReportQuery, variables: { id: params?.repId } });
+    const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
     const {getReport: report} = result?.data;
-    console.log("模板Page准备OriginalViewr进入repId=", params?.repId,"report=",report)
-    return <OriginalView action={action!} verId={'1'} rep={report}/>
+    console.log("模板Page准备OriginalViewr进入repId=", {repId, params, action, report})
+    return action && <OriginalView action={action!} verId={'1'} rep={report}/>
 }

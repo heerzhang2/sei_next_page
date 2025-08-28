@@ -35,13 +35,18 @@ export default function Home() {
                                 <Link
                                     href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1">查阅当前1份报告-管道的</Link>
                             </div>
+                        <div className="mt-10">
+                            <Link
+                                href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/">查阅当前1份报告-管道的多个斜杠的</Link>
+                        </div>
                             <div className="mt-10">
                                 <Link
                                     href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/_Controller?modelkey=THICK_MS#ProjectList">查阅当前第1子报告</Link>
                             </div>
-                            <div className="mt-10">
-                                <Link href="/process-start">⬅️ 验证rr登录</Link>
-                            </div>
+                        <div className="mt-10">
+                            <Link
+                                href="rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&redId=2#MangInstrument">磁粉检测报告2-2第2分项目流转</Link>
+                        </div>
                             <div className="mt-10">
                                 <Link
                                     href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/T6-14?#T6-14">分项报告的一第1份报告</Link>
@@ -53,9 +58,9 @@ export default function Home() {
                            <div className="mt-10">
                                 <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">滑行车类大型游乐设施监督检验</Link>
                             </div>
-                            <div className="mt-10">
-                                <Link href="/process-start">例子的 入口</Link>
-                            </div>
+                        <div className="mt-10">
+                            <Link href="/process-start">⬅️ 验证rr登录</Link>
+                        </div>
                     </li>
                     <li>Save and see your changes instantly.</li>
                 </ol>

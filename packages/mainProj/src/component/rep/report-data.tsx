@@ -375,6 +375,7 @@ function CommonReportDataSub({
     const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatus()
 
     useEffect(() => setMounted(true), [])
+    console.log("CommonReportDataSub编辑需要子报告单独查", { repId, subrid })
 
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])

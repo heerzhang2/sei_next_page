@@ -175,13 +175,10 @@ export const OriginalView = ({ action, verId, rep }: OriginalViewProps) => {
 
 export function registerUrl(template: string, version: string): string[] {
     const baseUrl = `/rep/*/${template}/${version}`
-
     // Define all action routes that need to be cached for this template
     const actions = ["ALL", "ProjectList", "Survey", "ConcAppendix", "MaterialReview",
-        "TkmsInstrument", "Conclusion"
+        "TkmsInstrument", "Conclusion","Accessories","RadoInstrument","Solidify","MangInstrument"
     ]
-//  `/rep/*/INDPL_DJ/1/TkmsDiagram?subrid=1&redId=1`,
-
-    // Generate URLs for each action
-    return actions.map((action) => `${baseUrl}/${action}`)
+    const urls=actions.map((action) => `${baseUrl}/${action}`)
+    return [baseUrl, ...urls]
 }

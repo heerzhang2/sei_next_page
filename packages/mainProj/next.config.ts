@@ -261,7 +261,7 @@ module.exports = async (phase) => {
             register: true,
             maximumFileSizeToCacheInBytes: 5000000, // 减小到5MB
             additionalPrecacheEntries: [{ url: "/~offline", revision },
-                { url: "/login", revision }
+                { url: "/login", revision }, { url: "/", revision }
             ],
         })
         return withSerwist(nextConfig)
