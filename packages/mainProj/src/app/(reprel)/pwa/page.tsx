@@ -406,9 +406,9 @@ export default function Page() {
                 </div>
             )}
 
-            <h1>Serwist定制</h1>
+            <h1>报告离线编制能力的部署安排</h1>
             <div className="mt-10">
-                <Link href="/dyn/1/one">分项报告的一第11份报告</Link>
+                <Link href="/">首页</Link>
             </div>
             <div className="max-w-4xl mx-auto">
                 <header className="text-center py-12">

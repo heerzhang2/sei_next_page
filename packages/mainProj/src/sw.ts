@@ -53,178 +53,16 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
     return request.url
 }
 
+//【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker"，然后自己再修改！
 const PAGES_CACHE_NAME = {
     rscPrefetch: "pages-rsc-prefetch",
     rsc: "pages-rsc",
     html: "pages",
 } as const
-//【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker"，然后自己再修改！
 const customCache: RuntimeCaching[] = [
     {
-        matcher: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
-        handler: new CacheFirst({
-            cacheName: "google-fonts-webfonts",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 4,
-                    maxAgeSeconds: 365 * 24 * 60 * 60, // 365 days
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,
-        handler: new StaleWhileRevalidate({
-            cacheName: "google-fonts-stylesheets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 4,
-                    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
-        handler: new StaleWhileRevalidate({
-            cacheName: "static-font-assets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 4,
-                    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
-        handler: new StaleWhileRevalidate({
-            cacheName: "static-image-assets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 64,
-                    maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\/_next\/static.+\.js$/i,
-        handler: new CacheFirst({
-            cacheName: "next-static-js-assets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 64,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\/_next\/image\?url=.+$/i,
-        handler: new StaleWhileRevalidate({
-            cacheName: "next-image",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 64,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\.(?:mp3|wav|ogg)$/i,
-        handler: new CacheFirst({
-            cacheName: "static-audio-assets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 32,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                    maxAgeFrom: "last-used",
-                }),
-                new RangeRequestsPlugin(),
-            ],
-        }),
-    },
-    {
-        matcher: /\.(?:mp4|webm)$/i,
-        handler: new CacheFirst({
-            cacheName: "static-video-assets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 32,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                    maxAgeFrom: "last-used",
-                }),
-                new RangeRequestsPlugin(),
-            ],
-        }),
-    },
-    {
-        matcher: /\.(?:js)$/i,
-        handler: new StaleWhileRevalidate({
-            cacheName: "static-js-assets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 48,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\.(?:css|less)$/i,
-        handler: new StaleWhileRevalidate({
-            cacheName: "static-style-assets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 32,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\/_next\/data\/.+\/.+\.json$/i,
-        handler: new NetworkFirst({
-            cacheName: "next-data",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 32,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\.(?:json|xml|csv)$/i,
-        handler: new NetworkFirst({
-            cacheName: "static-data-assets",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 32,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                    maxAgeFrom: "last-used",
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: /\/api\/auth\/.*/,
-        handler: new NetworkOnly(),
-    },
-    {
         matcher: ({ url: { pathname }, sameOrigin }) =>
-            sameOrigin && pathname.startsWith("/rep/") && !pathname.startsWith("/api/"),
+            sameOrigin && pathname.startsWith("/rep/"),
         handler: new NetworkFirst({
             cacheName: "report-pages-normalized",
             plugins: [
@@ -270,49 +108,7 @@ const customCache: RuntimeCaching[] = [
             ],
         }),
     },
-    {
-        matcher: ({ request, url: { pathname }, sameOrigin }) =>
-            request.headers.get("Content-Type")?.includes("text/html") && sameOrigin && !pathname.startsWith("/api/"),
-        handler: new NetworkFirst({
-            cacheName: PAGES_CACHE_NAME.html,
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 32,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && !pathname.startsWith("/api/"),
-        handler: new NetworkFirst({
-            cacheName: "others",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 32,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
-                }),
-            ],
-        }),
-    },
-    {
-        matcher: ({ sameOrigin }) => !sameOrigin,
-        handler: new NetworkFirst({
-            cacheName: "cross-origin",
-            plugins: [
-                new ExpirationPlugin({
-                    maxEntries: 32,
-                    maxAgeSeconds: 60 * 60, // 1 hour
-                }),
-            ],
-            networkTimeoutSeconds: 10,
-        }),
-    },
-    {
-        matcher: /.*/i,
-        method: "GET",
-        handler: new NetworkOnly(),
-    },
+
     ...defaultCache,
 ]
 
@@ -338,7 +134,6 @@ const serwist = new Serwist({
         plugins: [],
     },
 })
-console.log(`📊 Startserwist路由表规则个数`,{size: customCache.length, def: defaultCache.length, controller:navigator?.serviceWorker?.controller})
 
 serwist.addEventListeners()
 
@@ -653,3 +448,5 @@ async function notifyClientsOfError(error: string, errorType = "CACHE_ERROR") {
         console.error("[SW] 无法通知客户端错误:", e)
     }
 }
+
+console.log(`📊 Startserwist路由表规则个数`,{size: customCache.length, def: defaultCache.length, controller:navigator?.serviceWorker?.controller})
