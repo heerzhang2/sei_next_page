@@ -3,6 +3,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme inline {
+  /* 中文字体配置 - 优先使用思源字体 */
+  --font-sans: "Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "PingFang SC", "Hiragino Sans GB",
+  "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "SimSun", "Times New Roman",
+  serif;
+
+  --font-mono: "Noto Sans Mono", "Source Code Pro", "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Consolas",
+  monospace;
+
+  /* 字体渲染优化 */
+  --font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  --font-variant-ligatures: common-ligatures;
+
+  /* 行高配置 */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
