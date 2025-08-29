@@ -2,9 +2,6 @@ import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { createServerUrqlClient } from "@/auth/urql"
 
-const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
-const url = `${endpoint}/graphql`
-
 // GraphQL mutations
 const AUTHENTICATE_MUTATION = `
   mutation Authenticate($username: String!, $password: String!) {
@@ -29,15 +26,6 @@ const REFRESH_MUTATION = `
     }
   }
 `
-
-// Server-side crypto function
-function sha256Sync(data: string): string {
-    if (typeof window === "undefined") {
-        const { createHash } = require("node:crypto")
-        return createHash("sha256").update(data).digest("hex")
-    }
-    throw new Error("sha256Sync should only be called on server side")
-}
 
 // 刷新 access token
 export async function refreshAccessToken(token: any) {
@@ -99,8 +87,7 @@ export const authConfig: NextAuthConfig = {
                 }
 
                 try {
-                    // Hash the password on the server side
-                    const hashedPassword = sha256Sync(credentials.password as string)
+                    const hashedPassword = credentials.password as string
 
                     const client = createServerUrqlClient()
                     const result = await client

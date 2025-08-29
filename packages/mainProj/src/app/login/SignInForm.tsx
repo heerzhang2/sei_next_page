@@ -10,6 +10,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
+async function sha256Hash(message: string): Promise<string> {
+    const msgBuffer = new TextEncoder().encode(message)
+    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+    return hashHex
+}
+
 export default function SignInForm() {
     const router = useRouter()
     const [username, setUsername] = useState("")
@@ -22,9 +30,11 @@ export default function SignInForm() {
         console.log("signInAction 录入formData:", { username, password: "***" })
 
         try {
+            const hashedPassword = await sha256Hash(password)
+
             const result = await signIn("credentials", {
                 username: username,
-                password: password, // Send plain password, hashing will be done server-side
+                password: hashedPassword, // Send hashed password instead of plain text
                 redirect: false,
             })
 
