@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import {useSearchParams} from "next/navigation";
 
 export interface NetworkStatus {
     //客户端网络或浏览器的网络在线判别； 所以isClientOnline是下面两个状态判定的基本前提！
@@ -21,6 +22,8 @@ export interface NetworkStatus {
  * v0dev竟然没有修改相关的关联代码输出；
  * */
 export function useNetworkStatus(): NetworkStatus {
+    const searchParams = useSearchParams()
+    const print = "1" === searchParams!.get("print")
     const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
         isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
         lastError: null,
@@ -123,7 +126,9 @@ export function useNetworkStatus(): NetworkStatus {
             updateNetworkStatus(false)
         }
 
-        const serverCheckInterval = setInterval(async () => {
+        const serverCheckInterval =print? undefined
+                    :
+            setInterval(async () => {
             if (navigator.onLine) {
                 const isNextJSReachable = await checkNextJSServerConnectivity()
                 const isGraphQLReachable = await checkGraphQLBackendConnectivity()
@@ -156,14 +161,15 @@ export function useNetworkStatus(): NetworkStatus {
         return () => {
             window.removeEventListener("online", handleOnline)
             window.removeEventListener("offline", handleOffline)
-            clearInterval(serverCheckInterval)
+            if(serverCheckInterval)
+                clearInterval(serverCheckInterval)
 
             if (typeof navigator !== "undefined" && "connection" in navigator) {
                 const connection = (navigator as any).connection
                 connection?.removeEventListener("change", handleConnectionChange)
             }
         }
-    }, [updateNetworkStatus, checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, getConnectionInfo])
+    }, [updateNetworkStatus, checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, getConnectionInfo, print])
 
     return networkStatus
 }

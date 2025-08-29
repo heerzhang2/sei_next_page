@@ -14,6 +14,7 @@ import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
+import {useSearchParams} from "next/navigation";
 
 // 创建网络状态管理:全局的。
 const networkStatus = {
@@ -297,7 +298,7 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
 }
 
 // 创建认证交换器
-const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>) => {
+const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print:boolean) => {
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
@@ -360,12 +361,12 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                 try {
                     console.log("[v0] 开始token刷新流程...")
 
-                    const connectivity = await checkNetworkConnectivity()
+                    const connectivity =print? undefined : await checkNetworkConnectivity()
                     console.log("[v0] 网络连接状态:", connectivity)
 
                     const refreshToken = getStoredRefreshToken()
 
-                    if (connectivity.nextjsReachable) {
+                    if (print || connectivity.nextjsReachable) {
                         console.log("[v0] 使用Next.js服务器刷新token...")
                         const response = await fetch("/api/refresh-token", {
                             method: "POST",
@@ -400,7 +401,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                         }
                     }
 
-                    if (!connectivity.nextjsReachable && connectivity.javaBackendReachable && refreshToken) {
+                    if (!print && !connectivity.nextjsReachable && connectivity.javaBackendReachable && refreshToken) {
                         console.log("[v0] Next.js离线，尝试直接调用Java后端刷新token...")
 
                         const result = await refreshTokenDirectly(refreshToken)
@@ -479,6 +480,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 }
 
 export function GraphQLProvider({ children }: { children: ReactNode }) {
+    const searchParams = useSearchParams()
+    const print = "1" === searchParams!.get("print")        //进入页面是打印目的的
     const accessToken = useAccessToken()
     const { update } = useSession()
 
@@ -651,7 +654,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
                 cache,
-                makeAuthExchange(accessToken, update),
+                makeAuthExchange(accessToken, update, print),
                 networkErrorExchange, // 自定义网络错误处理
                 ssr,
                 customFetchExchange, // 自定义 fetch exchange

@@ -6,11 +6,14 @@ import { useSession, signOut } from "next-auth/react"
 import { toast } from "sonner"
 import { useNetworkStatus } from "@/hooks/use-network-status"
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
+import {useSearchParams} from "next/navigation";
 
 export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
     const { data: session } = useSession()
     const networkStatus = useNetworkStatus()
     const { showConfirm, ConfirmDialog } = useLoginRedirectConfirm()
+    const searchParams = useSearchParams()
+    const print = "1" === searchParams!.get("print")
 
     useEffect(() => {
         // 检查是否有认证错误
@@ -35,7 +38,7 @@ export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
                 return
             }
 
-            if (networkStatus.isClientOnline && networkStatus.isNextJSServerReachable && networkStatus.isOnline) {
+            if (!print && networkStatus.isClientOnline && networkStatus.isNextJSServerReachable && networkStatus.isOnline) {
                 // 最后一次确认服务器状态
                 fetch("/api/health", {
                     method: "HEAD",
