@@ -22,6 +22,7 @@ const config = {
 
 // 初始化 MinIO 客户端
 const minioClient = new Minio.Client(config.minio);
+minioClient.setRequestOptions({rejectUnauthorized: false})
 
 interface FileUploaderOptions {
     large_file_threshold: number;

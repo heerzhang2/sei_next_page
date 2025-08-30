@@ -139,8 +139,10 @@ export const authConfig: NextAuthConfig = {
                 }
             }
             // 检查 access token 是否即将过期（提前 5 分钟刷新）  token里面没有accessTokenExpires字段，而是用exp替代的
-            const shouldRefresh = token.exp && Date.now() > ((token.exp as number) - 5 * 60) * 1000
-            if (shouldRefresh) {
+            const {accessToken, exp }=token
+            //accessToken是JWT字符串； 该如何提取accessToken有效期的？
+            const shouldRefresh = exp && Date.now() > ((exp as number) - 5 * 60) * 1000
+            if (shouldRefresh || !accessToken) {
                 console.log("Token 即将过期，开始刷新...")
                 return await refreshAccessToken(token)
             }

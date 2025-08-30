@@ -173,10 +173,13 @@ const customFetchExchange: Exchange = ({ forward }) => {
                     response: result.error?.response || result.response,
                     extensions: result.extensions,
                 })
-
                 // 清理超时
                 if (result.operation.context.fetchOptions?.signal) {
                     clearTimeout(result.operation.context.fetchOptions.timeoutId)
+                }
+                if(result.error?.response.status===401){
+                    //表明从Java后端获知token无效了：
+                    console.warn("401错误必须更新token")
                 }
             }),
         )
@@ -298,7 +301,7 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
 }
 
 // 创建认证交换器
-const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print:boolean) => {
+const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print?:boolean) => {
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
