@@ -311,7 +311,9 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
-                if (!accessToken) {
+                const currentToken = useAccessToken.getState?.() || accessToken
+
+                if (!currentToken) {
                     const refreshToken = getStoredRefreshToken()
                     if (refreshToken) {
                         console.log("[v0] 使用refreshToken作为认证fallback")
@@ -323,7 +325,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                     return operation
                 }
                 return utils.appendHeaders(operation, {
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${currentToken}`,
                 })
             },
             didAuthError(error) {
@@ -407,9 +409,22 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                             refreshToken: data.refreshToken,
                                         })
                                         console.log("[v0] Session已更新新的token")
+
+                                        await new Promise((resolve) => setTimeout(resolve, 100))
                                     } catch (error) {
                                         console.error("[v0] 更新session失败:", error)
                                     }
+                                }
+
+                                if (typeof window !== "undefined") {
+                                    window.dispatchEvent(
+                                        new CustomEvent("token:refreshed", {
+                                            detail: {
+                                                accessToken: data.accessToken,
+                                                refreshToken: data.refreshToken,
+                                            },
+                                        }),
+                                    )
                                 }
 
                                 toast.success("登录已刷新", {
@@ -446,6 +461,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                         refreshToken: result.refreshToken,
                                     })
                                     console.log("[v0] 离线模式Session已更新新的token")
+
+                                    await new Promise((resolve) => setTimeout(resolve, 100))
                                 } catch (error) {
                                     console.error("[v0] 离线模式更新session失败:", error)
                                 }
@@ -679,9 +696,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             ],
             suspense: true,
             fetchOptions: () => {
+                const currentToken = useAccessToken.getState?.() || accessToken
                 return {
                     headers: {
-                        authorization: accessToken ? `Bearer ${accessToken}` : "",
+                        authorization: currentToken ? `Bearer ${currentToken}` : "",
                     },
                 }
             },

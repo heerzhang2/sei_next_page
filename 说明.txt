@@ -516,4 +516,9 @@ eval	@	D:\home\sei_next_pag…\dist\wonka.mjs:877
 chifen  2:
 https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&redId=2#MangInstrument
 PWA导致原本const params = useParams()不可以再用了！离线subrid必须再登录。
-真正清楚serwist必须的做法
+java后端401报错之后 https://192.168.0.100:3765/api/refresh-token 更新token的请求响应
+    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjU1MzQ1NSwiZXhwIjoxNzU2NTU4ODU1fQ.wmTeZmB6PrIrFUv2D2hrAU3fjO-OLVkfBJr0VFJvg5udab6lGDSWK1I8rFl-MFjijoxKlW_U8iGmh0vJnOUjHA",
+可紧接着一次保存报告urql变更操作"useOriginalDataMutation"发送包的包头
+authorization:
+Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjU0MTI4MiwiZXhwIjoxNzU2NTQ2NjgyfQ.q51L4Sch5hys1f0pZJbvl3TsSykq9zeeujxR83H3byXFqtjav-XURf3U-3o5Lhr38F_QF6zpUv89814er_Hu1g
+说明urql没有获取到最新的accessToken，另外本机的offline_auth和 next-auth session 都有存储token的
