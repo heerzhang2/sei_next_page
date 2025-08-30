@@ -14,7 +14,7 @@ import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
-import {useSearchParams} from "next/navigation";
+import { useSearchParams } from "next/navigation"
 
 // 创建网络状态管理:全局的。
 const networkStatus = {
@@ -177,9 +177,28 @@ const customFetchExchange: Exchange = ({ forward }) => {
                 if (result.operation.context.fetchOptions?.signal) {
                     clearTimeout(result.operation.context.fetchOptions.timeoutId)
                 }
-                if(result.error?.response.status===401){
-                    //表明从Java后端获知token无效了：
-                    console.warn("401错误必须更新token")
+
+                if (result.error?.response?.status === 401) {
+                    console.log("[v0] 检测到401错误，token无效，准备触发刷新流程")
+
+                    // 确保错误对象包含足够的信息供 authExchange 识别
+                    if (result.error.response) {
+                        result.error.networkError = result.error.response
+                        result.error.isAuthError = true
+                    }
+
+                    // 立即派发认证错误事件，通知应用层
+                    if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                            new CustomEvent("urql:auth-error", {
+                                detail: {
+                                    error: result.error,
+                                    operation: result.operation.operationName,
+                                    status: result.error.response.status,
+                                },
+                            }),
+                        )
+                    }
                 }
             }),
         )
@@ -301,7 +320,7 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
 }
 
 // 创建认证交换器
-const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print?:boolean) => {
+const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print?: boolean) => {
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
@@ -333,6 +352,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                     responseUrl: error.response?.url,
                     responseType: error.response?.type,
                     responseBodyUsed: error.response?.bodyUsed,
+                    isAuthError: error.isAuthError,
                 })
 
                 // 检查 GraphQL 错误
@@ -340,9 +360,11 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                     (e) => e.extensions?.code === "UNAUTHORIZED" || e.extensions?.code === "UNAUTHENTICATED",
                 )
 
-                // 检查网络错误状态码
-                const response = error.response
+                const response = error.response || error.networkError
                 const hasNetworkAuthError = response && (response.status === 401 || response.status === 403)
+
+                // 检查自定义的认证错误标记
+                const hasCustomAuthError = error.isAuthError === true
 
                 // 检查特殊的 Java 后端 500 错误（实际是 token 过期）
                 const isSpecial500 =
@@ -351,25 +373,33 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                     response.headers?.get("content-length") === "0" &&
                     response.headers?.get("content-type")?.includes("application/graphql-response+json")
 
+                const finalResult = hasGraphQLAuthError || hasNetworkAuthError || isSpecial500 || hasCustomAuthError
+
                 console.log("[v0] authExchange.didAuthError - 认证错误判断结果:", {
                     hasGraphQLAuthError,
                     hasNetworkAuthError,
+                    hasCustomAuthError,
                     isSpecial500,
-                    finalResult: hasGraphQLAuthError || hasNetworkAuthError || isSpecial500,
+                    finalResult,
                 })
 
-                return hasGraphQLAuthError || hasNetworkAuthError || isSpecial500
+                return finalResult
             },
             async refreshAuth() {
                 try {
                     console.log("[v0] 开始token刷新流程...")
 
-                    const connectivity =print? undefined : await checkNetworkConnectivity()
+                    const connectivity = print ? undefined : await checkNetworkConnectivity()
                     console.log("[v0] 网络连接状态:", connectivity)
 
                     const refreshToken = getStoredRefreshToken()
 
-                    if (print || connectivity.nextjsReachable) {
+                    if (!refreshToken && !print && (!connectivity || !connectivity.nextjsReachable)) {
+                        console.warn("[v0] 没有refresh token且NextJS不可达，直接跳转登录页")
+                        throw new Error("No refresh token available and NextJS unreachable")
+                    }
+
+                    if (print || (connectivity && connectivity.nextjsReachable)) {
                         console.log("[v0] 使用Next.js服务器刷新token...")
                         const response = await fetch("/api/refresh-token", {
                             method: "POST",
@@ -404,7 +434,13 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                         }
                     }
 
-                    if (!print && !connectivity.nextjsReachable && connectivity.javaBackendReachable && refreshToken) {
+                    if (
+                        !print &&
+                        connectivity &&
+                        !connectivity.nextjsReachable &&
+                        connectivity.javaBackendReachable &&
+                        refreshToken
+                    ) {
                         console.log("[v0] Next.js离线，尝试直接调用Java后端刷新token...")
 
                         const result = await refreshTokenDirectly(refreshToken)
@@ -472,10 +508,10 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                         if (typeof window !== "undefined") {
                             const protocol = window.location.protocol === "https:" ? "https:" : "http:"
                             const host = window.location.host
-                            console.error("[v0] Token刷新失败跳转login")
+                            console.error("[v0] Token刷新失败，立即跳转login")
                             window.location.href = `${protocol}//${host}/login`
                         }
-                    }, 2000)
+                    }, 1000) // 减少到1秒，更快响应
                 }
             },
         }
@@ -484,7 +520,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
-    const print = "1" === searchParams!.get("print")        //进入页面是打印目的的
+    const print = "1" === searchParams!.get("print") //进入页面是打印目的的
     const accessToken = useAccessToken()
     const { update } = useSession()
 
