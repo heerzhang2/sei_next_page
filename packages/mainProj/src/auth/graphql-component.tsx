@@ -186,19 +186,6 @@ const customFetchExchange: Exchange = ({ forward }) => {
                         result.error.networkError = result.error.response
                         result.error.isAuthError = true
                     }
-
-                    // 立即派发认证错误事件，通知应用层
-                    if (typeof window !== "undefined") {
-                        window.dispatchEvent(
-                            new CustomEvent("urql:auth-error", {
-                                detail: {
-                                    error: result.error,
-                                    operation: result.operation.operationName,
-                                    status: result.error.response.status,
-                                },
-                            }),
-                        )
-                    }
                 }
             }),
         )
@@ -494,15 +481,6 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                         description: "请重新登录",
                         duration: 5000,
                     })
-
-                    // 派发未授权事件
-                    if (typeof window !== "undefined") {
-                        window.dispatchEvent(
-                            new CustomEvent("urql:unauthorized", {
-                                detail: { error },
-                            }),
-                        )
-                    }
 
                     setTimeout(() => {
                         if (typeof window !== "undefined") {
