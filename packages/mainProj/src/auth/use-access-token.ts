@@ -27,9 +27,9 @@ export function useAccessToken(): UseAccessTokenReturn {
     const lastDialogTimeRef = useRef<number>(0)
 
     const accessToken = useMemo(() => {
-        if (networkStatus.isOnline && session?.accessToken) {
+        if (networkStatus.isOnline && session?.user?.accessToken) {
             console.log("[v0] useAccessToken: 使用NextAuth token")
-            return session?.accessToken
+            return session?.user?.accessToken
         }
         if (!networkStatus.isOnline && offlineAuth.isAuthenticated && offlineAuth.accessToken) {
             console.log("[v0] useAccessToken: 使用离线认证token")
@@ -68,7 +68,7 @@ export function useAccessToken(): UseAccessTokenReturn {
             }
         }
         return null
-    }, [session, networkStatus, print, offlineAuth, showConfirm, hasShownDialog])
+    }, [session?.user, networkStatus, print, offlineAuth, showConfirm, hasShownDialog])
 
     return {
         accessToken,

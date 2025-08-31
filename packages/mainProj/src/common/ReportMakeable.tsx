@@ -29,17 +29,17 @@ const ReportMakeable = () => {
         const make = searchParams.get("make")
         setMake(!!make)
     }, [searchParams])
-
+    //数据结构是： session?.data.{ user:{token s} }
     useEffect(() => {
         const currentState = `${session.status}-${isClientOnline}-${isOnline}-${isGraphQLBackendReachable}-${hasShownDialog}-${offlineAuth.isAuthenticated}-${offlineAuth.isExpired}`
 
-        console.log("[v0] ReportMakeable useEffect triggered", {
+        console.log("ReportMakeable跟踪", {
             isClientOnline,
             isOnline,
             isGraphQLBackendReachable,
             sessionStatus: session.status,
             hasShownDialog,
-            hasAccessToken: !!(session?.data?.user as any)?.accessToken,
+            hasAccessToken: !!((session?.data?.user)?.accessToken),
             hasUser: !!session?.data?.user,
             offlineAuthStatus: {
                 isAuthenticated: offlineAuth.isAuthenticated,
@@ -89,11 +89,11 @@ const ReportMakeable = () => {
                 }
             }
 
-            const hasNextAuthSession = (session?.data?.user as any)?.accessToken && session?.data?.user
+            const hasNextAuthSession =!!((session?.data?.user)?.accessToken)
             const hasOfflineAuth = offlineAuth.isAuthenticated && !offlineAuth.isExpired
 
-            if (isClientOnline && isOnline && isGraphQLBackendReachable) {
-                if (!hasNextAuthSession) {
+            if (isClientOnline && isGraphQLBackendReachable) {
+                if (!hasNextAuthSession && !hasOfflineAuth) {
                     console.log("[v0] ReportMakeable: 需要登录", { session, offlineAuth })
                     setHasShownDialog(true)
                     showConfirm(
@@ -127,7 +127,7 @@ const ReportMakeable = () => {
     }, [session, offlineAuth, isClientOnline, isOnline, isGraphQLBackendReachable, hasShownDialog])
 
     useEffect(() => {
-        const hasNextAuthSession = session.status === "authenticated" && (session?.data?.user as any)?.accessToken
+        const hasNextAuthSession = session.status === "authenticated" && (session?.data?.user)?.accessToken
         const hasOfflineAuth = offlineAuth.isAuthenticated && !offlineAuth.isExpired
 
         if (hasNextAuthSession || hasOfflineAuth) {
