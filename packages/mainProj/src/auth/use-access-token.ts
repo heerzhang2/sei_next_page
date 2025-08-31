@@ -12,19 +12,21 @@ export function useAccessToken(): string | null {
 
     const accessToken = useMemo(() => {
         // 优先使用NextAuth的token（如果Next.js服务器可达）
-        if (networkStatus.isNextJSServerReachable && session?.user?.accessToken) {
+        if (networkStatus.isNextJSServerReachable && session?.accessToken) {
             console.log("[v0] useAccessToken: 使用NextAuth token")
-            return session.user.accessToken
+            return session.accessToken
         }
-
         // 如果Next.js服务器不可达但有离线认证，使用离线token
         if (!networkStatus.isNextJSServerReachable && offlineAuth.isAuthenticated && offlineAuth.accessToken) {
             console.log("[v0] useAccessToken: 使用离线认证token")
             return offlineAuth.accessToken
         }
-
         // 如果都没有，返回null
         console.log("[v0] useAccessToken: 无可用token")
+        if(networkStatus.isNextJSServerReachable && networkStatus.isGraphQLBackendReachable){
+            //应该增加跳转登录
+            console.log("应该增加跳转登录: 无可用token")
+        }
         return null
     }, [
         session?.user?.accessToken,

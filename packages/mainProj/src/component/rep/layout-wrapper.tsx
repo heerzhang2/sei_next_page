@@ -10,10 +10,11 @@ import { useParams, useSearchParams } from "next/navigation"
 import { useActualRepId } from "@/report/hook/use-actual-rep-id"
 import { EditControlProvider } from "@/component/rep/editControl-provider"
 import ReportMakeable from "@/common/ReportMakeable"
+import {ReportEntryProps} from "@/report/common/base";
 
 interface ReportLayoutWrapperProps {
     children: React.ReactNode
-    ReportView: React.ComponentType<{ rep?: any; printMode?: boolean }>
+    ReportView: React.ComponentType<ReportEntryProps>
     useCatalog: () => any[]
 }
 

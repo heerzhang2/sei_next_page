@@ -11,7 +11,7 @@
     "yarnAdd": "yarn add @radix-ui/react-combobox",
     "v0dev/Vercel自带组件添加": "npx shadcn@latest add --overwrite alert-dialog",
     "AI胡诌的": "yarn upgrade @radix-ui/react-dialog @radix-ui/react-slot @radix-ui/react-tooltip",
-    "dev": "next dev --turbopack  -p 3765",
+    "dev1": "next dev --turbopack  -p 3765",
     "dev": "next dev -p 3765",
     "start": "next start",
     "lint": "next lint",

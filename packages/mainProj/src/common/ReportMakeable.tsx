@@ -93,7 +93,7 @@ const ReportMakeable = () => {
             const hasOfflineAuth = offlineAuth.isAuthenticated && !offlineAuth.isExpired
 
             if (isClientOnline && isOnline && isGraphQLBackendReachable) {
-                if (!hasNextAuthSession && !hasOfflineAuth) {
+                if (!hasNextAuthSession) {
                     console.log("[v0] ReportMakeable: 需要登录", { session, offlineAuth })
                     setHasShownDialog(true)
                     showConfirm(
