@@ -311,7 +311,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
-                const currentToken = useAccessToken.getState?.() || accessToken
+                const currentToken = accessToken
 
                 if (!currentToken) {
                     const refreshToken = getStoredRefreshToken()
@@ -516,7 +516,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print") //进入页面是打印目的的
-    const accessToken = useAccessToken()
+    const { accessToken, ConfirmDialog } = useAccessToken()
     const { update } = useSession()
 
     const [isClient, setIsClient] = useState(false)
@@ -696,7 +696,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             ],
             suspense: true,
             fetchOptions: () => {
-                const currentToken = useAccessToken.getState?.() || accessToken
+                const currentToken = accessToken
                 return {
                     headers: {
                         authorization: currentToken ? `Bearer ${currentToken}` : "",
@@ -742,6 +742,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     return (
         <UrqlProvider client={client} ssr={ssr}>
             {children}
+            {ConfirmDialog}
         </UrqlProvider>
     )
 }

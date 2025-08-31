@@ -1,39 +1,77 @@
 "use client"
 
+import type React from "react"
+
 import { useSession } from "next-auth/react"
-import { useMemo } from "react"
+import { useMemo, useState, useRef } from "react"
 import { useOfflineAuth } from "@/hooks/use-offline-auth"
 import { useNetworkStatus } from "@/hooks/use-network-status"
+import { useSearchParams } from "next/navigation"
+import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
+import { toast } from "sonner"
 
-export function useAccessToken(): string | null {
+interface UseAccessTokenReturn {
+    accessToken: string | null
+    ConfirmDialog: React.ComponentType
+}
+
+export function useAccessToken(): UseAccessTokenReturn {
     const { data: session } = useSession()
     const offlineAuth = useOfflineAuth()
     const networkStatus = useNetworkStatus()
+    const searchParams = useSearchParams()
+    const print = "1" === searchParams!.get("print")
+
+    const { showConfirm, ConfirmDialog } = useLoginRedirectConfirm()
+    const [hasShownDialog, setHasShownDialog] = useState(false)
+    const lastDialogTimeRef = useRef<number>(0)
 
     const accessToken = useMemo(() => {
-        // 优先使用NextAuth的token（如果Next.js服务器可达）
-        if (networkStatus.isNextJSServerReachable && session?.accessToken) {
+        if (networkStatus.isOnline && session?.accessToken) {
             console.log("[v0] useAccessToken: 使用NextAuth token")
-            return session.accessToken
+            return session?.accessToken
         }
-        // 如果Next.js服务器不可达但有离线认证，使用离线token
-        if (!networkStatus.isNextJSServerReachable && offlineAuth.isAuthenticated && offlineAuth.accessToken) {
+        if (!networkStatus.isOnline && offlineAuth.isAuthenticated && offlineAuth.accessToken) {
             console.log("[v0] useAccessToken: 使用离线认证token")
             return offlineAuth.accessToken
         }
-        // 如果都没有，返回null
-        console.log("[v0] useAccessToken: 无可用token")
-        if(networkStatus.isNextJSServerReachable && networkStatus.isGraphQLBackendReachable){
-            //应该增加跳转登录
-            console.log("应该增加跳转登录: 无可用token")
+        console.log("[v0] useAccessToken: 无可用token", networkStatus)
+        if (
+            !print &&
+            networkStatus.connectionType !== null &&
+            networkStatus.isOnline &&
+            networkStatus.isGraphQLBackendReachable
+        ) {
+            const now = Date.now()
+            const twentyMinutes = 20 * 60 * 1000
+
+            if (!hasShownDialog || now - lastDialogTimeRef.current > twentyMinutes) {
+                console.log("应该增加跳转登录: 无可用token")
+                setHasShownDialog(true)
+                lastDialogTimeRef.current = now
+
+                showConfirm(
+                    "需要登录",
+                    "当前功能需要登录后才能使用。是否现在跳转到登录页面？",
+                    () => {
+                        console.log("[v0] User confirmed login redirect")
+                        window.location.href = "/login"
+                    },
+                    () => {
+                        console.log("[v0] User cancelled login redirect")
+                        toast.info("已取消登录", {
+                            description: "您可以继续浏览，但部分功能可能无法使用。",
+                            duration: 5000,
+                        })
+                    },
+                )
+            }
         }
         return null
-    }, [
-        session?.user?.accessToken,
-        offlineAuth.isAuthenticated,
-        offlineAuth.accessToken,
-        networkStatus.isNextJSServerReachable,
-    ])
+    }, [session, networkStatus, print, offlineAuth, showConfirm, hasShownDialog])
 
-    return accessToken
+    return {
+        accessToken,
+        ConfirmDialog,
+    }
 }
