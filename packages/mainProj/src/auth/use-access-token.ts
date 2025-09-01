@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useSession } from "next-auth/react"
-import { useMemo, useState, useRef } from "react"
+import { useMemo, useState, useRef, useEffect } from "react"
 import { useOfflineAuth } from "@/hooks/use-offline-auth"
 import { useNetworkStatus } from "@/hooks/use-network-status"
 import { useSearchParams } from "next/navigation"
@@ -16,7 +16,7 @@ interface UseAccessTokenReturn {
 }
 
 export function useAccessToken(): UseAccessTokenReturn {
-    const { data: session } = useSession()
+    const { data: session, update } = useSession()
     const offlineAuth = useOfflineAuth()
     const networkStatus = useNetworkStatus()
     const searchParams = useSearchParams()
@@ -26,15 +26,60 @@ export function useAccessToken(): UseAccessTokenReturn {
     const [hasShownDialog, setHasShownDialog] = useState(false)
     const lastDialogTimeRef = useRef<number>(0)
 
+    const [freshToken, setFreshToken] = useState<string | null>(null)
+    const freshTokenTimeRef = useRef<number>(0)
+
+    useEffect(() => {
+        const handleTokenRefresh = async (event: CustomEvent) => {
+            console.log("[v0] useAccessToken: 收到token刷新事件", event.detail)
+            const { accessToken } = event.detail
+            if (accessToken) {
+                setFreshToken(accessToken)
+                freshTokenTimeRef.current = Date.now()
+
+                try {
+                    await update({
+                        user: {
+                            ...session?.user,
+                            accessToken: accessToken,
+                        },
+                    })
+                    console.log("[v0] useAccessToken: NextAuth session已更新")
+                } catch (error) {
+                    console.error("[v0] useAccessToken: 更新NextAuth session失败", error)
+                }
+
+                setTimeout(
+                    () => {
+                        setFreshToken(null)
+                    },
+                    5 * 60 * 1000,
+                )
+            }
+        }
+
+        window.addEventListener("token:refreshed", handleTokenRefresh as EventListener)
+        return () => {
+            window.removeEventListener("token:refreshed", handleTokenRefresh as EventListener)
+        }
+    }, [session?.user, update])
+
     const accessToken = useMemo(() => {
+        if (freshToken && Date.now() - freshTokenTimeRef.current < 5 * 60 * 1000) {
+            console.log("[v0] useAccessToken: 使用刚刷新的token")
+            return freshToken
+        }
+
         if (networkStatus.isOnline && session?.user?.accessToken) {
             console.log("[v0] useAccessToken: 使用NextAuth token")
             return session?.user?.accessToken
         }
-        if (!networkStatus.isOnline && offlineAuth.isAuthenticated && offlineAuth.accessToken) {
-            console.log("[v0] useAccessToken: 使用离线认证token")
+
+        if (offlineAuth.isAuthenticated && offlineAuth.accessToken) {
+            console.log("[v0] useAccessToken: 使用离线认证token作为备选")
             return offlineAuth.accessToken
         }
+
         console.log("[v0] useAccessToken: 无可用token", networkStatus)
         if (
             !print &&
@@ -68,7 +113,7 @@ export function useAccessToken(): UseAccessTokenReturn {
             }
         }
         return null
-    }, [session?.user, networkStatus, print, offlineAuth, showConfirm, hasShownDialog])
+    }, [session?.user, networkStatus, print, offlineAuth, showConfirm, hasShownDialog, freshToken])
 
     return {
         accessToken,
