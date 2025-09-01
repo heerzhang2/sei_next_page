@@ -546,7 +546,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         console.log(
-            `[v0] Token变化检测 - 实例ID: ${instanceIdRef.current}, accessToken: ${accessToken}, lastTokenRef.current: ${lastTokenRef.current}`,
+            `Token变化检测实例ID: ${instanceIdRef.current}, accessToken: ${accessToken}, 旧lastTokenRef.current: ${lastTokenRef.current}`,
         )
     }, [accessToken])
 
@@ -698,6 +698,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             suspense: true,
             fetchOptions: () => {
                 const currentToken = accessToken
+                console.log(`createClientStable:最后:fetchOptions: ${currentToken}`)
                 return {
                     headers: {
                         authorization: currentToken ? `Bearer ${currentToken}` : "",
@@ -727,9 +728,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             return memoizedClientRef.current
         }
 
-        console.log(`[v0] 重新计算客户端 - 实例ID: ${instanceIdRef.current}`)
         lastAccessTokenRef.current = accessToken
         const result = createClientStable()
+
+        console.log(`[v0] 重新计算客户端 - 实例ID: ${instanceIdRef.current}`, accessToken)
         memoizedClientRef.current = result
         return result
     }, [createClientStable, accessToken, isClient])

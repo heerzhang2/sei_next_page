@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useActionState, useEffect, useRef, useState } from "react"
-import { signIn } from "next-auth/react"
+import {signIn, useSession} from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,7 +22,8 @@ export default function SignInForm() {
     const router = useRouter()
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
-
+    const { data: session } = useSession()
+    console.log("signIn登录render：——session=",session)
     const signInAction = async (_prevState: string | undefined, formData: FormData) => {
         const username = formData.get("username") as string
         const password = formData.get("password") as string
@@ -37,12 +38,20 @@ export default function SignInForm() {
                 password: hashedPassword, // Send hashed password instead of plain text
                 redirect: false,
             })
-
-            console.log("signIn 完成", result)
-
             if (result?.error) {
                 return `登录失败: ${result.error}`
             } else {
+                if (typeof window !== "undefined") {
+                    console.log("signIn完成token:refreshed session=",session)
+                    window.dispatchEvent(
+                        new CustomEvent("token:refreshed", {
+                            detail: {
+                                accessToken: null,      //表示依照session提取token
+                                refreshToken: session?.user?.refreshToken,
+                            },
+                        }),
+                    )
+                }
                 // 登录成功，重定向到用户页面
                 router.push("/")
                 return "登录成功"

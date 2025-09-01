@@ -9,6 +9,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useNetworkStatus } from "@/hooks/use-network-status"
+import {useSession} from "next-auth/react";
 
 // 离线认证函数
 const authenticateOffline = async (username: string, password: string) => {
@@ -98,6 +99,7 @@ export function OfflineLoginForm() {
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
     const networkStatus = useNetworkStatus()
+    const { data: session, update } = useSession()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -113,6 +115,18 @@ export function OfflineLoginForm() {
 
             // 存储离线认证信息
             storeOfflineAuth(authData)
+            try {
+                //若是在Nextjs服务器离线情况下：这实际无效，是没法真正修改session的accessToken。
+                await update({
+                    user: {
+                        ...session?.user,
+                        accessToken: authData?.accessToken,
+                    },
+                })
+                console.log("OfflineLoginForm:NextAuth session已更新")
+            } catch (error) {
+                console.error("OfflineLoginForm:更新NextAuth session失败", error)
+            }
 
             toast.success("离线登录成功", {
                 description: "已直接与后端服务器建立连接",
@@ -135,7 +149,7 @@ export function OfflineLoginForm() {
             <CardHeader>
                 <CardTitle className="text-2xl">离线登录</CardTitle>
                 <CardDescription>
-                    {networkStatus.isNextJSServerReachable
+                    {networkStatus.isOnline
                         ? "Next.js服务器正常，建议使用标准登录"
                         : "Next.js服务器离线，使用直连后端登录"}
                 </CardDescription>

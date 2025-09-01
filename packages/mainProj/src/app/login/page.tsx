@@ -25,7 +25,7 @@ export default function LoginPage() {
     )
   }
 
-  if (!networkStatus.isNextJSServerReachable && networkStatus.isGraphQLBackendReachable) {
+  if (!networkStatus.isOnline && networkStatus.isGraphQLBackendReachable) {
     // Next.js服务器离线但Java后端可达，只显示离线登录
     return (
         <div className="flex items-center justify-center min-h-screen">
@@ -40,7 +40,7 @@ export default function LoginPage() {
     )
   }
 
-  if (!networkStatus.isNextJSServerReachable && !networkStatus.isGraphQLBackendReachable) {
+  if (!networkStatus.isOnline && !networkStatus.isGraphQLBackendReachable) {
     // 完全离线，无法登录
     return (
         <div className="flex items-center justify-center min-h-screen">
@@ -76,9 +76,9 @@ export default function LoginPage() {
           <div className="mt-4 text-center text-sm text-muted-foreground">
             <div className="flex items-center justify-center gap-2">
               <div
-                  className={`w-2 h-2 rounded-full ${networkStatus.isNextJSServerReachable ? "bg-green-500" : "bg-red-500"}`}
+                  className={`w-2 h-2 rounded-full ${networkStatus.isOnline ? "bg-green-500" : "bg-red-500"}`}
               ></div>
-              <span>Next.js: {networkStatus.isNextJSServerReachable ? "在线" : "离线"}</span>
+              <span>Next.js: {networkStatus.isOnline ? "在线" : "离线"}</span>
               <div
                   className={`w-2 h-2 rounded-full ${networkStatus.isGraphQLBackendReachable ? "bg-green-500" : "bg-red-500"}`}
               ></div>

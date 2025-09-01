@@ -10,6 +10,24 @@ import { useSearchParams } from "next/navigation"
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
 import { toast } from "sonner"
 
+// 存储离线认证信息
+const storeOfflineAuth = (authData: any) => {
+    if (typeof window === "undefined") return
+    // 存储到localStorage
+    localStorage.setItem(
+        "offline_auth",
+        JSON.stringify({
+            accessToken: authData.accessToken,
+            refreshToken: authData.refreshToken,
+            user: authData.user,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24小时过期
+        }),
+    )
+    // 存储refreshToken用于后续刷新
+    localStorage.setItem("refresh_token", authData.refreshToken)
+}
+
 interface UseAccessTokenReturn {
     accessToken: string | null
     ConfirmDialog: React.ComponentType
@@ -28,6 +46,7 @@ export function useAccessToken(): UseAccessTokenReturn {
 
     const [freshToken, setFreshToken] = useState<string | null>(null)
     const freshTokenTimeRef = useRef<number>(0)
+    const [offlineTokenRepl, setOfflineTokenRepl] = useState(false)
 
     useEffect(() => {
         const handleTokenRefresh = async (event: CustomEvent) => {
@@ -55,6 +74,8 @@ export function useAccessToken(): UseAccessTokenReturn {
                     },
                     5 * 60 * 1000,
                 )
+            }else{
+                setOfflineTokenRepl(true)
             }
         }
 
@@ -69,7 +90,15 @@ export function useAccessToken(): UseAccessTokenReturn {
             console.log("[v0] useAccessToken: 使用刚刷新的token")
             return freshToken
         }
-
+        if(offlineTokenRepl){
+            if(session?.user){
+                const user ={id: session?.user?.id }
+                const authData={accessToken:session?.user?.accessToken, refreshToken:session?.user?.refreshToken, user:user}
+                console.log("更新离线TOKEN事件=?NEW=", authData)
+                storeOfflineAuth(authData)
+            }
+            setOfflineTokenRepl(false)
+        }
         if (networkStatus.isOnline && session?.user?.accessToken) {
             console.log("[v0] useAccessToken: 使用NextAuth token")
             return session?.user?.accessToken
@@ -113,7 +142,7 @@ export function useAccessToken(): UseAccessTokenReturn {
             }
         }
         return null
-    }, [session?.user, networkStatus, print, offlineAuth, showConfirm, hasShownDialog, freshToken])
+    }, [session?.user, networkStatus, freshToken,offlineTokenRepl, print, offlineAuth, showConfirm, hasShownDialog])
 
     return {
         accessToken,
