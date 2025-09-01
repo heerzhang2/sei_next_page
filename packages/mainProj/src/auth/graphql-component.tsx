@@ -14,7 +14,7 @@ import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, usePathname } from "next/navigation"
 
 // 创建网络状态管理:全局的。
 const networkStatus = {
@@ -515,6 +515,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
+    const pathname = usePathname()
     const print = "1" === searchParams!.get("print") //进入页面是打印目的的
     const { accessToken, ConfirmDialog } = useAccessToken()
     const { update } = useSession()
@@ -742,7 +743,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     return (
         <UrqlProvider client={client} ssr={ssr}>
             {children}
-            {ConfirmDialog}
+            {pathname !== "/login" && <ConfirmDialog />}
         </UrqlProvider>
     )
 }
