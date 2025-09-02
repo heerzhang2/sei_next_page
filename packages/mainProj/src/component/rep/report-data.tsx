@@ -174,7 +174,7 @@ function isNetworkError(error: any) {
 
 function CommonReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false)
-    const [queryEnabled, setQueryEnabled] = useState(true)
+    const [queryEnabled, setQueryEnabled] = useState(true)      //避免死循环地查询
     const queryCountRef = useRef(0)
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
@@ -195,7 +195,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         if (!isClientOnline || !isGraphQLBackendReachable) {
             return 'cache-first'
         }
-        return "cache-first" // 在线时优先使用缓存，必要时请求网络
+        return 'cache-and-network'      //在线时先用缓存，同时同步请求网络
     }, [isClientOnline, isGraphQLBackendReachable])
 
     const [result, reexecuteQuery] = useQuery({
@@ -383,21 +383,21 @@ function CommonReportDataSub({
         if (!isClientOnline || !isGraphQLBackendReachable) {
             return 'cache-first'
         }
-        return "cache-first"
+        return 'cache-and-network'      //在线时先用缓存，同时同步请求网络
     }, [isClientOnline, isGraphQLBackendReachable])
 
     const [result] = useQuery({
         query: ReportQuery,
         variables: mainQueryVariables,
         requestPolicy,
-        pause: !queryEnabled || (!isClientOnline && !isGraphQLBackendReachable),
+        pause: false,
     })
 
     const [resultSub] = useQuery({
         query: ReportSubQuery,
         variables: subQueryVariables,
         requestPolicy,
-        pause: !queryEnabled || (!isClientOnline && !isGraphQLBackendReachable),
+        pause: false,
     })
 
     const { data, fetching, error } = result
@@ -411,7 +411,6 @@ function CommonReportDataSub({
             console.log("离线状态下无法刷新数据")
             return
         }
-
         console.log("手动刷新报告数据")
         queryCountRef.current = 0
         lastQueryTimeRef.current = 0
