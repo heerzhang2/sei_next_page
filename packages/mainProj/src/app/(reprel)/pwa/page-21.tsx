@@ -80,26 +80,12 @@ export default function Page() {
     const [autoUpdateAvailable, setAutoUpdateAvailable] = useState(false)
 
     const offlineReportIds = offlineReports.map((report) => report.repId)
-
-    const [reportQueries, setReportQueries] = useState<any[]>([])
-
-    useEffect(() => {
-        const newReportQueries = offlineReportIds.map((repId) =>
-            useQuery({
-                query: ReportQuery,
-                variables: { id: repId },
-                pause: !repId,
-            }),
-        )
-        setReportQueries(newReportQueries)
-    }, [offlineReportIds])
-
-    // const [reportResults] = useQuery({
-    //     query: ReportQuery,
-    //     variables: { id: offlineReportIds[0] || "" },
-    //     pause: offlineReportIds.length === 0,
-    // })
-    // const {getReport :repdata }=reportResults?.data||{}
+    const [reportResults] = useQuery({
+        query: ReportQuery,
+        variables: { id: offlineReportIds[0] || "" },
+        pause: offlineReportIds.length === 0,
+    })
+    const {getReport :repdata }=reportResults?.data||{}
 
     useEffect(() => {
         const loadOfflineReports = () => {
@@ -121,51 +107,40 @@ export default function Page() {
 
     useEffect(() => {
         const queryReportsData = async () => {
-            if (offlineReports.length === 0 || reportQueries.length === 0) return
+            if (offlineReports.length === 0) return
 
             const templates: { templateId: string; version: string }[] = []
             const updatedReports: OfflineReport[] = []
 
-            for (let i = 0; i < offlineReports.length; i++) {
-                const report = offlineReports[i]
-                const queryResult = reportQueries[i]
-
+            for (const report of offlineReports) {
                 try {
-                    if (queryResult?.[0]?.data?.getReport) {
-                        const repdata = queryResult[0].data.getReport
-                        const newModeltype = repdata.modeltype
-                        const newModelversion = repdata.modelversion
+                    // In a real implementation, you would query each report individually
+                    const newModeltype =repdata.modeltype
+                    const newModelversion =repdata.modelversion
 
-                        updatedReports.push({
-                            ...report,
-                            modeltype: newModeltype,
-                            modelversion: newModelversion,
-                        })
+                    updatedReports.push({
+                        ...report,
+                        modeltype: newModeltype,
+                        modelversion: newModelversion,
+                    })
 
-                        templates.push({
-                            templateId: newModeltype,
-                            version: newModelversion,
-                        })
-                    } else {
-                        // Keep original report if query failed or no data
-                        updatedReports.push(report)
-                    }
+                    templates.push({
+                        templateId: newModeltype,
+                        version: newModelversion,
+                    })
                 } catch (error) {
                     console.error(`查询报告 ${report.repId} 失败:`, error)
                     updatedReports.push(report)
                 }
             }
 
-            const hasNewData = updatedReports.some((report) => report.modeltype && report.modelversion)
-            if (hasNewData && !offlineReports.some((report) => report.modeltype)) {
-                setOfflineReports(updatedReports)
-                setReportTemplates(templates)
-                console.log("[v0] 更新报告数据:", updatedReports)
-            }
+            setOfflineReports(updatedReports)
+            setReportTemplates(templates)
+            console.log("[v0] 更新报告模板列表:", templates)
         }
 
         queryReportsData()
-    }, [reportQueries.map((q) => q[0]?.data).join(",")]) // Only depend on query results
+    }, [offlineReports, repdata])
 
     useEffect(() => {
         const checkCacheStatus = async () => {
@@ -217,8 +192,9 @@ export default function Page() {
                 console.log("[v0] 所有模板都是最新的")
             }
         }
-        if (!autoUpdateAvailable) checkCacheStatus()
-    }, [autoUpdateAvailable, reportTemplates])
+        if(!autoUpdateAvailable)
+            checkCacheStatus()
+    }, [autoUpdateAvailable,reportTemplates])
 
     const handleRefreshPage = () => {
         window.location.reload()
