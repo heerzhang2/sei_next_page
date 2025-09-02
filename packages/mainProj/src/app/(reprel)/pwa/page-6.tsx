@@ -2,17 +2,6 @@
 
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { useQuery, gql } from "@urql/next"
-
-const ReportQuery = gql`
-  query pagegetReportQuery($id: ID!) {
-    getReport(id: $id) {
-      id
-      modeltype
-      modelversion
-    }
-  }
-`
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -35,26 +24,6 @@ interface CustomUrlConfig {
     enabled: boolean
 }
 
-interface OfflineReport {
-    repId: string
-    modeltype?: string
-    modelversion?: string
-    lastCacheTime?: number
-}
-
-interface TemplateConfig {
-    cacheUrls: string[]
-    changeTime: number // Added changeTime for template update tracking
-}
-
-interface CacheStatus {
-    templateId: string
-    version: string
-    needsUpdate: boolean
-    lastCacheTime?: number
-    templateChangeTime?: number
-}
-
 export default function Page() {
     const [precacheStatus, setPrecacheStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
     const [precacheMessage, setPrecacheMessage] = useState("")
@@ -74,127 +43,75 @@ export default function Page() {
     const [newUrlDescription, setNewUrlDescription] = useState("")
     const [showCustomUrlForm, setShowCustomUrlForm] = useState(false)
 
-    const [offlineReports, setOfflineReports] = useState<OfflineReport[]>([])
-    const [reportTemplates, setReportTemplates] = useState<{ templateId: string; version: string }[]>([])
-    const [cacheStatusList, setCacheStatusList] = useState<CacheStatus[]>([])
-    const [autoUpdateAvailable, setAutoUpdateAvailable] = useState(false)
-
-    const offlineReportIds = offlineReports.map((report) => report.repId)
-    const [reportResults] = useQuery({
-        query: ReportQuery,
-        variables: { id: offlineReportIds[0] || "" },
-        pause: offlineReportIds.length === 0,
-    })
+    const reportTemplates = [
+        { templateId: "INDPL_DJ", version: "1" },
+        { templateId: "SLIDING_JJ", version: "1" },
+        // 可以根据需要添加更多模板
+    ]
 
     useEffect(() => {
-        const loadOfflineReports = () => {
+        if ("serviceWorker" in navigator) {
+            const handleError = (event: ErrorEvent) => {
+                if (event.message?.includes("InvalidStateError") || event.message?.includes("database connection is closing")) {
+                    setSwError("检测到缓存数据库错误，建议刷新页面以重置 Service Worker")
+                    setShowRefreshPrompt(true)
+                }
+            }
+
+            const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+                if (
+                    event.reason?.message?.includes("InvalidStateError") ||
+                    event.reason?.message?.includes("database connection is closing")
+                ) {
+                    setSwError("检测到缓存数据库错误，建议刷新页面以重置缓存状态")
+                    setShowRefreshPrompt(true)
+                }
+            }
+
+            const handleSWMessage = (event: MessageEvent) => {
+                const { type, error, errorType } = event.data
+
+                if (type === "INDEXEDDB_ERROR") {
+                    setSwError(error || "IndexedDB 连接异常，建议刷新页面以重置缓存状态")
+                    setShowRefreshPrompt(true)
+                } else if (type === "SW_ERROR") {
+                    setSwError(error || "Service Worker 发生错误")
+                    setShowRefreshPrompt(true)
+                } else if (type === "ASYNC_ERROR") {
+                    console.warn("[页面] 收到 SW 异步错误:", error)
+                    // 对于一般异步错误，只在控制台记录，不打扰用户
+                } else if (type === "CACHE_ERROR") {
+                    setSwError(error || "缓存操作发生错误")
+                    setShowRefreshPrompt(true)
+                }
+            }
+
+            navigator.serviceWorker.addEventListener("controllerchange", () => {
+                setSwUpdateAvailable(true)
+                setShowRefreshPrompt(true)
+            })
+
+            navigator.serviceWorker.addEventListener("message", handleSWMessage)
+
+            window.addEventListener("error", handleError)
+            window.addEventListener("unhandledrejection", handleUnhandledRejection)
+
+            return () => {
+                navigator.serviceWorker.removeEventListener("message", handleSWMessage)
+                window.removeEventListener("error", handleError)
+                window.removeEventListener("unhandledrejection", handleUnhandledRejection)
+            }
+        }
+
+        const savedCustomUrls = localStorage.getItem("customPrecacheUrls")
+        if (savedCustomUrls) {
             try {
-                const savedReports = localStorage.getItem("offline-reports")
-                if (savedReports) {
-                    const reports: string[] = JSON.parse(savedReports)
-                    const offlineReportsList: OfflineReport[] = reports.map((repId) => ({ repId }))
-                    setOfflineReports(offlineReportsList)
-                    console.log("[v0] 加载离线报告列表:", offlineReportsList)
-                }
+                setCustomUrls(JSON.parse(savedCustomUrls))
             } catch (error) {
-                console.error("加载离线报告列表失败:", error)
+                console.error("加载自定义 URL 配置失败:", error)
             }
         }
-
-        loadOfflineReports()
-    }, [setOfflineReports])
-
-    useEffect(() => {
-        const queryReportsData = async () => {
-            if (offlineReports.length === 0) return
-
-            const templates: { templateId: string; version: string }[] = []
-            const updatedReports: OfflineReport[] = []
-
-            for (const report of offlineReports) {
-                try {
-                    // In a real implementation, you would query each report individually
-                    // For now, we'll simulate the data structure
-                    const mockModeltype = "INDPL_DJ" // This would come from GraphQL query
-                    const mockModelversion = "1" // This would come from GraphQL query
-
-                    updatedReports.push({
-                        ...report,
-                        modeltype: mockModeltype,
-                        modelversion: mockModelversion,
-                    })
-
-                    templates.push({
-                        templateId: mockModeltype,
-                        version: mockModelversion,
-                    })
-                } catch (error) {
-                    console.error(`查询报告 ${report.repId} 失败:`, error)
-                    updatedReports.push(report)
-                }
-            }
-
-            setOfflineReports(updatedReports)
-            setReportTemplates(templates)
-            console.log("[v0] 更新报告模板列表:", templates)
-        }
-
-        queryReportsData()
-    }, [offlineReports])
-
-    useEffect(() => {
-        const checkCacheStatus = async () => {
-            if (reportTemplates.length === 0) return
-
-            const statusList: CacheStatus[] = []
-            let hasUpdates = false
-
-            for (const template of reportTemplates) {
-                try {
-                    const templateModule: TemplateConfig = await import(
-                        `../../rep/[repId]/${template.templateId}/${template.version}/config`
-                        )
-
-                    const cacheKey = `cache-time-${template.templateId}-${template.version}`
-                    const lastCacheTime = localStorage.getItem(cacheKey)
-                    const lastCacheTimestamp = lastCacheTime ? Number.parseInt(lastCacheTime) : 0
-
-                    const needsUpdate = !lastCacheTime || lastCacheTimestamp < templateModule.changeTime
-
-                    statusList.push({
-                        templateId: template.templateId,
-                        version: template.version,
-                        needsUpdate,
-                        lastCacheTime: lastCacheTimestamp || undefined,
-                        templateChangeTime: templateModule.changeTime,
-                    })
-
-                    if (needsUpdate) {
-                        hasUpdates = true
-                    }
-                } catch (error) {
-                    console.warn(`检查模板 ${template.templateId}/${template.version} 状态失败:`, error)
-                    statusList.push({
-                        templateId: template.templateId,
-                        version: template.version,
-                        needsUpdate: true,
-                    })
-                    hasUpdates = true
-                }
-            }
-
-            setCacheStatusList(statusList)
-            setAutoUpdateAvailable(hasUpdates)
-
-            if (hasUpdates) {
-                console.log("[v0] 检测到模板更新，需要重新缓存")
-            } else {
-                console.log("[v0] 所有模板都是最新的")
-            }
-        }
-
-        checkCacheStatus()
-    }, [reportTemplates])
+    }, [])
 
     const handleRefreshPage = () => {
         window.location.reload()
@@ -298,10 +215,13 @@ export default function Page() {
 
     const importTemplateUrls = async (templateId: string, version: string): Promise<string[]> => {
         try {
-            const templateModule: TemplateConfig = await import(`../../rep/[repId]/${templateId}/${version}/config`)
+            const templateModule = await import(`../../rep/[repId]/${templateId}/${version}/config`)
+
+            // Return the cacheUrls array if it exists, otherwise return empty array
             return templateModule.cacheUrls || []
         } catch (error) {
             console.warn(`[v0] Failed to import cacheUrls from template ${templateId}/${version}:`, error)
+            // Fallback to default URLs if import fails
             return [
                 `/rep/sample/${templateId}/${version}/ALL`,
                 `/rep/sample/${templateId}/${version}/T607`,
@@ -331,6 +251,7 @@ export default function Page() {
                 urlsToCache.push(...templateUrls)
             } catch (error) {
                 console.error(`[v0] Error importing URLs for template ${template.templateId}/${template.version}:`, error)
+                // Fallback to default URLs
                 urlsToCache.push(`/rep/sample/${template.templateId}/${template.version}/ALL`)
                 urlsToCache.push(`/rep/sample/${template.templateId}/${template.version}/T607`)
                 urlsToCache.push(`/rep/sample/${template.templateId}/${template.version}/T608`)
@@ -350,6 +271,7 @@ export default function Page() {
         setPrecacheProgress({ completed: 0, total: urlsToCache.length, currentItem: "" })
         setPrecacheResults([])
         setFailedItems([])
+        console.log("直接发送CACHE_URLS的链接列表=", urlsToCache)
 
         try {
             navigator.serviceWorker.controller.postMessage({
@@ -371,28 +293,13 @@ export default function Page() {
                     if (data.success) {
                         setPrecacheStatus("success")
                         setPrecacheMessage(`成功预缓存 ${data.successCount} 个项目`)
-
-                        const currentTime = Date.now()
-                        templatesToCache.forEach((template) => {
-                            const cacheKey = `cache-time-${template.templateId}-${template.version}`
-                            localStorage.setItem(cacheKey, currentTime.toString())
-                        })
-
-                        // Update cache status
-                        setCacheStatusList((prev) =>
-                            prev.map((status) => ({
-                                ...status,
-                                needsUpdate: false,
-                                lastCacheTime: currentTime,
-                            })),
-                        )
-                        setAutoUpdateAvailable(false)
                     } else {
                         setPrecacheStatus("error")
                         setPrecacheMessage(`预缓存完成，但有 ${data.failedCount} 个失败`)
                         setFailedItems(data.failedItems || [])
                     }
                     setPrecacheResults(data.results || [])
+
                     navigator.serviceWorker.removeEventListener("message", handleMessage)
                 }
             }
@@ -401,16 +308,14 @@ export default function Page() {
         } catch (error) {
             setPrecacheStatus("error")
             setPrecacheMessage(`预缓存失败: ${error instanceof Error ? error.message : "未知错误"}`)
-        }
-    }
 
-    const handleAutoUpdate = async () => {
-        const templatesToUpdate = cacheStatusList
-            .filter((status) => status.needsUpdate)
-            .map((status) => ({ templateId: status.templateId, version: status.version }))
-
-        if (templatesToUpdate.length > 0) {
-            await handlePrecacheReports(templatesToUpdate, false)
+            if (
+                error instanceof Error &&
+                (error.message.includes("InvalidStateError") || error.message.includes("database connection is closing"))
+            ) {
+                setSwError("缓存数据库连接异常，建议刷新页面重试")
+                setShowRefreshPrompt(true)
+            }
         }
     }
 
@@ -512,102 +417,6 @@ export default function Page() {
                     <h1 className="text-4xl font-bold text-gray-900 mb-4">报告离线编辑</h1>
                     <p className="text-xl text-gray-600 mb-8">Progressive Web App for Report Management</p>
                 </header>
-
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">离线报告状态</h2>
-
-                    {offlineReports.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            <p>暂无离线报告</p>
-                            <p className="text-sm mt-2">请在其他页面选择报告添加到离线列表</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {offlineReports.map((report, index) => (
-                                    <div key={report.repId} className="bg-gray-50 rounded-lg p-4">
-                                        <div className="font-medium text-gray-900">报告 ID: {report.repId}</div>
-                                        {report.modeltype && (
-                                            <div className="text-sm text-gray-600">
-                                                模板: {report.modeltype} v{report.modelversion}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="text-sm text-gray-600">
-                                共 {offlineReports.length} 个离线报告，生成 {reportTemplates.length} 个模板配置
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {cacheStatusList.length > 0 && (
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">缓存状态检查</h2>
-
-                        {autoUpdateAvailable && (
-                            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h3 className="font-medium text-amber-800">检测到模板更新</h3>
-                                        <p className="text-sm text-amber-700">
-                                            有 {cacheStatusList.filter((s) => s.needsUpdate).length} 个模板需要更新缓存
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={handleAutoUpdate}
-                                        className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-                                    >
-                                        自动更新
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="space-y-3">
-                            {cacheStatusList.map((status, index) => (
-                                <div
-                                    key={`${status.templateId}-${status.version}`}
-                                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                                        status.needsUpdate ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"
-                                    }`}
-                                >
-                                    <div>
-                                        <div className="font-medium">
-                                            {status.templateId} v{status.version}
-                                        </div>
-                                        <div className="text-sm text-gray-600">
-                                            {status.lastCacheTime ? (
-                                                <>上次缓存: {new Date(status.lastCacheTime).toLocaleString()}</>
-                                            ) : (
-                                                "从未缓存"
-                                            )}
-                                            {status.templateChangeTime && (
-                                                <> | 模板更新: {new Date(status.templateChangeTime).toLocaleString()}</>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div
-                                        className={`px-3 py-1 rounded text-sm ${
-                                            status.needsUpdate ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                                        }`}
-                                    >
-                                        {status.needsUpdate ? "需要更新" : "已是最新"}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {!autoUpdateAvailable && cacheStatusList.length > 0 && (
-                            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <p className="text-green-800 font-medium">✓ 所有模板缓存都是最新的</p>
-                                <p className="text-sm text-green-700">无需重新预缓存</p>
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -733,14 +542,9 @@ export default function Page() {
                     </div>
                 </div>
 
-                {/* ... existing precache section with minimal changes ... */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 className="text-2xl font-semibold text-gray-900 mb-4">离线预缓存</h2>
-                    <p className="text-gray-600 mb-6">
-                        {offlineReports.length > 0
-                            ? `基于您的 ${offlineReports.length} 个离线报告，预先缓存对应的报告模板和自定义页面。`
-                            : "预先缓存常用的报告模板和自定义页面，确保在离线状态下也能快速访问。"}
-                    </p>
+                    <p className="text-gray-600 mb-6">预先缓存常用的报告模板和自定义页面，确保在离线状态下也能快速访问。</p>
 
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center justify-between mb-4">
@@ -846,9 +650,9 @@ export default function Page() {
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                         <button
                             onClick={() => handlePrecacheReports()}
-                            disabled={precacheStatus === "loading" || reportTemplates.length === 0}
+                            disabled={precacheStatus === "loading"}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                                precacheStatus === "loading" || reportTemplates.length === 0
+                                precacheStatus === "loading"
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                     : "bg-blue-600 text-white hover:bg-blue-700"
                             }`}
@@ -862,10 +666,6 @@ export default function Page() {
                                 `我要开始预缓存 (${reportTemplates.length + customUrls.filter((u) => u.enabled).length} 项)`
                             )}
                         </button>
-
-                        {reportTemplates.length === 0 && (
-                            <div className="text-sm text-amber-600">请先在其他页面添加报告到离线列表</div>
-                        )}
 
                         {failedItems.length > 0 && precacheStatus !== "loading" && (
                             <button
@@ -995,7 +795,7 @@ export default function Page() {
                         <p>预缓存项目包括:</p>
                         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <p className="font-medium mb-2">基于离线报告的模板:</p>
+                                <p className="font-medium mb-2">默认报告模板:</p>
                                 <ul className="space-y-1">
                                     {reportTemplates.map((template, index) => (
                                         <li key={index} className="flex items-center space-x-2">
@@ -1006,7 +806,6 @@ export default function Page() {
                                         </li>
                                     ))}
                                 </ul>
-                                {reportTemplates.length === 0 && <p className="text-gray-400 italic">暂无模板</p>}
                             </div>
                             {customUrls.filter((u) => u.enabled).length > 0 && (
                                 <div>
