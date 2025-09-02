@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
-import { useQuery, gql } from "@urql/next"
+import { useState, useEffect, useCallback } from "react";
+import { useQuery, gql, useClient } from "@urql/next";
 
 const ReportQuery = gql`
   query pagegetReportQuery($id: ID!) {
@@ -56,6 +56,7 @@ interface CacheStatus {
 }
 
 export default function Page() {
+    const client = useClient(); // 正确地在顶层获取 URQL 客户端
     const [precacheStatus, setPrecacheStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
     const [precacheMessage, setPrecacheMessage] = useState("")
     const [precacheProgress, setPrecacheProgress] = useState<PrecacheProgress>({
@@ -81,91 +82,189 @@ export default function Page() {
 
     const offlineReportIds = offlineReports.map((report) => report.repId)
 
-    const [reportQueries, setReportQueries] = useState<any[]>([])
 
+
+    const [reportQueries, setReportQueries] = useState<any[]>([]);
+    const [isFetching, setIsFetching] = useState(false);
+
+    // 使用 useCallback 记忆化 fetch 函数
+    const fetchAllReports = useCallback(async () => {
+        if (offlineReportIds.length === 0) {
+            setReportQueries([]);
+            return;
+        }
+
+        setIsFetching(true);
+        try {
+            const queryResults = [];
+            for (const repId of offlineReportIds) {
+                if (!repId) {
+                    queryResults.push(null);
+                    continue;
+                }
+                try {
+                    const result = await client.query(ReportQuery, { id: repId }).toPromise();
+                    queryResults.push(result);
+                } catch (err) {
+                    console.error(`Failed to fetch report ${repId}:`, err);
+                    queryResults.push(null);
+                }
+            }
+            setReportQueries(queryResults);
+        } catch (error) {
+            console.error("Failed to fetch reports:", error);
+        } finally {
+            setIsFetching(false);
+        }
+    }, [offlineReportIds, client]);
+
+    // 只有当 offlineReportIds 真正改变时才获取数据
     useEffect(() => {
-        const newReportQueries = offlineReportIds.map((repId) =>
-            useQuery({
-                query: ReportQuery,
-                variables: { id: repId },
-                pause: !repId,
-            }),
-        )
-        setReportQueries(newReportQueries)
-    }, [offlineReportIds])
+        // 使用一个标志来避免重复请求
+        let isMounted = true;
 
-    // const [reportResults] = useQuery({
-    //     query: ReportQuery,
-    //     variables: { id: offlineReportIds[0] || "" },
-    //     pause: offlineReportIds.length === 0,
-    // })
-    // const {getReport :repdata }=reportResults?.data||{}
+        if (isMounted) {
+            fetchAllReports();
+        }
 
+        return () => {
+            isMounted = false;
+        };
+    }, [fetchAllReports]); // 现在只依赖 memoized 的回调
+
+    // 加载离线报告的 useEffect - 应该只运行一次
     useEffect(() => {
         const loadOfflineReports = () => {
             try {
-                const savedReports = localStorage.getItem("offline-reports")
+                const savedReports = localStorage.getItem("offline-reports");
                 if (savedReports) {
-                    const reports: string[] = JSON.parse(savedReports)
-                    const offlineReportsList: OfflineReport[] = reports.map((repId) => ({ repId }))
-                    setOfflineReports(offlineReportsList)
-                    console.log("[v0] 加载离线报告列表:", offlineReportsList)
+                    const reports: string[] = JSON.parse(savedReports);
+                    const offlineReportsList: OfflineReport[] = reports.map((repId) => ({ repId }));
+                    setOfflineReports(offlineReportsList);
+                    console.log("[v0] 加载离线报告列表:", offlineReportsList);
                 }
             } catch (error) {
-                console.error("加载离线报告列表失败:", error)
+                console.error("加载离线报告列表失败:", error);
             }
-        }
+        };
 
-        loadOfflineReports()
-    }, [setOfflineReports])
+        loadOfflineReports();
+    }, []); // 空依赖数组，只运行一次
 
+    // 处理报告数据的 useEffect
     useEffect(() => {
-        const queryReportsData = async () => {
-            if (offlineReports.length === 0 || reportQueries.length === 0) return
+        if (offlineReports.length === 0 || reportQueries.length === 0) return;
 
-            const templates: { templateId: string; version: string }[] = []
-            const updatedReports: OfflineReport[] = []
+        const templates: { templateId: string; version: string }[] = [];
+        const updatedReports: OfflineReport[] = [];
 
-            for (let i = 0; i < offlineReports.length; i++) {
-                const report = offlineReports[i]
-                const queryResult = reportQueries[i]
+        for (let i = 0; i < offlineReports.length; i++) {
+            const report = offlineReports[i];
+            const queryResult = reportQueries[i];
 
-                try {
-                    if (queryResult?.[0]?.data?.getReport) {
-                        const repdata = queryResult[0].data.getReport
-                        const newModeltype = repdata.modeltype
-                        const newModelversion = repdata.modelversion
+            try {
+                if (queryResult?.data?.getReport) {
+                    const repdata = queryResult.data.getReport;
+                    const newModeltype = repdata.modeltype;
+                    const newModelversion = repdata.modelversion;
 
-                        updatedReports.push({
-                            ...report,
-                            modeltype: newModeltype,
-                            modelversion: newModelversion,
-                        })
+                    updatedReports.push({
+                        ...report,
+                        modeltype: newModeltype,
+                        modelversion: newModelversion,
+                    });
 
-                        templates.push({
-                            templateId: newModeltype,
-                            version: newModelversion,
-                        })
-                    } else {
-                        // Keep original report if query failed or no data
-                        updatedReports.push(report)
-                    }
-                } catch (error) {
-                    console.error(`查询报告 ${report.repId} 失败:`, error)
-                    updatedReports.push(report)
+                    templates.push({
+                        templateId: newModeltype,
+                        version: newModelversion,
+                    });
+                } else {
+                    // Keep original report if query failed or no data
+                    updatedReports.push(report);
                 }
-            }
-
-            const hasNewData = updatedReports.some((report) => report.modeltype && report.modelversion)
-            if (hasNewData && !offlineReports.some((report) => report.modeltype)) {
-                setOfflineReports(updatedReports)
-                setReportTemplates(templates)
-                console.log("[v0] 更新报告数据:", updatedReports)
+            } catch (error) {
+                console.error(`查询报告 ${report.repId} 失败:`, error);
+                updatedReports.push(report);
             }
         }
 
-        queryReportsData()
-    }, [reportQueries.map((q) => q[0]?.data).join(",")]) // Only depend on query results
+        const hasNewData = updatedReports.some((report) => report.modeltype && report.modelversion);
+        if (hasNewData && !offlineReports.some((report) => report.modeltype)) {
+            setOfflineReports(updatedReports);
+            setReportTemplates(templates);
+            console.log("[v0] 更新报告数据:", updatedReports);
+        }
+    }, [reportQueries]); // 只依赖于 reportQueries 的变化
+
+
+
+    // useEffect(() => {
+    //     const loadOfflineReports = () => {
+    //         try {
+    //             const savedReports = localStorage.getItem("offline-reports")
+    //             if (savedReports) {
+    //                 const reports: string[] = JSON.parse(savedReports)
+    //                 const offlineReportsList: OfflineReport[] = reports.map((repId) => ({ repId }))
+    //                 setOfflineReports(offlineReportsList)
+    //                 console.log("[v0] 加载离线报告列表:", offlineReportsList)
+    //             }
+    //         } catch (error) {
+    //             console.error("加载离线报告列表失败:", error)
+    //         }
+    //     }
+    //
+    //     loadOfflineReports()
+    // }, [setOfflineReports])
+
+    // useEffect(() => {
+    //     const queryReportsData = async () => {
+    //         if (offlineReports.length === 0 || reportQueries.length === 0) return
+    //
+    //         const templates: { templateId: string; version: string }[] = []
+    //         const updatedReports: OfflineReport[] = []
+    //
+    //         for (let i = 0; i < offlineReports.length; i++) {
+    //             const report = offlineReports[i]
+    //             const queryResult = reportQueries[i]
+    //
+    //             try {
+    //                 if (queryResult?.[0]?.data?.getReport) {
+    //                     const repdata = queryResult[0].data.getReport
+    //                     const newModeltype = repdata.modeltype
+    //                     const newModelversion = repdata.modelversion
+    //
+    //                     updatedReports.push({
+    //                         ...report,
+    //                         modeltype: newModeltype,
+    //                         modelversion: newModelversion,
+    //                     })
+    //
+    //                     templates.push({
+    //                         templateId: newModeltype,
+    //                         version: newModelversion,
+    //                     })
+    //                 } else {
+    //                     // Keep original report if query failed or no data
+    //                     updatedReports.push(report)
+    //                 }
+    //             } catch (error) {
+    //                 console.error(`查询报告 ${report.repId} 失败:`, error)
+    //                 updatedReports.push(report)
+    //             }
+    //         }
+    //
+    //         const hasNewData = updatedReports.some((report) => report.modeltype && report.modelversion)
+    //         if (hasNewData && !offlineReports.some((report) => report.modeltype)) {
+    //             setOfflineReports(updatedReports)
+    //             setReportTemplates(templates)
+    //             console.log("[v0] 更新报告数据:", updatedReports)
+    //         }
+    //     }
+    //
+    //     queryReportsData()
+    // }, [reportQueries.map((q) => q[0]?.data).join(",")])
+    //
+
 
     useEffect(() => {
         const checkCacheStatus = async () => {
