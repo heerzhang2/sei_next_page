@@ -1,9 +1,9 @@
 [Agent] v23 >>  https://vercel.com/login?next=%2Fsingup
 v0.app当前= 0;  https://v0.app/chat/id-sRSxMyX0hbg
-3:: heerzhang3;  23 days
+3:: heerzhang3;  Your monthly credits reset in 24 days.
 2:: Your monthly credits reset in 19 days.
-1:: Your monthly credits reset in 11 days. Credits are used in the following order: gifted, monthly,
-0:: Your monthly credits reset in 9 days. Credits are used in the following order: gifted, monthly,
+1:: Your monthly credits reset in 11 days.
+0:: Your monthly credits reset in 9 days.
 
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :9872
 自签名证书Chrome_SSL_cert.sh,在linux系统跑的chmod +x Chrome_SSL_cert.sh  不用windows自带openssl64窗口。
