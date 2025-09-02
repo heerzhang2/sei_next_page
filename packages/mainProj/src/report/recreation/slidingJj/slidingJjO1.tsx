@@ -247,3 +247,12 @@ if(process.env.NEXT_PUBLIC_APP_TEST==='true')  recordPrintList.splice(0,0,create
 export const OriginalView=({action,verId,rep}:OriginalViewProps)=>{
     return <CommonOriginal action={action} rep={rep} config={config记录} areaFn={setupItemAreaRoute} rlist={recordPrintList} verId={verId}/>
 }
+
+export function registerUrl(template: string, version: string): string[] {
+    const baseUrl = `/rep/*/${template}/${version}`
+    const actions = ["ALL", "Instrument", "Survey", "MainTechnical", 'T3-1',
+        "Measure", "Conclusion","SiteCondition","RadoInstrument","Measure2","StrainStress"
+    ]
+    const urls=actions.map((action) => `${baseUrl}/${action}`)
+    return [baseUrl, ...urls]
+}

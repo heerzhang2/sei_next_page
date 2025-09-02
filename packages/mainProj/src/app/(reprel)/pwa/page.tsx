@@ -45,6 +45,7 @@ export default function Page() {
 
     const reportTemplates = [
         { templateId: "INDPL_DJ", version: "1" },
+        { templateId: "SLIDING_JJ", version: "1" },
         // 可以根据需要添加更多模板
     ]
 
