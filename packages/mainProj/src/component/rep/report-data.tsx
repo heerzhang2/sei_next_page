@@ -206,7 +206,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     })
 
     const { data, fetching, error } = result
-    const report = data?.getReport
+    const report = data && data.getReport
     const { setStorage, setSubrType, setOffline } = useStorage()
 
     const refreshData = useCallback(() => {
@@ -402,8 +402,8 @@ function CommonReportDataSub({
 
     const { data, fetching, error } = result
     const { data: dataSub, fetching: fetchingSub, error: errorSub } = resultSub
-    const report = data?.getReport
-    const reportSub = dataSub?.getReport
+    const report =data && data?.getReport
+    const reportSub =dataSub && dataSub?.getReport
     const { setStorage, setSubrType, setParrepfs, setOffline } = useStorage()
 
     const refreshData = useCallback(() => {

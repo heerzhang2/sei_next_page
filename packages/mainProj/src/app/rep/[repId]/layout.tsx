@@ -14,7 +14,7 @@ export default function ReportLayout({
 }) {
     const repId = useActualRepId()
 
-    if (!repId) {
+    if (!repId || repId==="*") {
         return <div>Loading...</div>
     }
 
