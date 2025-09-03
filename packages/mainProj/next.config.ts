@@ -179,7 +179,7 @@ module.exports = async (phase) => {
                     headers: [
                         {
                             key: "Cache-Control",
-                            value: "public, max-age=300, stale-while-revalidate=86400",
+                            value: "no-cache, max-age=0",
                         },
                         {
                             key: "X-PWA-Cache",

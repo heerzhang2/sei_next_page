@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, gql, useClient } from "@urql/next";
+import {ReportQuery} from "@/component/rep/report-data";
 
-const ReportQuery = gql`
-  query pagegetReportQuery($id: ID!) {
-    getReport(id: $id) {
-      id
-      modeltype
-      modelversion
-    }
-  }
-`;
+// const ReportQuery = gql`
+//   query pagegetReportQuery($id: ID!) {
+//     getReport(id: $id) {
+//       id
+//       modeltype
+//       modelversion
+//     }
+//   }
+// `;
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -182,56 +183,6 @@ export default function Page() {
             console.log("[v0] 更新报告数据:", updatedReports);
         }
     }, [reportQueries, offlineReports]); // 依赖于 reportQueries 和 offlineReports
-
-    // useEffect(() => {
-    //     const queryReportsData = async () => {
-    //         if (offlineReports.length === 0 || reportQueries.length === 0) return
-    //
-    //         const templates: { templateId: string; version: string }[] = []
-    //         const updatedReports: OfflineReport[] = []
-    //
-    //         for (let i = 0; i < offlineReports.length; i++) {
-    //             const report = offlineReports[i]
-    //             const queryResult = reportQueries[i]
-    //
-    //             try {
-    //                 if (queryResult?.[0]?.data?.getReport) {
-    //                     const repdata = queryResult[0].data.getReport
-    //                     const newModeltype = repdata.modeltype
-    //                     const newModelversion = repdata.modelversion
-    //
-    //                     updatedReports.push({
-    //                         ...report,
-    //                         modeltype: newModeltype,
-    //                         modelversion: newModelversion,
-    //                     })
-    //
-    //                     templates.push({
-    //                         templateId: newModeltype,
-    //                         version: newModelversion,
-    //                     })
-    //                 } else {
-    //                     // Keep original report if query failed or no data
-    //                     updatedReports.push(report)
-    //                 }
-    //             } catch (error) {
-    //                 console.error(`查询报告 ${report.repId} 失败:`, error)
-    //                 updatedReports.push(report)
-    //             }
-    //         }
-    //
-    //         const hasNewData = updatedReports.some((report) => report.modeltype && report.modelversion)
-    //         if (hasNewData && !offlineReports.some((report) => report.modeltype)) {
-    //             setOfflineReports(updatedReports)
-    //             setReportTemplates(templates)
-    //             console.log("[v0] 更新报告数据:", updatedReports)
-    //         }
-    //     }
-    //
-    //     queryReportsData()
-    // }, [reportQueries.map((q) => q[0]?.data).join(",")])
-    //
-
 
     useEffect(() => {
         const checkCacheStatus = async () => {

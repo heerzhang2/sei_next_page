@@ -526,3 +526,6 @@ authorization:
 Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjU0MTI4MiwiZXhwIjoxNzU2NTQ2NjgyfQ.q51L4Sch5hys1f0pZJbvl3TsSykq9zeeujxR83H3byXFqtjav-XURf3U-3o5Lhr38F_QF6zpUv89814er_Hu1g
 说明urql没有获取到最新的accessToken，另外本机的offline_auth和 next-auth session 都有存储token的
 
+
+offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
+
