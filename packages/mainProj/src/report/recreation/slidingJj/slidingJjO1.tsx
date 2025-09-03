@@ -251,7 +251,7 @@ export const OriginalView=({action,verId,rep}:OriginalViewProps)=>{
 export function registerUrl(template: string, version: string): string[] {
     const baseUrl = `/rep/*/${template}/${version}`
     const actions = ["ALL", "Instrument", "Survey", "MainTechnical", 'T3-1',
-        "Measure", "Conclusion","SiteCondition","RadoInstrument","Measure2","StrainStress"
+        "Measure","Measure2", "Conclusion","SiteCondition","RadoInstrument","StrainStress"
     ]
     const urls=actions.map((action) => `${baseUrl}/${action}`)
     return [baseUrl, ...urls]

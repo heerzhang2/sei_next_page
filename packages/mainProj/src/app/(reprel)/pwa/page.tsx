@@ -183,26 +183,6 @@ export default function Page() {
         }
     }, [reportQueries, offlineReports]); // 依赖于 reportQueries 和 offlineReports
 
-
-
-    // useEffect(() => {
-    //     const loadOfflineReports = () => {
-    //         try {
-    //             const savedReports = localStorage.getItem("offline-reports")
-    //             if (savedReports) {
-    //                 const reports: string[] = JSON.parse(savedReports)
-    //                 const offlineReportsList: OfflineReport[] = reports.map((repId) => ({ repId }))
-    //                 setOfflineReports(offlineReportsList)
-    //                 console.log("[v0] 加载离线报告列表:", offlineReportsList)
-    //             }
-    //         } catch (error) {
-    //             console.error("加载离线报告列表失败:", error)
-    //         }
-    //     }
-    //
-    //     loadOfflineReports()
-    // }, [setOfflineReports])
-
     // useEffect(() => {
     //     const queryReportsData = async () => {
     //         if (offlineReports.length === 0 || reportQueries.length === 0) return
@@ -265,11 +245,10 @@ export default function Page() {
                     const templateModule: TemplateConfig = await import(
                         `../../rep/[repId]/${template.templateId}/${template.version}/config`
                         )
-
                     const cacheKey = `cache-time-${template.templateId}-${template.version}`
                     const lastCacheTime = localStorage.getItem(cacheKey)
                     const lastCacheTimestamp = lastCacheTime ? Number.parseInt(lastCacheTime) : 0
-
+                    console.warn(`模板${template.templateId}/${template.version}当前--更新时间:`, templateModule.changeTime,"项目数：",templateModule.cacheUrls?.length )
                     const needsUpdate = !lastCacheTime || lastCacheTimestamp < templateModule.changeTime
 
                     statusList.push({
@@ -303,7 +282,7 @@ export default function Page() {
                 console.log("[v0] 所有模板都是最新的")
             }
         }
-        if (!autoUpdateAvailable) checkCacheStatus()
+        if(!autoUpdateAvailable)   checkCacheStatus()
     }, [autoUpdateAvailable, reportTemplates])
 
     const handleRefreshPage = () => {
@@ -461,58 +440,60 @@ export default function Page() {
         setPrecacheResults([])
         setFailedItems([])
 
+        // 替换原有的 navigator.serviceWorker.controller.postMessage 调用部分
         try {
+            // 创建一个 MessageChannel 来建立双向通信
+            const channel = new MessageChannel();
+
+            // 监听来自 Service Worker 的回应
+            channel.port1.onmessage = (event) => {
+                if (event.data === true) {
+                    console.log("URLs 缓存成功！");
+                    // 在这里更新 UI，例如设置成功状态、隐藏加载指示器等
+                    setPrecacheStatus("success");
+                    setPrecacheMessage(`成功预缓存 ${urlsToCache.length} 个项目`);
+                    const currentTime = Date.now()
+                    templatesToCache.forEach((template) => {
+                        const cacheKey = `cache-time-${template.templateId}-${template.version}`
+                        localStorage.setItem(cacheKey, currentTime.toString())
+                    })
+                    // Update cache status
+                    setCacheStatusList((prev) =>
+                        prev.map((status) => ({
+                            ...status,
+                            needsUpdate: false,
+                            lastCacheTime: currentTime,
+                        })),
+                    )
+                    setAutoUpdateAvailable(false)
+                } else {
+                    console.error("缓存过程中可能发生了问题，部分url失败。");
+                    setPrecacheStatus("error");
+                    setPrecacheMessage("预缓存完成，但可能存在部分失败");
+                }
+                // 关闭端口
+                channel.port1.close();
+            };
+
+            // 处理消息错误
+            channel.port1.onmessageerror = (error) => {
+                console.error("接收消息出错:", error);
+                setPrecacheStatus("error");
+                setPrecacheMessage("通信错误");
+                channel.port1.close();
+            };
+
+            // 发送消息到 Service Worker，并转移 MessageChannel 的 port2
             navigator.serviceWorker.controller.postMessage({
                 type: "CACHE_URLS",
                 payload: { urlsToCache },
-            })
+            }, [channel.port2]); // 将 port2 转移给 Service Worker
 
-            const handleMessage = (event: MessageEvent) => {
-                const { type, ...data } = event.data
-
-                if (type === "CACHE_URLS_PROGRESS") {
-                    setPrecacheProgress({
-                        completed: data.completed,
-                        total: data.total,
-                        currentItem: data.currentItem,
-                    })
-                    setPrecacheMessage(`正在缓存: ${data.currentItem} (${data.completed}/${data.total})`)
-                } else if (type === "CACHE_URLS_COMPLETE") {
-                    if (data.success) {
-                        setPrecacheStatus("success")
-                        setPrecacheMessage(`成功预缓存 ${data.successCount} 个项目`)
-
-                        const currentTime = Date.now()
-                        templatesToCache.forEach((template) => {
-                            const cacheKey = `cache-time-${template.templateId}-${template.version}`
-                            localStorage.setItem(cacheKey, currentTime.toString())
-                        })
-
-                        // Update cache status
-                        setCacheStatusList((prev) =>
-                            prev.map((status) => ({
-                                ...status,
-                                needsUpdate: false,
-                                lastCacheTime: currentTime,
-                            })),
-                        )
-                        setAutoUpdateAvailable(false)
-                    } else {
-                        setPrecacheStatus("error")
-                        setPrecacheMessage(`预缓存完成，但有 ${data.failedCount} 个失败`)
-                        setFailedItems(data.failedItems || [])
-                    }
-                    setPrecacheResults(data.results || [])
-                    navigator.serviceWorker.removeEventListener("message", handleMessage)
-                }
-            }
-
-            navigator.serviceWorker.addEventListener("message", handleMessage)
         } catch (error) {
-            setPrecacheStatus("error")
-            setPrecacheMessage(`预缓存失败: ${error instanceof Error ? error.message : "未知错误"}`)
+            setPrecacheStatus("error");
+            setPrecacheMessage(`预缓存失败: ${error instanceof Error ? error.message : "未知错误"}`);
         }
-    }
+    };
 
     const handleAutoUpdate = async () => {
         const templatesToUpdate = cacheStatusList
