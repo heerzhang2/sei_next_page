@@ -1,8 +1,6 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { createServerUrqlClient } from "@/auth/urql"
-import {NextResponse} from "next/server";
-import {unstable_update as updateSession} from "@/app/auth";
 
 // GraphQL mutations
 const AUTHENTICATE_MUTATION = `

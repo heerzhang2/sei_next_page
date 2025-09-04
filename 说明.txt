@@ -531,6 +531,7 @@ offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9y
 offline-reports  ["KQcbgDF9RO21DsI92H3tTVJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
 更健壮的版本（推荐）
 typescript
+
 writeMetadata: (json: SerializedRequest[]) => {
   try {
     if (!json?.length) {

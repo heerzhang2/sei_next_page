@@ -1,17 +1,14 @@
 import {
-    CacheFirst,
     ExpirationPlugin,
     NetworkFirst,
-    NetworkOnly,
     type PrecacheEntry,
-    RangeRequestsPlugin,
     type RuntimeCaching,
     type SerwistGlobalConfig,
-    StaleWhileRevalidate,
 } from "serwist"
 import { Serwist } from "serwist"
 //不要删除！来自参考 ./node_modules/@serwist/next/src/index.worker.ts 生产版本有生效的？
 import { defaultCache } from "@serwist/next/worker"
+
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -227,7 +224,7 @@ self.addEventListener("activate", (event) => {
 
             // 立即控制所有客户端
             await self.clients.claim()
-            console.log("[SW] Service Worker 已激活并控制所有页面")
+            console.log("✅ 离线功能: 已激活并控制所有页面")
         })(),
     )
 })

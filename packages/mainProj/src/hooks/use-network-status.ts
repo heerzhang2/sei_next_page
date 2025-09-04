@@ -57,7 +57,7 @@ export function useNetworkStatus(): NetworkStatus {
     const checkGraphQLBackendConnectivity = useCallback(async () => {
         try {
             const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 8000) // 8秒超时
+            const timeoutId = setTimeout(() => controller.abort(), 20000) // 20秒超时
 
             const backendUrl = process.env.NEXT_PUBLIC_BACK_END
             if (!backendUrl) return false

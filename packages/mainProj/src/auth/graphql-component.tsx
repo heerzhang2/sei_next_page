@@ -599,29 +599,32 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
             storage: {
                 ...storage,
-                // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，不需要做storage.readMetadata!().then(existing;
+                // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，离线mutation保存才会进入这里的;点击太快会重复出现的。
                 writeMetadata: (json: SerializedRequest[]) => {
-                    if (!json?.length) {
-                        storage.writeMetadata!(json || []);
-                        return;
-                    }
-                    // 为每个请求添加时间戳（如果还没有）
-                    const timestampedJson = json.map(request => ({
-                        ...request,
-                        timestamp: request.timestamp || Date.now()
-                    }));
-                    // 按时间戳排序并去重
-                    const requestMap = new Map();
-                    timestampedJson
-                        .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
-                        .forEach(request => {
+                    try {
+                        if (!json?.length) {
+                            storage.writeMetadata!(json || []);
+                            return;
+                        }
+                        // 使用对象来去重，保留最后一次出现的请求
+                        const uniqueRequests: SerializedRequest[] = [];
+                        const seen = new Set();
+                        // 反向遍历，保留每个唯一键的最后一次出现:按变更mutation+报告变更接口的(ID!)来区分的。每个变更接口的参数不定？如何判别重复出现的？
+                        for (let i = json.length - 1; i >= 0; i--) {
+                            const request = json[i];
                             const key = request.variables?.id
-                                    ? `${request.query}-${request.variables.id}`
-                                    : request.query;
-                            requestMap.set(key, request);
-                        });
-                    const uniqueRequests = Array.from(requestMap.values());
-                    storage.writeMetadata!(uniqueRequests);
+                                        ? `${request.query}-${request.variables.id}`
+                                        : request.query;
+                            if (!seen.has(key)) {
+                                seen.add(key);
+                                uniqueRequests.unshift(request); // 添加到开头以保持相对顺序
+                            }
+                        }
+                        storage.writeMetadata!(uniqueRequests);
+                    } catch (error) {
+                        console.error('Error in writeMetadata:', error);
+                        storage.writeMetadata!(json || []);
+                    }
                 },
             } as any,
             // 修改 offlineExchange 配置，确保网络错误能正确传播
