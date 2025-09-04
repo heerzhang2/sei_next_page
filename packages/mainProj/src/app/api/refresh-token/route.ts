@@ -1,4 +1,4 @@
-import { auth } from "@/app/auth"
+import { auth, unstable_update as updateSession } from "@/app/auth"
 import { NextResponse } from "next/server"
 import { refreshAccessToken } from "@/app/auth.config"
 
@@ -35,8 +35,17 @@ export async function POST() {
                 console.error("Token刷新失败:", refreshedToken.error)
                 return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
             }
-
-            console.log("API路由token刷新成功")
+            const sessionObj={
+                user: {
+                    ...session.user,
+                    accessToken:   refreshedToken.accessToken,
+                    refreshToken:  refreshedToken.refreshToken,
+                    accessTokenExpires: refreshedToken.accessTokenExpires,
+                }
+            };
+            //会触发执行auth.config.ts里面的async jwt({ token, user, trigger, profile }：：trigger: "update"但是token还是旧的数据？
+            const newsession = await updateSession(sessionObj)
+            console.log("API路由token刷新session",session,"New:",newsession)
             return NextResponse.json({
                 success: true,
                 accessToken: refreshedToken.accessToken,

@@ -404,11 +404,11 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
                                 if (updateSession) {
                                     try {
-                                        await updateSession({
+                                        const newsession=await updateSession({
                                             accessToken: data.accessToken,
                                             refreshToken: data.refreshToken,
                                         })
-                                        console.log("[v0] Session已更新新的token")
+                                        console.log("[v0] Session已更新新的token",newsession,"目标",data.accessToken)
 
                                         await new Promise((resolve) => setTimeout(resolve, 100))
                                     } catch (error) {
@@ -429,7 +429,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
                                 toast.success("登录已刷新", {
                                     description: "会话已自动续期",
-                                    duration: 3000,
+                                    duration: 1000,
                                 })
                                 return
                             }
@@ -456,11 +456,11 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
                             if (updateSession) {
                                 try {
-                                    await updateSession({
+                                   const newsession= await updateSession({
                                         accessToken: result.accessToken,
                                         refreshToken: result.refreshToken,
                                     })
-                                    console.log("[v0] 离线模式Session已更新新的token")
+                                    console.log("[v0] 离线模式Session已更新新的token",newsession,"目标",result.accessToken)
 
                                     await new Promise((resolve) => setTimeout(resolve, 100))
                                 } catch (error) {
@@ -482,7 +482,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
                             toast.success("离线模式登录已刷新", {
                                 description: "直接与后端服务器通信成功",
-                                duration: 3000,
+                                duration: 1000,
                             })
                             return
                         }
@@ -736,8 +736,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [createClientStable, accessToken, isClient])
 
-    console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
-
+    if(typeof window !== "undefined")
+        console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }

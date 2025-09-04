@@ -57,15 +57,15 @@ export function useAccessToken(): UseAccessTokenReturn {
                 freshTokenTimeRef.current = Date.now()
 
                 try {
-                    await update({
+                  const newsession= await update({
                         user: {
                             ...session?.user,
                             accessToken: accessToken,
                         },
                     })
-                    console.log("[v0] useAccessToken: NextAuth session已更新")
+                    console.log("useAccessToken: NextAuth更新",newsession)
                 } catch (error) {
-                    console.error("[v0] useAccessToken: 更新NextAuth session失败", error)
+                    console.error("useAccessToken: NextAuth更新失败", error)
                 }
 
                 setTimeout(
@@ -94,13 +94,15 @@ export function useAccessToken(): UseAccessTokenReturn {
             if(session?.user){
                 const user ={id: session?.user?.id }
                 const authData={accessToken:session?.user?.accessToken, refreshToken:session?.user?.refreshToken, user:user}
-                console.log("更新离线TOKEN事件=?NEW=", authData)
                 storeOfflineAuth(authData)
+                setOfflineTokenRepl(false)
+                console.log("更新离线TOKEN事件=?NEW=用offlineTokenRepl token authData",authData,"session",session)
+                return authData.accessToken;
             }
             setOfflineTokenRepl(false)
         }
         if (networkStatus.isOnline && session?.user?.accessToken) {
-            console.log("[v0] useAccessToken: 使用NextAuth token")
+            console.log("[v0] useAccessToken: 使用NextAuth token", session)
             return session?.user?.accessToken
         }
 

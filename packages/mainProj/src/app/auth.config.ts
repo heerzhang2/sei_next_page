@@ -123,7 +123,7 @@ export const authConfig: NextAuthConfig = {
         }),
     ],
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger, profile }) {
             // 初次登录时，将用户信息保存到 token
             if (user) {
                 return {
@@ -140,11 +140,16 @@ export const authConfig: NextAuthConfig = {
             }
             // 检查 access token 是否即将过期（提前 5 分钟刷新）  token里面没有accessTokenExpires字段，而是用exp替代的
             const {accessToken, exp }=token
+            console.log("jwt. . .",{trigger, profile, token,user})
             //accessToken是JWT字符串； 该如何提取accessToken有效期的？
             const shouldRefresh = exp && Date.now() > ((exp as number) - 5 * 60) * 1000
             if (shouldRefresh || !accessToken) {
                 console.log("Token 即将过期，开始刷新...")
                 return await refreshAccessToken(token)
+            }
+            if(trigger==="update"){
+                console.log("Token update...session.token =>NULL?")
+                return null;
             }
             return token
         },
@@ -158,11 +163,11 @@ export const authConfig: NextAuthConfig = {
                     refreshToken: token.refreshToken as string,
                     accessTokenExpires: token.exp as number,
                 }
-
                 // 如果有刷新错误，也传递给 session
                 if (token.error) {
                     ;(session as any).error = token.error
                 }
+                console.log("刷新",{session,token})
             }
 
             return session
