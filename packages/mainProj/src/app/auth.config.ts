@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { createServerUrqlClient } from "@/auth/urql"
+import {NextResponse} from "next/server";
+import {unstable_update as updateSession} from "@/app/auth";
 
 // GraphQL mutations
 const AUTHENTICATE_MUTATION = `
@@ -140,21 +142,33 @@ export const authConfig: NextAuthConfig = {
             }
             // 检查 access token 是否即将过期（提前 5 分钟刷新）  token里面没有accessTokenExpires字段，而是用exp替代的
             const {accessToken, exp }=token
-            console.log("jwt. . .",{trigger, profile, token,user})
+            // console.log("jwt. . .",{trigger, profile, token,user})
             //accessToken是JWT字符串； 该如何提取accessToken有效期的？
             const shouldRefresh = exp && Date.now() > ((exp as number) - 5 * 60) * 1000
-            if (shouldRefresh || !accessToken) {
-                console.log("Token 即将过期，开始刷新...")
-                return await refreshAccessToken(token)
-            }
-            if(trigger==="update"){
-                console.log("Token update...session.token =>NULL?")
-                return null;
+            if(trigger==="update" || shouldRefresh || !accessToken){
+                if (shouldRefresh || !accessToken)
+                    console.log("Token 即将过期，开始刷新...")
+                else
+                    console.log("trigger==update...刷新token=>")
+                const refreshedToken = await refreshAccessToken(token)
+                if (refreshedToken.error) {
+                    console.error("Token刷新失败:", refreshedToken.error)
+                    return null
+                }
+                const newJwt={
+                    user: {
+                        ...token.user,
+                    },
+                    accessToken:   refreshedToken.accessToken,
+                    refreshToken:  refreshedToken.refreshToken,
+                    accessTokenExpires: refreshedToken.accessTokenExpires,
+                };
+                return newJwt;
             }
             return token
         },
         async session({ session, token }) {
-            // 将 token 信息传递给 session
+            //这个执行频繁！   将 token 信息传递给 session
             if (token) {
                 session.user = {
                     ...session.user,
@@ -167,9 +181,7 @@ export const authConfig: NextAuthConfig = {
                 if (token.error) {
                     ;(session as any).error = token.error
                 }
-                console.log("刷新",{session,token})
             }
-
             return session
         },
     },

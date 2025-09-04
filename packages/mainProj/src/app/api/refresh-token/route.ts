@@ -1,6 +1,6 @@
 import { auth, unstable_update as updateSession } from "@/app/auth"
 import { NextResponse } from "next/server"
-import { refreshAccessToken } from "@/app/auth.config"
+// import { refreshAccessToken } from "@/app/auth.config"
 
 export async function POST() {
     try {
@@ -17,39 +17,40 @@ export async function POST() {
 
         try {
             // 构造token对象用于刷新
-            const tokenToRefresh = {
-                accessToken: session.user.accessToken,
-                refreshToken: session.user.refreshToken,
-                exp: session.user.accessTokenExpires,
-                user: {
-                    id: session.user.id,
-                    name: session.user.name,
-                    email: session.user.email,
-                },
-            }
+            // const tokenToRefresh = {
+            //     accessToken: session.user.accessToken,
+            //     refreshToken: session.user.refreshToken,
+            //     exp: session.user.accessTokenExpires,
+            //     user: {
+            //         id: session.user.id,
+            //         name: session.user.name,
+            //         email: session.user.email,
+            //     },
+            // }
+            //
+            // console.log("API路由开始刷新token...")
+            // const refreshedToken = await refreshAccessToken(tokenToRefresh)
+            //
+            // if (refreshedToken.error) {
+            //     console.error("Token刷新失败:", refreshedToken.error)
+            //     return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
+            // }
+            // const sessionObj={
+            //     user: {
+            //         ...session.user,
+            //         accessToken:   refreshedToken.accessToken,
+            //         refreshToken:  refreshedToken.refreshToken,
+            //         accessTokenExpires: refreshedToken.accessTokenExpires,
+            //     }
+            // };
 
-            console.log("API路由开始刷新token...")
-            const refreshedToken = await refreshAccessToken(tokenToRefresh)
-
-            if (refreshedToken.error) {
-                console.error("Token刷新失败:", refreshedToken.error)
-                return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
-            }
-            const sessionObj={
-                user: {
-                    ...session.user,
-                    accessToken:   refreshedToken.accessToken,
-                    refreshToken:  refreshedToken.refreshToken,
-                    accessTokenExpires: refreshedToken.accessTokenExpires,
-                }
-            };
             //会触发执行auth.config.ts里面的async jwt({ token, user, trigger, profile }：：trigger: "update"但是token还是旧的数据？
-            const newsession = await updateSession(sessionObj)
+            const newsession = await updateSession(session)
             console.log("API路由token刷新session",session,"New:",newsession)
             return NextResponse.json({
-                success: true,
-                accessToken: refreshedToken.accessToken,
-                refreshToken: refreshedToken.refreshToken,
+                success:  newsession!==null,
+                accessToken: newsession?.user?.accessToken,
+                refreshToken: newsession?.user?.refreshToken,
             })
         } catch (refreshError) {
             console.error("Token刷新过程中出错:", refreshError)
