@@ -601,20 +601,27 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 ...storage,
                 // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，不需要做storage.readMetadata!().then(existing;
                 writeMetadata: (json: SerializedRequest[]) => {
-                    if (json?.length !== 0) {
-                        const newMetadata = [...(json || [])]
-                        const thisIndex = newMetadata.length - 1 //[假设前提]最后一条是最新发送失败的变更mutation操作。
-                        if (thisIndex > 0) {
-                            //删除所有同样接口的未成功的pending操作（按操作类型）？不是同一份的检验报告 +json[thisIndex].variables id &&条件? 来区分吗。业务层面事务性锁定的。
-                            newMetadata.forEach(({ query }, index) => {
-                                if (index !== thisIndex && query === json[thisIndex].query) {
-                                    delete newMetadata[index]
-                                }
-                            })
-                        }
-                        const out = [...newMetadata.filter((a) => a !== undefined)]
-                        storage.writeMetadata!(out)
-                    } else storage.writeMetadata!(json)
+                    if (!json?.length) {
+                        storage.writeMetadata!(json || []);
+                        return;
+                    }
+                    // 为每个请求添加时间戳（如果还没有）
+                    const timestampedJson = json.map(request => ({
+                        ...request,
+                        timestamp: request.timestamp || Date.now()
+                    }));
+                    // 按时间戳排序并去重
+                    const requestMap = new Map();
+                    timestampedJson
+                        .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+                        .forEach(request => {
+                            const key = request.variables?.id
+                                    ? `${request.query}-${request.variables.id}`
+                                    : request.query;
+                            requestMap.set(key, request);
+                        });
+                    const uniqueRequests = Array.from(requestMap.values());
+                    storage.writeMetadata!(uniqueRequests);
                 },
             } as any,
             // 修改 offlineExchange 配置，确保网络错误能正确传播
