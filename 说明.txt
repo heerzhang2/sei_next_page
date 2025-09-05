@@ -529,37 +529,22 @@ Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjU0MTI4MiwiZXhw
 
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["KQcbgDF9RO21DsI92H3tTVJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
-更健壮的版本（推荐）
+
+4. 添加自动检测机制
+你还可以添加一个自动检测机制，定期检查离线队列：
+
 typescript
-
-writeMetadata: (json: SerializedRequest[]) => {
-  try {
-    if (!json?.length) {
-      storage.writeMetadata!(json || []);
-      return;
-    }
-
-    // 使用对象来去重，保留最后一次出现的请求
-    const uniqueRequests: SerializedRequest[] = [];
-    const seen = new Set();
-
-    // 反向遍历，保留每个唯一键的最后一次出现
-    for (let i = json.length - 1; i >= 0; i--) {
-      const request = json[i];
-      const key = request.variables?.id
-        ? `${request.query}-${request.variables.id}`
-        : request.query;
-
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueRequests.unshift(request); // 添加到开头以保持相对顺序
+// 在 useNetworkStatus 中添加定期检查
+useEffect(() => {
+  const checkInterval = setInterval(async () => {
+    if (networkStatus.isGraphQLBackendReachable && networkStatus.isClientOnline) {
+      const queueStatus = await checkOfflineQueue()
+      if (queueStatus.hasPendingMutations) {
+        showRefreshPrompt(queueStatus.queueLength)
       }
     }
+  }, 30000) // 每30秒检查一次
 
-    storage.writeMetadata!(uniqueRequests);
-  } catch (error) {
-    console.error('Error in writeMetadata:', error);
-    // 出错时保持原样
-    storage.writeMetadata!(json || []);
-  }
-},
+  return () => clearInterval(checkInterval)
+}, [networkStatus.isGraphQLBackendReachable, networkStatus.isClientOnline, showRefreshPrompt])
+这样修改后，当GraphQL后端从离线恢复在线时，系统会自动检查离线队列，如果有待同步的操作，会提示用户刷新页面进行同步。

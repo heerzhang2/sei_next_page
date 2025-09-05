@@ -600,30 +600,51 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             storage: {
                 ...storage,
                 // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，离线mutation保存才会进入这里的;点击太快会重复出现的。
-                writeMetadata: (json: SerializedRequest[]) => {
+                writeMetadata: async (json: SerializedRequest[]) => {
                     try {
                         if (!json?.length) {
-                            storage.writeMetadata!(json || []);
+                            await storage.writeMetadata!(json || []);
+                            // 谨慎处理：只有在确定存储为空时才删除备份
+                            if (typeof window !== "undefined") {
+                                setTimeout(async () => {
+                                    try {
+                                        const currentMetadata = await storage.readMetadata!();
+                                        if (!currentMetadata || currentMetadata.length === 0) {
+                                            localStorage.removeItem('urql-metadata');
+                                        }
+                                    } catch (error) {
+                                        console.warn('检查存储状态失败:', error);
+                                    }
+                                }, 5000); // 延迟检查，确保写入完成：页面刚刚启动可能连续出现writeMetadata调用的。
+                            }
                             return;
                         }
                         // 使用对象来去重，保留最后一次出现的请求
                         const uniqueRequests: SerializedRequest[] = [];
                         const seen = new Set();
-                        // 反向遍历，保留每个唯一键的最后一次出现:按变更mutation+报告变更接口的(ID!)来区分的。每个变更接口的参数不定？如何判别重复出现的？
+                        // 反向遍历，保留每个唯一键的最后一次出现
                         for (let i = json.length - 1; i >= 0; i--) {
                             const request = json[i];
                             const key = request.variables?.id
-                                        ? `${request.query}-${request.variables.id}`
-                                        : request.query;
+                                ? `${request.query}-${request.variables.id}`
+                                : request.query;
+
                             if (!seen.has(key)) {
                                 seen.add(key);
-                                uniqueRequests.unshift(request); // 添加到开头以保持相对顺序
+                                uniqueRequests.unshift(request);
                             }
                         }
                         storage.writeMetadata!(uniqueRequests);
+                        // 在 localStorage 中备份队列信息，便于检查
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem('urql-metadata', JSON.stringify({
+                                length: uniqueRequests.length,
+                                timestamp: new Date().toLocaleString(),
+                            }));
+                        }
                     } catch (error) {
                         console.error('Error in writeMetadata:', error);
-                        storage.writeMetadata!(json || []);
+                        await storage.writeMetadata!(json || []);
                     }
                 },
             } as any,

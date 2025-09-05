@@ -5,7 +5,7 @@ import { useNetworkStatus } from "@/hooks/use-network-status"
 import { WifiOff, Server, Database } from "lucide-react"
 
 export function OfflineStatusIndicator() {
-    const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatus()
+    const { isClientOnline, isOnline, isGraphQLBackendReachable, offlineQueue } = useNetworkStatus()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
 
     useEffect(() => {
@@ -33,6 +33,7 @@ export function OfflineStatusIndicator() {
         <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-amber-900 px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
             <Icon className="h-4 w-4" />
             <span>{message}</span>
+            <span>有{offlineQueue.queueLength}个离线操作等待同步</span>
             <button
                 onClick={() => window.location.reload()}
                 className="ml-4 px-2 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700"
