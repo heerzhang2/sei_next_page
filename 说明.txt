@@ -548,3 +548,34 @@ useEffect(() => {
   return () => clearInterval(checkInterval)
 }, [networkStatus.isGraphQLBackendReachable, networkStatus.isClientOnline, showRefreshPrompt])
 这样修改后，当GraphQL后端从离线恢复在线时，系统会自动检查离线队列，如果有待同步的操作，会提示用户刷新页面进行同步。
+
+{
+  "status": "UP",
+  "components" db components hikariDataSource status: {
+    "camundaClient": {
+      "status": "UP"
+    },
+    "db": {
+      "status": "UP",
+      "components": {
+        "fjtjDataSource": {
+          "status": "UP",
+          "details": {
+            "database": "PostgreSQL",
+            "validationQuery": "isValid()"
+          }
+        },
+        "hikariDataSource": {
+          "status": "UP",
+          "details": {
+            "database": "PostgreSQL",
+            "validationQuery": "isValid()"
+          }
+        },
+{
+    "timestamp": 1757075817849,
+    "status": 500,
+    "error": "Internal Server Error",
+    "message": "Unable to acquire JDBC Connection [seiDBpool - Connection is not available, request timed out after 30009ms (total=0, active=0, idle=0, waiting=3)] [n/a]",
+    "path": "/graphql"
+}

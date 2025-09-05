@@ -144,6 +144,8 @@ export function useNetworkStatus(): NetworkStatus {
                 const response = await fetch(`${backendUrl}/actuator/health`, {
                     method: "GET",
                     headers: { "Content-Type": "application/json" },
+                    mode: "cors", // 明确指定 CORS 模式
+                    credentials: "include", // 如果需要发送 cookie/认证信息
                     cache: "no-cache",
                     signal: controller.signal,
                 });
@@ -152,7 +154,8 @@ export function useNetworkStatus(): NetworkStatus {
 
                 if (response.ok) {
                     const healthData = await response.json();
-                    const dbStatus = healthData.components?.db?.status || healthData.status;
+                    const dbStatus = healthData.components?.db?.components?.hikariDataSource?.status
+                                                || healthData.components?.db?.status;
                     return dbStatus === 'UP';
                 }
 
