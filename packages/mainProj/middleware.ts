@@ -28,7 +28,7 @@ const isNetworkAvailable = async (request: NextRequest): Promise<boolean> => {
         // 构建健康检查URL
         const protocol = request.headers.get("x-forwarded-proto") || "http"
         const host = request.headers.get("host") || "localhost:3000"
-        const healthUrl = `${protocol}://${host}/api/health`
+        const healthUrl = `${protocol}://${host}/api/nextLive`
 
         const response = await fetch(healthUrl, {
             method: "HEAD",

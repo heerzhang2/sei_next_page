@@ -261,7 +261,7 @@ const refreshTokenDirectly = async (
 const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; javaBackendReachable: boolean }> => {
     const results = await Promise.allSettled([
         // 检查Next.js服务器
-        fetch("/api/health", { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
+        fetch("/api/nextLive", { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
         // 检查Java后端
         fetch(`${process.env.NEXT_PUBLIC_BACK_END}/graphql`, {
             method: "POST",

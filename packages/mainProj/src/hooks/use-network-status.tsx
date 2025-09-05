@@ -118,7 +118,7 @@ export function useNetworkStatus(): NetworkStatus {
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-            const response = await fetch("/api/health", {
+            const response = await fetch("/api/nextLive", {
                 method: "HEAD",
                 cache: "no-cache",
                 signal: controller.signal,

@@ -23,7 +23,7 @@ const UserAuthed = async () => {
         if (!session?.user || !session?.user?.accessToken) {
             try {
                 // 尝试快速健康检查
-                const response = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/health`, {
+                const response = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/nextLive`, {
                     method: "HEAD",
                     cache: "no-cache",
                     signal: AbortSignal.timeout(2000), // 2秒超时

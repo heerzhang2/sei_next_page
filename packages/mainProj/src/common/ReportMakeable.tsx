@@ -71,7 +71,7 @@ const ReportMakeable = () => {
                 console.log("[v0] Session unauthenticated, double-checking network status")
 
                 try {
-                    const response = await fetch("/api/health", {
+                    const response = await fetch("/api/nextLive", {
                         method: "GET",
                         cache: "no-cache",
                         signal: AbortSignal.timeout(3000),

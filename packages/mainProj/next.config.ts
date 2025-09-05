@@ -241,7 +241,7 @@ module.exports = async (phase) => {
                 // 健康检查端点
                 {
                     source: "/health",
-                    destination: "/api/health",
+                    destination: "/api/nextLive",
                 },
             ]
         },

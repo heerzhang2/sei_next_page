@@ -40,7 +40,7 @@ export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
 
             if (!print && networkStatus.isClientOnline && networkStatus.isNextJSServerReachable && networkStatus.isOnline) {
                 // 最后一次确认服务器状态
-                fetch("/api/health", {
+                fetch("/api/nextLive", {
                     method: "HEAD",
                     cache: "no-cache",
                     signal: AbortSignal.timeout(2000), // 缩短超时时间到2秒
