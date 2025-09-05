@@ -27,19 +27,17 @@ export interface NetworkStatus {
     offlineQueue: OfflineQueueStatus
 }
 
-// 检查离线队列的函数
+// 检查变更请求离线队列
 const checkOfflineQueue = async (): Promise<OfflineQueueStatus> => {
     try {
         if (typeof window === "undefined") {
             return { hasPendingMutations: false, queueLength: 0, lastUpdated: null }
         }
-
         // 从 localStorage 或 indexedDB 读取离线队列元数据
         const metadata = localStorage.getItem('urql-metadata')
         if (!metadata) {
             return { hasPendingMutations: false, queueLength: 0, lastUpdated: null }
         }
-
         const requests = JSON.parse(metadata)
         return {
             hasPendingMutations: requests.length > 0,
@@ -80,37 +78,36 @@ export function useNetworkStatus(): NetworkStatus {
 
     // 添加显示刷新提示的函数
     const showRefreshPrompt = useCallback((queueLength: number) => {
-        toast.info(<div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-200 shadow-xl rounded-lg p-6 max-w-md w-full mx-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 text-center">
+        toast.warning(<div className="bg-white border border-gray-200 shadow-xl rounded-lg p-1 max-w-md w-full mx-1">
+                <h3 className="text-base font-semibold text-red-700 mb-1 text-center">
                     网络已恢复，有待同步的更改
                 </h3>
-                <p className="text-sm text-gray-600 mb-6 text-center">
+                <p className="text-sm text-gray-600 mb-1 text-center">
                     检测到 {queueLength} 个离线操作需要同步。刷新页面立即同步？
                     可暂时不刷新，但是必须尽快手动刷新才能确保报告都保存
                 </p>
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center gap-x-4">
                     <button
                         onClick={() => {
                             window.location.reload();
                             toast.dismiss();
                         }}
-                        className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-5 rounded-md transition-colors"
+                        className="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-1 rounded-md transition-colors"
                     >
                         立即刷新
                     </button>
                     <button
                         onClick={() => toast.dismiss()}
-                        className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-5 rounded-md transition-colors"
+                        className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-1 px-1 rounded-md transition-colors"
                     >
                         稍后处理
                     </button>
                 </div>
-            </div>
-        </div>,
+            </div>,
             {
                 duration: 99999000,
                 dismissible: false,
+                closeButton: true,
                 position: 'top-center'
             }
         )
@@ -277,6 +274,19 @@ export function useNetworkStatus(): NetworkStatus {
             }
         }
     }, [updateNetworkStatus, checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, getConnectionInfo, print, updateOfflineQueueStatus, showRefreshPrompt])
+
+    //预防网络短暂保存失败的，然后很快恢复了，出现'urql-metadata'里面存在等待提交的变更，但无法等待isNextJSServerReachable从false变化为true的消息出发检查机制；
+    useEffect(() => {
+        const checkOfflineQueueInterval = setInterval(async () => {
+            if (networkStatus.isGraphQLBackendReachable) {
+                const queueStatus = await updateOfflineQueueStatus();
+                if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0) {
+                    showRefreshPrompt(queueStatus.queueLength);
+                }
+            }
+        }, 30000);
+        return () => clearInterval(checkOfflineQueueInterval);
+    }, [networkStatus.isGraphQLBackendReachable, updateOfflineQueueStatus, showRefreshPrompt]);
 
     return networkStatus
 }

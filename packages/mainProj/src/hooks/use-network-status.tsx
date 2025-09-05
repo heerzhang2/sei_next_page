@@ -132,33 +132,44 @@ export function useNetworkStatus(): NetworkStatus {
         }
     }, [])
 
-    const checkGraphQLBackendConnectivity = useCallback(async () => {
-        try {
-            const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 20000)
+    const checkGraphQLBackendConnectivity = useCallback(async (retries = 2) => {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-            const backendUrl = process.env.NEXT_PUBLIC_BACK_END
-            if (!backendUrl) return false
+                const backendUrl = process.env.NEXT_PUBLIC_BACK_END;
+                if (!backendUrl) return false;
 
-            const response = await fetch(`${backendUrl}/graphql`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    query: "{ __typename }",
-                }),
-                cache: "no-cache",
-                signal: controller.signal,
-            })
+                const response = await fetch(`${backendUrl}/actuator/health`, {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                    cache: "no-cache",
+                    signal: controller.signal,
+                });
 
-            clearTimeout(timeoutId)
-            return response.ok
-        } catch (error) {
-            console.warn("GraphQL后端连接检查失败:", error)
-            return false
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const healthData = await response.json();
+                    const dbStatus = healthData.components?.db?.status || healthData.status;
+                    return dbStatus === 'UP';
+                }
+
+                if (attempt < retries) {
+                    console.log(`健康检查失败，第${attempt + 1}次重试...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                }
+
+            } catch (error) {
+                console.warn(`健康检查尝试${attempt + 1}失败:`, error);
+                if (attempt < retries) {
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                }
+            }
         }
-    }, [])
+        return false;
+    }, []);
 
     const getConnectionInfo = useCallback(() => {
         if (typeof navigator !== "undefined" && "connection" in navigator) {
