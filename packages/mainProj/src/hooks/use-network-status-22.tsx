@@ -80,21 +80,40 @@ export function useNetworkStatus(): NetworkStatus {
 
     // 添加显示刷新提示的函数
     const showRefreshPrompt = useCallback((queueLength: number) => {
-        toast.info('网络已恢复，有待同步的更改', {
-            description: `检测到 ${queueLength} 个离线操作需要同步。刷新页面立即同步？可暂时不刷新，但是必须尽快手动刷新才能确保报告都保存`,
-            duration: 99999000,
-            dismissible: false,
-            action: {
-                label: '刷新',
-                onClick: () => {
-                    window.location.reload()
-                }
-            },
-            actionButtonStyle: {
-                backgroundColor: '#10b981',
-                color: 'white'
+        toast.info(<div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="bg-white border border-gray-200 shadow-xl rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 text-center">
+                    网络已恢复，有待同步的更改
+                </h3>
+                <p className="text-sm text-gray-600 mb-6 text-center">
+                    检测到 {queueLength} 个离线操作需要同步。刷新页面立即同步？
+                    可暂时不刷新，但是必须尽快手动刷新才能确保报告都保存
+                </p>
+                <div className="flex justify-center gap-3">
+                    <button
+                        onClick={() => {
+                            window.location.reload();
+                            toast.dismiss();
+                        }}
+                        className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-5 rounded-md transition-colors"
+                    >
+                        立即刷新
+                    </button>
+                    <button
+                        onClick={() => toast.dismiss()}
+                        className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-5 rounded-md transition-colors"
+                    >
+                        稍后处理
+                    </button>
+                </div>
+            </div>
+        </div>,
+            {
+                duration: 99999000,
+                dismissible: false,
+                position: 'top-center'
             }
-        })
+        )
     }, [])
 
     const checkNextJSServerConnectivity = useCallback(async () => {
