@@ -132,7 +132,7 @@ export function useNetworkStatus(): NetworkStatus {
         }
     }, [])
 
-    const checkGraphQLBackendConnectivity = useCallback(async (retries = 2) => {
+    const checkGraphQLBackendConnectivity = useCallback(async (retries = 1) => {
         for (let attempt = 0; attempt <= retries; attempt++) {
             try {
                 const controller = new AbortController();
@@ -161,13 +161,13 @@ export function useNetworkStatus(): NetworkStatus {
 
                 if (attempt < retries) {
                     console.log(`健康检查失败，第${attempt + 1}次重试...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 15)));
                 }
 
             } catch (error) {
                 console.warn(`健康检查尝试${attempt + 1}失败:`, error);
                 if (attempt < retries) {
-                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 15)));
                 }
             }
         }
