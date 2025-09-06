@@ -39,52 +39,27 @@ export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
             }
 
             if (!print && networkStatus.isClientOnline && networkStatus.isNextJSServerReachable && networkStatus.isOnline) {
-                // 最后一次确认服务器状态
-                fetch("/api/nextLive", {
-                    method: "HEAD",
-                    cache: "no-cache",
-                    signal: AbortSignal.timeout(2000), // 缩短超时时间到2秒
-                })
-                    .then((response) => {
-                        if (response.ok) {
-                            // 网络正常，确实是认证问题，询问用户是否跳转登录
-                            console.log("Network confirmed OK, asking user about signing out")
-                            showConfirm(
-                                "登录已过期",
-                                "您的登录状态已过期，需要重新登录。是否现在跳转到登录页面？",
-                                () => {
-                                    toast.error("登录已过期", {
-                                        description: "正在重新登录...",
-                                        duration: 3000,
-                                    })
-                                    setTimeout(() => {
-                                        signOut({ callbackUrl: "/login" })
-                                    }, 1000)
-                                },
-                                () => {
-                                    toast.info("已取消跳转", {
-                                        description: "您可以继续使用离线功能，或稍后手动登录。",
-                                        duration: 5000,
-                                    })
-                                },
-                            )
-                        } else {
-                            // 服务器响应异常，进入离线模式
-                            console.log("Server response not OK, entering offline mode")
-                            toast.warning("服务器异常", {
-                                description: "服务器响应异常，已切换到离线模式。",
-                                duration: 5000,
-                            })
-                        }
-                    })
-                    .catch((error) => {
-                        // 网络请求失败，进入离线模式
-                        console.log("Health check failed, entering offline mode:", error)
-                        toast.warning("网络连接失败", {
-                            description: "无法连接到服务器，已切换到离线模式。",
+                // 网络正常，确实是认证问题，询问用户是否跳转登录
+                console.log("Network confirmed OK, asking user about signing out")
+                showConfirm(
+                    "登录已过期",
+                    "您的登录状态已过期，需要重新登录。是否现在跳转到登录页面？",
+                    () => {
+                        toast.error("登录已过期", {
+                            description: "正在重新登录...",
+                            duration: 3000,
+                        })
+                        setTimeout(() => {
+                            signOut({ redirectTo: "/login" })
+                        }, 1000)
+                    },
+                    () => {
+                        toast.info("已取消跳转", {
+                            description: "您可以继续使用离线功能，或稍后手动登录。",
                             duration: 5000,
                         })
-                    })
+                    },
+                )
             } else {
                 console.log("Network status not optimal, entering offline mode")
                 toast.warning("网络连接不稳定", {
