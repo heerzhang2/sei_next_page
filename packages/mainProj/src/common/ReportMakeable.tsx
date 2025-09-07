@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { useNetworkStatus } from "@/hooks/use-network-status"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
 import { useOfflineAuth } from "@/hooks/use-offline-auth"
 import { toast } from "sonner"
@@ -19,7 +19,7 @@ const ReportMakeable = () => {
     const searchParams = useSearchParams()
     const [make, setMake] = useState(false)
     const [hasShownDialog, setHasShownDialog] = useState(false)
-    const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatus()
+    const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
     const { showConfirm, ConfirmDialog } = useLoginRedirectConfirm()
 
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)

@@ -579,3 +579,9 @@ useEffect(() => {
     "message": "Unable to acquire JDBC Connection [seiDBpool - Connection is not available, request timed out after 30009ms (total=0, active=0, idle=0, waiting=3)] [n/a]",
     "path": "/graphql"
 }
+
+
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
+
+    const networkStatus = useNetworkStatusContext()
+

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useNetworkStatus } from "./use-network-status"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 
 interface OfflineStorageOptions {
     key: string
@@ -104,7 +104,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
     const [isLoading, setIsLoading] = useState(true)
     const [lastSaved, setLastSaved] = useState<Date | null>(null)
     const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null)
-    const networkStatus = useNetworkStatus()
+    const networkStatus = useNetworkStatusContext()
     const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle")
     const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
 

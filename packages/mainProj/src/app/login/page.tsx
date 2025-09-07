@@ -2,13 +2,13 @@
 
 import SignInForm from "@/app/login/SignInForm"
 import { OfflineLoginForm } from "@/components/offline-login-form"
-import { useNetworkStatus } from "@/hooks/use-network-status"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function LoginPage() {
   const [isClient, setIsClient] = useState(false)
-  const networkStatus = useNetworkStatus()
+  const networkStatus = useNetworkStatusContext()
 
   useEffect(() => {
     setIsClient(true)

@@ -4,13 +4,13 @@ import type React from "react"
 import { useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { toast } from "sonner"
-import { useNetworkStatus } from "@/hooks/use-network-status"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
 import {useSearchParams} from "next/navigation";
 
 export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
     const { data: session } = useSession()
-    const networkStatus = useNetworkStatus()
+    const networkStatus = useNetworkStatusContext()
     const { showConfirm, ConfirmDialog } = useLoginRedirectConfirm()
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")

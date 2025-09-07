@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { useNetworkStatus } from "@/hooks/use-network-status"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import {useSession} from "next-auth/react";
 
 // 离线认证函数
@@ -98,7 +98,7 @@ export function OfflineLoginForm() {
     const [password, setPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
-    const networkStatus = useNetworkStatus()
+    const networkStatus = useNetworkStatusContext()
     const { data: session, update } = useSession()
 
     const handleSubmit = async (e: React.FormEvent) => {

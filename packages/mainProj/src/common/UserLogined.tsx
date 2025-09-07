@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
-import { useNetworkStatus } from "@/hooks/use-network-status"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
 import { useOfflineAuth } from "@/hooks/use-offline-auth"
 import { toast } from "sonner"
@@ -13,7 +13,7 @@ import { toast } from "sonner"
 const UserLogined = () => {
     const [isClient, setIsClient] = useState(false)
     const { data: session, status } = useSession()
-    const networkStatus = useNetworkStatus()
+    const networkStatus = useNetworkStatusContext()
     const offlineAuth = useOfflineAuth()
     const { showConfirm, ConfirmDialog } = useLoginRedirectConfirm()
 

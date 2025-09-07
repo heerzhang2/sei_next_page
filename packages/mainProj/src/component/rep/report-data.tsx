@@ -5,7 +5,7 @@ import { useQuery, gql } from "@urql/next"
 import { useStorage } from "@/report/StorageContext"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useNetworkStatus } from "@/hooks/use-network-status"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import {toast} from "sonner";
 
 export interface ReportParams {
@@ -180,7 +180,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const pausedUntilRef = useRef(0)
 
     const [isClient, setIsClient] = useState(false)
-    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatus()
+    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
 
     useEffect(() => {
         setIsClient(true)
@@ -372,7 +372,7 @@ function CommonReportDataSub({
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
 
-    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatus()
+    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
 
     useEffect(() => setMounted(true), [])
     console.log("CommonReportDataSub编辑需要子报告单独查", { repId, subrid })

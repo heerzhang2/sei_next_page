@@ -1,10 +1,10 @@
 "use client"
 
-import { useNetworkStatus } from "@/hooks/use-network-status"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import { AlertCircle, Wifi, WifiOff } from "lucide-react"
 
 export function OfflineIndicator() {
-    const { isOnline, lastError } = useNetworkStatus()
+    const { isOnline, lastError } = useNetworkStatusContext()
     //识别标准： 依据 Nextjs 服务器是否可用的；
     if (isOnline) {
         return (
