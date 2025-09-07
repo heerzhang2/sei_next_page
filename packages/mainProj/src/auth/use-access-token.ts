@@ -5,10 +5,10 @@ import type React from "react"
 import { useSession } from "next-auth/react"
 import { useMemo, useState, useRef, useEffect } from "react"
 import { useOfflineAuth } from "@/hooks/use-offline-auth"
-import { useNetworkStatus } from "@/hooks/use-network-status"
 import { useSearchParams } from "next/navigation"
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
 import { toast } from "sonner"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 
 // 存储离线认证信息
 const storeOfflineAuth = (authData: any) => {
@@ -36,7 +36,7 @@ interface UseAccessTokenReturn {
 export function useAccessToken(): UseAccessTokenReturn {
     const { data: session, update } = useSession()
     const offlineAuth = useOfflineAuth()
-    const networkStatus = useNetworkStatus()
+    const networkStatus = useNetworkStatusContext()
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
 

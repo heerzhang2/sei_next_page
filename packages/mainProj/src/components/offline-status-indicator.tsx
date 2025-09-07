@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useNetworkStatus } from "@/hooks/use-network-status"
 import { WifiOff, Server, Database } from "lucide-react"
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
 
 export function OfflineStatusIndicator() {
-    const { isClientOnline, isOnline, isGraphQLBackendReachable, offlineQueue } = useNetworkStatus()
+    const { isClientOnline, isOnline, isGraphQLBackendReachable, offlineQueue } = useNetworkStatusContext()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
 
     useEffect(() => {

@@ -15,6 +15,7 @@ import {AuthErrorBoundary} from "@/components/auth-error-boundary";
 import {OfflineStatusIndicator} from "@/components/offline-status-indicator";
 import {OfflineIndicator} from "@/components/offline-indicator";
 import {PWAInstaller} from "@/components/pwa-installer";
+import { NetworkStatusProvider } from "@/contexts/network-status-context"
 
 
 const APP_NAME = "报告编制系统";
@@ -62,23 +63,25 @@ export default async function RootLayout({
         <ThemeProvider>
             <PrintSettingsProvider>
                 <SessionProvider session={session}>
-                    <AuthErrorBoundary>
-                        <Provider>
-                            <GraphQLProvider>
-                                {/* 离线状态指示器 */}
-                                <OfflineStatusIndicator />
+                    <NetworkStatusProvider>
+                        <AuthErrorBoundary>
+                            <Provider>
+                                <GraphQLProvider>
+                                    {/* 离线状态指示器 */}
+                                    <OfflineStatusIndicator />
 
-                                <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-                                    <OfflineIndicator />
-                                </div>
-                                <HeaderWrapper />
-                                {children}
-                                {/* PWA 组件 */}
-                                <PWAInstaller />
-                                <Toaster richColors position="top-right" />
-                            </GraphQLProvider>
-                        </Provider>
-                    </AuthErrorBoundary>
+                                    <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+                                        <OfflineIndicator />
+                                    </div>
+                                    <HeaderWrapper />
+                                    {children}
+                                    {/* PWA 组件 */}
+                                    <PWAInstaller />
+                                    <Toaster richColors position="top-right" />
+                                </GraphQLProvider>
+                            </Provider>
+                        </AuthErrorBoundary>
+                    </NetworkStatusProvider>
                 </SessionProvider>
             </PrintSettingsProvider>
         </ThemeProvider>

@@ -20,22 +20,22 @@ import { useSearchParams, usePathname } from "next/navigation"
 const networkStatus = {
     isOnline: true,
     lastError: null as Error | null,
-    listeners: new Set<(status: { isOnline: boolean; lastError: Error | null }) => void>(),
+    // listeners: new Set<(status: { isOnline: boolean; lastError: Error | null }) => void>(),
 }
 
 // 网络状态监听器
-export const subscribeToNetworkStatus = (
-    callback: (status: { isOnline: boolean; lastError: Error | null }) => void,
-) => {
-    networkStatus.listeners.add(callback)
-    return () => networkStatus.listeners.delete(callback)
-}
+// export const subscribeToNetworkStatus = (
+//     callback: (status: { isOnline: boolean; lastError: Error | null }) => void,
+// ) => {
+//     networkStatus.listeners.add(callback)
+//     return () => networkStatus.listeners.delete(callback)
+// }
 
 // 更新网络状态
 export const updateNetworkStatus = (isOnline: boolean, error: Error | null = null) => {
     networkStatus.isOnline = isOnline
     networkStatus.lastError = error
-    networkStatus.listeners.forEach((callback) => callback({ isOnline, lastError: error }))
+    // networkStatus.listeners.forEach((callback) => callback({ isOnline, lastError: error }))
 }
 
 // 检查是否为网络错误
