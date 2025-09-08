@@ -25,12 +25,8 @@ export default function Home() {
                 <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
                     <li className="mb-2">
                         <div className="mt-10">
-                            <Link href="/main">认证后的主页home</Link>
+                            <Link href="/deptask">认证后的dep页</Link>
                         </div>
-                        {/*KQcbgDF9RO21DsI92H3tTVJlcG9ydA*/}
-                            <div className="mt-10">
-                                <Link href="/lazy">Visit (potentially) cached page ➡️</Link>
-                            </div>
                         <div className="mt-10">
                             <Link
                                 href="/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1">Precahe重新注册前3份报告-滑行车的</Link>
@@ -88,12 +84,23 @@ export default function Home() {
                         />
                         Deploy now
                     </a>
+                    <Link className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
+                          href="/reptype">
+                        <Image
+                            aria-hidden
+                            src="/globe.svg"
+                            alt="Globe icon"
+                            width={16}
+                            height={16}
+                        />
+                        模板
+                    </Link>
                     <a
                         className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
                         href="/reptype"
                         rel="noopener noreferrer"
                     >
-                    Read our docs
+                    docs
                     </a>
                 </div>
             </main>

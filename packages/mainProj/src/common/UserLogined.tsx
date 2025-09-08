@@ -42,7 +42,7 @@ const UserLogined = () => {
             console.log("UserLogined: 需要登录", { session, offlineAuth })
             showConfirm(
                 "需要登录",
-                "此页面需要登录后才能访问。是否现在跳转到登录页面？",
+                "此页面需要登录后才能访问。是否现在跳转到登录页面？UserLogined",
                 () => {
                     window.location.href = "/login"
                 },

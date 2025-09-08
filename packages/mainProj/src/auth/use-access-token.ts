@@ -122,13 +122,17 @@ export function useAccessToken(): UseAccessTokenReturn {
             const twentyMinutes = 20 * 60 * 1000
 
             if (!hasShownDialog || now - lastDialogTimeRef.current > twentyMinutes) {
-                console.log("应该增加跳转登录: 无可用token")
+                console.log("应该增加跳转登录: 无可用token", {
+                    old: lastDialogTimeRef.current,
+                    passedminute: now - lastDialogTimeRef.current,
+                    overtime: now - lastDialogTimeRef.current > twentyMinutes,
+                })
                 setHasShownDialog(true)
                 lastDialogTimeRef.current = now
 
                 showConfirm(
                     "需要登录",
-                    "当前功能需要登录后才能使用。是否现在跳转到登录页面？",
+                    "当前功能需要登录后才能使用。是否现在跳转到登录页面？accessToken",
                     () => {
                         console.log("[v0] User confirmed login redirect")
                         window.location.href = "/login"

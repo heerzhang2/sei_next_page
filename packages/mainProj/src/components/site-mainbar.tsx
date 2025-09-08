@@ -21,6 +21,7 @@ interface ReportSidebarProps {
 
 /**主菜单区域的
  * 没法添加repId参数了：若需要repId的都放入更底下层次的子路由中的独立菜单去做了。
+ *@param items: 可以注入，目前是默认的菜单列表。
  * */
 export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarProps) {
     const pathname = usePathname()
