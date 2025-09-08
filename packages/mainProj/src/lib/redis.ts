@@ -62,4 +62,5 @@ export class UserInfoCache {
     const cacheKey = `${this.CACHE_PREFIX}${userId}`
     await redis.del(cacheKey)
   }
+
 }

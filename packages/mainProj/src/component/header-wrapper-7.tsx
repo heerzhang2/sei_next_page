@@ -4,7 +4,6 @@ import {SiteMainbar} from "@/components/site-mainbar";
 import {redirect} from "next/navigation";
 import {gql, useQuery} from "@urql/next";
 import {ReportQuery} from "@/component/rep/report-data";
-import {getAuthUser} from "@/lib/user-roles";
 
 // export const dynamic = "force-dynamic"
 export const AuthCompQuery = gql`
@@ -30,10 +29,16 @@ interface HeaderWrapperProps {
 //这若用async服务器组件const session = await auth()，有毛病，SSR看到session?.user都是空的，而且只有浏览器硬性刷新才会再执行的。
 export default async function HeaderWrapper({ items, children }: HeaderWrapperProps) {
   const session = await auth()
-  const authUser =session?.user?.accessToken? await getAuthUser(session?.user?.accessToken) : undefined;
-  const userInfo={ name: authUser?.username };
+  const [result, ] = useQuery({
+    query: AuthCompQuery,
+    variables: {},
+    requestPolicy: 'cache-first',
+  })
+  const userInfo=(!session?.user || !session?.user?.accessToken) ?
+              undefined
+          : { name: session?.user?.name };
 
-  console.log("HeaderWrapper看到的登录是", { userInfo, authUser })
+  console.log("HeaderWrapper看到的登录是", { userInfo, result })
   return (
     <SiteMainbar items={items} userInfo={userInfo}>
       {children}

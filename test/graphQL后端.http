@@ -14,3 +14,10 @@ Authorization: Bearer {{auth_token}}  # 可选认证头，根据实际需求添�
   }
 }
 
+### GraphQL Mutation 请求
+POST https://192.168.171.3:8673/graphql
+Content-Type: application/json
+Cache-Control: no-cache
+Authorization: Bearer {{auth_token}}  # 可选认证头，根据实际需求添加
+
+{   "query": "{authUser{ id}  }" }

@@ -37,10 +37,12 @@ const getHttpAgent = () => {
 const createFetchOptions = (accessToken?: string | null) => {
     return {
         agent: getHttpAgent(),
+        method: 'POST', // 明确指定使用 POST 方法
         headers: {
+            'Content-Type': 'application/json',
             ...(accessToken && { authorization: `Bearer ${accessToken}` }),
         },
-        timeout: 20000, // 从30秒减少到20秒
+        timeout: 30000, //30秒
     }
 }
 
@@ -109,5 +111,6 @@ export const urqlClient = (accessToken?: string | null) => {
         fetchOptions: createFetchOptions(accessToken),
         // 服务端不需要 suspense
         suspense: false,
+        requestPolicy: 'network-only', // 可选：确保总是发起网络请求
     })
 }
