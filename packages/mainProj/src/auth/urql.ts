@@ -112,5 +112,6 @@ export const urqlClient = (accessToken?: string | null) => {
         // 服务端不需要 suspense
         suspense: false,
         requestPolicy: 'network-only', // 可选：确保总是发起网络请求
+        preferGetMethod: false,
     })
 }

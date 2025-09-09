@@ -727,6 +727,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 fetchExchange,
             ],
             suspense: true,
+            preferGetMethod: false,     //默认会可能用GET方法的。
             fetchOptions: () => {
                 const currentToken = accessToken
                 console.log(`createClientStable:最后:fetchOptions: ${currentToken}`)

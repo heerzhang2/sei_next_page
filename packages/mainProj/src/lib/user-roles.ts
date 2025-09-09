@@ -42,55 +42,12 @@ export const AuthCompQuery = gql`
       }
 `
 
-//报错？
-// export async function getAuthUser(accessToken?: string) {
-//     const result = await urqlClient(accessToken || null)
-//         .query(AuthCompQuery, {})
-//         .toPromise()
-//     if (result.error) {
-//         throw result.error
-//     }
-//     return result.data.authUser
-// }
-/**不走urql库的，原生做法的：
- * @param accessToken  调用函数人的身份
- * */
 export async function getAuthUser(accessToken?: string) {
-    const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
-    const url = `${endpoint}/graphql`
-
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(accessToken && { authorization: `Bearer ${accessToken}` }),
-        },
-        body: JSON.stringify({
-            query: `
-        query AuthCompQuery {
-          authUser {
-            id, username, 
-            person { id, name }
-            dep { id, name } 
-            office { id, name } 
-            unit { id, name, dvs { id, name } }
-            ispUnits { id, unit { id, name } }
-          }
-        }
-      `,
-            operationName: 'AuthCompQuery'
-        }),
-    })
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+    const result = await urqlClient(accessToken || null)
+        .query(AuthCompQuery, {})
+        .toPromise()
+    if (result.error) {
+        throw result.error
     }
-
-    const result = await response.json()
-
-    if (result.errors) {
-        throw new Error(result.errors[0].message)
-    }
-
     return result.data.authUser
 }

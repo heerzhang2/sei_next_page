@@ -55,7 +55,8 @@ export const PropertySolidify = (
     const [searchResult, reQuerysearch] = useQuery({
         query: LIST_ALL_PIPINGUNIT,
         variables: { detId: rep?.isp?.bus?.id },
-        requestPolicy: "network-only",
+        requestPolicy: 'cache-and-network',     //"network-only",
+        pause: true,
     })
     const { data, fetching, error } = searchResult
     const busPipingList = data?.listAllPipingUnit || []

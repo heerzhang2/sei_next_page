@@ -78,7 +78,7 @@
     "@urql/exchange-retry": "^2.0.0",
     "@urql/introspection": "^1.2.1",
     "@urql/next": "^2.0.0",
-    "urql": "4.2.2",
+    "urql": "^5.0.1",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

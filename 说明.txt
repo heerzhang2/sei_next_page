@@ -584,4 +584,6 @@ useEffect(() => {
 import {useNetworkStatusContext} from "@/contexts/network-status-context";
 
     const networkStatus = useNetworkStatusContext()
-
+query-string + variables comes down to less than 2048 characters
+createClient 方法中设置 preferGetMethod 参数为 false，
+同时将持久化查询交换器 persisted exchange的 preferGetForPersistedQueries 参数也设为 false
