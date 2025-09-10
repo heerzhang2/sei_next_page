@@ -80,7 +80,6 @@ const customCache: RuntimeCaching[] = [
             plugins: [
                 createCacheKeyPlugin(normalizeReportCacheKey), // Apply normalization plugin
                 new ExpirationPlugin({
-                    // maxEntries: 2,
                     maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days for report pages
                     maxAgeFrom: "last-used",
                 }),
@@ -98,8 +97,7 @@ const customCache: RuntimeCaching[] = [
             cacheName: PAGES_CACHE_NAME.rscPrefetch,
             plugins: [
                 new ExpirationPlugin({
-                    // maxEntries: 2,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                    maxAgeSeconds: 48 * 60 * 60, // 48 hours
                 }),
             ],
         }),
@@ -115,7 +113,7 @@ const customCache: RuntimeCaching[] = [
             plugins: [
                 new ExpirationPlugin({
                     // maxEntries: 2,
-                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                    maxAgeSeconds: 48 * 60 * 60, // 48 hours
                 }),
             ],
         }),

@@ -186,7 +186,7 @@ export const ActionMapItem = ({
             if (result.error) {
                 // 使用 sonner 的 toast.error 显示错误
                 toast.error("保存失败,若断网会自动重新发送的", {
-                    description: result.error.toString(),
+                    duration: 2000,
                 })
                 console.log("Oh no!", result.error)
             } else {

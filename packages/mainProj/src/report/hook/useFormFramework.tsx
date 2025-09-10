@@ -222,6 +222,7 @@ export function useFormFramework({
             if (result.error) {
                 toast.error("保存失败,若断网会自动重新发送的", {
                     description: result.error.toString(),
+                    duration: 2000,
                 })
                 console.log("Oh no!", result.error)
             } else {
@@ -404,6 +405,7 @@ export function useFrameEditorBar({
             if (result.error) {
                 toast.error("保存失败,若断网会自动重新发送的", {
                     description: result.error.toString(),
+                    duration: 2000,
                 })
                 console.log("Oh no!", result.error)
             } else {

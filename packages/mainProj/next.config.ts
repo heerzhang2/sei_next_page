@@ -232,20 +232,6 @@ module.exports = async (phase) => {
             ]
         },
 
-        rewrites: async () => {
-            return [
-                {
-                    source: "/sw.js",
-                    destination: "/sw.js",
-                },
-                // 健康检查端点
-                {
-                    source: "/health",
-                    destination: "/api/nextLive",
-                },
-            ]
-        },
-
         // 允许特定开发来源;    但是生产环境推荐Nginx反向代理方案
         allowedDevOrigins: ["192.168.171.3", "192.168.0.100"], // 多来源数组
     }
@@ -259,7 +245,7 @@ module.exports = async (phase) => {
             reloadOnOnline: false,
             cacheOnNavigation: false,
             register: true,
-            maximumFileSizeToCacheInBytes: 5000000, // 减小到5MB
+            maximumFileSizeToCacheInBytes: 9000000, // 减小到9MB
             additionalPrecacheEntries: [
                 { url: "/~offline", revision },
                 { url: "/login", revision:null },
