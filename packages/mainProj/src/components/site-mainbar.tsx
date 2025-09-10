@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { Menu, X, FileText, Home, Settings, User,LogIn, LogOut } from "lucide-react"
+import { Menu, X, FileText, Home, Settings, User,LogIn, LogOut,WifiOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useSession, signOut, signIn } from "next-auth/react"
@@ -54,6 +54,11 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
                     title: "设置",
                     url: `/settings`,
                     icon: Settings,
+                },
+                {
+                    title: "离线能力预备",
+                    url: `/pwa`,
+                    icon: WifiOff,
                 },
             ]
 

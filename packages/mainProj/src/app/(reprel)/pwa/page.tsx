@@ -1,19 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
-import { useQuery, gql, useClient } from "@urql/next";
+import { useState, useEffect } from "react";
+import { useClient } from "@urql/next";
 import {ReportQuery} from "@/component/rep/report-data";
-
-// const ReportQuery = gql`
-//   query pagegetReportQuery($id: ID!) {
-//     getReport(id: $id) {
-//       id
-//       modeltype
-//       modelversion
-//     }
-//   }
-// `;
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -68,8 +58,6 @@ export default function Page() {
     const [precacheResults, setPrecacheResults] = useState<PrecacheResult[]>([])
     const [failedItems, setFailedItems] = useState<PrecacheResult[]>([])
     const [swError, setSwError] = useState<string | null>(null)
-    const [showRefreshPrompt, setShowRefreshPrompt] = useState(true)
-    const [swUpdateAvailable, setSwUpdateAvailable] = useState(false)
 
     const [customUrls, setCustomUrls] = useState<CustomUrlConfig[]>([])
     const [newUrlPattern, setNewUrlPattern] = useState("")
@@ -179,7 +167,14 @@ export default function Page() {
         const hasNewData = updatedReports.some((report) => report.modeltype && report.modelversion);
         if (hasNewData && !offlineReports.some((report) => report.modeltype)) {
             setOfflineReports(updatedReports);
-            setReportTemplates(templates);
+            // 过滤重复项
+            const tmplAllList = templates.filter((status, index, self) =>
+                    index === self.findIndex((s) =>
+                        s.templateId === status.templateId &&
+                        s.version === status.version
+                    )
+            );
+            setReportTemplates(tmplAllList);
             console.log("[v0] 更新报告数据:", updatedReports);
         }
     }, [reportQueries, offlineReports]); // 依赖于 reportQueries 和 offlineReports
@@ -199,7 +194,7 @@ export default function Page() {
                     const cacheKey = `cache-time-${template.templateId}-${template.version}`
                     const lastCacheTime = localStorage.getItem(cacheKey)
                     const lastCacheTimestamp = lastCacheTime ? Number.parseInt(lastCacheTime) : 0
-                    console.warn(`模板${template.templateId}/${template.version}当前--更新时间:`, templateModule.changeTime,"项目数：",templateModule.cacheUrls?.length )
+                    console.log(`模板${template.templateId}/${template.version}当前--更新时间:`, templateModule.changeTime,"项目数：",templateModule.cacheUrls?.length)
                     const needsUpdate = !lastCacheTime || lastCacheTimestamp < templateModule.changeTime
 
                     statusList.push({
@@ -224,7 +219,15 @@ export default function Page() {
                 }
             }
 
-            setCacheStatusList(statusList)
+            // 过滤重复项
+            const uniqueStatusList = statusList.filter((status, index, self) =>
+                    index === self.findIndex((s) =>
+                        s.templateId === status.templateId &&
+                        s.version === status.version
+                    )
+            );
+
+            setCacheStatusList(uniqueStatusList)
             setAutoUpdateAvailable(hasUpdates)
 
             if (hasUpdates) {
@@ -233,7 +236,7 @@ export default function Page() {
                 console.log("[v0] 所有模板都是最新的")
             }
         }
-        if(!autoUpdateAvailable)   checkCacheStatus()
+        if(!autoUpdateAvailable) checkCacheStatus()
     }, [autoUpdateAvailable, reportTemplates])
 
     const handleRefreshPage = () => {
@@ -242,8 +245,6 @@ export default function Page() {
 
     const handleDismissError = () => {
         setSwError(null)
-        setShowRefreshPrompt(false)
-        setSwUpdateAvailable(false)
     }
 
     const handleClearCache = async () => {
@@ -463,7 +464,7 @@ export default function Page() {
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-            {(swError || showRefreshPrompt || swUpdateAvailable) && (
+            {(swError || !(navigator.serviceWorker.controller)) && (
                 <div className="fixed top-4 right-4 max-w-md bg-white border-l-4 border-orange-500 rounded-lg shadow-lg p-4 z-50">
                     <div className="flex items-start">
                         <div className="flex-shrink-0">
@@ -483,12 +484,8 @@ export default function Page() {
                             </svg>
                         </div>
                         <div className="ml-3 flex-1">
-                            <h3 className="text-sm font-medium text-orange-800">
-                                {swUpdateAvailable ? "Service Worker 已更新" : "缓存系统提示"}
-                            </h3>
                             <div className="mt-1 text-sm text-orange-700">
-                                {swError ||
-                                    (swUpdateAvailable ? "检测到新版本，建议刷新页面以获得最佳体验" : "建议刷新页面以重置缓存系统")}
+                                {swError}
                             </div>
                             <div className="mt-3 space-y-2">
                                 <div className="flex flex-wrap gap-2">
@@ -579,7 +576,7 @@ export default function Page() {
                             </div>
 
                             <div className="text-sm text-gray-600">
-                                共 {offlineReports.length} 个离线报告，生成 {reportTemplates.length} 个模板配置
+                              共 {offlineReports.length} 个离线报告，对应于 {reportTemplates.length} 个模板需缓存。
                             </div>
                         </div>
                     )}
@@ -651,131 +648,6 @@ export default function Page() {
                     </div>
                 )}
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                            <svg
-                                className="w-6 h-6 text-blue-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                style={{ height: "2rem" }}
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">查看报告</h3>
-                        <p className="text-gray-600 mb-4">浏览和管理您的所有报告文档</p>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                            <svg
-                                className="w-6 h-6 text-green-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                style={{ height: "2rem" }}
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">创建报告</h3>
-                        <p className="text-gray-600 mb-4">创建新的报告文档和分析</p>
-                        <button className="text-green-600 hover:text-green-800 font-medium">开始创建 →</button>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                            <svg
-                                className="w-6 h-6 text-purple-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                style={{ height: "2rem" }}
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                                />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">数据分析</h3>
-                        <p className="text-gray-600 mb-4">深入分析报告数据和趋势</p>
-                        <button className="text-purple-600 hover:text-purple-800 font-medium">查看分析 →</button>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">PWA 功能</h2>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <svg
-                                    className="w-4 h-4 text-blue-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    style={{ height: "2rem" }}
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <span className="text-gray-700">离线访问支持</span>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                <svg
-                                    className="w-4 h-4 text-green-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    style={{ height: "2rem" }}
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <span className="text-gray-700">智能缓存管理</span>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                                <svg
-                                    className="w-4 h-4 text-purple-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    style={{ height: "2rem" }}
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <span className="text-gray-700">快速加载体验</span>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                                <svg
-                                    className="w-4 h-4 text-orange-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    style={{ height: "2rem" }}
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <span className="text-gray-700">移动端优化</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ... existing precache section with minimal changes ... */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 className="text-2xl font-semibold text-gray-900 mb-4">离线预缓存</h2>
                     <p className="text-gray-600 mb-6">
@@ -901,7 +773,7 @@ export default function Page() {
                                     <span>预缓存中...</span>
                                 </div>
                             ) : (
-                                `我要开始预缓存 (${reportTemplates.length + customUrls.filter((u) => u.enabled).length} 项)`
+                                `重新预缓存 (${reportTemplates.length + customUrls.filter((u) => u.enabled).length} 项)`
                             )}
                         </button>
 
