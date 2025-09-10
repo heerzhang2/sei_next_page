@@ -530,3 +530,11 @@ Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjU0MTI4MiwiZXhw
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["KQcbgDF9RO21DsI92H3tTVJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
 
+                const response = await fetch(`${backendUrl}/actuator/health`, {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                    mode: "cors",
+                    credentials: "include",
+                    cache: "no-cache",
+                    signal: controller.signal,
+                });

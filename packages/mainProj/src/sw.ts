@@ -1,6 +1,6 @@
 import {
     ExpirationPlugin,
-    NetworkFirst,
+    NetworkFirst, NetworkOnly,
     type PrecacheEntry,
     type RuntimeCaching,
     type SerwistGlobalConfig,
@@ -8,7 +8,6 @@ import {
 import { Serwist } from "serwist"
 //不要删除！来自参考 ./node_modules/@serwist/next/src/index.worker.ts 生产版本有生效的？
 import { defaultCache } from "@serwist/next/worker"
-
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -81,7 +80,7 @@ const customCache: RuntimeCaching[] = [
             plugins: [
                 createCacheKeyPlugin(normalizeReportCacheKey), // Apply normalization plugin
                 new ExpirationPlugin({
-                    maxEntries: 64,
+                    // maxEntries: 2,
                     maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days for report pages
                     maxAgeFrom: "last-used",
                 }),
@@ -99,7 +98,7 @@ const customCache: RuntimeCaching[] = [
             cacheName: PAGES_CACHE_NAME.rscPrefetch,
             plugins: [
                 new ExpirationPlugin({
-                    maxEntries: 32,
+                    // maxEntries: 2,
                     maxAgeSeconds: 24 * 60 * 60, // 24 hours
                 }),
             ],
@@ -115,11 +114,16 @@ const customCache: RuntimeCaching[] = [
             cacheName: PAGES_CACHE_NAME.rsc,
             plugins: [
                 new ExpirationPlugin({
-                    maxEntries: 32,
+                    // maxEntries: 2,
                     maxAgeSeconds: 24 * 60 * 60, // 24 hours
                 }),
             ],
         }),
+    },
+    {
+        matcher: ({ url: { pathname }, sameOrigin }) => !sameOrigin && pathname==="/actuator/health",
+        method: "GET",
+        handler: new NetworkOnly(),
     },
 
     ...defaultCache,

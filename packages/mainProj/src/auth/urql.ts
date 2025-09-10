@@ -96,6 +96,7 @@ if (typeof process !== "undefined") {
     process.on("SIGTERM", cleanupServerConnections)
 }
 
+//若依据参数传递session?.user?.accessToken，确实可区分不同的登录用户的情况。
 export const urqlClient = (accessToken?: string | null) => {
     return createClient({
         url,

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import HeaderWrapper from "@/component/header-wrapper";
 
 /* 20px minmax(100px, 1fr) 20px
   grid-template-rows: 20px clamp(90px, 1fr, 600px) 20px;
@@ -11,6 +12,7 @@ import Link from "next/link";
 export default function Home() {
     return (
         <div className="grid @apply custom-grid-rows items-center justify-items-center min-h-screen p-8 pb-16 gap-12 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+            <HeaderWrapper />
             <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
                 <a className="flex items-center gap-2 hover:underline hover:underline-offset-4" href="deptask">
                     <Image

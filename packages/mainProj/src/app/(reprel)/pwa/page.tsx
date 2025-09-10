@@ -542,18 +542,15 @@ export default function Page() {
                 </div>
             )}
 
-            <h1>等待检验的报告以及离线编制保障</h1>
-            <div className="mt-10">
+            <div className="mt-10 text-xl">
                 <Link href="/">首页</Link>
             </div>
             <div className="max-w-4xl mx-auto">
                 <header className="text-center py-12">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">报告离线编辑</h1>
-                    <p className="text-xl text-gray-600 mb-8">Progressive Web App for Report Management</p>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">待检验报告离线编制保障</h1>
                 </header>
-
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">离线报告状态</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">离线报告状态</h2>
 
                     {offlineReports.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">

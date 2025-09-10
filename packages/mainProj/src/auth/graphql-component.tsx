@@ -64,7 +64,7 @@ export const isNetworkError = (error: any): boolean => {
 // 自定义网络错误处理 Exchange
 let errorCount = 0
 let lastErrorTime = 0
-const MAX_ERRORS_PER_MINUTE = 10
+const MAX_ERRORS_PER_MINUTE = 2
 const ERROR_RESET_TIME = 60000 // 1分钟
 
 const networkErrorExchange: Exchange = ({ forward }) => {
@@ -102,9 +102,8 @@ const networkErrorExchange: Exchange = ({ forward }) => {
                             updateNetworkStatus(false, result.error)
 
                             if (errorCount <= 3 && typeof window !== "undefined") {
-                                toast.error("GraphQL后端连接失败", {
-                                    description: "正在使用缓存数据，请检查后端服务器状态",
-                                    duration: 5000,
+                                toast.warning("后端服务器不可用！", {
+                                    duration: 2000,
                                 })
                             }
                         } else {

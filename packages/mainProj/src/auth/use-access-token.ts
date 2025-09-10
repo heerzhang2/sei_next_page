@@ -111,7 +111,6 @@ export function useAccessToken(): UseAccessTokenReturn {
             return offlineAuth.accessToken
         }
 
-        console.log("[v0] useAccessToken: 无可用token", networkStatus)
         if (
             !print &&
             networkStatus.connectionType !== null &&

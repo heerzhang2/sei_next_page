@@ -30,24 +30,3 @@ export async function getUserInfo(userId: string, accessToken?: string) {
   }
   return result.data.getUser
 }
-
-export const AuthCompQuery = gql`
-      query AuthCompQuery {
-          authUser{
-              id,username, person{id,name}
-              dep{id name} office{id name} 
-              unit{id name dvs{id name} }
-              ispUnits{id,unit{id,name}}
-           }
-      }
-`
-
-export async function getAuthUser(accessToken?: string) {
-    const result = await urqlClient(accessToken || null)
-        .query(AuthCompQuery, {})
-        .toPromise()
-    if (result.error) {
-        throw result.error
-    }
-    return result.data.authUser
-}
