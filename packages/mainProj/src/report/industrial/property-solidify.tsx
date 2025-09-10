@@ -55,7 +55,7 @@ export const PropertySolidify = (
     const [searchResult, reQuerysearch] = useQuery({
         query: LIST_ALL_PIPINGUNIT,
         variables: { detId: rep?.isp?.bus?.id },
-        requestPolicy: 'cache-and-network',     //不用'network-only'了，因为在这里配合情况下会触发2次数的后端请求。
+        requestPolicy: 'cache-and-network',     //不能用'network-only'了，因在这组合配套情况下会触发2次的后端请求。
         pause: false,
     })
     const { data, fetching, error } = searchResult
