@@ -1,6 +1,8 @@
 {
-  "name": "My Awesome PWA app",
-  "short_name": "PWA App",
+  "name": "报告编制系统",
+  "short_name": "报告系统",
+  "id": "/?app=sei_report_system",
+  "description": "支持离线编辑的在线检验报告编制系统",
   "icons": [
     {
       "src": "/icons/android-chrome-192x192.png",
@@ -16,7 +18,21 @@
   ],
   "theme_color": "#FFFFFF",
   "background_color": "#FFFFFF",
+  "screenshots": [
+    {
+      "src": "/samp320X320.png",
+      "sizes": "320x320",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait-primary"
 }
