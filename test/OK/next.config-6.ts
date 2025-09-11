@@ -35,7 +35,29 @@ module.exports = async (phase) => {
 
         headers: async () => {
             return [
-                //PWA Service Worker也算一种请求发起者的。
+                {
+                    source: "/rep/:path*",
+                    headers: [
+                        {
+                            key: "Cache-Control",
+                            value: "no-cache, max-age=0",
+                        },
+                        {
+                            key: "X-PWA-Cache",
+                            value: "report-page",
+                        },
+                    ],
+                },
+                {
+                    source: "/_next/data/:path*",
+                    headers: [
+                        {
+                            key: "Cache-Control",
+                            value: "public, max-age=60, stale-while-revalidate=300",
+                        },
+                    ],
+                },
+                // PWA Service Worker 配置
                 {
                     source: "/sw.js",
                     headers: [

@@ -32,7 +32,7 @@
     "react-dom": "19.1.0"
   },
   "dependencies": {
-    "@camunda8/sdk": "^8.7.11",
+    "@camunda8/sdk": "^8.7.28",
     "@floating-ui/react": "^0.27.12",
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-accordion": "^1.2.2",

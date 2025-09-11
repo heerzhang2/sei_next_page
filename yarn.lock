@@ -36,10 +36,10 @@
   resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.27.1.tgz"
   integrity sha512-1x3D2xEk2fRo3PAhwQwu5UubzgiVWSXTBfWpVd2Mx2AzRqJuDJCsgaDVZ7HB5iGzDW1Hl1sWN2mFyKjmR9uAog==
 
-"@camunda8/sdk@^8.7.11":
-  version "8.7.11"
-  resolved "https://registry.npmjs.org/@camunda8/sdk/-/sdk-8.7.11.tgz"
-  integrity sha512-0DCJqxr2VdxYm4AcyyjED3auezYYICrSaH6q/UXpq+wuBpdJCV5sa+/QnpAH6LpbXgJdAQDsO/WoPHZQbn0Xfw==
+"@camunda8/sdk@^8.7.28":
+  version "8.7.28"
+  resolved "https://registry.npmjs.org/@camunda8/sdk/-/sdk-8.7.28.tgz#5ad2453be59cb6c41fdda46b5f0716316d853e89"
+  integrity sha512-ou/woU4e+IgP8400jqs1WejZoeV1RMBs9gDTipcFMuSEcr2NP+6oHblstVPyyTZIRscKKsQG3TzOgVG4rgta7A==
   dependencies:
     "@grpc/grpc-js" "1.12.5"
     "@grpc/proto-loader" "0.7.13"

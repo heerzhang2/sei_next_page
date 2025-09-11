@@ -19,18 +19,7 @@ module.exports = async (phase) => {
         images: {
             unoptimized: true,
         },
-        ...(phase === PHASE_DEVELOPMENT_SERVER && {
-            reactStrictMode: false,
-            experimental: {
-                forceSwcTransforms: false,
-            },
-        }),
-        ...(phase !== PHASE_DEVELOPMENT_SERVER && {
-
-        }),
-        experimental: {
-            webpackBuildWorker: true,
-        },
+        reactStrictMode: true,
 
         webpack: (config, { isServer }) => {
             // 排除所有 .node 二进制文件
@@ -38,8 +27,7 @@ module.exports = async (phase) => {
                 test: /\.node$/,
                 use: "ignore-loader",
             })
-            // 如果你需要使用这些模块，可以使用 node-loader 代替 ignore-loader
-            // 但这通常只在 Node.js 环境中有效，不适用于浏览器
+            // 如果你需要使用这些模块，可以使用 node-loader 代替 ignore-loader 但这通常只在 Node.js 环境中有效，不适用于浏览器
             return config
         },
 
@@ -47,24 +35,6 @@ module.exports = async (phase) => {
 
         headers: async () => {
             return [
-                {
-                    // 匹配所有 API 路由
-                    source: "/api/:path*",
-                    headers: [
-                        {
-                            key: "Cache-Control",
-                            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
-                        },
-                        {
-                            key: "Pragma",
-                            value: "no-cache",
-                        },
-                        {
-                            key: "Expires",
-                            value: "0",
-                        },
-                    ],
-                },
                 {
                     source: "/rep/:path*",
                     headers: [
@@ -87,44 +57,11 @@ module.exports = async (phase) => {
                         },
                     ],
                 },
-                {
-                    source: "/_next/static/:path*",
-                    headers: [
-                        {
-                            key: "Cache-Control",
-                            value: "public, max-age=31536000, immutable",
-                        },
-                    ],
-                },
-                // PWA Service Worker 配置
-                {
-                    source: "/sw.js",
-                    headers: [
-                        {
-                            key: "Cache-Control",
-                            value: "public, max-age=0, must-revalidate",
-                        },
-                        {
-                            key: "Service-Worker-Allowed",
-                            value: "/",
-                        },
-                    ],
-                },
-                // PWA Manifest 配置
-                {
-                    source: "/manifest.json",
-                    headers: [
-                        {
-                            key: "Cache-Control",
-                            value: "public, max-age=31536000, immutable",
-                        },
-                    ],
-                },
             ]
         },
 
         // 允许特定开发来源;    但是生产环境推荐Nginx反向代理方案
-        allowedDevOrigins: ["192.168.171.3", "192.168.0.100"], // 多来源数组
+        allowedDevOrigins: ["192.168.171.3", "192.168.0.100"],
     }
 
     const revision = crypto.randomUUID()
