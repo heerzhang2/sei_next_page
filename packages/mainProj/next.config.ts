@@ -6,9 +6,6 @@ const crypto = require("crypto")
 module.exports = async (phase) => {
     /** @type {import("next").NextConfig} */
 
-    const enableSerwist = process.env.ENABLE_SERWIST !== "false"
-    const enableHMR = process.env.ENABLE_HMR !== "false"
-
     const nextConfig: NextConfig = {
         /* config options here */
         eslint: {
@@ -22,134 +19,17 @@ module.exports = async (phase) => {
         images: {
             unoptimized: true,
         },
-
         ...(phase === PHASE_DEVELOPMENT_SERVER && {
             reactStrictMode: false,
             experimental: {
-                forceSwcTransforms: !enableHMR,
-            },
-            webpack: (config, { dev, isServer }) => {
-                const enableHMR = process.env.ENABLE_HMR !== "false" // Moved declaration here
-                if (dev && !enableHMR) {
-                    config.plugins = config.plugins.map((plugin) => {
-                        if (plugin.constructor.name === "HotModuleReplacementPlugin") {
-                            // 禁用HMR但保留插件结构
-                            return new plugin.constructor({ multiStep: false })
-                        }
-                        return plugin
-                    })
-
-                    config.watchOptions = {
-                        ...config.watchOptions,
-                        poll: false,
-                        aggregateTimeout: 30000, //聚合时间：设置大值会导致初始化较慢，但浏览器刷新频率减少。
-                        ignored: /node_modules/,
-                    }
-
-                    config.module.rules.forEach((rule) => {
-                        if (rule.use && Array.isArray(rule.use)) {
-                            rule.use = rule.use.filter((loader) => {
-                                if (typeof loader === "object" && loader.loader) {
-                                    return !loader.loader.includes("react-refresh")
-                                }
-                                return true
-                            })
-                        }
-                    })
-                }
-
-                // 排除所有 .node 二进制文件
-                config.module.rules.push({
-                    test: /\.node$/,
-                    use: "ignore-loader",
-                })
-
-                if (!isServer) {
-                    // 客户端优化
-                    config.resolve.fallback = {
-                        ...config.resolve.fallback,
-                        fs: false,
-                        net: false,
-                        tls: false,
-                    }
-
-                    // 代码分割优化
-                    config.optimization.splitChunks = {
-                        ...config.optimization.splitChunks,
-                        cacheGroups: {
-                            ...config.optimization.splitChunks?.cacheGroups,
-                            // 报告相关代码单独打包
-                            report: {
-                                test: /[\\/]src[\\/]report[\\/]/,
-                                name: "report",
-                                chunks: "all",
-                                priority: 10,
-                            },
-                            // 组件库单独打包
-                            components: {
-                                test: /[\\/]src[\\/]components[\\/]/,
-                                name: "components",
-                                chunks: "all",
-                                priority: 5,
-                            },
-                        },
-                    }
-                }
-
-                return config
+                forceSwcTransforms: false,
             },
         }),
-
         ...(phase !== PHASE_DEVELOPMENT_SERVER && {
-            webpack: (config, { isServer }) => {
-                // 排除所有 .node 二进制文件
-                config.module.rules.push({
-                    test: /\.node$/,
-                    use: "ignore-loader",
-                })
 
-                if (!isServer) {
-                    // 客户端优化
-                    config.resolve.fallback = {
-                        ...config.resolve.fallback,
-                        fs: false,
-                        net: false,
-                        tls: false,
-                    }
-
-                    // 代码分割优化
-                    config.optimization.splitChunks = {
-                        ...config.optimization.splitChunks,
-                        cacheGroups: {
-                            ...config.optimization.splitChunks?.cacheGroups,
-                            // 报告相关代码单独打包
-                            report: {
-                                test: /[\\/]src[\\/]report[\\/]/,
-                                name: "report",
-                                chunks: "all",
-                                priority: 10,
-                            },
-                            // 组件库单独打包
-                            components: {
-                                test: /[\\/]src[\\/]components[\\/]/,
-                                name: "components",
-                                chunks: "all",
-                                priority: 5,
-                            },
-                        },
-                    }
-                }
-
-                return config
-            },
         }),
-
         experimental: {
             webpackBuildWorker: true,
-            // 启用静态导出优化
-            optimizePackageImports: ["@/components", "@/lib"],
-            // 启用部分预渲染
-            ppr: false, // 可以设为 true 试验部分预渲染
         },
 
         output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
@@ -236,23 +116,20 @@ module.exports = async (phase) => {
         allowedDevOrigins: ["192.168.171.3", "192.168.0.100"], // 多来源数组
     }
 
-    if (phase === PHASE_PRODUCTION_BUILD || (phase === PHASE_DEVELOPMENT_SERVER && enableSerwist)) {
-        const revision = crypto.randomUUID()
-        const withSerwist = (await import("@serwist/next")).default({
-            disable: false,
-            swSrc: "src/sw.ts",
-            swDest: "public/sw.js",
-            reloadOnOnline: false,
-            cacheOnNavigation: false,
-            register: true,
-            maximumFileSizeToCacheInBytes: 9000000, // 减小到9MB
-            additionalPrecacheEntries: [
-                { url: "/~offline", revision },
-                { url: "/login", revision:null },
-                { url: "/", revision }
-            ],
-        })
-        return withSerwist(nextConfig)
-    }
-    return nextConfig
+    const revision = crypto.randomUUID()
+    const withSerwist = (await import("@serwist/next")).default({
+        disable: false,
+        swSrc: "src/sw.ts",
+        swDest: "public/sw.js",
+        reloadOnOnline: false,
+        cacheOnNavigation: false,
+        register: true,
+        maximumFileSizeToCacheInBytes: 9000000, // 减小到9MB
+        additionalPrecacheEntries: [
+            { url: "/~offline", revision },
+            { url: "/login", revision:null },
+            { url: "/", revision }
+        ],
+    })
+    return withSerwist(nextConfig)
 }

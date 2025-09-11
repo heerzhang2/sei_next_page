@@ -16,7 +16,6 @@
     "start": "next start",
     "lint": "next lint",
     "dev:https": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 node server.mjs",
-    "dev:no-pwa": "cross-env ENABLE_SERWIST=false ENABLE_HMR=true next dev -p 3765",
     "build": "next build",
     "build:standalone": "cross-env BUILD_STANDALONE=true next build",
     "start:https": "cross-env NODE_ENV=production NODE_TLS_REJECT_UNAUTHORIZED=0 node server.mjs",
