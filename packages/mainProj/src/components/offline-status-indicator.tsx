@@ -22,6 +22,8 @@ export function OfflineStatusIndicator() {
             return { icon: Server, message: "Next服务器无法连接" }
         }
         if (!isGraphQLBackendReachable) {
+            if(offlineQueue.queueLength>0)
+                return { icon: Database, message: "等待同步" }
             return { icon: Database, message: "后端数据库无法连接" }
         }
         return { icon: WifiOff, message: "离线模式" }
@@ -30,16 +32,11 @@ export function OfflineStatusIndicator() {
     const { icon: Icon, message } = getStatusMessage()
 
     return (
-        <div className="print:hidden fixed top-0 left-0 right-0 z-50 bg-amber-500 text-amber-900 px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
+        <div className="print:hidden fixed top-0 left-0 right-0 z-50 text-amber-900 px-4 py-2 text-sm font-medium flex items-center justify-center gap-2"
+             style={{ pointerEvents: 'none' }}
+        >
             <Icon className="h-4 w-4" />
             <span>{message}</span>
-            <span>有{offlineQueue.queueLength}个离线操作</span>
-            <button
-                onClick={() => window.location.reload()}
-                className="ml-4 px-2 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700"
-            >
-              尝试重试连接
-            </button>
         </div>
     )
 }

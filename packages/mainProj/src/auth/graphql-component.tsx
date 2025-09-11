@@ -710,9 +710,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
                             // 显示用户友好的错误提示
                             if (typeof window !== "undefined") {
-                                toast.error("网络连接失败", {
-                                    description: "后端服务器无法连接，正在使用缓存数据",
-                                    duration: 5000,
+                                toast.error("后端服务器无法连接，用缓存数据", {
+                                    duration: 2000,
                                 })
                             }
                         }

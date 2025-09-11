@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { X, Download, Smartphone, Monitor, Apple, Chrome } from "lucide-react"
+import { X, Download, Smartphone, Monitor, Apple, Rabbit } from "lucide-react"
 import { toast } from "sonner"
 
 interface BeforeInstallPromptEvent extends Event {
@@ -228,7 +228,7 @@ export function PWAInstaller() {
                 <CardContent className="pt-0">
                     <div className="flex gap-2">
                         <Button onClick={instructions.handler} size="sm" className="flex-1 text-xs">
-                            {browser === "chrome" && <Chrome className="w-3 h-3 mr-1" />}
+                            {browser === "chrome" && <Rabbit className="w-3 h-3 mr-1" />}
                             {instructions.action}
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => setShowInstallPrompt(false)} className="text-xs">
