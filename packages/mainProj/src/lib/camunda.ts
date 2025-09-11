@@ -1,9 +1,6 @@
-//这不能加上"use server" 会报错A "use server" file can only export async functions, found object.
 import { Camunda8 } from "@camunda8/sdk"
 import dotenv from "dotenv"
 
-//文档： https://camunda.github.io/camunda-8-js-sdk/
-//https://docs.camunda.io/docs/apis-tools/working-with-apis-tools/
 // 加载环境变量
 dotenv.config()
 
@@ -13,29 +10,48 @@ const camundaConfig = {
     CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
     CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
     CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION === "true",
-    // 其他配置...
 }
 
-// @ts-ignore
-const c8 = new Camunda8(camundaConfig)
-//公司的：配置CAMUNDA_AUTH_STRATEGY: 'NONE',
-// console.log(`当前camundaConfig:`,camundaConfig);
+// 只在服务端初始化 Camunda8 客户端
+let c8: Camunda8 | null = null;
+let restClient: any = null;
 
+// 获取 Camunda8 实例的函数
+function getCamunda8Instance() {
+    if (typeof window !== 'undefined') {
+        throw new Error('Camunda8 SDK 只能在服务端使用');
+    }
 
-//两个工程都能使用restClient的：一个单纯的流程worker服务。 一个前端nextjs工程的RSC。
-// 使用 REST API 客户端代替 gRPC 客户端
-export const restClient = c8.getCamundaRestClient() // REST API
-//export const zeebe = c8.getZeebeGrpcApiClient()  报错：无法找到必要的 Protocol Buffers 定义文件zeebe.proto，使用 gRPC 客户端
+    if (!c8) {
+        c8 = new Camunda8(camundaConfig);
+    }
+    return c8;
+}
 
+// 获取 REST 客户端的函数
+export function getRestClient() {
+    if (typeof window !== 'undefined') {
+        throw new Error('REST 客户端只能在服务端使用');
+    }
 
-//使用 REST API 创建流程实例的辅助函数 ；  加"use server"确保服务端环境执行。
+    if (!restClient) {
+        const instance = getCamunda8Instance();
+        restClient = instance.getCamundaRestClient();
+    }
+    return restClient;
+}
+
+// 使用 REST API 创建流程实例的辅助函数
 export async function createProcessInstanceRest(bpmnProcessId: string, variables: Record<string, any>) {
-    "use server"
+    if (typeof window !== 'undefined') {
+        throw new Error('此函数只能在服务端使用');
+    }
+
     try {
+        const client = getRestClient();
         // 使用 REST API 创建流程实例
-        const response = await restClient.createProcessInstance({
+        const response = await client.createProcessInstance({
             processDefinitionId: bpmnProcessId,
-            // bpmnProcessId,
             variables,
         })
 
