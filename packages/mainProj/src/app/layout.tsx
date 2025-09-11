@@ -5,15 +5,13 @@ import { Provider } from "jotai"
 import {GraphQLProvider} from "@/auth/graphql-component";
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from "sonner"
-import "@/styles/print-styles.css" // 导入打印样式
+import "@/styles/print-styles.css"
 import {PrintSettingsProvider} from "@/contexts/print-settings-context";
 import type React from "react"
 import { notoSans, notoSerif } from '@/styles/fonts';
 import "./globals.css"
-import HeaderWrapper from "@/component/header-wrapper"
 import {AuthErrorBoundary} from "@/components/auth-error-boundary";
 import {OfflineStatusIndicator} from "@/components/offline-status-indicator";
-import {OfflineIndicator} from "@/components/offline-indicator";
 import {PWAInstaller} from "@/components/pwa-installer";
 import { NetworkStatusProvider } from "@/contexts/network-status-context"
 
@@ -69,10 +67,6 @@ export default async function RootLayout({
                                 <GraphQLProvider>
                                     {/* 离线状态指示器 */}
                                     <OfflineStatusIndicator />
-
-                                    <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-                                        <OfflineIndicator />
-                                    </div>
                                     {children}
                                     {/* PWA 组件 */}
                                     <PWAInstaller />

@@ -529,12 +529,18 @@ Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjU0MTI4MiwiZXhw
 
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["KQcbgDF9RO21DsI92H3tTVJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
+                                    <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+                                        <OfflineIndicator />
+                                    </div>
+import {useNetworkStatusContext} from "@/contexts/network-status-context";
+import { AlertCircle, Wifi, WifiOff } from "lucide-react"
 
-                const response = await fetch(`${backendUrl}/actuator/health`, {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json" },
-                    mode: "cors",
-                    credentials: "include",
-                    cache: "no-cache",
-                    signal: controller.signal,
-                });
+export function OfflineIndicator() {
+    const { isOnline, lastError } = useNetworkStatusContext()
+    //识别标准： 依据 Nextjs 服务器是否可用的；
+    if (isOnline) {
+        return (
+            <div className="flex items-center gap-2 text-green-600 text-sm">
+                <Wifi className="h-4 w-4" />
+                <span>服务在线</span>
+            </div>

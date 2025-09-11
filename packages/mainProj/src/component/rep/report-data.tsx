@@ -282,60 +282,25 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     if (!isClient || !mounted) {
         return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     }
-
     if (!isClientOnline || !isGraphQLBackendReachable) {
         if (data && report) {
-            return (
-                <>
-                    <div className="fixed top-7 right-7 flex items-center gap-2 text-xs">
-                        <span className="px-2 py-1 bg-amber-500 text-white rounded text-xs">离线呢{isClientOnline?"":"A"}{isGraphQLBackendReachable?"":"B"}</span>
-                        <button
-                            onClick={refreshData}
-                            className="px-2 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 disabled:opacity-50"
-                            title="离线状态下无法刷新"
-                        >
-                            ↻
-                        </button>
-                    </div>
-                    {children}
-                </>
-            )
+            return children
         }
     }
-
     if (fetching && !data && Date.now() < pausedUntilRef.current) {
         return <div className="p-4 text-sm text-muted-foreground">查询已暂停，请稍后...</div>
     }
-
-    if (fetching && !data) return <div className="p-4">加载中...</div>
-
+    if (fetching && !data)
+        return <div className="p-4">加载中...</div>
     if (error) {
         if (isNetworkError(error)) {
-            return (
-                <>
-                    <div className="text-center p-4">
-                        <div className="text-red-500 mb-2">后端服务器离线</div>
-                        <div className="text-sm text-gray-600">{data ? "正在使用缓存数据" : "无法连接到服务器"}</div>
-                        <div className="text-xs text-gray-500 mt-2">错误: {error.message}</div>
-                        {data && <div className="text-xs text-blue-600 mt-2">已加载缓存数据，功能有限</div>}
-                        <button
-                            onClick={refreshData}
-                            className="mt-2 px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                            disabled={fetching}
-                        >
-                            {fetching ? "刷新中..." : "重试连接"}
-                        </button>
-                    </div>
-                    {report && data && children}
-                </>
-            )
+            return  report && data && children;
         } else {
             return <div>报告取数据错: {error.message}</div>
         }
     }
-
-    if (report && !report.snapshot) return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
-
+    if (report && !report.snapshot)
+        return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
     if (!report) {
         return (
             <div className="content-center text-center h-screen w-screen">
@@ -343,22 +308,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
             </div>
         )
     }
-
-    return (
-        <>
-            <div className="fixed top-4 right-4 z-50 flex items-center gap-2 text-xs">
-                <button
-                    onClick={refreshData}
-                    className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    disabled={fetching}
-                    title="刷新数据"
-                >
-                    {fetching ? "⟳" : "↻"}
-                </button>
-            </div>
-            {children}
-        </>
-    )
+    return children
 }
 
 function CommonReportDataSub({
@@ -482,28 +432,21 @@ function CommonReportDataSub({
         setOffline(shouldBeOffline)
     }, [error, errorSub, isClientOnline, isGraphQLBackendReachable, setOffline])
 
-    if (!mounted) return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
-    if (fetching || fetchingSub) return <div>加载中...</div>
+    if (!mounted)
+        return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
+    if (fetching || fetchingSub)
+        return <div>加载中...</div>
 
     if (error || errorSub) {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
         if (hasNetworkError) {
-            return (
-                <>
-                    <div className="text-center p-4">
-                        <div className="text-red-500 mb-2">后端服务器离线</div>
-                        <div className="text-sm text-gray-600">正在使用缓存数据</div>
-                        <div className="text-xs text-gray-500 mt-2">{error?.message || errorSub?.message}</div>
-                    </div>
-                    {report && reportSub && children}
-                </>
-            )
+            return  report && reportSub && children;
         } else {
             return <div>报告取数据错: {error?.message || errorSub?.message}</div>
         }
     }
-
-    if (report && !report.snapshot) return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
+    if (report && !report.snapshot)
+        return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
     if (!report) {
         return (
             <div className="content-center text-center h-screen w-screen">
@@ -518,8 +461,7 @@ function CommonReportDataSub({
             </div>
         )
     }
-
-    return <>{children}</>
+    return children
 }
 
 export default function ReportData({ repId, children }: { repId: string; children: React.ReactNode }) {

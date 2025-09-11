@@ -123,9 +123,24 @@ const customCache: RuntimeCaching[] = [
         method: "GET",
         handler: new NetworkOnly(),
     },
+    //这个和graphQL请求没有关系的;
+    {
+        matcher: ({ sameOrigin }) => !sameOrigin,
+        handler: new NetworkFirst({
+            cacheName: "cross-origin",
+            plugins: [
+                new ExpirationPlugin({
+                    maxEntries: 2000,
+                    maxAgeSeconds: 4 * 60 * 60,     //4 hour
+                }),
+            ],
+            networkTimeoutSeconds: 10,
+        }),
+    },
 
     ...defaultCache,
 ]
+
 
 const serwist = new Serwist({
     precacheEntries: self.__SW_MANIFEST,

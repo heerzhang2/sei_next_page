@@ -191,8 +191,8 @@ export const ActionMapItem = ({
                 console.log("Oh no!", result.error)
             } else {
                 // 使用 sonner 的 toast.success 显示成功消息
-                toast.success("保存成功", {
-                    description: "数据已成功保存到服务器",
+                toast.success("数据已成功保存到服务器", {
+                    duration: 2000,
                 })
                 setModified(false)
             }
