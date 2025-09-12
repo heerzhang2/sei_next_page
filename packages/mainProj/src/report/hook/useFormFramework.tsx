@@ -220,7 +220,7 @@ export function useFormFramework({
         update().then((result) => {
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败,若断网会自动重新发送的", {
+                toast.error("保存失败,若断网会自动重新发送的3", {
                     description: result.error.toString(),
                     duration: 2000,
                 })
@@ -403,7 +403,7 @@ export function useFrameEditorBar({
         update().then((result) => {
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败,若断网会自动重新发送的", {
+                toast.error("保存失败,若断网会自动重新发送的2", {
                     description: result.error.toString(),
                     duration: 2000,
                 })
