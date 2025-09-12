@@ -25,7 +25,7 @@ export default function useOssDeleteFileMutation(callback: (resp: any,arIndex:nu
 
       if (result.error) {
         // 使用 sonner 的 toast.error 显示错误
-        toast.error("保存失败", {
+        toast.error("删除oss文件失败", {
           description: result.error.toString(),
         })
         console.log("Oh no!", result.error)

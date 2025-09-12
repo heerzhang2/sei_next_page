@@ -307,18 +307,9 @@ export function useFormFramework({
 //报告: 修改指示器组件
 export const ModificationIndicator = () => {
     const { modified } = useStorage()
-    const { isOnline, isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
     return (
         <div className="fixed top-4 left-10 z-50">
-            {(!isClientOnline || !isGraphQLBackendReachable) && (
-               <div className="relative bg-amber-500/80 border border-amber-900/80 rounded-lg p-3">
-                    <AlertCircle className="absolute top-0 left-0 w-6 h-6 text-amber-500 animate-pulse" style={{ zIndex: 2 }} />
-                    <span className="absolute top-0 left-1/2 -translate-x-1/2 text-sm font-medium text-amber-800 z-10">
-                        {!isClientOnline ? "断网" : "离线"}
-                    </span>
-               </div>
-            )}
-            {/* 修改状态图标 */}
+            {/* 修改状态 */}
             {modified && (
                 <div className="bg-yellow-500 border border-pink-900 text-black px-0 py-0 @5xl:px-1 @5xl:py-1 rounded-lg animate-spin-slow">
                     <Pencil className="w-3 h-3 text-red-500 animate-spin" />
@@ -403,8 +394,7 @@ export function useFrameEditorBar({
         update().then((result) => {
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败,若断网会自动重新发送的2", {
-                    description: result.error.toString(),
+                toast.error("保存失败,若因断网原因会自动重新发。", {
                     duration: 2000,
                 })
                 console.log("Oh no!", result.error)

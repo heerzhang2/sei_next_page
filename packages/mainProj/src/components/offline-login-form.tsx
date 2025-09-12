@@ -128,8 +128,8 @@ export function OfflineLoginForm() {
                 console.error("OfflineLoginForm:更新NextAuth session失败", error)
             }
 
-            toast.success("离线登录成功", {
-                description: "已直接与后端服务器建立连接",
+            toast.success("Next离线情形下登录,与后端服务器连接", {
+                duration: 2000
             })
 
             // 跳转到首页

@@ -96,20 +96,12 @@ const networkErrorExchange: Exchange = ({ forward }) => {
                     if (hasNetworkError) {
                         errorCount++
                         lastErrorTime = now
-
                         if (errorCount <= MAX_ERRORS_PER_MINUTE) {
                             console.error("网络错误检测到:", result.error)
                             updateNetworkStatus(false, result.error)
-
-                            if (errorCount <= 3 && typeof window !== "undefined") {
-                                toast.warning("后端服务器不可用！", {
-                                    duration: 2000,
-                                })
-                            }
                         } else {
-                            console.warn("GraphQL错误过于频繁，暂停错误处理")
+                            console.log("GraphQL错误过于频繁，暂停错误处理")
                         }
-
                         // 确保错误能被 useQuery 捕获
                         result.error.isNetworkError = true
                     } else {
@@ -479,9 +471,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                 )
                             }
 
-                            toast.success("离线模式登录已刷新", {
-                                description: "直接与后端服务器通信成功",
-                                duration: 1000,
+                            toast.success("离线模式登录刷新直接,直接与后端服务器通信", {
+                                duration: 3000,
                             })
                             return
                         }
@@ -705,15 +696,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             isNetworkError(error)
 
                         if (hasNetworkError) {
-                            console.error("网络连接错误:", error)
+                            // console.error("网络连接错误:", error)
                             updateNetworkStatus(false, error)
-
-                            // 显示用户友好的错误提示
-                            if (typeof window !== "undefined") {
-                                toast.error("后端服务器无法连接，用缓存数据", {
-                                    duration: 2000,
-                                })
-                            }
                         }
                     },
                 }),
