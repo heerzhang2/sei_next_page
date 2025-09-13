@@ -98,6 +98,7 @@ const ERROR_RESET_TIME = 60000 // 1分钟
 
 const createNetworkErrorExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
+    storage: any, // Add storage parameter for queue management
 ): Exchange => {
     return ({ forward }) => {
         return (operations$) => {
@@ -105,6 +106,10 @@ const createNetworkErrorExchange = (
                 operations$,
                 forward,
                 tap((result: OperationResult) => {
+                    if (result.data && !result.error && result.operation.kind === "mutation") {
+                        handleSuccessfulMutation(result, result.operation, storage)
+                    }
+
                     if (result.error) {
                         console.log("[v0] networkErrorExchange - 原始错误对象:", {
                             error: result.error,
@@ -150,6 +155,33 @@ const createNetworkErrorExchange = (
                 }),
             )
         }
+    }
+}
+
+const handleSuccessfulMutation = async (result: OperationResult, operation: Operation, storage: any) => {
+    try {
+        // Check if this is a successful mutation response
+        if (result.data && operation.kind === "mutation" && !result.error) {
+            console.log("[v0] 检测到成功的mutation响应，准备从离线队列中移除:", {
+                operationName: operation.operationName,
+                hasData: !!result.data,
+                variables: operation.variables,
+            })
+
+            // Remove the successful operation from offline queue
+            const success = await removeOperationFromQueue(operation, storage)
+            if (success) {
+                console.log("[v0] 成功mutation操作已从离线队列中移除")
+
+                // Show success notification
+                toast.success("数据保存成功", {
+                    description: "离线操作已同步到服务器",
+                    duration: 3000,
+                })
+            }
+        }
+    } catch (error) {
+        console.error("[v0] 处理成功mutation时出错:", error)
     }
 }
 
@@ -776,7 +808,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 }),
                 cache,
                 makeAuthExchange(accessToken, update, print),
-                createNetworkErrorExchange(updateGraphQLBackendStatus),
+                createNetworkErrorExchange(updateGraphQLBackendStatus, storage),
                 ssr,
                 customFetchExchange, // 自定义 fetch exchange
                 fetchExchange,
