@@ -15,28 +15,7 @@ import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
 import { useSearchParams, usePathname } from "next/navigation"
-
-// 创建网络状态管理:全局的。
-const networkStatus = {
-    isOnline: true,
-    lastError: null as Error | null,
-    // listeners: new Set<(status: { isOnline: boolean; lastError: Error | null }) => void>(),
-}
-
-// 网络状态监听器
-// export const subscribeToNetworkStatus = (
-//     callback: (status: { isOnline: boolean; lastError: Error | null }) => void,
-// ) => {
-//     networkStatus.listeners.add(callback)
-//     return () => networkStatus.listeners.delete(callback)
-// }
-
-// 更新网络状态
-export const updateNetworkStatus = (isOnline: boolean, error: Error | null = null) => {
-    networkStatus.isOnline = isOnline
-    networkStatus.lastError = error
-    // networkStatus.listeners.forEach((callback) => callback({ isOnline, lastError: error }))
-}
+import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/network-status-context"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -61,67 +40,116 @@ export const isNetworkError = (error: any): boolean => {
     )
 }
 
+const isVersionConflictError = (error: any): boolean => {
+    if (!error) return false
+
+    const errorMessage = error.message || ""
+    return (
+        errorMessage.includes("原始记录已在其它设备或其他人改动了") ||
+        errorMessage.includes("版本是") ||
+        (error.graphQLErrors &&
+            error.graphQLErrors.some((err: any) => err.message && err.message.includes("原始记录已在其它设备或其他人改动了")))
+    )
+}
+
+const removeOperationFromQueue = async (operationToRemove: Operation, storage: any) => {
+    try {
+        if (!storage.readMetadata || !storage.writeMetadata) return
+
+        const currentMetadata = await storage.readMetadata()
+        if (!currentMetadata || !Array.isArray(currentMetadata)) return
+
+        // Filter out the failed operation based on operation name and variables
+        const filteredMetadata = currentMetadata.filter((request: SerializedRequest) => {
+            const isSameOperation = request.query === operationToRemove.query.loc?.source.body
+            const isSameVariables = JSON.stringify(request.variables) === JSON.stringify(operationToRemove.variables)
+            return !(isSameOperation && isSameVariables)
+        })
+
+        console.log(
+            `[v0] 从离线队列中移除操作，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`,
+        )
+
+        await storage.writeMetadata(filteredMetadata)
+
+        // Update localStorage backup
+        if (typeof window !== "undefined") {
+            localStorage.setItem(
+                "urql-metadata",
+                JSON.stringify({
+                    length: filteredMetadata.length,
+                    timestamp: new Date().toLocaleString(),
+                }),
+            )
+        }
+
+        return true
+    } catch (error) {
+        console.error("[v0] 移除离线队列操作失败:", error)
+        return false
+    }
+}
+
 // 自定义网络错误处理 Exchange
 let errorCount = 0
 let lastErrorTime = 0
 const MAX_ERRORS_PER_MINUTE = 2
 const ERROR_RESET_TIME = 60000 // 1分钟
 
-const networkErrorExchange: Exchange = ({ forward }) => {
-    return (operations$) => {
-        return pipe(
-            operations$,
-            forward,
-            tap((result: OperationResult) => {
-                if (result.error) {
-                    console.log("[v0] networkErrorExchange - 原始错误对象:", {
-                        error: result.error,
-                        networkError: result.error.networkError,
-                        graphQLErrors: result.error.graphQLErrors,
-                        response: result.error.response,
-                        operation: result.operation.operationName,
-                    })
+const createNetworkErrorExchange = (
+    updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
+): Exchange => {
+    return ({ forward }) => {
+        return (operations$) => {
+            return pipe(
+                operations$,
+                forward,
+                tap((result: OperationResult) => {
+                    if (result.error) {
+                        console.log("[v0] networkErrorExchange - 原始错误对象:", {
+                            error: result.error,
+                            networkError: result.error.networkError,
+                            graphQLErrors: result.error.graphQLErrors,
+                            response: result.error.response,
+                            operation: result.operation.operationName,
+                        })
 
-                    const now = Date.now()
+                        const now = Date.now()
 
-                    if (now - lastErrorTime > ERROR_RESET_TIME) {
+                        if (now - lastErrorTime > ERROR_RESET_TIME) {
+                            errorCount = 0
+                        }
+
+                        const hasNetworkError =
+                            result.error.networkError ||
+                            result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
+                            isNetworkError(result.error)
+
+                        if (hasNetworkError) {
+                            errorCount++
+                            lastErrorTime = now
+                            if (errorCount <= MAX_ERRORS_PER_MINUTE) {
+                                console.error("网络错误检测到:", result.error)
+                                updateGraphQLBackendStatus(false, false)
+                            } else {
+                                console.log("GraphQL错误过于频繁，暂停错误处理")
+                            }
+                            result.error.isNetworkError = true
+                        } else {
+                            if (result.data) {
+                                console.log("GraphQL后端网络已恢复")
+                                updateGraphQLBackendStatus(true, true)
+                                errorCount = 0
+                            }
+                        }
+                    } else if (result.data) {
+                        console.log("GraphQL后端网络已恢复")
+                        updateGraphQLBackendStatus(true, true)
                         errorCount = 0
                     }
-
-                    const hasNetworkError =
-                        result.error.networkError ||
-                        result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
-                        isNetworkError(result.error)
-
-                    if (hasNetworkError) {
-                        errorCount++
-                        lastErrorTime = now
-                        if (errorCount <= MAX_ERRORS_PER_MINUTE) {
-                            console.error("网络错误检测到:", result.error)
-                            updateNetworkStatus(false, result.error)
-                        } else {
-                            console.log("GraphQL错误过于频繁，暂停错误处理")
-                        }
-                        // 确保错误能被 useQuery 捕获
-                        result.error.isNetworkError = true
-                    } else {
-                        // 如果有成功的响应，说明网络恢复了
-                        if (result.data && !networkStatus.isOnline) {
-                            console.log("GraphQL后端网络已恢复")
-                            updateNetworkStatus(true)
-                            errorCount = 0 // 重置错误计数
-                        }
-                    }
-                } else if (result.data) {
-                    // 成功获取数据，网络正常
-                    if (!networkStatus.isOnline) {
-                        console.log("GraphQL后端网络已恢复")
-                        updateNetworkStatus(true)
-                        errorCount = 0 // 重置错误计数
-                    }
-                }
-            }),
-        )
+                }),
+            )
+        }
     }
 }
 
@@ -395,11 +423,11 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
                                 if (updateSession) {
                                     try {
-                                        const newsession=await updateSession({
+                                        const newsession = await updateSession({
                                             accessToken: data.accessToken,
                                             refreshToken: data.refreshToken,
                                         })
-                                        console.log("[v0] Session已更新新的token",newsession,"目标",data.accessToken)
+                                        console.log("[v0] Session已更新新的token", newsession, "目标", data.accessToken)
 
                                         await new Promise((resolve) => setTimeout(resolve, 100))
                                     } catch (error) {
@@ -447,11 +475,11 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
                             if (updateSession) {
                                 try {
-                                   const newsession= await updateSession({
+                                    const newsession = await updateSession({
                                         accessToken: result.accessToken,
                                         refreshToken: result.refreshToken,
                                     })
-                                    console.log("[v0] 离线模式Session已更新新的token",newsession,"目标",result.accessToken)
+                                    console.log("[v0] 离线模式Session已更新新的token", newsession, "目标", result.accessToken)
 
                                     await new Promise((resolve) => setTimeout(resolve, 100))
                                 } catch (error) {
@@ -506,9 +534,11 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const pathname = usePathname()
-    const print = "1" === searchParams!.get("print") //进入页面是打印目的的
+    const print = "1" === searchParams!.get("print")
     const { accessToken, ConfirmDialog } = useAccessToken()
     const { update } = useSession()
+    const networkStatusContext = useNetworkStatusContext()
+    const { updateGraphQLBackendStatus } = useNetworkStatusActions()
 
     const [isClient, setIsClient] = useState(false)
 
@@ -521,6 +551,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const ssrRef = useRef<any>(null)
     const lastTokenRef = useRef<string | null>(null)
     const instanceIdRef = useRef(Math.random().toString(36).substr(2, 9))
+    const storageRef = useRef<any>(null) // Add storage ref for queue management
 
     const initializedRef = useRef(false)
 
@@ -579,6 +610,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             }
         }
 
+        storageRef.current = storage
+
         const cache = offlineExchange({
             logger(severity: "debug" | "error" | "warn", message: string) {
                 console.log("offlineExchange:", severity, "消息", message)
@@ -593,48 +626,49 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 writeMetadata: async (json: SerializedRequest[]) => {
                     try {
                         if (!json?.length) {
-                            await storage.writeMetadata!(json || []);
                             // 谨慎处理：只有在确定存储为空时才删除备份
                             if (typeof window !== "undefined") {
                                 setTimeout(async () => {
                                     try {
-                                        const currentMetadata = await storage.readMetadata!();
+                                        const currentMetadata = await storage.readMetadata!()
                                         if (!currentMetadata || currentMetadata.length === 0) {
-                                            localStorage.removeItem('urql-metadata');
+                                            localStorage.removeItem("urql-metadata")
+                                            await storage.writeMetadata!(json || [])
                                         }
                                     } catch (error) {
-                                        console.warn('检查存储状态失败:', error);
+                                        console.warn("检查存储状态失败:", error)
                                     }
-                                }, 5000); // 延迟检查，确保写入完成：页面刚刚启动可能连续出现writeMetadata调用的。
+                                }, 5000) // 延迟检查，确保写入完成：页面刚刚启动可能连续出现writeMetadata调用的。
                             }
-                            return;
+                            return
                         }
                         // 使用对象来去重，保留最后一次出现的请求
-                        const uniqueRequests: SerializedRequest[] = [];
-                        const seen = new Set();
+                        const uniqueRequests: SerializedRequest[] = []
+                        const seen = new Set()
                         // 反向遍历，保留每个唯一键的最后一次出现
                         for (let i = json.length - 1; i >= 0; i--) {
-                            const request = json[i];
-                            const key = request.variables?.id
-                                ? `${request.query}-${request.variables.id}`
-                                : request.query;
+                            const request = json[i]
+                            const key = request.variables?.id ? `${request.query}-${request.variables.id}` : request.query
 
                             if (!seen.has(key)) {
-                                seen.add(key);
-                                uniqueRequests.unshift(request);
+                                seen.add(key)
+                                uniqueRequests.unshift(request)
                             }
                         }
-                        storage.writeMetadata!(uniqueRequests);
+                        storage.writeMetadata!(uniqueRequests)
                         // 在 localStorage 中备份队列信息，便于检查
                         if (typeof window !== "undefined") {
-                            localStorage.setItem('urql-metadata', JSON.stringify({
-                                length: uniqueRequests.length,
-                                timestamp: new Date().toLocaleString(),
-                            }));
+                            localStorage.setItem(
+                                "urql-metadata",
+                                JSON.stringify({
+                                    length: uniqueRequests.length,
+                                    timestamp: new Date().toLocaleString(),
+                                }),
+                            )
                         }
                     } catch (error) {
-                        console.error('Error in writeMetadata:', error);
-                        await storage.writeMetadata!(json || []);
+                        console.error("Error in writeMetadata:", error)
+                        await storage.writeMetadata!(json || [])
                     }
                 },
             } as any,
@@ -689,6 +723,46 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
                         console.error("GraphQL 错误:", error)
 
+                        if (isVersionConflictError(error)) {
+                            console.log("[v0] 检测到版本冲突错误，显示详细提示并从队列中移除")
+
+                            // Show detailed error message to user
+                            const errorMessage = error.message || error.graphQLErrors?.[0]?.message || "版本冲突错误"
+                            const invalidId = error.graphQLErrors?.[0]?.extensions?.invalidId || "未知ID"
+
+                            toast.error("数据版本冲突", {
+                                description: (
+                                    <div className="space-y-2">
+                                        <p className="font-medium text-red-700">{errorMessage}</p>
+                                        <p className="text-sm text-gray-600">记录ID: {invalidId}</p>
+                                        <p className="text-sm text-gray-500">
+                                            该记录已被其他设备或用户修改，请刷新页面获取最新数据后重新操作。
+                                        </p>
+                                    </div>
+                                ),
+                                duration: 8000,
+                                action: {
+                                    label: "刷新页面",
+                                    onClick: () => window.location.reload(),
+                                },
+                            })
+
+                            // Remove the failed operation from offline queue
+                            if (storageRef.current && operation.kind === "mutation") {
+                                removeOperationFromQueue(operation, storageRef.current)
+                                    .then((success) => {
+                                        if (success) {
+                                            console.log("[v0] 版本冲突操作已从离线队列中移除")
+                                        }
+                                    })
+                                    .catch((err) => {
+                                        console.error("[v0] 移除版本冲突操作失败:", err)
+                                    })
+                            }
+
+                            return // Don't process as network error
+                        }
+
                         // 检查是否为网络错误
                         const hasNetworkError =
                             error.networkError ||
@@ -696,20 +770,19 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             isNetworkError(error)
 
                         if (hasNetworkError) {
-                            // console.error("网络连接错误:", error)
-                            updateNetworkStatus(false, error)
+                            networkStatusContext && console.log("使用全局网络状态更新")
                         }
                     },
                 }),
                 cache,
                 makeAuthExchange(accessToken, update, print),
-                networkErrorExchange, // 自定义网络错误处理
+                createNetworkErrorExchange(updateGraphQLBackendStatus),
                 ssr,
                 customFetchExchange, // 自定义 fetch exchange
                 fetchExchange,
             ],
             suspense: true,
-            preferGetMethod: false,     //默认会可能用GET方法的。
+            preferGetMethod: false, //默认会可能用GET方法的。
             fetchOptions: () => {
                 const currentToken = accessToken
                 console.log(`createClientStable:最后:fetchOptions: ${currentToken}`)
@@ -726,7 +799,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         ssrRef.current = ssr
 
         return [client, ssr]
-    }, [accessToken, isClient, update])
+    }, [accessToken, isClient, update, networkStatusContext])
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
@@ -750,7 +823,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [createClientStable, accessToken, isClient])
 
-    if(typeof window !== "undefined")
+    if (typeof window !== "undefined")
         console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>

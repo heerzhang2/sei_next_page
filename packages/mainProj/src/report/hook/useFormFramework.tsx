@@ -220,8 +220,7 @@ export function useFormFramework({
         update().then((result) => {
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败,若断网会自动重新发送的3", {
-                    description: result.error.toString(),
+                toast.error("保存失败,断网会自动重新再发送...", {
                     duration: 2000,
                 })
                 console.log("Oh no!", result.error)
