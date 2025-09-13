@@ -16,7 +16,7 @@ import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
 import { useSearchParams, usePathname } from "next/navigation"
 import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/network-status-context"
-
+//文档： https://nearform.com/open-source/urql/docs/
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
     if (!error) return false
