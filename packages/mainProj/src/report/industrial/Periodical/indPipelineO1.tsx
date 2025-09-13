@@ -123,8 +123,8 @@ const createRecordList =()=>[
         createItem('SoniConclusion', <FxSimpConclus label={'超声波检测-检测结果'} clc="结果" clist={soni结果选}/>),
     ]),
     aggregateProj('硬度检测', 'HARD_TS', [
-        createItem('HardInstrument', <DeviceSurveyFx config={config硬度仪} label='磁粉检测-概要仪器'/>),
-        createItem('HardDiagram', <FxDiagram label="磁粉检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={10} dlist={hard示说选}/>),
+        createItem('HardInstrument', <DeviceSurveyFx config={config硬度仪} label='硬度检测-概要仪器'/>),
+        createItem('HardDiagram', <FxDiagram label="硬度检测部位、缺陷位置示意图" pic='_FILE_S部位' memo='点图说明' maxFile={10} dlist={hard示说选}/>),
         createItem('HardEvaluation', <HardEvaluation label='硬度检测分析结果表'/>),
         createItem('HardConclusion', <FxSimpConclus label={'硬度检测-备注检测结果'} clc="结果" memo='备注'
                                                     clist={['所检项目未见异常。']} mlist={['试验部位为硬度检测附图中编号处的管件。']}/>),

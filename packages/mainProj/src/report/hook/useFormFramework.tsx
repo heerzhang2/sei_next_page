@@ -165,7 +165,7 @@ export function useFormFramework({
                                      redId,
                                      modType,
                                  }: UseFormFrameworkProps) {
-    const { storage, setStorage, setModified } = useStorage()
+    const { storage, setStorage, setModified, modified } = useStorage()
 
     // 创建表单
     const form = useForm<z.infer<typeof schema>>({
@@ -284,7 +284,7 @@ export function useFormFramework({
                             <Button type="button" variant="outline" onClick={handleConfirm}>
                                 确认
                             </Button>
-                            <Button type="submit" disabled={form.formState.isSubmitting}>
+                            <Button type="submit" disabled={form.formState.isSubmitting || !modified}>
                                 {form.formState.isSubmitting ? "保存到后端..." : "保存"}
                             </Button>
                         </div>
@@ -351,7 +351,7 @@ export function useFrameEditorBar({
                                       root,
                                   }: UseFrameEditorBarProps) {
     const [isSaving, setIsSaving] = useState(false)
-    const { storage, setStorage, setModified } = useStorage()
+    const { storage, setStorage, setModified, modified } = useStorage()
     //用URQL mutation来保存变更数据到后端数据库的
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
     //保存：处理表单提交
@@ -443,7 +443,7 @@ export function useFrameEditorBar({
             <Button type="button" variant="outline" onClick={handleConfirm}>
                 确认
             </Button>
-            <Button type="submit" disabled={isSaving} onClick={handleSubmit}>
+            <Button type="submit" disabled={isSaving || !modified} onClick={handleSubmit}>
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving ? "保存到后端..." : "保存"}
             </Button>

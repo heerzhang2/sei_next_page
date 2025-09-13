@@ -353,7 +353,14 @@ function CommonReportDataSub({
     const { data, fetching, error } = result
     const { data: dataSub, fetching: fetchingSub, error: errorSub } = resultSub
     const report =data && data?.getReport
-    const reportSub =dataSub && dataSub?.getReport
+    //离线缓存情形下：若子查询失败，允许利用主查询的。
+    const reportSub = React.useMemo(() => {
+        const reportSub =dataSub && dataSub?.getReport
+        if(reportSub || !report)   return reportSub;
+        const {node: subrepObj}=report.isp?.reps?.edges?.find(({node: {id}}:any) => id===subrid);
+        return subrepObj
+    }, [dataSub, subrid])
+
     const { setStorage, setSubrType, setParrepfs, setOffline } = useStorage()
 
     const refreshData = useCallback(() => {

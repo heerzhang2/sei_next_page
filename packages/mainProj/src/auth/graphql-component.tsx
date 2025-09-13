@@ -65,7 +65,9 @@ const removeOperationFromQueue = async (operationToRemove: Operation, storage: a
             const isSameVariables = JSON.stringify(request.variables) === JSON.stringify(operationToRemove.variables)
             return !(isSameOperation && isSameVariables)
         })
-
+        toast.success(`离线队列中移除原队长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length} ${operationToRemove.variables?.id} ${operationToRemove.variables?.verion}`, {
+            duration: 40000,
+        })
         console.log(
             `[v0] 从离线队列中移除操作，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`,
         )
@@ -163,22 +165,17 @@ const handleSuccessfulMutation = async (result: OperationResult, operation: Oper
         // Check if this is a successful mutation response
         if (result.data && operation.kind === "mutation" && !result.error) {
             console.log("[v0] 检测到成功的mutation响应，准备从离线队列中移除:", {
-                operationName: operation.operationName,
-                hasData: !!result.data,
                 variables: operation.variables,
             })
-
             // Remove the successful operation from offline queue
             const success = await removeOperationFromQueue(operation, storage)
+            const {id,version}=result.data.modifyOriginalRecordData || {}
             if (success) {
-                console.log("[v0] 成功mutation操作已从离线队列中移除")
-
-                // Show success notification
-                toast.success("数据保存成功", {
-                    description: "离线操作已同步到服务器",
-                    duration: 3000,
-                })
+                console.log("[v0] 成功mutation操作已从离线队列中移除",id,version)
             }
+            toast.success(`离线队SuccessMuta移除:${id} ${version}`, {
+                duration: 40000,
+            })
         }
     } catch (error) {
         console.error("[v0] 处理成功mutation时出错:", error)
@@ -478,9 +475,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                     )
                                 }
 
-                                toast.success("登录已刷新", {
-                                    description: "会话已自动续期",
-                                    duration: 1000,
+                                toast.success("登录已刷新，会话已自动续期", {
+                                    duration: 2000,
                                 })
                                 return
                             }
@@ -784,6 +780,9 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                 removeOperationFromQueue(operation, storageRef.current)
                                     .then((success) => {
                                         if (success) {
+                                            toast.success(`离线队中移除度: ${JSON.stringify(operation.query.loc?.source)}`, {
+                                                duration: 40000,
+                                            })
                                             console.log("[v0] 版本冲突操作已从离线队列中移除")
                                         }
                                     })
