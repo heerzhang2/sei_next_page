@@ -30,3 +30,41 @@ D:\home\sei_next_pag…ks\waitUntil.js:274 serwist A service worker with the sam
 urlPattern
   matcher: RegExp | string | RouteMatchCallback;
 -猪扒是什么样serwist
+
+D:\home\sei_next_pag…rmFramework.tsx:407
+ POST https://192.168.0.100:8673/graphql net::ERR_CONNECTION_REFUSED
+D:\home\sei_next_pag…l-component.tsx:232 [v0] customFetchExchange - 收到响应:
+{operationName: undefined, hasData: false, hasError: true, error: CombinedError: [Network] Failed to fetch
+    at makeErrorResult (webpack-internal:///(app-pages-bro…, response: undefined, …}
+D:\home\sei_next_pag…l-component.tsx:254 [v0] customFetchExchange - 检测到网络错误，立即返回错误结果
+D:\home\sei_next_pag…l-component.tsx:119 [v0] networkErrorExchange - 原始错误对象:
+{error: {…}, networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, operation: undefined, …}
+D:\home\sei_next_pag…l-component.tsx:144 网络错误检测到:
+{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
+D:\home\sei_next_pag…tus-context.tsx:210 [v0] 外部更新GraphQL后端状态:
+{isReachable: false, isClientOnline: false}
+D:\home\sei_next_pag…l-component.tsx:151 [v0] networkErrorExchange - 立即返回网络错误
+D:\home\sei_next_pag…l-component.tsx:426 [v0] authExchange.didAuthError - 详细错误信息:
+{error: {…}, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, …}
+D:\home\sei_next_pag…l-component.tsx:461 [v0] authExchange.didAuthError - 认证错误判断结果:
+{hasGraphQLAuthError: false, hasNetworkAuthError: false, hasCustomAuthError: false, isSpecial500: false, finalResult: false}
+
+D:\home\sei_next_pag…l-component.tsx:775 [v0] errorExchange.onError - 完整错误信息:
+{operationName: undefined, operationType: 'mutation', error: {…}, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, …}
+D:\home\sei_next_pag…l-component.tsx:798 GraphQL 错误:
+{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
+D:\home\sei_next_pag…l-component.tsx:850 使用全局网络状态更新
+
+D:\home\sei_next_pag…rmFramework.tsx:414 updateOriginalResult=应答=
+{operation: {…}, data: undefined, error: {…}, extensions: undefined, hasNext: false, …}
+D:\home\sei_next_pag…rmFramework.tsx:419 Oh no!
+{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
+
+D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
+D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选

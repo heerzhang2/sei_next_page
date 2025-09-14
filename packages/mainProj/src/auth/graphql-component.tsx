@@ -13,7 +13,7 @@ import schema from "./urql-schema.json"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
-import { pipe, tap, map } from "wonka"
+import { pipe, map } from "wonka"
 import { useSearchParams, usePathname } from "next/navigation"
 import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/network-status-context"
 //文档： https://nearform.com/open-source/urql/docs/
@@ -65,9 +65,12 @@ const removeOperationFromQueue = async (operationToRemove: Operation, storage: a
             const isSameVariables = JSON.stringify(request.variables) === JSON.stringify(operationToRemove.variables)
             return !(isSameOperation && isSameVariables)
         })
-        toast.success(`离线队列中移除原队长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length} ${operationToRemove.variables?.id} ${operationToRemove.variables?.verion}`, {
-            duration: 40000,
-        })
+        toast.success(
+            `离线队列中移除原队长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length} ${operationToRemove.variables?.id} ${operationToRemove.variables?.verion}`,
+            {
+                duration: 40000,
+            },
+        )
         console.log(
             `[v0] 从离线队列中移除操作，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`,
         )
@@ -107,7 +110,7 @@ const createNetworkErrorExchange = (
             return pipe(
                 operations$,
                 forward,
-                tap((result: OperationResult) => {
+                map((result: OperationResult) => {
                     if (result.data && !result.error && result.operation.kind === "mutation") {
                         handleSuccessfulMutation(result, result.operation, storage)
                     }
@@ -119,6 +122,7 @@ const createNetworkErrorExchange = (
                             graphQLErrors: result.error.graphQLErrors,
                             response: result.error.response,
                             operation: result.operation.operationName,
+                            isImmediateError: result.error.isImmediateError,
                         })
 
                         const now = Date.now()
@@ -130,7 +134,8 @@ const createNetworkErrorExchange = (
                         const hasNetworkError =
                             result.error.networkError ||
                             result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
-                            isNetworkError(result.error)
+                            isNetworkError(result.error) ||
+                            result.error.isNetworkError
 
                         if (hasNetworkError) {
                             errorCount++
@@ -141,7 +146,17 @@ const createNetworkErrorExchange = (
                             } else {
                                 console.log("GraphQL错误过于频繁，暂停错误处理")
                             }
-                            result.error.isNetworkError = true
+
+                            if (result.error.isImmediateError) {
+                                console.log("[v0] networkErrorExchange - 立即返回网络错误")
+                                return {
+                                    ...result,
+                                    error: {
+                                        ...result.error,
+                                        message: result.error.message || "网络连接失败，请检查网络后重试",
+                                    },
+                                }
+                            }
                         } else {
                             if (result.data) {
                                 console.log("GraphQL后端网络已恢复")
@@ -154,6 +169,8 @@ const createNetworkErrorExchange = (
                         updateGraphQLBackendStatus(true, true)
                         errorCount = 0
                     }
+
+                    return result
                 }),
             )
         }
@@ -169,9 +186,9 @@ const handleSuccessfulMutation = async (result: OperationResult, operation: Oper
             })
             // Remove the successful operation from offline queue
             const success = await removeOperationFromQueue(operation, storage)
-            const {id,version}=result.data.modifyOriginalRecordData || {}
+            const { id, version } = result.data.modifyOriginalRecordData || {}
             if (success) {
-                console.log("[v0] 成功mutation操作已从离线队列中移除",id,version)
+                console.log("[v0] 成功mutation操作已从离线队列中移除", id, version)
             }
             toast.success(`离线队SuccessMuta移除:${id} ${version}`, {
                 duration: 40000,
@@ -211,7 +228,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
                 }
             }),
             forward,
-            tap((result: OperationResult) => {
+            map((result: OperationResult) => {
                 console.log("[v0] customFetchExchange - 收到响应:", {
                     operationName: result.operation.operationName,
                     hasData: !!result.data,
@@ -221,9 +238,36 @@ const customFetchExchange: Exchange = ({ forward }) => {
                     response: result.error?.response || result.response,
                     extensions: result.extensions,
                 })
+
                 // 清理超时
                 if (result.operation.context.fetchOptions?.signal) {
                     clearTimeout(result.operation.context.fetchOptions.timeoutId)
+                }
+
+                if (result.error) {
+                    const hasNetworkError =
+                        result.error.networkError ||
+                        result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
+                        isNetworkError(result.error)
+
+                    if (hasNetworkError) {
+                        console.log("[v0] customFetchExchange - 检测到网络错误，立即返回错误结果")
+                        // Mark as network error for immediate handling
+                        result.error.isNetworkError = true
+                        result.error.isImmediateError = true
+
+                        // Return the error result immediately
+                        return {
+                            ...result,
+                            error: {
+                                ...result.error,
+                                message: result.error.message || "网络连接失败",
+                                networkError: result.error.networkError || new Error("Network connection failed"),
+                                isNetworkError: true,
+                                isImmediateError: true,
+                            },
+                        }
+                    }
                 }
 
                 if (result.error?.response?.status === 401) {
@@ -235,6 +279,8 @@ const customFetchExchange: Exchange = ({ forward }) => {
                         result.error.isAuthError = true
                     }
                 }
+
+                return result
             }),
         )
     }

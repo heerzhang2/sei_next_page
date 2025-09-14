@@ -28,7 +28,6 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [modified, setModified] = useState<boolean>(false)
 
     const setStorage = useCallback((data: any) => {
-        console.log("StorageContext: Setting storage data", data)
         setStorageState(data)
     }, [])
 

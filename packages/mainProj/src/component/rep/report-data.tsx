@@ -265,7 +265,6 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         const newData = dat ? { ...dat, ...snap, _version: report.version } : { ...(snap || {}), _version: report.version }
 
         if (JSON.stringify(newData) !== JSON.stringify(prevDataRef.current)) {
-            console.log("StorageContext: Setting storage data", { version: report.version })
             setStorage(newData)
             setSubrType(undefined)
             prevDataRef.current = newData

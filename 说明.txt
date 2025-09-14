@@ -529,84 +529,25 @@ https://nearform.com/open-source/urql/docs/
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["KQcbgDF9RO21DsI92H3tTVJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
 
-229
-result.error
-CombinedError: [Network] Failed to fetch
-    at makeErrorResult (D:\home\sei_next_page\node_modules\@urql\core\dist\urql-core-chunk.mjs:350:1)
-    at fetchOperation (D:\home\sei_next_page\node_modules\@urql\core\dist\urql-core-chunk.mjs:607:1)
-    at async eval (D:\home\sei_next_page\node_modules\wonka\dist\wonka.mjs:877:1)
-
-
-[v0] State unchanged, skipping
-264-7fdea720f4b53831.js:2
-
-
-           POST https://192.168.0.100:8673/graphql net::ERR_CONNECTION_REFUSED
-j @ 264-7fdea720f4b53831.js:2
-（匿名） @ 264-7fdea720f4b53831.js:1
-await in （匿名）
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-next @ 264-7fdea720f4b53831.js:1
-next @ 264-7fdea720f4b53831.js:1
-p @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-t @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-q @ 264-7fdea720f4b53831.js:1
-（匿名） @ 264-7fdea720f4b53831.js:1
-E @ 1701-3ea916489b3e0874.js:1
-（匿名） @ 2586-2b6102207200b241.js:1
-await in （匿名）
-i8 @ 87c73c54-dd8d81ac9604067c.js:1
-（匿名） @ 87c73c54-dd8d81ac9604067c.js:1
-nz @ 87c73c54-dd8d81ac9604067c.js:1
-sn @ 87c73c54-dd8d81ac9604067c.js:1
-cc @ 87c73c54-dd8d81ac9604067c.js:1
-ci @ 87c73c54-dd8d81ac9604067c.js:1了解此错误
-layout-b8d1187ce6c52087.js:1 [v0] customFetchExchange - 收到响应: {operationName: undefined, hasData: false, hasError: true, error: CombinedError: [Network] Failed to fetch
-    at q (https://192.168.0.100:3765/_next/static/chunks/2…, response: undefined, …}
-layout-b8d1187ce6c52087.js:1 [v0] networkErrorExchange - 原始错误对象: {error: CombinedError: [Network] Failed to fetch
-    at q (https://192.168.0.100:3765/_next/static/chunks/2…, networkError: TypeError: Failed to fetch
-    at j (https://192.168.0.100:3765/_next/static/chunks/264-7fdea720f4b…, graphQLErrors: Array(0), response: undefined, operation: undefined}
-layout-b8d1187ce6c52087.js:1 GraphQL错误过于频繁，暂停错误处理
-layout-b8d1187ce6c52087.js:1 [v0] authExchange.didAuthError - 详细错误信息: {error: CombinedError: [Network] Failed to fetch
-    at q (https://192.168.0.100:3765/_next/static/chunks/2…, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
-    at j (https://192.168.0.100:3765/_next/static/chunks/264-7fdea720f4b…, graphQLErrors: Array(0), response: undefined, …}
-layout-b8d1187ce6c52087.js:1 [v0] authExchange.didAuthError - 认证错误判断结果: {hasGraphQLAuthError: false, hasNetworkAuthError: false, hasCustomAuthError: false, isSpecial500: false, finalResult: false}
+D:\home\sei_next_pag…l-component.tsx:769
+ POST https://192.168.0.100:8673/graphql net::ERR_CONNECTION_REFUSED
+D:\home\sei_next_pag…l-component.tsx:232 [v0] customFetchExchange - 收到响应:
+{operationName: undefined, hasData: false, hasError: true, error: CombinedError: [Network] Failed to fetch
+    at makeErrorResult (webpack-internal:///(app-pages-bro…, response: undefined, …}
+D:\home\sei_next_pag…l-component.tsx:254 [v0] customFetchExchange - 检测到网络错误，立即返回错误结果
+D:\home\sei_next_pag…l-component.tsx:119 [v0] networkErrorExchange - 原始错误对象:
+{error: {…}, networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, operation: undefined, …}
+D:\home\sei_next_pag…l-component.tsx:144 网络错误检测到:
+{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
+D:\home\sei_next_pag…tus-context.tsx:210 [v0] 外部更新GraphQL后端状态:
+{isReachable: false, isClientOnline: false}
+D:\home\sei_next_pag…l-component.tsx:151 [v0] networkErrorExchange - 立即返回网络错误
+D:\home\sei_next_pag…l-component.tsx:426 [v0] authExchange.didAuthError - 详细错误信息:
+{error: {…}, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
+    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, …}
+D:\home\sei_next_pag…l-component.tsx:461 [v0] authExchange.didAuthError - 认证错误判断结果:
+{hasGraphQLAuthError: false, hasNetworkAuthError: false, hasCustomAuthError: false, isSpecial500: false, finalResult: false}
+D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
+D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选

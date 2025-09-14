@@ -201,7 +201,7 @@ export function useFormFramework({
 
         // 第一步：将空字符串转为 undefined，但保留字段
         const valuesWithUndefined = convertEmptyToUndefined(values)
-        console.log("转换空字符串为undefined后:", JSON.stringify(valuesWithUndefined, null, 2))
+        // console.log("转换空字符串为undefined后:", JSON.stringify(valuesWithUndefined, null, 2))
 
         // 第二步：合并到存储中（undefined 会覆盖原有的空字符串）
         const mergedStorage =
@@ -214,8 +214,8 @@ export function useFormFramework({
 
         // 第四步：清理 RepData，移除 undefined 和空字符串字段
         const cleanedRepData = cleanEmptyFields(RepData)
-        console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
-        console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
+        // console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
+        // console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
 
         try {
             const result = await withTimeout(
@@ -305,8 +305,8 @@ export function useFormFramework({
                             <Button type="button" variant="outline" onClick={handleConfirm}>
                                 确认
                             </Button>
-                            <Button type="submit" disabled={form.formState.isSubmitting || !modified}>
-                                {form.formState.isSubmitting ? "保存到后端..." : "保存"}
+                            <Button type="submit" disabled={(form.formState.isSubmitting && updateResult?.fetching) || !modified}>
+                                {form.formState.isSubmitting && updateResult?.fetching ? "保存到后端..." : "保存"}
                             </Button>
                         </div>
                     </CardFooter>
@@ -379,13 +379,12 @@ export function useFrameEditorBar({
     const handleSubmit = async () => {
         if (onVerify && !onVerify(values)) return
         // 默认提交处理
-        console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
-
+        // console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
         const oldStore = storage?.[`_${modType}_${redId}`]
 
         // 第一步：将空字符串转为 undefined，但保留字段
         const valuesWithUndefined = convertEmptyToUndefined(values)
-        console.log("转换空字符串为undefined后:", JSON.stringify(valuesWithUndefined, null, 2))
+        // console.log("转换空字符串为undefined后:", JSON.stringify(valuesWithUndefined, null, 2))
 
         // 第二步：合并到存储中（undefined 会覆盖原有的空字符串）
         const mergedStorage =
@@ -398,8 +397,8 @@ export function useFrameEditorBar({
 
         // 第四步：清理 RepData，移除 undefined 和空字符串字段
         const cleanedRepData = cleanEmptyFields(RepData)
-        console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
-        console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
+        // console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
+        // console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
 
         setIsSaving(true)
 
@@ -478,9 +477,9 @@ export function useFrameEditorBar({
             <Button type="button" variant="outline" onClick={handleConfirm}>
                 确认
             </Button>
-            <Button type="submit" disabled={isSaving || !modified} onClick={handleSubmit}>
+            <Button type="submit" disabled={(isSaving && updateResult?.fetching) || !modified} onClick={handleSubmit}>
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? "保存到后端..." : "保存"}
+                {isSaving && updateResult?.fetching ? "保存到后端..." : "保存"}
             </Button>
         </div>
     )
