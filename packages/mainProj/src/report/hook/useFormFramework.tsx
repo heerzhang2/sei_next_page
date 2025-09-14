@@ -11,9 +11,8 @@ import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
-import { Save, AlertCircle, Pencil } from "lucide-react"
+import { Save, Pencil } from "lucide-react"
 import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
-import {useNetworkStatusContext} from "@/contexts/network-status-context";
 
 // 将空字符串转为 undefined，但保留字段
 const convertEmptyToUndefined = (obj: any): any => {
@@ -128,6 +127,17 @@ const serializeErrors = (errors: any): string => {
     }
 }
 
+export const withTimeout = <T,>(promise: Promise<T>, timeoutMs = 30000): Promise<T> => {
+    return Promise.race([
+        promise,
+        new Promise<T>((_, reject) => {
+            setTimeout(() => {
+                reject(new Error(`操作超时 (${timeoutMs}ms)`))
+            }, timeoutMs)
+        }),
+    ])
+}
+
 interface UseFormFrameworkProps {
     // 接收外部传入的schema和默认值
     schema: z.ZodObject<any>
@@ -207,17 +217,15 @@ export function useFormFramework({
         console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
         console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
 
-        // 直接定义更新函数，不使用 useCallback
-        const update = async () => {
-            return await updateOriginal({
-                id: subrid ?? rep?.id,
-                operationType: 1,
-                version: _version,
-                data: JSON.stringify(cleanedRepData),
-            })
-        }
-
-        update().then((result) => {
+        try {
+            const result = await withTimeout(
+                updateOriginal({
+                    id: subrid ?? rep?.id,
+                    operationType: 1,
+                    version: _version,
+                    data: JSON.stringify(cleanedRepData),
+                }),
+            )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
                 toast.error("保存失败,断网会自动重新再发送...", {
@@ -231,7 +239,20 @@ export function useFormFramework({
                 // 保存成功后，设置 modified 为 false
                 setModified(false)
             }
-        })
+        } catch (error) {
+            console.log("updateOriginalResult=异常=", error)
+
+            if (error instanceof Error && error.message.includes("操作超时")) {
+                toast.error("保存超时，请检查网络连接后重试", {
+                    duration: 3000,
+                })
+            } else {
+                toast.error("保存失败,断网会自动重新再发送...", {
+                    duration: 2000,
+                })
+            }
+            console.log("Caught error!", error)
+        }
     }
 
     //同步或确认操作：处理确认按钮 - 临时保存到 storage
@@ -380,17 +401,17 @@ export function useFrameEditorBar({
         console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
         console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
 
-        // 直接定义更新函数，不使用 useCallback
-        const update = async () => {
-            return await updateOriginal({
-                id: subrid ?? rep?.id,
-                operationType: 1,
-                version: _version,
-                data: JSON.stringify(cleanedRepData),
-            })
-        }
         setIsSaving(true)
-        update().then((result) => {
+
+        try {
+            const result = await withTimeout(
+                updateOriginal({
+                    id: subrid ?? rep?.id,
+                    operationType: 1,
+                    version: _version,
+                    data: JSON.stringify(cleanedRepData),
+                }),
+            )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
                 toast.error("保存失败,若因断网原因会自动重新发。", {
@@ -404,8 +425,22 @@ export function useFrameEditorBar({
                 // 保存成功后，设置 modified 为 false
                 setModified(false)
             }
+        } catch (error) {
+            console.log("updateOriginalResult=异常=", error)
+
+            if (error instanceof Error && error.message.includes("操作超时")) {
+                toast.error("保存超时，请检查网络连接后重试", {
+                    duration: 3000,
+                })
+            } else {
+                toast.error("保存失败,若因断网原因会自动重新发。", {
+                    duration: 2000,
+                })
+            }
+            console.log("Caught error!", error)
+        } finally {
             setIsSaving(false)
-        })
+        }
     }
 
     //同步或确认操作：处理确认按钮 - 临时保存到 storage

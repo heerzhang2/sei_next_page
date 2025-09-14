@@ -21,11 +21,11 @@ import { Column_Setting } from "./useFormatOmni";
 import {useForm} from "react-hook-form";
 
 /**字体显示问题，改变"合格""不合格"的存储字节：不兼容了； 结论非法√
-    第一代版本的{ label: "合格", value: "√" },     但在web开源字体显示像平方根符号的。
-    修改成 value: "✔" },   "\u2714" },
-    第一版的{ label: "不合格", value: "×" },
-    修改成 value: "✘" },   "\u2718" },
-    设备台账后端存储多数还是"/"而不是"／"的 应该来自用户输入的，并非代码生成的。  标记为"／"打印显示更好看点。
+ 第一代版本的{ label: "合格", value: "√" },     但在web开源字体显示像平方根符号的。
+ 修改成 value: "✔" },   "\u2714" },
+ 第一版的{ label: "不合格", value: "×" },
+ 修改成 value: "✘" },   "\u2718" },
+ 设备台账后端存储多数还是"/"而不是"／"的 应该来自用户输入的，并非代码生成的。  标记为"／"打印显示更好看点。
  */
 export const clcOptions = [
     { label: "合格", value: "\u2714" },
@@ -63,13 +63,13 @@ interface Props  extends React.HTMLAttributes<HTMLDivElement>{
 /**机电impressionismAs项目列表形式的 编辑器：
  * 编辑区：【单一个index=？编辑区域的】 全部项目。  当前editAreasConf[index]是可以动态的。
  * @param editIts   支持是可变的情况: 可能外部需要注入动态的输入列表情况：
-    const witnessNos =React.useMemo(() => {
-        return storage.见证表?.map((a:any, i:number) => a && a.no);
-    }, [storage.见证表]);
-    *  _M`];      //备注; _Z`];      //工作见证; _S`];      //确认日期
-* 若想orc?._Oitems用户输入的文本有格式化换行效果等，只能在记录编辑的2个解析器这里特殊对待来做。？特殊标记，特定标签的tag '_其它'+i。<br/>替换\n;
+ const witnessNos =React.useMemo(() => {
+ return storage.见证表?.map((a:any, i:number) => a && a.no);
+ }, [storage.见证表]);
+ *  _M`];      //备注; _Z`];      //工作见证; _S`];      //确认日期
+ * 若想orc?._Oitems用户输入的文本有格式化换行效果等，只能在记录编辑的2个解析器这里特殊对待来做。？特殊标记，特定标签的tag '_其它'+i。<br/>替换\n;
  * refWidth：抛弃不用了？ 没必要用LineColumn布局，直接多列的做。
-* */
+ * */
 export const ActionMapItem = ({
                                   show = false,
                                   // alone = true,
@@ -173,30 +173,38 @@ export const ActionMapItem = ({
         const jsonData = JSON.stringify(values, null, 2)
         console.log("表单值:", jsonData)
 
-        const { _version, "":_omit, ...RepData } = {...storage, ...values }
+        const { _version, "": _omit, ...RepData } = { ...storage, ...values }
 
-        updateOriginal({
-            id: repId,
-            operationType: 1,
-            version: _version,
-            data: JSON.stringify(RepData),
-        }).then((result) => {
+        try {
+            const result = await updateOriginal({
+                id: repId,
+                operationType: 1,
+                version: _version,
+                data: JSON.stringify(RepData),
+            })
+
             console.log("updateOriginalResult8=应答=", result)
 
             if (result.error) {
                 // 使用 sonner 的 toast.error 显示错误
-                toast.error("保存失败,若断网会自动重新发送的1", {
-                    duration: 2000,
+                toast.error("保存失败,若断网会自动重新发送的", {
+                    description: result.error.toString(),
                 })
                 console.log("Oh no!", result.error)
             } else {
                 // 使用 sonner 的 toast.success 显示成功消息
-                toast.success("数据已成功保存到服务器", {
-                    duration: 2000,
+                toast.success("保存成功", {
+                    description: "数据已成功保存到服务器",
                 })
                 setModified(false)
             }
-        })
+        } catch (error) {
+            console.log("updateOriginalResult8=异常=", error)
+            toast.error("保存失败,若断网会自动重新发送的", {
+                description: error instanceof Error ? error.message : String(error),
+            })
+            console.log("Caught error!", error)
+        }
 
         // 模拟API调用 - form.formState.isSubmitting 会在这个Promise完成后变为false
         // await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -347,11 +355,11 @@ export const ActionMapItem = ({
                         </div>
                     }
                     <div className="flex justify-around">
-                                { typeof tago.desc === "string"?
-                                    <h5>{tago.desc}</h5>
-                                    :
-                                    tago.desc
-                                }
+                        { typeof tago.desc === "string"?
+                            <h5>{tago.desc}</h5>
+                            :
+                            tago.desc
+                        }
                     </div><hr/>
                     <div className="columns-1 @lg:columns-2 @4xl:columns-3 @7xl:columns-4">
                         {

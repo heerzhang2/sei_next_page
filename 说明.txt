@@ -529,10 +529,84 @@ https://nearform.com/open-source/urql/docs/
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["KQcbgDF9RO21DsI92H3tTVJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
 
-[v0] errorExchange.onError - 完整错误信息: {operationName: undefined, operationType: 'mutation', error: CombinedError: [GraphQL] 原始记录已在其它设备或其他人改动了，版本是993旧版本是992
-    at C (https://192.168.0.100:3765/_next…, message: '[GraphQL] 原始记录已在其它设备或其他人改动了，版本是993旧版本是992', networkError: undefined, …}error: CombinedError: [GraphQL] 原始记录已在其它设备或其他人改动了，版本是993旧版本是992
-    at C (https://192.168.0.100:3765/_next/static/chunks/264-7fdea720f4b53831.js:2:631)
-    at j (https://192.168.0.100:3765/_next/static/chunks/264-7fdea720f4b53831.js:2:5441)
-    at async https://192.168.0.100:3765/_next/static/chunks/264-7fdea720f4b53831.js:1:15279graphQLErrors: Array(1)0: {message: '原始记录已在其它设备或其他人改动了，版本是993旧版本是992', extensions: {…}}extensions: {invalidId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', classification: 'DataFetchingException'}message: "原始记录已在其它设备或其他人改动了，版本是993旧版本是992"[[Prototype]]: Objectlength: 1[[Prototype]]: Array(0)message: "[GraphQL] 原始记录已在其它设备或其他人改动了，版本是993旧版本是992"networkError: undefinedoperationName: undefinedoperationType: "mutation"response: Response {type: 'cors', url: 'https://192.168.0.100:8673/graphql', redirected: false, status: 200, ok: true, …}responseDetails: {status: 200, statusText: '', headers: {…}, url: 'https://192.168.0.100:8673/graphql', type: 'cors', …}[[Prototype]]: Object
-layout-8ceee5c32d0f5304.js:1 GraphQL 错误: CombinedError: [GraphQL] 原始记录已在其它设备或其他人改动了，版本是993旧版本是992
-    at C (264-7fdea720f4b53831.js:2:631)
+229
+result.error
+CombinedError: [Network] Failed to fetch
+    at makeErrorResult (D:\home\sei_next_page\node_modules\@urql\core\dist\urql-core-chunk.mjs:350:1)
+    at fetchOperation (D:\home\sei_next_page\node_modules\@urql\core\dist\urql-core-chunk.mjs:607:1)
+    at async eval (D:\home\sei_next_page\node_modules\wonka\dist\wonka.mjs:877:1)
+
+
+[v0] State unchanged, skipping
+264-7fdea720f4b53831.js:2
+
+
+           POST https://192.168.0.100:8673/graphql net::ERR_CONNECTION_REFUSED
+j @ 264-7fdea720f4b53831.js:2
+（匿名） @ 264-7fdea720f4b53831.js:1
+await in （匿名）
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+next @ 264-7fdea720f4b53831.js:1
+next @ 264-7fdea720f4b53831.js:1
+p @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+t @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+q @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+E @ 1701-3ea916489b3e0874.js:1
+（匿名） @ 2586-2b6102207200b241.js:1
+await in （匿名）
+i8 @ 87c73c54-dd8d81ac9604067c.js:1
+（匿名） @ 87c73c54-dd8d81ac9604067c.js:1
+nz @ 87c73c54-dd8d81ac9604067c.js:1
+sn @ 87c73c54-dd8d81ac9604067c.js:1
+cc @ 87c73c54-dd8d81ac9604067c.js:1
+ci @ 87c73c54-dd8d81ac9604067c.js:1了解此错误
+layout-b8d1187ce6c52087.js:1 [v0] customFetchExchange - 收到响应: {operationName: undefined, hasData: false, hasError: true, error: CombinedError: [Network] Failed to fetch
+    at q (https://192.168.0.100:3765/_next/static/chunks/2…, response: undefined, …}
+layout-b8d1187ce6c52087.js:1 [v0] networkErrorExchange - 原始错误对象: {error: CombinedError: [Network] Failed to fetch
+    at q (https://192.168.0.100:3765/_next/static/chunks/2…, networkError: TypeError: Failed to fetch
+    at j (https://192.168.0.100:3765/_next/static/chunks/264-7fdea720f4b…, graphQLErrors: Array(0), response: undefined, operation: undefined}
+layout-b8d1187ce6c52087.js:1 GraphQL错误过于频繁，暂停错误处理
+layout-b8d1187ce6c52087.js:1 [v0] authExchange.didAuthError - 详细错误信息: {error: CombinedError: [Network] Failed to fetch
+    at q (https://192.168.0.100:3765/_next/static/chunks/2…, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
+    at j (https://192.168.0.100:3765/_next/static/chunks/264-7fdea720f4b…, graphQLErrors: Array(0), response: undefined, …}
+layout-b8d1187ce6c52087.js:1 [v0] authExchange.didAuthError - 认证错误判断结果: {hasGraphQLAuthError: false, hasNetworkAuthError: false, hasCustomAuthError: false, isSpecial500: false, finalResult: false}
