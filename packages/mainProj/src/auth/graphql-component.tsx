@@ -73,29 +73,28 @@ const isJavaBackendDownError = (error: any): boolean => {
 
 const removeOperationFromQueue = async (operationToRemove: Operation, storage: any) => {
     try {
-        if (!storage.readMetadata || !storage.writeMetadata) return
-
+        if (!storage.readMetadata || !storage.writeMetadata)    return
         const currentMetadata = await storage.readMetadata()
-        if (!currentMetadata || !Array.isArray(currentMetadata)) return
-
+        if (!currentMetadata || !Array.isArray(currentMetadata)) {
+            console.log(`[v0] 从离线队列中移除操作，队列:已经空`)
+            return
+        }
         // Filter out the failed operation based on operation name and variables
         const filteredMetadata = currentMetadata.filter((request: SerializedRequest) => {
             const isSameOperation = request.query === operationToRemove.query.loc?.source.body
             const isSameVariables = JSON.stringify(request.variables) === JSON.stringify(operationToRemove.variables)
             return !(isSameOperation && isSameVariables)
         })
+        console.log(
+            `[v0]离线队列移除，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`,
+        )
         toast.success(
             `离线队列中移除原队长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length} ${operationToRemove.variables?.id} ${operationToRemove.variables?.verion}`,
             {
                 duration: 40000,
             },
         )
-        console.log(
-            `[v0] 从离线队列中移除操作，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`,
-        )
-
         await storage.writeMetadata(filteredMetadata)
-
         // Update localStorage backup
         if (typeof window !== "undefined") {
             localStorage.setItem(
@@ -106,7 +105,6 @@ const removeOperationFromQueue = async (operationToRemove: Operation, storage: a
                 }),
             )
         }
-
         return true
     } catch (error) {
         console.error("[v0] 移除离线队列操作失败:", error)
@@ -719,9 +717,17 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         if (!json?.length) {
                             // 谨慎处理：只有在确定存储为空时才删除备份
                             if (typeof window !== "undefined") {
+                                const metadata = localStorage.getItem("urql-metadata")
+                                let listLen=0
+                                if (metadata) {
+                                    const requests = JSON.parse(metadata)
+                                    listLen=requests.length
+                                }
+                                console.log('[offlineExchange]localStorage队列Len=', listLen);
                                 setTimeout(async () => {
                                     try {
                                         const currentMetadata = await storage.readMetadata!()
+                                        console.log('[offlineExchange]队列Len==', currentMetadata?.length);
                                         if (!currentMetadata || currentMetadata.length === 0) {
                                             localStorage.removeItem("urql-metadata")
                                             await storage.writeMetadata!(json || [])
@@ -731,6 +737,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                     }
                                 }, 5000) // 延迟检查，确保写入完成：页面刚刚启动可能连续出现writeMetadata调用的。
                             }
+                            console.log('[offlineExchange]队列空的:', json?.length);
                             return
                         }
                         // 使用对象来去重，保留最后一次出现的请求
@@ -761,11 +768,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         console.error("Error in writeMetadata:", error)
                         await storage.writeMetadata!(json || [])
                     }
-                },
-                readMetadata: async () => {
-                    const result = await storage.readMetadata!();
-                    console.log('[offlineExchange] readMetadata returned:', result?.length, 'items');
-                    return result;
                 },
             } as any,
             // 修改 offlineExchange 配置，确保网络错误能正确传播
@@ -833,15 +835,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
-                // 1. 离线/缓存 exchange 应该在最前面
-                cache,
-
-                // 2. 开发工具 (如果有)
-                // devToolsExchange,
-
-                // 3. 认证 exchange - 需要尽早添加认证头
-                makeAuthExchange(accessToken, update, print),
-
                 // 4. 错误处理 exchange - 在认证后处理错误
                 errorExchange({
                     onError: (error, operation) => {
@@ -925,18 +918,20 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
 
+                // 1. 离线/缓存 exchange 应前面
+                cache,
+                // 2. 开发工具 (如果有)
+                // devToolsExchange,
+                // 3. 认证 exchange - 需要尽早添加认证头
+                makeAuthExchange(accessToken, update, print),
                 // 5. 自定义网络错误处理
                 createNetworkErrorExchange(updateGraphQLBackendStatus, storage),
-
                 // 6. SSR exchange
                 ssr,
-
                 // 7.避免离线情形保存按钮无限期等待应答的毛病。
                 fetchAbortExchange,
-
                 // 8. 自定义 fetch 处理
                 customFetchExchange,
-
                 // 9. 最终的 fetch exchange - 应该放在最后
                 fetchExchange,
             ],
