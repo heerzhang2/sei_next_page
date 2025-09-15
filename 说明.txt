@@ -551,3 +551,4 @@ D:\home\sei_next_pag…l-component.tsx:461 [v0] authExchange.didAuthError - 认�
 {hasGraphQLAuthError: false, hasNetworkAuthError: false, hasCustomAuthError: false, isSpecial500: false, finalResult: false}
 D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
 D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
+今天新引进？fetchAbortExchange消息'mutation-completed'避免保存按钮无限等待。但是：分项报告第一次从离线恢复提交后没有清理干净旧的metadata队列？导致两次请求发出了
