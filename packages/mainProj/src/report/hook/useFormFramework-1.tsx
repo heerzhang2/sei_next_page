@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useEffect,useRef } from "react"
+import type * as React from "react"
 import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -128,30 +127,16 @@ const serializeErrors = (errors: any): string => {
     }
 }
 
-export const withTimeout = <T,>(
-    promise: Promise<T>,
-    timeoutMs = 5*60*1000,
-    signal?: AbortSignal
-): Promise<T> => {
-    if (signal?.aborted) {
-        return Promise.reject(new DOMException('Aborted', 'AbortError'));
-    }
+export const withTimeout = <T,>(promise: Promise<T>, timeoutMs = 30000): Promise<T> => {
     return Promise.race([
         promise,
         new Promise<T>((_, reject) => {
-            const timeoutId = setTimeout(() => {
-                reject(new Error(`操作超时 (${timeoutMs}ms)`));
-            }, timeoutMs);
-            // 如果提供了 signal，监听取消事件
-            if (signal) {
-                signal.addEventListener('abort', () => {
-                    clearTimeout(timeoutId);
-                    reject(new DOMException('Aborted', 'AbortError'));
-                });
-            }
+            setTimeout(() => {
+                reject(new Error(`操作超时 (${timeoutMs}ms)`))
+            }, timeoutMs)
         }),
-    ]);
-};
+    ])
+}
 
 interface UseFormFrameworkProps {
     // 接收外部传入的schema和默认值
@@ -190,7 +175,6 @@ export function useFormFramework({
                                      redId,
                                      modType,
                                  }: UseFormFrameworkProps) {
-    const abortControllerRef = useRef<AbortController | null>(null);
     const { storage, setStorage, setModified, modified } = useStorage()
 
     // 创建表单
@@ -207,11 +191,6 @@ export function useFormFramework({
 
     //保存：处理表单提交
     const handleSubmit = async (values: any) => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-        abortControllerRef.current = new AbortController();
-        const signal = abortControllerRef.current.signal;
         if (customOnSubmit) {
             await customOnSubmit(values)
             return
@@ -246,13 +225,7 @@ export function useFormFramework({
                     version: _version,
                     data: JSON.stringify(cleanedRepData),
                 }),
-                120000, // 超时时间
-                signal // 传递 abort signal
-            );
-            if (signal.aborted) {
-                console.log("请求已被取消");
-                return;
-            }
+            )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
                 toast.error("保存失败,断网会自动重新再发送...", {
@@ -268,10 +241,7 @@ export function useFormFramework({
             }
         } catch (error) {
             console.log("updateOriginalResult=异常=", error)
-            if (error.name === 'AbortError') {
-                console.warn("请求已被取消");
-                return;
-            }
+
             if (error instanceof Error && error.message.includes("操作超时")) {
                 toast.error("保存超时，请检查网络连接后重试", {
                     duration: 3000,
@@ -311,23 +281,6 @@ export function useFormFramework({
         // 设置已修改标志
         setModified(true)
     }
-
-    useEffect(() => {
-        const handleMutationCompleted = (event: CustomEvent) => {
-            const objId= subrid ?? rep?.id;
-            console.log('【终结】Mutation操作已完成:', event.detail);
-            if(event.detail.hasError && 'useOriginalDataMutation'===event.detail.operation && objId===event.detail.variables.id) {
-                if (abortControllerRef.current) {
-                    abortControllerRef.current.abort();
-                }
-                form.reset({}, { keepValues: true });
-            }
-        };
-        window.addEventListener('mutation-completed', handleMutationCompleted as EventListener);
-        return () => {
-            window.removeEventListener('mutation-completed', handleMutationCompleted as EventListener);
-        };
-    }, [rep?.id, subrid, form]);
 
     // 使用contentRendererFactory创建内容渲染器
     const contentRenderer = contentRendererFactory ? contentRendererFactory(form, arrayControls) : null

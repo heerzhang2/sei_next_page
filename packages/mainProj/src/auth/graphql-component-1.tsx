@@ -52,25 +52,6 @@ const isVersionConflictError = (error: any): boolean => {
     )
 }
 
-// 检测Java后端宕机错误的函数
-const isJavaBackendDownError = (error: any): boolean => {
-    if (!error) return false;
-    if(error?.isImmediateError && error?.isNetworkError)
-        return true;
-    // 检查特定的错误模式表明Java后端宕机
-    const isConnectionRefused =
-        error.message?.includes('connection refused') ||
-        error.message?.includes('failed to fetch') ||
-        error.message?.includes('network error');
-    const isTimeout =
-        error.message?.includes('timeout') ||
-        error.message?.includes('aborted');
-    const is5xxError =
-        error.response?.status >= 500 ||
-        (error.networkError && error.networkError.status >= 500);
-    return (isConnectionRefused || isTimeout || is5xxError);
-};
-
 const removeOperationFromQueue = async (operationToRemove: Operation, storage: any) => {
     try {
         if (!storage.readMetadata || !storage.writeMetadata) return
@@ -394,25 +375,25 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
         return
     }
+
     try {
         const registration = await navigator.serviceWorker.ready
         if (registration.active) {
             const messageChannel = new MessageChannel()
 
             return new Promise((resolve, reject) => {
-                    messageChannel.port1.onmessage = (event) => {
-                        if (event.data.success) {
-                            console.log("[v0] Service Worker认证缓存已清除")
-                            resolve()
-                        } else {
-                            console.error("[v0] Service Worker缓存清除失败:", event.data.error)
-                            reject(new Error(event.data.error))
-                        }
+                messageChannel.port1.onmessage = (event) => {
+                    if (event.data.success) {
+                        console.log("[v0] Service Worker认证缓存已清除")
+                        resolve()
+                    } else {
+                        console.error("[v0] Service Worker缓存清除失败:", event.data.error)
+                        reject(new Error(event.data.error))
                     }
-
-                    registration.active!.postMessage({type: "CLEAR_AUTH_CACHE"}, [messageChannel.port2])
                 }
-            )
+
+                registration.active!.postMessage({ type: "CLEAR_AUTH_CACHE" }, [messageChannel.port2])
+            })
         }
     } catch (error) {
         console.error("[v0] 清除Service Worker缓存失败:", error)
@@ -787,43 +768,15 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             isClient: typeof window !== "undefined",
         })
 
-        const fetchAbortExchange: Exchange = ({ forward, client }) => (ops$) => {
+        const debugExchange: Exchange = ({ forward }) => (ops$) => {
             return pipe(
                 ops$,
                 tap((op) => {
-                    // console.log(`操作 ${op.operationName} 开始处理`, op);
+                    console.log(`操作 ${op.operationName} 开始处理`, op);
                 }),
                 forward,
                 tap((result) => {
-                    // console.log(`操作 ${result.operation.operationName} 处理完成`, result);
-                    // 检测Java后端宕机错误
-                    if (result.error && isJavaBackendDownError(result.error)) {
-                        // console.log("检测到Java后端宕机错误，终止操作并通知页面");
-                        //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
-                        if (result.operation.kind === 'mutation') {
-                            const operationName=result.operation.query?.definitions[0]?.name.value;
-                            if(operationName){
-                                // 这里可以添加逻辑来标记操作已完成，即使有错误  例如，可以修改结果对象来模拟完成状态
-                                setTimeout(() => {
-                                    // 通知组件操作已完成（尽管有错误）
-                                    if (typeof window !== 'undefined') {
-                                        window.dispatchEvent(
-                                            new CustomEvent('mutation-completed', {
-                                                detail: {
-                                                    operation: operationName,
-                                                    variables: {
-                                                        id: result.operation.variables.id,
-                                                    },
-                                                    error: result.error,
-                                                    hasError: true
-                                                }
-                                            })
-                                        );
-                                    }
-                                }, 100); // 短暂延迟确保事件监听器已设置
-                            }
-                        }
-                    }
+                    console.log(`操作 ${result.operation.operationName} 处理完成`, result);
                 })
             );
         };
@@ -835,13 +788,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             exchanges: [
                 // 1. 离线/缓存 exchange 应该在最前面
                 cache,
-
+                debugExchange,
                 // 2. 开发工具 (如果有)
                 // devToolsExchange,
-
                 // 3. 认证 exchange - 需要尽早添加认证头
                 makeAuthExchange(accessToken, update, print),
-
                 // 4. 错误处理 exchange - 在认证后处理错误
                 errorExchange({
                     onError: (error, operation) => {
@@ -927,17 +878,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
                 // 5. 自定义网络错误处理
                 createNetworkErrorExchange(updateGraphQLBackendStatus, storage),
-
                 // 6. SSR exchange
                 ssr,
-
-                // 7.避免离线情形保存按钮无限期等待应答的毛病。
-                fetchAbortExchange,
-
-                // 8. 自定义 fetch 处理
-                customFetchExchange,
-
-                // 9. 最终的 fetch exchange - 应该放在最后
+                // 7. 自定义 fetch 处理
+                // customFetchExchange,
                 fetchExchange,
             ],
             suspense: true,
