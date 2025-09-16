@@ -741,9 +741,20 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         return null
                     }
                 },
-                // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，离线mutation保存才会进入这里的;点击太快会重复出现的。
                 writeMetadata: async (json: SerializedRequest[]) => {
                     console.log("[offlineExchange] writeMetadata写:", json?.length, "items")
+
+                    const isInitializing =
+                        typeof window !== "undefined" && Date.now() - (window as any).__graphql_init_time < INITIALIZATION_DELAY
+
+                    if (isInitializing && json?.length > 0) {
+                        console.log("[offlineExchange] 初始化阶段，延迟处理队列操作")
+                        // During initialization, don't immediately process the queue
+                        // Just save it and let the offline detection stabilize first
+                        await storage.writeMetadata!(json)
+                        return
+                    }
+
                     try {
                         if (!json?.length) {
                             console.log("[offlineExchange]网恢复==》队列清空", json?.length)
@@ -772,41 +783,47 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             return
                         }
 
-                        const uniqueRequests: SerializedRequest[] = []
-                        const seen = new Map<string, SerializedRequest>()
+                        const currentMetadata = await storage.readMetadata!()
+                        const existingOperations = new Set()
 
-                        // 反向遍历，保留每个唯一键的最后一次出现（接口名+id+version）
-                        for (let i = json.length - 1; i >= 0; i--) {
-                            const request = json[i]
-                            const key = request.variables?.id
-                                ? `${request.query}-${request.variables.id}-${request.variables?.version || ""}`
-                                : `${request.query}-${JSON.stringify(request.variables || {})}`
-
-                            if (!seen.has(key)) {
-                                seen.set(key, request)
-                                uniqueRequests.unshift(request)
-                            }
+                        // Build set of existing operations
+                        if (currentMetadata && Array.isArray(currentMetadata)) {
+                            currentMetadata.forEach((item: SerializedRequest) => {
+                                const key = `${getOperationName(item.query)}-${JSON.stringify(item.variables)}`
+                                existingOperations.add(key)
+                            })
                         }
 
-                        const filteredRequests = uniqueRequests.filter((request) => {
-                            // 如果是mutation且有ID，检查是否应该保留
-                            if (request.variables?.id && request.query.includes("mutation")) {
-                                // 这里可以添加更多的过滤逻辑
-                                return true
-                            }
-                            return true
+                        // Filter out duplicates from new operations
+                        const uniqueNewOperations = json.filter((item: SerializedRequest) => {
+                            const key = `${getOperationName(item.query)}-${JSON.stringify(item.variables)}`
+                            return !existingOperations.has(key)
                         })
 
-                        await storage.writeMetadata!(filteredRequests)
+                        if (uniqueNewOperations.length === 0) {
+                            console.log("[offlineExchange] 所有操作都是重复的，跳过写入")
+                            return
+                        }
+
+                        // Merge with existing operations
+                        const mergedOperations = [...(currentMetadata || []), ...uniqueNewOperations]
+
+                        console.log("[offlineExchange] 合并操作:", {
+                            existing: currentMetadata?.length || 0,
+                            new: uniqueNewOperations.length,
+                            total: mergedOperations.length,
+                        })
+
+                        await storage.writeMetadata!(mergedOperations)
 
                         // 在 localStorage 中备份队列信息，便于检查
                         if (typeof window !== "undefined") {
                             localStorage.setItem(
                                 "urql-metadata",
                                 JSON.stringify({
-                                    length: filteredRequests.length,
+                                    length: mergedOperations.length,
                                     timestamp: new Date().toLocaleString(),
-                                    requests: filteredRequests.map((r) => ({
+                                    requests: mergedOperations.map((r) => ({
                                         id: r.variables?.id,
                                         operationType: r.variables?.operationType,
                                         version: r.variables?.version,
@@ -815,7 +832,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             )
                         }
 
-                        console.log("[offlineExchange] 队列更新完成，剩余项目:", filteredRequests.length)
+                        console.log("[offlineExchange] 队列更新完成，剩余项目:", mergedOperations.length)
                     } catch (error) {
                         console.error("Error in writeMetadata:", error)
                         if (!json?.length) {
@@ -838,6 +855,17 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         data: args.data,
                     }
                 },
+            },
+            isOnline: () => {
+                if (typeof window === "undefined") return true
+
+                const isInitializing = Date.now() - (window as any).__graphql_init_time < INITIALIZATION_DELAY
+                if (isInitializing) {
+                    console.log("[offlineExchange] 初始化阶段，假设离线状态以保护队列")
+                    return false // Assume offline during initialization to protect queue
+                }
+                return false
+                // return navigator.onLine && networkStatusContext.isGraphQLBackendReachable
             },
         })
 
@@ -1030,6 +1058,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [createClientStable, accessToken, isClient])
 
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            ;(window as any).__graphql_init_time = Date.now()
+            console.log("[v0] GraphQL 初始化时间戳设置:", (window as any).__graphql_init_time)
+        }
+    }, [])
+
     // if (typeof window !== "undefined")
     //     console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
     if (!client) {
@@ -1043,3 +1078,5 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         </UrqlProvider>
     )
 }
+
+const INITIALIZATION_DELAY = 1000 // 1 second delay to ensure proper offline detection
