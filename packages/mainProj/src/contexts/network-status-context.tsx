@@ -22,6 +22,7 @@ export interface NetworkStatus {
     connectionType: string | null
     isNextJSServerReachable: boolean
     offlineQueue: OfflineQueueStatus
+    showOfflineQueueDialog?: (queueLength: number) => void
 }
 
 export interface NetworkStatusActions {
@@ -30,6 +31,10 @@ export interface NetworkStatusActions {
 
 const NetworkStatusContext = createContext<NetworkStatus | null>(null)
 const NetworkStatusActionsContext = createContext<NetworkStatusActions | null>(null)
+
+declare global {
+    var pendingQueueCallback: (() => void) | null
+}
 
 export function NetworkStatusProvider({ children }: { children: React.ReactNode }) {
     const searchParams = useSearchParams()
@@ -42,9 +47,56 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         connectionType: null,
         isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
         isNextJSServerReachable: true,
-        isGraphQLBackendReachable: true,
+        isGraphQLBackendReachable: false,
         offlineQueue: { hasPendingMutations: false, queueLength: 0, lastUpdated: null },
     })
+
+    const [showQueueDialog, setShowQueueDialog] = useState(false)
+    const [queueDialogData, setQueueDialogData] = useState<{ queueLength: number } | null>(null)
+
+    const showQueueConfirmationDialog = useCallback((queueLength: number) => {
+        console.log("[v0] 显示离线队列确认对话框:", queueLength)
+        setQueueDialogData({ queueLength })
+        setShowQueueDialog(true)
+    }, [])
+
+    const handleQueueDecision = useCallback((shouldProcess: boolean) => {
+        console.log("[v0] 用户队列决定:", shouldProcess)
+        setShowQueueDialog(false)
+
+        if (shouldProcess) {
+            if (typeof window !== "undefined" && (window as any).pendingQueueCallback) {
+                console.log("[v0] 执行待处理的队列回调")
+                ;(window as any).pendingQueueCallback()
+                ;(window as any).pendingQueueCallback = null
+            }
+
+            // Allow queue processing by updating backend status
+            setNetworkStatus((prev) => ({
+                ...prev,
+                isGraphQLBackendReachable: true,
+            }))
+
+            toast.success("正在发送离线操作到服务器...", {
+                duration: 3000,
+            })
+        } else {
+            if (typeof window !== "undefined") {
+                ;(window as any).pendingQueueCallback = null
+            }
+
+            // Keep backend as unreachable to prevent queue processing
+            setNetworkStatus((prev) => ({
+                ...prev,
+                isGraphQLBackendReachable: false,
+            }))
+
+            toast.info("离线操作已保留，稍后可手动同步", {
+                duration: 3000,
+            })
+        }
+        setQueueDialogData(null)
+    }, [])
 
     // 显示刷新提示
     const showRefreshPrompt = useCallback((queueLength: number) => {
@@ -207,7 +259,8 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     )
 
     const updateGraphQLBackendStatus = useCallback((isReachable: boolean, isClientOnline = true) => {
-        // console.log("[v0] 外部更新GraphQL后端状态:", { isReachable, isClientOnline })
+        console.log("[v0] 外部更新GraphQL后端状态:", { isReachable, isClientOnline })
+
         setNetworkStatus((prev) => ({
             ...prev,
             isGraphQLBackendReachable: isReachable,
@@ -220,6 +273,11 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
     const actions: NetworkStatusActions = {
         updateGraphQLBackendStatus,
+    }
+
+    const contextValue: NetworkStatus = {
+        ...networkStatus,
+        showOfflineQueueDialog: showQueueConfirmationDialog,
     }
 
     useEffect(() => {
@@ -320,9 +378,59 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         return () => clearInterval(checkOfflineQueueInterval)
     }, [networkStatus.isGraphQLBackendReachable, updateOfflineQueueStatus, showRefreshPrompt])
 
+    useEffect(() => {
+        const checkInitialQueue = async () => {
+            const queueStatus = await checkOfflineQueue()
+            if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0) {
+                console.log("[v0] 发现离线队列，显示确认对话框:", queueStatus.queueLength)
+                showQueueConfirmationDialog(queueStatus.queueLength)
+            } else {
+                // No queue, safe to check backend connectivity
+                const isGraphQLReachable = navigator.onLine ? await checkGraphQLBackendConnectivity() : false
+                setNetworkStatus((prev) => ({
+                    ...prev,
+                    isGraphQLBackendReachable: isGraphQLReachable,
+                }))
+            }
+        }
+
+        // Initial status update with delayed backend check
+        updateNetworkStatus(navigator.onLine)
+        updateOfflineQueueStatus()
+
+        // Check initial queue after a short delay
+        setTimeout(checkInitialQueue, 1000)
+    }, [updateNetworkStatus, updateOfflineQueueStatus, checkGraphQLBackendConnectivity, showQueueConfirmationDialog])
+
     return (
-        <NetworkStatusContext.Provider value={networkStatus}>
-            <NetworkStatusActionsContext.Provider value={actions}>{children}</NetworkStatusActionsContext.Provider>
+        <NetworkStatusContext.Provider value={contextValue}>
+            <NetworkStatusActionsContext.Provider value={actions}>
+                {children}
+                {showQueueDialog && queueDialogData && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">发现离线操作队列</h3>
+                            <p className="text-gray-600 mb-6">
+                                检测到 {queueDialogData.queueLength} 个离线保存的操作。 是否立即发送这些操作到服务器？
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => handleQueueDecision(false)}
+                                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                                >
+                                    暂不发送
+                                </button>
+                                <button
+                                    onClick={() => handleQueueDecision(true)}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                >
+                                    立即发送
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </NetworkStatusActionsContext.Provider>
         </NetworkStatusContext.Provider>
     )
 }

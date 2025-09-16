@@ -853,28 +853,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 },
                 onOnline: (callback: () => void) => {
                     if (typeof window !== "undefined") {
-                        const handleOnline = async () => {
+                        const handleOnline = () => {
                             const isInitializing = Date.now() - (window as any).__graphql_init_time < INITIALIZATION_DELAY
                             if (!isInitializing) {
-                                console.log("[offlineExchange] 网络恢复，检查队列状态")
-
-                                try {
-                                    const currentMetadata = await storage.readMetadata!()
-                                    if (currentMetadata && currentMetadata.length > 0) {
-                                        console.log("[offlineExchange] 检测到离线队列，等待用户确认:", currentMetadata.length)
-                                        ;(window as any).pendingQueueCallback = callback
-
-                                        // Trigger the confirmation dialog through network status context
-                                        if (networkStatusContext && networkStatusContext.showOfflineQueueDialog) {
-                                            networkStatusContext.showOfflineQueueDialog(currentMetadata.length)
-                                        }
-                                        return // Don't process queue automatically
-                                    }
-                                } catch (error) {
-                                    console.warn("检查离线队列失败:", error)
-                                }
-
-                                console.log("[offlineExchange] 无离线队列，正常处理网络恢复")
+                                console.log("[offlineExchange] 网络恢复，触发队列处理")
                                 setTimeout(async () => {
                                     try {
                                         await storage.writeData!({})
@@ -896,41 +878,21 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 },
             } as any,
             isOfflineError: (error: any) => {
-                const now = Date.now()
                 const isInitializing =
                     typeof window !== "undefined" && Date.now() - (window as any).__graphql_init_time < INITIALIZATION_DELAY
 
-                if (now - lastOfflineErrorTime > OFFLINE_ERROR_COOLDOWN) {
-                    offlineErrorCount = 0
-                    lastOfflineErrorTime = now
-                }
-
-                if (offlineErrorCount >= MAX_OFFLINE_ERRORS_PER_PERIOD) {
-                    console.log("[offlineExchange] 达到错误限制，暂时停止离线处理")
-                    return false
-                }
-
-                const isBackendOffline = networkStatusContext && !networkStatusContext.isGraphQLBackendReachable
-
-                if (isInitializing || isBackendOffline) {
-                    offlineErrorCount++
-                    if (offlineErrorCount <= 3) {
-                        console.log("[offlineExchange] 后端离线或初始化阶段，将错误视为离线错误以保护队列")
-                        return true
-                    } else {
-                        console.log("[offlineExchange] 错误过多，停止离线处理")
-                        return false
-                    }
+                if (isInitializing) {
+                    console.log("[offlineExchange] 初始化阶段，将所有错误视为离线错误以保护队列")
+                    return true
                 }
 
                 const isOffline = isNetworkError(error)
                 if (isOffline) {
-                    offlineErrorCount++
                     console.log("[offlineExchange] 检测到网络错误，标记为离线:", error?.message)
                 }
                 return isOffline
             },
-            resolverExchange: false,
+            resolverExchange: false, // 禁用解析器交换，让网络错误能够传播
             optimistic: {
                 modifyOriginalRecordData(args, cache, info) {
                     console.log("[offlineExchange] optimistic update for:", args.id)
@@ -1127,7 +1089,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         }
         // 如果token没有变化且已有缓存的客户端，直接返回
         if (lastAccessTokenRef.current === accessToken && memoizedClientRef.current) {
-            console.log(`[v0] 复用现有客户端 - 实例ID: ${instanceIdRef.current}`)
             return memoizedClientRef.current
         }
         lastAccessTokenRef.current = accessToken
@@ -1141,12 +1102,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         if (typeof window !== "undefined") {
             ;(window as any).__graphql_init_time = Date.now()
             console.log("[v0] GraphQL 初始化时间戳设置:", (window as any).__graphql_init_time)
-
-            if (networkStatusContext && !networkStatusContext.isGraphQLBackendReachable) {
-                console.log("[v0] 网络上下文显示后端不可达，保持离线状态")
-            }
         }
-    }, [networkStatusContext])
+    }, [])
 
     // if (typeof window !== "undefined")
     //     console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
@@ -1163,11 +1120,3 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 }
 
 const INITIALIZATION_DELAY = 1000 // 1 second delay to ensure proper offline detection
-const OFFLINE_ERROR_COOLDOWN = 5000 // 5 seconds cooldown
-const MAX_OFFLINE_ERRORS_PER_PERIOD = 10
-
-let offlineErrorCount = 0
-let lastOfflineErrorTime = 0
-
-// let userConfirmedQueueProcessing = false
-// let pendingQueueCallback: (() => void) | null = null
