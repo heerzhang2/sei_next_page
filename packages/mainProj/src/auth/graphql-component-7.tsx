@@ -893,12 +893,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
-                // 1. 离线缓存:最好在前面
-                cache,
-                // 2. 开发工具 (如果有)
-                // devToolsExchange,
-                // 3. 认证 exchange - 需要尽早添加认证头
-                makeAuthExchange(accessToken, update, print),
                 // 4. 错误处理 exchange - 在认证后处理错误
                 errorExchange({
                     onError: (error, operation) => {
@@ -982,6 +976,12 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
 
+                // 1. 离线缓存:最好在前面
+                cache,
+                // 2. 开发工具 (如果有)
+                // devToolsExchange,
+                // 3. 认证 exchange - 需要尽早添加认证头
+                makeAuthExchange(accessToken, update, print),
                 // 5. 离线metedata队列的删除
                 offlineListRemoveExchange(updateGraphQLBackendStatus, storage),
                 // 6. SSR exchange
