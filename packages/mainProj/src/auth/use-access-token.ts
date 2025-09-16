@@ -102,12 +102,12 @@ export function useAccessToken(): UseAccessTokenReturn {
             setOfflineTokenRepl(false)
         }
         if (networkStatus.isOnline && session?.user?.accessToken) {
-            console.log("[v0] useAccessToken: 使用NextAuth token", session)
+            // console.log("[v0] useAccessToken: 使用NextAuth token", session)
             return session?.user?.accessToken
         }
 
         if (offlineAuth.isAuthenticated && offlineAuth.accessToken) {
-            console.log("[v0] useAccessToken: 使用离线认证token作为备选")
+            // console.log("[v0] useAccessToken: 使用离线认证token作为备选")
             return offlineAuth.accessToken
         }
 

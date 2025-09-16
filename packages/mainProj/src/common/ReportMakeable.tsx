@@ -51,7 +51,6 @@ const ReportMakeable = () => {
         })
 
         if (currentState === lastCheckRef.current) {
-            console.log("[v0] State unchanged, skipping")
             return
         }
 
@@ -65,7 +64,7 @@ const ReportMakeable = () => {
         }
 
         debounceTimerRef.current = setTimeout(async () => {
-            console.log("[v0] Debounced check executing")
+            // console.log("[v0] Debounced check executing")
 
             if (session.status === "unauthenticated") {
                 console.log("[v0] Session unauthenticated, double-checking network status")
@@ -131,7 +130,6 @@ const ReportMakeable = () => {
         const hasOfflineAuth = offlineAuth.isAuthenticated && !offlineAuth.isExpired
 
         if (hasNextAuthSession || hasOfflineAuth) {
-            console.log("[v0] User authenticated (NextAuth or offline), resetting dialog state")
             setHasShownDialog(false)
             lastCheckRef.current = ""
         }

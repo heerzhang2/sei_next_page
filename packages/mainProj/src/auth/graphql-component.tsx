@@ -1,13 +1,12 @@
 "use client"
 
 import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/next"
+import { authExchange } from "@urql/exchange-auth"
+import { offlineExchange } from "@urql/exchange-graphcache"
 import { UrqlProvider } from "@urql/next"
 import { useAccessToken } from "./use-access-token"
-import { authExchange } from "@urql/exchange-auth"
 import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-//离线保存支持的：
-import { offlineExchange } from "@urql/exchange-graphcache"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
@@ -17,6 +16,15 @@ import { pipe, map, tap } from "wonka"
 import { useSearchParams, usePathname } from "next/navigation"
 import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/network-status-context"
 //文档： https://nearform.com/open-source/urql/docs/
+
+const getOperationName = (query: string): string => {
+    try {
+        const match = query.match(/(mutation|query|subscription)\s+(\w+)/);
+        return match ? match[2] : "UnknownOperation";
+    } catch {
+        return "UnknownOperation";
+    }
+};
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
     if (!error) return false
@@ -118,7 +126,8 @@ let lastErrorTime = 0
 const MAX_ERRORS_PER_MINUTE = 2
 const ERROR_RESET_TIME = 60000 // 1分钟
 
-const createNetworkErrorExchange = (
+//从离线队列中移除mutation，网络状态更新：
+const offlineListRemoveExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
     storage: any, // Add storage parameter for queue management
 ): Exchange => {
@@ -216,21 +225,22 @@ const handleSuccessfulMutation = async (result: OperationResult, operation: Oper
     }
 }
 
-// 自定义 fetch exchange 来更好地处理网络错误
+//超时设置，以及处理网络错误401认证的错误；
 const customFetchExchange: Exchange = ({ forward }) => {
     return (operations$) => {
         return pipe(
             operations$,
             map((operation: Operation) => {
+                //你想恢复的发送居然有两个同样的，一个mutation进来两次吗？
                 console.log("[v0] customFetchExchange - 发送请求:", {
                     operationName: operation.operationName,
-                    query: operation.query.loc?.source.body.substring(0, 200) + "...",
+                    query: operation.query.loc?.source.body.substring(0, 50) + "...",
                     variables: operation.variables,
                 })
 
                 // 为每个操作添加超时和错误处理
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
+                const timeoutId = setTimeout(() => controller.abort(), 120*1000) // 120秒超时
 
                 return {
                     ...operation,
@@ -710,9 +720,38 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
             storage: {
                 ...storage,
+                readMetadata: async () => {
+                    try {
+                        const metadata = await storage.readMetadata!();
+                        console.log('[offlineExchange]宕机恢复第一时间读:', {
+                            count: metadata?.length || 0,
+                            items: metadata?.map((item: SerializedRequest, index: number) => ({
+                                index,
+                                operationName: getOperationName(item.query),
+                                variables: item.variables,
+                                timestamp: new Date().toLocaleString(),
+                            })),
+                        });
+                        // 记录到 localStorage 以便页面刷新后仍可查看
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem(
+                                "offlineExchange-metadata-history",
+                                JSON.stringify({
+                                    count: metadata?.length || 0,
+                                    timestamp: new Date().toISOString(),
+                                    sample: metadata?.slice(0, 3)
+                                })
+                            );
+                        }
+                        return metadata;
+                    } catch (error) {
+                        console.error('[offlineExchange] Error in readMetadata:', error);
+                        return null;
+                    }
+                },
                 // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，离线mutation保存才会进入这里的;点击太快会重复出现的。
                 writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log('[offlineExchange] writeMetadata called with:', json?.length, 'items');
+                    console.log('[offlineExchange] writeMetadata写:', json?.length, 'items');
                     try {
                         if (!json?.length) {
                             // 谨慎处理：只有在确定存储为空时才删除备份
@@ -723,21 +762,23 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                     const requests = JSON.parse(metadata)
                                     listLen=requests.length
                                 }
-                                console.log('[offlineExchange]localStorage队列Len=', listLen);
+                                console.log('[offlineExchange]localStorage队列Len=', listLen,"应自动发完成");
                                 setTimeout(async () => {
                                     try {
                                         const currentMetadata = await storage.readMetadata!()
-                                        console.log('[offlineExchange]队列Len==', currentMetadata?.length);
                                         if (!currentMetadata || currentMetadata.length === 0) {
+                                            console.log('[offlineExchange]队列正常清空');
                                             localStorage.removeItem("urql-metadata")
                                             await storage.writeMetadata!(json || [])
                                         }
+                                        else
+                                            console.warn('[offlineExchange]5秒后居然遇到？遗留项=', currentMetadata.length);
                                     } catch (error) {
                                         console.warn("检查存储状态失败:", error)
                                     }
                                 }, 5000) // 延迟检查，确保写入完成：页面刚刚启动可能连续出现writeMetadata调用的。
                             }
-                            console.log('[offlineExchange]队列空的:', json?.length);
+                            console.log('[offlineExchange]网恢复==》队列空的:', json?.length);
                             return
                         }
                         // 使用对象来去重，保留最后一次出现的请求
@@ -918,28 +959,27 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
 
-                // 1. 离线/缓存 exchange 应前面
+                // 1. 离线缓存:最好在前面
                 cache,
                 // 2. 开发工具 (如果有)
                 // devToolsExchange,
                 // 3. 认证 exchange - 需要尽早添加认证头
                 makeAuthExchange(accessToken, update, print),
-                // 5. 自定义网络错误处理
-                createNetworkErrorExchange(updateGraphQLBackendStatus, storage),
+                // 5. 离线metedata队列的删除
+                offlineListRemoveExchange(updateGraphQLBackendStatus, storage),
                 // 6. SSR exchange
                 ssr,
-                // 7.避免离线情形保存按钮无限期等待应答的毛病。
+                // 7.避免离线情形保存按钮无限期等待应答的毛病，发送mutation-completed事件。
                 fetchAbortExchange,
-                // 8. 自定义 fetch 处理
+                // 8. 自定义fetch超时时间配置，若有401认证错误码捕获传递。
                 customFetchExchange,
-                // 9. 最终的 fetch exchange - 应该放在最后
+                // 9. 原始的fetch放在最后
                 fetchExchange,
             ],
             suspense: true,
             preferGetMethod: false, //默认会可能用GET方法的。
             fetchOptions: () => {
                 const currentToken = accessToken
-                console.log(`createClientStable:最后:fetchOptions: ${currentToken}`)
                 return {
                     headers: {
                         authorization: currentToken ? `Bearer ${currentToken}` : "",
@@ -962,23 +1002,19 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         if (!isClient) {
             return [null, null]
         }
-
         // 如果token没有变化且已有缓存的客户端，直接返回
         if (lastAccessTokenRef.current === accessToken && memoizedClientRef.current) {
-            console.log(`[v0] 使用memoized客户端 - 实例ID: ${instanceIdRef.current}`)
             return memoizedClientRef.current
         }
-
         lastAccessTokenRef.current = accessToken
         const result = createClientStable()
-
-        console.log(`[v0] 重新计算客户端 - 实例ID: ${instanceIdRef.current}`, accessToken)
+        // console.log(`[v0] 重新计算客户端 - 实例ID: ${instanceIdRef.current}`, accessToken)
         memoizedClientRef.current = result
         return result
     }, [createClientStable, accessToken, isClient])
 
-    if (typeof window !== "undefined")
-        console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
+    // if (typeof window !== "undefined")
+    //     console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
