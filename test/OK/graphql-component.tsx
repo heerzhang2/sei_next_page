@@ -1,18 +1,18 @@
 "use client"
 
+import { pipe, map, tap } from "wonka"
 import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/next"
 import { authExchange } from "@urql/exchange-auth"
 import { offlineExchange } from "@urql/exchange-graphcache"
 import { UrqlProvider } from "@urql/next"
+import { Exchange, Operation, OperationResult } from "@urql/core"
+import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
+import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { useAccessToken } from "./use-access-token"
 import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
-import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
-import {CombinedError, Exchange, Operation, OperationResult} from "@urql/core"
-import { pipe, map, tap } from "wonka"
 import { useSearchParams, usePathname } from "next/navigation"
 import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/network-status-context"
 //文档： https://nearform.com/open-source/urql/docs/
@@ -138,9 +138,9 @@ const offlineListRemoveExchange = (
                 forward,
                 map((result: OperationResult) => {
                     if (result.data && !result.error && result.operation.kind === "mutation") {
+                        //实际上，离线恢复自动发送mutation： 这位置队列早已被清空！
                         handleSuccessfulMutation(result, result.operation, storage)
                     }
-
                     if (result.error) {
                         console.log("[v0] networkErrorExchange - 原始错误对象:", {
                             error: result.error,
@@ -754,32 +754,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     console.log('[offlineExchange] writeMetadata写:', json?.length, 'items');
                     try {
                         if (!json?.length) {
-                            // 谨慎处理：只有在确定存储为空时才删除备份
+                            // 直接清空元数据，不设置定时器检查
                             if (typeof window !== "undefined") {
-                                const metadata = localStorage.getItem("urql-metadata")
-                                let listLen=0
-                                if (metadata) {
-                                    const requests = JSON.parse(metadata)
-                                    listLen=requests.length
-                                }
-                                console.log('[offlineExchange]localStorage队列Len=', listLen,"应自动发完成");
-                                setTimeout(async () => {
-                                    try {
-                                        const currentMetadata = await storage.readMetadata!()
-                                        if (!currentMetadata || currentMetadata.length === 0) {
-                                            console.log('[offlineExchange]队列正常清空');
-                                            localStorage.removeItem("urql-metadata")
-                                            await storage.writeMetadata!(json || [])
-                                        }
-                                        else
-                                            console.warn('[offlineExchange]5秒后居然遇到？遗留项=', currentMetadata.length);
-                                    } catch (error) {
-                                        console.warn("检查存储状态失败:", error)
-                                    }
-                                }, 5000) // 延迟检查，确保写入完成：页面刚刚启动可能连续出现writeMetadata调用的。
+                                localStorage.removeItem("urql-metadata");
                             }
-                            console.log('[offlineExchange]网恢复==》队列空的:', json?.length);
-                            return
+                            await storage.writeMetadata!([]);
+                            console.log('网恢复[offlineExchange] Metadata队列清空！');
+                            return;
                         }
                         // 使用对象来去重，保留最后一次出现的请求
                         const uniqueRequests: SerializedRequest[] = []

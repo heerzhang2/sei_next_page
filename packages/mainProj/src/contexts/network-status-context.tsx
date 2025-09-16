@@ -207,8 +207,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     )
 
     const updateGraphQLBackendStatus = useCallback((isReachable: boolean, isClientOnline = true) => {
-        console.log("[v0] 外部更新GraphQL后端状态:", { isReachable, isClientOnline })
-
+        // console.log("[v0] 外部更新GraphQL后端状态:", { isReachable, isClientOnline })
         setNetworkStatus((prev) => ({
             ...prev,
             isGraphQLBackendReachable: isReachable,

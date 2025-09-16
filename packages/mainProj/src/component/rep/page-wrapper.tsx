@@ -28,7 +28,7 @@ export function ReportPageWrapper({ OriginalView, verId = "1" }: ReportPageWrapp
 
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } })
     const { getReport: report } = result?.data || {}
-    console.log("模板ReportPageWrapper进入", { repId, params, action, report })
+    // console.log("模板ReportPageWrapper进入", { repId, params, action, report })
     if (repId === "*") return null
 
     return action && <OriginalView action={action!} verId={verId} rep={report} />

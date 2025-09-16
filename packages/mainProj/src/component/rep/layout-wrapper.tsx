@@ -28,7 +28,7 @@ export function ReportLayoutWrapper({ children, ReportView, useCatalog }: Report
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } })
     const { getReport: report } = result?.data || {}
     const catItems = useCatalog()
-    console.log("模板ReportLayoutWrapper路由=", { repId, action, print })
+    // console.log("模板ReportLayoutWrapper路由=", { repId, action, print })
     if (repId === "*") return null
 
     return (

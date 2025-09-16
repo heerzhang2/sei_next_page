@@ -35,7 +35,7 @@ export default function HeaderWrapper({ items, children }: HeaderWrapperProps) {
   })
   const { authUser }=result?.data || {};
   const userInfo={ name: authUser?.username };
-  console.log("HeaderWrapper看到的登录是", { userInfo, authUser })
+  // console.log("HeaderWrapper看到的登录是", { userInfo, authUser })
   return (
     <SiteMainbar items={items} userInfo={userInfo}>
       {children}

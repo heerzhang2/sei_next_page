@@ -18,7 +18,7 @@ export default function ReportLayout({
         return <div>Loading...</div>
     }
 
-    console.log(`🚀ReportLayout running repId=${repId}`, repId)
+    // console.log(`🚀ReportLayout running repId=${repId}`, repId)
     return (
         <ErrorBoundaryWrapper>
             <StorageProvider>

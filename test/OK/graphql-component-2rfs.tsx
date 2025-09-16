@@ -1,13 +1,12 @@
 "use client"
 
 import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/next"
+import { authExchange } from "@urql/exchange-auth"
+import { offlineExchange } from "@urql/exchange-graphcache"
 import { UrqlProvider } from "@urql/next"
 import { useAccessToken } from "./use-access-token"
-import { authExchange } from "@urql/exchange-auth"
 import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-//离线保存支持的：
-import { offlineExchange } from "@urql/exchange-graphcache"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
@@ -17,6 +16,15 @@ import { pipe, map, tap } from "wonka"
 import { useSearchParams, usePathname } from "next/navigation"
 import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/network-status-context"
 //文档： https://nearform.com/open-source/urql/docs/
+
+const getOperationName = (query: string): string => {
+    try {
+        const match = query.match(/(mutation|query|subscription)\s+(\w+)/);
+        return match ? match[2] : "UnknownOperation";
+    } catch {
+        return "UnknownOperation";
+    }
+};
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
     if (!error) return false
@@ -52,31 +60,49 @@ const isVersionConflictError = (error: any): boolean => {
     )
 }
 
+// 检测Java后端宕机错误的函数
+const isJavaBackendDownError = (error: any): boolean => {
+    if (!error) return false;
+    if(error?.isImmediateError && error?.isNetworkError)
+        return true;
+    // 检查特定的错误模式表明Java后端宕机
+    const isConnectionRefused =
+        error.message?.includes('connection refused') ||
+        error.message?.includes('failed to fetch') ||
+        error.message?.includes('network error');
+    const isTimeout =
+        error.message?.includes('timeout') ||
+        error.message?.includes('aborted');
+    const is5xxError =
+        error.response?.status >= 500 ||
+        (error.networkError && error.networkError.status >= 500);
+    return (isConnectionRefused || isTimeout || is5xxError);
+};
+
 const removeOperationFromQueue = async (operationToRemove: Operation, storage: any) => {
     try {
-        if (!storage.readMetadata || !storage.writeMetadata) return
-
+        if (!storage.readMetadata || !storage.writeMetadata)    return
         const currentMetadata = await storage.readMetadata()
-        if (!currentMetadata || !Array.isArray(currentMetadata)) return
-
+        if (!currentMetadata || !Array.isArray(currentMetadata)) {
+            console.log(`[v0] 从离线队列中移除操作，队列:已经空`)
+            return
+        }
         // Filter out the failed operation based on operation name and variables
         const filteredMetadata = currentMetadata.filter((request: SerializedRequest) => {
             const isSameOperation = request.query === operationToRemove.query.loc?.source.body
             const isSameVariables = JSON.stringify(request.variables) === JSON.stringify(operationToRemove.variables)
             return !(isSameOperation && isSameVariables)
         })
+        console.log(
+            `[v0]离线队列移除，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`,
+        )
         toast.success(
             `离线队列中移除原队长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length} ${operationToRemove.variables?.id} ${operationToRemove.variables?.verion}`,
             {
                 duration: 40000,
             },
         )
-        console.log(
-            `[v0] 从离线队列中移除操作，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`,
-        )
-
         await storage.writeMetadata(filteredMetadata)
-
         // Update localStorage backup
         if (typeof window !== "undefined") {
             localStorage.setItem(
@@ -87,7 +113,6 @@ const removeOperationFromQueue = async (operationToRemove: Operation, storage: a
                 }),
             )
         }
-
         return true
     } catch (error) {
         console.error("[v0] 移除离线队列操作失败:", error)
@@ -101,7 +126,8 @@ let lastErrorTime = 0
 const MAX_ERRORS_PER_MINUTE = 2
 const ERROR_RESET_TIME = 60000 // 1分钟
 
-const createNetworkErrorExchange = (
+//从离线队列中移除mutation，网络状态更新：
+const offlineListRemoveExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
     storage: any, // Add storage parameter for queue management
 ): Exchange => {
@@ -199,21 +225,22 @@ const handleSuccessfulMutation = async (result: OperationResult, operation: Oper
     }
 }
 
-// 自定义 fetch exchange 来更好地处理网络错误
+//超时设置，以及处理网络错误401认证的错误；
 const customFetchExchange: Exchange = ({ forward }) => {
     return (operations$) => {
         return pipe(
             operations$,
             map((operation: Operation) => {
+                //你想恢复的发送居然有两个同样的，一个mutation进来两次吗？
                 console.log("[v0] customFetchExchange - 发送请求:", {
                     operationName: operation.operationName,
-                    query: operation.query.loc?.source.body.substring(0, 200) + "...",
+                    query: operation.query.loc?.source.body.substring(0, 50) + "...",
                     variables: operation.variables,
                 })
 
                 // 为每个操作添加超时和错误处理
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
+                const timeoutId = setTimeout(() => controller.abort(), 120*1000) // 120秒超时
 
                 return {
                     ...operation,
@@ -375,25 +402,25 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
         return
     }
-
     try {
         const registration = await navigator.serviceWorker.ready
         if (registration.active) {
             const messageChannel = new MessageChannel()
 
             return new Promise((resolve, reject) => {
-                messageChannel.port1.onmessage = (event) => {
-                    if (event.data.success) {
-                        console.log("[v0] Service Worker认证缓存已清除")
-                        resolve()
-                    } else {
-                        console.error("[v0] Service Worker缓存清除失败:", event.data.error)
-                        reject(new Error(event.data.error))
+                    messageChannel.port1.onmessage = (event) => {
+                        if (event.data.success) {
+                            console.log("[v0] Service Worker认证缓存已清除")
+                            resolve()
+                        } else {
+                            console.error("[v0] Service Worker缓存清除失败:", event.data.error)
+                            reject(new Error(event.data.error))
+                        }
                     }
-                }
 
-                registration.active!.postMessage({ type: "CLEAR_AUTH_CACHE" }, [messageChannel.port2])
-            })
+                    registration.active!.postMessage({type: "CLEAR_AUTH_CACHE"}, [messageChannel.port2])
+                }
+            )
         }
     } catch (error) {
         console.error("[v0] 清除Service Worker缓存失败:", error)
@@ -693,25 +720,65 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
             storage: {
                 ...storage,
+                readMetadata: async () => {
+                    try {
+                        const metadata = await storage.readMetadata!();
+                        console.log('[offlineExchange]宕机恢复第一时间读:', {
+                            count: metadata?.length || 0,
+                            items: metadata?.map((item: SerializedRequest, index: number) => ({
+                                index,
+                                operationName: getOperationName(item.query),
+                                variables: item.variables,
+                                timestamp: new Date().toLocaleString(),
+                            })),
+                        });
+                        // 记录到 localStorage 以便页面刷新后仍可查看
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem(
+                                "offlineExchange-metadata-history",
+                                JSON.stringify({
+                                    count: metadata?.length || 0,
+                                    timestamp: new Date().toISOString(),
+                                    sample: metadata?.slice(0, 3)
+                                })
+                            );
+                        }
+                        return metadata;
+                    } catch (error) {
+                        console.error('[offlineExchange] Error in readMetadata:', error);
+                        return null;
+                    }
+                },
                 // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，离线mutation保存才会进入这里的;点击太快会重复出现的。
                 writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log('[offlineExchange] writeMetadata called with:', json?.length, 'items');
+                    console.log('[offlineExchange] writeMetadata写:', json?.length, 'items');
                     try {
                         if (!json?.length) {
                             // 谨慎处理：只有在确定存储为空时才删除备份
                             if (typeof window !== "undefined") {
+                                const metadata = localStorage.getItem("urql-metadata")
+                                let listLen=0
+                                if (metadata) {
+                                    const requests = JSON.parse(metadata)
+                                    listLen=requests.length
+                                }
+                                console.log('[offlineExchange]localStorage队列Len=', listLen,"应自动发完成");
                                 setTimeout(async () => {
                                     try {
                                         const currentMetadata = await storage.readMetadata!()
                                         if (!currentMetadata || currentMetadata.length === 0) {
+                                            console.log('[offlineExchange]队列正常清空');
                                             localStorage.removeItem("urql-metadata")
                                             await storage.writeMetadata!(json || [])
                                         }
+                                        else
+                                            console.warn('[offlineExchange]5秒后居然遇到？遗留项=', currentMetadata.length);
                                     } catch (error) {
                                         console.warn("检查存储状态失败:", error)
                                     }
                                 }, 5000) // 延迟检查，确保写入完成：页面刚刚启动可能连续出现writeMetadata调用的。
                             }
+                            console.log('[offlineExchange]网恢复==》队列空的:', json?.length);
                             return
                         }
                         // 使用对象来去重，保留最后一次出现的请求
@@ -743,11 +810,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         await storage.writeMetadata!(json || [])
                     }
                 },
-                readMetadata: async () => {
-                    const result = await storage.readMetadata!();
-                    console.log('[offlineExchange] readMetadata returned:', result?.length, 'items');
-                    return result;
-                },
             } as any,
             // 修改 offlineExchange 配置，确保网络错误能正确传播
             resolverExchange: false, // 禁用解析器交换，让网络错误能够传播
@@ -762,47 +824,49 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     }
                 },
             },
-            isOfflineError: (error: undefined | CombinedError, result: OperationResult) => {
-                console.log('[offlineExchange] isOfflineError called:', {
-                    hasError: !!error,
-                    error,
-                    hasResult: !!result,
-                    resultError: result?.error,
-                    operation: result?.operation?.operationName,
-                });
-
-                // 检查是否为网络错误
-                const hasNetworkError =
-                    (error && (error.isNetworkError || isNetworkError(error))) ||
-                    (result && result.error && (result.error.isNetworkError || isNetworkError(result.error)));
-
-                // 检查是否为离线状态
-                const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-
-                console.log('[offlineExchange] isOfflineError 决策:', {
-                    hasNetworkError,
-                    isOffline,
-                    isOfflineError: hasNetworkError || isOffline || !networkStatusContext.isGraphQLBackendReachable
-                });
-                if (hasNetworkError && !networkStatusContext.isGraphQLBackendReachable)
-                    return true;
-                return  hasNetworkError || isOffline;
-            }
         })
 
         const ssr = ssrExchange({
             isClient: typeof window !== "undefined",
         })
 
-        const debugExchange: Exchange = ({ forward }) => (ops$) => {
+        const fetchAbortExchange: Exchange = ({ forward, client }) => (ops$) => {
             return pipe(
                 ops$,
                 tap((op) => {
-                    console.log(`操作 ${op.operationName} 开始处理`, op);
+                    // console.log(`操作 ${op.operationName} 开始处理`, op);
                 }),
                 forward,
                 tap((result) => {
-                    console.log(`操作 ${result.operation.operationName} 处理完成`, result);
+                    // console.log(`操作 ${result.operation.operationName} 处理完成`, result);
+                    // 检测Java后端宕机错误
+                    if (result.error && isJavaBackendDownError(result.error)) {
+                        // console.log("检测到Java后端宕机错误，终止操作并通知页面");
+                        //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
+                        if (result.operation.kind === 'mutation') {
+                            const operationName=result.operation.query?.definitions[0]?.name.value;
+                            if(operationName){
+                                // 这里可以添加逻辑来标记操作已完成，即使有错误  例如，可以修改结果对象来模拟完成状态
+                                setTimeout(() => {
+                                    // 通知组件操作已完成（尽管有错误）
+                                    if (typeof window !== 'undefined') {
+                                        window.dispatchEvent(
+                                            new CustomEvent('mutation-completed', {
+                                                detail: {
+                                                    operation: operationName,
+                                                    variables: {
+                                                        id: result.operation.variables.id,
+                                                    },
+                                                    error: result.error,
+                                                    hasError: true
+                                                }
+                                            })
+                                        );
+                                    }
+                                }, 100); // 短暂延迟确保事件监听器已设置
+                            }
+                        }
+                    }
                 })
             );
         };
@@ -812,13 +876,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
-                // 1. 离线/缓存 exchange 应该在最前面
-                cache,
-                debugExchange,
-                // 2. 开发工具 (如果有)
-                // devToolsExchange,
-                // 3. 认证 exchange - 需要尽早添加认证头
-                makeAuthExchange(accessToken, update, print),
                 // 4. 错误处理 exchange - 在认证后处理错误
                 errorExchange({
                     onError: (error, operation) => {
@@ -902,19 +959,27 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
 
-                // 5. 自定义网络错误处理
-                createNetworkErrorExchange(updateGraphQLBackendStatus, storage),
+                // 1. 离线缓存:最好在前面
+                cache,
+                // 2. 开发工具 (如果有)
+                // devToolsExchange,
+                // 3. 认证 exchange - 需要尽早添加认证头
+                makeAuthExchange(accessToken, update, print),
+                // 5. 离线metedata队列的删除
+                offlineListRemoveExchange(updateGraphQLBackendStatus, storage),
                 // 6. SSR exchange
                 ssr,
-                // 7. 自定义 fetch 处理
+                // 7.避免离线情形保存按钮无限期等待应答的毛病，发送mutation-completed事件。
+                fetchAbortExchange,
+                // 8. 自定义fetch超时时间配置，若有401认证错误码捕获传递。
                 customFetchExchange,
+                // 9. 原始的fetch放在最后
                 fetchExchange,
             ],
             suspense: true,
             preferGetMethod: false, //默认会可能用GET方法的。
             fetchOptions: () => {
                 const currentToken = accessToken
-                console.log(`createClientStable:最后:fetchOptions: ${currentToken}`)
                 return {
                     headers: {
                         authorization: currentToken ? `Bearer ${currentToken}` : "",
@@ -937,23 +1002,19 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         if (!isClient) {
             return [null, null]
         }
-
         // 如果token没有变化且已有缓存的客户端，直接返回
         if (lastAccessTokenRef.current === accessToken && memoizedClientRef.current) {
-            console.log(`[v0] 使用memoized客户端 - 实例ID: ${instanceIdRef.current}`)
             return memoizedClientRef.current
         }
-
         lastAccessTokenRef.current = accessToken
         const result = createClientStable()
-
-        console.log(`[v0] 重新计算客户端 - 实例ID: ${instanceIdRef.current}`, accessToken)
+        // console.log(`[v0] 重新计算客户端 - 实例ID: ${instanceIdRef.current}`, accessToken)
         memoizedClientRef.current = result
         return result
     }, [createClientStable, accessToken, isClient])
 
-    if (typeof window !== "undefined")
-        console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
+    // if (typeof window !== "undefined")
+    //     console.log("停滞isClient:", isClient, "accessToken: ", accessToken, "client空=", client === null)
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }

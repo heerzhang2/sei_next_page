@@ -33,22 +33,22 @@ const ReportMakeable = () => {
     useEffect(() => {
         const currentState = `${session.status}-${isClientOnline}-${isOnline}-${isGraphQLBackendReachable}-${hasShownDialog}-${offlineAuth.isAuthenticated}-${offlineAuth.isExpired}`
 
-        console.log("ReportMakeable跟踪", {
-            isClientOnline,
-            isOnline,
-            isGraphQLBackendReachable,
-            sessionStatus: session.status,
-            hasShownDialog,
-            hasAccessToken: !!((session?.data?.user)?.accessToken),
-            hasUser: !!session?.data?.user,
-            offlineAuthStatus: {
-                isAuthenticated: offlineAuth.isAuthenticated,
-                isExpired: offlineAuth.isExpired,
-                hasUser: !!offlineAuth.user,
-            },
-            currentState,
-            lastState: lastCheckRef.current,
-        })
+        // console.log("ReportMakeable跟踪", {
+        //     isClientOnline,
+        //     isOnline,
+        //     isGraphQLBackendReachable,
+        //     sessionStatus: session.status,
+        //     hasShownDialog,
+        //     hasAccessToken: !!((session?.data?.user)?.accessToken),
+        //     hasUser: !!session?.data?.user,
+        //     offlineAuthStatus: {
+        //         isAuthenticated: offlineAuth.isAuthenticated,
+        //         isExpired: offlineAuth.isExpired,
+        //         hasUser: !!offlineAuth.user,
+        //     },
+        //     currentState,
+        //     lastState: lastCheckRef.current,
+        // })
 
         if (currentState === lastCheckRef.current) {
             return

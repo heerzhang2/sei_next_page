@@ -11,7 +11,7 @@ import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
-import {CombinedError, Exchange, Operation, OperationResult} from "@urql/core"
+import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, map, tap } from "wonka"
 import { useSearchParams, usePathname } from "next/navigation"
 import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/network-status-context"
@@ -19,12 +19,12 @@ import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/ne
 
 const getOperationName = (query: string): string => {
     try {
-        const match = query.match(/(mutation|query|subscription)\s+(\w+)/);
-        return match ? match[2] : "UnknownOperation";
+        const match = query.match(/(mutation|query|subscription)\s+(\w+)/)
+        return match ? match[2] : "UnknownOperation"
     } catch {
-        return "UnknownOperation";
+        return "UnknownOperation"
     }
-};
+}
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
     if (!error) return false
@@ -62,26 +62,21 @@ const isVersionConflictError = (error: any): boolean => {
 
 // 检测Java后端宕机错误的函数
 const isJavaBackendDownError = (error: any): boolean => {
-    if (!error) return false;
-    if(error?.isImmediateError && error?.isNetworkError)
-        return true;
+    if (!error) return false
+    if (error?.isImmediateError && error?.isNetworkError) return true
     // 检查特定的错误模式表明Java后端宕机
     const isConnectionRefused =
-        error.message?.includes('connection refused') ||
-        error.message?.includes('failed to fetch') ||
-        error.message?.includes('network error');
-    const isTimeout =
-        error.message?.includes('timeout') ||
-        error.message?.includes('aborted');
-    const is5xxError =
-        error.response?.status >= 500 ||
-        (error.networkError && error.networkError.status >= 500);
-    return (isConnectionRefused || isTimeout || is5xxError);
-};
+        error.message?.includes("connection refused") ||
+        error.message?.includes("failed to fetch") ||
+        error.message?.includes("network error")
+    const isTimeout = error.message?.includes("timeout") || error.message?.includes("aborted")
+    const is5xxError = error.response?.status >= 500 || (error.networkError && error.networkError.status >= 500)
+    return isConnectionRefused || isTimeout || is5xxError
+}
 
 const removeOperationFromQueue = async (operationToRemove: Operation, storage: any) => {
     try {
-        if (!storage.readMetadata || !storage.writeMetadata)    return
+        if (!storage.readMetadata || !storage.writeMetadata) return
         const currentMetadata = await storage.readMetadata()
         if (!currentMetadata || !Array.isArray(currentMetadata)) {
             console.log(`[v0] 从离线队列中移除操作，队列:已经空`)
@@ -93,9 +88,7 @@ const removeOperationFromQueue = async (operationToRemove: Operation, storage: a
             const isSameVariables = JSON.stringify(request.variables) === JSON.stringify(operationToRemove.variables)
             return !(isSameOperation && isSameVariables)
         })
-        console.log(
-            `[v0]离线队列移除，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`,
-        )
+        console.log(`[v0]离线队列移除，原队列长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length}`)
         toast.success(
             `离线队列中移除原队长度: ${currentMetadata.length}, 新队列长度: ${filteredMetadata.length} ${operationToRemove.variables?.id} ${operationToRemove.variables?.verion}`,
             {
@@ -185,13 +178,13 @@ const offlineListRemoveExchange = (
                             }
                         } else {
                             if (result.data) {
-                                console.log("GraphQL后端网络已恢复")
+                                //console.log("GraphQL后端网络已恢复")
                                 updateGraphQLBackendStatus(true, true)
                                 errorCount = 0
                             }
                         }
                     } else if (result.data) {
-                        console.log("GraphQL后端网络已恢复")
+                        //console.log("GraphQL后端网络已恢复")
                         updateGraphQLBackendStatus(true, true)
                         errorCount = 0
                     }
@@ -240,7 +233,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
 
                 // 为每个操作添加超时和错误处理
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 120*1000) // 120秒超时
+                const timeoutId = setTimeout(() => controller.abort(), 120 * 1000) // 120秒超时
 
                 return {
                     ...operation,
@@ -408,19 +401,18 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
             const messageChannel = new MessageChannel()
 
             return new Promise((resolve, reject) => {
-                    messageChannel.port1.onmessage = (event) => {
-                        if (event.data.success) {
-                            console.log("[v0] Service Worker认证缓存已清除")
-                            resolve()
-                        } else {
-                            console.error("[v0] Service Worker缓存清除失败:", event.data.error)
-                            reject(new Error(event.data.error))
-                        }
+                messageChannel.port1.onmessage = (event) => {
+                    if (event.data.success) {
+                        console.log("[v0] Service Worker认证缓存已清除")
+                        resolve()
+                    } else {
+                        console.error("[v0] Service Worker缓存清除失败:", event.data.error)
+                        reject(new Error(event.data.error))
                     }
-
-                    registration.active!.postMessage({type: "CLEAR_AUTH_CACHE"}, [messageChannel.port2])
                 }
-            )
+
+                registration.active!.postMessage({ type: "CLEAR_AUTH_CACHE" }, [messageChannel.port2])
+            })
         }
     } catch (error) {
         console.error("[v0] 清除Service Worker缓存失败:", error)
@@ -722,8 +714,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 ...storage,
                 readMetadata: async () => {
                     try {
-                        const metadata = await storage.readMetadata!();
-                        console.log('[offlineExchange]宕机恢复第一时间读:', {
+                        const metadata = await storage.readMetadata!()
+                        console.log("[offlineExchange]宕机恢复第一时间读:", {
                             count: metadata?.length || 0,
                             items: metadata?.map((item: SerializedRequest, index: number) => ({
                                 index,
@@ -731,7 +723,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                 variables: item.variables,
                                 timestamp: new Date().toLocaleString(),
                             })),
-                        });
+                        })
                         // 记录到 localStorage 以便页面刷新后仍可查看
                         if (typeof window !== "undefined") {
                             localStorage.setItem(
@@ -739,75 +731,98 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                 JSON.stringify({
                                     count: metadata?.length || 0,
                                     timestamp: new Date().toISOString(),
-                                    sample: metadata?.slice(0, 3)
-                                })
-                            );
+                                    sample: metadata?.slice(0, 3),
+                                }),
+                            )
                         }
-                        return metadata;
+                        return metadata
                     } catch (error) {
-                        console.error('[offlineExchange] Error in readMetadata:', error);
-                        return null;
+                        console.error("[offlineExchange] Error in readMetadata:", error)
+                        return null
                     }
                 },
                 // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，离线mutation保存才会进入这里的;点击太快会重复出现的。
                 writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log('[offlineExchange] writeMetadata写:', json?.length, 'items');
+                    console.log("[offlineExchange] writeMetadata写:", json?.length, "items")
                     try {
                         if (!json?.length) {
-                            // 谨慎处理：只有在确定存储为空时才删除备份
+                            console.log("[offlineExchange]网恢复==》队列清空", json?.length)
+                            // 立即清空存储
+                            await storage.writeMetadata!([])
                             if (typeof window !== "undefined") {
-                                const metadata = localStorage.getItem("urql-metadata")
-                                let listLen=0
-                                if (metadata) {
-                                    const requests = JSON.parse(metadata)
-                                    listLen=requests.length
-                                }
-                                console.log('[offlineExchange]localStorage队列Len=', listLen,"应自动发完成");
+                                // 立即清除localStorage备份
+                                localStorage.removeItem("urql-metadata")
+                                // 延迟验证清空是否成功，但不依赖这个验证来清空队列
                                 setTimeout(async () => {
                                     try {
                                         const currentMetadata = await storage.readMetadata!()
-                                        if (!currentMetadata || currentMetadata.length === 0) {
-                                            console.log('[offlineExchange]队列正常清空');
+                                        if (currentMetadata && currentMetadata.length > 0) {
+                                            console.warn("[offlineExchange]检测到遗留项，强制清空:", currentMetadata.length)
+                                            // 强制清空遗留项
+                                            await storage.writeMetadata!([])
                                             localStorage.removeItem("urql-metadata")
-                                            await storage.writeMetadata!(json || [])
+                                        } else {
+                                            console.log("[offlineExchange]队列验证清空成功")
                                         }
-                                        else
-                                            console.warn('[offlineExchange]5秒后居然遇到？遗留项=', currentMetadata.length);
                                     } catch (error) {
-                                        console.warn("检查存储状态失败:", error)
+                                        console.warn("验证队列清空状态失败:", error)
                                     }
-                                }, 5000) // 延迟检查，确保写入完成：页面刚刚启动可能连续出现writeMetadata调用的。
+                                }, 2000) // 减少延迟时间到2秒
                             }
-                            console.log('[offlineExchange]网恢复==》队列空的:', json?.length);
                             return
                         }
-                        // 使用对象来去重，保留最后一次出现的请求
+
                         const uniqueRequests: SerializedRequest[] = []
-                        const seen = new Set()
-                        // 反向遍历，保留每个唯一键的最后一次出现
+                        const seen = new Map<string, SerializedRequest>()
+
+                        // 反向遍历，保留每个唯一键的最后一次出现（接口名+id+version）
                         for (let i = json.length - 1; i >= 0; i--) {
                             const request = json[i]
-                            const key = request.variables?.id ? `${request.query}-${request.variables.id}` : request.query
+                            const key = request.variables?.id
+                                ? `${request.query}-${request.variables.id}-${request.variables?.version || ""}`
+                                : `${request.query}-${JSON.stringify(request.variables || {})}`
 
                             if (!seen.has(key)) {
-                                seen.add(key)
+                                seen.set(key, request)
                                 uniqueRequests.unshift(request)
                             }
                         }
-                        storage.writeMetadata!(uniqueRequests)
+
+                        const filteredRequests = uniqueRequests.filter((request) => {
+                            // 如果是mutation且有ID，检查是否应该保留
+                            if (request.variables?.id && request.query.includes("mutation")) {
+                                // 这里可以添加更多的过滤逻辑
+                                return true
+                            }
+                            return true
+                        })
+
+                        await storage.writeMetadata!(filteredRequests)
+
                         // 在 localStorage 中备份队列信息，便于检查
                         if (typeof window !== "undefined") {
                             localStorage.setItem(
                                 "urql-metadata",
                                 JSON.stringify({
-                                    length: uniqueRequests.length,
+                                    length: filteredRequests.length,
                                     timestamp: new Date().toLocaleString(),
+                                    requests: filteredRequests.map((r) => ({
+                                        id: r.variables?.id,
+                                        operationType: r.variables?.operationType,
+                                        version: r.variables?.version,
+                                    })),
                                 }),
                             )
                         }
+
+                        console.log("[offlineExchange] 队列更新完成，剩余项目:", filteredRequests.length)
                     } catch (error) {
                         console.error("Error in writeMetadata:", error)
-                        await storage.writeMetadata!(json || [])
+                        if (!json?.length) {
+                            await storage.writeMetadata!([])
+                        } else {
+                            await storage.writeMetadata!(json || [])
+                        }
                     }
                 },
             } as any,
@@ -815,7 +830,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             resolverExchange: false, // 禁用解析器交换，让网络错误能够传播
             optimistic: {
                 modifyOriginalRecordData(args, cache, info) {
-                    console.log('[offlineExchange] optimistic update for:', args.id);
+                    console.log("[offlineExchange] optimistic update for:", args.id)
                     //没断网情况也会执行。
                     return {
                         __typename: "Report",
@@ -830,46 +845,48 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             isClient: typeof window !== "undefined",
         })
 
-        const fetchAbortExchange: Exchange = ({ forward, client }) => (ops$) => {
-            return pipe(
-                ops$,
-                tap((op) => {
-                    // console.log(`操作 ${op.operationName} 开始处理`, op);
-                }),
-                forward,
-                tap((result) => {
-                    // console.log(`操作 ${result.operation.operationName} 处理完成`, result);
-                    // 检测Java后端宕机错误
-                    if (result.error && isJavaBackendDownError(result.error)) {
-                        // console.log("检测到Java后端宕机错误，终止操作并通知页面");
-                        //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
-                        if (result.operation.kind === 'mutation') {
-                            const operationName=result.operation.query?.definitions[0]?.name.value;
-                            if(operationName){
-                                // 这里可以添加逻辑来标记操作已完成，即使有错误  例如，可以修改结果对象来模拟完成状态
-                                setTimeout(() => {
-                                    // 通知组件操作已完成（尽管有错误）
-                                    if (typeof window !== 'undefined') {
-                                        window.dispatchEvent(
-                                            new CustomEvent('mutation-completed', {
-                                                detail: {
-                                                    operation: operationName,
-                                                    variables: {
-                                                        id: result.operation.variables.id,
-                                                    },
-                                                    error: result.error,
-                                                    hasError: true
-                                                }
-                                            })
-                                        );
+        const fetchAbortExchange: Exchange =
+            ({ forward, client }) =>
+                (ops$) => {
+                    return pipe(
+                        ops$,
+                        tap((op) => {
+                            // console.log(`操作 ${op.operationName} 开始处理`, op);
+                        }),
+                        forward,
+                        tap((result) => {
+                            // console.log(`操作 ${result.operation.operationName} 处理完成`, result);
+                            // 检测Java后端宕机错误
+                            if (result.error && isJavaBackendDownError(result.error)) {
+                                // console.log("检测到Java后端宕机错误，终止操作并通知页面");
+                                //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
+                                if (result.operation.kind === "mutation") {
+                                    const operationName = result.operation.query?.definitions[0]?.name.value
+                                    if (operationName) {
+                                        // 这里可以添加逻辑来标记操作已完成，即使有错误  例如，可以修改结果对象来模拟完成状态
+                                        setTimeout(() => {
+                                            // 通知组件操作已完成（尽管有错误）
+                                            if (typeof window !== "undefined") {
+                                                window.dispatchEvent(
+                                                    new CustomEvent("mutation-completed", {
+                                                        detail: {
+                                                            operation: operationName,
+                                                            variables: {
+                                                                id: result.operation.variables.id,
+                                                            },
+                                                            error: result.error,
+                                                            hasError: true,
+                                                        },
+                                                    }),
+                                                )
+                                            }
+                                        }, 100) // 短暂延迟确保事件监听器已设置
                                     }
-                                }, 100); // 短暂延迟确保事件监听器已设置
+                                }
                             }
-                        }
-                    }
-                })
-            );
-        };
+                        }),
+                    )
+                }
 
         //must be prefixed with NEXT_PUBLIC_.
         const epoint = process.env.NEXT_PUBLIC_BACK_END
