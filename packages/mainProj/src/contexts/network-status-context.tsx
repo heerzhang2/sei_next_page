@@ -47,7 +47,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         connectionType: null,
         isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
         isNextJSServerReachable: true,
-        isGraphQLBackendReachable: false,
+        isGraphQLBackendReachable: true,
         offlineQueue: { hasPendingMutations: false, queueLength: 0, lastUpdated: null },
     })
 
