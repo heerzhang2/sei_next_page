@@ -11,10 +11,11 @@ import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
-import type { Exchange, Operation, OperationResult } from "@urql/core"
+import type {CombinedError, Exchange, Operation, OperationResult} from "@urql/core"
 import { pipe, map, tap } from "wonka"
 import { useSearchParams, usePathname } from "next/navigation"
 import { useNetworkStatusContext, useNetworkStatusActions } from "../contexts/network-status-context"
+import {AnyVariables} from "urql";
 //文档： https://nearform.com/open-source/urql/docs/
 
 const getOperationName = (query: string): string => {
@@ -907,40 +908,19 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     return () => {}
                 },
             } as any,
-            isOfflineError: (error: any) => {
-                const now = Date.now()
-                const isInitializing =
-                    typeof window !== "undefined" && Date.now() - (window as any).__graphql_init_time < INITIALIZATION_DELAY
-
-                if (now - lastOfflineErrorTime > OFFLINE_ERROR_COOLDOWN) {
-                    offlineErrorCount = 0
-                    lastOfflineErrorTime = now
-                }
-
-                if (offlineErrorCount >= MAX_OFFLINE_ERRORS_PER_PERIOD) {
-                    console.log("[offlineExchange] 达到错误限制，=离线处理")
-                    return false
-                }
-
+            isOfflineError: (error: undefined | CombinedError, result: OperationResult<any, AnyVariables>) =>{
                 const isBackendOffline = networkStatusContext && !networkStatusContext.isGraphQLBackendReachable
-
-                if (isInitializing || isBackendOffline) {
-                    offlineErrorCount++
-                    if (offlineErrorCount <= 3) {
-                        console.log("[offlineExchange] 后端离线或初始化阶段，将错误视为离线错误以保护队列")
-                        return true
-                    } else {
-                        console.log("[offlineExchange] 错误过多，=离线")
-                        return true
-                    }
-                }
-
                 const isOffline = isNetworkError(error)
-                if (isOffline) {
-                    offlineErrorCount++
-                    console.log("[offlineExchange] 检测到网络错误，标记为离线:", error?.message)
+                if(isBackendOffline || isOffline) {
+                     return true
                 }
-                return isOffline
+                return  !!( error &&
+                    error.networkError &&
+                    !error.response &&
+                    ((typeof navigator !== 'undefined' && navigator.onLine === false) ||
+                        /request failed|failed to fetch|network\s?error/i.test(
+                            error.networkError.message
+                        )) )
             },
             resolverExchange: false,
             optimistic: {
