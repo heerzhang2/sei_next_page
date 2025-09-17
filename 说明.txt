@@ -510,13 +510,10 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subr
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
 【等问题】
-1恢复自动提醒刷新发送
-      isOfflineError: (error: undefined | CombinedError, result: OperationResult<any,
+1恢复自动提醒刷新发送  urql-offlineCache:不要干预太多，内部自己实现的机制，注入的干涉太多了反而出问题
+## save按钮死等...;  action + BAR？;
 
-2 isVersionConflictError被人已经修改了？+removeOperationFromQueue；@@ toast.error("数据版本冲突", {
-# map((result: OperationResult) => { result.error.isAuthError = true  验证401返回码 token无效，准备触发刷新流程
+2 isVersionConflictError被人已经修改了？+removeOperationFromQueue；@后端爆出的 @ toast.error("数据版本冲突", {
 
-      const fetchAbortExchange: Exchange =  new CustomEvent("mutation-completed", {
-save按钮死等...;;
 
-urql-metadata 没同步，判标记？弹出串窗口 offlineExchange-metadata-history
+}

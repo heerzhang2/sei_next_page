@@ -152,7 +152,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
 
                 // 为每个操作添加超时和错误处理
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
+                const timeoutId = setTimeout(() => controller.abort(), 120*1000)    //120秒超时查询或变更
 
                 return {
                     ...operation,
@@ -181,15 +181,14 @@ const customFetchExchange: Exchange = ({ forward }) => {
                 if (result.operation.context.fetchOptions?.signal) {
                     clearTimeout(result.operation.context.fetchOptions.timeoutId)
                 }
-
                 if (result.error?.response?.status === 401) {
                     console.log("[v0] 检测到401错误，token无效，准备触发刷新流程")
-
                     // 确保错误对象包含足够的信息供 authExchange 识别
-                    if (result.error.response) {
-                        result.error.networkError = result.error.response
-                        result.error.isAuthError = true
-                    }
+                    result.error.networkError = result.error.response
+                    result.error.isAuthError = true
+                    toast.warning("token的401错误，变更操作需重试一次避免丢失修改", {
+                        duration: 30000,
+                    })
                 }
             }),
         )
@@ -513,6 +512,60 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
     })
 }
 
+const isJavaBackendDownError = (error: any): boolean => {
+    if (!error) return false
+    if (error?.isImmediateError && error?.isNetworkError) return true
+    // 检查特定的错误模式表明Java后端宕机 CombinedError: [Network] Failed to fetch
+    const isConnectionRefused =
+        error.message?.includes("connection refused") ||
+        error.message?.includes("Failed to fetch") ||
+        error.message?.includes("network error")
+    const isTimeout = error.message?.includes("timeout") || error.message?.includes("aborted")
+    const is5xxError = error.response?.status >= 500 || (error.networkError && error.networkError.status >= 500)
+    return isConnectionRefused || isTimeout || is5xxError
+}
+//避免变更保存按钮的无限等待。
+const fetchAbortExchange: Exchange =
+    ({ forward, client }) =>
+        (ops$) => {
+            return pipe(
+                ops$,
+                tap((op) => {
+                    // console.log(`操作 ${op.operationName} 开始处理`, op);
+                }),
+                forward,
+                tap((result) => {
+                    // console.log(`操作 ${result.operation.operationName} 处理完成`, result);
+                    // 检测Java后端宕机错误
+                    if (result.error && isJavaBackendDownError(result.error)) {
+                        // console.log("检测到Java后端宕机错误，终止操作并通知页面");
+                        //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
+                        if (result.operation.kind === "mutation") {
+                            const operationName = result.operation.query?.definitions[0]?.name.value
+                            if (operationName) {
+                                setTimeout(() => {
+                                    if (typeof window !== "undefined") {
+                                        window.dispatchEvent(
+                                            new CustomEvent("mutation-completed", {
+                                                detail: {
+                                                    operation: operationName,
+                                                    variables: {
+                                                        id: result.operation.variables.id,      //失败的操作匹配性
+                                                    },
+                                                    error: result.error,
+                                                    hasError: true,
+                                                },
+                                            }),
+                                        )
+                                    }
+                                }, 100) // 短暂延迟确保事件监听器已设置
+                            }
+                        }
+                    }
+                }),
+            )
+        };
+
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const pathname = usePathname()
@@ -667,7 +720,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
-                // 错误处理 exchange 应该在最前面
+                // 4. 错误处理 exchange - 在认证后处理错误
                 errorExchange({
                     onError: (error, operation) => {
                         console.log("[v0] errorExchange.onError - 完整错误信息:", {
@@ -715,14 +768,17 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
+                // 1. 离线缓存:在前面
                 cache,
+                // 3. 认证 exchange - 需要尽早添加认证头
                 makeAuthExchange(accessToken, update, print),
                 // 5. 离线metedata队列的删除
                 offlineListRemoveExchange(updateGraphQLBackendStatus, storage),
                 ssr,
                 // 7.避免离线情形保存按钮无限期等待应答的毛病，发送mutation-completed事件。
-                // fetchAbortExchange,
-                customFetchExchange, // 自定义 fetch exchange
+                fetchAbortExchange,
+                // 8. 自定义fetch超时时间配置，若有401认证错误码捕获传递。
+                customFetchExchange,
                 fetchExchange,
             ],
             suspense: true,

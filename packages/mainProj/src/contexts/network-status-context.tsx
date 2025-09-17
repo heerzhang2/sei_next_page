@@ -325,7 +325,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                         }
                     }
                 }
-            }, 60000)
+            }, 80000)
 
         const handleConnectionChange = () => {
             const connectionType = getConnectionInfo()
@@ -382,22 +382,18 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         const checkInitialQueue = async () => {
             const queueStatus = await checkOfflineQueue()
             if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0) {
-                console.log("[v0] 发现离线队列，显示确认对话框:", queueStatus.queueLength)
-                showQueueConfirmationDialog(queueStatus.queueLength)
-            } else {
-                // No queue, safe to check backend connectivity
-                const isGraphQLReachable = navigator.onLine ? await checkGraphQLBackendConnectivity() : false
-                setNetworkStatus((prev) => ({
-                    ...prev,
-                    isGraphQLBackendReachable: isGraphQLReachable,
-                }))
+                console.log("[v0] 发现离线队列:", queueStatus.queueLength)
+                // showQueueConfirmationDialog(queueStatus.queueLength)
             }
+            const isGraphQLReachable = navigator.onLine ? await checkGraphQLBackendConnectivity() : false
+            setNetworkStatus((prev) => ({
+                ...prev,
+                isGraphQLBackendReachable: isGraphQLReachable,
+            }))
         }
-
         // Initial status update with delayed backend check
         updateNetworkStatus(navigator.onLine)
         updateOfflineQueueStatus()
-
         // Check initial queue after a short delay
         setTimeout(checkInitialQueue, 1000)
     }, [updateNetworkStatus, updateOfflineQueueStatus, checkGraphQLBackendConnectivity, showQueueConfirmationDialog])
