@@ -509,55 +509,14 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subrid=KQcbgDF9RO21DgA92H3tQlJlcG9ydA
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
+【等问题】
+1恢复自动提醒刷新发送
 
-D:\home\sei_next_pag…-core-chunk.mjs:511
- POST https://192.168.171.3:8673/graphql net::ERR_INTERNET_DISCONNECTED
-fetchOperation	@	D:\home\sei_next_pag…-core-chunk.mjs:511
-eval	@	D:\home\sei_next_pag…\dist\wonka.mjs:877
+2isVersionConflictError被人已经修改了？+removeOperationFromQueue；@@ toast.error("数据版本冲突", {
 
-离线模式下因graphql失败500报错引起：refreshAuth fetch("/api/refresh-token", { 最终再跳转/login
-chifen  2:
-https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&redId=2#MangInstrument
-PWA导致原本const params = useParams()不可以再用了！离线subrid必须再登录。
-java后端401报错之后 https://192.168.0.100:3765/api/refresh-token 更新token的请求响应
-    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjU1MzQ1NSwiZXhwIjoxNzU2NTU4ODU1fQ.wmTeZmB6PrIrFUv2D2hrAU3fjO-OLVkfBJr0VFJvg5udab6lGDSWK1I8rFl-MFjijoxKlW_U8iGmh0vJnOUjHA",
-可紧接着一次保存报告urql变更操作"useOriginalDataMutation"发送包的包头
-authorization:
-Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1NjU0MTI4MiwiZXhwIjoxNzU2NTQ2NjgyfQ.q51L4Sch5hys1f0pZJbvl3TsSykq9zeeujxR83H3byXFqtjav-XURf3U-3o5Lhr38F_QF6zpUv89814er_Hu1g
-说明urql没有获取到最新的accessToken，另外本机的offline_auth和 next-auth session 都有存储token的
-https://nearform.com/open-source/urql/docs/
-offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
-offline-reports  ["KQcbgDF9RO21DsI92H3tTVJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
+map((result: OperationResult) => { result.error.isAuthError = true  验证401返回码 token无效，准备触发刷新流程
 
-D:\home\sei_next_pag…l-component.tsx:769
- POST https://192.168.0.100:8673/graphql net::ERR_CONNECTION_REFUSED
-D:\home\sei_next_pag…l-component.tsx:232 [v0] customFetchExchange - 收到响应:
-{operationName: undefined, hasData: false, hasError: true, error: CombinedError: [Network] Failed to fetch
-    at makeErrorResult (webpack-internal:///(app-pages-bro…, response: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:254 [v0] customFetchExchange - 检测到网络错误，立即返回错误结果
-D:\home\sei_next_pag…l-component.tsx:119 [v0] networkErrorExchange - 原始错误对象:
-{error: {…}, networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, operation: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:144 网络错误检测到:
-{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
-D:\home\sei_next_pag…tus-context.tsx:210 [v0] 外部更新GraphQL后端状态:
-{isReachable: false, isClientOnline: false}
-D:\home\sei_next_pag…l-component.tsx:151 [v0] networkErrorExchange - 立即返回网络错误
-D:\home\sei_next_pag…l-component.tsx:426 [v0] authExchange.didAuthError - 详细错误信息:
-{error: {…}, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:461 [v0] authExchange.didAuthError - 认证错误判断结果:
-{hasGraphQLAuthError: false, hasNetworkAuthError: false, hasCustomAuthError: false, isSpecial500: false, finalResult: false}
-D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
-D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
-今天新引进？fetchAbortExchange消息'mutation-completed'避免保存按钮无限等待。但是：分项报告第一次从离线恢复提交后没有清理干净旧的metadata队列？导致两次请求发出了
-
-[offlineExchange] 初始化阶段，将所有错误视为离线错误以保护队列
-D:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:885 [offlineExchange] 初始化阶段，将所有错误视为离线错误以保护队列
-D:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:885 [offlineExchange] 初始化阶段，将所有错误视为离线错误以保护队列
-D:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:885 [offlineExchange] 初始化阶段，将所有错误视为离线错误以保护队列
-792D:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:885 [offlineExchange] 初始化阶段，将所有错误视为离线错误以保护队列
-D:\home\sei_next_page\node_modules\@urql\exchange-graphcache\dist\urql-exchange-graphcache.mjs:212 Uncaught (in promise) RangeError: Maximum call stack size exceeded
-    at getField (D:\home\sei_next_page\node_modules\@urql\exchange-graphcache\dist\urql-exchange-graphcache.mjs:212:1)
-    at isListNullable (D:\home\sei_next_page\node_modules\@urql\exchange-graphcache\dist\urql-exchange-graphcache.mjs:185:1)
+      const fetchAbortExchange: Exchange =  new CustomEvent("mutation-completed", {
+      isOfflineError: (error: undefined | CombinedError, result: OperationResult<any,
+save按钮死等...;;
+urql-metadata 没同步，判标记？弹出串窗口 offlineExchange-metadata-history

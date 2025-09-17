@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
 import {usePathname, useSearchParams} from "next/navigation"
+import {useNetworkStatusActions, useNetworkStatusContext} from "@/contexts/network-status-context";
 
 // 创建网络状态管理:全局的。
 const networkStatus = {
@@ -67,70 +68,73 @@ let lastErrorTime = 0
 const MAX_ERRORS_PER_MINUTE = 10
 const ERROR_RESET_TIME = 60000 // 1分钟
 
-const networkErrorExchange: Exchange = ({ forward }) => {
-    return (operations$) => {
-        return pipe(
-            operations$,
-            forward,
-            tap((result: OperationResult) => {
-                if (result.error) {
-                    console.log("[v0] networkErrorExchange - 原始错误对象:", {
-                        error: result.error,
-                        networkError: result.error.networkError,
-                        graphQLErrors: result.error.graphQLErrors,
-                        response: result.error.response,
-                        operation: result.operation.operationName,
-                    })
-
-                    const now = Date.now()
-
-                    if (now - lastErrorTime > ERROR_RESET_TIME) {
-                        errorCount = 0
-                    }
-
-                    const hasNetworkError =
-                        result.error.networkError ||
-                        result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
-                        isNetworkError(result.error)
-
-                    if (hasNetworkError) {
-                        errorCount++
-                        lastErrorTime = now
-
-                        if (errorCount <= MAX_ERRORS_PER_MINUTE) {
-                            console.error("网络错误检测到:", result.error)
-                            updateNetworkStatus(false, result.error)
-
-                            if (errorCount <= 3 && typeof window !== "undefined") {
-                                toast.error("GraphQL后端连接失败", {
-                                    description: "正在使用缓存数据，请检查后端服务器状态",
-                                    duration: 5000,
-                                })
+//从离线队列中移除mutation，网络状态更新：
+const offlineListRemoveExchange = (
+    updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
+    storage: any, // Add storage parameter for queue management
+): Exchange => {
+    return ({ forward, client }) => {
+        return (operations$) => {
+            return pipe(
+                operations$,
+                forward,
+                map((result: OperationResult) => {
+                    // if (result.data && !result.error && result.operation.kind === "mutation") {
+                    //     handleSuccessfulMutation(result, result.operation, storage)
+                    // }
+                    if (result.error) {
+                        console.log("[v0] networkErrorExchange - 原始错误对象:", {
+                            error: result.error,
+                            networkError: result.error.networkError,
+                            graphQLErrors: result.error.graphQLErrors,
+                            response: result.error.response,
+                            operation: result.operation.operationName,
+                            isImmediateError: result.error.isImmediateError,
+                        })
+                        const now = Date.now()
+                        if (now - lastErrorTime > ERROR_RESET_TIME) {
+                            errorCount = 0
+                        }
+                        const hasNetworkError =
+                                result.error.networkError ||
+                                result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
+                                isNetworkError(result.error) ||
+                                result.error.isNetworkError
+                        if (hasNetworkError) {
+                            errorCount++
+                            lastErrorTime = now
+                            if (errorCount <= MAX_ERRORS_PER_MINUTE) {
+                                console.error("网络错误检测到:", result.error)
+                                updateGraphQLBackendStatus(false, false)
+                            } else {
+                                console.log("GraphQL错误过于频繁，暂停错误处理")
+                            }
+                            if (result.error.isImmediateError) {
+                                console.log("[v0] networkErrorExchange - 立即返回网络错误")
+                                return {
+                                    ...result,
+                                    error: {
+                                        ...result.error,
+                                        message: result.error.message || "网络连接失败，请检查网络后重试",
+                                    },
+                                }
                             }
                         } else {
-                            console.warn("GraphQL错误过于频繁，暂停错误处理")
+                            if (result.data) {
+                                //console.log("GraphQL后端网络已恢复")
+                                updateGraphQLBackendStatus(true, true)
+                                errorCount = 0
+                            }
                         }
-
-                        // 确保错误能被 useQuery 捕获
-                        result.error.isNetworkError = true
-                    } else {
-                        // 如果有成功的响应，说明网络恢复了
-                        if (result.data && !networkStatus.isOnline) {
-                            console.log("GraphQL后端网络已恢复")
-                            updateNetworkStatus(true)
-                            errorCount = 0 // 重置错误计数
-                        }
+                    } else if (result.data) {
+                        //console.log("GraphQL后端网络已恢复")
+                        updateGraphQLBackendStatus(true, true)
+                        errorCount = 0
                     }
-                } else if (result.data) {
-                    // 成功获取数据，网络正常
-                    if (!networkStatus.isOnline) {
-                        console.log("GraphQL后端网络已恢复")
-                        updateNetworkStatus(true)
-                        errorCount = 0 // 重置错误计数
-                    }
-                }
-            }),
-        )
+                    return result
+                }),
+            )
+        }
     }
 }
 
@@ -261,7 +265,7 @@ const refreshTokenDirectly = async (
 const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; javaBackendReachable: boolean }> => {
     const results = await Promise.allSettled([
         // 检查Next.js服务器
-        fetch("/api/health", { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
+        fetch("/api/nextLive", { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
         // 检查Java后端
         fetch(`${process.env.NEXT_PUBLIC_BACK_END}/graphql`, {
             method: "POST",
@@ -426,10 +430,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                         }),
                                     )
                                 }
-
-                                toast.success("登录已刷新", {
-                                    description: "会话已自动续期",
-                                    duration: 3000,
+                                toast.success("登录已刷新，会话已自动续期", {
+                                    duration: 2000,
                                 })
                                 return
                             }
@@ -479,9 +481,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                     }),
                                 )
                             }
-
-                            toast.success("离线模式登录已刷新", {
-                                description: "直接与后端服务器通信成功",
+                            toast.success("离线模式登录刷新直接,直接与后端服务器通信", {
                                 duration: 3000,
                             })
                             return
@@ -519,6 +519,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const print = "1" === searchParams!.get("print") //进入页面是打印目的的
     const { accessToken, ConfirmDialog } = useAccessToken()
     const { update } = useSession()
+    const networkStatusContext = useNetworkStatusContext()
+    const { updateGraphQLBackendStatus } = useNetworkStatusActions()
 
     const [isClient, setIsClient] = useState(false)
 
@@ -604,7 +606,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     if (json?.length !== 0) {
                         const uniqueRequests: SerializedRequest[] = []
                         const seen = new Map<string, SerializedRequest>()
-                        // 反向遍历，保留每个唯一键的最后一次出现（接口名+id+opType,没有id的按全部参数会太长）
+                        //反向遍历，保留每个唯一键的最后一次出现（接口名+id+opType,没有id的按全部参数）,避免保留冗余的同一个ID的多个变更请求包。
                         for (let i = json.length - 1; i >= 0; i--) {
                             const request = json[i]
                             const key = request.variables?.id
@@ -715,8 +717,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 }),
                 cache,
                 makeAuthExchange(accessToken, update, print),
-                networkErrorExchange, // 自定义网络错误处理
+                // 5. 离线metedata队列的删除
+                offlineListRemoveExchange(updateGraphQLBackendStatus, storage),
                 ssr,
+                // 7.避免离线情形保存按钮无限期等待应答的毛病，发送mutation-completed事件。
+                // fetchAbortExchange,
                 customFetchExchange, // 自定义 fetch exchange
                 fetchExchange,
             ],
@@ -737,7 +742,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         ssrRef.current = ssr
 
         return [client, ssr]
-    }, [accessToken, isClient, update])
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus])
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
