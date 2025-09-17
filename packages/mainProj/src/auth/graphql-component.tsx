@@ -599,21 +599,46 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
             storage: {
                 ...storage,
-                // 覆盖DefaultStorage writeMetadata方法： 进来就是重复的队列，不需要做storage.readMetadata!().then(existing;
+                //后端离线刷新页面会出现两次，第一次为空的，第二次是发送失败恢复的操作列表；
                 writeMetadata: (json: SerializedRequest[]) => {
                     if (json?.length !== 0) {
-                        const newMetadata = [...(json || [])]
-                        const thisIndex = newMetadata.length - 1 //[假设前提]最后一条是最新发送失败的变更mutation操作。
-                        if (thisIndex > 0) {
-                            //删除所有同样接口的未成功的pending操作（按操作类型）？不是同一份的检验报告 +json[thisIndex].variables id &&条件? 来区分吗。业务层面事务性锁定的。
-                            newMetadata.forEach(({ query }, index) => {
-                                if (index !== thisIndex && query === json[thisIndex].query) {
-                                    delete newMetadata[index]
-                                }
-                            })
+                        const uniqueRequests: SerializedRequest[] = []
+                        const seen = new Map<string, SerializedRequest>()
+                        // 反向遍历，保留每个唯一键的最后一次出现（接口名+id+opType,没有id的按全部参数会太长）
+                        for (let i = json.length - 1; i >= 0; i--) {
+                            const request = json[i]
+                            const key = request.variables?.id
+                                ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
+                                : `${request.query}-${JSON.stringify(request.variables || {})}`
+                            if (!seen.has(key)) {
+                                seen.set(key, request)
+                                uniqueRequests.unshift(request)
+                            }
                         }
-                        const out = [...newMetadata.filter((a) => a !== undefined)]
-                        storage.writeMetadata!(out)
+                        const filteredRequests = uniqueRequests.filter((request) => {
+                            // 如果是mutation且有ID，检查是否应该保留
+                            if (request.variables?.id && request.query.includes("mutation")) {
+                                // 这里可以添加更多的过滤逻辑
+                                return true
+                            }
+                            return true
+                        })
+                        storage.writeMetadata!(filteredRequests)
+                        // 在 localStorage 中备份队列信息，便于检查
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem(
+                                "urql-metadata",
+                                JSON.stringify({
+                                    length: filteredRequests.length,
+                                    timestamp: new Date().toLocaleString(),
+                                    requests: filteredRequests.map((r) => ({
+                                        id: r.variables?.id,
+                                        opType: r.variables?.opType,
+                                        version: r.variables?.version,
+                                    })),
+                                }),
+                            )
+                        }
                     } else storage.writeMetadata!(json)
                 },
             } as any,
