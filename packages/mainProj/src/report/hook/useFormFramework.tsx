@@ -318,7 +318,7 @@ export function useFormFramework({
             console.log('【终结】Mutation操作已完成:', event.detail);
             if(event.detail.hasError && 'useOriginalDataMutation'===event.detail.operation && objId===event.detail.variables.id) {
                 if (abortControllerRef.current) {
-                    abortControllerRef.current.abort();
+                    abortControllerRef.current.abort();  //但是不会影响后端JAVA数据库事务的执行。
                 }
                 form.reset({}, { keepValues: true });
             }
@@ -418,12 +418,18 @@ export function useFrameEditorBar({
                                       modType,
                                       root,
                                   }: UseFrameEditorBarProps) {
+    const abortControllerRef = useRef<AbortController | null>(null);
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified, modified } = useStorage()
     //用URQL mutation来保存变更数据到后端数据库的
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
     //保存：处理表单提交
     const handleSubmit = async () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
         if (onVerify && !onVerify(values)) return
         // 默认提交处理
         // console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
@@ -446,9 +452,7 @@ export function useFrameEditorBar({
         const cleanedRepData = cleanEmptyFields(RepData)
         // console.log("清理前的RepData:", JSON.stringify(RepData, null, 2))
         // console.log("清理后的RepData:", JSON.stringify(cleanedRepData, null, 2))
-
         setIsSaving(true)
-
         try {
             const result = await withTimeout(
                 updateOriginal({
@@ -458,6 +462,7 @@ export function useFrameEditorBar({
                     data: JSON.stringify(cleanedRepData),
                 }),
                 120000, // 超时时间
+                signal // 传递 abort signal
             )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
@@ -515,7 +520,21 @@ export function useFrameEditorBar({
         // 设置已修改标志
         setModified(true)
     }
-
+    useEffect(() => {
+        const handleMutationCompleted = (event: CustomEvent) => {
+            const objId= subrid ?? rep?.id;
+            console.log('【终结】Mutation操作已完成:', event.detail);
+            if(event.detail.hasError && 'useOriginalDataMutation'===event.detail.operation && objId===event.detail.variables.id) {
+                if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                }
+            }
+        };
+        window.addEventListener('mutation-completed', handleMutationCompleted as EventListener);
+        return () => {
+            window.removeEventListener('mutation-completed', handleMutationCompleted as EventListener);
+        };
+    }, [rep?.id, subrid]);
     // 创建渲染函数
     const render = () => (
         <div className="flex gap-4 justify-end">

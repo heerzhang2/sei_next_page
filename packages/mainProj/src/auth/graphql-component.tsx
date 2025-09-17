@@ -773,7 +773,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                         </p>
                                     </div>
                                 ),
-                                duration: 20*60*1000,
+                                duration: 4*60*60*1000,
                                 action: {
                                     label: "刷新页面",
                                     onClick: () => window.location.reload(),
