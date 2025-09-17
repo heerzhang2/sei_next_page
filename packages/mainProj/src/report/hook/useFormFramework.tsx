@@ -457,6 +457,7 @@ export function useFrameEditorBar({
                     version: _version,
                     data: JSON.stringify(cleanedRepData),
                 }),
+                120000, // 超时时间
             )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {

@@ -633,15 +633,15 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                 JSON.stringify({
                                     length: filteredRequests.length,
                                     timestamp: new Date().toLocaleString(),
-                                    requests: filteredRequests.map((r) => ({
-                                        id: r.variables?.id,
-                                        opType: r.variables?.opType,
-                                        version: r.variables?.version,
-                                    })),
                                 }),
                             )
                         }
-                    } else storage.writeMetadata!(json)
+                    } else {
+                        storage.writeMetadata!(json)
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem("urql-metadata", JSON.stringify({length: 0, timestamp: new Date().toLocaleString()}) )
+                        }
+                    }
                 },
             } as any,
             // 修改 offlineExchange 配置，确保网络错误能正确传播

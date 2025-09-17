@@ -511,12 +511,12 @@ https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
 【等问题】
 1恢复自动提醒刷新发送
+      isOfflineError: (error: undefined | CombinedError, result: OperationResult<any,
 
-2isVersionConflictError被人已经修改了？+removeOperationFromQueue；@@ toast.error("数据版本冲突", {
-
-map((result: OperationResult) => { result.error.isAuthError = true  验证401返回码 token无效，准备触发刷新流程
+2 isVersionConflictError被人已经修改了？+removeOperationFromQueue；@@ toast.error("数据版本冲突", {
+# map((result: OperationResult) => { result.error.isAuthError = true  验证401返回码 token无效，准备触发刷新流程
 
       const fetchAbortExchange: Exchange =  new CustomEvent("mutation-completed", {
-      isOfflineError: (error: undefined | CombinedError, result: OperationResult<any,
 save按钮死等...;;
+
 urql-metadata 没同步，判标记？弹出串窗口 offlineExchange-metadata-history
