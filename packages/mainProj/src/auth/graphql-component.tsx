@@ -14,7 +14,7 @@ import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
-import { useSearchParams } from "next/navigation"
+import {usePathname, useSearchParams} from "next/navigation"
 
 // 创建网络状态管理:全局的。
 const networkStatus = {
@@ -311,7 +311,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
-                const currentToken = useAccessToken.getState?.() || accessToken
+                const currentToken = accessToken
 
                 if (!currentToken) {
                     const refreshToken = getStoredRefreshToken()
@@ -515,8 +515,9 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
+    const pathname = usePathname()
     const print = "1" === searchParams!.get("print") //进入页面是打印目的的
-    const accessToken = useAccessToken()
+    const { accessToken, ConfirmDialog } = useAccessToken()
     const { update } = useSession()
 
     const [isClient, setIsClient] = useState(false)
@@ -697,7 +698,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             suspense: true,
             preferGetMethod: false, //默认会可能用GET方法的。
             fetchOptions: () => {
-                const currentToken = useAccessToken.getState?.() || accessToken
+                const currentToken = accessToken
                 return {
                     headers: {
                         authorization: currentToken ? `Bearer ${currentToken}` : "",
@@ -743,6 +744,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     return (
         <UrqlProvider client={client} ssr={ssr}>
             {children}
+            {pathname !== "/login" && <ConfirmDialog />}
         </UrqlProvider>
     )
 }
