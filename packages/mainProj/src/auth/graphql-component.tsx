@@ -566,6 +566,17 @@ const fetchAbortExchange: Exchange =
             )
         };
 
+//严谨操作的："操作数据记录已在其它设备或其他人改动，新版本是996旧版本是",这个失败请求不会被离线缓冲收进到metadata列表的。
+const isVersionConflictError = (error: any): boolean => {
+    if (!error) return false
+    const errorMessage = error.message || ""
+    return (
+        errorMessage.includes("操作数据记录已在其它设备或其他人改动") ||
+        (error.graphQLErrors &&
+            error.graphQLErrors.some((err: any) => err.message && err.message.includes("操作数据记录已在其它设备或其他人改动")))
+    )
+}
+
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const pathname = usePathname()
@@ -720,7 +731,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
-                // 4. 错误处理 exchange - 在认证后处理错误
+                // 4. 应用层错误处理 exchange - 在认证后处理错误
                 errorExchange({
                     onError: (error, operation) => {
                         console.log("[v0] errorExchange.onError - 完整错误信息:", {
@@ -731,7 +742,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             networkError: error.networkError,
                             graphQLErrors: error.graphQLErrors,
                             response: error.response,
-                            // 尝试获取原始HTTP响应的详细信息
                             responseDetails: error.response
                                 ? {
                                     status: error.response.status,
@@ -745,26 +755,31 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                 }
                                 : null,
                         })
-
                         console.error("GraphQL 错误:", error)
+                        if (isVersionConflictError(error)) {
+                            console.log("[v0] 检测到版本冲突错误，显示详细提示并从队列中移除")
 
-                        // 检查是否为网络错误
-                        const hasNetworkError =
-                            error.networkError ||
-                            error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
-                            isNetworkError(error)
+                            // Show detailed error message to user
+                            const errorMessage = error.message || error.graphQLErrors?.[0]?.message || "版本冲突错误"
+                            const invalidId = error.graphQLErrors?.[0]?.extensions?.invalidId || "未知ID"
 
-                        if (hasNetworkError) {
-                            console.error("网络连接错误:", error)
-                            updateNetworkStatus(false, error)
-
-                            // 显示用户友好的错误提示
-                            if (typeof window !== "undefined") {
-                                toast.error("网络连接失败", {
-                                    description: "后端服务器无法连接，正在使用缓存数据",
-                                    duration: 5000,
-                                })
-                            }
+                            toast.error("数据版本冲突", {
+                                description: (
+                                    <div className="space-y-2">
+                                        <p className="font-medium text-red-700">{errorMessage}</p>
+                                        <p className="text-sm text-gray-600">记录ID: {invalidId}</p>
+                                        <p className="text-sm text-gray-500">
+                                            该记录已被其他设备或用户修改，请刷新页面获取最新数据后重新操作。
+                                        </p>
+                                    </div>
+                                ),
+                                duration: 20*60*1000,
+                                action: {
+                                    label: "刷新页面",
+                                    onClick: () => window.location.reload(),
+                                },
+                            })
+                            return  // Don't process as network error
                         }
                     },
                 }),

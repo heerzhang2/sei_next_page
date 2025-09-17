@@ -512,8 +512,3 @@ https://v0.dev/chat/-kzgHkcfksnz
 【等问题】
 1恢复自动提醒刷新发送  urql-offlineCache:不要干预太多，内部自己实现的机制，注入的干涉太多了反而出问题
 ## save按钮死等...;  action + BAR？;
-
-2 isVersionConflictError被人已经修改了？+removeOperationFromQueue；@后端爆出的 @ toast.error("数据版本冲突", {
-
-
-}
