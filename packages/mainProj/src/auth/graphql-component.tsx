@@ -6,7 +6,6 @@ import { useAccessToken } from "./use-access-token"
 import { authExchange } from "@urql/exchange-auth"
 import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-//离线保存支持的：
 import { offlineExchange } from "@urql/exchange-graphcache"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
@@ -15,29 +14,7 @@ import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
 import {usePathname, useSearchParams} from "next/navigation"
-import {useNetworkStatusActions, useNetworkStatusContext} from "@/contexts/network-status-context";
-
-// 创建网络状态管理:全局的。
-const networkStatus = {
-    isOnline: true,
-    lastError: null as Error | null,
-    listeners: new Set<(status: { isOnline: boolean; lastError: Error | null }) => void>(),
-}
-
-// 网络状态监听器
-export const subscribeToNetworkStatus = (
-    callback: (status: { isOnline: boolean; lastError: Error | null }) => void,
-) => {
-    networkStatus.listeners.add(callback)
-    return () => networkStatus.listeners.delete(callback)
-}
-
-// 更新网络状态
-export const updateNetworkStatus = (isOnline: boolean, error: Error | null = null) => {
-    networkStatus.isOnline = isOnline
-    networkStatus.lastError = error
-    networkStatus.listeners.forEach((callback) => callback({ isOnline, lastError: error }))
-}
+import {useNetworkStatusActions} from "@/contexts/network-status-context";
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -186,9 +163,8 @@ const customFetchExchange: Exchange = ({ forward }) => {
                     // 确保错误对象包含足够的信息供 authExchange 识别
                     result.error.networkError = result.error.response
                     result.error.isAuthError = true
-                    toast.warning("token的401错误，变更操作需重试一次避免丢失修改", {
-                        duration: 30000,
-                    })
+                    if(result.operation.kind==='mutation')
+                        toast.warning("碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失", {duration: 60*1000,})
                 }
             }),
         )
@@ -208,7 +184,7 @@ const setStoredRefreshToken = (token: string | null): void => {
         localStorage.removeItem("refresh_token")
     }
 }
-
+//直接post原生做法发送请求包了
 const refreshTokenDirectly = async (
     refreshToken: string,
 ): Promise<{ accessToken: string; refreshToken: string } | null> => {
@@ -240,17 +216,13 @@ const refreshTokenDirectly = async (
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
-
         const result = await response.json()
-
         if (result.errors) {
             throw new Error(result.errors[0]?.message || "GraphQL error")
         }
-
         if (!result.data?.refreshToken) {
             throw new Error("No refresh token data returned")
         }
-
         return {
             accessToken: result.data.refreshToken.accessToken,
             refreshToken: result.data.refreshToken.refreshToken,
@@ -265,7 +237,7 @@ const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; j
     const results = await Promise.allSettled([
         // 检查Next.js服务器
         fetch("/api/nextLive", { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
-        // 检查Java后端
+        //简易方式做检查Java后端
         fetch(`${process.env.NEXT_PUBLIC_BACK_END}/graphql`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -273,18 +245,16 @@ const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; j
             cache: "no-cache",
         }).then((r) => r.ok),
     ])
-
     return {
         nextjsReachable: results[0].status === "fulfilled" && results[0].value,
         javaBackendReachable: results[1].status === "fulfilled" && results[1].value,
     }
 }
-
+//清理PWA的/api/auth/session的缓存；
 const clearServiceWorkerAuthCache = async (): Promise<void> => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
         return
     }
-
     try {
         const registration = await navigator.serviceWorker.ready
         if (registration.active) {
@@ -300,7 +270,6 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
                         reject(new Error(event.data.error))
                     }
                 }
-
                 registration.active!.postMessage({ type: "CLEAR_AUTH_CACHE" }, [messageChannel.port2])
             })
         }
@@ -380,10 +349,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
             async refreshAuth() {
                 try {
                     console.log("[v0] 开始token刷新流程...")
-
                     const connectivity = print ? undefined : await checkNetworkConnectivity()
                     console.log("[v0] 网络连接状态:", connectivity)
-
                     const refreshToken = getStoredRefreshToken()
 
                     if (!refreshToken && !print && (!connectivity || !connectivity.nextjsReachable)) {
@@ -449,12 +416,9 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                         const result = await refreshTokenDirectly(refreshToken)
                         if (result) {
                             console.log("[v0] 直接调用Java后端token刷新成功")
-
                             // 更新存储的refreshToken
                             setStoredRefreshToken(result.refreshToken)
-
                             await clearServiceWorkerAuthCache()
-
                             if (updateSession) {
                                 try {
                                     await updateSession({
@@ -468,7 +432,6 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                     console.error("[v0] 离线模式更新session失败:", error)
                                 }
                             }
-
                             // 触发自定义事件通知token更新
                             if (typeof window !== "undefined") {
                                 window.dispatchEvent(
@@ -486,18 +449,14 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                             return
                         }
                     }
-
                     throw new Error("所有token刷新方式都失败")
                 } catch (error) {
                     console.error("[v0] Token 刷新失败:", error)
-
                     setStoredRefreshToken(null)
-
                     toast.error("登录已过期", {
                         description: "请重新登录",
                         duration: 5000,
                     })
-
                     setTimeout(() => {
                         if (typeof window !== "undefined") {
                             const protocol = window.location.protocol === "https:" ? "https:" : "http:"
@@ -566,7 +525,7 @@ const fetchAbortExchange: Exchange =
             )
         };
 
-//严谨操作的："操作数据记录已在其它设备或其他人改动，新版本是996旧版本是",这个失败请求不会被离线缓冲收进到metadata列表的。
+//严谨："操作数据记录已在其它设备或其他人改动，新版本是996旧版本是",这个请求失败以后就不会再被离线缓冲收进到metadata列表的。
 const isVersionConflictError = (error: any): boolean => {
     if (!error) return false
     const errorMessage = error.message || ""
@@ -583,21 +542,17 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const print = "1" === searchParams!.get("print") //进入页面是打印目的的
     const { accessToken, ConfirmDialog } = useAccessToken()
     const { update } = useSession()
-    const networkStatusContext = useNetworkStatusContext()
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
-
     const [isClient, setIsClient] = useState(false)
 
     useEffect(() => {
         setIsClient(true)
     }, [])
-
     // 使用 useRef 来保持客户端实例的稳定性
     const clientRef = useRef<any>(null)
     const ssrRef = useRef<any>(null)
     const lastTokenRef = useRef<string | null>(null)
     const instanceIdRef = useRef(Math.random().toString(36).substr(2, 9))
-
     const initializedRef = useRef(false)
 
     useEffect(() => {
@@ -621,18 +576,15 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         if (!isClient) {
             return [null, null]
         }
-
         console.log(`[v0] createClientStable调用 - 实例ID: ${instanceIdRef.current}`)
         console.log(
             `[v0] 当前状态 - accessToken: ${accessToken}, lastTokenRef.current: ${lastTokenRef.current}, clientRef存在: ${!!clientRef.current}`,
         )
-
         // 只有当 accessToken 真正发生变化时才重新创建客户端
         if (lastTokenRef.current === accessToken && clientRef.current) {
             console.log(`[v0] 复用现有客户端 - 实例ID: ${instanceIdRef.current}`)
             return [clientRef.current, ssrRef.current]
         }
-
         console.log(
             `[v0] 重新创建 GraphQL 客户端，token 变化: ${lastTokenRef.current} -> ${accessToken}, 实例ID: ${instanceIdRef.current}`,
         )
