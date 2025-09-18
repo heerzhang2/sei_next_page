@@ -47,7 +47,7 @@ export const CommonOriginal=({action, verId, rep,config,rlist,areaFn}:CommonOrig
                 let moreItems = [] as any;
                 itemConfigs.forEach((area, x) => {
                     seq += 1;
-                    const rowHead =<ActionMapItem key={seq} repId={rep?.id} alone={false} editAreasConf={itemConfigs}
+                    const rowHead =<ActionMapItem key={seq} rep={rep} alone={false} editAreasConf={itemConfigs}
                                                   index={x} sureD editIts={config} />;
                     moreItems.push(createItem(area.tag, rowHead));
                 });

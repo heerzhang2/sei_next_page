@@ -157,16 +157,13 @@ interface UseFormFrameworkProps {
     // 接收外部传入的schema和默认值
     schema: z.ZodObject<any>
     defaultValues: Record<string, any>
-
-    //[可选方式之一] 接收外部传入的内容渲染函数工厂
+    //[可选方式一]接收外部传入的内容渲染函数工厂，从构造函数传递form环境的。[可选方式二]是用本hook返回的form在上外部组件直接引用然后传递给render()的做法。
     contentRendererFactory?: (form: any, arrays?: Record<string, any>) => React.ReactNode
-
     // 数组字段配置
     arrayFields?: {
         name: string //每一张表格存储名；
         itemTemplate: any
     }[]
-
     // 其他参数
     rep?: any
     onSubmit?: (values: any) => Promise<void>
@@ -405,7 +402,7 @@ interface UseFrameEditorBarProps {
     //逻辑上优先！强调确保是根路径存储的； #针对分项控制器的特别情况的：不嵌套。
     root?: boolean
 }
-/**
+/**不依赖react-hook-form环境的版本，表单简单的情形下就可以使用，【缺点】需自己管理表单状态。
  * 支持声明 modType && redId 或者subrid 来申明存储的实际位置转移：存储到分项数据结构中。
  * */
 export function useFrameEditorBar({
@@ -535,7 +532,7 @@ export function useFrameEditorBar({
             window.removeEventListener('mutation-completed', handleMutationCompleted as EventListener);
         };
     }, [rep?.id, subrid]);
-    // 创建渲染函数
+    // 创建渲染函数：只提供按钮条，不依赖于Form环境的。
     const render = () => (
         <div className="flex gap-4 justify-end">
             <Button type="button" variant="outline" onClick={onReset}>
