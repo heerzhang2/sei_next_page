@@ -509,7 +509,7 @@ http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1
 http://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ALL?subrid=KQcbgDF9RO21DgA92H3tQlJlcG9ydA
 https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
-【等问题】
-1恢复自动提醒刷新发送  urql-offlineCache:不要干预太多，内部自己实现的机制，注入的干涉太多了反而出问题
+
 https://relex.github.io/json-diff-react/examples/example-07.html
 若点浏览器刷新，后端恢复都能自动发出的，而不会等待用户点消息框确认按钮的。
+操作数据记录已在其它设备或其他人改动，新版本是
