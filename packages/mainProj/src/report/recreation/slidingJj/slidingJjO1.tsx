@@ -17,8 +17,8 @@ import {CardContent,} from "@/components/ui";
 import {CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {AreaConfig, generateAreaItems, omniCalculateDefault, pushOmni} from "@/report/common/omni";
-import {create2_12Area, create3_6_1Area, create4_9Area, create5_5_1Area, create6_4Area, createT1_1Area, createT2_1Area,
-    createT3_1Area, createT4_1Area, createT5_1Area, createT6_14Area, createT6_1Area, createT7_1Area
+import {create2_12Area, create3_6_1Area, create4_9Area, create5_5_1Area, create6_4Area, create1_1Area, create2_1Area,
+    create3_1Area, create4_1Area, create5_1Area, create6_14Area, create6_1Area, create7_1Area
 } from "@/report/recreation/slidingJj/areas1v";
 import {DevToolsSection, useEntranceSetup} from "@/report/hook/useEntranceSetup";
 import {CommonOriginal} from "@/report/common/original";
@@ -161,21 +161,21 @@ export const tail观测 = <div className={"text-[0.75rem]"}>
 
 //所有编辑区的默认配置
 const IspItemAreas: AreaConfig[] = [
-    createT1_1Area(),
-    createT2_1Area(),
+    create1_1Area(),
+    create2_1Area(),
     create2_12Area(),
-    createT3_1Area(),
+    create3_1Area(),
     create3_6_1Area(),
-    createT4_1Area(),
+    create4_1Area(),
     create4_9Area(),
-    createT5_1Area(),
+    create5_1Area(),
     create5_5_1Area(),
-    createT6_1Area(),
+    create6_1Area(),
     create6_4Area(),
-    createT6_14Area(),
-    createT7_1Area(),
+    create6_14Area(),
+    create7_1Area(),
 ];
-//不能放在slidingJjR1.tsx中，会产生循环依赖导致的报错 Cannot access 'setupItemAreaRoute' before initialization；
+//不能放在slidingJjR1.tsx中，会产生循环依赖导致的报错 Cannot access 'setupItemAreaRoute' before initialization；但不能动态修改编辑区tag/action;
 export const setupItemAreaRoute = ({rep, orc, noDefault}: { rep: any, orc?: any, noDefault?: boolean }
 ) => {
     let ari: any[] = [];
@@ -248,6 +248,5 @@ export const OriginalView=({action,verId,rep}:OriginalViewProps)=>{
     return <CommonOriginal action={action} rep={rep} config={config记录} areaFn={setupItemAreaRoute} rlist={recordPrintList} verId={verId}/>
 }
 
-const listItem= setupItemAreaRoute({});
-
-export const registerUrl = crtUrlRegistGen(recordPrintList);
+const actions= setupItemAreaRoute({})["Item"].map(item => item.tag);
+export const registerUrl = crtUrlRegistGen(recordPrintList,actions);

@@ -438,7 +438,7 @@ const isVersionConflictError = (error: any): boolean => {
     )
 }
 /**
- * 点击Link切换不同的报告，后端恢复能自动发出缓存的报告变更队列。
+ * 点击Link切换不同的报告，后端恢复能自动发出缓存的报告变更队列,【可能】操作数据记录已在其它设备或其他人改动？只能从graphqlCache缓存找回来?metadata已经被丢弃。
  * 业务上没法按照ACID事务性锁定，乐观锁version机制能用于PWA离线修改报告的做法，很容易遇到考虑数据版本的冲突：
  * 假如流程引擎修改导致的version变动，后端转Pdf就是这个情况，后端网页转为Pdf完成，导致version改了：假如还在改这报告面临无法提交！因version被后台变更导致无法成功提交修改；最好必须等待网页转为Pdf后台已处理完才能继续刷新报告再修改。
 * */
@@ -590,7 +590,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                     onClick: () => window.location.reload(),
                                 },
                             })
-                            return  // Don't process as network error
+                            return  // Don't process as network error？不是当前编辑的报告的考虑写入临时的错误存储标记列表当中？
                         }
                     },
                 }),

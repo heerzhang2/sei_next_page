@@ -254,11 +254,19 @@ export function assertNamesUnique(arr: PlainArConfigs[]) :boolean {
   return true;    //全部 没冲突的！
 }
 
-export function crtUrlRegistGen(recordPrintList: EditorAreaConfig[]) {
+export function crtUrlRegistGen(recordPrintList: EditorAreaConfig[], itemActions: string[]) {
   return function registerUrl(template: string, version: string): string[] {
     const baseUrl = `/rep/*/${template}/${version}`;
-    // 从 recordPrintList 中提取所有 itemArea
-    const actions = ["ALL", ...recordPrintList.map(item => item.itemArea)];
+    // 从 recordPrintList 中提取所有 itemArea，然后过滤掉机电报告的记录列表占位符"Item"
+    const plainrs = recordPrintList
+        .map(item => item.itemArea)
+        .filter(itemArea => itemArea !== "Item");
+
+    const actions = [
+      "ALL",
+      ...plainrs,
+      ...itemActions,
+    ];
     const urls = actions.map((action) => `${baseUrl}/${action}`);
     return [baseUrl, ...urls];
   };

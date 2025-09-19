@@ -32,3 +32,4 @@ next-env.d.ts
 /packages/mainProj/.turbo/
 /packages/camunda-worker/upload.progress
 /.idea/
+/其它文件/~$报告模板登记.xlsx

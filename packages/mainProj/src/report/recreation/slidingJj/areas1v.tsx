@@ -2,9 +2,9 @@ import * as React from "react";
 import {CCell, FlexibleTable, TableBody, TableRow} from "@/components/flexible-table";
 import {crtOmni} from "@/report/common/omni";
 import {JumpMeasure} from "@/report/common/general";
-
+//可允许多版本重复地引用的：部分修改增加的就新加文件。ver也兼容注入；
 // T1-1 编辑区：资料审查区域
-export const createT1_1Area =  (ver="1") => ({
+export const create1_1Area =  (ver="1") => ({
     id: 'T1-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('许可证',{big:'K1资料审查',bspan:11,span:2,seco:'※K1.1特种设备生产许可证',},{seco:'※K1.1' },
@@ -45,7 +45,7 @@ export const createT1_1Area =  (ver="1") => ({
 });
 
 // T2-1 编辑区：机械与结构检验区域
-export const createT2_1Area = (ver="1") => ({
+export const create2_1Area = (ver="1") => ({
     id: 'T2-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('铭牌',{big:'K2机械与结构检验',bspan:11,span:2,seco:'K2.1产品铭牌与乘客须知',}, {seco:'K2.1',},
@@ -91,7 +91,7 @@ export const createT2_1Area = (ver="1") => ({
 
 // 2.12 编辑区：轨道检验区域
 export const create2_12Area =  (ver="1") => ({
-    id: '2.12',
+    id: 'T2-12',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('轨道支柱',{bspan:5,span:5,seco:'K2.12轨道',third:'K2.12.1',tspan:1,},undefined,
             <div>(1)支柱不应承受设计文件要求以外的外加载荷。
@@ -115,7 +115,7 @@ export const create2_12Area =  (ver="1") => ({
 });
 
 // T3-1 编辑区：传动系统检验区域
-export const createT3_1Area =  (ver="1") => ({
+export const create3_1Area =  (ver="1") => ({
     id: 'T3-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('液压系统',{big:'K3传动系统检验',bspan:9,span:1,seco:'K3.1',},undefined,
@@ -167,7 +167,7 @@ export const createT3_1Area =  (ver="1") => ({
 
 // 3.6.1 编辑区：提升系统检验区域
 export const create3_6_1Area =  (ver="1") => ({
-    id: '3.6.1',
+    id: 'T3-6-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('提升系统',{bspan:6,seco:'K3.6乘人部分提升系统',span:4,third:'K3.6.1',tspan:1,},undefined,
             <div>(1)提升系统运行时不应有异常声响和冲击振动。
@@ -193,7 +193,7 @@ export const create3_6_1Area =  (ver="1") => ({
 });
 
 // T4-1 编辑区：电气及控制系统检验区域
-export const createT4_1Area =  (ver="1") => ({
+export const create4_1Area =  (ver="1") => ({
     id: 'T4-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('电气安装',{big:'K4电气及控制系统检验',bspan:8,span:1,seco:'K4.1',},undefined,
@@ -228,7 +228,7 @@ export const createT4_1Area =  (ver="1") => ({
 
 // 4.9 编辑区：控制元件及按钮区域
 export const create4_9Area =  (ver="1") => ({
-    id: '4.9',
+    id: 'T4-9',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('按钮信号',{bspan:7,span:1,seco:'K4.9',},undefined,
             <div>(1)控制元件与操作台按钮应完好，并有明确标志；操作按钮应有相应的信号响应，指示灯应按照标识指示。
@@ -258,7 +258,7 @@ export const create4_9Area =  (ver="1") => ({
 });
 
 // T5-1 编辑区：乘载系统检验区域
-export const createT5_1Area =  (ver="1") => ({
+export const create5_1Area =  (ver="1") => ({
     id: 'T5-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('乘人结构',{big:'K5乘载系统检验',bspan:12,span:3,seco:'K5.1结构',},{seco:'K5.1',},
@@ -310,7 +310,7 @@ export const createT5_1Area =  (ver="1") => ({
 
 // 5.5.1 编辑区：安全距离和防护区域
 export const create5_5_1Area =  (ver="1") => ({
-    id: '5.5.1',
+    id: 'T5-5-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('安全距',{bspan:3,span:3,seco:'K5.5安全距离和防护',third:'※K5.5.1',tspan:1,},undefined,
             <div>(1)乘人部分与障碍物最近距离应符合设计文件及以下要求，凡乘客身体可伸到座舱以外时，应当设有防止乘客在运行中与周围障碍物相碰撞的安全保护装置或者留出足够的安全距离，防止乘客发生
@@ -328,7 +328,7 @@ export const create5_5_1Area =  (ver="1") => ({
 });
 
 // T6-1 编辑区：安全保护装置和防护措施检验区域
-export const createT6_1Area =  (ver="1") => ({
+export const create6_1Area =  (ver="1") => ({
     id: 'T6-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('安保要求',{big:'K6安全保护装置和防护措施检验',bspan:7,span:1,seco:'K6.1',},undefined,
@@ -359,7 +359,7 @@ export const createT6_1Area =  (ver="1") => ({
 
 // 6.4 编辑区：防超速等安全控制装置区域
 export const create6_4Area =  (ver="1") => ({
-    id: '6.4',
+    id: 'T6-4',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('防超速',{bspan:10,span:1,seco:'※K6.4',},undefined,
             <div>(1)有可能超速的大型游乐设施应当设有安全可靠的限速装置或者采取限速措施；防超速装置应有效。
@@ -397,7 +397,7 @@ export const create6_4Area =  (ver="1") => ({
 });
 
 // T6-14 编辑区：安全网等其他防护措施区域
-export const createT6_14Area =  (ver="1") => ({
+export const create6_14Area =  (ver="1") => ({
     id: 'T6-14',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('安全网',{bspan:12,span:1,seco:'K6.14',},undefined,
@@ -448,7 +448,7 @@ export const createT6_14Area =  (ver="1") => ({
 });
 
 // T7-1 编辑区：载荷试验与测试区域
-export const createT7_1Area =  (ver="1") => ({
+export const create7_1Area =  (ver="1") => ({
     id: 'T7-1',
     generator: ({rep, orc}: {rep: any, orc?: any}) => [
         crtOmni('空载运',{big:'K7载荷试验与测试',bspan:8,span:2,seco:'K7.1空载运行试验',},{seco:'K7.1',},
