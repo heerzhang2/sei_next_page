@@ -7,7 +7,7 @@ import {
 } from "serwist"
 import { Serwist } from "serwist"
 //不要删除！来自参考 ./node_modules/@serwist/next/src/index.worker.ts 生产版本有生效的？
-import { defaultCache } from "@serwist/next/worker"
+import { defaultCache, PAGES_CACHE_NAME } from "@serwist/next/worker"
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -66,11 +66,6 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
 }
 
 //【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker"，然后自己再修改！
-const PAGES_CACHE_NAME = {
-    rscPrefetch: "pages-rsc-prefetch",
-    rsc: "pages-rsc",
-    html: "pages",
-} as const
 const customCache: RuntimeCaching[] = [
     {
         matcher: ({ url: { pathname }, sameOrigin }) =>

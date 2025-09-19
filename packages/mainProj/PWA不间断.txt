@@ -1,3 +1,4 @@
+不用生产版"start:https": "cross-env NODE_ENV=production "真的无法发挥PWA的全部功能。
 serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
 D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Service worker is installing...
 D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker installed.
@@ -67,4 +68,19 @@ D:\home\sei_next_pag…rmFramework.tsx:419 Oh no!
     at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
 
 D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
-D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
+
+{id: 'report-pages-normalized|https://192.168.171.3:3765/rep/*/INDPL_DJ/1/Solidify',
+ cacheName: 'report-pages-normalized',
+  url: 'https://192.168.171.3:3765/rep/*/INDPL_DJ/1/Solidify',
+   timestamp: 1758187720398}
+//【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker"，然后自己再修改！
+const PAGES_CACHE_NAME = {
+    rscPrefetch: "pages-rsc-prefetch",
+    rsc: "pages-rsc",
+    html: "pages",
+} as const
+
+compositeKey
+'report-pages-normalized|/rep/*/SLIDING_JJ/1/Survey'
+
+

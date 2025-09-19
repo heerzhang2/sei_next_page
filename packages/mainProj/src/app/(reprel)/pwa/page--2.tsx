@@ -473,58 +473,35 @@ export default function Page() {
 
     const checkSerwistCacheExpiration = async (url: string): Promise<boolean> => {
         try {
-            // Open the Serwist cache database (not expiration database)
+            // Open the Serwist expiration database
             const db = await new Promise<IDBDatabase>((resolve, reject) => {
                 const request = indexedDB.open("serwist-expiration", 1)
                 request.onsuccess = () => resolve(request.result)
                 request.onerror = () => reject(request.error)
             })
 
-            // Use cache-entries object store instead of expiration
-            const transaction = db.transaction(["cache-entries"], "readonly")
-            const store = transaction.objectStore("cache-entries")
+            // Get the expiration data for the URL
+            const transaction = db.transaction(["expiration"], "readonly")
+            const store = transaction.objectStore("expiration")
+            const request = store.get(url)
 
-            // Try different cache names that might contain this URL
-            const possibleCacheNames = ["report-pages-normalized"]
-            let cacheEntry = null
-
-            const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://192.168.171.3:3765"
-            const fullUrl = url.startsWith("http") ? url : `${currentOrigin}${url}`
-
-            // Search for the URL with different cache name prefixes
-            for (const cacheName of possibleCacheNames) {
-                const compositeKey = `${cacheName}|${fullUrl}`
-                const request = store.get(compositeKey)
-                const result = await new Promise<any>((resolve, reject) => {
-                    request.onsuccess = () => resolve(request.result)
-                    request.onerror = () => reject(request.error)
-                })
-
-                if (result) {
-                    cacheEntry = result
-                    break
-                }
-            }
+            const result = await new Promise<any>((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result)
+                request.onerror = () => reject(request.error)
+            })
 
             db.close()
 
-            if (!cacheEntry) {
-                // URL not found in any cache, needs caching
-                console.log(`URL ${fullUrl} 未在缓存中找到，需要缓存`)
+            if (!result) {
+                // URL not found in cache, needs caching
                 return true
             }
 
-            // Check if the cached item is still valid based on timestamp
+            // Check if the cached item has expired
             const now = Date.now()
-            const cacheTimestamp = cacheEntry.timestamp
+            const expirationTime = result.expiration || result.timestamp
 
-            // Consider cache valid for 24 hours (86400000 ms)
-            const cacheValidityPeriod = 24 * 60 * 60 * 1000
-            const isExpired = now - cacheTimestamp > cacheValidityPeriod
-
-            console.log(`URL ${fullUrl} 缓存时间: ${new Date(cacheTimestamp).toLocaleString()}, 是否过期: ${isExpired}`)
-
-            return isExpired
+            return now > expirationTime
         } catch (error) {
             console.warn(`检查URL ${url} 的Serwist缓存过期状态失败:`, error)
             // If we can't check, assume it needs updating
