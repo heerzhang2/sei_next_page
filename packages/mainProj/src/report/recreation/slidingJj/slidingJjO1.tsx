@@ -1,6 +1,6 @@
 import * as React from "react";
 import {InternalItemProps, OriginalViewProps} from "@/report/common/base";
-import {createItem} from "@/report/common/eHelper";
+import {createItem, crtUrlRegistGen} from "@/report/common/eHelper";
 import {ItemInstrumentTable} from "@/report/common/Instrument";
 import {GenCode} from "@/report/common/GenCode";
 import {DeviceSurveyD} from "@/report/common/survey";
@@ -248,11 +248,6 @@ export const OriginalView=({action,verId,rep}:OriginalViewProps)=>{
     return <CommonOriginal action={action} rep={rep} config={config记录} areaFn={setupItemAreaRoute} rlist={recordPrintList} verId={verId}/>
 }
 
-export function registerUrl(template: string, version: string): string[] {
-    const baseUrl = `/rep/*/${template}/${version}`
-    const actions = ["ALL", "Instrument", "Survey", "MainTechnical", 'T3-1',
-        "Measure","Measure2", "Conclusion","SiteCondition","RadoInstrument","StrainStress"
-    ]
-    const urls=actions.map((action) => `${baseUrl}/${action}`)
-    return [baseUrl, ...urls]
-}
+const listItem= setupItemAreaRoute({});
+
+export const registerUrl = crtUrlRegistGen(recordPrintList);

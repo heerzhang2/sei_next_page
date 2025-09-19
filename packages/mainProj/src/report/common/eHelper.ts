@@ -254,3 +254,12 @@ export function assertNamesUnique(arr: PlainArConfigs[]) :boolean {
   return true;    //全部 没冲突的！
 }
 
+export function crtUrlRegistGen(recordPrintList: EditorAreaConfig[]) {
+  return function registerUrl(template: string, version: string): string[] {
+    const baseUrl = `/rep/*/${template}/${version}`;
+    // 从 recordPrintList 中提取所有 itemArea
+    const actions = ["ALL", ...recordPrintList.map(item => item.itemArea)];
+    const urls = actions.map((action) => `${baseUrl}/${action}`);
+    return [baseUrl, ...urls];
+  };
+}

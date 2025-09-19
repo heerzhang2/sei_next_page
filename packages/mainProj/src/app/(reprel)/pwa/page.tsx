@@ -45,7 +45,8 @@ interface CacheStatus {
     lastCacheTime?: number
     templateChangeTime?: number
 }
-
+/**需外部配合向localStorage("offline-reports")注入离线报告的id;
+* */
 export default function Page() {
     const client = useClient()
     const [precacheStatus, setPrecacheStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
