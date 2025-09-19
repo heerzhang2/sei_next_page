@@ -71,7 +71,50 @@ export default function Page() {
 
     const [reportQueries, setReportQueries] = useState<any[]>([])
     const [isFetching, setIsFetching] = useState(false)
+    const [cacheSize, setCacheSize] = useState<string>("0 KB")
+    const [isCalculatingCache, setIsCalculatingCache] = useState(false)
+    const [showCustomUrlSection, setShowCustomUrlSection] = useState(false);
 
+    const checkCacheStatus = async (setCacheStatusList: any, setAutoUpdateAvailable: any) => {
+        console.log("checkCacheStatus function is called")
+        try {
+            const statusList: CacheStatus[] = []
+
+            for (const template of reportTemplates) {
+                const needsUpdate = await validateTemplateCacheFromSerwist(template.templateId, template.version)
+
+                // Get cache time from unified localStorage object
+                const cacheTimeData = localStorage.getItem("cache-time")
+                const cacheTimeObj = cacheTimeData ? JSON.parse(cacheTimeData) : {}
+                const templateKey = `${template.templateId}-${template.version}`
+                const lastCacheTime = cacheTimeObj[templateKey] ? Number.parseInt(cacheTimeObj[templateKey]) : undefined
+
+                // Get template change time
+                let templateChangeTime: number | undefined
+                try {
+                    const templateModule: TemplateConfig = await import(
+                        `../../rep/[repId]/${template.templateId}/${template.version}/config`
+                        )
+                    templateChangeTime = templateModule.changeTime
+                } catch (error) {
+                    console.warn(`无法加载模板配置: ${template.templateId}/${template.version}`)
+                }
+
+                statusList.push({
+                    templateId: template.templateId,
+                    version: template.version,
+                    needsUpdate,
+                    lastCacheTime,
+                    templateChangeTime,
+                })
+            }
+
+            setCacheStatusList(statusList)
+            setAutoUpdateAvailable(statusList.some((status) => status.needsUpdate))
+        } catch (error) {
+            console.error("检查缓存状态失败:", error)
+        }
+    }
     // 加载离线报告的 useEffect - 应该只运行一次
     useEffect(() => {
         const loadOfflineReports = () => {
@@ -173,115 +216,23 @@ export default function Page() {
                     index === self.findIndex((s) => s.templateId === status.templateId && s.version === status.version),
             )
             setReportTemplates(tmplAllList)
-            console.log("[v0] 更新报告数据:", updatedReports)
+            console.log("[v0] 更新报告数据:", updatedReports, "setReportTemplates?=",tmplAllList)
         }
     }, [reportQueries, offlineReports]) // 依赖于 reportQueries 和 offlineReports
 
     useEffect(() => {
-        const checkCacheStatus = async () => {
-            if (reportTemplates.length === 0) return
+        if (!autoUpdateAvailable) checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
+    }, [autoUpdateAvailable])
 
-            const statusList: CacheStatus[] = []
-            let hasUpdates = false
-
-            for (const template of reportTemplates) {
-                try {
-                    const templateModule: TemplateConfig = await import(
-                        `../../rep/[repId]/${template.templateId}/${template.version}/config`
-                        )
-
-                    const needsUpdate = await validateTemplateCacheFromSerwist(template.templateId, template.version)
-
-                    // Still get localStorage cache time for display purposes
-                    const cacheKey = `cache-time-${template.templateId}-${template.version}`
-                    const lastCacheTime = localStorage.getItem(cacheKey)
-                    const lastCacheTimestamp = lastCacheTime ? Number.parseInt(lastCacheTime) : 0
-
-                    console.log(
-                        `模板${template.templateId}/${template.version}当前--更新时间:`,
-                        templateModule.changeTime,
-                        "项目数：",
-                        templateModule.cacheUrls?.length,
-                        "需要更新:",
-                        needsUpdate,
-                    )
-
-                    statusList.push({
-                        templateId: template.templateId,
-                        version: template.version,
-                        needsUpdate,
-                        lastCacheTime: lastCacheTimestamp || undefined,
-                        templateChangeTime: templateModule.changeTime,
-                    })
-
-                    if (needsUpdate) {
-                        hasUpdates = true
-                    }
-                } catch (error) {
-                    console.warn(`检查模板 ${template.templateId}/${template.version} 状态失败:`, error)
-                    statusList.push({
-                        templateId: template.templateId,
-                        version: template.version,
-                        needsUpdate: true,
-                    })
-                    hasUpdates = true
-                }
-            }
-
-            // 过滤重复项
-            const uniqueStatusList = statusList.filter(
-                (status, index, self) =>
-                    index === self.findIndex((s) => s.templateId === status.templateId && s.version === status.version),
-            )
-
-            setCacheStatusList(uniqueStatusList)
-            setAutoUpdateAvailable(hasUpdates)
-
-            if (hasUpdates) {
-                console.log("[v0] 检测到模板更新，需要重新缓存")
-            } else {
-                console.log("[v0] 所有模板都是最新的")
-            }
+    useEffect(() => {
+        if (reportTemplates.length > 0) {
+            checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
         }
-        if (!autoUpdateAvailable) checkCacheStatus()
-    }, [autoUpdateAvailable, reportTemplates])
-
-    const handleRefreshPage = () => {
-        window.location.reload()
-    }
-
-    const handleDismissError = () => {
-        setSwError(null)
-    }
-
-    const handleClearCache = async () => {
-        if ("caches" in window) {
-            try {
-                const cacheNames = await caches.keys()
-                await Promise.all(cacheNames.map((name) => caches.delete(name)))
-                setSwError("缓存已清理，正在刷新页面...")
-                setTimeout(() => window.location.reload(), 1000)
-            } catch (error) {
-                console.error("清理缓存失败:", error)
-                setSwError("清理缓存失败，请手动刷新页面")
-            }
-        }
-    }
-
+    }, [reportTemplates])
     const handleHardRefresh = () => {
         // 硬刷新页面，相当于 Ctrl+Shift+R
         window.location.reload()
     }
-
-    const handleCloseTab = () => {
-        // 尝试关闭当前标签页
-        window.close()
-        // 如果无法关闭，显示提示
-        setTimeout(() => {
-            alert("请手动关闭此标签页，然后重新打开应用")
-        }, 100)
-    }
-
     const handleCompleteReset = async () => {
         try {
             // 1. 清理所有缓存
@@ -304,8 +255,9 @@ export default function Page() {
             }
             setSwError("系统已完全重置，正在重新加载...")
             setTimeout(() => {
-                window.location.href = window.location.origin + window.location.pathname
+                window.location.reload()
             }, 1500)
+            setCacheSize("0 KB")
         } catch (error) {
             console.error("完全重置失败:", error)
             setSwError("重置失败，请手动重启浏览器")
@@ -357,7 +309,94 @@ export default function Page() {
             ]
         }
     }
+    const calculateCacheSize = async () => {
+        if (!("caches" in window)) return "0 KB"
 
+        setIsCalculatingCache(true)
+        try {
+            const cacheNames = await caches.keys()
+            let totalSize = 0
+
+            for (const cacheName of cacheNames) {
+                const cache = await caches.open(cacheName)
+                const requests = await cache.keys()
+
+                for (const request of requests) {
+                    const response = await cache.match(request)
+                    if (response) {
+                        // 尝试获取Content-Length头信息
+                        const contentLength = response.headers.get('content-length')
+                        if (contentLength) {
+                            totalSize += parseInt(contentLength, 10)
+                        } else {
+                            // 如果没有Content-Length头，则读取整个响应体来计算大小
+                            const blob = await response.blob()
+                            totalSize += blob.size
+                        }
+                    }
+                }
+            }
+
+            // 格式化大小显示
+            let formattedSize
+            if (totalSize < 1024) {
+                formattedSize = `${totalSize} B`
+            } else if (totalSize < 1024 * 1024) {
+                formattedSize = `${(totalSize / 1024).toFixed(2)} KB`
+            } else {
+                formattedSize = `${(totalSize / (1024 * 1024)).toFixed(2)} MB`
+            }
+
+            setCacheSize(formattedSize)
+            return formattedSize
+        } catch (error) {
+            console.error("计算缓存大小失败:", error)
+            setCacheSize("计算失败")
+            return "计算失败"
+        } finally {
+            setIsCalculatingCache(false)
+        }
+    }
+    useEffect(() => {
+        calculateCacheSize()
+
+        // 可以定期更新缓存大小
+        const interval = setInterval(() => {
+            calculateCacheSize()
+        }, 30000) // 每30秒更新一次
+
+        return () => clearInterval(interval)
+    }, [])
+    const handlePrecacheSuccess = () => {
+        setTimeout(() => {
+            calculateCacheSize()
+        }, 100) //延迟后更新，确保缓存操作完成
+    }
+    const cleanupOldCacheTimes = () => {
+        try {
+            const cacheTimeData = getCacheTimeData()
+            const twoMonthsAgo = Date.now() - (60 * 24 * 60 * 60 * 1000) // 60天的毫秒数
+
+            let hasChanges = false
+
+            // 遍历所有缓存时间记录
+            for (const [key, timestamp] of Object.entries(cacheTimeData)) {
+                if (timestamp < twoMonthsAgo) {
+                    delete cacheTimeData[key]
+                    hasChanges = true
+                    console.log(`移除过期缓存记录: ${key}, 时间: ${new Date(timestamp).toLocaleString()}`)
+                }
+            }
+
+            // 如果有变更，保存回localStorage
+            if (hasChanges) {
+                setCacheTimeData(cacheTimeData)
+                console.log("已清理过期的缓存时间记录")
+            }
+        } catch (error) {
+            console.error("清理旧缓存时间记录时出错:", error)
+        }
+    }
     const handlePrecacheReports = async (templatesToCache = reportTemplates, includeCustomUrls = true) => {
         if (!("serviceWorker" in navigator)) {
             setPrecacheStatus("error")
@@ -412,19 +451,15 @@ export default function Page() {
                     setPrecacheStatus("success")
                     setPrecacheMessage(`成功预缓存 ${urlsToCache.length} 个项目`)
                     const currentTime = Date.now()
+
                     templatesToCache.forEach((template) => {
-                        const cacheKey = `cache-time-${template.templateId}-${template.version}`
-                        localStorage.setItem(cacheKey, currentTime.toString())
+                        setCacheTime(template.templateId, template.version, currentTime)
                     })
-                    // Update cache status
-                    setCacheStatusList((prev) =>
-                        prev.map((status) => ({
-                            ...status,
-                            needsUpdate: false,
-                            lastCacheTime: currentTime,
-                        })),
-                    )
-                    setAutoUpdateAvailable(false)
+                    cleanupOldCacheTimes()
+                    handlePrecacheSuccess()
+                    setTimeout(async () => {
+                        await checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
+                    }, 100)
                 } else {
                     console.error("缓存过程中可能发生了问题，部分url失败。")
                     setPrecacheStatus("error")
@@ -455,7 +490,6 @@ export default function Page() {
             setPrecacheMessage(`预缓存失败: ${error instanceof Error ? error.message : "未知错误"}`)
         }
     }
-
     const handleAutoUpdate = async () => {
         const templatesToUpdate = cacheStatusList
             .filter((status) => status.needsUpdate)
@@ -463,6 +497,9 @@ export default function Page() {
 
         if (templatesToUpdate.length > 0) {
             await handlePrecacheReports(templatesToUpdate, false)
+            setTimeout(async () => {
+                await checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
+            }, 500)
         }
     }
 
@@ -471,7 +508,7 @@ export default function Page() {
         handlePrecacheReports(failedTemplates)
     }
 
-    const checkSerwistCacheExpiration = async (url: string): Promise<boolean> => {
+    const checkSerwistCacheExpiration = async (url: string, templateChangeTime: number): Promise<boolean> => {
         try {
             // Open the Serwist cache database (not expiration database)
             const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -514,15 +551,12 @@ export default function Page() {
                 return true
             }
 
-            // Check if the cached item is still valid based on timestamp
-            const now = Date.now()
             const cacheTimestamp = cacheEntry.timestamp
+            const isExpired = cacheTimestamp < templateChangeTime
 
-            // Consider cache valid for 24 hours (86400000 ms)
-            const cacheValidityPeriod = 24 * 60 * 60 * 1000
-            const isExpired = now - cacheTimestamp > cacheValidityPeriod
-
-            console.log(`URL ${fullUrl} 缓存时间: ${new Date(cacheTimestamp).toLocaleString()}, 是否过期: ${isExpired}`)
+            console.log(
+                `URL ${fullUrl} 缓存时间: ${new Date(cacheTimestamp).toLocaleString()}, 模板更新时间: ${new Date(templateChangeTime).toLocaleString()}, 是否过期: ${isExpired}`,
+            )
 
             return isExpired
         } catch (error) {
@@ -532,17 +566,41 @@ export default function Page() {
         }
     }
 
+    const getCacheTimeData = (): Record<string, number> => {
+        const cacheTimeStr = localStorage.getItem("cache-time")
+        return cacheTimeStr ? JSON.parse(cacheTimeStr) : {}
+    }
+
+    const setCacheTimeData = (data: Record<string, number>) => {
+        localStorage.setItem("cache-time", JSON.stringify(data))
+    }
+
+    const getCacheTime = (templateId: string, version: string): number => {
+        const cacheData = getCacheTimeData()
+        return cacheData[`${templateId}-${version}`] || 0
+    }
+
+    const setCacheTime = (templateId: string, version: string, timestamp: number) => {
+        const cacheData = getCacheTimeData()
+        cacheData[`${templateId}-${version}`] = timestamp
+        setCacheTimeData(cacheData)
+    }
+
     const validateTemplateCacheFromSerwist = async (templateId: string, version: string): Promise<boolean> => {
         try {
-            const templateUrls = await importTemplateUrls(templateId, version)
+            // Import template config to get changeTime
+            const templateModule: TemplateConfig = await import(`../../rep/[repId]/${templateId}/${version}/config`)
+            const templateUrls = templateModule.cacheUrls || []
 
             if (templateUrls.length === 0) {
                 console.warn(`模板 ${templateId}/${version} 没有缓存URL`)
                 return true // No URLs to cache, consider as needing update
             }
 
-            // Check each URL in the template
-            const expirationChecks = await Promise.all(templateUrls.map((url) => checkSerwistCacheExpiration(url)))
+            // Check each URL in the template using template's changeTime
+            const expirationChecks = await Promise.all(
+                templateUrls.map((url) => checkSerwistCacheExpiration(url, templateModule.changeTime)),
+            )
 
             // Use conservative approach: if any URL is expired, the template needs updating
             const hasExpiredUrls = expirationChecks.some((isExpired) => isExpired)
@@ -551,12 +609,13 @@ export default function Page() {
                 totalUrls: templateUrls.length,
                 expiredUrls: expirationChecks.filter(Boolean).length,
                 needsUpdate: hasExpiredUrls,
+                templateChangeTime: new Date(templateModule.changeTime).toLocaleString(),
             })
 
             return hasExpiredUrls
         } catch (error) {
-            console.warn(`验证模板 ${templateId}/${version} 缓存状态失败:`, error)
-            return true // If validation fails, assume it needs updating
+            console.warn(`验证模板 ${templateId}/${version} 缓存失败:`, error)
+            return true // If we can't validate, assume it needs updating
         }
     }
 
@@ -584,49 +643,21 @@ export default function Page() {
                         <div className="ml-3 flex-1">
                             <div className="mt-1 text-sm text-orange-700">{swError}</div>
                             <div className="mt-3 space-y-2">
-                                <div className="flex flex-wrap gap-2">
-                                    <button
-                                        onClick={handleRefreshPage}
-                                        className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-colors"
-                                    >
-                                        普通刷新
-                                    </button>
+                                <div className="flex flex-wrap gap-2 justify-evenly">
                                     <button
                                         onClick={handleHardRefresh}
-                                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+                                        className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-colors"
                                     >
-                                        硬刷新
+                                        刷新
                                     </button>
-                                    {swError?.includes("IndexedDB") || swError?.includes("缓存") ? (
-                                        <button
-                                            onClick={handleClearCache}
-                                            className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
-                                        >
-                                            清理缓存
-                                        </button>
-                                    ) : null}
-                                </div>
-                                <div className="flex flex-wrap gap-2">
                                     <button
                                         onClick={handleCompleteReset}
                                         className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors"
                                     >
                                         完全重置
                                     </button>
-                                    <button
-                                        onClick={handleCloseTab}
-                                        className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition-colors"
-                                    >
-                                        关闭标签页
-                                    </button>
-                                    <button
-                                        onClick={handleDismissError}
-                                        className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400 transition-colors"
-                                    >
-                                        稍后处理
-                                    </button>
                                 </div>
-                                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                                <div className="mt-1 p-1 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
                                     <p className="font-medium">如果问题持续存在：</p>
                                     <p>1. 点击"完全重置"清理所有数据</p>
                                     <p>2. 手动重启浏览器（推荐）</p>
@@ -638,29 +669,29 @@ export default function Page() {
                 </div>
             )}
 
-            <div className="mt-10 text-xl">
+            <div className="mt-2 text-xl">
                 <Link href="/">首页</Link>
             </div>
-            <div className="max-w-4xl mx-auto">
-                <header className="text-center py-12">
+            <div className="max-w-7xl mx-auto">
+                <header className="text-center py-1">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">待检验报告离线编制保障</h1>
                 </header>
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-md p-1 mb-1">
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">离线报告状态</h2>
 
                     {offlineReports.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="text-center py-1 text-gray-500">
                             <p>暂无离线报告</p>
                             <p className="text-sm mt-2">请在其他页面选择报告添加到离线列表</p>
                         </div>
                     ) : (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1">
                                 {offlineReports.map((report, index) => (
-                                    <div key={report.repId} className="bg-gray-50 rounded-lg p-4">
-                                        <div className="font-medium text-gray-900">报告 ID: {report.repId}</div>
+                                    <div key={report.repId} className="bg-gray-50 rounded-lg p-1">
+                                        <div className="text-sm text-gray-900">报告ID: {report.repId}</div>
                                         {report.modeltype && (
-                                            <div className="text-sm text-gray-600">
+                                            <div className="text-sm text-blue-800">
                                                 模板: {report.modeltype} v{report.modelversion}
                                             </div>
                                         )}
@@ -676,11 +707,11 @@ export default function Page() {
                 </div>
 
                 {cacheStatusList.length > 0 && (
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">缓存状态检查</h2>
+                    <div className="bg-white rounded-lg shadow-md p-1 mb-1">
+                        <h2 className="text-base font-semibold text-gray-900 mb-4">缓存状态检查</h2>
 
                         {autoUpdateAvailable && (
-                            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="mb-1 p-1 bg-amber-50 border border-amber-200 rounded-lg">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h3 className="font-medium text-amber-800">检测到模板更新</h3>
@@ -690,7 +721,7 @@ export default function Page() {
                                     </div>
                                     <button
                                         onClick={handleAutoUpdate}
-                                        className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                                        className="px-4 py-1 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
                                     >
                                         自动更新
                                     </button>
@@ -698,11 +729,11 @@ export default function Page() {
                             </div>
                         )}
 
-                        <div className="space-y-3">
+                        <div className="space-y-1">
                             {cacheStatusList.map((status, index) => (
                                 <div
                                     key={`${status.templateId}-${status.version}`}
-                                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                                    className={`flex items-center justify-between p-1 rounded-lg border ${
                                         status.needsUpdate ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"
                                     }`}
                                 >
@@ -733,7 +764,7 @@ export default function Page() {
                         </div>
 
                         {!autoUpdateAvailable && cacheStatusList.length > 0 && (
-                            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="mt-1 p-3 bg-green-50 border border-green-200 rounded-lg">
                                 <p className="text-green-800 font-medium">✓ 所有模板缓存都是最新的</p>
                                 <p className="text-sm text-green-700">无需重新预缓存</p>
                             </div>
@@ -741,120 +772,155 @@ export default function Page() {
                     </div>
                 )}
 
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">离线预缓存</h2>
-                    <p className="text-gray-600 mb-6">
-                        {offlineReports.length > 0
-                            ? `基于您的 ${offlineReports.length} 个离线报告，预先缓存对应的报告模板和自定义页面。`
-                            : "预先缓存常用的报告模板和自定义页面，确保在离线状态下也能快速访问。"}
-                    </p>
-
-                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-medium text-gray-900">自定义预缓存 URL</h3>
+                <div className="bg-white rounded-lg shadow-md p-1 mb-1">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold text-gray-900">离线预缓存</h2>
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-gray-700">缓存大小:</span>
+                            <span className="text-base font-semibold text-blue-600">
+                        {isCalculatingCache ? "计算中..." : cacheSize}
+                    </span>
                             <button
-                                onClick={() => setShowCustomUrlForm(!showCustomUrlForm)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                onClick={calculateCacheSize}
+                                disabled={isCalculatingCache}
+                                className="p-1 text-blue-500 hover:text-blue-700 disabled:opacity-50"
+                                title="刷新缓存大小"
                             >
-                                {showCustomUrlForm ? "取消" : "添加 URL"}
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
                             </button>
                         </div>
+                    </div>
 
-                        {showCustomUrlForm && (
-                            <div className="mb-4 p-4 bg-white rounded-lg border">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">URL 模式 *</label>
-                                        <input
-                                            type="text"
-                                            value={newUrlPattern}
-                                            onChange={(e) => setNewUrlPattern(e.target.value)}
-                                            placeholder="/rep/sample/CUSTOM_RPT/1/ALL"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">描述</label>
-                                        <input
-                                            type="text"
-                                            value={newUrlDescription}
-                                            onChange={(e) => setNewUrlDescription(e.target.value)}
-                                            placeholder="自定义报告模板"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex justify-end space-x-2">
-                                    <button
-                                        onClick={() => setShowCustomUrlForm(false)}
-                                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                                    >
-                                        取消
-                                    </button>
-                                    <button
-                                        onClick={handleAddCustomUrl}
-                                        disabled={!newUrlPattern.trim()}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        添加
-                                    </button>
-                                </div>
+                    {/* 修改自定义URL部分为可折叠 */}
+                    <div className="mb-6 bg-gray-50 rounded-lg overflow-hidden">
+                        <div
+                            className="flex items-center justify-between p-1 cursor-pointer"
+                            onClick={() => setShowCustomUrlSection(!showCustomUrlSection)}
+                        >
+                            <h3 className="text-base font-medium text-gray-900">自定义预缓存 URL</h3>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowCustomUrlForm(!showCustomUrlForm);
+                                    }}
+                                    className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm mr-2"
+                                >
+                                    {showCustomUrlForm ? "取消添加" : "添加 URL"}
+                                </button>
+                                <svg
+                                    className={`w-5 h-5 transform transition-transform ${showCustomUrlSection ? 'rotate-180' : ''}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
                             </div>
-                        )}
+                        </div>
 
-                        {customUrls.length > 0 && (
-                            <div className="space-y-2">
-                                <h4 className="text-sm font-medium text-gray-700">已配置的自定义 URL:</h4>
-                                {customUrls.map((url) => (
-                                    <div key={url.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                                        <div className="flex items-center space-x-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={url.enabled}
-                                                onChange={() => handleToggleCustomUrl(url.id)}
-                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                            />
+                        {showCustomUrlSection && (
+                            <div className="p-4 border-t border-gray-200">
+                                {showCustomUrlForm && (
+                                    <div className="mb-4 p-4 bg-white rounded-lg border">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                             <div>
-                                                <div className="font-medium text-gray-900">{url.description}</div>
-                                                <div className="text-sm text-gray-500">{url.urlPattern}</div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">URL 模式 *</label>
+                                                <input
+                                                    type="text"
+                                                    value={newUrlPattern}
+                                                    onChange={(e) => setNewUrlPattern(e.target.value)}
+                                                    placeholder="/rep/sample/CUSTOM_RPT/1/ALL"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">描述</label>
+                                                <input
+                                                    type="text"
+                                                    value={newUrlDescription}
+                                                    onChange={(e) => setNewUrlDescription(e.target.value)}
+                                                    placeholder="自定义报告模板"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                />
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleRemoveCustomUrl(url.id)}
-                                            className="text-red-600 hover:text-red-800 transition-colors"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
+                                        <div className="flex justify-end space-x-2">
+                                            <button
+                                                onClick={() => setShowCustomUrlForm(false)}
+                                                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                            >
+                                                取消
+                                            </button>
+                                            <button
+                                                onClick={handleAddCustomUrl}
+                                                disabled={!newUrlPattern.trim()}
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                添加
+                                            </button>
+                                        </div>
                                     </div>
-                                ))}
+                                )}
+
+                                {customUrls.length > 0 && (
+                                    <div className="space-y-2">
+                                        <h4 className="text-sm font-medium text-gray-700">已配置的自定义 URL:</h4>
+                                        {customUrls.map((url) => (
+                                            <div key={url.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                                                <div className="flex items-center space-x-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={url.enabled}
+                                                        onChange={() => handleToggleCustomUrl(url.id)}
+                                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <div>
+                                                        <div className="font-medium text-gray-900">{url.description}</div>
+                                                        <div className="text-sm text-gray-500">{url.urlPattern}</div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleRemoveCustomUrl(url.id)}
+                                                    className="text-red-600 hover:text-red-800 transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p className="text-sm text-blue-800">
+                                        <strong>提示:</strong> 您可以添加任何想要预缓存的 URL 模式。例如：
+                                    </p>
+                                    <ul className="text-sm text-blue-700 mt-2 space-y-1">
+                                        <li>
+                                            • <code>/rep/sample/CUSTOM_RPT/1/ALL</code> - 特定报告模板
+                                        </li>
+                                        <li>
+                                            • <code>/dashboard</code> - 仪表板页面
+                                        </li>
+                                        <li>
+                                            • <code>/settings</code> - 设置页面
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         )}
-
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="text-sm text-blue-800">
-                                <strong>提示:</strong> 您可以添加任何想要预缓存的 URL 模式。例如：
-                            </p>
-                            <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                                <li>
-                                    • <code>/rep/sample/CUSTOM_RPT/1/ALL</code> - 特定报告模板
-                                </li>
-                                <li>
-                                    • <code>/dashboard</code> - 仪表板页面
-                                </li>
-                                <li>
-                                    • <code>/settings</code> - 设置页面
-                                </li>
-                            </ul>
-                        </div>
                     </div>
+
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                         <button
                             onClick={() => handlePrecacheReports()}
                             disabled={precacheStatus === "loading" || reportTemplates.length === 0}
-                            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                            className={`px-2 py-1 rounded-lg font-medium transition-colors ${
                                 precacheStatus === "loading" || reportTemplates.length === 0
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                     : "bg-blue-600 text-white hover:bg-blue-700"
@@ -885,7 +951,7 @@ export default function Page() {
 
                         {precacheMessage && (
                             <div
-                                className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
+                                className={`flex items-center space-x-2 px-1 py-1 rounded-lg ${
                                     precacheStatus === "success"
                                         ? "bg-green-100 text-green-800"
                                         : precacheStatus === "error"
