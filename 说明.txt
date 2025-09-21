@@ -511,3 +511,73 @@ https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
+<1>windows登录，因为PWA浏览器
+?original=1
+[2]run build，重新启动后，必须再次缓存？不能多版本运行 在线正常访问的+PWA的版本js资源文件不一致的？？>=系统重新build部署的时间。
+【3】
+Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1ODQzOTY0MywiZXhwIjoxNzU4NDQ1MDQzfQ.qrsPdumcdiAzLAPHMQGxdGH3Zg2cWjuL3z4cJT9mHHanrQBu6-IBvJMNhYvGF6lT0afhAEx1chl2zgx9On4zGQ
+token过期； 测试：把后端返回-压缩有效期时间
+{
+    "success": true,
+    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1ODQ0NjYyOCwiZXhwIjoxNzU4NDUyMDI4fQ.eoMLqQGnFgXXTzM6jm0whZUL9soeU_nZIofvsYDYr3XxLndiWip4nHXmbry0RHeljR2srIFcGd-lsKkmdKn25Q",
+    "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4cCI6MTc1OTAyMTYxMn0.ZMiS8aDSK4zsWZLQ7ffGzMkgHL3vwaEsT6QdFsyj6s277hcsnw72RgbDBUWusCE5_F5J36vbAXg9mnSdqkQUWg"
+}
+401-》5/api/refresh-token  确保下一次变更查询立刻使用新的token？
+if(result.operation.kind==='mutation')
+                        toast.warning("碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失", {duration: 60*1000,})
+                }
+useAccessToken: 收到token刷新事件 {accessToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhd…YDYr3XxLndiWip4nHXmbry0RHeljR2srIFcGd-lsKkmdKn25Q', refreshToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4c…syj6s277hcsnw72RgbDBUWusCE5_F5J36vbAXg9mnSdqkQUWg'}
+[v0] useAccessToken: 使用刚刷新的token
+接续时机副作用的？
+Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1ODQ1OTg4MywiZXhwIjoxNzU4NDY1MjgzfQ.axpZEPfovW5dQzArM2m8XuZjSQ7_bjI-h75G7oWyuup4HBS1K2fw2TTmwE5Q47gTuSiz6PP2-sg0q7Tw0Cw3AQ
+
+<>
+264-7fdea720f4b53831.js:2
+
+
+           POST https://192.168.0.100:8673/graphql 401 (Unauthorized)
+j @ 264-7fdea720f4b53831.js:2
+（匿名） @ 264-7fdea720f4b53831.js:1
+await in （匿名）
+（匿名） @ 264-7fdea720f4b53831.js:1
+
+（匿名） @ 264-7fdea720f4b53831.js:1
+next @ 264-7fdea720f4b53831.js:1
+next @ 264-7fdea720f4b53831.js:1
+m @ 2756-899dbd9f72f01db1.js:1
+then @ 2756-899dbd9f72f01db1.js:1
+await in then
+（匿名） @ 2756-899dbd9f72f01db1.js:1
+（匿名） @ 2756-899dbd9f72f01db1.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+（匿名） @ 264-7fdea720f4b53831.js:1
+e @ 264-7fdea720f4b53831.js:1
+（匿名） @ layout-4ced7c9175d53f94.js:1
+（匿名） @ layout-4ced7c9175d53f94.js:1
+aq @ 87c73c54-dd8d81ac9604067c.js:1
+（匿名） @ 3492-6d4aaf42f04274a4.js:1
+B @ layout-4ced7c9175d53f94.js:1
+l9 @ 87c73c54-dd8d81ac9604067c.js:1
+o_ @ 87c73c54-dd8d81ac9604067c.js:1
+oq @ 87c73c54-dd8d81ac9604067c.js:1
+ik @ 87c73c54-dd8d81ac9604067c.js:1
+（匿名） @ 87c73c54-dd8d81ac9604067c.js:1
+ib @ 87c73c54-dd8d81ac9604067c.js:1
+
+iX @ 87c73c54-dd8d81ac9604067c.js:1
+M @ 3492-6d4aaf42f04274a4.js:1了解此错误
+layout-4ced7c9175d53f94.js:1 检测到401错误，token无效，准备触发刷新流程
+4572-7b368df46c5e078a.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+sw.js:2 [SW] 清除认证缓存: https://192.168.0.100:3765/_next/static/chunks/app/api/auth/%5B...nextauth%5D/route-d97bc43d2f48327d.js
+layout-4ced7c9175d53f94.js:1 Token变化检测 - 实例ID: bhkh6l6cp, accessToken: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1ODQ4OTM4OSwiZXhwIjoxNzU4NDk0Nzg5fQ.MjvOJ-agAqaeQbZiNuNc-v5WvHyyMZ_12SpijQWyBXF4FoGOYZ4TO-1odDAP-Ux_BIeXHirA2EkQSZl9ZuBfJQ, lastTokenRef.current: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1ODQ4OTM4OSwiZXhwIjoxNzU4NDk0Nzg5fQ.MjvOJ-agAqaeQbZiNuNc-v5WvHyyMZ_12SpijQWyBXF4FoGOYZ4TO-1odDAP-Ux_BIeXHirA2EkQSZl9ZuBfJQ
+layout-4ced7c9175d53f94.js:1 检测到token刷新事件
+layout-4ced7c9175d53f94.js:1 [v0] useAccessToken: 收到token刷新事件 {accessToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhd…QWyBXF4FoGOYZ4TO-1odDAP-Ux_BIeXHirA2EkQSZl9ZuBfJQ', refreshToken: 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImV4c…cVOchI4hO1QaNEsVFGtFiKyUcYpFz0Vnz0wP46_1b3ExqUNag'}
+layout-4ced7c9175d53f94.js:1 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1ODQ4OTM4OSwiZXhwIjoxNzU4NDk0Nzg5fQ.MjvOJ-agAqaeQbZiNuNc-v5WvHyyMZ_12SpijQWyBXF4FoGOYZ4TO-1odDAP-Ux_BIeXHirA2EkQSZl9ZuBfJQ
+264-7fdea720f4b53831.js:2
+
+
+           POST https://192.168.0.100:8673/graphql 401 (Unauthorized)
+
+
+
+Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc1ODQ5MTA2MCwiZXhwIjoxNzU4NDk2NDYwfQ.0iIwW3pM7uk8FuXMCnJkkCuZua0lzqKiX2xpRDhG23Gh6O1eOrlshW887M691c8VOmrX9Bq1eIWowQPdp4bDrg

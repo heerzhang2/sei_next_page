@@ -611,6 +611,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             preferGetMethod: false, //默认会可能用GET方法的。
             fetchOptions: () => {
                 const currentToken = accessToken
+                console.warn("费用authorization Bearer:", currentToken)
                 return {
                     headers: {
                         authorization: currentToken ? `Bearer ${currentToken}` : "",
@@ -637,7 +638,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const result = createClientStable()
         memoizedClientRef.current = result
         return result
-    }, [createClientStable, accessToken, isClient])
+    }, [accessToken, createClientStable, isClient])
 
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>

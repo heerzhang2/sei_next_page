@@ -238,7 +238,7 @@ export const FormatOriginal: React.FunctionComponent<ReportViewProps> = ({
             </JumpTab>
             <FlexibleTable columnWidths={["15%", "%", "15%", "20%"]}>
                 <TableBody>
-                    <JumpTab href={`/report/${rep?.modeltype}/ver/${rep?.modelversion}/${rep?.id}/ALL`}>
+                    <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ALL`}>
                         <TableRow>
                             <CCell className="border-none">检验</CCell>
                             <CCell className="border-none"></CCell>

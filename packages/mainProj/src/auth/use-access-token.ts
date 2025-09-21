@@ -50,7 +50,7 @@ export function useAccessToken(): UseAccessTokenReturn {
 
     useEffect(() => {
         const handleTokenRefresh = async (event: CustomEvent) => {
-            console.log("[v0] useAccessToken: 收到token刷新事件", event.detail)
+            console.log("[v0] useAccessToken: 收到token刷新事件accessToken", event.detail?.accessToken)
             const { accessToken } = event.detail
             if (accessToken) {
                 setFreshToken(accessToken)
@@ -63,7 +63,7 @@ export function useAccessToken(): UseAccessTokenReturn {
                             accessToken: accessToken,
                         },
                     })
-                    console.log("useAccessToken: NextAuth更新",newsession)
+                    console.log("useAccessToken: update更新newsession",newsession)
                 } catch (error) {
                     console.error("useAccessToken: NextAuth更新失败", error)
                 }
@@ -87,7 +87,7 @@ export function useAccessToken(): UseAccessTokenReturn {
 
     const accessToken = useMemo(() => {
         if (freshToken && Date.now() - freshTokenTimeRef.current < 5 * 60 * 1000) {
-            console.log("[v0] useAccessToken: 使用刚刷新的token")
+            console.log("[v0] useAccessToken: 使用刚刷新的freshToken=",freshToken)
             return freshToken
         }
         if(offlineTokenRepl){
