@@ -11,10 +11,10 @@ import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
-import {CombinedError, Exchange, Operation, OperationResult} from "@urql/core"
+import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
-import { usePathname, useSearchParams } from "next/navigation"
-import { useNetworkStatusActions } from "@/contexts/network-status-context"
+import {usePathname, useSearchParams} from "next/navigation"
+import {useNetworkStatusActions} from "@/contexts/network-status-context";
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -58,10 +58,10 @@ const updateBackendStatusExchange = (
                             errorCount = 0
                         }
                         const hasNetworkError =
-                            result.error.networkError ||
-                            result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
-                            isNetworkError(result.error) ||
-                            result.error.isNetworkError
+                                result.error.networkError ||
+                                result.error.graphQLErrors?.some((err: any) => isNetworkError(err)) ||
+                                isNetworkError(result.error) ||
+                                result.error.isNetworkError
                         if (hasNetworkError) {
                             errorCount++
                             lastErrorTime = now
@@ -101,7 +101,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
             map((operation: Operation) => {
                 // 为每个操作添加超时和错误处理
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 120 * 1000) //120秒超时查询或变更
+                const timeoutId = setTimeout(() => controller.abort(), 120*1000)    //120秒超时查询或变更
                 return {
                     ...operation,
                     context: {
@@ -120,14 +120,14 @@ const customFetchExchange: Exchange = ({ forward }) => {
                 if (result.operation.context.fetchOptions?.signal) {
                     clearTimeout(result.operation.context.fetchOptions.timeoutId)
                 }
-                const app401 = result.error?.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401 //应用层抛出401错误码
+                const app401=result.error?.graphQLErrors?.[0]?.extensions?.httpStatusCode===401;     //应用层抛出401错误码
                 if (result.error?.response?.status === 401 || app401) {
-                    console.log("检测到401错误，token无效，准备触发刷新流程,app401=", app401)
+                    console.log("检测到401错误，token无效，准备触发刷新流程,app401=",app401)
                     // 确保错误对象包含足够的信息供 authExchange 识别
                     result.error.networkError = result.error.response
                     result.error.isAuthError = true
-                    if (result.operation.kind === "mutation")
-                        console.warn("碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失", result.operation?.variables?.id)
+                    if(result.operation.kind==='mutation')
+                        toast.warning("碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失", {duration: 60*1000,})
                 }
             }),
         )
@@ -268,10 +268,10 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                 const hasCustomAuthError = error.isAuthError === true
                 // 检查特殊的 Java 后端 500 错误（实际是 token 过期）
                 const isSpecial500 =
-                    response &&
-                    response.status === 500 &&
-                    response.headers?.get("content-length") === "0" &&
-                    response.headers?.get("content-type")?.includes("application/graphql-response+json")
+                        response &&
+                        response.status === 500 &&
+                        response.headers?.get("content-length") === "0" &&
+                        response.headers?.get("content-type")?.includes("application/graphql-response+json")
                 const finalResult = hasGraphQLAuthError || hasNetworkAuthError || isSpecial500 || hasCustomAuthError
                 return finalResult
             },
@@ -321,13 +321,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                         }
                     }
 
-                    if (
-                        !print &&
-                        connectivity &&
-                        !connectivity.nextjsReachable &&
-                        connectivity.javaBackendReachable &&
-                        refreshToken
-                    ) {
+                    if (!print && connectivity && !connectivity.nextjsReachable && connectivity.javaBackendReachable && refreshToken)
+                    {
                         const result = await refreshTokenDirectly(refreshToken)
                         if (result) {
                             // 更新存储的refreshToken
@@ -361,9 +356,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                             return
                         }
                     }
-                    toast.error("务必重新登录！", {
-                        duration: 30*1000,
-                    })
+                    throw new Error("所有token刷新方式都失败")
                 } catch (error) {
                     console.error("Token 刷新失败:", error)
                     setStoredRefreshToken(null)
@@ -384,16 +377,17 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
         }
     })
 }
-
-const isOfflineError = (error: any): boolean => {
+const isJavaBackendDownError = (error: any): boolean => {
     if (!error) return false
-    // Network errors should be treated as offline
-    if (isNetworkError(error)) return true
-    // 401 errors should be queued for retry after authentication
-    const has401Error = error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
-    // Version conflicts should NOT be queued (permanent failures)
-    if (isVersionConflictError(error)) return false
-    return has401Error
+    if (error?.isImmediateError && error?.isNetworkError) return true
+    // 检查特定的错误模式表明Java后端宕机 CombinedError: [Network] Failed to fetch
+    const isConnectionRefused =
+        error.message?.includes("connection refused") ||
+        error.message?.includes("Failed to fetch") ||
+        error.message?.includes("network error")
+    const isTimeout = error.message?.includes("timeout") || error.message?.includes("aborted")
+    const is5xxError = error.response?.status >= 500 || (error.networkError && error.networkError.status >= 500)
+    return isConnectionRefused || isTimeout || is5xxError
 }
 //避免变更保存按钮的无限等待。
 const fetchAbortExchange: Exchange =
@@ -401,18 +395,16 @@ const fetchAbortExchange: Exchange =
         (ops$) => {
             return pipe(
                 ops$,
-                tap((op) => {}),
+                tap((op) => {
+                }),
                 forward,
                 tap((result) => {
-                    // 检测Java后端宕机错误 isJavaBackendDownError
-                    if (result.error && isOfflineError(result.error)) {
+                    // 检测Java后端宕机错误
+                    if (result.error && isJavaBackendDownError(result.error)) {
                         //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
                         if (result.operation.kind === "mutation") {
                             const operationName = result.operation.query?.definitions[0]?.name.value
                             if (operationName) {
-                                toast.success("离线或未登录", {
-                                    duration: 2*1000,
-                                })
                                 setTimeout(() => {
                                     if (typeof window !== "undefined") {
                                         window.dispatchEvent(
@@ -420,7 +412,7 @@ const fetchAbortExchange: Exchange =
                                                 detail: {
                                                     operation: operationName,
                                                     variables: {
-                                                        id: result.operation.variables.id, //失败的操作匹配性
+                                                        id: result.operation.variables.id,      //失败的操作匹配性
                                                     },
                                                     error: result.error,
                                                     hasError: true,
@@ -434,7 +426,7 @@ const fetchAbortExchange: Exchange =
                     }
                 }),
             )
-        }
+        };
 
 //严谨："操作数据记录已在其它设备或其他人改动，新版本是996旧版本是",这个请求失败以后就不会再被离线缓冲收进到metadata列表的。
 const isVersionConflictError = (error: any): boolean => {
@@ -443,17 +435,14 @@ const isVersionConflictError = (error: any): boolean => {
     return (
         errorMessage.includes("操作数据记录已在其它设备或其他人改动") ||
         (error.graphQLErrors &&
-            error.graphQLErrors.some(
-                (err: any) => err.message && err.message.includes("操作数据记录已在其它设备或其他人改动"),
-            ))
+            error.graphQLErrors.some((err: any) => err.message && err.message.includes("操作数据记录已在其它设备或其他人改动")))
     )
 }
-
 /**
  * 点击Link切换不同的报告，后端恢复能自动发出缓存的报告变更队列,【可能】操作数据记录已在其它设备或其他人改动？只能从graphqlCache缓存找回来?metadata已经被丢弃。
  * 业务上没法按照ACID事务性锁定，乐观锁version机制能用于PWA离线修改报告的做法，很容易遇到考虑数据版本的冲突：
  * 假如流程引擎修改导致的version变动，后端转Pdf就是这个情况，后端网页转为Pdf完成，导致version改了：假如还在改这报告面临无法提交！因version被后台变更导致无法成功提交修改；最好必须等待网页转为Pdf后台已处理完才能继续刷新报告再修改。
- * */
+* */
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const pathname = usePathname()
@@ -470,13 +459,14 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const clientRef = useRef<any>(null)
     const ssrRef = useRef<any>(null)
     const lastTokenRef = useRef<string | null>(null)
-    const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
+    const instanceIdRef =useRef(Math.random().toString(36).slice(2, 11))
     const initializedRef = useRef(false)
     useEffect(() => {
         if (!initializedRef.current) {
             initializedRef.current = true
         }
-        return () => {}
+        return () => {
+        }
     }, [])
 
     useEffect(() => {
@@ -513,18 +503,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             schema,
             keys: {
                 RepLink: () => null, //不需要生成缓存键
-            },
-            isOfflineError: (error: undefined | CombinedError, result: OperationResult)=> {
-                const shouldQueue = isOfflineError(error)
-                if (shouldQueue && result.operation.kind === "mutation") {
-                    console.log(
-                        "[offlineExchange] 将mutation加入离线队列:",
-                        result.operation.query.definitions[0]?.name?.value,
-                        "error:",
-                        error.message,
-                    )
-                }
-                return shouldQueue
             },
             storage: {
                 ...storage,
@@ -563,16 +541,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                 }),
                             )
                         }
-                        console.log("[offlineExchange] writeMetadata写:", filteredRequests.length, "items")
                     } else {
                         storage.writeMetadata!(json)
                         if (typeof window !== "undefined") {
-                            localStorage.setItem(
-                                "urql-metadata",
-                                JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
-                            )
+                            localStorage.setItem("urql-metadata", JSON.stringify({length: 0, timestamp: new Date().toLocaleString()}) )
                         }
-                        console.log("[offlineExchange] writeMetadata写:", 0, "items")
                     }
                 },
             } as any,
@@ -612,23 +585,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                         </p>
                                     </div>
                                 ),
-                                duration: 4 * 60 * 60 * 1000,
+                                duration: 4*60*60*1000,
                                 action: {
                                     label: "刷新页面",
                                     onClick: () => window.location.reload(),
                                 },
                             })
-                            return // Don't process as network error？不是当前编辑的报告的考虑写入临时的错误存储标记列表当中？
-                        }
-
-                        const has401Error =
-                            error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
-                        if (has401Error && operation.kind === "mutation") {
-                            console.log("[errorExchange] 检测到401错误的mutation，已加入离线队列等待重试")
-                            toast.warning("认证失效，数据变更已保存到离线队列", {
-                                description: "登录后将自动重新提交保存的数据变更",
-                                duration: 10000,
-                            })
+                            return  // Don't process as network error？不是当前编辑的报告的考虑写入临时的错误存储标记列表当中？
                         }
                     },
                 }),

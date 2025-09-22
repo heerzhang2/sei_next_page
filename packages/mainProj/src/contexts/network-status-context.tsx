@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
-import { useSearchParams } from "next/navigation"
+import {usePathname, useSearchParams} from "next/navigation"
 import { toast } from "sonner"
 
 // 离线队列状态接口
@@ -38,6 +38,7 @@ declare global {
 
 export function NetworkStatusProvider({ children }: { children: React.ReactNode }) {
     const searchParams = useSearchParams()
+    const pathname = usePathname()
     const print = "1" === searchParams!.get("print")
     const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
         isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
@@ -243,9 +244,9 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             // 如果后端从离线恢复在线，检查离线队列
             if (wasBackendOffline && isBackendNowOnline && isClientOnline) {
                 const queueStatus = await updateOfflineQueueStatus()
-                if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0) {
-                    showRefreshPrompt(queueStatus.queueLength)
-                }
+                // if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0) {
+                //     showRefreshPrompt(queueStatus.queueLength)
+                // }
             }
         },
         [
@@ -320,9 +321,9 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                     // 如果后端从离线恢复在线，提示用户
                     if (wasBackendOffline && isBackendNowOnline) {
                         const queueStatus = await checkOfflineQueue()
-                        if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0) {
-                            showRefreshPrompt(queueStatus.queueLength)
-                        }
+                        // if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0) {
+                        //     showRefreshPrompt(queueStatus.queueLength)
+                        // }
                     }
                 }
             }, 80000)
@@ -370,13 +371,13 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         const checkOfflineQueueInterval = setInterval(async () => {
             if (networkStatus.isGraphQLBackendReachable) {
                 const queueStatus = await updateOfflineQueueStatus()
-                if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0) {
+                if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0 && pathname!=="/login") {
                     showRefreshPrompt(queueStatus.queueLength)
                 }
             }
         }, 30000)
         return () => clearInterval(checkOfflineQueueInterval)
-    }, [networkStatus.isGraphQLBackendReachable, updateOfflineQueueStatus, showRefreshPrompt])
+    }, [pathname, networkStatus.isGraphQLBackendReachable, updateOfflineQueueStatus, showRefreshPrompt])
 
     useEffect(() => {
         const checkInitialQueue = async () => {
@@ -402,7 +403,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         <NetworkStatusContext.Provider value={contextValue}>
             <NetworkStatusActionsContext.Provider value={actions}>
                 {children}
-                {showQueueDialog && queueDialogData && (
+                {pathname !== "/login" && showQueueDialog && queueDialogData && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">发现离线操作队列</h3>
