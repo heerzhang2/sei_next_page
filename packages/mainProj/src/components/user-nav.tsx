@@ -29,7 +29,7 @@ export function UserNav() {
     }
 
     const handleSignOut = () => {
-        showConfirm("确认退出登录", "您确定要退出登录吗？退出后将跳转到登录页面。", () => {
+        showConfirm("确认退出登录", "您确定要退出登录吗？退出后将跳转到登录页面nav。", () => {
             signOut({ callbackUrl: "/login" })
         })
     }

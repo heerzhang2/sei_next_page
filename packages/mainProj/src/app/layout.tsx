@@ -62,18 +62,16 @@ export default async function RootLayout({
             <PrintSettingsProvider>
                 <SessionProvider session={session}>
                     <NetworkStatusProvider>
-                        <AuthErrorBoundary>
-                            <Provider>
-                                <GraphQLProvider>
-                                    {/* 离线状态指示器 */}
-                                    <OfflineStatusIndicator />
-                                    {children}
-                                    {/* PWA 组件 */}
-                                    <PWAInstaller />
-                                    <Toaster richColors position="top-right" />
-                                </GraphQLProvider>
-                            </Provider>
-                        </AuthErrorBoundary>
+                        <Provider>
+                            <GraphQLProvider>
+                                {/* 离线状态指示器 */}
+                                <OfflineStatusIndicator />
+                                {children}
+                                {/* PWA 组件 */}
+                                <PWAInstaller />
+                                <Toaster richColors position="top-right" />
+                            </GraphQLProvider>
+                        </Provider>
                     </NetworkStatusProvider>
                 </SessionProvider>
             </PrintSettingsProvider>

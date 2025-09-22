@@ -97,7 +97,7 @@ const ReportMakeable = () => {
                     setHasShownDialog(true)
                     showConfirm(
                         "需要登录",
-                        "报告编制功能需要登录后才能使用。是否现在跳转到登录页面？",
+                        "报告编制功能需要登录后才能使用。是否现在跳转到登录页面？make",
                         () => {
                             console.log("[v0] User confirmed login redirect")
                             window.location.href = "/login"
@@ -135,7 +135,7 @@ const ReportMakeable = () => {
         }
     }, [session.status, session?.data?.user, offlineAuth.isAuthenticated, offlineAuth.isExpired])
 
-    return <ConfirmDialog />
+    return ConfirmDialog
 }
 
 export default ReportMakeable

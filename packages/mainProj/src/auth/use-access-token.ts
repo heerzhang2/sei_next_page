@@ -40,7 +40,7 @@ export function useAccessToken(): UseAccessTokenReturn {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
 
-    const { showConfirm, ConfirmDialog } = useLoginRedirectConfirm()
+    const { showConfirm, ConfirmDialog,hiddenConfirm} = useLoginRedirectConfirm()
     const [hasShownDialog, setHasShownDialog] = useState(false)
     const lastDialogTimeRef = useRef<number>(0)
 
@@ -159,8 +159,9 @@ export function useAccessToken(): UseAccessTokenReturn {
                         })
                     },
                 )
-            }
+            }else hiddenConfirm()
         }
+        else hiddenConfirm()
     }, [shouldShowLoginDialog, hasShownDialog, showConfirm])
 
     return {

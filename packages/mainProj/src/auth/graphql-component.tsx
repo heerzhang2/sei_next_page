@@ -702,7 +702,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     return (
         <UrqlProvider client={client} ssr={ssr}>
             {children}
-            {pathname !== "/login" && <ConfirmDialog />}
+            {pathname !== "/login" && ConfirmDialog }
         </UrqlProvider>
     )
 }

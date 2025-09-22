@@ -69,9 +69,10 @@ export function useLoginRedirectConfirm() {
         setConfig({ title, description, onConfirm, onCancel })
         setIsOpen(true)
     }
-
-    const ConfirmDialog = () => (
-        <LoginRedirectConfirm
+    const hiddenConfirm = () => {
+        setIsOpen(false)
+    }
+    const ConfirmDialog =<LoginRedirectConfirm
             open={isOpen}
             onOpenChange={setIsOpen}
             title={config.title}
@@ -82,7 +83,6 @@ export function useLoginRedirectConfirm() {
             }}
             onCancel={config.onCancel}
         />
-    )
 
-    return { showConfirm, ConfirmDialog }
+    return { showConfirm, ConfirmDialog, hiddenConfirm }
 }
