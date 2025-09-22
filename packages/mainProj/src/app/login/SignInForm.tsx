@@ -4,11 +4,11 @@ import * as React from "react"
 import Link from "next/link"
 import { useActionState, useEffect, useRef, useState } from "react"
 import {signIn, useSession} from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { useRouter, useSearchParams } from "next/navigation"
 
 async function sha256Hash(message: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(message)
@@ -17,12 +17,25 @@ async function sha256Hash(message: string): Promise<string> {
     const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
     return hashHex
 }
+const isValidCallbackUrl = (url: string): boolean => {
+    try {
+        const parsedUrl = new URL(url, window.location.origin);
+        return parsedUrl.origin === window.location.origin;
+    } catch {
+        return false;
+    }
+}
 
 export default function SignInForm() {
     const router = useRouter()
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const { data: session } = useSession()
+    const searchParams = useSearchParams()
+    const rawCallbackUrl = searchParams.get('callbackUrl');
+    const callbackUrl = rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl)
+        ? rawCallbackUrl
+        : '/';
     console.log("signIn登录render：——session=",session)
     const signInAction = async (_prevState: string | undefined, formData: FormData) => {
         const username = formData.get("username") as string
@@ -52,8 +65,8 @@ export default function SignInForm() {
                         }),
                     )
                 }
-                // 登录成功，重定向到用户页面
-                router.push("/")
+                // 登录成功，跳转到回调URL或首页
+                router.push(callbackUrl)
                 return "登录成功"
             }
         } catch (error) {

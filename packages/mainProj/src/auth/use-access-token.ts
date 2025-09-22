@@ -110,7 +110,10 @@ export function useAccessToken(): UseAccessTokenReturn {
             // console.log("[v0] useAccessToken: 使用离线认证token作为备选")
             return offlineAuth.accessToken
         }
+        return null
+    }, [session?.user, networkStatus, freshToken,offlineTokenRepl, print, offlineAuth])
 
+    useEffect(() => {
         if (
             !print &&
             networkStatus.connectionType !== null &&
@@ -119,7 +122,6 @@ export function useAccessToken(): UseAccessTokenReturn {
         ) {
             const now = Date.now()
             const twentyMinutes = 20 * 60 * 1000
-
             if (!hasShownDialog || now - lastDialogTimeRef.current > twentyMinutes) {
                 console.log("应该增加跳转登录: 无可用token", {
                     old: lastDialogTimeRef.current,
@@ -128,16 +130,14 @@ export function useAccessToken(): UseAccessTokenReturn {
                 })
                 setHasShownDialog(true)
                 lastDialogTimeRef.current = now
-
                 showConfirm(
                     "需要登录",
                     "当前功能需要登录后才能使用。是否现在跳转到登录页面？accessToken",
                     () => {
-                        console.log("[v0] User confirmed login redirect")
-                        window.location.href = "/login"
+                        const currentPath = window.location.pathname + window.location.search;
+                        window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;
                     },
                     () => {
-                        console.log("[v0] User cancelled login redirect")
                         toast.info("已取消登录", {
                             description: "您可以继续浏览，但部分功能可能无法使用。",
                             duration: 5000,
@@ -146,8 +146,10 @@ export function useAccessToken(): UseAccessTokenReturn {
                 )
             }
         }
-        return null
-    }, [session?.user, networkStatus, freshToken,offlineTokenRepl, print, offlineAuth, showConfirm, hasShownDialog])
+        return () => {
+            console.log("useAccessToken: 事件[卸载的？]")
+        }
+    }, [hasShownDialog, lastDialogTimeRef, networkStatus,print, accessToken])
 
     return {
         accessToken,
