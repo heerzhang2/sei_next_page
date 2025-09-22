@@ -8,7 +8,7 @@ import { useOfflineAuth } from "@/hooks/use-offline-auth"
 import { useSearchParams } from "next/navigation"
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
 import { toast } from "sonner"
-import {useNetworkStatusContext} from "@/contexts/network-status-context";
+import { useNetworkStatusContext } from "@/contexts/network-status-context"
 
 // 存储离线认证信息
 const storeOfflineAuth = (authData: any) => {
@@ -57,13 +57,13 @@ export function useAccessToken(): UseAccessTokenReturn {
                 freshTokenTimeRef.current = Date.now()
 
                 try {
-                  const newsession= await update({
+                    const newsession = await update({
                         user: {
                             ...session?.user,
                             accessToken: accessToken,
                         },
                     })
-                    console.log("useAccessToken: update更新newsession",newsession)
+                    console.log("useAccessToken: update更新newsession", newsession)
                 } catch (error) {
                     console.error("useAccessToken: NextAuth更新失败", error)
                 }
@@ -74,7 +74,7 @@ export function useAccessToken(): UseAccessTokenReturn {
                     },
                     5 * 60 * 1000,
                 )
-            }else{
+            } else {
                 setOfflineTokenRepl(true)
             }
         }
@@ -83,21 +83,25 @@ export function useAccessToken(): UseAccessTokenReturn {
         return () => {
             window.removeEventListener("token:refreshed", handleTokenRefresh as EventListener)
         }
-    }, [session?.user, update])
+    }, [session, update]) // Updated dependency to session
 
     const accessToken = useMemo(() => {
         if (freshToken && Date.now() - freshTokenTimeRef.current < 5 * 60 * 1000) {
-            console.log("[v0] useAccessToken: 使用刚刷新的freshToken=",freshToken)
+            console.log("[v0] useAccessToken: 使用刚刷新的freshToken=", freshToken)
             return freshToken
         }
-        if(offlineTokenRepl){
-            if(session?.user){
-                const user ={id: session?.user?.id }
-                const authData={accessToken:session?.user?.accessToken, refreshToken:session?.user?.refreshToken, user:user}
+        if (offlineTokenRepl) {
+            if (session?.user) {
+                const user = { id: session?.user?.id }
+                const authData = {
+                    accessToken: session?.user?.accessToken,
+                    refreshToken: session?.user?.refreshToken,
+                    user: user,
+                }
                 storeOfflineAuth(authData)
                 setOfflineTokenRepl(false)
-                console.log("更新离线TOKEN事件=?NEW=用offlineTokenRepl token authData",authData,"session",session)
-                return authData.accessToken;
+                console.log("更新离线TOKEN事件=?NEW=用offlineTokenRepl token authData", authData, "session", session)
+                return authData.accessToken
             }
             setOfflineTokenRepl(false)
         }
@@ -111,15 +115,26 @@ export function useAccessToken(): UseAccessTokenReturn {
             return offlineAuth.accessToken
         }
         return null
-    }, [session?.user, networkStatus, freshToken,offlineTokenRepl, print, offlineAuth])
+    }, [session, networkStatus, freshToken, offlineTokenRepl, print, offlineAuth]) // Updated dependency to session
 
-    useEffect(() => {
-        if (
+    const shouldShowLoginDialog = useMemo(() => {
+        return (
             !print &&
             networkStatus.connectionType !== null &&
             networkStatus.isOnline &&
-            networkStatus.isGraphQLBackendReachable
-        ) {
+            networkStatus.isGraphQLBackendReachable &&
+            !accessToken
+        )
+    }, [
+        print,
+        networkStatus.connectionType,
+        networkStatus.isOnline,
+        networkStatus.isGraphQLBackendReachable,
+        accessToken,
+    ])
+
+    useEffect(() => {
+        if (shouldShowLoginDialog) {
             const now = Date.now()
             const twentyMinutes = 20 * 60 * 1000
             if (!hasShownDialog || now - lastDialogTimeRef.current > twentyMinutes) {
@@ -134,8 +149,8 @@ export function useAccessToken(): UseAccessTokenReturn {
                     "需要登录",
                     "当前功能需要登录后才能使用。是否现在跳转到登录页面？accessToken",
                     () => {
-                        const currentPath = window.location.pathname + window.location.search;
-                        window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+                        const currentPath = window.location.pathname + window.location.search
+                        window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`
                     },
                     () => {
                         toast.info("已取消登录", {
@@ -146,10 +161,7 @@ export function useAccessToken(): UseAccessTokenReturn {
                 )
             }
         }
-        return () => {
-            console.log("useAccessToken: 事件[卸载的？]")
-        }
-    }, [hasShownDialog, lastDialogTimeRef, networkStatus,print, accessToken])
+    }, [shouldShowLoginDialog, hasShownDialog, showConfirm])
 
     return {
         accessToken,

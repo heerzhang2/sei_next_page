@@ -11,7 +11,7 @@ import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
-import {CombinedError, Exchange, Operation, OperationResult} from "@urql/core"
+import type { CombinedError, Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
@@ -127,7 +127,10 @@ const customFetchExchange: Exchange = ({ forward }) => {
                     result.error.networkError = result.error.response
                     result.error.isAuthError = true
                     if (result.operation.kind === "mutation")
-                        console.warn("碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失", result.operation?.variables?.id)
+                        console.warn(
+                            "碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失",
+                            result.operation?.variables?.id,
+                        )
                 }
             }),
         )
@@ -362,7 +365,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                         }
                     }
                     toast.error("务必重新登录！", {
-                        duration: 30*1000,
+                        duration: 30 * 1000,
                     })
                 } catch (error) {
                     console.error("Token 刷新失败:", error)
@@ -411,7 +414,7 @@ const fetchAbortExchange: Exchange =
                             const operationName = result.operation.query?.definitions[0]?.name.value
                             if (operationName) {
                                 toast.success("离线或未登录", {
-                                    duration: 2*1000,
+                                    duration: 2 * 1000,
                                 })
                                 setTimeout(() => {
                                     if (typeof window !== "undefined") {
@@ -466,12 +469,25 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         setIsClient(true)
     }, [])
+
+    const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
+    const mountCountRef = useRef(0)
+
+    useEffect(() => {
+        mountCountRef.current++
+        console.log(`[v0] GraphQLProvider mounted - 实例ID: ${instanceIdRef.current}, 挂载次数: ${mountCountRef.current}`)
+
+        return () => {
+            console.log(`[v0] GraphQLProvider unmounted - 实例ID: ${instanceIdRef.current}`)
+        }
+    }, [])
+
     //使用 useRef 来避免token注入变动 导致的客户端实例的稳定性
     const clientRef = useRef<any>(null)
     const ssrRef = useRef<any>(null)
     const lastTokenRef = useRef<string | null>(null)
-    const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
     const initializedRef = useRef(false)
+
     useEffect(() => {
         if (!initializedRef.current) {
             initializedRef.current = true
@@ -480,10 +496,12 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     }, [])
 
     useEffect(() => {
-        console.log(
-            `Token变化检测 - 实例ID: ${instanceIdRef.current}, accessToken: ${accessToken}, lastTokenRef.current: ${lastTokenRef.current}`,
-        )
+        if (lastTokenRef.current !== accessToken) {
+            console.log(`[v0] 复用现有客户端 - 实例ID: ${instanceIdRef.current}`)
+            lastTokenRef.current = accessToken
+        }
     }, [accessToken])
+
     // 防抖机制：避免频繁重新创建客户端
     const createClientStable = useCallback(() => {
         if (!isClient) {
@@ -514,14 +532,14 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             keys: {
                 RepLink: () => null, //不需要生成缓存键
             },
-            isOfflineError: (error: undefined | CombinedError, result: OperationResult)=> {
+            isOfflineError: (error: undefined | CombinedError, result: OperationResult) => {
                 const shouldQueue = isOfflineError(error)
                 if (shouldQueue && result.operation.kind === "mutation") {
                     console.log(
                         "[offlineExchange] 将mutation加入离线队列:",
                         result.operation.query.definitions[0]?.name?.value,
                         "error:",
-                        error.message,
+                        error?.message,
                     )
                 }
                 return shouldQueue
