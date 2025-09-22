@@ -140,7 +140,7 @@ export default function SignInForm() {
                     )}
 
                     <div className="flex justify-end">
-                        <Button disabled={!username || !password || isPending} className="w-full mt-4" type="submit">
+                        <Button disabled={isPending} className="w-full mt-4" type="submit">
                             {isPending ? "登录中..." : "登录"}
                         </Button>
                     </div>
