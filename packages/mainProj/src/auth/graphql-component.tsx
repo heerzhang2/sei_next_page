@@ -120,8 +120,9 @@ const customFetchExchange: Exchange = ({ forward }) => {
                 if (result.operation.context.fetchOptions?.signal) {
                     clearTimeout(result.operation.context.fetchOptions.timeoutId)
                 }
-                if (result.error?.response?.status === 401) {
-                    console.log("检测到401错误，token无效，准备触发刷新流程")
+                const app401=result.error?.graphQLErrors?.[0]?.extensions?.httpStatusCode===401;     //应用层抛出401错误码
+                if (result.error?.response?.status === 401 || app401) {
+                    console.log("检测到401错误，token无效，准备触发刷新流程,app401=",app401)
                     // 确保错误对象包含足够的信息供 authExchange 识别
                     result.error.networkError = result.error.response
                     result.error.isAuthError = true
