@@ -76,13 +76,11 @@ export default function SignInForm() {
     }
 
     const [response, action, isPending] = useActionState(signInAction, undefined)
-
     const usernameRef = useRef<HTMLInputElement>(null)
-    useEffect(() => {
-        const timeout = setTimeout(() => usernameRef.current?.focus(), 100)
-        return () => clearTimeout(timeout)
-    }, [])
-
+    // useEffect(() => {
+    //     const timeout = setTimeout(() => usernameRef.current?.focus(), 100)
+    //     return () => clearTimeout(timeout)
+    // }, [])
     const [error, setError] = React.useState("")
 
     // 当 response 有错误信息时显示
