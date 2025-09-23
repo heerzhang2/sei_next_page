@@ -65,6 +65,9 @@ export default function Home() {
                         <div className="mt-10">
                             <Link href="/process-start">⬅️ 验证rr登录</Link>
                         </div>
+                        <div className="mt-10">
+                            <Link href="/login">登录</Link>
+                        </div>
                     </li>
                     <li>Save and see your changes instantly.</li>
                 </ol>

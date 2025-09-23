@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import {useNetworkStatusContext} from "@/contexts/network-status-context";
 
 interface OfflineStorageOptions {
@@ -98,20 +98,19 @@ async function cleanupIndexedDB(expireTime: number): Promise<void> {
     })
 }
 
-//无效功能？
 export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }: OfflineStorageOptions) {
     const [data, setData] = useState<T>(defaultValue)
     const [isLoading, setIsLoading] = useState(true)
     const [lastSaved, setLastSaved] = useState<Date | null>(null)
     const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null)
-    const networkStatus = useNetworkStatusContext()
+    const { isClientOnline, isOnline, isGraphQLBackendReachable,lastOnlineTime } = useNetworkStatusContext()
     const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle")
     const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
 
     // 同步到服务器的函数
     const syncToServer = useCallback(
         async (data: T) => {
-            if (!networkStatus.isOnline || !networkStatus.isGraphQLBackendReachable) {
+            if (!isClientOnline || !isGraphQLBackendReachable) {
                 return false
             }
 
@@ -148,7 +147,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
                 return false
             }
         },
-        [key, networkStatus.isOnline, networkStatus.isGraphQLBackendReachable],
+        [key, isClientOnline, isGraphQLBackendReachable],
     )
 
     // 获取存储信息
@@ -156,16 +155,23 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         if ("storage" in navigator && "estimate" in navigator.storage) {
             try {
                 const estimate = await navigator.storage.estimate()
-                setStorageInfo({
-                    used: estimate.usage || 0,
-                    quota: estimate.quota || 0,
-                    percentage: estimate.quota ? ((estimate.usage || 0) / estimate.quota) * 100 : 0,
+                setStorageInfo((prev) => {
+                    const newInfo = {
+                        used: estimate.usage || 0,
+                        quota: estimate.quota || 0,
+                        percentage: estimate.quota ? ((estimate.usage || 0) / estimate.quota) * 100 : 0,
+                    }
+                    // 只有当信息真正改变时才更新
+                    if (!prev || prev.used !== newInfo.used || prev.quota !== newInfo.quota) {
+                        return newInfo
+                    }
+                    return prev
                 })
             } catch (error) {
                 console.error("获取存储信息失败:", error)
             }
         }
-    }, [])
+    }, []) // 移除所有依赖，使用函数式更新
 
     // 从本地存储加载数据
     const loadData = useCallback(async () => {
@@ -197,7 +203,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         } finally {
             setIsLoading(false)
         }
-    }, [key, defaultValue])
+    }, [key, defaultValue]) // 只保留必要的依赖
 
     // 保存数据到本地存储
     const saveData = useCallback(
@@ -270,7 +276,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
     }, [])
 
     const syncFromServer = useCallback(async (): Promise<T | null> => {
-        if (!networkStatus.isOnline || !networkStatus.isGraphQLBackendReachable) {
+        if (!isClientOnline || !isGraphQLBackendReachable) {
             return null
         }
 
@@ -288,23 +294,34 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         }
 
         return null
-    }, [key, networkStatus.isOnline, networkStatus.isGraphQLBackendReachable])
+    }, [key, isClientOnline, isGraphQLBackendReachable])
+
+    const loadDataRef = useRef(loadData)
+    const updateStorageInfoRef = useRef(updateStorageInfo)
+    const cleanupExpiredDataRef = useRef(cleanupExpiredData)
+
+    // 更新 refs
+    useEffect(() => {
+        loadDataRef.current = loadData
+        updateStorageInfoRef.current = updateStorageInfo
+        cleanupExpiredDataRef.current = cleanupExpiredData
+    }, [loadData, updateStorageInfo, cleanupExpiredData])
 
     useEffect(() => {
-        loadData()
-        updateStorageInfo()
-        cleanupExpiredData()
+        loadDataRef.current()
+        updateStorageInfoRef.current()
+        cleanupExpiredDataRef.current()
 
         // 定期更新存储信息
         const interval = setInterval(() => {
-            updateStorageInfo()
+            updateStorageInfoRef.current()
         }, syncInterval)
 
         return () => clearInterval(interval)
-    }, [loadData, updateStorageInfo, cleanupExpiredData, syncInterval])
+    }, [syncInterval]) // 只依赖 syncInterval
 
     useEffect(() => {
-        if (networkStatus.isOnline && networkStatus.lastOnlineTime) {
+        if (isClientOnline && lastOnlineTime) {
             // 网络恢复时自动同步
             const autoSync = async () => {
                 try {
@@ -327,7 +344,7 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
             const timer = setTimeout(autoSync, 2000)
             return () => clearTimeout(timer)
         }
-    }, [networkStatus.isOnline, networkStatus.lastOnlineTime, syncFromServer, key])
+    }, [isClientOnline, lastOnlineTime, syncFromServer, key])
 
     useEffect(() => {
         const handleDataSyncUpdate = (event: CustomEvent<{ key: string; data: T }>) => {
@@ -355,6 +372,6 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         lastSyncTime,
         syncToServer,
         syncFromServer,
-        canSync: networkStatus.isOnline && networkStatus.isGraphQLBackendReachable,
+        canSync: isClientOnline && isGraphQLBackendReachable,
     }
 }
