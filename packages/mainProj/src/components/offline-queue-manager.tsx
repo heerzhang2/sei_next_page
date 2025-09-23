@@ -299,7 +299,7 @@ export function OfflineQueueManager() {
                                         <p className="text-sm">所有离线操作都已处理完成</p>
                                     </div>
                                 ) : (
-                                    queuedRequests.map((request) => <QueueRequestCard key={request.id} request={request} />)
+                                    queuedRequests.map((request,index) => <QueueRequestCard key={index} request={request} />)
                                 )}
                             </ScrollArea>
                         </CardContent>

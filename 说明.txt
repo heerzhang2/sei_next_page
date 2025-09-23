@@ -526,3 +526,24 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 9-18 16：41 NOok   PWA配合
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
+**只读监控**：只读取URQL的IndexedDB数据，不修改writeMetadata的行为；**协作式重试**：通过触发网络事件让URQL自动处理重试，
+保持URQL的控制权；**备份机制**：提供队列备份和恢复功能，防止数据丢失；
+**存储监听**：监听localStorage变化来同步队列状态。这样既保留了URQL的完整控制权，又提供了丰富的监控和备份功能
+const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
+    try {
+        const db = await openUrqlDatabase()
+        const transaction = db.transaction(["metadata"], "readonly")
+        const store = transaction.objectStore("metadata")
+
+        return new Promise((resolve, reject) => {
+            const request = store.get("metadata")
+            request.onerror = () => reject(request.error)
+            request.onsuccess = () => {
+                const result = request.result
+                if (result) {
+                    resolve(result)
+                } else {
+                    resolve([])
+                }
+            }
+        })
