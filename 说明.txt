@@ -526,24 +526,11 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 9-18 16：41 NOok   PWA配合
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
-**只读监控**：只读取URQL的IndexedDB数据，不修改writeMetadata的行为；**协作式重试**：通过触发网络事件让URQL自动处理重试，
-保持URQL的控制权；**备份机制**：提供队列备份和恢复功能，防止数据丢失；
-**存储监听**：监听localStorage变化来同步队列状态。这样既保留了URQL的完整控制权，又提供了丰富的监控和备份功能
-const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
-    try {
-        const db = await openUrqlDatabase()
-        const transaction = db.transaction(["metadata"], "readonly")
-        const store = transaction.objectStore("metadata")
-
-        return new Promise((resolve, reject) => {
-            const request = store.get("metadata")
-            request.onerror = () => reject(request.error)
-            request.onsuccess = () => {
-                const result = request.result
-                if (result) {
-                    resolve(result)
-                } else {
-                    resolve([])
-                }
-            }
-        })
+{1}两个的，reload， 就会丢了一个。
+{2}检测到401错误，token无效，准备触发刷新流程,app401= false
+console.warn(
+                            "碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失",
+                            result.operation?.variables?.id,
+                        )
+      [v0] 外部更新GraphQL后端状态: isClientOnline  false isReachable : false 不去继续发起一条 refrestoken？
+但遇到，nexts服务端https://192.168.171.3:3765/api/refresh-token 401 Unauthorized --》反而没有丢失啊
