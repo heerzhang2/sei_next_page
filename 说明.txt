@@ -524,8 +524,7 @@ offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9y
 NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动刷新、同一个报告确认情况两个页面就没了上一个
 【 】9-22： 06：10；= NOok的
 9-18 16：41 NOok   PWA配合
-offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
-offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
+
 {1}两个的，reload， 就会丢了一个。
 {2}检测到401错误，token无效，准备触发刷新流程,app401= false
 console.warn(
@@ -534,3 +533,8 @@ console.warn(
                         )
       [v0] 外部更新GraphQL后端状态: isClientOnline  false isReachable : false 不去继续发起一条 refrestoken？
 但遇到，nexts服务端https://192.168.171.3:3765/api/refresh-token 401 Unauthorized --》反而没有丢失啊
+(failed)net::ERR_CONNECTION_REFUSED
+(failed)net::ERR_CONNECTION_REFUSED
+(failed)net::ERR_FAILED
+net 禁止chache； rep刚刚进入页面， 立刻又点击浏览器菜单再次复位首页面。
+

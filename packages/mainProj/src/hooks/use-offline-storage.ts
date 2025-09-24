@@ -107,49 +107,6 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
     const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle")
     const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
 
-    // 同步到服务器的函数
-    const syncToServer = useCallback(
-        async (data: T) => {
-            if (!isClientOnline || !isGraphQLBackendReachable) {
-                return false
-            }
-
-            setSyncStatus("syncing")
-            window.dispatchEvent(new CustomEvent("sync-start"))
-
-            try {
-                const response = await fetch("/api/sync", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        key,
-                        data,
-                        timestamp: Date.now(),
-                    }),
-                })
-
-                if (response.ok) {
-                    setSyncStatus("success")
-                    setLastSyncTime(new Date())
-                    window.dispatchEvent(new CustomEvent("sync-success"))
-                    return true
-                } else {
-                    setSyncStatus("error")
-                    window.dispatchEvent(new CustomEvent("sync-error"))
-                    return false
-                }
-            } catch (error) {
-                console.error("同步失败:", error)
-                setSyncStatus("error")
-                window.dispatchEvent(new CustomEvent("sync-error"))
-                return false
-            }
-        },
-        [key, isClientOnline, isGraphQLBackendReachable],
-    )
-
     // 获取存储信息
     const updateStorageInfo = useCallback(async () => {
         if ("storage" in navigator && "estimate" in navigator.storage) {
@@ -234,17 +191,11 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
 
                 // 触发数据变更事件
                 window.dispatchEvent(new CustomEvent("offline-data-change"))
-
-                // 同步数据到服务器
-                const syncSuccess = await syncToServer(newData)
-                if (!syncSuccess) {
-                    console.warn("数据同步到服务器失败，本地数据已更新")
-                }
             } catch (error) {
                 console.error("保存离线数据失败:", error)
             }
         },
-        [key, syncToServer],
+        [key],
     )
 
     // 清理过期数据
@@ -275,26 +226,6 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         }
     }, [])
 
-    const syncFromServer = useCallback(async (): Promise<T | null> => {
-        if (!isClientOnline || !isGraphQLBackendReachable) {
-            return null
-        }
-
-        try {
-            const response = await fetch(`/api/sync/${key}`, {
-                cache: "no-cache",
-            })
-
-            if (response.ok) {
-                const serverData = await response.json()
-                return serverData.data
-            }
-        } catch (error) {
-            console.error("从服务器获取数据失败:", error)
-        }
-
-        return null
-    }, [key, isClientOnline, isGraphQLBackendReachable])
 
     const loadDataRef = useRef(loadData)
     const updateStorageInfoRef = useRef(updateStorageInfo)
@@ -320,31 +251,6 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         return () => clearInterval(interval)
     }, [syncInterval]) // 只依赖 syncInterval
 
-    useEffect(() => {
-        if (isClientOnline && lastOnlineTime) {
-            // 网络恢复时自动同步
-            const autoSync = async () => {
-                try {
-                    // 先尝试从服务器获取最新数据
-                    const serverData = await syncFromServer()
-                    if (serverData) {
-                        // 触发数据更新事件
-                        window.dispatchEvent(
-                            new CustomEvent("data-sync-update", {
-                                detail: { key, data: serverData },
-                            }),
-                        )
-                    }
-                } catch (error) {
-                    console.error("自动同步失败:", error)
-                }
-            }
-
-            // 延迟执行，避免网络刚恢复时的不稳定
-            const timer = setTimeout(autoSync, 2000)
-            return () => clearTimeout(timer)
-        }
-    }, [isClientOnline, lastOnlineTime, syncFromServer, key])
 
     useEffect(() => {
         const handleDataSyncUpdate = (event: CustomEvent<{ key: string; data: T }>) => {
@@ -370,8 +276,6 @@ export function useOfflineStorage<T>({ key, defaultValue, syncInterval = 5000 }:
         cleanup: cleanupExpiredData,
         syncStatus,
         lastSyncTime,
-        syncToServer,
-        syncFromServer,
         canSync: isClientOnline && isGraphQLBackendReachable,
     }
 }
