@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useOfflineQueueManager, type QueuedRequest, type QueueHistory } from "@/hooks/use-offline-queue-manager"
+import { useMetadataProtection } from "@/hooks/use-metadata-protection"
 import {
     Clock,
     RefreshCw,
@@ -23,6 +24,8 @@ import {
     Calendar,
     Activity,
     Database,
+    Shield,
+    History,
 } from "lucide-react"
 import { format } from "date-fns"
 
@@ -47,7 +50,18 @@ export function OfflineQueueManager() {
         exportQueueData,
     } = useOfflineQueueManager()
 
+    const { manualRestore, getBackupHistory, currentBackup } = useMetadataProtection()
+
     const [selectedDate, setSelectedDate] = useState(new Date())
+    const [backupHistory, setBackupHistory] = useState<any[]>([])
+
+    useEffect(() => {
+        const loadBackupHistory = async () => {
+            const history = await getBackupHistory()
+            setBackupHistory(history)
+        }
+        loadBackupHistory()
+    }, [getBackupHistory])
 
     const getPriorityColor = (priority: string) => {
         switch (priority) {
@@ -90,6 +104,16 @@ export function OfflineQueueManager() {
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
+    }
+
+    const handleManualRestore = async () => {
+        const success = await manualRestore()
+        if (success) {
+            const history = await getBackupHistory()
+            setBackupHistory(history)
+            // 可以显示成功消息或刷新队列
+            window.location.reload() // 简单的刷新来重新加载队列
+        }
     }
 
     const QueueRequestCard = ({ request }: { request: QueuedRequest }) => (
@@ -223,6 +247,64 @@ export function OfflineQueueManager() {
                 </Card>
             </div>
 
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Shield className="w-5 h-5" />
+                        队列保护状态
+                    </CardTitle>
+                    <CardDescription>监控和保护离线队列数据，防止意外丢失</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-2">
+                            {currentBackup ? (
+                                <>
+                                    <p className="text-sm text-green-600">
+                                        ✓ 最新备份: {format(new Date(currentBackup.timestamp), "yyyy-MM-dd HH:mm:ss")}
+                                    </p>
+                                    <p className="text-sm text-gray-600">备份项目: {currentBackup.data.length} 个</p>
+                                    <p className="text-sm text-gray-500">历史备份: {backupHistory.length} 个</p>
+                                </>
+                            ) : (
+                                <p className="text-sm text-gray-500">暂无备份数据</p>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={handleManualRestore}
+                                variant="outline"
+                                className="flex items-center gap-2 bg-transparent"
+                            >
+                                <History className="w-4 h-4" />
+                                紧急恢复
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    // 可以打开一个模态框显示备份历史
+                                    console.log("备份历史:", backupHistory)
+                                }}
+                                variant="outline"
+                                size="sm"
+                                className="bg-transparent"
+                            >
+                                <Database className="w-4 h-4 mr-1" />
+                                历史
+                            </Button>
+                        </div>
+                    </div>
+
+                    {totalRequests === 0 && currentBackup && currentBackup.data.length > 0 && (
+                        <Alert className="mt-4">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertDescription>
+                                检测到队列为空但存在备份数据。如果这是意外情况，请点击"紧急恢复"按钮恢复队列。
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </CardContent>
+            </Card>
+
             {/* 队列控制 */}
             <Card>
                 <CardHeader>
@@ -299,7 +381,7 @@ export function OfflineQueueManager() {
                                         <p className="text-sm">所有离线操作都已处理完成</p>
                                     </div>
                                 ) : (
-                                    queuedRequests.map((request,index) => <QueueRequestCard key={index} request={request} />)
+                                    queuedRequests.map((request, index) => <QueueRequestCard key={index} request={request} />)
                                 )}
                             </ScrollArea>
                         </CardContent>

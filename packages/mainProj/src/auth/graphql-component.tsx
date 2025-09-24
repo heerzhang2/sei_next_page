@@ -15,6 +15,7 @@ import type { CombinedError, Exchange, Operation, OperationResult } from "@urql/
 import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
+import { useMetadataProtection } from "@/hooks/use-metadata-protection"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -439,7 +440,7 @@ const fetchAbortExchange: Exchange =
             )
         }
 
-//严谨："操作数据记录已在其它设备或其他人改动，新版本是996旧版本是",这个请求失败以后就不会再被离线缓冲收进到metadata列表的。
+//严谨："操作数据记录已在其它设备或其他人改动？这个请求失败以后就不会再被离线缓冲收进到metadata列表的。
 const isVersionConflictError = (error: any): boolean => {
     if (!error) return false
     const errorMessage = error.message || ""
@@ -465,6 +466,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { update } = useSession()
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
+    const { manualRestore } = useMetadataProtection()
 
     useEffect(() => {
         setIsClient(true)
@@ -696,13 +698,26 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [accessToken, createClientStable, isClient])
 
+    useEffect(() => {
+        const handleMetadataRestored = (event: CustomEvent) => {
+            console.log(`[GraphQLProvider] Metadata已恢复: ${event.detail.count} 项`)
+            // 可以在这里触发UI更新或其他必要的操作
+        }
+
+        window.addEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
+
+        return () => {
+            window.removeEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
+        }
+    }, [])
+
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
     return (
         <UrqlProvider client={client} ssr={ssr}>
             {children}
-            {pathname !== "/login" && ConfirmDialog }
+            {pathname !== "/login" && ConfirmDialog}
         </UrqlProvider>
     )
 }
