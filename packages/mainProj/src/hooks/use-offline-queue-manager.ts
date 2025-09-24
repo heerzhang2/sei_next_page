@@ -86,7 +86,7 @@ const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
                     try {
                         resolve(Array.isArray(result) ? result : [])
                     } catch (e) {
-                        console.error("[v0] 解析URQL metadata失败:", e)
+                        console.error("【冲途中】解析URQL metadata失败:", e)
                         resolve([])
                     }
                 } else {
@@ -95,7 +95,7 @@ const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
             }
         })
     } catch (error) {
-        console.error("[v0] 读取URQL metadata失败:", error)
+        console.error("【冲途中】读取URQL metadata失败:", error)
         return []
     }
 }

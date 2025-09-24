@@ -36,12 +36,6 @@ interface OfflineUserData {
 export default function OfflinePage() {
     const { data: session, status } = useSession()
     const [isOnline, setIsOnline] = useState(true)
-    const [storageStatus, setStorageStatus] = useState({
-        localStorage: false,
-        indexedDB: false,
-        cacheAPI: false,
-    })
-
     const {
         data: offlineUserData,
         setData: setOfflineUserData,
@@ -58,7 +52,6 @@ export default function OfflinePage() {
         const updateOnlineStatus = () => {
             setIsOnline(navigator.onLine)
         }
-
         updateOnlineStatus()
         window.addEventListener("online", updateOnlineStatus)
         window.addEventListener("offline", updateOnlineStatus)
@@ -67,62 +60,6 @@ export default function OfflinePage() {
             window.removeEventListener("online", updateOnlineStatus)
             window.removeEventListener("offline", updateOnlineStatus)
         }
-    }, [])
-
-    useEffect(() => {
-        const checkStorageSupport = async () => {
-            const status = {
-                localStorage: false,
-                indexedDB: false,
-                cacheAPI: false,
-            }
-
-            try {
-                const testKey = "__offline_test__"
-                localStorage.setItem(testKey, "test")
-                localStorage.removeItem(testKey)
-                status.localStorage = true
-            } catch (error) {
-                console.error("localStorage not supported:", error)
-            }
-
-            if ("indexedDB" in window) {
-                try {
-                    const request = indexedDB.open("__test_db__", 1)
-                    await new Promise((resolve, reject) => {
-                        request.onsuccess = () => {
-                            request.result.close()
-                            indexedDB.deleteDatabase("__test_db__")
-                            status.indexedDB = true
-                            resolve(true)
-                        }
-                        request.onerror = () => reject(request.error)
-                        request.onupgradeneeded = () => {
-                            const db = request.result
-                            if (!db.objectStoreNames.contains("test")) {
-                                db.createObjectStore("test")
-                            }
-                        }
-                    })
-                } catch (error) {
-                    console.error("IndexedDB not supported:", error)
-                }
-            }
-
-            if ("caches" in window) {
-                try {
-                    const cache = await caches.open("__test_cache__")
-                    await caches.delete("__test_cache__")
-                    status.cacheAPI = true
-                } catch (error) {
-                    console.error("Cache API not supported:", error)
-                }
-            }
-
-            setStorageStatus(status)
-        }
-
-        checkStorageSupport()
     }, [])
 
     useEffect(() => {
@@ -135,92 +72,16 @@ export default function OfflinePage() {
                 lastSync: new Date().toISOString(),
             }
 
-            setOfflineUserData(userData).catch((error) => {
-                console.error("Failed to save offline user data:", error)
-            })
+            // setOfflineUserData(userData).catch((error) => {
+            //     console.error("Failed to save offline user data:", error)
+            // })
         }
     }, [session, isOnline])
 
-    const getStorageIcon = (supported: boolean) => {
-        return supported ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />
-    }
-
     const displayUserName = offlineUserData?.name || offlineUserData?.username || session?.user?.name || "用户"
-
     const refreshPage = () => {
         window.location.reload()
     }
-
-    const testOfflineFeatures = async () => {
-        const results = []
-
-        if (storageStatus.localStorage) {
-            try {
-                const testData = { test: "localStorage works", timestamp: Date.now() }
-                localStorage.setItem("offline_test", JSON.stringify(testData))
-                const retrieved = JSON.parse(localStorage.getItem("offline_test") || "{}")
-                if (retrieved.test === testData.test) {
-                    results.push("✅ localStorage 功能正常")
-                }
-                localStorage.removeItem("offline_test")
-            } catch (error) {
-                results.push("❌ localStorage 测试失败")
-            }
-        }
-
-        if (storageStatus.indexedDB) {
-            try {
-                const request = indexedDB.open("offline_test_db", 1)
-                await new Promise((resolve, reject) => {
-                    request.onsuccess = () => {
-                        const db = request.result
-                        const transaction = db.transaction(["test"], "readwrite")
-                        const store = transaction.objectStore("test")
-                        store.add({ id: 1, data: "IndexedDB works" })
-
-                        transaction.oncomplete = () => {
-                            db.close()
-                            indexedDB.deleteDatabase("offline_test_db")
-                            results.push("✅ IndexedDB 功能正常")
-                            resolve(true)
-                        }
-                        transaction.onerror = () => reject(transaction.error)
-                    }
-                    request.onerror = () => reject(request.error)
-                    request.onupgradeneeded = () => {
-                        const db = request.result
-                        if (!db.objectStoreNames.contains("test")) {
-                            db.createObjectStore("test", { keyPath: "id" })
-                        }
-                    }
-                })
-            } catch (error) {
-                results.push("❌ IndexedDB 测试失败")
-            }
-        }
-
-        if (storageStatus.cacheAPI) {
-            try {
-                const cache = await caches.open("offline_test_cache")
-                const response = new Response("Cache API works")
-                await cache.put("/test", response)
-                const retrieved = await cache.match("/test")
-                if (retrieved) {
-                    results.push("✅ Cache API 功能正常")
-                }
-                await caches.delete("offline_test_cache")
-            } catch (error) {
-                results.push("❌ Cache API 测试失败")
-            }
-        }
-
-        if (results.length === 0) {
-            results.push("⚠️ 没有可用的离线存储功能")
-        }
-
-        alert(results.join("\n"))
-    }
-
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl">
             <div className="space-y-6">
@@ -323,44 +184,12 @@ export default function OfflinePage() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <HardDrive className="w-4 h-4" />
-                                            <span className="text-sm">localStorage</span>
-                                        </div>
-                                        {getStorageIcon(storageStatus.localStorage)}
-                                    </div>
 
-                                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <Database className="w-4 h-4" />
-                                            <span className="text-sm">IndexedDB</span>
-                                        </div>
-                                        {getStorageIcon(storageStatus.indexedDB)}
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <Server className="w-4 h-4" />
-                                            <span className="text-sm">Cache API</span>
-                                        </div>
-                                        {getStorageIcon(storageStatus.cacheAPI)}
-                                    </div>
                                 </div>
-
                                 {storageError && (
                                     <Alert variant="destructive">
                                         <XCircle className="h-4 w-4" />
                                         <AlertDescription>存储错误: {storageError}</AlertDescription>
-                                    </Alert>
-                                )}
-
-                                {!storageStatus.localStorage && !storageStatus.indexedDB && !storageStatus.cacheAPI && (
-                                    <Alert variant="destructive">
-                                        <XCircle className="h-4 w-4" />
-                                        <AlertDescription>
-                                            您的浏览器不支持任何离线存储方案。这可能是由于隐私模式或浏览器限制导致的。
-                                        </AlertDescription>
                                     </Alert>
                                 )}
                             </CardContent>
@@ -395,10 +224,6 @@ export default function OfflinePage() {
                                     <Button onClick={refreshPage} variant="outline">
                                         <RefreshCw className="w-4 h-4 mr-2" />
                                         刷新页面
-                                    </Button>
-                                    <Button onClick={testOfflineFeatures} variant="outline">
-                                        <Database className="w-4 h-4 mr-2" />
-                                        测试离线功能
                                     </Button>
                                 </div>
                             </CardContent>

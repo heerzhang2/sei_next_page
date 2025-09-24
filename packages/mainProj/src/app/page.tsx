@@ -22,12 +22,15 @@ export default function Home() {
                         width={16}
                         height={16}
                     />
-                    Go每日采集 →
+                    每日采集 →
                 </a>
                 <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
                     <li className="mb-2">
                         <div className="mt-10">
-                            <Link href="/deptask">认证后的dep页</Link>
+                            <Link href="/deptask">每日采集 →</Link>
+                        </div>
+                        <div className="mt-10">
+                            <Link href="/offline">indexDB冲突导致</Link>
                         </div>
                         <div className="mt-10">
                             <Link
