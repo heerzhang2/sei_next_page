@@ -74,8 +74,8 @@ const openUrqlDatabase = (): Promise<IDBDatabase> => {
 const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
     try {
         const db = await openUrqlDatabase()
-        const transaction = db.transaction(["metadata"], "readonly") // 只读事务
-        const store = transaction.objectStore("metadata")
+        const transaction = db?.transaction(["metadata"], "readonly") // 只读事务
+        const store = transaction?.objectStore("metadata")
 
         return new Promise((resolve, reject) => {
             const request = store.get("metadata")
@@ -95,7 +95,7 @@ const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
             }
         })
     } catch (error) {
-        console.error("【冲途中】读取URQL metadata失败:", error)
+        console.log("读取URQL metadata失败:", error)
         return []
     }
 }
@@ -461,7 +461,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         const initialize = async () => {
             if (!mountedRef.current) return
             loadStoredData()
-            await syncWithUrqlQueue()
+            // await syncWithUrqlQueue() 太早了 indexDB数据库可能还没有创建
         }
 
         initialize()

@@ -44,7 +44,7 @@ export function usePageRefreshProtection() {
 
             const now = Date.now()
             const elapsed = now - protectionStartTimeRef.current
-            const remainingTime = Math.max(0, 3000 - elapsed)
+            const remainingTime = Math.max(0, 5000 - elapsed)
 
             if (remainingTime > 0) {
                 console.log(`[PageProtection] 拦截导航，剩余保护时间: ${remainingTime}ms`)

@@ -467,22 +467,27 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
 
-    const [isWriteConfirmed, setIsWriteConfirmed] = useState(false)
+    const isWriteConfirmedRef = useRef(false)
     const [pendingWriteData, setPendingWriteData] = useState<SerializedRequest[] | null>(null)
     const [isWriteModalOpen, setIsWriteModalOpen] = useState(false)
 
     const handleWriteConfirm = useCallback(() => {
-            setIsWriteConfirmed(true)
-            setIsWriteModalOpen(false)
-            // 立即执行待处理的写入操作
-            const executeWrite = async () => {
+        isWriteConfirmedRef.current = true
+        setIsWriteModalOpen(false)
+        console.log("[GraphQLProvider] 用户确认了metadata写入操作")
+
+        // 立即执行待处理的写入操作
+        const executeWrite = async () => {
+            if (pendingWriteData) {
                 const storage = clientRef.current?.exchanges?.find((ex: any) => ex.storage)?.storage
                 if (storage && storage.writeMetadata) {
+                    console.log("[GraphQLProvider] 执行延迟的writeMetadata操作")
                     await storage.writeMetadata(pendingWriteData)
                 }
                 setPendingWriteData(null)
             }
-            if(pendingWriteData)  executeWrite()
+        }
+        executeWrite()
     }, [pendingWriteData])
 
     const handleWriteCancel = useCallback(() => {
@@ -571,8 +576,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 ...storage,
                 writeMetadata: async (json: SerializedRequest[]) => {
                     console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
-                    if (isWriteConfirmed) {
-                        console.log("[GraphQLProvider] 已确认写入且未过期，直接执行")
+                    if (isWriteConfirmedRef.current) {
+                        console.log("[GraphQLProvider] 已确认写入，直接执行")
                         if (json?.length !== 0) {
                             const uniqueRequests: SerializedRequest[] = []
                             const seen = new Map<string, SerializedRequest>()
@@ -701,7 +706,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus, isWriteConfirmed])
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus]) // 移除isWriteConfirmed依赖
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)

@@ -61,7 +61,7 @@ export function PageProtectionModal({
                         页面保护中
                     </DialogTitle>
                     <DialogDescription className="space-y-2">
-                        <p>系统正在初始化离线缓存，为了避免数据丢失，请等待初始化完成。</p>
+                        <span>系统正在初始化离线缓存，为了避免数据丢失，请等待初始化完成。</span>
                         {targetUrl && (
                             <p className="text-sm text-muted-foreground">
                                 目标页面: <code className="bg-muted px-1 rounded">{targetUrl}</code>
