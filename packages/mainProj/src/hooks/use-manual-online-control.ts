@@ -86,7 +86,7 @@ export function useManualOnlineControl() {
             }
 
             // 尝试从 IndexedDB 获取更准确的数据
-            const dbName = "graphcache-v3"
+            const dbName = "graphcache-sei"
             return new Promise((resolve) => {
                 const request = indexedDB.open(dbName)
                 request.onsuccess = () => {

@@ -146,7 +146,7 @@ export function useMetadataProtection() {
             if (typeof window === "undefined") return []
 
             return new Promise((resolve) => {
-                const request = indexedDB.open("graphcache-v3")
+                const request = indexedDB.open("graphcache-sei")
                 request.onsuccess = () => {
                     const db = request.result
                     if (!db.objectStoreNames.contains("metadata")) {
@@ -217,7 +217,7 @@ export function useMetadataProtection() {
 
             // 写入IndexedDB
             return new Promise((resolve) => {
-                const request = indexedDB.open("graphcache-v3")
+                const request = indexedDB.open("graphcache-sei")
                 request.onsuccess = () => {
                     const db = request.result
                     if (!db.objectStoreNames.contains("metadata")) {

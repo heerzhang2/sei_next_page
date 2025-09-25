@@ -65,7 +65,7 @@ const HISTORY_RETENTION_DAYS = 1
 
 const openUrqlDatabase = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open("graphcache-v3", 1)
+        const request = indexedDB.open("graphcache-sei")
         request.onerror = () => reject(request.error)
         request.onsuccess = () => resolve(request.result)
     })

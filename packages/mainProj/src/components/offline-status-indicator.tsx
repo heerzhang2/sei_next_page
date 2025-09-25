@@ -4,11 +4,13 @@ import { useEffect, useState } from "react"
 import { WifiOff, Database, CloudOff, Clock, AlertTriangle, Activity } from "lucide-react"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { useOfflineQueueManager } from "@/hooks/use-offline-queue-manager"
+import {useRouter} from "next/navigation";
 
 export function OfflineStatusIndicator() {
     const { isClientOnline, isOnline, isGraphQLBackendReachable, offlineQueue } = useNetworkStatusContext()
     const { totalRequests, pendingCount, isPaused } = useOfflineQueueManager()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
+    const router = useRouter()
 
     useEffect(() => {
         setShowOfflineBar(!isClientOnline || !isOnline || !isGraphQLBackendReachable || totalRequests > 0)
@@ -64,7 +66,7 @@ export function OfflineStatusIndicator() {
 
     const handleClick = () => {
         if (typeof window !== "undefined") {
-            window.location.href = "/offline"
+            router.push("/offline")
         }
     }
 

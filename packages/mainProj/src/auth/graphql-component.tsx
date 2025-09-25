@@ -540,7 +540,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         let storage
         if (typeof window !== "undefined") {
             const defaultStorage = makeDefaultStorage({
-                idbName: "graphcache-v3",
+                idbName: "graphcache-sei",
                 maxAge: 7,
             })
             storage = {
