@@ -4,12 +4,10 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useOfflineQueueManager, type QueuedRequest, type QueueHistory } from "@/hooks/use-offline-queue-manager"
-import { useMetadataProtection } from "@/hooks/use-metadata-protection"
 import {
     Clock,
     RefreshCw,
@@ -43,25 +41,11 @@ export function OfflineQueueManager() {
         retryAll,
         clearQueue,
         clearHistory,
-        pauseQueue,
-        resumeQueue,
-        isPaused,
         getHistoryByDate,
         exportQueueData,
     } = useOfflineQueueManager()
 
-    const { manualRestore, getBackupHistory, currentBackup } = useMetadataProtection()
-
     const [selectedDate, setSelectedDate] = useState(new Date())
-    const [backupHistory, setBackupHistory] = useState<any[]>([])
-
-    useEffect(() => {
-        const loadBackupHistory = async () => {
-            const history = await getBackupHistory()
-            setBackupHistory(history)
-        }
-        loadBackupHistory()
-    }, [getBackupHistory])
 
     const getPriorityColor = (priority: string) => {
         switch (priority) {
@@ -106,16 +90,6 @@ export function OfflineQueueManager() {
         URL.revokeObjectURL(url)
     }
 
-    const handleManualRestore = async () => {
-        const success = await manualRestore()
-        if (success) {
-            const history = await getBackupHistory()
-            setBackupHistory(history)
-            // 可以显示成功消息或刷新队列
-            window.location.reload() // 简单的刷新来重新加载队列
-        }
-    }
-
     const QueueRequestCard = ({ request }: { request: QueuedRequest }) => (
         <Card className="mb-3">
             <CardContent className="p-4">
@@ -133,10 +107,10 @@ export function OfflineQueueManager() {
                             {request.lastError && <p className="text-red-600">错误: {request.lastError}</p>}
                             {Object.keys(request.variables).length > 0 && (
                                 <details className="mt-2">
-                                    <summary className="cursor-pointer text-blue-600 hover:text-blue-800">查看参数</summary>
-                                    <pre className="mt-1 p-2 bg-gray-50 rounded text-xs overflow-auto">
-                    {JSON.stringify(request.variables, null, 2)}
-                  </pre>
+                                   <summary className="cursor-pointer text-blue-600 hover:text-blue-800">查看参数</summary>
+                                   <pre className="mt-1 p-2 bg-gray-50 rounded text-xs overflow-auto">
+                                      {JSON.stringify(request.variables, null, 2)}
+                                   </pre>
                                 </details>
                             )}
                         </div>
@@ -159,35 +133,6 @@ export function OfflineQueueManager() {
                                 取消
                             </Button>
                         )}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    )
-
-    const HistoryCard = ({ item }: { item: QueueHistory }) => (
-        <Card className="mb-3">
-            <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                            {getStatusIcon(item.status)}
-                            <h4 className="font-medium">{item.operationName}</h4>
-                        </div>
-
-                        <div className="text-sm text-gray-600 space-y-1">
-                            <p>创建时间: {format(new Date(item.timestamp), "yyyy-MM-dd HH:mm:ss")}</p>
-                            <p>处理时间: {format(new Date(item.processedAt), "yyyy-MM-dd HH:mm:ss")}</p>
-                            {item.error && <p className="text-red-600">错误: {item.error}</p>}
-                            {Object.keys(item.variables).length > 0 && (
-                                <details className="mt-2">
-                                    <summary className="cursor-pointer text-blue-600 hover:text-blue-800">查看参数</summary>
-                                    <pre className="mt-1 p-2 bg-gray-50 rounded text-xs overflow-auto">
-                    {JSON.stringify(item.variables, null, 2)}
-                  </pre>
-                                </details>
-                            )}
-                        </div>
                     </div>
                 </div>
             </CardContent>
@@ -247,64 +192,6 @@ export function OfflineQueueManager() {
                 </Card>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Shield className="w-5 h-5" />
-                        队列保护状态
-                    </CardTitle>
-                    <CardDescription>监控和保护离线队列数据，防止意外丢失</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                            {currentBackup ? (
-                                <>
-                                    <p className="text-sm text-green-600">
-                                        ✓ 最新备份: {format(new Date(currentBackup.timestamp), "yyyy-MM-dd HH:mm:ss")}
-                                    </p>
-                                    <p className="text-sm text-gray-600">备份项目: {currentBackup.data.length} 个</p>
-                                    <p className="text-sm text-gray-500">历史备份: {backupHistory.length} 个</p>
-                                </>
-                            ) : (
-                                <p className="text-sm text-gray-500">暂无备份数据</p>
-                            )}
-                        </div>
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={handleManualRestore}
-                                variant="outline"
-                                className="flex items-center gap-2 bg-transparent"
-                            >
-                                <History className="w-4 h-4" />
-                                紧急恢复
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    // 可以打开一个模态框显示备份历史
-                                    console.log("备份历史:", backupHistory)
-                                }}
-                                variant="outline"
-                                size="sm"
-                                className="bg-transparent"
-                            >
-                                <Database className="w-4 h-4 mr-1" />
-                                历史
-                            </Button>
-                        </div>
-                    </div>
-
-                    {totalRequests === 0 && currentBackup && currentBackup.data.length > 0 && (
-                        <Alert className="mt-4">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertDescription>
-                                检测到队列为空但存在备份数据。如果这是意外情况，请点击"紧急恢复"按钮恢复队列。
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                </CardContent>
-            </Card>
-
             {/* 队列控制 */}
             <Card>
                 <CardHeader>
@@ -318,20 +205,11 @@ export function OfflineQueueManager() {
                     <div className="flex flex-wrap gap-3">
                         <Button
                             onClick={retryAll}
-                            disabled={isProcessing || isPaused || pendingCount === 0}
+                            disabled={isProcessing  || pendingCount === 0}
                             className="flex items-center gap-2"
                         >
                             <RefreshCw className={`w-4 h-4 ${isProcessing ? "animate-spin" : ""}`} />
                             重试所有
-                        </Button>
-
-                        <Button
-                            onClick={isPaused ? resumeQueue : pauseQueue}
-                            variant="outline"
-                            className="flex items-center gap-2 bg-transparent"
-                        >
-                            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-                            {isPaused ? "恢复队列" : "暂停队列"}
                         </Button>
 
                         <Button
@@ -349,87 +227,28 @@ export function OfflineQueueManager() {
                             导出数据
                         </Button>
                     </div>
-
-                    {isPaused && (
-                        <Alert className="mt-4">
-                            <Pause className="h-4 w-4" />
-                            <AlertDescription>队列已暂停。新的离线操作将被添加到队列，但不会自动处理。</AlertDescription>
-                        </Alert>
-                    )}
                 </CardContent>
             </Card>
-
             {/* 队列详情 */}
-            <Tabs defaultValue="queue" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="queue">当前队列 ({totalRequests})</TabsTrigger>
-                    <TabsTrigger value="history">历史记录 ({queueHistory.length})</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="queue" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>待处理的离线操作</CardTitle>
-                            <CardDescription>这些操作将在网络恢复后自动重试，您也可以手动控制</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-[400px]">
-                                {queuedRequests.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                        <p>队列为空</p>
-                                        <p className="text-sm">所有离线操作都已处理完成</p>
-                                    </div>
-                                ) : (
-                                    queuedRequests.map((request, index) => <QueueRequestCard key={index} request={request} />)
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="history" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Calendar className="w-5 h-5" />
-                                操作历史记录
-                            </CardTitle>
-                            <CardDescription>查看过去24小时内处理的离线操作记录</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex justify-between items-center mb-4">
-                                <input
-                                    type="date"
-                                    value={format(selectedDate, "yyyy-MM-dd")}
-                                    onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                                    className="px-3 py-2 border rounded-md"
-                                />
-                                <Button onClick={clearHistory} variant="outline" size="sm" disabled={queueHistory.length === 0}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    清空历史
-                                </Button>
+            <Card>
+                <CardHeader>
+                    <CardTitle>待处理的离线操作，当前队列 ({totalRequests})</CardTitle>
+                    <CardDescription>这些操作将在网络恢复后自动重试，您也可以手动控制</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-[400px]">
+                        {queuedRequests.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                                <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p>队列为空</p>
+                                <p className="text-sm">所有离线操作都已处理完成</p>
                             </div>
-
-                            <Separator className="mb-4" />
-
-                            <ScrollArea className="h-[400px]">
-                                {queueHistory.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                        <p>暂无历史记录</p>
-                                        <p className="text-sm">处理的操作记录将显示在这里</p>
-                                    </div>
-                                ) : (
-                                    getHistoryByDate(selectedDate).map((item) => (
-                                        <HistoryCard key={`${item.id}-${item.processedAt}`} item={item} />
-                                    ))
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                        ) : (
+                            queuedRequests.map((request, index) => <QueueRequestCard key={index} request={request} />)
+                        )}
+                    </ScrollArea>
+                </CardContent>
+            </Card>
         </div>
     )
 }

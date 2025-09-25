@@ -203,7 +203,7 @@ export default function OfflinePage() {
                                     <Activity className="w-5 h-5" />
                                     离线变更队列管理
                                 </CardTitle>
-                                <CardDescription>管理和监控失败的GraphQL变更请求队列，支持手动重试、取消和历史追踪</CardDescription>
+                                <CardDescription>管理和监控失败的GraphQL变更请求队列，下载离线的请求</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <OfflineQueueManager />

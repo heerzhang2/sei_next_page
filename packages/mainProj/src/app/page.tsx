@@ -4,7 +4,6 @@ import Image from "next/image"
 import Link from "next/link"
 import HeaderWrapper from "@/component/header-wrapper"
 import { usePageRefreshProtection } from "@/hooks/use-page-refresh-protection"
-import { useMetadataProtection } from "@/hooks/use-metadata-protection"
 import { PageProtectionModal } from "@/components/page-protection-modal"
 import { useEffect } from "react"
 
@@ -12,10 +11,8 @@ export default function Home() {
     const { protectedNavigate, enableProtection, isProtected, showModal, pendingNavigation, forceNavigate, closeModal } =
         usePageRefreshProtection()
 
-    useMetadataProtection()
-
     useEffect(() => {
-        enableProtection(3000) // 3秒保护期
+        enableProtection(5000) // 5秒保护期
     }, [enableProtection])
 
     return (

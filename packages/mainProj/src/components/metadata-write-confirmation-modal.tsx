@@ -58,23 +58,20 @@ export function MetadataWriteConfirmationModal({
                         <span>系统需要写入离线缓存数据，请确认是否允许继续。</span>
                     </DialogDescription>
                 </DialogHeader>
-
                 {queueCount > 0 && (
                     <div className="flex items-center justify-between">
                         <span>当前队列:</span>
                         <Badge variant="secondary">{queueCount} 个待处理操作</Badge>
                     </div>
                 )}
-
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
                     <div className="flex items-start gap-2">
                         <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <span className="text-sm text-blue-800">
-              <strong>提示:</strong> 确认后，在当前页面会话期间将不再需要重复确认。 只有重新加载页面后才会再次要求确认。
-            </span>
+                          <strong>提示:</strong> 确认后，在当前页面会话期间将不再需要重复确认。 只有重新加载页面后才会再次要求确认。
+                        </span>
                     </div>
                 </div>
-
                 <div className="space-y-3">
                     {countdown > 0 && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -82,8 +79,8 @@ export function MetadataWriteConfirmationModal({
                             <span>对话框将在 {countdown} 秒后自动关闭</span>
                         </div>
                     )}
+                    预防过快刷新页面导致离线变更数据丢失。
                 </div>
-
                 <DialogFooter className="flex gap-2">
                     <Button variant="outline" onClick={onCancel} className="flex-1 bg-transparent">
                         暂不允许

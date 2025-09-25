@@ -44,11 +44,6 @@ export interface OfflineQueueManager {
     clearQueue: () => Promise<void>
     clearHistory: () => Promise<void>
 
-    // 队列控制
-    pauseQueue: () => void
-    resumeQueue: () => void
-    isPaused: boolean
-
     // 备份和恢复
     backupQueue: () => Promise<void>
     restoreFromBackup: (backupData: string) => Promise<void>
@@ -59,7 +54,6 @@ export interface OfflineQueueManager {
 }
 
 const HISTORY_KEY = "urql-queue-history"
-const QUEUE_SETTINGS_KEY = "urql-queue-settings"
 const BACKUP_KEY = "urql-queue-backup"
 const HISTORY_RETENTION_DAYS = 1
 
@@ -104,7 +98,6 @@ export function useOfflineQueueManager(): OfflineQueueManager {
     const [queuedRequests, setQueuedRequests] = useState<EnhancedSerializedRequest[]>([])
     const [queueHistory, setQueueHistory] = useState<QueueHistory[]>([])
     const [isProcessing, setIsProcessing] = useState(false)
-    const [isPaused, setIsPaused] = useState(false)
 
     const queuedRequestsRef = useRef<EnhancedSerializedRequest[]>([])
     const lastSyncRef = useRef<string>("")
@@ -115,58 +108,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         queuedRequestsRef.current = queuedRequests
     }, [queuedRequests])
 
-    const loadStoredData = useCallback(() => {
-        try {
-            // 加载队列设置
-            const settings = localStorage.getItem(QUEUE_SETTINGS_KEY)
-            if (settings) {
-                const parsed = JSON.parse(settings)
-                setIsPaused(parsed.isPaused || false)
-            }
-
-            // 加载历史记录
-            const historyData = localStorage.getItem(HISTORY_KEY)
-            if (historyData) {
-                const history = JSON.parse(historyData)
-                const cutoffTime = Date.now() - HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000
-                const validHistory = history.filter((item: QueueHistory) => item.processedAt > cutoffTime)
-                setQueueHistory(validHistory)
-
-                if (validHistory.length !== history.length) {
-                    localStorage.setItem(HISTORY_KEY, JSON.stringify(validHistory))
-                }
-            }
-        } catch (error) {
-            console.error("[v0] 加载存储数据失败:", error)
-        }
-    }, [])
-
-    const saveSettings = useCallback(
-        (paused: boolean = isPaused) => {
-            try {
-                localStorage.setItem(
-                    QUEUE_SETTINGS_KEY,
-                    JSON.stringify({
-                        isPaused: paused,
-                        lastUpdated: Date.now(),
-                    }),
-                )
-            } catch (error) {
-                console.error("[v0] 保存设置失败:", error)
-            }
-        },
-        [isPaused],
-    )
-
-    // 保存历史记录
-    const saveHistory = useCallback((history: QueueHistory[]) => {
-        try {
-            localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
-        } catch (error) {
-            console.error("[v0] 保存历史记录失败:", error)
-        }
-    }, [])
-
+    //读取urql的离线metadata列表，转换为方便观察的形式
     const syncWithUrqlQueue = useCallback(async () => {
         if (!mountedRef.current) return
 
@@ -265,7 +207,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
                 // 等待一段时间后检查状态
                 setTimeout(async () => {
                     await syncWithUrqlQueue()
-                }, 2000)
+                }, 4000)
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : "未知错误"
 
@@ -311,15 +253,10 @@ export function useOfflineQueueManager(): OfflineQueueManager {
                 toast.error("取消请求失败")
             }
         },
-        [queuedRequests, saveHistory],
+        [queuedRequests],
     )
 
     const retryAll = useCallback(async () => {
-        if (isPaused) {
-            toast.warning("队列已暂停，请先恢复队列")
-            return
-        }
-
         setIsProcessing(true)
         const pendingRequests = queuedRequests.filter((r) => r.status === "pending" || r.status === "failed")
 
@@ -339,8 +276,8 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             setIsProcessing(false)
             await syncWithUrqlQueue()
             toast.success("所有请求重试完成")
-        }, 3000)
-    }, [queuedRequests, isPaused, syncWithUrqlQueue])
+        }, 5000)
+    }, [queuedRequests,  syncWithUrqlQueue])
 
     const clearQueue = useCallback(async () => {
         try {
@@ -359,19 +296,6 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         toast.success("历史记录已清空")
     }, [])
 
-    // 暂停队列
-    const pauseQueue = useCallback(() => {
-        setIsPaused(true)
-        saveSettings(true)
-        toast.info("队列监控已暂停")
-    }, [saveSettings])
-
-    // 恢复队列
-    const resumeQueue = useCallback(() => {
-        setIsPaused(false)
-        saveSettings(false)
-        toast.info("队列监控已恢复")
-    }, [saveSettings])
 
     const backupQueue = useCallback(async () => {
         try {
@@ -404,7 +328,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             console.error("[v0] 备份队列失败:", error)
             toast.error("备份队列失败")
         }
-    }, [queuedRequests, saveHistory])
+    }, [queuedRequests])
 
     const restoreFromBackup = useCallback(async (backupData: string) => {
         try {
@@ -457,30 +381,27 @@ export function useOfflineQueueManager(): OfflineQueueManager {
 
     useEffect(() => {
         mountedRef.current = true
-
         const initialize = async () => {
             if (!mountedRef.current) return
-            loadStoredData()
-            // await syncWithUrqlQueue() 太早了 indexDB数据库可能还没有创建
+            //await syncWithUrqlQueue() 太早了 indexDB数据库可能还没有创建
         }
-
         initialize()
 
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === "urql-metadata" && mountedRef.current) {
-                setTimeout(() => syncWithUrqlQueue(), 500)
+                setTimeout(() => syncWithUrqlQueue(), 2000)
             }
         }
 
         const interval = setInterval(() => {
-            if (mountedRef.current && !isPaused) {
+            if (mountedRef.current) {
                 syncWithUrqlQueue()
             }
         }, 5000) // 每5秒检查一次
 
         const handleOnline = () => {
             if (mountedRef.current) {
-                setTimeout(() => syncWithUrqlQueue(), 1000)
+                setTimeout(() => syncWithUrqlQueue(), 3000)
             }
         }
 
@@ -493,7 +414,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             window.removeEventListener("storage", handleStorageChange)
             window.removeEventListener("online", handleOnline)
         }
-    }, [loadStoredData, syncWithUrqlQueue, isPaused])
+    }, [syncWithUrqlQueue])
 
     return {
         queuedRequests,
@@ -508,9 +429,6 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         retryAll,
         clearQueue,
         clearHistory,
-        pauseQueue,
-        resumeQueue,
-        isPaused,
         backupQueue,
         restoreFromBackup,
         getHistoryByDate,
