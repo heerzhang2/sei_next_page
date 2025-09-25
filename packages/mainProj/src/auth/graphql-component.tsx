@@ -545,6 +545,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 readData: () => Promise.resolve(null),
                 writeMetadata: (data: any) => Promise.resolve(),
                 readMetadata: () => Promise.resolve(null),
+                onOnline: () => () => {},
             }
         }
 
@@ -567,7 +568,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
             storage: {
                 ...storage,
-                //后端离线刷新页面会出现两次，第一次为空的，第二次是发送失败恢复的操作列表；
+                // 后端离线刷新页面会出现两次，第一次为空的，第二次是发送失败恢复的操作列表；
                 writeMetadata: (json: SerializedRequest[]) => {
                     if (json?.length !== 0) {
                         const uniqueRequests: SerializedRequest[] = []

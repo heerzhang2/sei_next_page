@@ -74,34 +74,33 @@ export function OnlineConfirmationModal({
                         网络连接确认
                     </DialogTitle>
                     <DialogDescription className="space-y-3">
-                        <div className="flex items-center justify-between">
+                        <span className="flex items-center justify-between">
                             <span>Java后端状态:</span>
                             <Badge variant={backendStatus.isReachable ? "default" : "destructive"}>
                                 {backendStatus.isReachable ? "可访问" : "不可访问"}
                             </Badge>
-                        </div>
-
-                        {queueCount > 0 && (
-                            <div className="flex items-center justify-between">
-                                <span>离线队列:</span>
-                                <Badge variant="secondary">{queueCount} 个待处理操作</Badge>
-                            </div>
-                        )}
-
-                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                            <p className="text-sm text-yellow-800">
-                                <strong>重要提醒:</strong> 只有在确认Java后端真正可访问时才点击"确认在线"。
-                                这将触发离线队列的处理，如果后端实际不可用，可能导致队列数据丢失。
-                            </p>
-                        </div>
-
-                        {backendStatus.lastChecked && (
-                            <div className="text-xs text-muted-foreground">
-                                最后检查: {backendStatus.lastChecked.toLocaleTimeString()}
-                            </div>
-                        )}
+                        </span>
                     </DialogDescription>
                 </DialogHeader>
+
+                {queueCount > 0 && (
+                    <div className="flex items-center justify-between">
+                        <span>离线队列:</span>
+                        <Badge variant="secondary">{queueCount} 个待处理操作</Badge>
+                    </div>
+                )}
+
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                            <span className="text-sm text-yellow-800">
+                                <strong>重要提醒:</strong> 只有在确认Java后端真正可访问时才点击"确认在线"。
+                                这将触发离线队列的处理，如果后端实际不可用，可能导致队列数据丢失。
+                            </span>
+                </div>
+                {backendStatus.lastChecked && (
+                    <div className="text-xs text-muted-foreground">
+                        最后检查: {backendStatus.lastChecked.toLocaleTimeString()}
+                    </div>
+                )}
 
                 <div className="space-y-3">
                     {countdown > 0 && (
