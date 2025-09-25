@@ -15,8 +15,7 @@ import type { CombinedError, Exchange, Operation, OperationResult } from "@urql/
 import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
-import { useMetadataProtection } from "@/hooks/use-metadata-protection"
-import { OnlineConfirmationModal } from "@/components/online-confirmation-modal"
+import { MetadataWriteConfirmationModal } from "@/components/metadata-write-confirmation-modal"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -467,35 +466,23 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { update } = useSession()
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
-    const { manualRestore } = useMetadataProtection()
 
     const [isWriteConfirmed, setIsWriteConfirmed] = useState(false)
     const [pendingWriteData, setPendingWriteData] = useState<SerializedRequest[] | null>(null)
     const [isWriteModalOpen, setIsWriteModalOpen] = useState(false)
-    const [backendStatus, setBackendStatus] = useState({ isReachable: false, lastCheck: Date.now() })
-
-    const checkBackendStatus = useCallback(async () => {
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_END}/graphql`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query: "{ __typename }" }),
-                cache: "no-cache",
-            })
-            const isReachable = response.ok
-            setBackendStatus({ isReachable, lastCheck: Date.now() })
-            return isReachable
-        } catch (error) {
-            setBackendStatus({ isReachable: false, lastCheck: Date.now() })
-            return false
-        }
-    }, [])
 
     const handleWriteConfirm = useCallback(() => {
-        if (pendingWriteData) {
             setIsWriteConfirmed(true)
             setIsWriteModalOpen(false)
-        }
+            // 立即执行待处理的写入操作
+            const executeWrite = async () => {
+                const storage = clientRef.current?.exchanges?.find((ex: any) => ex.storage)?.storage
+                if (storage && storage.writeMetadata) {
+                    await storage.writeMetadata(pendingWriteData)
+                }
+                setPendingWriteData(null)
+            }
+            if(pendingWriteData)  executeWrite()
     }, [pendingWriteData])
 
     const handleWriteCancel = useCallback(() => {
@@ -503,11 +490,9 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         setPendingWriteData(null)
         console.log("[GraphQLProvider] 用户取消了metadata写入操作")
     }, [])
-
     useEffect(() => {
         setIsClient(true)
     }, [])
-
     const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
     const mountCountRef = useRef(0)
 
@@ -520,7 +505,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         }
     }, [])
 
-    //使用 useRef 来避免token注入变动 导致的客户端实例的稳定性
     const clientRef = useRef<any>(null)
     const ssrRef = useRef<any>(null)
     const lastTokenRef = useRef<string | null>(null)
@@ -540,22 +524,19 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         }
     }, [accessToken])
 
-    // 防抖机制：避免频繁重新创建客户端
     const createClientStable = useCallback(() => {
         if (!isClient) {
             return [null, null]
         }
-        // 只有当 accessToken 真正发生变化时才重新创建客户端
         if (lastTokenRef.current === accessToken && clientRef.current) {
             return [clientRef.current, ssrRef.current]
         }
         lastTokenRef.current = accessToken
-        //离线保存支持的：只在客户端代码中使用 indexedDB。
         let storage
         if (typeof window !== "undefined") {
             const defaultStorage = makeDefaultStorage({
-                idbName: "graphcache-v3", // The name of the IndexedDB database
-                maxAge: 7, // The maximum age of the persisted data in days
+                idbName: "graphcache-v3",
+                maxAge: 7,
             })
             storage = {
                 ...defaultStorage,
@@ -572,7 +553,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const cache = offlineExchange({
             schema,
             keys: {
-                RepLink: () => null, //不需要生成缓存键
+                RepLink: () => null,
             },
             isOfflineError: (error: undefined | CombinedError, result: OperationResult) => {
                 const shouldQueue = isOfflineError(error)
@@ -590,10 +571,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 ...storage,
                 writeMetadata: async (json: SerializedRequest[]) => {
                     console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
-
-                    // 如果已经确认过写入（3秒内），直接执行
                     if (isWriteConfirmed) {
-                        console.log("[GraphQLProvider] 已确认写入，直接执行")
+                        console.log("[GraphQLProvider] 已确认写入且未过期，直接执行")
                         if (json?.length !== 0) {
                             const uniqueRequests: SerializedRequest[] = []
                             const seen = new Map<string, SerializedRequest>()
@@ -640,27 +619,14 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                         return
                     }
-
-                    // 检查后端状态
-                    const isBackendReachable = await checkBackendStatus()
-
-                    // 如果是清空操作且后端不可达，直接阻止
-                    if (json.length === 0 && !isBackendReachable) {
-                        console.log("[GraphQLProvider] 后端不可达，阻止清空metadata操作")
-                        return
-                    }
-
-                    // 如果有数据要写入或者后端可达时的清空操作，需要用户确认
                     console.log("[GraphQLProvider] 需要用户确认writeMetadata操作")
                     setPendingWriteData(json)
                     setIsWriteModalOpen(true)
                 },
             } as any,
-            // 修改 offlineExchange 配置，确保网络错误能正确传播
-            resolverExchange: false, // 禁用解析器交换，让网络错误能够传播
+            resolverExchange: false,
             optimistic: {
                 modifyOriginalRecordData(args, cache, info) {
-                    //没断网情况也会执行。
                     return {
                         __typename: "Report",
                         id: args.id,
@@ -669,6 +635,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 },
             },
         })
+
         const ssr = ssrExchange({
             isClient: typeof window !== "undefined",
         })
@@ -676,7 +643,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
-                // 4. 应用层错误处理 exchange - 在认证后处理错误
                 errorExchange({
                     onError: (error, operation) => {
                         if (isVersionConflictError(error)) {
@@ -698,7 +664,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                     onClick: () => window.location.reload(),
                                 },
                             })
-                            return // Don't process as network error？不是当前编辑的报告的考虑写入临时的错误存储标记列表当中？
+                            return
                         }
 
                         const has401Error =
@@ -712,21 +678,16 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
-                // 1. 离线缓存:在前面
                 cache,
-                // 3. 认证 exchange - 需要尽早添加认证头
                 makeAuthExchange(accessToken, update, print),
-                // 5. 后端状态的更新
                 updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
                 ssr,
-                // 7.避免离线情形保存按钮无限期等待应答的毛病，发送mutation-completed事件。
                 fetchAbortExchange,
-                // 8. 自定义fetch超时时间配置，若有401认证错误码捕获传递。
                 customFetchExchange,
                 fetchExchange,
             ],
             suspense: true,
-            preferGetMethod: false, //默认会可能用GET方法的。
+            preferGetMethod: false,
             fetchOptions: () => {
                 const currentToken = accessToken
                 console.warn("费用authorization Bearer:", currentToken)
@@ -737,18 +698,17 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 }
             },
         })
-        // 缓存客户端实例
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus, isWriteConfirmed, checkBackendStatus])
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus, isWriteConfirmed])
+
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
     const [client, ssr] = useMemo(() => {
         if (!isClient) {
             return [null, null]
         }
-        // 如果token没有变化且已有缓存的客户端，直接返回
         if (lastAccessTokenRef.current === accessToken && memoizedClientRef.current) {
             return memoizedClientRef.current
         }
@@ -761,7 +721,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const handleMetadataRestored = (event: CustomEvent) => {
             console.log(`[GraphQLProvider] Metadata已恢复: ${event.detail.count} 项`)
-            // 可以在这里触发UI更新或其他必要的操作
         }
 
         window.addEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
@@ -779,18 +738,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         <UrqlProvider client={client} ssr={ssr}>
             {children}
             {pathname !== "/login" && ConfirmDialog}
-            <OnlineConfirmationModal
+            <MetadataWriteConfirmationModal
                 isOpen={isWriteModalOpen}
                 onConfirm={handleWriteConfirm}
                 onCancel={handleWriteCancel}
-                backendStatus={backendStatus}
                 queueCount={pendingWriteData?.length || 0}
-                title="确认离线队列操作"
-                message={
-                    pendingWriteData?.length === 0
-                        ? "检测到后端已恢复连接，是否清空离线队列？"
-                        : `是否将 ${pendingWriteData?.length || 0} 个操作写入离线队列？`
-                }
             />
         </UrqlProvider>
     )
