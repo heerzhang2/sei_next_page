@@ -16,6 +16,8 @@ import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { useMetadataProtection } from "@/hooks/use-metadata-protection"
+import { useManualOnlineControl } from "@/hooks/use-manual-online-control"
+import { OnlineConfirmationModal } from "@/components/online-confirmation-modal"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -467,6 +469,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
     const { manualRestore } = useMetadataProtection()
+    const { isModalOpen, backendStatus, queueCount, requestOnlineConfirmation, confirmOnline, cancelOnline } =
+        useManualOnlineControl()
 
     useEffect(() => {
         setIsClient(true)
@@ -517,10 +521,24 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         //离线保存支持的：只在客户端代码中使用 indexedDB。
         let storage
         if (typeof window !== "undefined") {
-            storage = makeDefaultStorage({
+            const defaultStorage = makeDefaultStorage({
                 idbName: "graphcache-v3", // The name of the IndexedDB database
                 maxAge: 7, // The maximum age of the persisted data in days
             })
+
+            storage = {
+                ...defaultStorage,
+                // 重写 onOnline 方法来实现手动确认
+                onOnline: (callback: () => void) => {
+                    console.log("[GraphQLProvider] URQL请求在线确认")
+                    requestOnlineConfirmation(callback)
+
+                    // 返回一个清理函数
+                    return () => {
+                        console.log("[GraphQLProvider] 清理在线确认回调")
+                    }
+                },
+            }
         } else {
             storage = {
                 writeData: (data: any) => Promise.resolve(),
@@ -529,6 +547,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 readMetadata: () => Promise.resolve(null),
             }
         }
+
         const cache = offlineExchange({
             schema,
             keys: {
@@ -681,7 +700,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus])
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus, requestOnlineConfirmation])
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
     const [client, ssr] = useMemo(() => {
@@ -714,10 +733,18 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
+
     return (
         <UrqlProvider client={client} ssr={ssr}>
             {children}
             {pathname !== "/login" && ConfirmDialog}
+            <OnlineConfirmationModal
+                isOpen={isModalOpen}
+                onConfirm={confirmOnline}
+                onCancel={cancelOnline}
+                backendStatus={backendStatus}
+                queueCount={queueCount}
+            />
         </UrqlProvider>
     )
 }
