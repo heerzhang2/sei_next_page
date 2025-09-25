@@ -16,7 +16,6 @@ import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { useMetadataProtection } from "@/hooks/use-metadata-protection"
-import { useManualOnlineControl } from "@/hooks/use-manual-online-control"
 import { OnlineConfirmationModal } from "@/components/online-confirmation-modal"
 
 // 检查是否为网络错误
@@ -469,8 +468,41 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
     const { manualRestore } = useMetadataProtection()
-    const { isModalOpen, backendStatus, queueCount, requestOnlineConfirmation, confirmOnline, cancelOnline } =
-        useManualOnlineControl()
+
+    const [isWriteConfirmed, setIsWriteConfirmed] = useState(false)
+    const [pendingWriteData, setPendingWriteData] = useState<SerializedRequest[] | null>(null)
+    const [isWriteModalOpen, setIsWriteModalOpen] = useState(false)
+    const [backendStatus, setBackendStatus] = useState({ isReachable: false, lastCheck: Date.now() })
+
+    const checkBackendStatus = useCallback(async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_END}/graphql`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: "{ __typename }" }),
+                cache: "no-cache",
+            })
+            const isReachable = response.ok
+            setBackendStatus({ isReachable, lastCheck: Date.now() })
+            return isReachable
+        } catch (error) {
+            setBackendStatus({ isReachable: false, lastCheck: Date.now() })
+            return false
+        }
+    }, [])
+
+    const handleWriteConfirm = useCallback(() => {
+        if (pendingWriteData) {
+            setIsWriteConfirmed(true)
+            setIsWriteModalOpen(false)
+        }
+    }, [pendingWriteData])
+
+    const handleWriteCancel = useCallback(() => {
+        setIsWriteModalOpen(false)
+        setPendingWriteData(null)
+        console.log("[GraphQLProvider] 用户取消了metadata写入操作")
+    }, [])
 
     useEffect(() => {
         setIsClient(true)
@@ -525,19 +557,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 idbName: "graphcache-v3", // The name of the IndexedDB database
                 maxAge: 7, // The maximum age of the persisted data in days
             })
-
             storage = {
                 ...defaultStorage,
-                // 重写 onOnline 方法来实现手动确认
-                onOnline: (callback: () => void) => {
-                    console.log("[GraphQLProvider] URQL请求在线确认")
-                    requestOnlineConfirmation(callback)
-
-                    // 返回一个清理函数
-                    return () => {
-                        console.log("[GraphQLProvider] 清理在线确认回调")
-                    }
-                },
             }
         } else {
             storage = {
@@ -545,7 +566,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 readData: () => Promise.resolve(null),
                 writeMetadata: (data: any) => Promise.resolve(),
                 readMetadata: () => Promise.resolve(null),
-                onOnline: () => () => {},
             }
         }
 
@@ -568,52 +588,72 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
             storage: {
                 ...storage,
-                // 后端离线刷新页面会出现两次，第一次为空的，第二次是发送失败恢复的操作列表；
-                writeMetadata: (json: SerializedRequest[]) => {
-                    if (json?.length !== 0) {
-                        const uniqueRequests: SerializedRequest[] = []
-                        const seen = new Map<string, SerializedRequest>()
-                        //反向遍历，保留每个唯一键的最后一次出现（接口名+id+opType,没有id的按全部参数）,避免保留冗余的同一个ID的多个变更请求包。
-                        for (let i = json.length - 1; i >= 0; i--) {
-                            const request = json[i]
-                            const key = request.variables?.id
-                                ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
-                                : `${request.query}-${JSON.stringify(request.variables || {})}`
-                            if (!seen.has(key)) {
-                                seen.set(key, request)
-                                uniqueRequests.unshift(request)
+                writeMetadata: async (json: SerializedRequest[]) => {
+                    console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
+
+                    // 如果已经确认过写入（3秒内），直接执行
+                    if (isWriteConfirmed) {
+                        console.log("[GraphQLProvider] 已确认写入，直接执行")
+                        if (json?.length !== 0) {
+                            const uniqueRequests: SerializedRequest[] = []
+                            const seen = new Map<string, SerializedRequest>()
+
+                            for (let i = json.length - 1; i >= 0; i--) {
+                                const request = json[i]
+                                const key = request.variables?.id
+                                    ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
+                                    : `${request.query}-${JSON.stringify(request.variables || {})}`
+                                if (!seen.has(key)) {
+                                    seen.set(key, request)
+                                    uniqueRequests.unshift(request)
+                                }
                             }
-                        }
-                        const filteredRequests = uniqueRequests.filter((request) => {
-                            // 如果是mutation且有ID，检查是否应该保留
-                            if (request.variables?.id && request.query.includes("mutation")) {
-                                // 这里可以添加更多的过滤逻辑
+
+                            const filteredRequests = uniqueRequests.filter((request) => {
+                                if (request.variables?.id && request.query.includes("mutation")) {
+                                    return true
+                                }
                                 return true
+                            })
+
+                            await storage.writeMetadata!(filteredRequests)
+
+                            if (typeof window !== "undefined") {
+                                localStorage.setItem(
+                                    "urql-metadata",
+                                    JSON.stringify({
+                                        length: filteredRequests.length,
+                                        timestamp: new Date().toLocaleString(),
+                                    }),
+                                )
                             }
-                            return true
-                        })
-                        storage.writeMetadata!(filteredRequests)
-                        // 在 localStorage 中备份队列信息，便于检查
-                        if (typeof window !== "undefined") {
-                            localStorage.setItem(
-                                "urql-metadata",
-                                JSON.stringify({
-                                    length: filteredRequests.length,
-                                    timestamp: new Date().toLocaleString(),
-                                }),
-                            )
+                            console.log("[offlineExchange] writeMetadata写:", filteredRequests.length, "items")
+                        } else {
+                            await storage.writeMetadata!(json)
+                            if (typeof window !== "undefined") {
+                                localStorage.setItem(
+                                    "urql-metadata",
+                                    JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
+                                )
+                            }
+                            console.log("[offlineExchange] writeMetadata写:", 0, "items")
                         }
-                        console.log("[offlineExchange] writeMetadata写:", filteredRequests.length, "items")
-                    } else {
-                        storage.writeMetadata!(json)
-                        if (typeof window !== "undefined") {
-                            localStorage.setItem(
-                                "urql-metadata",
-                                JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
-                            )
-                        }
-                        console.log("[offlineExchange] writeMetadata写:", 0, "items")
+                        return
                     }
+
+                    // 检查后端状态
+                    const isBackendReachable = await checkBackendStatus()
+
+                    // 如果是清空操作且后端不可达，直接阻止
+                    if (json.length === 0 && !isBackendReachable) {
+                        console.log("[GraphQLProvider] 后端不可达，阻止清空metadata操作")
+                        return
+                    }
+
+                    // 如果有数据要写入或者后端可达时的清空操作，需要用户确认
+                    console.log("[GraphQLProvider] 需要用户确认writeMetadata操作")
+                    setPendingWriteData(json)
+                    setIsWriteModalOpen(true)
                 },
             } as any,
             // 修改 offlineExchange 配置，确保网络错误能正确传播
@@ -701,7 +741,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus, requestOnlineConfirmation])
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus, isWriteConfirmed, checkBackendStatus])
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
     const [client, ssr] = useMemo(() => {
@@ -740,11 +780,17 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             {children}
             {pathname !== "/login" && ConfirmDialog}
             <OnlineConfirmationModal
-                isOpen={isModalOpen}
-                onConfirm={confirmOnline}
-                onCancel={cancelOnline}
+                isOpen={isWriteModalOpen}
+                onConfirm={handleWriteConfirm}
+                onCancel={handleWriteCancel}
                 backendStatus={backendStatus}
-                queueCount={queueCount}
+                queueCount={pendingWriteData?.length || 0}
+                title="确认离线队列操作"
+                message={
+                    pendingWriteData?.length === 0
+                        ? "检测到后端已恢复连接，是否清空离线队列？"
+                        : `是否将 ${pendingWriteData?.length || 0} 个操作写入离线队列？`
+                }
             />
         </UrqlProvider>
     )

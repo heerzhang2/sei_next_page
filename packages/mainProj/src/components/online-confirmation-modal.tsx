@@ -127,11 +127,11 @@ export function OnlineConfirmationModal({
 
                 <DialogFooter className="flex gap-2">
                     <Button variant="outline" onClick={onCancel} className="flex-1 bg-transparent">
-                        保持离线模式
+                        还不能写缓存
                     </Button>
-                    <Button onClick={onConfirm} disabled={!backendStatus.isReachable} className="flex-1">
+                    <Button onClick={onConfirm} className="flex-1">
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        确认在线
+                        确认允许写缓存
                     </Button>
                 </DialogFooter>
             </DialogContent>

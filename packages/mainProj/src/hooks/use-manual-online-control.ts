@@ -22,6 +22,9 @@ export function useManualOnlineControl() {
         queueCount: 0,
     })
 
+    const [isOnlineConfirmed, setIsOnlineConfirmed] = useState(false)
+    const pendingCallbackRef = useRef<(() => void) | null>(null)
+
     const checkingRef = useRef(false)
 
     // 检查后端状态
@@ -125,6 +128,8 @@ export function useManualOnlineControl() {
         async (onlineCallback: () => void) => {
             console.log("[ManualOnlineControl] 请求在线确认")
 
+            pendingCallbackRef.current = onlineCallback
+
             // 检查后端状态和队列数量
             const [backendStatus, queueCount] = await Promise.all([checkBackendStatus(), getQueueCount()])
 
@@ -143,8 +148,11 @@ export function useManualOnlineControl() {
     const confirmOnline = useCallback(() => {
         console.log("[ManualOnlineControl] 用户确认在线")
 
-        if (state.pendingOnlineCallback) {
-            state.pendingOnlineCallback()
+        setIsOnlineConfirmed(true)
+
+        if (pendingCallbackRef.current) {
+            pendingCallbackRef.current()
+            pendingCallbackRef.current = null
         }
 
         setState((prev) => ({
@@ -152,11 +160,13 @@ export function useManualOnlineControl() {
             isModalOpen: false,
             pendingOnlineCallback: null,
         }))
-    }, [state.pendingOnlineCallback])
+    }, [])
 
     // 取消在线确认
     const cancelOnline = useCallback(() => {
         console.log("[ManualOnlineControl] 用户取消在线确认，保持离线模式")
+
+        pendingCallbackRef.current = null
 
         setState((prev) => ({
             ...prev,
@@ -193,6 +203,7 @@ export function useManualOnlineControl() {
         isModalOpen: state.isModalOpen,
         backendStatus: state.backendStatus,
         queueCount: state.queueCount,
+        isOnlineConfirmed,
         requestOnlineConfirmation,
         confirmOnline,
         cancelOnline,
