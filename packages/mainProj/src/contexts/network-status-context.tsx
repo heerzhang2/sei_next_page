@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
-import {usePathname, useSearchParams} from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
 // 离线队列状态接口
@@ -259,18 +259,33 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         ],
     )
 
-    const updateGraphQLBackendStatus = useCallback((isReachable: boolean, isClientOnline = true) => {
-        console.log("[v0] 外部更新GraphQL后端状态:", { isReachable, isClientOnline })
+    const updateGraphQLBackendStatus = useCallback(
+        (isReachable: boolean, isClientOnline = true) => {
+            console.log("[v0] 外部更新GraphQL后端状态:", { isReachable, isClientOnline })
 
-        setNetworkStatus((prev) => ({
-            ...prev,
-            isGraphQLBackendReachable: isReachable,
-            isClientOnline: isClientOnline,
-            isOnline: isClientOnline && prev.isNextJSServerReachable,
-            lastOnlineTime: isReachable && isClientOnline ? new Date() : prev.lastOnlineTime,
-            lastOfflineTime: !isReachable || !isClientOnline ? new Date() : prev.lastOfflineTime,
-        }))
-    }, [])
+            const wasOffline = !networkStatus.isGraphQLBackendReachable
+            const isNowOnline = isReachable
+
+            setNetworkStatus((prev) => ({
+                ...prev,
+                isGraphQLBackendReachable: isReachable,
+                isClientOnline: isClientOnline,
+                isOnline: isClientOnline && prev.isNextJSServerReachable,
+                lastOnlineTime: isReachable && isClientOnline ? new Date() : prev.lastOnlineTime,
+                lastOfflineTime: !isReachable || !isClientOnline ? new Date() : prev.lastOfflineTime,
+            }))
+
+            if (wasOffline && isNowOnline && typeof window !== "undefined") {
+                console.log("[v0] 后端从离线恢复到在线，触发backend-status-changed事件")
+                window.dispatchEvent(
+                    new CustomEvent("backend-status-changed", {
+                        detail: { wasOffline, isNowOnline, timestamp: Date.now() },
+                    }),
+                )
+            }
+        },
+        [networkStatus.isGraphQLBackendReachable],
+    )
 
     const actions: NetworkStatusActions = {
         updateGraphQLBackendStatus,
@@ -371,7 +386,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         const checkOfflineQueueInterval = setInterval(async () => {
             if (networkStatus.isGraphQLBackendReachable) {
                 const queueStatus = await updateOfflineQueueStatus()
-                if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0 && pathname!=="/login") {
+                if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0 && pathname !== "/login") {
                     showRefreshPrompt(queueStatus.queueLength)
                 }
             }

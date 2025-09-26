@@ -39,11 +39,13 @@ export const isNetworkError = (error: any): boolean => {
         (error.name === "TypeError" && errorMessage.includes("fetch"))
     )
 }
+
 // 自定义网络错误处理 Exchange
 let errorCount = 0
 let lastErrorTime = 0
 const MAX_ERRORS_PER_MINUTE = 10
 const ERROR_RESET_TIME = 60000 // 1分钟
+
 //网络状态更新：
 const updateBackendStatusExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
@@ -96,6 +98,7 @@ const updateBackendStatusExchange = (
         }
     }
 }
+
 // 自定义 fetch exchange 来更好地处理网络错误
 const customFetchExchange: Exchange = ({ forward }) => {
     return (operations$) => {
@@ -144,6 +147,7 @@ const getStoredRefreshToken = (): string | null => {
     if (typeof window === "undefined") return null
     return localStorage.getItem("refresh_token")
 }
+
 const setStoredRefreshToken = (token: string | null): void => {
     if (typeof window === "undefined") return
     if (token) {
@@ -152,6 +156,7 @@ const setStoredRefreshToken = (token: string | null): void => {
         localStorage.removeItem("refresh_token")
     }
 }
+
 //直接post原生做法发送请求包了
 const refreshTokenDirectly = async (
     refreshToken: string,
@@ -200,6 +205,7 @@ const refreshTokenDirectly = async (
         return null
     }
 }
+
 const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; javaBackendReachable: boolean }> => {
     const results = await Promise.allSettled([
         // 检查Next.js服务器
@@ -217,6 +223,7 @@ const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; j
         javaBackendReachable: results[1].status === "fulfilled" && results[1].value,
     }
 }
+
 //清理PWA的/api/auth/session的缓存；
 const clearServiceWorkerAuthCache = async (): Promise<void> => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
@@ -242,6 +249,7 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
         console.error("清除Service Worker缓存失败:", error)
     }
 }
+
 //创建认证交换器
 const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print?: boolean) => {
     return authExchange(async (utils) => {
@@ -401,6 +409,7 @@ const isOfflineError = (error: any): boolean => {
     if (isVersionConflictError(error)) return false
     return has401Error
 }
+
 //避免变更保存按钮的无限等待。
 const fetchAbortExchange: Exchange =
     ({ forward, client }) =>
@@ -476,44 +485,84 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const [pendingWriteData, setPendingWriteData] = useState<SerializedRequest[] | null>(null)
     const [isWriteModalOpen, setIsWriteModalOpen] = useState(false)
 
+    const pageStartTimeRef = useRef<number>(Date.now())
+    const backendRecoveryTimeRef = useRef<number | null>(null)
+    const lastBackendStatusRef = useRef<boolean>(true)
+
+    const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
+    const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false)
+    const emptyArrayReminderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+    useEffect(() => {
+        const handleBackendStatusChange = (event: CustomEvent) => {
+            const { wasOffline, isNowOnline } = event.detail
+            if (wasOffline && isNowOnline) {
+                backendRecoveryTimeRef.current = Date.now()
+                console.log("[v0] 检测到后端恢复在线，记录恢复时间")
+            }
+        }
+
+        window.addEventListener("backend-status-changed", handleBackendStatusChange as EventListener)
+
+        return () => {
+            window.removeEventListener("backend-status-changed", handleBackendStatusChange as EventListener)
+        }
+    }, [])
+
+    const isInCriticalTimeWindow = useCallback((): boolean => {
+        const now = Date.now()
+        const pageStartWindow = now - pageStartTimeRef.current <= 30000 // 30秒
+        const backendRecoveryWindow = backendRecoveryTimeRef.current && now - backendRecoveryTimeRef.current <= 30000 // 后端恢复30秒内
+
+        return pageStartWindow || !!backendRecoveryWindow
+    }, [])
+
+    const handleEmptyArrayReminder = useCallback(() => {
+        if (!isInCriticalTimeWindow()) return
+
+        console.log("[v0] 显示空数组提醒 - 请勿重新加载页面")
+        setShowEmptyArrayReminder(true)
+        setIsProcessingOfflineQueue(true)
+
+        // 清除之前的定时器
+        if (emptyArrayReminderTimeoutRef.current) {
+            clearTimeout(emptyArrayReminderTimeoutRef.current)
+        }
+
+        // 设置10秒后自动隐藏提醒（如果没有其他操作）
+        emptyArrayReminderTimeoutRef.current = setTimeout(() => {
+            console.log("[v0] 空数组提醒超时，自动隐藏")
+            setShowEmptyArrayReminder(false)
+            setIsProcessingOfflineQueue(false)
+        }, 10000)
+    }, [isInCriticalTimeWindow])
+
+    useEffect(() => {
+        const handleQueueProcessed = (event: CustomEvent) => {
+            console.log("[v0] 离线队列处理完成，隐藏空数组提醒")
+            setShowEmptyArrayReminder(false)
+            setIsProcessingOfflineQueue(false)
+
+            if (emptyArrayReminderTimeoutRef.current) {
+                clearTimeout(emptyArrayReminderTimeoutRef.current)
+                emptyArrayReminderTimeoutRef.current = null
+            }
+        }
+
+        window.addEventListener("offline-queue-processed", handleQueueProcessed as EventListener)
+
+        return () => {
+            window.removeEventListener("offline-queue-processed", handleQueueProcessed as EventListener)
+            if (emptyArrayReminderTimeoutRef.current) {
+                clearTimeout(emptyArrayReminderTimeoutRef.current)
+            }
+        }
+    }, [])
+
     const handleWriteConfirm = useCallback(() => {
         isWriteConfirmedRef.current = true
         setIsWriteModalOpen(false)
         console.log("[GraphQLProvider] 用户确认了metadata写入操作")
-        // 立即执行待处理的写入操作
-        // const executeWrite = async () => {
-        //     if (pendingWriteData) {
-        //         const storage = clientRef.current?.exchanges?.find((ex: any) => ex.storage)?.storage
-        //         if (storage && storage.writeMetadata) {         //每次都null的
-        //             console.log("[GraphQLProvider] 执行延迟的writeMetadata操作")
-        //             await storage.writeMetadata(pendingWriteData)
-        //         } else {
-        //             console.warn("[GraphQLProvider] 无法获取URQL storage，尝试直接写入IndexedDB")
-        //             try {
-        //                 const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        //                     const request = indexedDB.open("graphcache-sei")
-        //                     request.onerror = () => reject(request.error)
-        //                     request.onsuccess = () => resolve(request.result)
-        //                 })
-        //
-        //                 const transaction = db.transaction(["metadata"], "readwrite")
-        //                 const store = transaction.objectStore("metadata")
-        //
-        //                 await new Promise<void>((resolve, reject) => {
-        //                     const request = store.put(pendingWriteData, "metadata")
-        //                     request.onerror = () => reject(request.error)
-        //                     request.onsuccess = () => resolve()
-        //                 })
-        //
-        //                 console.log("[GraphQLProvider] 直接写入IndexedDB成功")
-        //             } catch (error) {
-        //                 console.error("[GraphQLProvider] 直接写入IndexedDB失败:", error)
-        //             }
-        //         }
-        //         setPendingWriteData(null)
-        //     }
-        // }
-        // executeWrite()
     }, [pendingWriteData])
 
     const handleWriteCancel = useCallback(() => {
@@ -521,9 +570,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         setPendingWriteData(null)
         console.log("[GraphQLProvider] 用户取消了metadata写入操作")
     }, [])
+
     useEffect(() => {
         setIsClient(true)
     }, [])
+
     const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
     const mountCountRef = useRef(0)
 
@@ -634,6 +685,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 ...storage,
                 writeMetadata: async (json: SerializedRequest[]) => {
                     console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
+
+                    if (json && json.length === 0 && isInCriticalTimeWindow()) {
+                        console.log("[v0] 检测到空数组且在关键时间窗口内，显示提醒")
+                        handleEmptyArrayReminder()
+                    }
 
                     if (json && json.length > 0) {
                         try {
@@ -770,7 +826,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             preferGetMethod: false,
             fetchOptions: () => {
                 const currentToken = accessToken
-                console.warn("费用authorization Bearer:", currentToken)
+                console.warn("authorization Bearer:", currentToken)
                 return {
                     headers: {
                         authorization: currentToken ? `Bearer ${currentToken}` : "",
@@ -781,7 +837,16 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus, addConflictRequest, backupOfflineQueue])
+    }, [
+        accessToken,
+        isClient,
+        update,
+        updateGraphQLBackendStatus,
+        addConflictRequest,
+        backupOfflineQueue,
+        handleEmptyArrayReminder,
+        isInCriticalTimeWindow,
+    ])
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
@@ -823,6 +888,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 onConfirm={handleWriteConfirm}
                 onCancel={handleWriteCancel}
                 queueCount={pendingWriteData?.length || 0}
+            />
+            <div
+                data-empty-array-reminder={showEmptyArrayReminder.toString()}
+                data-processing-queue={isProcessingOfflineQueue.toString()}
+                style={{ display: "none" }}
             />
         </UrqlProvider>
     )
