@@ -537,4 +537,8 @@ console.warn(
 (failed)net::ERR_CONNECTION_REFUSED
 (failed)net::ERR_FAILED
 net 禁止chache； rep刚刚进入页面， 立刻又点击浏览器菜单再次复位首页面。
+            storage = {
+                ...defaultStorage,
+                onOnline: null,
+            } 会导致writeMetadata 发送离线队列请求： 都不能做了！！
 

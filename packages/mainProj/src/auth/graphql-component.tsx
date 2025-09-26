@@ -478,41 +478,40 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         isWriteConfirmedRef.current = true
         setIsWriteModalOpen(false)
         console.log("[GraphQLProvider] 用户确认了metadata写入操作")
-
         // 立即执行待处理的写入操作
-        const executeWrite = async () => {
-            if (pendingWriteData && pendingWriteData.length>0) {
-                const storage = clientRef.current?.exchanges?.find((ex: any) => ex.storage)?.storage
-                if (storage && storage.writeMetadata) {         //每次都null的
-                    console.log("[GraphQLProvider] 执行延迟的writeMetadata操作")
-                    await storage.writeMetadata(pendingWriteData)
-                } else {
-                    console.warn("[GraphQLProvider] 无法获取URQL storage，尝试直接写入IndexedDB")
-                    try {
-                        const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                            const request = indexedDB.open("graphcache-sei")
-                            request.onerror = () => reject(request.error)
-                            request.onsuccess = () => resolve(request.result)
-                        })
-
-                        const transaction = db.transaction(["metadata"], "readwrite")
-                        const store = transaction.objectStore("metadata")
-
-                        await new Promise<void>((resolve, reject) => {
-                            const request = store.put(pendingWriteData, "metadata")
-                            request.onerror = () => reject(request.error)
-                            request.onsuccess = () => resolve()
-                        })
-
-                        console.log("[GraphQLProvider] 直接写入IndexedDB成功")
-                    } catch (error) {
-                        console.error("[GraphQLProvider] 直接写入IndexedDB失败:", error)
-                    }
-                }
-            }
-            setPendingWriteData(null)
-        }
-        executeWrite()
+        // const executeWrite = async () => {
+        //     if (pendingWriteData) {
+        //         const storage = clientRef.current?.exchanges?.find((ex: any) => ex.storage)?.storage
+        //         if (storage && storage.writeMetadata) {         //每次都null的
+        //             console.log("[GraphQLProvider] 执行延迟的writeMetadata操作")
+        //             await storage.writeMetadata(pendingWriteData)
+        //         } else {
+        //             console.warn("[GraphQLProvider] 无法获取URQL storage，尝试直接写入IndexedDB")
+        //             try {
+        //                 const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        //                     const request = indexedDB.open("graphcache-sei")
+        //                     request.onerror = () => reject(request.error)
+        //                     request.onsuccess = () => resolve(request.result)
+        //                 })
+        //
+        //                 const transaction = db.transaction(["metadata"], "readwrite")
+        //                 const store = transaction.objectStore("metadata")
+        //
+        //                 await new Promise<void>((resolve, reject) => {
+        //                     const request = store.put(pendingWriteData, "metadata")
+        //                     request.onerror = () => reject(request.error)
+        //                     request.onsuccess = () => resolve()
+        //                 })
+        //
+        //                 console.log("[GraphQLProvider] 直接写入IndexedDB成功")
+        //             } catch (error) {
+        //                 console.error("[GraphQLProvider] 直接写入IndexedDB失败:", error)
+        //             }
+        //         }
+        //         setPendingWriteData(null)
+        //     }
+        // }
+        // executeWrite()
     }, [pendingWriteData])
 
     const handleWriteCancel = useCallback(() => {
@@ -562,14 +561,22 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             return [clientRef.current, ssrRef.current]
         }
         lastTokenRef.current = accessToken
+        let onOnlineSave
         let storage
         if (typeof window !== "undefined") {
             const defaultStorage = makeDefaultStorage({
                 idbName: "graphcache-sei",
                 maxAge: 7,
+                onCacheHydrated: () => {
+                    if(!isWriteConfirmedRef.current)   setIsWriteModalOpen(true)
+                    //太早了isWriteConfirmedRef.current = true;还是会丢失
+                    console.log("[GraphQLProvider] 到了onCacheHydrated》")
+                },
             })
+            onOnlineSave= defaultStorage.onOnline;
             storage = {
                 ...defaultStorage,
+                onOnline: null,
             }
         } else {
             storage = {
@@ -600,59 +607,53 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             storage: {
                 ...storage,
                 writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
-                    if (isWriteConfirmedRef.current) {
-                        console.log("[GraphQLProvider] 已确认写入，直接执行")
-                        if (json?.length !== 0) {
-                            const uniqueRequests: SerializedRequest[] = []
-                            const seen = new Map<string, SerializedRequest>()
+                    console.log("[GraphQLProvider] 已确认写入，数据长度:", json.length)
+                    if (json?.length !== 0) {
+                        const uniqueRequests: SerializedRequest[] = []
+                        const seen = new Map<string, SerializedRequest>()
 
-                            for (let i = json.length - 1; i >= 0; i--) {
-                                const request = json[i]
-                                const key = request.variables?.id
-                                    ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
-                                    : `${request.query}-${JSON.stringify(request.variables || {})}`
-                                if (!seen.has(key)) {
-                                    seen.set(key, request)
-                                    uniqueRequests.unshift(request)
-                                }
+                        for (let i = json.length - 1; i >= 0; i--) {
+                            const request = json[i]
+                            const key = request.variables?.id
+                                ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
+                                : `${request.query}-${JSON.stringify(request.variables || {})}`
+                            if (!seen.has(key)) {
+                                seen.set(key, request)
+                                uniqueRequests.unshift(request)
                             }
-
-                            const filteredRequests = uniqueRequests.filter((request) => {
-                                if (request.variables?.id && request.query.includes("mutation")) {
-                                    return true
-                                }
-                                return true
-                            })
-
-                            await storage.writeMetadata!(filteredRequests)
-
-                            if (typeof window !== "undefined") {
-                                localStorage.setItem(
-                                    "urql-metadata",
-                                    JSON.stringify({
-                                        length: filteredRequests.length,
-                                        timestamp: new Date().toLocaleString(),
-                                    }),
-                                )
-                            }
-                            console.log("[offlineExchange] writeMetadata写:", filteredRequests.length, "items")
-                        } else {
-                            await storage.writeMetadata!(json)
-                            if (typeof window !== "undefined") {
-                                localStorage.setItem(
-                                    "urql-metadata",
-                                    JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
-                                )
-                            }
-                            console.log("[offlineExchange] writeMetadata写:", 0, "items")
                         }
-                        return
+
+                        const filteredRequests = uniqueRequests.filter((request) => {
+                            if (request.variables?.id && request.query.includes("mutation")) {
+                                return true
+                            }
+                            return true
+                        })
+
+                        await storage.writeMetadata!(filteredRequests)
+
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem(
+                                "urql-metadata",
+                                JSON.stringify({
+                                    length: filteredRequests.length,
+                                    timestamp: new Date().toLocaleString(),
+                                }),
+                            )
+                        }
+                        console.log("[offlineExchange] writeMetadata写:", filteredRequests.length, "items")
+                    } else {
+                        await storage.writeMetadata!(json)
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem(
+                                "urql-metadata",
+                                JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
+                            )
+                        }
+                        console.log("[offlineExchange] writeMetadata写:", 0, "items")
                     }
-                    console.log("[GraphQLProvider] 需要用户确认writeMetadata操作")
-                    setPendingWriteData(json)
-                    setIsWriteModalOpen(true)
                 },
+                onOnline: isWriteConfirmedRef.current?  onOnlineSave : null,  //允许离线缓存的运作
             } as any,
             resolverExchange: false,
             optimistic: {
@@ -735,7 +736,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus, addConflictRequest]) // 移除isWriteConfirmed依赖
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus, addConflictRequest])
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
