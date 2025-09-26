@@ -16,6 +16,7 @@ import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { MetadataWriteConfirmationModal } from "@/components/metadata-write-confirmation-modal"
+import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -467,6 +468,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
 
+    const { addConflictRequest } = useVersionConflictManager()
+
     const isWriteConfirmedRef = useRef(false)
     const [pendingWriteData, setPendingWriteData] = useState<SerializedRequest[] | null>(null)
     const [isWriteModalOpen, setIsWriteModalOpen] = useState(false)
@@ -478,14 +481,36 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
         // 立即执行待处理的写入操作
         const executeWrite = async () => {
-            if (pendingWriteData) {
+            if (pendingWriteData && pendingWriteData.length>0) {
                 const storage = clientRef.current?.exchanges?.find((ex: any) => ex.storage)?.storage
-                if (storage && storage.writeMetadata) {
+                if (storage && storage.writeMetadata) {         //每次都null的
                     console.log("[GraphQLProvider] 执行延迟的writeMetadata操作")
                     await storage.writeMetadata(pendingWriteData)
+                } else {
+                    console.warn("[GraphQLProvider] 无法获取URQL storage，尝试直接写入IndexedDB")
+                    try {
+                        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+                            const request = indexedDB.open("graphcache-sei")
+                            request.onerror = () => reject(request.error)
+                            request.onsuccess = () => resolve(request.result)
+                        })
+
+                        const transaction = db.transaction(["metadata"], "readwrite")
+                        const store = transaction.objectStore("metadata")
+
+                        await new Promise<void>((resolve, reject) => {
+                            const request = store.put(pendingWriteData, "metadata")
+                            request.onerror = () => reject(request.error)
+                            request.onsuccess = () => resolve()
+                        })
+
+                        console.log("[GraphQLProvider] 直接写入IndexedDB成功")
+                    } catch (error) {
+                        console.error("[GraphQLProvider] 直接写入IndexedDB失败:", error)
+                    }
                 }
-                setPendingWriteData(null)
             }
+            setPendingWriteData(null)
         }
         executeWrite()
     }, [pendingWriteData])
@@ -653,6 +678,9 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         if (isVersionConflictError(error)) {
                             const errorMessage = error.message || error.graphQLErrors?.[0]?.message || "版本冲突错误"
                             const invalidId = error.graphQLErrors?.[0]?.extensions?.invalidId || "未知ID"
+
+                            addConflictRequest(operation, error)
+
                             toast.error("数据版本冲突", {
                                 description: (
                                     <div className="space-y-2">
@@ -661,6 +689,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                         <p className="text-sm text-gray-500">
                                             该记录已被其他设备或用户修改，请刷新页面获取最新数据后重新操作。
                                         </p>
+                                        <p className="text-sm text-blue-600">冲突请求已保存到版本冲突列表中，可在离线队列管理器中查看。</p>
                                     </div>
                                 ),
                                 duration: 4 * 60 * 60 * 1000,
@@ -706,7 +735,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus]) // 移除isWriteConfirmed依赖
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus, addConflictRequest]) // 移除isWriteConfirmed依赖
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)

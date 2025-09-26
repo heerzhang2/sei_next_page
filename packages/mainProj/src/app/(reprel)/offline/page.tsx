@@ -24,6 +24,7 @@ import {
     Activity,
     Settings,
 } from "lucide-react"
+import {VersionConflictManager} from "@/components/version-conflict-manager";
 
 interface OfflineUserData {
     name?: string
@@ -91,9 +92,10 @@ export default function OfflinePage() {
                 </div>
 
                 <Tabs defaultValue="status" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="status">系统状态</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="status">状态</TabsTrigger>
                         <TabsTrigger value="queue">队列管理</TabsTrigger>
+                        <TabsTrigger value="conflict">版本冲突</TabsTrigger>
                         <TabsTrigger value="settings">设置</TabsTrigger>
                     </TabsList>
 
@@ -210,7 +212,20 @@ export default function OfflinePage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
-
+                    <TabsContent value="conflict" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Activity className="w-5 h-5" />
+                                    版本冲突管理
+                                </CardTitle>
+                                <CardDescription>版本冲突的GraphQL变更请求队列，下载离线的请求</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <VersionConflictManager />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                     <TabsContent value="settings" className="space-y-6">
                         <Card>
                             <CardHeader>
