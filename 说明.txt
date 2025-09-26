@@ -527,18 +527,7 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 
 {1}两个的，reload， 就会丢了一个。
 {2}检测到401错误，token无效，准备触发刷新流程,app401= false
-console.warn(
-                            "碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失",
-                            result.operation?.variables?.id,
-                        )
-      [v0] 外部更新GraphQL后端状态: isClientOnline  false isReachable : false 不去继续发起一条 refrestoken？
-但遇到，nexts服务端https://192.168.171.3:3765/api/refresh-token 401 Unauthorized --》反而没有丢失啊
-(failed)net::ERR_CONNECTION_REFUSED
-(failed)net::ERR_CONNECTION_REFUSED
-(failed)net::ERR_FAILED
-net 禁止chache； rep刚刚进入页面， 立刻又点击浏览器菜单再次复位首页面。
-            storage = {
-                ...defaultStorage,
-                onOnline: null,
-            } 会导致writeMetadata 发送离线队列请求： 都不能做了！！
+【hez1】 authorization  Bearer%20iNW8BnPJexI0MIInYjQwm4Qr
+https://v0.app/chat/serwist-urq-offline-cache-wnDI5hlCctH
+能不能在主页面刚刚启动的30秒之内，或者java graphQL后端恢复在线的30秒之内，若graphql-component.tsx的第635行代码writeMetadata: async (json: SerializedRequest[]) => {  假如碰到json是空数组的情形下，弹出一个提醒信息，提示用户不要着急重新加载页面，随后发送的mutation请求包正常10秒钟应答时间之内要持续点亮提示信息一直到离线请求列表都发送一遍完毕。
 

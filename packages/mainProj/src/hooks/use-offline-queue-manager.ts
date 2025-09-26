@@ -47,6 +47,7 @@ export interface OfflineQueueManager {
     // 备份和恢复
     backupQueue: () => Promise<void>
     restoreFromBackup: (backupData: string) => Promise<void>
+    backupOfflineQueue: (requests: SerializedRequest[], source: string) => Promise<void>
 
     // 历史管理
     getHistoryByDate: (date: Date) => QueueHistory[]
@@ -55,6 +56,7 @@ export interface OfflineQueueManager {
 
 const HISTORY_KEY = "urql-queue-history"
 const BACKUP_KEY = "urql-queue-backup"
+const OFFLINE_BACKUP_KEY = "urql-offline-backup"
 const HISTORY_RETENTION_DAYS = 1
 
 const openUrqlDatabase = (): Promise<IDBDatabase> => {
@@ -277,7 +279,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             await syncWithUrqlQueue()
             toast.success("所有请求重试完成")
         }, 5000)
-    }, [queuedRequests,  syncWithUrqlQueue])
+    }, [queuedRequests, syncWithUrqlQueue])
 
     const clearQueue = useCallback(async () => {
         try {
@@ -296,6 +298,74 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         toast.success("历史记录已清空")
     }, [])
 
+    const backupOfflineQueue = useCallback(async (requests: SerializedRequest[], source: string) => {
+        try {
+            if (!requests || requests.length === 0) {
+                console.log("[OfflineQueueManager] 没有需要备份的离线队列数据")
+                return
+            }
+
+            const backupData = {
+                requests,
+                source,
+                timestamp: Date.now(),
+                version: "2.0",
+                count: requests.length,
+            }
+
+            // 保存到localStorage作为临时备份
+            const existingBackups = JSON.parse(localStorage.getItem(OFFLINE_BACKUP_KEY) || "[]")
+            existingBackups.push(backupData)
+
+            // 只保留最近10个备份
+            if (existingBackups.length > 10) {
+                existingBackups.splice(0, existingBackups.length - 10)
+            }
+
+            localStorage.setItem(OFFLINE_BACKUP_KEY, JSON.stringify(existingBackups))
+
+            // 同时保存到IndexedDB作为持久备份
+            try {
+                const db = await openUrqlDatabase()
+                const transaction = db.transaction(["metadata"], "readwrite")
+                const store = transaction.objectStore("metadata")
+
+                const backupKey = `backup-${source}-${Date.now()}`
+                await new Promise<void>((resolve, reject) => {
+                    const request = store.put(requests, backupKey)
+                    request.onerror = () => reject(request.error)
+                    request.onsuccess = () => resolve()
+                })
+
+                console.log(`[OfflineQueueManager] 离线队列备份成功: ${requests.length} 项 (来源: ${source})`)
+            } catch (idbError) {
+                console.warn("[OfflineQueueManager] IndexedDB备份失败，但localStorage备份成功:", idbError)
+            }
+
+            // 添加到历史记录
+            const historyItems: QueueHistory[] = requests.map((req, index) => {
+                const operationName = extractOperationName(req.query)
+                return {
+                    id: `backup-${source}-${Date.now()}-${index}`,
+                    operationName,
+                    variables: req.variables,
+                    query: req.query,
+                    timestamp: Date.now(),
+                    status: "backed_up",
+                    processedAt: Date.now(),
+                }
+            })
+
+            setQueueHistory((prev) => {
+                const newHistory = [...historyItems, ...prev]
+                saveHistory(newHistory)
+                return newHistory
+            })
+        } catch (error) {
+            console.error("[OfflineQueueManager] 备份离线队列失败:", error)
+            // 不抛出错误，避免影响主流程
+        }
+    }, [])
 
     const backupQueue = useCallback(async () => {
         try {
@@ -431,7 +501,20 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         clearHistory,
         backupQueue,
         restoreFromBackup,
+        backupOfflineQueue,
         getHistoryByDate,
         exportQueueData,
+    }
+}
+
+const saveHistory = (history: QueueHistory[]) => {
+    try {
+        // 只保留最近的历史记录
+        const cutoffTime = Date.now() - HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000
+        const filteredHistory = history.filter((item) => item.processedAt > cutoffTime)
+
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(filteredHistory))
+    } catch (error) {
+        console.error("保存历史记录失败:", error)
     }
 }
