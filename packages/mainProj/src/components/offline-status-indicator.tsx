@@ -7,7 +7,7 @@ import { useOfflineQueueManager } from "@/hooks/use-offline-queue-manager"
 
 export function OfflineStatusIndicator() {
     const { isClientOnline, isOnline, isGraphQLBackendReachable, offlineQueue } = useNetworkStatusContext()
-    const { totalRequests, pendingCount, isPaused } = useOfflineQueueManager()
+    const { totalRequests, pendingCount } = useOfflineQueueManager()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
 
     const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
@@ -17,7 +17,6 @@ export function OfflineStatusIndicator() {
         const checkEmptyArrayReminderStatus = () => {
             const reminderElement = document.querySelector("[data-empty-array-reminder]")
             const processingElement = document.querySelector("[data-processing-queue]")
-
             if (reminderElement) {
                 const reminderStatus = reminderElement.getAttribute("data-empty-array-reminder") === "true"
                 const processingStatus = processingElement?.getAttribute("data-processing-queue") === "true"
@@ -26,13 +25,8 @@ export function OfflineStatusIndicator() {
                 setIsProcessingOfflineQueue(processingStatus)
             }
         }
-
-        // 初始检查
         checkEmptyArrayReminderStatus()
-
-        // 定期检查状态变化
-        const interval = setInterval(checkEmptyArrayReminderStatus, 500)
-
+        const interval = setInterval(checkEmptyArrayReminderStatus, 1000)
         return () => clearInterval(interval)
     }, [])
 
@@ -52,22 +46,13 @@ export function OfflineStatusIndicator() {
                 color: "bg-blue-200 border-blue-400 text-blue-900 animate-pulse",
             }
         }
-
         if (totalRequests > 0) {
-            if (isPaused) {
-                return {
-                    icon: Activity,
-                    message: `队列已暂停 (${totalRequests}个待处理)`,
-                    color: "bg-orange-100 border-orange-300 text-orange-900",
-                }
-            }
             return {
                 icon: Clock,
                 message: `离线队列: ${pendingCount}个待处理`,
                 color: "bg-blue-100 border-blue-300 text-blue-900",
             }
         }
-
         if (!isClientOnline) {
             return {
                 icon: WifiOff,
@@ -114,7 +99,7 @@ export function OfflineStatusIndicator() {
             className={`print:hidden fixed top-0 left-1/2 transform -translate-x-1/2 z-50 ${color} px-4 py-2 text-sm font-medium flex items-center justify-center gap-2 rounded-b-md shadow-sm cursor-pointer hover:shadow-md transition-shadow`}
             style={{ pointerEvents: "auto" }}
             onClick={handleClick}
-            title={showEmptyArrayReminder ? "正在发送离线请求，请勿重新加载页面" : "点击查看详细的离线队列管理"}
+            title={showEmptyArrayReminder ? "正在发送离线请求，请勿重新加载页面" : "离线队列"}
         >
             <Icon className="h-4 w-4" />
             <span>{message}</span>
@@ -126,6 +111,7 @@ export function OfflineStatusIndicator() {
                     <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
                     <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
                     <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                    正在发
                 </div>
             )}
         </div>

@@ -511,30 +511,26 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
     const isInCriticalTimeWindow = useCallback((): boolean => {
         const now = Date.now()
-        const pageStartWindow = now - pageStartTimeRef.current <= 30000 // 30秒
-        const backendRecoveryWindow = backendRecoveryTimeRef.current && now - backendRecoveryTimeRef.current <= 30000 // 后端恢复30秒内
-
+        const pageStartWindow = now - pageStartTimeRef.current <= 60000 //页面加载60秒内
+        const backendRecoveryWindow = backendRecoveryTimeRef.current && now - backendRecoveryTimeRef.current <= 60000 //后端恢复60秒内
         return pageStartWindow || !!backendRecoveryWindow
     }, [])
 
     const handleEmptyArrayReminder = useCallback(() => {
         if (!isInCriticalTimeWindow()) return
-
         console.log("[v0] 显示空数组提醒 - 请勿重新加载页面")
         setShowEmptyArrayReminder(true)
         setIsProcessingOfflineQueue(true)
-
         // 清除之前的定时器
         if (emptyArrayReminderTimeoutRef.current) {
             clearTimeout(emptyArrayReminderTimeoutRef.current)
         }
-
-        // 设置10秒后自动隐藏提醒（如果没有其他操作）
+        // 设置20秒后自动隐藏提醒（如果没有其他操作）
         emptyArrayReminderTimeoutRef.current = setTimeout(() => {
             console.log("[v0] 空数组提醒超时，自动隐藏")
             setShowEmptyArrayReminder(false)
             setIsProcessingOfflineQueue(false)
-        }, 10000)
+        }, 20000)
     }, [isInCriticalTimeWindow])
 
     useEffect(() => {
@@ -628,7 +624,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             onOnlineSave = defaultStorage.onOnline
             storage = {
                 ...defaultStorage,
-                onOnline: null,
+                // onOnline: null,  离线的没法保存，但在线可以；
                 readData: async () => {
                     console.log("[GraphQLProvider] readData被调用，准备备份离线队列")
 
@@ -686,20 +682,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 writeMetadata: async (json: SerializedRequest[]) => {
                     console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
 
-                    if (json && json.length === 0 && isInCriticalTimeWindow()) {
+                    if ((!json || json.length === 0) && isInCriticalTimeWindow()) {
                         console.log("[v0] 检测到空数组且在关键时间窗口内，显示提醒")
                         handleEmptyArrayReminder()
                     }
-
-                    if (json && json.length > 0) {
-                        try {
-                            await backupOfflineQueue(json, "writeMetadata-backup")
-                            console.log("[GraphQLProvider] writeMetadata备份完成")
-                        } catch (error) {
-                            console.error("[GraphQLProvider] writeMetadata备份失败:", error)
-                        }
-                    }
-
                     if (isWriteConfirmedRef.current) {
                         console.log("[GraphQLProvider] 已确认写入，数据长度:", json.length)
                         if (json?.length !== 0) {
@@ -754,7 +740,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         return Promise.resolve()
                     }
                 },
-                onOnline: isWriteConfirmedRef.current ? onOnlineSave : null,
+                // onOnline: isWriteConfirmedRef.current ? onOnlineSave : null,
             } as any,
             resolverExchange: false,
             optimistic: {
@@ -863,24 +849,15 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [accessToken, createClientStable, isClient])
 
-    useEffect(() => {
-        const handleMetadataRestored = (event: CustomEvent) => {
-            console.log(`[GraphQLProvider] Metadata已恢复: ${event.detail.count} 项`)
-        }
-
-        window.addEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
-
-        return () => {
-            window.removeEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
-        }
-    }, [])
-
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
-
     return (
         <UrqlProvider client={client} ssr={ssr}>
+            <div data-empty-array-reminder={showEmptyArrayReminder.toString()}
+                data-processing-queue={isProcessingOfflineQueue.toString()}
+                style={{ display: "none" }}
+            />
             {children}
             {pathname !== "/login" && ConfirmDialog}
             <MetadataWriteConfirmationModal
@@ -888,11 +865,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 onConfirm={handleWriteConfirm}
                 onCancel={handleWriteCancel}
                 queueCount={pendingWriteData?.length || 0}
-            />
-            <div
-                data-empty-array-reminder={showEmptyArrayReminder.toString()}
-                data-processing-queue={isProcessingOfflineQueue.toString()}
-                style={{ display: "none" }}
             />
         </UrqlProvider>
     )
