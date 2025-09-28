@@ -1,7 +1,7 @@
 import { pipe, share, merge, makeSubject, filter, onPush } from "wonka"
 import type { Operation, OperationResult, Exchange, ExchangeIO, CombinedError, RequestPolicy } from "@urql/core"
 import { stringifyDocument, createRequest, makeOperation } from "@urql/core"
-import  type { SerializedRequest, CacheExchangeOpts, StorageAdapter } from "@urql/exchange-graphcache"
+import type { SerializedRequest, CacheExchangeOpts, StorageAdapter } from "@urql/exchange-graphcache"
 import { cacheExchange } from "@urql/exchange-graphcache"
 
 const toRequestPolicy = (operation: Operation, policy: RequestPolicy): Operation => {
@@ -156,7 +156,7 @@ export const customOfflineExchange =
                             )
                         }
 
-                        const sent = new Set<number>()
+                        const processedOperations = new Set<string>()
 
                         for (const [requestId, request] of pendingRequests.entries()) {
                             if (!processingRequests.has(requestId)) {
@@ -169,10 +169,11 @@ export const customOfflineExchange =
                                         request.extensions,
                                     )
 
-                                    if (!sent.has(operation.key)) {
-                                        sent.add(operation.key)
-                                        next(makeOperation("teardown", operation))
-                                        next(toRequestPolicy(operation, "cache-first"))
+                                    const operationId = `${operation.query.loc?.source.body}_${JSON.stringify(operation.variables)}`
+
+                                    if (!processedOperations.has(operationId)) {
+                                        processedOperations.add(operationId)
+                                        next(toRequestPolicy(operation, "network-only"))
                                     }
                                 } catch (error) {
                                     console.error("[CustomOfflineExchange] Error creating operation:", error)
@@ -237,7 +238,6 @@ export const customOfflineExchange =
                                 async then(onEntries) {
                                     const mutations = await storage.readMetadata!()
                                     if (mutations && mutations.length > 0) {
-                                        // 重建待处理请求映射
                                         for (const request of mutations) {
                                             const requestId = getRequestId(request)
                                             pendingRequests.set(requestId, request)
@@ -250,7 +250,6 @@ export const customOfflineExchange =
                                     storage.onOnline!(flushQueue)
                                     hasRehydrated = true
 
-                                    // 如果有待处理的请求，立即尝试刷新队列
                                     if (pendingRequests.size > 0) {
                                         await flushQueue()
                                     }
@@ -271,9 +270,7 @@ export const customOfflineExchange =
                             operations$,
                             onPush((operation) => {
                                 if (operation.kind === "query" && !hasRehydrated) {
-                                    // 查询操作暂时不需要特殊处理
                                 } else if (operation.kind === "teardown") {
-                                    // 清理操作
                                 }
                             }),
                         ),

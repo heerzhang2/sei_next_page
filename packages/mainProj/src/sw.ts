@@ -1,6 +1,7 @@
 import {
     ExpirationPlugin,
-    NetworkFirst, NetworkOnly,
+    NetworkFirst,
+    NetworkOnly,
     type PrecacheEntry,
     type RuntimeCaching,
     type SerwistGlobalConfig,
@@ -31,8 +32,8 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
     // 提取路径部分，移除动态的 repid
     const pathParts = url.pathname.split("/")
     if (pathParts[1] === "rep" && pathParts.length >= 4) {
-        const hasAction=(pathParts.length>=5 && pathParts[5]!=="")       //若有编辑器的子路由
-        if(hasAction){
+        const hasAction = pathParts.length >= 5 && pathParts[5] !== "" //若有编辑器的子路由
+        if (hasAction) {
             // 重构路径：/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
             const normalizedPath = `/rep/*/${pathParts.slice(3).join("/")}`
             // 移除 subrid 查询参数 subrid from utm_idx #这些参数还需要在整个路由之内做协调统一的。
@@ -49,8 +50,7 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
             // 构建标准化的缓存键
             const normalizedUrl = `${url.origin}${normalizedPath}${searchParams.toString() ? "?" + searchParams.toString() : ""}${suffix}`
             return normalizedUrl
-        }
-        else{
+        } else {
             const normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`
             // 移除 ?print=1 查询参数
             const searchParams = new URLSearchParams(url.search)
@@ -68,8 +68,7 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
 //【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker"，然后自己再修改！
 const customCache: RuntimeCaching[] = [
     {
-        matcher: ({ url: { pathname }, sameOrigin }) =>
-            sameOrigin && pathname.startsWith("/rep/"),
+        matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && pathname.startsWith("/rep/"),
         handler: new NetworkFirst({
             cacheName: "report-pages-normalized",
             plugins: [
@@ -114,19 +113,22 @@ const customCache: RuntimeCaching[] = [
         }),
     },
     {
-        matcher: ({ url: { pathname }, sameOrigin }) => !sameOrigin && pathname==="/actuator/health",
+        matcher: ({ url: { pathname }, sameOrigin }) => !sameOrigin && pathname === "/actuator/health",
         method: "GET",
         handler: new NetworkOnly(),
     },
     //这个和graphQL请求没有关系的;
     {
-        matcher: ({ sameOrigin }) => !sameOrigin,
+        matcher: ({ url, sameOrigin }) =>
+            !sameOrigin &&
+            !url.pathname.includes("/graphql") && // 排除GraphQL请求
+            !url.pathname.endsWith(".svg"), // 排除SVG静态资源
         handler: new NetworkFirst({
             cacheName: "cross-origin",
             plugins: [
                 new ExpirationPlugin({
                     maxEntries: 2000,
-                    maxAgeSeconds: 4 * 60 * 60,     //4 hour
+                    maxAgeSeconds: 4 * 60 * 60, //4 hour
                 }),
             ],
             networkTimeoutSeconds: 10,
@@ -135,7 +137,6 @@ const customCache: RuntimeCaching[] = [
 
     ...defaultCache,
 ]
-
 
 const serwist = new Serwist({
     precacheEntries: self.__SW_MANIFEST,
@@ -162,7 +163,6 @@ const serwist = new Serwist({
 
 serwist.addEventListeners()
 
-
 // 监听来自主页面的消息
 self.addEventListener("message", (event) => {
     const { data } = event
@@ -179,7 +179,6 @@ self.addEventListener("message", (event) => {
         )
         return
     }
-
 })
 
 async function clearAuthCache() {
