@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { WifiOff, Database, CloudOff, Clock, AlertTriangle, Activity, Send } from "lucide-react"
+import { WifiOff, Database, CloudOff, Clock, AlertTriangle, Send } from "lucide-react"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { useOfflineQueueManager } from "@/hooks/use-offline-queue-manager"
 
@@ -14,6 +14,21 @@ export function OfflineStatusIndicator() {
     const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false)
 
     useEffect(() => {
+        const handleEmptyArrayReminder = (event: CustomEvent) => {
+            const { show } = event.detail
+            console.log("[OfflineStatusIndicator] 收到空数组提醒事件:", show)
+            setShowEmptyArrayReminder(show)
+        }
+
+        const handleProcessingQueue = (event: CustomEvent) => {
+            const { processing, total } = event.detail
+            console.log("[OfflineStatusIndicator] 收到队列处理事件:", processing, "总数:", total)
+            setIsProcessingOfflineQueue(processing)
+            if (!processing) {
+                setShowEmptyArrayReminder(false)
+            }
+        }
+
         const checkEmptyArrayReminderStatus = () => {
             const reminderElement = document.querySelector("[data-empty-array-reminder]")
             const processingElement = document.querySelector("[data-processing-queue]")
@@ -25,9 +40,20 @@ export function OfflineStatusIndicator() {
                 setIsProcessingOfflineQueue(processingStatus)
             }
         }
+
+        // 监听自定义事件
+        window.addEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
+        window.addEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
+
+        // 保留原有的轮询检查作为备用
         checkEmptyArrayReminderStatus()
-        const interval = setInterval(checkEmptyArrayReminderStatus, 1000)
-        return () => clearInterval(interval)
+        const interval = setInterval(checkEmptyArrayReminderStatus, 2000)
+
+        return () => {
+            window.removeEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
+            window.removeEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
+            clearInterval(interval)
+        }
     }, [])
 
     useEffect(() => {

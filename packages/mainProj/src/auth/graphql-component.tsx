@@ -6,7 +6,7 @@ import { useAccessToken } from "./use-access-token"
 import { authExchange } from "@urql/exchange-auth"
 import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { offlineExchange } from "@urql/exchange-graphcache"
+import { customOfflineExchange } from "@/lib/custom-offline-exchange"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
@@ -477,18 +477,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { update } = useSession()
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
-
     const { addConflictRequest } = useVersionConflictManager()
     const { backupOfflineQueue } = useOfflineQueueManager()
-
-    const isWriteConfirmedRef = useRef(false)
-    const [pendingWriteData, setPendingWriteData] = useState<SerializedRequest[] | null>(null)
-    const [isWriteModalOpen, setIsWriteModalOpen] = useState(false)
-
     const pageStartTimeRef = useRef<number>(Date.now())
     const backendRecoveryTimeRef = useRef<number | null>(null)
-    const lastBackendStatusRef = useRef<boolean>(true)
-
     const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
     const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false)
     const emptyArrayReminderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -514,57 +506,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const pageStartWindow = now - pageStartTimeRef.current <= 60000 //页面加载60秒内
         const backendRecoveryWindow = backendRecoveryTimeRef.current && now - backendRecoveryTimeRef.current <= 60000 //后端恢复60秒内
         return pageStartWindow || !!backendRecoveryWindow
-    }, [])
-
-    const handleEmptyArrayReminder = useCallback(() => {
-        if (!isInCriticalTimeWindow()) return
-        console.log("[v0] 显示空数组提醒 - 请勿重新加载页面")
-        setShowEmptyArrayReminder(true)
-        setIsProcessingOfflineQueue(true)
-        // 清除之前的定时器
-        if (emptyArrayReminderTimeoutRef.current) {
-            clearTimeout(emptyArrayReminderTimeoutRef.current)
-        }
-        // 设置20秒后自动隐藏提醒（如果没有其他操作）
-        emptyArrayReminderTimeoutRef.current = setTimeout(() => {
-            console.log("[v0] 空数组提醒超时，自动隐藏")
-            setShowEmptyArrayReminder(false)
-            setIsProcessingOfflineQueue(false)
-        }, 20000)
-    }, [isInCriticalTimeWindow])
-
-    useEffect(() => {
-        const handleQueueProcessed = (event: CustomEvent) => {
-            console.log("[v0] 离线队列处理完成，隐藏空数组提醒")
-            setShowEmptyArrayReminder(false)
-            setIsProcessingOfflineQueue(false)
-
-            if (emptyArrayReminderTimeoutRef.current) {
-                clearTimeout(emptyArrayReminderTimeoutRef.current)
-                emptyArrayReminderTimeoutRef.current = null
-            }
-        }
-
-        window.addEventListener("offline-queue-processed", handleQueueProcessed as EventListener)
-
-        return () => {
-            window.removeEventListener("offline-queue-processed", handleQueueProcessed as EventListener)
-            if (emptyArrayReminderTimeoutRef.current) {
-                clearTimeout(emptyArrayReminderTimeoutRef.current)
-            }
-        }
-    }, [])
-
-    const handleWriteConfirm = useCallback(() => {
-        isWriteConfirmedRef.current = true
-        setIsWriteModalOpen(false)
-        console.log("[GraphQLProvider] 用户确认了metadata写入操作")
-    }, [pendingWriteData])
-
-    const handleWriteCancel = useCallback(() => {
-        setIsWriteModalOpen(false)
-        setPendingWriteData(null)
-        console.log("[GraphQLProvider] 用户取消了metadata写入操作")
     }, [])
 
     useEffect(() => {
@@ -610,43 +551,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             return [clientRef.current, ssrRef.current]
         }
         lastTokenRef.current = accessToken
-        let onOnlineSave
         let storage
         if (typeof window !== "undefined") {
             const defaultStorage = makeDefaultStorage({
                 idbName: "graphcache-sei",
                 maxAge: 7,
-                onCacheHydrated: () => {
-                    if (!isWriteConfirmedRef.current) setIsWriteModalOpen(true)
-                    console.log("[GraphQLProvider] 到了onCacheHydrated》")
-                },
             })
-            onOnlineSave = defaultStorage.onOnline
-            storage = {
-                ...defaultStorage,
-                // onOnline: null,  离线的没法保存，但在线可以；
-                readData: async () => {
-                    console.log("[GraphQLProvider] readData被调用，准备备份离线队列")
-
-                    try {
-                        //读取metadata来备份离线队列
-                        const metadata = await defaultStorage.readMetadata()
-                        if (metadata && metadata.length > 0) {
-                            console.log("[GraphQLProvider] 发现离线队列，准备备份:", metadata.length, "项")
-                            // 备份到离线队列管理器
-                            await backupOfflineQueue(metadata, "readData-backup")
-                            console.log("[GraphQLProvider] 离线队列备份完成")
-                        }
-                        //用原始的readData获取数据
-                        const originalData = await defaultStorage.readData()
-                        return originalData
-                    } catch (error) {
-                        console.error("[GraphQLProvider] readData备份过程出错:", error)
-                        // 即使备份失败，也要返回原始数据
-                        return await defaultStorage.readData()
-                    }
-                },
-            }
+            storage = {...defaultStorage,}
         } else {
             storage = {
                 writeData: (data: any) => Promise.resolve(),
@@ -656,7 +567,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             }
         }
 
-        const cache = offlineExchange({
+        const cache = customOfflineExchange({
             schema,
             keys: {
                 RepLink: () => null,
@@ -665,7 +576,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 const shouldQueue = isOfflineError(error)
                 if (shouldQueue && result.operation.kind === "mutation") {
                     console.log(
-                        "[offlineExchange] 将mutation加入离线队列:",
+                        "[customOfflineExchange] 将mutation加入离线队列:",
                         result.operation.query.definitions[0]?.name?.value,
                         "error:",
                         error?.message,
@@ -673,70 +584,57 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 }
                 return shouldQueue
             },
+            startupTimeWindow: 30000, // 30秒
+            recoveryTimeWindow: 30000, // 30秒
             storage: {
                 ...storage,
                 writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
+                    console.log("[GraphQLProvider] 已确认写入，数据长度:", json.length)
+                    if (json?.length !== 0) {
+                        const uniqueRequests: SerializedRequest[] = []
+                        const seen = new Map<string, SerializedRequest>()
 
-                    if ((!json || json.length === 0) && isInCriticalTimeWindow()) {
-                        console.log("[v0] 检测到空数组且在关键时间窗口内，显示提醒")
-                        handleEmptyArrayReminder()
-                    }
-                    if (isWriteConfirmedRef.current) {
-                        console.log("[GraphQLProvider] 已确认写入，数据长度:", json.length)
-                        if (json?.length !== 0) {
-                            const uniqueRequests: SerializedRequest[] = []
-                            const seen = new Map<string, SerializedRequest>()
-
-                            for (let i = json.length - 1; i >= 0; i--) {
-                                const request = json[i]
-                                const key = request.variables?.id
-                                    ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
-                                    : `${request.query}-${JSON.stringify(request.variables || {})}`
-                                if (!seen.has(key)) {
-                                    seen.set(key, request)
-                                    uniqueRequests.unshift(request)
-                                }
+                        for (let i = json.length - 1; i >= 0; i--) {
+                            const request = json[i]
+                            const key = request.variables?.id
+                                ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
+                                : `${request.query}-${JSON.stringify(request.variables || {})}`
+                            if (!seen.has(key)) {
+                                seen.set(key, request)
+                                uniqueRequests.unshift(request)
                             }
-
-                            const filteredRequests = uniqueRequests.filter((request) => {
-                                if (request.variables?.id && request.query.includes("mutation")) {
-                                    return true
-                                }
-                                return true
-                            })
-
-                            await storage.writeMetadata!(filteredRequests)
-
-                            if (typeof window !== "undefined") {
-                                localStorage.setItem(
-                                    "urql-metadata",
-                                    JSON.stringify({
-                                        length: filteredRequests.length,
-                                        timestamp: new Date().toLocaleString(),
-                                    }),
-                                )
-                            }
-                            console.log("[offlineExchange] writeMetadata写:", filteredRequests.length, "items")
-                        } else {
-                            await storage.writeMetadata!(json)
-                            if (typeof window !== "undefined") {
-                                localStorage.setItem(
-                                    "urql-metadata",
-                                    JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
-                                )
-                            }
-                            console.log("[offlineExchange] writeMetadata写:", 0, "items")
                         }
-                    } else {
-                        console.log("[GraphQLProvider] 等待用户确认writeMetadata操作")
-                        setPendingWriteData(json)
-                        setIsWriteModalOpen(true)
 
-                        return Promise.resolve()
+                        const filteredRequests = uniqueRequests.filter((request) => {
+                            if (request.variables?.id && request.query.includes("mutation")) {
+                                return true
+                            }
+                            return true
+                        })
+
+                        await storage.writeMetadata!(filteredRequests)
+
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem(
+                                "urql-metadata",
+                                JSON.stringify({
+                                    length: filteredRequests.length,
+                                    timestamp: new Date().toLocaleString(),
+                                }),
+                            )
+                        }
+                        console.log("[customOfflineExchange] writeMetadata写:", filteredRequests.length, "items")
+                    } else {
+                        await storage.writeMetadata!(json)
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem(
+                                "urql-metadata",
+                                JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
+                            )
+                        }
+                        console.log("[customOfflineExchange] writeMetadata写:", 0, "items")
                     }
                 },
-                // onOnline: isWriteConfirmedRef.current ? onOnlineSave : null,
             } as any,
             resolverExchange: false,
             optimistic: {
@@ -757,6 +655,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
+                cache,
                 errorExchange({
                     onError: (error, operation) => {
                         if (isVersionConflictError(error)) {
@@ -796,7 +695,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
-                cache,
                 makeAuthExchange(accessToken, update, print),
                 updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
                 ssr,
@@ -819,16 +717,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [
-        accessToken,
-        isClient,
-        update,
-        updateGraphQLBackendStatus,
-        addConflictRequest,
-        backupOfflineQueue,
-        handleEmptyArrayReminder,
-        isInCriticalTimeWindow,
-    ])
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus, addConflictRequest, backupOfflineQueue])
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
@@ -845,23 +734,63 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return result
     }, [accessToken, createClientStable, isClient])
 
+    useEffect(() => {
+        const handleEmptyArrayReminder = (event: CustomEvent) => {
+            const { show } = event.detail
+            console.log("[v0] 收到空数组提醒事件:", show)
+            setShowEmptyArrayReminder(show)
+            if (show) {
+                setIsProcessingOfflineQueue(true)
+                // 设置超时自动隐藏
+                if (emptyArrayReminderTimeoutRef.current) {
+                    clearTimeout(emptyArrayReminderTimeoutRef.current)
+                }
+                emptyArrayReminderTimeoutRef.current = setTimeout(() => {
+                    setShowEmptyArrayReminder(false)
+                    setIsProcessingOfflineQueue(false)
+                }, 10000)
+            }
+        }
+
+        const handleProcessingQueue = (event: CustomEvent) => {
+            const { processing, total } = event.detail
+            console.log("[v0] 收到队列处理事件:", processing, "总数:", total)
+            setIsProcessingOfflineQueue(processing)
+            if (!processing) {
+                setShowEmptyArrayReminder(false)
+            }
+        }
+
+        const handleBackendRecovery = () => {
+            backendRecoveryTimeRef.current = Date.now()
+            console.log("[v0] 收到后端恢复事件")
+            // 触发自定义事件通知自定义离线交换器
+            window.dispatchEvent(new CustomEvent("graphql-backend-recovery"))
+        }
+
+        window.addEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
+        window.addEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
+        window.addEventListener("backend-status-changed", handleBackendRecovery as EventListener)
+
+        return () => {
+            window.removeEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
+            window.removeEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
+            window.removeEventListener("backend-status-changed", handleBackendRecovery as EventListener)
+        }
+    }, [])
+
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
     return (
         <UrqlProvider client={client} ssr={ssr}>
-            <div data-empty-array-reminder={showEmptyArrayReminder.toString()}
+            <div
+                data-empty-array-reminder={showEmptyArrayReminder.toString()}
                 data-processing-queue={isProcessingOfflineQueue.toString()}
                 style={{ display: "none" }}
             />
             {children}
             {pathname !== "/login" && ConfirmDialog}
-            <MetadataWriteConfirmationModal
-                isOpen={isWriteModalOpen}
-                onConfirm={handleWriteConfirm}
-                onCancel={handleWriteCancel}
-                queueCount={pendingWriteData?.length || 0}
-            />
         </UrqlProvider>
     )
 }
