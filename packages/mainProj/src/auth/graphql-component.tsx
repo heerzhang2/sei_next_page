@@ -629,20 +629,16 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     console.log("[GraphQLProvider] readData被调用，准备备份离线队列")
 
                     try {
-                        // 先调用原始的readData获取数据
-                        const originalData = await defaultStorage.readData()
-
-                        // 同时读取metadata来备份离线队列
+                        //读取metadata来备份离线队列
                         const metadata = await defaultStorage.readMetadata()
                         if (metadata && metadata.length > 0) {
                             console.log("[GraphQLProvider] 发现离线队列，准备备份:", metadata.length, "项")
-
                             // 备份到离线队列管理器
                             await backupOfflineQueue(metadata, "readData-backup")
-
                             console.log("[GraphQLProvider] 离线队列备份完成")
                         }
-
+                        //用原始的readData获取数据
+                        const originalData = await defaultStorage.readData()
                         return originalData
                     } catch (error) {
                         console.error("[GraphQLProvider] readData备份过程出错:", error)

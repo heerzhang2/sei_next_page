@@ -304,27 +304,22 @@ export function useOfflineQueueManager(): OfflineQueueManager {
                 console.log("[OfflineQueueManager] 没有需要备份的离线队列数据")
                 return
             }
-
-            const backupData = {
-                requests,
-                source,
-                timestamp: Date.now(),
-                version: "2.0",
-                count: requests.length,
-            }
-
+            // const backupData = {
+            //     requests,
+            //     source,
+            //     timestamp: Date.now(),
+            //     version: "2.0",
+            //     count: requests.length,
+            // }
             // 保存到localStorage作为临时备份
-            const existingBackups = JSON.parse(localStorage.getItem(OFFLINE_BACKUP_KEY) || "[]")
-            existingBackups.push(backupData)
-
-            // 只保留最近10个备份
-            if (existingBackups.length > 10) {
-                existingBackups.splice(0, existingBackups.length - 10)
-            }
-
-            localStorage.setItem(OFFLINE_BACKUP_KEY, JSON.stringify(existingBackups))
-
-            // 同时保存到IndexedDB作为持久备份
+            // const existingBackups = JSON.parse(localStorage.getItem(OFFLINE_BACKUP_KEY) || "[]")
+            // existingBackups.push(backupData)
+            // // 只保留最近10个备份
+            // if (existingBackups.length > 10) {
+            //     existingBackups.splice(0, existingBackups.length - 10)
+            // }
+            // localStorage.setItem(OFFLINE_BACKUP_KEY, JSON.stringify(existingBackups))
+            //保存到IndexedDB作为持久备份
             try {
                 const db = await openUrqlDatabase()
                 const transaction = db.transaction(["metadata"], "readwrite")
