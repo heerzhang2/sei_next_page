@@ -65,13 +65,6 @@ export function OfflineStatusIndicator() {
     if (!showOfflineBar) return null
 
     const getStatusMessage = () => {
-        if (showEmptyArrayReminder && isProcessingOfflineQueue) {
-            return {
-                icon: Send,
-                message: "请勿重新加载页面，正在发送离线请求...",
-                color: "bg-blue-200 border-blue-400 text-blue-900 animate-pulse",
-            }
-        }
         if (totalRequests > 0) {
             return {
                 icon: Clock,
@@ -125,19 +118,12 @@ export function OfflineStatusIndicator() {
             className={`print:hidden fixed top-0 left-1/2 transform -translate-x-1/2 z-50 ${color} px-4 py-2 text-sm font-medium flex items-center justify-center gap-2 rounded-b-md shadow-sm cursor-pointer hover:shadow-md transition-shadow`}
             style={{ pointerEvents: "auto" }}
             onClick={handleClick}
-            title={showEmptyArrayReminder ? "正在发送离线请求，请勿重新加载页面" : "离线队列"}
+            title={"离线队列"}
         >
             <Icon className="h-4 w-4" />
             <span>{message}</span>
             {totalRequests > 0 && !showEmptyArrayReminder && (
                 <span className="ml-2 px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs">点击管理</span>
-            )}
-            {showEmptyArrayReminder && isProcessingOfflineQueue && (
-                <div className="ml-2 flex space-x-1">
-                    <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                    <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                    <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                </div>
             )}
         </div>
     )

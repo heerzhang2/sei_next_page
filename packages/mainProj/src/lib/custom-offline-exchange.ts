@@ -78,36 +78,6 @@ export const customOfflineExchange =
                     return `${request.query}_${JSON.stringify(request.variables || {})}_${JSON.stringify(request.extensions || {})}`
                 }
 
-                const isInCriticalTimeWindow = (): boolean => {
-                    const now = Date.now()
-                    const withinStartupWindow = now - pageStartTime <= startupTimeWindow
-                    const withinRecoveryWindow = lastBackendRecoveryTime && now - lastBackendRecoveryTime <= recoveryTimeWindow
-                    return withinStartupWindow || !!withinRecoveryWindow
-                }
-
-                const triggerEmptyArrayReminder = () => {
-                    if (isInCriticalTimeWindow()) {
-                        // 触发自定义事件通知组件显示提醒
-                        if (typeof window !== "undefined") {
-                            window.dispatchEvent(
-                                new CustomEvent("graphql-empty-array-reminder", {
-                                    detail: { show: true },
-                                }),
-                            )
-                        }
-                    }
-                }
-
-                const hideEmptyArrayReminder = () => {
-                    if (typeof window !== "undefined") {
-                        window.dispatchEvent(
-                            new CustomEvent("graphql-empty-array-reminder", {
-                                detail: { show: false },
-                            }),
-                        )
-                    }
-                }
-
                 const updateMetadata = async () => {
                     if (hasRehydrated) {
                         const requests = Array.from(pendingRequests.values())
@@ -149,7 +119,7 @@ export const customOfflineExchange =
 
                             // 如果所有请求都处理完毕，隐藏提醒
                             if (pendingRequests.size === 0) {
-                                hideEmptyArrayReminder()
+                                // hideEmptyArrayReminder()
                             }
                         }
                     }
@@ -171,7 +141,7 @@ export const customOfflineExchange =
 
                             // 如果所有请求都处理完毕，隐藏提醒
                             if (pendingRequests.size === 0) {
-                                hideEmptyArrayReminder()
+                                // hideEmptyArrayReminder()
                             }
                         }
                     }
@@ -220,7 +190,6 @@ export const customOfflineExchange =
 
                         // 设置超时隐藏提醒（10秒后）
                         setTimeout(() => {
-                            hideEmptyArrayReminder()
                             if (typeof window !== "undefined") {
                                 window.dispatchEvent(
                                     new CustomEvent("graphql-processing-queue", {
@@ -293,10 +262,7 @@ export const customOfflineExchange =
                                             const requestId = getRequestId(request)
                                             pendingRequests.set(requestId, request)
                                         }
-                                    } else if (isInCriticalTimeWindow()) {
-                                        triggerEmptyArrayReminder()
                                     }
-
                                     onEntries!(await hydrate)
                                     storage.onOnline!(flushQueue)
                                     hasRehydrated = true

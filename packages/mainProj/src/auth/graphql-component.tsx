@@ -654,21 +654,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
-                cache,
                 errorExchange({
                     onError: (error, operation) => {
                         if (isVersionConflictError(error)) {
-                            console.log("[ErrorExchange] 开始处理版本冲突错误")
-
                             const errorMessage = error.message || error.graphQLErrors?.[0]?.message || "版本冲突错误"
                             const invalidId = error.graphQLErrors?.[0]?.extensions?.invalidId || "未知ID"
-
-                            console.log("[ErrorExchange] 准备显示版本冲突toast")
-
                             // 确保toast在下一个事件循环中显示，避免被其他逻辑阻塞
                             setTimeout(() => {
-                                console.log("[ErrorExchange] 正在显示版本冲突toast")
-
                                 // 显示详细的版本冲突toast提示
                                 toast.error("数据版本冲突", {
                                     description: (
@@ -687,13 +679,9 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                         onClick: () => window.location.reload(),
                                     },
                                 })
-
-                                console.log("[ErrorExchange] 版本冲突toast已显示")
                             }, 50)
-
                             // 添加到版本冲突管理器
                             addConflictRequest(operation, error)
-
                             // 通知自定义离线交换器移除请求（双重保障）
                             if (typeof window !== "undefined") {
                                 setTimeout(() => {
@@ -707,10 +695,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                     )
                                 }, 200)
                             }
-
                             return
                         }
-
                         const has401Error =
                             error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
                         if (has401Error && operation.kind === "mutation") {
@@ -722,6 +708,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
+                cache,
                 makeAuthExchange(accessToken, update, print),
                 updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
                 ssr,

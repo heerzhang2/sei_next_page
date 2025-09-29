@@ -3,18 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import HeaderWrapper from "@/component/header-wrapper"
-import { usePageRefreshProtection } from "@/hooks/use-page-refresh-protection"
-import { PageProtectionModal } from "@/components/page-protection-modal"
-import { useEffect } from "react"
 
 export default function Home() {
-    const { protectedNavigate, enableProtection, isProtected, showModal, pendingNavigation, forceNavigate, closeModal } =
-        usePageRefreshProtection()
-
-    useEffect(() => {
-        enableProtection(5000) // 5秒保护期
-    }, [enableProtection])
-
     return (
         <div className="grid @apply custom-grid-rows items-center justify-items-center min-h-screen p-8 pb-16 gap-12 sm:p-20 font-[family-name:var(--font-geist-sans)]">
             <HeaderWrapper />
@@ -23,11 +13,6 @@ export default function Home() {
                     <Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
                     每日采集 →
                 </Link>
-
-                {isProtected && (
-                    <div className="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded-md">页面保护中，请稍候...</div>
-                )}
-
                 <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
                     <li className="mb-2">
                         <div className="mt-10">
@@ -119,14 +104,6 @@ export default function Home() {
                     style={{ width: "auto", height: "2.2rem", objectFit: "contain" }}
                 />
             </footer>
-
-            <PageProtectionModal
-                isOpen={showModal}
-                onClose={closeModal}
-                onForceNavigate={forceNavigate}
-                remainingTime={pendingNavigation?.remainingTime || 0}
-                targetUrl={pendingNavigation?.url}
-            />
         </div>
     )
 }
