@@ -15,7 +15,6 @@ import type { CombinedError, Exchange, Operation, OperationResult } from "@urql/
 import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
-import { MetadataWriteConfirmationModal } from "@/components/metadata-write-confirmation-modal"
 import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { useOfflineQueueManager } from "@/hooks/use-offline-queue-manager"
 
@@ -557,7 +556,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 idbName: "graphcache-sei",
                 maxAge: 7,
             })
-            storage = {...defaultStorage,}
+            storage = { ...defaultStorage }
         } else {
             storage = {
                 writeData: (data: any) => Promise.resolve(),
@@ -662,8 +661,22 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             const errorMessage = error.message || error.graphQLErrors?.[0]?.message || "版本冲突错误"
                             const invalidId = error.graphQLErrors?.[0]?.extensions?.invalidId || "未知ID"
 
+                            // 通知自定义离线交换器移除请求（如果还没移除的话）
+                            if (typeof window !== "undefined") {
+                                window.dispatchEvent(
+                                    new CustomEvent("graphql-force-remove-request", {
+                                        detail: {
+                                            operation,
+                                            reason: "version-conflict",
+                                        },
+                                    }),
+                                )
+                            }
+
+                            // 添加到版本冲突管理器
                             addConflictRequest(operation, error)
 
+                            // 显示详细的版本冲突toast提示
                             toast.error("数据版本冲突", {
                                 description: (
                                     <div className="space-y-2">
@@ -672,15 +685,17 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                         <p className="text-sm text-gray-500">
                                             该记录已被其他设备或用户修改，请刷新页面获取最新数据后重新操作。
                                         </p>
-                                        <p className="text-sm text-blue-600">冲突请求已保存到版本冲突列表中，可在离线队列管理器中查看。</p>
+                                        <p className="text-sm text-blue-600">冲突请求已从离线队列中移除，并保存到版本冲突列表中。</p>
                                     </div>
                                 ),
-                                duration: 4 * 60 * 60 * 1000,
+                                duration: 4 * 60 * 60 * 1000, // 4小时
                                 action: {
                                     label: "刷新页面",
                                     onClick: () => window.location.reload(),
                                 },
                             })
+
+                            console.log("[ErrorExchange] 版本冲突toast已显示")
                             return
                         }
 

@@ -51,6 +51,18 @@ export const customOfflineExchange =
                     ((typeof navigator !== "undefined" && navigator.onLine === false) ||
                         /request failed|failed to fetch|network\s?error/i.test(error.networkError.message)))
 
+            const isVersionConflictError = (error: any): boolean => {
+                if (!error) return false
+                const errorMessage = error.message || ""
+                return (
+                    errorMessage.includes("操作数据记录已在其它设备或其他人改动") ||
+                    (error.graphQLErrors &&
+                        error.graphQLErrors.some(
+                            (err: any) => err.message && err.message.includes("操作数据记录已在其它设备或其他人改动"),
+                        ))
+                )
+            }
+
             if (storage && storage.onOnline && storage.readMetadata && storage.writeMetadata) {
                 const { forward: outerForward, client, dispatchDebug } = input
                 const { source: reboundOps$, next } = makeSubject<Operation>()
@@ -143,6 +155,28 @@ export const customOfflineExchange =
                     }
                 }
 
+                const forceRemovePendingRequest = async (operation: Operation, reason = "unknown") => {
+                    if (operation.kind === "mutation") {
+                        const request: SerializedRequest = {
+                            query: stringifyDocument(operation.query),
+                            variables: operation.variables,
+                            extensions: operation.extensions,
+                        }
+                        const requestId = getRequestId(request)
+                        if (pendingRequests.has(requestId)) {
+                            console.log(`[CustomOfflineExchange] 强制移除请求 (${reason}):`, requestId)
+                            pendingRequests.delete(requestId)
+                            processingRequests.delete(requestId)
+                            await updateMetadata()
+
+                            // 如果所有请求都处理完毕，隐藏提醒
+                            if (pendingRequests.size === 0) {
+                                hideEmptyArrayReminder()
+                            }
+                        }
+                    }
+                }
+
                 const flushQueue = async () => {
                     if (!isFlushingQueue && pendingRequests.size > 0) {
                         isFlushingQueue = true
@@ -202,12 +236,25 @@ export const customOfflineExchange =
                     window.addEventListener("graphql-backend-recovery", () => {
                         lastBackendRecoveryTime = Date.now()
                     })
+
+                    window.addEventListener("graphql-force-remove-request", ((event: CustomEvent) => {
+                        const { operation, reason } = event.detail
+                        forceRemovePendingRequest(operation, reason)
+                    }) as EventListener)
                 }
 
                 const forward: ExchangeIO = (ops$) => {
                     return pipe(
                         outerForward(ops$),
                         filter((res) => {
+                            if (res.operation.kind === "mutation" && res.error && isVersionConflictError(res.error)) {
+                                console.log("[CustomOfflineExchange] 检测到版本冲突错误，强制移除请求:", res.operation.variables?.id)
+                                // 异步移除请求，不阻塞错误传播
+                                forceRemovePendingRequest(res.operation, "version-conflict").catch(console.error)
+                                // 确保错误继续传播到errorExchange，让toast提示正常显示
+                                return true
+                            }
+
                             if (
                                 hasRehydrated &&
                                 res.operation.kind === "mutation" &&
