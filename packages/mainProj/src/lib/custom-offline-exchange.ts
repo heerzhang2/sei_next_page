@@ -248,10 +248,14 @@ export const customOfflineExchange =
                         outerForward(ops$),
                         filter((res) => {
                             if (res.operation.kind === "mutation" && res.error && isVersionConflictError(res.error)) {
-                                console.log("[CustomOfflineExchange] 检测到版本冲突错误，强制移除请求:", res.operation.variables?.id)
-                                // 异步移除请求，不阻塞错误传播
-                                forceRemovePendingRequest(res.operation, "version-conflict").catch(console.error)
-                                // 确保错误继续传播到errorExchange，让toast提示正常显示
+                                console.log("[CustomOfflineExchange] 检测到版本冲突错误，将移除请求:", res.operation.variables?.id)
+
+                                // 延迟移除请求，确保错误先传播到errorExchange显示toast
+                                setTimeout(() => {
+                                    forceRemovePendingRequest(res.operation, "version-conflict").catch(console.error)
+                                }, 100)
+
+                                // 让错误继续传播到errorExchange，确保toast能正常显示
                                 return true
                             }
 
