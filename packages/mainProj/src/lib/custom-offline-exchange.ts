@@ -69,6 +69,10 @@ export const customOfflineExchange =
 
                 const pendingRequests = new Map<string, SerializedRequest>()
                 const processingRequests = new Set<string>()
+                const requestTimeouts = new Map<string, { timestamp: number; timeoutId?: NodeJS.Timeout }>()
+                const REQUEST_TIMEOUT = 60000 // 60秒超时
+                const MAX_RETRIES = 1 // 最大重试次数
+                const requestRetries = new Map<string, number>()
                 let hasRehydrated = false
                 let isFlushingQueue = false
                 const pageStartTime = Date.now()
@@ -81,6 +85,11 @@ export const customOfflineExchange =
                 const updateMetadata = async () => {
                     if (hasRehydrated) {
                         const requests = Array.from(pendingRequests.values())
+                        const previousCount = pendingRequests.size
+
+                        if (requests.length === 0 && previousCount > 0 && isFlushingQueue) {
+                            triggerOfflineTaskCompletion()
+                        }
 
                         // 如果请求列表为空且在关键时间窗口内，触发提醒
                         if (requests.length === 0 && isInCriticalTimeWindow()) {
@@ -113,13 +122,19 @@ export const customOfflineExchange =
                         }
                         const requestId = getRequestId(request)
                         if (pendingRequests.has(requestId)) {
+                            const previousCount = pendingRequests.size
                             pendingRequests.delete(requestId)
                             processingRequests.delete(requestId)
+                            const timeoutInfo = requestTimeouts.get(requestId)
+                            if (timeoutInfo?.timeoutId) {
+                                clearTimeout(timeoutInfo.timeoutId)
+                            }
+                            requestTimeouts.delete(requestId)
+                            requestRetries.delete(requestId)
                             await updateMetadata()
 
-                            // 如果所有请求都处理完毕，隐藏提醒
-                            if (pendingRequests.size === 0) {
-                                // hideEmptyArrayReminder()
+                            if (pendingRequests.size === 0 && previousCount > 0 && isFlushingQueue) {
+                                triggerOfflineTaskCompletion()
                             }
                         }
                     }
@@ -135,61 +150,111 @@ export const customOfflineExchange =
                         const requestId = getRequestId(request)
                         if (pendingRequests.has(requestId)) {
                             console.log(`[CustomOfflineExchange] 强制移除请求 (${reason}):`, requestId)
+                            const previousCount = pendingRequests.size
                             pendingRequests.delete(requestId)
                             processingRequests.delete(requestId)
+                            const timeoutInfo = requestTimeouts.get(requestId)
+                            if (timeoutInfo?.timeoutId) {
+                                clearTimeout(timeoutInfo.timeoutId)
+                            }
+                            requestTimeouts.delete(requestId)
+                            requestRetries.delete(requestId)
                             await updateMetadata()
 
-                            // 如果所有请求都处理完毕，隐藏提醒
-                            if (pendingRequests.size === 0) {
-                                // hideEmptyArrayReminder()
+                            if (pendingRequests.size === 0 && previousCount > 0 && isFlushingQueue) {
+                                triggerOfflineTaskCompletion()
                             }
                         }
+                    }
+                }
+
+                const processRequest = async (requestId: string, request: SerializedRequest) => {
+                    if (processingRequests.has(requestId)) {
+                        console.log(`[CustomOfflineExchange] 请求 ${requestId} 正在处理中，跳过`)
+                        return
+                    }
+
+                    const retryCount = requestRetries.get(requestId) || 0
+                    if (retryCount >= MAX_RETRIES) {
+                        console.log(`[CustomOfflineExchange] 请求 ${requestId} 已达到最大重试次数，移除`)
+                        const operation = client.createRequestOperation(
+                            "mutation",
+                            createRequest(request.query, request.variables),
+                            request.extensions,
+                        )
+                        await forceRemovePendingRequest(operation, "max-retries-exceeded")
+                        return
+                    }
+
+                    processingRequests.add(requestId)
+                    requestRetries.set(requestId, retryCount + 1)
+
+                    console.log(`[CustomOfflineExchange] 开始处理请求 ${requestId} (第${retryCount + 1}次尝试)`)
+
+                    try {
+                        const operation = client.createRequestOperation(
+                            "mutation",
+                            createRequest(request.query, request.variables),
+                            request.extensions,
+                        )
+
+                        // 设置超时机制
+                        const timeoutId = setTimeout(() => {
+                            console.log(`[CustomOfflineExchange] 请求 ${requestId} 超时，准备重试`)
+                            processingRequests.delete(requestId)
+                            requestTimeouts.delete(requestId)
+
+                            // 延迟重试，避免立即重发
+                            setTimeout(() => {
+                                if (pendingRequests.has(requestId)) {
+                                    processRequest(requestId, request)
+                                }
+                            }, 2000) // 2秒后重试
+                        }, REQUEST_TIMEOUT)
+
+                        requestTimeouts.set(requestId, { timestamp: Date.now(), timeoutId })
+
+                        next(toRequestPolicy(operation, "network-only"))
+                    } catch (error) {
+                        console.error(`[CustomOfflineExchange] 创建操作时出错:`, error)
+                        processingRequests.delete(requestId)
+                        requestTimeouts.delete(requestId)
                     }
                 }
 
                 const flushQueue = async () => {
                     if (!isFlushingQueue && pendingRequests.size > 0) {
                         isFlushingQueue = true
+                        const totalTasks = pendingRequests.size
+
+                        console.log(`[CustomOfflineExchange] 开始处理 ${totalTasks} 个离线请求`)
 
                         // 通知开始处理离线队列
                         if (typeof window !== "undefined") {
                             window.dispatchEvent(
                                 new CustomEvent("graphql-processing-queue", {
-                                    detail: { processing: true, total: pendingRequests.size },
+                                    detail: { processing: true, total: totalTasks },
                                 }),
                             )
                         }
 
-                        const processedOperations = new Set<string>()
+                        const requestEntries = Array.from(pendingRequests.entries())
+                        for (let i = 0; i < requestEntries.length; i++) {
+                            const [requestId, request] = requestEntries[i]
 
-                        for (const [requestId, request] of pendingRequests.entries()) {
-                            if (!processingRequests.has(requestId)) {
-                                processingRequests.add(requestId)
-
-                                try {
-                                    const operation = client.createRequestOperation(
-                                        "mutation",
-                                        createRequest(request.query, request.variables),
-                                        request.extensions,
-                                    )
-
-                                    const operationId = `${operation.query.loc?.source.body}_${JSON.stringify(operation.variables)}`
-
-                                    if (!processedOperations.has(operationId)) {
-                                        processedOperations.add(operationId)
-                                        next(toRequestPolicy(operation, "network-only"))
-                                    }
-                                } catch (error) {
-                                    console.error("[CustomOfflineExchange] Error creating operation:", error)
-                                    processingRequests.delete(requestId)
-                                }
+                            // 添加延迟，避免同时发送太多请求
+                            if (i > 0) {
+                                await new Promise((resolve) => setTimeout(resolve, 3000)) // 每个请求间隔3秒
                             }
+
+                            await processRequest(requestId, request)
                         }
 
-                        isFlushingQueue = false
-
-                        // 设置超时隐藏提醒（10秒后）
                         setTimeout(() => {
+                            if (pendingRequests.size === 0) {
+                                triggerOfflineTaskCompletion()
+                            }
+
                             if (typeof window !== "undefined") {
                                 window.dispatchEvent(
                                     new CustomEvent("graphql-processing-queue", {
@@ -197,7 +262,8 @@ export const customOfflineExchange =
                                     }),
                                 )
                             }
-                        }, 10000)
+                            isFlushingQueue = false
+                        }, 20000) // 延长到20秒，确保所有请求都有时间完成
                     }
                 }
 
@@ -279,6 +345,42 @@ export const customOfflineExchange =
                     dispatchDebug,
                     forward,
                 })
+
+                const triggerOfflineTaskCompletion = () => {
+                    if (typeof window !== "undefined") {
+                        console.log("[CustomOfflineExchange] 所有离线任务已完成，触发完成提醒")
+                        window.dispatchEvent(
+                            new CustomEvent("graphql-offline-tasks-completed", {
+                                detail: {
+                                    message: "所有离线mutation任务已完成发送",
+                                    timestamp: new Date().toLocaleString(),
+                                },
+                            }),
+                        )
+                    }
+                }
+
+                const triggerEmptyArrayReminder = () => {
+                    if (typeof window !== "undefined") {
+                        console.log("[CustomOfflineExchange] 离线请求队列为空，触发提醒")
+                        window.dispatchEvent(
+                            new CustomEvent("graphql-offline-queue-empty", {
+                                detail: {
+                                    message: "离线请求队列为空，请检查网络连接",
+                                    timestamp: new Date().toLocaleString(),
+                                },
+                            }),
+                        )
+                    }
+                }
+
+                const isInCriticalTimeWindow = (): boolean => {
+                    const currentTime = Date.now()
+                    return (
+                        (currentTime - pageStartTime <= startupTimeWindow && !hasRehydrated) ||
+                        (lastBackendRecoveryTime && currentTime - lastBackendRecoveryTime <= recoveryTimeWindow)
+                    )
+                }
 
                 return (operations$) => {
                     const opsAndRebound$ = merge([

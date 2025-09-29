@@ -775,6 +775,34 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             }
         }
 
+        const handleOfflineTasksCompleted = (event: CustomEvent) => {
+            const { message, timestamp } = event.detail
+            console.log("[v0] 收到离线任务完成事件:", message, timestamp)
+
+            // 显示完成提醒toast
+            toast.success("离线任务完成", {
+                description: (
+                    <div className="space-y-1">
+                        <p className="font-medium text-green-700">{message}</p>
+                        <p className="text-sm text-gray-600">完成时间: {timestamp}</p>
+                        <p className="text-sm text-blue-600">所有离线保存的数据变更已成功发送到服务器</p>
+                    </div>
+                ),
+                duration: 8000, // 8秒显示时间
+                action: {
+                    label: "确认",
+                    onClick: () => {
+                        // 可以添加确认后的操作，比如刷新页面数据
+                        console.log("用户确认离线任务完成")
+                    },
+                },
+            })
+
+            // 重置状态
+            setIsProcessingOfflineQueue(false)
+            setShowEmptyArrayReminder(false)
+        }
+
         const handleBackendRecovery = () => {
             backendRecoveryTimeRef.current = Date.now()
             console.log("[v0] 收到后端恢复事件")
@@ -784,11 +812,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
         window.addEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
         window.addEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
+        window.addEventListener("graphql-offline-tasks-completed", handleOfflineTasksCompleted as EventListener)
         window.addEventListener("backend-status-changed", handleBackendRecovery as EventListener)
 
         return () => {
             window.removeEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
             window.removeEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
+            window.removeEventListener("graphql-offline-tasks-completed", handleOfflineTasksCompleted as EventListener)
             window.removeEventListener("backend-status-changed", handleBackendRecovery as EventListener)
         }
     }, [])
