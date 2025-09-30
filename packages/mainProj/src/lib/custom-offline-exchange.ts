@@ -3,6 +3,7 @@ import type { Operation, OperationResult, Exchange, ExchangeIO, CombinedError, R
 import { stringifyDocument, createRequest, makeOperation } from "@urql/core"
 import type { SerializedRequest, CacheExchangeOpts, StorageAdapter } from "@urql/exchange-graphcache"
 import { cacheExchange } from "@urql/exchange-graphcache"
+import { mutationBackupStorage, type MutationBackupItem } from "./mutation-backup-storage"
 
 const toRequestPolicy = (operation: Operation, policy: RequestPolicy): Operation => {
     return makeOperation(operation.kind, operation, {
@@ -30,7 +31,7 @@ export interface CustomOfflineExchangeOpts extends CacheExchangeOpts {
     recoveryTimeWindow?: number
 }
 
-/**用默认的没法满足要求，只好自己来定做：离线交换器工厂函数
+/**用默认的没法满足要求,只好自己来定做：离线交换器工厂函数
  *【变更点】避免了请求没有成功发送但却丢失Metadata请求的情况，通过先读取现有Metadata、发送请求、收到成功响应后再删除的方式，确保了离线请求的可靠性。
  *取代原本的 import { offlineExchange } from "@urql/exchange-graphcache" 默认工厂。
  *实际是模仿替代了"@urql/exchange-graphcache" : "7.2.2",包的里面的src/offlineExchange.ts。
@@ -68,15 +69,42 @@ export const customOfflineExchange =
                 const { source: reboundOps$, next } = makeSubject<Operation>()
 
                 const pendingRequests = new Map<string, SerializedRequest>()
-                const processingRequests = new Set<string>()
-                const requestTimeouts = new Map<string, { timestamp: number; timeoutId?: NodeJS.Timeout }>()
-                const REQUEST_TIMEOUT = 60000 // 60秒超时
-                const MAX_RETRIES = 2 // 最大重试次数
-                const requestRetries = new Map<string, number>()
+                const requestKeyMap = new Map<string, number>()
                 let hasRehydrated = false
                 let isFlushingQueue = false
                 const pageStartTime = Date.now()
                 let lastBackendRecoveryTime: number | null = null
+
+                mutationBackupStorage
+                    .init()
+                    .then(() => {
+                        console.log("[CustomOfflineExchange] MutationBackupStorage已初始化")
+
+                        // 启动超时检查
+                        mutationBackupStorage.startTimeoutCheck(async (timeoutMutations: MutationBackupItem[]) => {
+                            console.log(`[CustomOfflineExchange] 发现${timeoutMutations.length}个超时mutation，将加入failedQueue`)
+
+                            // 将超时的mutation加入到pendingRequests，以便下次发送
+                            for (const mutation of timeoutMutations) {
+                                const request: SerializedRequest = {
+                                    query: mutation.query,
+                                    variables: mutation.variables,
+                                    extensions: mutation.extensions,
+                                }
+                                const requestId = getRequestId(request)
+                                if (!pendingRequests.has(requestId)) {
+                                    pendingRequests.set(requestId, request)
+                                    console.log(`[CustomOfflineExchange] 超时mutation已加入pendingRequests: ${requestId}`)
+                                }
+                            }
+
+                            // 更新metadata，将超时的mutation写入离线缓存
+                            await updateMetadata()
+                        })
+                    })
+                    .catch((error) => {
+                        console.error("[CustomOfflineExchange] MutationBackupStorage初始化失败:", error)
+                    })
 
                 const getRequestId = (request: SerializedRequest): string => {
                     return `${request.query}_${JSON.stringify(request.variables || {})}_${JSON.stringify(request.extensions || {})}`
@@ -109,6 +137,7 @@ export const customOfflineExchange =
                         }
                         const requestId = getRequestId(request)
                         pendingRequests.set(requestId, request)
+                        requestKeyMap.set(requestId, operation.key)
                         await updateMetadata()
                     }
                 }
@@ -124,13 +153,13 @@ export const customOfflineExchange =
                         if (pendingRequests.has(requestId)) {
                             const previousCount = pendingRequests.size
                             pendingRequests.delete(requestId)
-                            processingRequests.delete(requestId)
-                            const timeoutInfo = requestTimeouts.get(requestId)
-                            if (timeoutInfo?.timeoutId) {
-                                clearTimeout(timeoutInfo.timeoutId)
+
+                            const operationKey = requestKeyMap.get(requestId)
+                            if (operationKey !== undefined) {
+                                await mutationBackupStorage.removeMutation(operationKey)
+                                requestKeyMap.delete(requestId)
                             }
-                            requestTimeouts.delete(requestId)
-                            requestRetries.delete(requestId)
+
                             await updateMetadata()
 
                             if (pendingRequests.size === 0 && previousCount > 0 && isFlushingQueue) {
@@ -152,73 +181,19 @@ export const customOfflineExchange =
                             console.log(`[CustomOfflineExchange] 强制移除请求 (${reason}):`, requestId)
                             const previousCount = pendingRequests.size
                             pendingRequests.delete(requestId)
-                            processingRequests.delete(requestId)
-                            const timeoutInfo = requestTimeouts.get(requestId)
-                            if (timeoutInfo?.timeoutId) {
-                                clearTimeout(timeoutInfo.timeoutId)
+
+                            const operationKey = requestKeyMap.get(requestId)
+                            if (operationKey !== undefined) {
+                                await mutationBackupStorage.removeMutation(operationKey)
+                                requestKeyMap.delete(requestId)
                             }
-                            requestTimeouts.delete(requestId)
-                            requestRetries.delete(requestId)
+
                             await updateMetadata()
 
                             if (pendingRequests.size === 0 && previousCount > 0 && isFlushingQueue) {
                                 triggerOfflineTaskCompletion()
                             }
                         }
-                    }
-                }
-
-                const processRequest = async (requestId: string, request: SerializedRequest) => {
-                    if (processingRequests.has(requestId)) {
-                        console.log(`[CustomOfflineExchange] 请求 ${requestId} 正在处理中，跳过`)
-                        return
-                    }
-
-                    const retryCount = requestRetries.get(requestId) || 0
-                    if (retryCount >= MAX_RETRIES) {
-                        console.log(`[CustomOfflineExchange] 请求 ${requestId} 已达到最大重试次数，移除`)
-                        const operation = client.createRequestOperation(
-                            "mutation",
-                            createRequest(request.query, request.variables),
-                            request.extensions,
-                        )
-                        await forceRemovePendingRequest(operation, "max-retries-exceeded")
-                        return
-                    }
-
-                    processingRequests.add(requestId)
-                    requestRetries.set(requestId, retryCount + 1)
-
-                    console.log(`[CustomOfflineExchange] 开始处理请求 ${requestId} (第${retryCount + 1}次尝试)`)
-
-                    try {
-                        const operation = client.createRequestOperation(
-                            "mutation",
-                            createRequest(request.query, request.variables),
-                            request.extensions,
-                        )
-
-                        // 设置超时机制
-                        const timeoutId = setTimeout(() => {
-                            console.log(`[CustomOfflineExchange] 请求 ${requestId} 超时，准备重试`)
-                            processingRequests.delete(requestId)
-                            requestTimeouts.delete(requestId)
-
-                            // 延迟重试，避免立即重发
-                            setTimeout(() => {
-                                if (pendingRequests.has(requestId)) {
-                                    processRequest(requestId, request)
-                                }
-                            }, 2000) // 2秒后重试
-                        }, REQUEST_TIMEOUT)
-
-                        requestTimeouts.set(requestId, { timestamp: Date.now(), timeoutId })
-
-                        next(toRequestPolicy(operation, "network-only"))
-                    } catch (error) {
-                        console.error(`[CustomOfflineExchange] 创建操作时出错:`, error)
-                        processingRequests.delete(requestId)
-                        requestTimeouts.delete(requestId)
                     }
                 }
 
@@ -244,10 +219,30 @@ export const customOfflineExchange =
 
                             // 添加延迟，避免同时发送太多请求
                             if (i > 0) {
-                                await new Promise((resolve) => setTimeout(resolve, 3000)) // 每个请求间隔3秒
+                                await new Promise((resolve) => setTimeout(resolve, 1000)) // 每个请求间隔1秒
                             }
 
-                            await processRequest(requestId, request)
+                            try {
+                                const operation = client.createRequestOperation(
+                                    "mutation",
+                                    createRequest(request.query, request.variables),
+                                    request.extensions,
+                                )
+
+                                await mutationBackupStorage.addMutation(
+                                    operation.key,
+                                    request.query,
+                                    request.variables,
+                                    request.extensions,
+                                )
+
+                                requestKeyMap.set(requestId, operation.key)
+
+                                console.log(`[CustomOfflineExchange] 发送请求: ${requestId}`)
+                                next(toRequestPolicy(operation, "network-only"))
+                            } catch (error) {
+                                console.error(`[CustomOfflineExchange] 创建操作时出错:`, error)
+                            }
                         }
 
                         setTimeout(() => {
@@ -263,7 +258,7 @@ export const customOfflineExchange =
                                 )
                             }
                             isFlushingQueue = false
-                        }, 20000) // 延长到20秒，确保所有请求都有时间完成
+                        }, 5000) // 5秒后标记完成
                     }
                 }
 
@@ -294,17 +289,13 @@ export const customOfflineExchange =
                                 return true
                             }
 
-                            if (
-                                hasRehydrated &&
-                                res.operation.kind === "mutation" &&
-                                res.operation.context.optimistic &&
-                                isOfflineError(res.error, res)
-                            ) {
+                            if (hasRehydrated && res.operation.kind === "mutation" && res.error && isOfflineError(res.error, res)) {
+                                console.log("[CustomOfflineExchange] 检测到离线错误，添加到pending:", res.operation.variables?.id)
                                 addPendingRequest(res.operation)
                                 return false
                             }
 
-                            if (res.operation.kind === "mutation" && !res.error && !isOfflineError(res.error, res)) {
+                            if (res.operation.kind === "mutation" && !res.error) {
                                 removePendingRequest(res.operation)
                             }
 
