@@ -654,6 +654,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const client = createClient({
             url: `${epoint}/graphql`,
             exchanges: [
+                cache,
                 errorExchange({
                     onError: (error, operation) => {
                         if (isVersionConflictError(error)) {
@@ -708,7 +709,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
-                cache,
                 makeAuthExchange(accessToken, update, print),
                 updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
                 ssr,
