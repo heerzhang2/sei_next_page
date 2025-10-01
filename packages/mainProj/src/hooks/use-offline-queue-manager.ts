@@ -201,15 +201,20 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             )
 
             try {
-                // 触发网络状态变化，让URQL自动重试
-                window.dispatchEvent(new Event("online"))
+                const requestId = `${request.query}_${JSON.stringify(request.variables || {})}_${JSON.stringify(request.extensions || {})}`
+
+                window.dispatchEvent(
+                    new CustomEvent("graphql-manual-retry", {
+                        detail: { requestId, retryAll: false },
+                    }),
+                )
 
                 toast.success(`操作 "${request.operationName}" 已触发重试`)
 
                 // 等待一段时间后检查状态
                 setTimeout(async () => {
                     await syncWithUrqlQueue()
-                }, 4000)
+                }, 2000)
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : "未知错误"
 
@@ -262,6 +267,12 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         setIsProcessing(true)
         const pendingRequests = queuedRequests.filter((r) => r.status === "pending" || r.status === "failed")
 
+        if (pendingRequests.length === 0) {
+            toast.info("没有需要重试的请求")
+            setIsProcessing(false)
+            return
+        }
+
         // 批量更新状态
         setQueuedRequests((prev) =>
             prev.map((r) =>
@@ -271,14 +282,18 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             ),
         )
 
-        // 触发网络重连事件，让URQL处理重试
-        window.dispatchEvent(new Event("online"))
+        window.dispatchEvent(
+            new CustomEvent("graphql-manual-retry", {
+                detail: { retryAll: true },
+            }),
+        )
+
+        toast.success(`开始重试 ${pendingRequests.length} 个请求`)
 
         setTimeout(async () => {
             setIsProcessing(false)
             await syncWithUrqlQueue()
-            toast.success("所有请求重试完成")
-        }, 5000)
+        }, 3000)
     }, [queuedRequests, syncWithUrqlQueue])
 
     const clearQueue = useCallback(async () => {
@@ -304,22 +319,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
                 console.log("[OfflineQueueManager] 没有需要备份的离线队列数据")
                 return
             }
-            // const backupData = {
-            //     requests,
-            //     source,
-            //     timestamp: Date.now(),
-            //     version: "2.0",
-            //     count: requests.length,
-            // }
-            // 保存到localStorage作为临时备份
-            // const existingBackups = JSON.parse(localStorage.getItem(OFFLINE_BACKUP_KEY) || "[]")
-            // existingBackups.push(backupData)
-            // // 只保留最近10个备份
-            // if (existingBackups.length > 10) {
-            //     existingBackups.splice(0, existingBackups.length - 10)
-            // }
-            // localStorage.setItem(OFFLINE_BACKUP_KEY, JSON.stringify(existingBackups))
-            //保存到IndexedDB作为持久备份
+            // 保存到IndexedDB作为持久备份
             try {
                 const db = await openUrqlDatabase()
                 const transaction = db.transaction(["metadata"], "readwrite")

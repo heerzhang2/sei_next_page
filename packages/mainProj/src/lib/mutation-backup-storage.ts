@@ -1,6 +1,6 @@
 import { IndexedDBCache, type BaseCacheItem } from "./indexeddb-cache"
 
-// 备份的mutation请求项
+//@Deprecated 备份的mutation请求项
 export interface MutationBackupItem extends BaseCacheItem {
     id: string // 使用operation.key作为唯一标识
     query: string
@@ -11,9 +11,9 @@ export interface MutationBackupItem extends BaseCacheItem {
     nextRetryTime: number // 下次允许重试的时间戳
 }
 
-// Mutation备份存储管理器
+//@Deprecated Mutation备份存储管理器
 export class MutationBackupStorage extends IndexedDBCache<MutationBackupItem> {
-    private readonly BASE_TIMEOUT_MS = 30 * 1000 // 基础超时30秒
+    private readonly BASE_TIMEOUT_MS = 60 * 1000 // 基础超时60秒
     private readonly RETRY_INCREMENT_MS = 30 * 1000 // 每次重试增加30秒
     private checkInterval: NodeJS.Timeout | null = null
 
@@ -26,10 +26,10 @@ export class MutationBackupStorage extends IndexedDBCache<MutationBackupItem> {
     }
 
     private calculateNextRetryDelay(retryCount: number): number {
-        // 第一次发送后等待30秒
-        // 第一次重试（retryCount=1）等待60秒 (30 + 30*1)
-        // 第二次重试（retryCount=2）等待90秒 (30 + 30*2)
-        // 第三次重试（retryCount=3）等待120秒 (30 + 30*3)
+        // 第一次发送后等待60秒
+        // 第一次重试（retryCount=1）等待60秒 (60 + 30*1)
+        // 第二次重试（retryCount=2）等待90秒 (60 + 30*2)
+        // 第三次重试（retryCount=3）等待120秒 (60 + 30*3)
         return this.BASE_TIMEOUT_MS + this.RETRY_INCREMENT_MS * retryCount
     }
 
@@ -142,9 +142,9 @@ export class MutationBackupStorage extends IndexedDBCache<MutationBackupItem> {
             clearInterval(this.checkInterval)
         }
 
-        console.log("[MutationBackup] 启动超时检查，间隔30秒")
+        console.log("[MutationBackup] 启动超时检查，间隔45秒")
 
-        // 每30秒检查一次
+        // 每45秒检查一次
         this.checkInterval = setInterval(async () => {
             try {
                 const retryableMutations = await this.getRetryableMutations()
@@ -159,7 +159,7 @@ export class MutationBackupStorage extends IndexedDBCache<MutationBackupItem> {
             } catch (error) {
                 console.error("[MutationBackup] 检查超时mutation失败:", error)
             }
-        }, 30000) // 30秒检查一次
+        }, 45000) // 45秒检查一次
     }
 
     // 停止超时检查
@@ -178,5 +178,5 @@ export class MutationBackupStorage extends IndexedDBCache<MutationBackupItem> {
     }
 }
 
-// 创建单例实例
+//@Deprecated 创建单例实例
 export const mutationBackupStorage = new MutationBackupStorage()

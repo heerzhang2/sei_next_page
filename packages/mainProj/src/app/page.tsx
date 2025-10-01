@@ -29,6 +29,9 @@ export default function Home() {
                             <Link href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1">查阅当前1份报告-管道的</Link>
                         </div>
                         <div className="mt-10">
+                            <Link href="/login">登录。。。</Link>
+                        </div>
+                        <div className="mt-10">
                             <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">查阅当前2份报告-滑行车</Link>
                         </div>
 
@@ -53,9 +56,6 @@ export default function Home() {
                         </div>
                         <div className="mt-10">
                             <Link href="/process-start">⬅️ 验证rr登录</Link>
-                        </div>
-                        <div className="mt-10">
-                            <Link href="/login">登录</Link>
                         </div>
                     </li>
                     <li>Save and see your changes instantly.</li>

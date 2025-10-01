@@ -478,42 +478,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const [isClient, setIsClient] = useState(false)
     const { addConflictRequest } = useVersionConflictManager()
     const { backupOfflineQueue } = useOfflineQueueManager()
-    const pageStartTimeRef = useRef<number>(Date.now())
-    const backendRecoveryTimeRef = useRef<number | null>(null)
-    const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
-    const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false)
-    const emptyArrayReminderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-    useEffect(() => {
-        const handleBackendStatusChange = (event: CustomEvent) => {
-            const { wasOffline, isNowOnline } = event.detail
-            if (wasOffline && isNowOnline) {
-                backendRecoveryTimeRef.current = Date.now()
-                console.log("[v0] 检测到后端恢复在线，记录恢复时间")
-            }
-        }
-
-        window.addEventListener("backend-status-changed", handleBackendStatusChange as EventListener)
-
-        return () => {
-            window.removeEventListener("backend-status-changed", handleBackendStatusChange as EventListener)
-        }
-    }, [])
-
-    const isInCriticalTimeWindow = useCallback((): boolean => {
-        const now = Date.now()
-        const pageStartWindow = now - pageStartTimeRef.current <= 60000 //页面加载60秒内
-        const backendRecoveryWindow = backendRecoveryTimeRef.current && now - backendRecoveryTimeRef.current <= 60000 //后端恢复60秒内
-        return pageStartWindow || !!backendRecoveryWindow
-    }, [])
-
     useEffect(() => {
         setIsClient(true)
     }, [])
-
     const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
     const mountCountRef = useRef(0)
-
     useEffect(() => {
         mountCountRef.current++
         console.log(`[v0] GraphQLProvider mounted - 实例ID: ${instanceIdRef.current}, 挂载次数: ${mountCountRef.current}`)
@@ -522,12 +491,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             console.log(`[v0] GraphQLProvider unmounted - 实例ID: ${instanceIdRef.current}`)
         }
     }, [])
-
     const clientRef = useRef<any>(null)
     const ssrRef = useRef<any>(null)
     const lastTokenRef = useRef<string | null>(null)
     const initializedRef = useRef(false)
-
     useEffect(() => {
         if (!initializedRef.current) {
             initializedRef.current = true
@@ -541,16 +508,8 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             lastTokenRef.current = accessToken
         }
     }, [accessToken])
-
-    const createClientStable = useCallback(() => {
-        if (!isClient) {
-            return [null, null]
-        }
-        if (lastTokenRef.current === accessToken && clientRef.current) {
-            return [clientRef.current, ssrRef.current]
-        }
-        lastTokenRef.current = accessToken
-        let storage
+   const [cache,storage]=useMemo(() => {
+        let storage;
         if (typeof window !== "undefined") {
             const defaultStorage = makeDefaultStorage({
                 idbName: "graphcache-sei",
@@ -565,8 +524,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 readMetadata: () => Promise.resolve(null),
             }
         }
-
-        const cache = customOfflineExchange({
+        const custCache = customOfflineExchange({
             schema,
             keys: {
                 RepLink: () => null,
@@ -583,8 +541,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 }
                 return shouldQueue
             },
-            startupTimeWindow: 30000, // 30秒
-            recoveryTimeWindow: 30000, // 30秒
             storage: {
                 ...storage,
                 writeMetadata: async (json: SerializedRequest[]) => {
@@ -646,7 +602,18 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 },
             },
         })
+        return [custCache, storage]
+    }, [])
 
+    const createClientStable = useCallback(() => {
+        if (!isClient) {
+            return [null, null]
+        }
+        if (lastTokenRef.current === accessToken && clientRef.current) {
+            return [clientRef.current, ssrRef.current]
+        }
+        lastTokenRef.current = accessToken
+        //cache=原来的构件位置
         const ssr = ssrExchange({
             isClient: typeof window !== "undefined",
         })
@@ -749,36 +716,9 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     }, [accessToken, createClientStable, isClient])
 
     useEffect(() => {
-        const handleEmptyArrayReminder = (event: CustomEvent) => {
-            const { show } = event.detail
-            console.log("[v0] 收到空数组提醒事件:", show)
-            setShowEmptyArrayReminder(show)
-            if (show) {
-                setIsProcessingOfflineQueue(true)
-                // 设置超时自动隐藏
-                if (emptyArrayReminderTimeoutRef.current) {
-                    clearTimeout(emptyArrayReminderTimeoutRef.current)
-                }
-                emptyArrayReminderTimeoutRef.current = setTimeout(() => {
-                    setShowEmptyArrayReminder(false)
-                    setIsProcessingOfflineQueue(false)
-                }, 10000)
-            }
-        }
-
-        const handleProcessingQueue = (event: CustomEvent) => {
-            const { processing, total } = event.detail
-            console.log("[v0] 收到队列处理事件:", processing, "总数:", total)
-            setIsProcessingOfflineQueue(processing)
-            if (!processing) {
-                setShowEmptyArrayReminder(false)
-            }
-        }
-
         const handleOfflineTasksCompleted = (event: CustomEvent) => {
             const { message, timestamp } = event.detail
             console.log("[v0] 收到离线任务完成事件:", message, timestamp)
-
             // 显示完成提醒toast
             toast.success("离线任务完成", {
                 description: (
@@ -797,27 +737,15 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 },
             })
-
-            // 重置状态
-            setIsProcessingOfflineQueue(false)
-            setShowEmptyArrayReminder(false)
         }
-
         const handleBackendRecovery = () => {
-            backendRecoveryTimeRef.current = Date.now()
             console.log("[v0] 收到后端恢复事件")
             // 触发自定义事件通知自定义离线交换器
             window.dispatchEvent(new CustomEvent("graphql-backend-recovery"))
         }
-
-        window.addEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
-        window.addEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
         window.addEventListener("graphql-offline-tasks-completed", handleOfflineTasksCompleted as EventListener)
         window.addEventListener("backend-status-changed", handleBackendRecovery as EventListener)
-
         return () => {
-            window.removeEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
-            window.removeEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
             window.removeEventListener("graphql-offline-tasks-completed", handleOfflineTasksCompleted as EventListener)
             window.removeEventListener("backend-status-changed", handleBackendRecovery as EventListener)
         }
@@ -828,11 +756,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     }
     return (
         <UrqlProvider client={client} ssr={ssr}>
-            <div
-                data-empty-array-reminder={showEmptyArrayReminder.toString()}
-                data-processing-queue={isProcessingOfflineQueue.toString()}
-                style={{ display: "none" }}
-            />
             {children}
             {pathname !== "/login" && ConfirmDialog}
         </UrqlProvider>

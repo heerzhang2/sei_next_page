@@ -528,7 +528,5 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 {1}两个的，reload， 就会丢了一个。
 {2}检测到401错误，token无效，准备触发刷新流程,app401= false
 【hez1】 authorization 【1】账户改的=  Bearer%20iNW8BnPJexI0MIInYjQwm4Qr  【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN
-https://v0.app/chat/serwist-urq-offline-cache-wnDI5hlCctH
-能不能在主页面刚刚启动的30秒之内，或者java graphQL后端恢复在线的30秒之内，若graphql-component.tsx的第635行代码writeMetadata: async (json: SerializedRequest[]) => {  假如碰到json是空数组的情形下，弹出一个提醒信息，提示用户不要着急重新加载页面，随后发送的mutation请求包正常10秒钟应答时间之内要持续点亮提示信息一直到离线请求列表都发送一遍完毕。
-
+https://v0.app/chat/metedata-pl7rXA23woe
 队列数据丢失
