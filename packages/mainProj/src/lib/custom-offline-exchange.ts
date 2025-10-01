@@ -70,17 +70,21 @@ export const customOfflineExchange =
 
                 const pendingRequests = new Map<string, SerializedRequest>()
                 const requestKeyMap = new Map<string, number>()
+                const sendingRequests = new Set<string>()
                 let hasRehydrated = false
                 let isFlushingQueue = false
-                let flushQueuePromise: Promise<void> | null = null // 新增：全局 Promise 锁
-                let onlineHandlerRegistered = false // 新增：防止重复注册 online 监听器
+                let flushQueuePromise: Promise<void> | null = null
+                let onlineHandlerRegistered = false
                 const pageStartTime = Date.now()
                 let lastBackendRecoveryTime: number | null = null
 
                 mutationBackupStorage
                     .init()
-                    .then(() => {
+                    .then(async () => {
                         console.log("[CustomOfflineExchange] MutationBackupStorage已初始化")
+
+                        const allBackupMutations = await mutationBackupStorage.getAllMutations()
+                        console.log(`[CustomOfflineExchange] 备份存储中有${allBackupMutations.length}个mutation`)
 
                         // 启动超时检查
                         mutationBackupStorage.startTimeoutCheck(async (timeoutMutations: MutationBackupItem[]) => {
@@ -156,6 +160,8 @@ export const customOfflineExchange =
                             const previousCount = pendingRequests.size
                             pendingRequests.delete(requestId)
 
+                            sendingRequests.delete(requestId)
+
                             const operationKey = requestKeyMap.get(requestId)
                             if (operationKey !== undefined) {
                                 await mutationBackupStorage.removeMutation(operationKey)
@@ -184,6 +190,8 @@ export const customOfflineExchange =
                             const previousCount = pendingRequests.size
                             pendingRequests.delete(requestId)
 
+                            sendingRequests.delete(requestId)
+
                             const operationKey = requestKeyMap.get(requestId)
                             if (operationKey !== undefined) {
                                 await mutationBackupStorage.removeMutation(operationKey)
@@ -199,7 +207,6 @@ export const customOfflineExchange =
                     }
                 }
 
-                // 修改后的 flushQueue 函数，加强锁机制
                 const flushQueue = async (): Promise<void> => {
                     // 如果已经在执行，返回同一个 Promise
                     if (flushQueuePromise) {
@@ -229,9 +236,21 @@ export const customOfflineExchange =
                                 for (let i = 0; i < requestEntries.length; i++) {
                                     const [requestId, request] = requestEntries[i]
 
+                                    if (sendingRequests.has(requestId)) {
+                                        console.log(`[CustomOfflineExchange] 请求已在发送中，跳过重复: ${requestId}`)
+                                        continue
+                                    }
+
                                     // 检查请求是否还在队列中（可能被其他逻辑移除）
                                     if (!pendingRequests.has(requestId)) {
                                         console.log(`[CustomOfflineExchange] 请求已被移除，跳过: ${requestId}`)
+                                        continue
+                                    }
+
+                                    const existingBackup = await mutationBackupStorage.getMutationByRequestId(requestId)
+                                    if (existingBackup) {
+                                        console.log(`[CustomOfflineExchange] 请求已在备份存储中，跳过重复添加: ${requestId}`)
+                                        sendingRequests.add(requestId)
                                         continue
                                     }
 
@@ -247,6 +266,9 @@ export const customOfflineExchange =
                                             request.extensions,
                                         )
 
+                                        sendingRequests.add(requestId)
+
+                                        // 添加到备份存储
                                         await mutationBackupStorage.addMutation(
                                             operation.key,
                                             request.query,
@@ -260,6 +282,7 @@ export const customOfflineExchange =
                                         next(toRequestPolicy(operation, "network-only"))
                                     } catch (error) {
                                         console.error(`[CustomOfflineExchange] 创建操作时出错:`, error)
+                                        sendingRequests.delete(requestId)
                                     }
                                 }
 
@@ -301,7 +324,7 @@ export const customOfflineExchange =
                     } else {
                         console.log("[CustomOfflineExchange] 跳过离线队列处理:", {
                             hasRehydrated,
-                            pendingRequestsSize: pendingRequests.size
+                            pendingRequestsSize: pendingRequests.size,
                         })
                     }
                 }
@@ -319,7 +342,7 @@ export const customOfflineExchange =
                     }) as EventListener)
 
                     // 监听浏览器在线事件
-                    window.addEventListener('online', () => {
+                    window.addEventListener("online", () => {
                         console.log("[CustomOfflineExchange] 浏览器在线状态恢复")
                         triggerOfflineQueueProcessing().catch(console.error)
                     })

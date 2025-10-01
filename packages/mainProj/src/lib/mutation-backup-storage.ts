@@ -23,8 +23,36 @@ export class MutationBackupStorage extends IndexedDBCache<MutationBackupItem> {
         })
     }
 
+    // 生成requestId的辅助方法
+    private getRequestId(query: string, variables: any, extensions?: Record<string, any>): string {
+        return `${query}_${JSON.stringify(variables || {})}_${JSON.stringify(extensions || {})}`
+    }
+
+    // 根据requestId查询是否存在该mutation
+    async getMutationByRequestId(requestId: string): Promise<MutationBackupItem | null> {
+        const allMutations = await this.getAllCached()
+        const found = allMutations.find((item) => {
+            const itemRequestId = this.getRequestId(item.query, item.variables, item.extensions)
+            return itemRequestId === requestId
+        })
+        return found || null
+    }
+
+    // 获取所有mutation
+    async getAllMutations(): Promise<MutationBackupItem[]> {
+        return await this.getAllCached()
+    }
+
     // 添加mutation到备份存储
     async addMutation(key: number, query: string, variables: any, extensions?: Record<string, any>): Promise<void> {
+        const requestId = this.getRequestId(query, variables, extensions)
+        const existing = await this.getMutationByRequestId(requestId)
+
+        if (existing) {
+            console.log(`[MutationBackup] mutation已存在于备份存储中，跳过添加: ${key}`)
+            return
+        }
+
         const item: MutationBackupItem = {
             id: String(key),
             query,
