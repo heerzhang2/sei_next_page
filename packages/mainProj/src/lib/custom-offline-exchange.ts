@@ -88,7 +88,7 @@ export const customOfflineExchange =
 
                         // 启动超时检查
                         mutationBackupStorage.startTimeoutCheck(async (timeoutMutations: MutationBackupItem[]) => {
-                            console.log(`[CustomOfflineExchange] 发现${timeoutMutations.length}个超时mutation，将加入failedQueue`)
+                            console.log(`[CustomOfflineExchange] 发现${timeoutMutations.length}个可重试mutation，将加入failedQueue`)
 
                             // 将超时的mutation加入到pendingRequests，以便下次发送
                             for (const mutation of timeoutMutations) {
@@ -100,12 +100,16 @@ export const customOfflineExchange =
                                 const requestId = getRequestId(request)
                                 if (!pendingRequests.has(requestId)) {
                                     pendingRequests.set(requestId, request)
-                                    console.log(`[CustomOfflineExchange] 超时mutation已加入pendingRequests: ${requestId}`)
+                                    console.log(
+                                        `[CustomOfflineExchange] 可重试mutation已加入pendingRequests: ${requestId}, 重试次数: ${mutation.retryCount + 1}`,
+                                    )
                                 }
                             }
 
                             // 更新metadata，将超时的mutation写入离线缓存
                             await updateMetadata()
+
+                            await triggerOfflineQueueProcessing()
                         })
                     })
                     .catch((error) => {
