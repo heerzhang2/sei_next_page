@@ -104,13 +104,8 @@ export interface RepVwProps{
 
 
 export const OriginalDataMutation =gql`
-    mutation useOriginalDataMutation(
-        $id: ID!
-        $operationType:Int!
-        $data: String
-        $deduction: String, $version:Int
-    ) {
-        modifyOriginalRecordData(id: $id, operationType: $operationType, data: $data, deduction: $deduction,version: $version) {
+    mutation useOriginalDataMutation( $id: ID! $data: String $client: String!, $version:Int ) {
+        modifyOriginalRecordData(id: $id, data: $data, client: $client,version: $version) {
             id,version,type
             data
             snapshot

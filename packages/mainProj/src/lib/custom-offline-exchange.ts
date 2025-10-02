@@ -11,13 +11,6 @@ const toRequestPolicy = (operation: Operation, policy: RequestPolicy): Operation
     })
 }
 
-const policyLevel = {
-    "cache-only": 0,
-    "cache-first": 1,
-    "network-only": 2,
-    "cache-and-network": 3,
-} as const
-
 /** 自定义离线交换器配置选项 */
 export interface CustomOfflineExchangeOpts extends CacheExchangeOpts {
     /** 离线存储适配器 */
@@ -105,9 +98,26 @@ export const customOfflineExchange =
                 let flushQueuePromise: Promise<void> | null = null
                 let onlineHandlerRegistered = false
                 //只适合每一个可离线的mutation的：
+
+                const getMutationName = (query: string): string | null => {
+                    // Match pattern: mutation MutationName or mutation { ... }
+                    const match = query.match(/mutation\s+(\w+)/)
+                    return match ? match[1] : null
+                }
+
                 const getRequestId = (request: SerializedRequest): string => {
-                    //根据不同的mutation接口来具体优化生成的id：
-                    return `${request.query}_${JSON.stringify(request.variables || {})}_${JSON.stringify(request.extensions || {})}`
+                    const mutationName = getMutationName(request.query)
+
+                    let variables = request.variables || {}
+
+                    // For useOriginalDataMutation, exclude the 'data' variable from ID generation
+                    if (mutationName === "useOriginalDataMutation" && variables.data) {
+                        const { data, ...restVariables } = variables
+                        variables = restVariables
+                        console.log(`[v0] useOriginalDataMutation detected, excluding 'data' from ID generation`)
+                    }
+
+                    return `${request.query}_${JSON.stringify(variables)}_${JSON.stringify(request.extensions || {})}`
                 }
 
                 const updateMetadata = async () => {
@@ -347,12 +357,10 @@ export const customOfflineExchange =
                         filter((res) => {
                             if (res.operation.kind === "mutation" && res.error && isVersionConflictError(res.error)) {
                                 console.log("[v0] 检测到版本冲突错误，将移除请求:", res.operation.variables?.id)
-
                                 // 延迟移除请求，确保错误先传播到errorExchange显示toast
                                 setTimeout(() => {
                                     forceRemovePendingRequest(res.operation, "version-conflict").catch(console.error)
                                 }, 100)
-
                                 // 让错误继续传播到errorExchange，确保toast能正常显示
                                 return true
                             }
@@ -399,7 +407,6 @@ export const customOfflineExchange =
                                     }
 
                                     hasRehydrated = true
-
                                     // 水合完成后触发队列处理（通过统一入口）
                                     if (pendingRequests.size > 0) {
                                         console.log("[v0] 水合完成，开始处理离线队列")

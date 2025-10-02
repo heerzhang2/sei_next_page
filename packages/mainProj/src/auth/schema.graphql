@@ -1321,7 +1321,7 @@ type Mutation {
   newReport(isp: ID!, master: ID, ispMens: [ID], reviewer: ID, approver: ID, modeltype: String!, modelversion: Int!): Report!
 
   """buildReport(isp: ID!,no: String!,path: String!) : Report!"""
-  modifyOriginalRecordData(id: ID!, operationType: Int!, data: String, deduction: String, version: Int): Report
+  modifyOriginalRecordData(id: ID!, data: String, client: String!, version: Int): Report
 
   """modifyOriginalRecordFiles(id: ID!, fileIDs: [ID]!) : Report"""
   deleteReport(repId: ID!, reason: String): Boolean!
