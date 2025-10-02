@@ -105,29 +105,32 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             <div className="bg-white border border-gray-200 shadow-xl rounded-lg p-1 max-w-md w-full mx-1">
                 <h3 className="text-base font-semibold text-red-700 mb-1 text-center">网络已恢复，有待同步的更改</h3>
                 <p className="text-sm text-gray-600 mb-1 text-center">
-                    检测到 {queueLength} 个离线操作需要同步。刷新页面立即同步？
-                    可暂时不刷新，但是必须尽快手动刷新才能确保报告都保存，或在离线队列页面点击重试
+                    检测到 {queueLength} 个离线操作需要同步。立即同步？ 尽快手动刷新才能确保报告都保存，或在离线队列页面点击重试
                 </p>
                 <div className="flex justify-center gap-x-4">
                     <button
                         onClick={() => {
-                            window.location.reload()
+                            window.dispatchEvent(
+                                new CustomEvent("graphql-manual-retry", {
+                                    detail: { retryAll: true },
+                                }),
+                            )
                             toast.dismiss()
                         }}
                         className="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-1 rounded-md transition-colors"
                     >
-                        立即刷新
+                        立即同步
                     </button>
                     <button
                         onClick={() => toast.dismiss()}
                         className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-1 px-1 rounded-md transition-colors"
                     >
-                        稍后处理
+                        稍后再说
                     </button>
                 </div>
             </div>,
             {
-                duration: 99999000,
+                duration: 20*1000,
                 dismissible: false,
                 closeButton: true,
                 position: "top-center",
