@@ -2,9 +2,6 @@
 https://v0.app/chat/serwist-urq-offline-cache-wnDI5hlCctH
 v0.app当前= 0;  https://v0.app/chat/id-sRSxMyX0hbg
 heerzhang3:: heerzhang3;  Your monthly credits reset in 24 days.
-2:: Your monthly credits reset in 19 days.
-1:: Your monthly credits reset in 11 days.
-herzhang:: 用完09/22;
 
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :9872
 自签名证书Chrome_SSL_cert.sh,在linux系统跑的chmod +x Chrome_SSL_cert.sh  不用windows自带openssl64窗口。
@@ -527,6 +524,6 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 
 {1}两个的，reload， 就会丢了一个。
 {2}检测到401错误，token无效，准备触发刷新流程,app401= false
-【hez1】 authorization 【1】账户改的=  Bearer%20iNW8BnPJexI0MIInYjQwm4Qr  【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN
+0，【hez1】 authorization 【1】账户改的=  Bearer%20iNW8BnPJexI0MIInYjQwm4Qr  【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN 【3】Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
 https://v0.app/chat/metedata-pl7rXA23woe
 队列数据丢失

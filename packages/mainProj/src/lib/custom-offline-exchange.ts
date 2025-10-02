@@ -30,6 +30,42 @@ const pendingRequests = new Map<string, SerializedRequest>()
 const requestKeyMap = new Map<string, number>()
 //只能刷新才变成空的： 数据量太大了？
 const sendingRequests = new Set<string>()
+
+const LAST_FLUSH_TIME_KEY = "graphql_last_flush_time"
+
+const canFlushQueue = (): boolean => {
+    const now = Date.now()
+    const lastFlushTimeStr = localStorage.getItem(LAST_FLUSH_TIME_KEY)
+
+    if (!lastFlushTimeStr) {
+        // First time, allow flush
+        return true
+    }
+
+    const lastFlushTime = Number.parseInt(lastFlushTimeStr, 10)
+    const timeSinceLastFlush = now - lastFlushTime // in milliseconds
+
+    // Base wait time: 2 minutes (120 seconds)
+    const baseWaitTime = 120 * 1000 // 120 seconds in ms
+
+    // Additional wait time: 20 seconds per pending request
+    const additionalWaitTime = pendingRequests.size * 20 * 1000 // 20 seconds per request in ms
+
+    const requiredWaitTime = baseWaitTime + additionalWaitTime
+
+    console.log(
+        `[v0] Rate limit check: timeSince=${timeSinceLastFlush}ms, required=${requiredWaitTime}ms, pending=${pendingRequests.size}`,
+    )
+
+    return timeSinceLastFlush >= requiredWaitTime
+}
+
+const updateLastFlushTime = (): void => {
+    const now = Date.now()
+    localStorage.setItem(LAST_FLUSH_TIME_KEY, now.toString())
+    console.log(`[v0] Updated last flush time: ${new Date(now).toLocaleString()}`)
+}
+
 /**用默认的没法满足要求,只好自己来定做：离线交换器工厂函数
  *【变更点】避免了请求没有成功发送但却丢失Metadata请求的情况，通过先读取现有Metadata、发送请求、收到成功响应后再删除的方式，确保了离线请求的可靠性。
  *取代原本的 import { offlineExchange } from "@urql/exchange-graphcache" 默认工厂。
@@ -195,6 +231,8 @@ export const customOfflineExchange =
                                 const totalTasks = pendingRequests.size
                                 console.log(`[v0] 开始处理 ${totalTasks} 个离线请求`)
 
+                                updateLastFlushTime()
+
                                 // 创建请求条目的快照，避免在循环过程中队列被修改
                                 const requestEntries = Array.from(pendingRequests.entries())
 
@@ -249,6 +287,10 @@ export const customOfflineExchange =
                 // 统一的离线队列处理触发函数
                 const triggerOfflineQueueProcessing = async (): Promise<void> => {
                     if (hasRehydrated && pendingRequests.size > 0) {
+                        if (!canFlushQueue()) {
+                            console.log("[v0] Rate limit: 跳过 flushQueue，距离上次执行时间不足")
+                            return
+                        }
                         console.log("[v0] 触发离线队列处理")
                         await flushQueue()
                     } else {
@@ -262,6 +304,7 @@ export const customOfflineExchange =
                 const triggerOfflineProcessingManual = async (): Promise<void> => {
                     if (hasRehydrated && pendingRequests.size > 0) {
                         console.log("[v0] 触发离线队列处理")
+                        updateLastFlushTime()
                         await flushQueue()
                     } else {
                         console.log("[v0] 跳过离线队列处理:", {
