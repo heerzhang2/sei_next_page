@@ -120,7 +120,7 @@ export function OfflineQueueManager() {
                         <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => retryRequest(request.id)}
+                            onClick={() => retryRequest(request.enhancedId)}
                             disabled={isProcessing || request.status === "retrying"}
                         >
                             <RefreshCw className="w-3 h-3 mr-1" />

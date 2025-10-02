@@ -4,6 +4,24 @@ import { stringifyDocument, createRequest, makeOperation } from "@urql/core"
 import type { SerializedRequest, CacheExchangeOpts, StorageAdapter } from "@urql/exchange-graphcache"
 import { cacheExchange } from "@urql/exchange-graphcache"
 
+const getMutationName = (query: string): string | null => {
+    // Match pattern: mutation MutationName or mutation { ... }
+    const match = query.match(/mutation\s+(\w+)/)
+    return match ? match[1] : null
+}
+
+export const getRequestId = (request: SerializedRequest): string => {
+    const mutationName = getMutationName(request.query)
+    let variables = request.variables || {}
+    // For useOriginalDataMutation, exclude the 'data' variable from ID generation
+    if (mutationName === "useOriginalDataMutation" && variables.data) {
+        const { data, ...restVariables } = variables
+        variables = restVariables
+        console.log(`[v0] useOriginalDataMutation detected, excluding 'data' from ID generation`)
+    }
+    return `${request.query}_${JSON.stringify(variables)}_${JSON.stringify(request.extensions || {})}`
+}
+
 const toRequestPolicy = (operation: Operation, policy: RequestPolicy): Operation => {
     return makeOperation(operation.kind, operation, {
         ...operation.context,
@@ -98,28 +116,6 @@ export const customOfflineExchange =
                 let flushQueuePromise: Promise<void> | null = null
                 let onlineHandlerRegistered = false
                 //只适合每一个可离线的mutation的：
-
-                const getMutationName = (query: string): string | null => {
-                    // Match pattern: mutation MutationName or mutation { ... }
-                    const match = query.match(/mutation\s+(\w+)/)
-                    return match ? match[1] : null
-                }
-
-                const getRequestId = (request: SerializedRequest): string => {
-                    const mutationName = getMutationName(request.query)
-
-                    let variables = request.variables || {}
-
-                    // For useOriginalDataMutation, exclude the 'data' variable from ID generation
-                    if (mutationName === "useOriginalDataMutation" && variables.data) {
-                        const { data, ...restVariables } = variables
-                        variables = restVariables
-                        console.log(`[v0] useOriginalDataMutation detected, excluding 'data' from ID generation`)
-                    }
-
-                    return `${request.query}_${JSON.stringify(variables)}_${JSON.stringify(request.extensions || {})}`
-                }
-
                 const updateMetadata = async () => {
                     if (hasRehydrated) {
                         const requests = Array.from(pendingRequests.values())

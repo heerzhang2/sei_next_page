@@ -671,7 +671,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             console.log("[errorExchange] 检测到401错误的mutation，已加入离线队列等待重试")
                             toast.warning("认证失效，数据变更已保存到离线队列", {
                                 description: "登录后将自动重新提交保存的数据变更",
-                                duration: 10000,
+                                duration: 20000,
                             })
                         }
                     },

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
-import {Menu, X, FileText, Home, Settings, User, LogIn, LogOut, WifiOff, WifiZero} from "lucide-react"
+import {Menu, X, FileText, Home, Settings, User, LogIn, LogOut, WifiOff, WifiZero, Activity} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useSession, signOut, signIn } from "next-auth/react"
@@ -63,7 +63,7 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
                 {
                     title: "离线队列",
                     url: `/offline`,
-                    icon: WifiZero,
+                    icon: Activity,
                 },
             ]
     // Handle clicks outside the sidebar to close it

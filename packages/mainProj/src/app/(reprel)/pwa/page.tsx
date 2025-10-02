@@ -4,6 +4,8 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useClient } from "@urql/next"
 import { ReportQuery } from "@/component/rep/report-data"
+import {Button} from "@/components/ui";
+import {Home} from "lucide-react";
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -670,9 +672,12 @@ export default function Page() {
                 </div>
             )}
 
-            <div className="mt-2 text-xl">
-                <Link href="/">首页</Link>
-            </div>
+            <Button asChild variant="outline" size="sm" className="absolute top-4 right-4 bg-transparent">
+                <Link href="/">
+                    <Home className="w-4 h-4 mr-2" />
+                    返回首页
+                </Link>
+            </Button>
             <div className="max-w-7xl mx-auto">
                 <header className="text-center py-1">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">待检验报告离线编制保障</h1>

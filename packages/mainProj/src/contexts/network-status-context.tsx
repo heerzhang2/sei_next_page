@@ -106,7 +106,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 <h3 className="text-base font-semibold text-red-700 mb-1 text-center">网络已恢复，有待同步的更改</h3>
                 <p className="text-sm text-gray-600 mb-1 text-center">
                     检测到 {queueLength} 个离线操作需要同步。刷新页面立即同步？
-                    可暂时不刷新，但是必须尽快手动刷新才能确保报告都保存
+                    可暂时不刷新，但是必须尽快手动刷新才能确保报告都保存，或在离线队列页面点击重试
                 </p>
                 <div className="flex justify-center gap-x-4">
                     <button

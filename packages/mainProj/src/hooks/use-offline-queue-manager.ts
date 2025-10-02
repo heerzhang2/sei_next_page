@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
+import {getRequestId} from "@/lib/custom-offline-exchange";
 
 export interface EnhancedSerializedRequest extends SerializedRequest {
     // 增强字段 - 仅用于UI显示和管理
@@ -201,16 +202,13 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             )
 
             try {
-                const requestId = `${request.query}_${JSON.stringify(request.variables || {})}_${JSON.stringify(request.extensions || {})}`
-
+                const requestId =getRequestId(request);
                 window.dispatchEvent(
                     new CustomEvent("graphql-manual-retry", {
                         detail: { requestId, retryAll: false },
                     }),
                 )
-
                 toast.success(`操作 "${request.operationName}" 已触发重试`)
-
                 // 等待一段时间后检查状态
                 setTimeout(async () => {
                     await syncWithUrqlQueue()
