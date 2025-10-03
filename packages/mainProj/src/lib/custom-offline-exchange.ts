@@ -63,12 +63,11 @@ const canFlushQueue = (): boolean => {
     const additionalWaitTime = pendingRequests.size * 20 * 1000 // 20 seconds per request in ms
 
     const requiredWaitTime = baseWaitTime + additionalWaitTime
-
+    const cando=timeSinceLastFlush >= requiredWaitTime
     console.log(
-        `[v0] Rate limit check: timeSince=${timeSinceLastFlush}ms, required=${requiredWaitTime}ms, pending=${pendingRequests.size}`,
+        `避免频繁发timeSince=${timeSinceLastFlush}ms, required=${requiredWaitTime}ms, pending=${pendingRequests.size},${cando?"可以":"不行"}`,
     )
-
-    return timeSinceLastFlush >= requiredWaitTime
+    return cando
 }
 
 const updateLastFlushTime = (): void => {
@@ -238,7 +237,7 @@ export const customOfflineExchange =
                         sendingRequests.add(requestId)
                         requestKeyMap.set(requestId, operation.key)
 
-                        console.log(`[v0] 手动发送请求: ${requestId}`)
+                        console.log(`[v0] 发送请求: ${requestId}`)
                         next(toRequestPolicy(operation, "network-only"))
                         return true
                     } catch (error) {
@@ -261,12 +260,9 @@ export const customOfflineExchange =
                             try {
                                 const totalTasks = pendingRequests.size
                                 console.log(`[v0] 开始处理 ${totalTasks} 个离线请求`)
-
-                                updateLastFlushTime()
-
                                 // 创建请求条目的快照，避免在循环过程中队列被修改
                                 const requestEntries = Array.from(pendingRequests.entries())
-
+                                let hasSend;
                                 for (let i = 0; i < requestEntries.length; i++) {
                                     const [requestId, request] = requestEntries[i]
 
@@ -289,9 +285,10 @@ export const customOfflineExchange =
                                         await new Promise((resolve) => setTimeout(resolve, 500)) // 每个请求间隔500ms
                                     }
 
-                                    await sendSingleRequest(requestId)
+                                    const isOk=await sendSingleRequest(requestId)
+                                    if(isOk)    hasSend=true;
                                 }
-
+                                if(hasSend)  updateLastFlushTime();
                                 // 检查是否所有请求都已完成
                                 setTimeout(() => {
                                     console.log(`[v0] 检查完成状态: pendingRequests.size=${pendingRequests.size}`)

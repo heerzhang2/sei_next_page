@@ -513,30 +513,21 @@ export default function Page() {
 
     const checkSerwistCacheExpiration = async (url: string, templateChangeTime: number): Promise<boolean> => {
         try {
-            // Open the Serwist cache database with proper initialization
+            // Open the Serwist cache database (read-only, don't try to create)
             const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                const request = indexedDB.open("serwist-expiration", 1)
-
-                // Initialize database schema if needed
-                request.onupgradeneeded = (event) => {
-                    const db = (event.target as IDBOpenDBRequest).result
-
-                    // Create cache-entries object store if it doesn't exist
-                    if (!db.objectStoreNames.contains("cache-entries")) {
-                        console.log("[v0] 创建 Serwist cache-entries 对象存储")
-                        db.createObjectStore("cache-entries")
-                    }
-                }
+                const request = indexedDB.open("serwist-expiration")
 
                 request.onsuccess = () => resolve(request.result)
                 request.onerror = () => reject(request.error)
+
+                // Don't handle onupgradeneeded - let Serwist create its own schema
             })
 
-            // Check if the object store exists
+            // Check if the object store exists (Serwist should have created it)
             if (!db.objectStoreNames.contains("cache-entries")) {
-                console.warn("cache-entries 对象存储不存在，需要缓存")
+                console.warn("[v0] Serwist cache-entries 对象存储不存在，可能 Serwist 尚未初始化，需要缓存")
                 db.close()
-                return true // Need to cache if object store doesn't exist
+                return true // Need to cache if Serwist hasn't initialized yet
             }
 
             // Use cache-entries object store
