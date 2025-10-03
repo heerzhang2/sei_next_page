@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
-import {getRequestId} from "@/lib/custom-offline-exchange";
+import { getRequestId } from "@/lib/custom-offline-exchange"
 
 export interface EnhancedSerializedRequest extends SerializedRequest {
     // 增强字段 - 仅用于UI显示和管理
@@ -45,45 +45,60 @@ export interface OfflineQueueManager {
     clearQueue: () => Promise<void>
     clearHistory: () => Promise<void>
 
-    // 备份和恢复
-    backupQueue: () => Promise<void>
-    restoreFromBackup: (backupData: string) => Promise<void>
-    backupOfflineQueue: (requests: SerializedRequest[], source: string) => Promise<void>
-
     // 历史管理
     getHistoryByDate: (date: Date) => QueueHistory[]
     exportQueueData: () => string
 }
 
-const HISTORY_KEY = "urql-queue-history"
-const BACKUP_KEY = "urql-queue-backup"
-const OFFLINE_BACKUP_KEY = "urql-offline-backup"
-const HISTORY_RETENTION_DAYS = 1
-
 const openUrqlDatabase = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open("graphcache-sei")
+        const request = indexedDB.open("graphcache-sei", 1)
+
         request.onerror = () => reject(request.error)
         request.onsuccess = () => resolve(request.result)
+
+        request.onupgradeneeded = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result
+
+            // Create metadata object store if it doesn't exist
+            if (!db.objectStoreNames.contains("metadata")) {
+                console.log("[v0] 创建 metadata 对象存储")
+                db.createObjectStore("metadata")
+            }
+
+            if (!db.objectStoreNames.contains("entries")) {
+                console.log("[v0] 创建 entries 对象存储")
+                db.createObjectStore("entries")
+            }
+        }
     })
 }
 
 const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
     try {
         const db = await openUrqlDatabase()
-        const transaction = db?.transaction(["metadata"], "readonly") // 只读事务
-        const store = transaction?.objectStore("metadata")
+
+        if (!db.objectStoreNames.contains("metadata")) {
+            console.log("[v0] metadata 对象存储不存在，返回空数组")
+            return []
+        }
+
+        const transaction = db.transaction(["metadata"], "readonly")
+        const store = transaction.objectStore("metadata")
 
         return new Promise((resolve, reject) => {
             const request = store.get("metadata")
-            request.onerror = () => reject(request.error)
+            request.onerror = () => {
+                console.error("[v0] 读取 metadata 失败:", request.error)
+                resolve([])
+            }
             request.onsuccess = () => {
                 const result = request.result
                 if (result) {
                     try {
                         resolve(Array.isArray(result) ? result : [])
                     } catch (e) {
-                        console.error("【冲途中】解析URQL metadata失败:", e)
+                        console.error("[v0] 解析URQL metadata失败:", e)
                         resolve([])
                     }
                 } else {
@@ -92,7 +107,7 @@ const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
             }
         })
     } catch (error) {
-        console.log("读取URQL metadata失败:", error)
+        console.log("[v0] 读取URQL metadata失败:", error)
         return []
     }
 }
@@ -202,7 +217,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             )
 
             try {
-                const requestId =getRequestId(request);
+                const requestId = getRequestId(request)
                 window.dispatchEvent(
                     new CustomEvent("graphql-manual-retry", {
                         detail: { requestId, retryAll: false },
@@ -245,7 +260,6 @@ export function useOfflineQueueManager(): OfflineQueueManager {
 
                 setQueueHistory((prev) => {
                     const newHistory = [historyItem, ...prev]
-                    saveHistory(newHistory)
                     return newHistory
                 })
 
@@ -307,105 +321,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
     // 清空历史记录
     const clearHistory = useCallback(async () => {
         setQueueHistory([])
-        localStorage.removeItem(HISTORY_KEY)
         toast.success("历史记录已清空")
-    }, [])
-
-    const backupOfflineQueue = useCallback(async (requests: SerializedRequest[], source: string) => {
-        try {
-            if (!requests || requests.length === 0) {
-                console.log("[OfflineQueueManager] 没有需要备份的离线队列数据")
-                return
-            }
-            // 保存到IndexedDB作为持久备份
-            try {
-                const db = await openUrqlDatabase()
-                const transaction = db.transaction(["metadata"], "readwrite")
-                const store = transaction.objectStore("metadata")
-
-                const backupKey = `backup-${source}-${Date.now()}`
-                await new Promise<void>((resolve, reject) => {
-                    const request = store.put(requests, backupKey)
-                    request.onerror = () => reject(request.error)
-                    request.onsuccess = () => resolve()
-                })
-
-                console.log(`[OfflineQueueManager] 离线队列备份成功: ${requests.length} 项 (来源: ${source})`)
-            } catch (idbError) {
-                console.warn("[OfflineQueueManager] IndexedDB备份失败，但localStorage备份成功:", idbError)
-            }
-
-            // 添加到历史记录
-            const historyItems: QueueHistory[] = requests.map((req, index) => {
-                const operationName = extractOperationName(req.query)
-                return {
-                    id: `backup-${source}-${Date.now()}-${index}`,
-                    operationName,
-                    variables: req.variables,
-                    query: req.query,
-                    timestamp: Date.now(),
-                    status: "backed_up",
-                    processedAt: Date.now(),
-                }
-            })
-
-            setQueueHistory((prev) => {
-                const newHistory = [...historyItems, ...prev]
-                saveHistory(newHistory)
-                return newHistory
-            })
-        } catch (error) {
-            console.error("[OfflineQueueManager] 备份离线队列失败:", error)
-            // 不抛出错误，避免影响主流程
-        }
-    }, [])
-
-    const backupQueue = useCallback(async () => {
-        try {
-            const backupData = {
-                queuedRequests,
-                timestamp: Date.now(),
-                version: "2.0",
-            }
-            localStorage.setItem(BACKUP_KEY, JSON.stringify(backupData))
-
-            // 同时添加到历史记录
-            const historyItems: QueueHistory[] = queuedRequests.map((req) => ({
-                id: req.enhancedId,
-                operationName: req.operationName,
-                variables: req.variables,
-                query: req.query,
-                timestamp: req.timestamp,
-                status: "backed_up",
-                processedAt: Date.now(),
-            }))
-
-            setQueueHistory((prev) => {
-                const newHistory = [...historyItems, ...prev]
-                saveHistory(newHistory)
-                return newHistory
-            })
-
-            toast.success(`已备份 ${queuedRequests.length} 个请求`)
-        } catch (error) {
-            console.error("[v0] 备份队列失败:", error)
-            toast.error("备份队列失败")
-        }
-    }, [queuedRequests])
-
-    const restoreFromBackup = useCallback(async (backupData: string) => {
-        try {
-            const parsed = JSON.parse(backupData)
-            if (parsed.queuedRequests && Array.isArray(parsed.queuedRequests)) {
-                setQueuedRequests(parsed.queuedRequests)
-                toast.success(`已恢复 ${parsed.queuedRequests.length} 个请求`)
-            } else {
-                throw new Error("无效的备份数据格式")
-            }
-        } catch (error) {
-            console.error("[v0] 恢复备份失败:", error)
-            toast.error("恢复备份失败")
-        }
     }, [])
 
     // 按日期获取历史记录
@@ -492,22 +408,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         retryAll,
         clearQueue,
         clearHistory,
-        backupQueue,
-        restoreFromBackup,
-        backupOfflineQueue,
         getHistoryByDate,
         exportQueueData,
-    }
-}
-
-const saveHistory = (history: QueueHistory[]) => {
-    try {
-        // 只保留最近的历史记录
-        const cutoffTime = Date.now() - HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000
-        const filteredHistory = history.filter((item) => item.processedAt > cutoffTime)
-
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(filteredHistory))
-    } catch (error) {
-        console.error("保存历史记录失败:", error)
     }
 }

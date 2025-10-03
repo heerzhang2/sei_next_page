@@ -1,36 +1,30 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { useOfflineQueueManager, type QueuedRequest, type QueueHistory } from "@/hooks/use-offline-queue-manager"
+import {
+    useOfflineQueueManager,
+    EnhancedSerializedRequest
+} from "@/hooks/use-offline-queue-manager"
 import {
     Clock,
     RefreshCw,
     X,
-    Play,
-    Pause,
     Trash2,
     Download,
     AlertTriangle,
     CheckCircle,
     XCircle,
-    Calendar,
     Activity,
     Database,
-    Shield,
-    History,
 } from "lucide-react"
 import { format } from "date-fns"
 
 export function OfflineQueueManager() {
     const {
         queuedRequests,
-        queueHistory,
         isProcessing,
         totalRequests,
         successCount,
@@ -40,12 +34,8 @@ export function OfflineQueueManager() {
         cancelRequest,
         retryAll,
         clearQueue,
-        clearHistory,
-        getHistoryByDate,
         exportQueueData,
     } = useOfflineQueueManager()
-
-    const [selectedDate, setSelectedDate] = useState(new Date())
 
     const getPriorityColor = (priority: string) => {
         switch (priority) {
@@ -90,7 +80,7 @@ export function OfflineQueueManager() {
         URL.revokeObjectURL(url)
     }
 
-    const QueueRequestCard = ({ request }: { request: QueuedRequest }) => (
+    const QueueRequestCard = ({ request }: { request: EnhancedSerializedRequest }) => (
         <Card className="mb-3">
             <CardContent className="p-4">
                 <div className="flex items-start justify-between">

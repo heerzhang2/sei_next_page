@@ -16,7 +16,6 @@ import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
-import { useOfflineQueueManager } from "@/hooks/use-offline-queue-manager"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -477,7 +476,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
     const { addConflictRequest } = useVersionConflictManager()
-    const { backupOfflineQueue } = useOfflineQueueManager()
     useEffect(() => {
         setIsClient(true)
     }, [])
@@ -698,7 +696,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus, addConflictRequest, backupOfflineQueue])
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus, addConflictRequest])
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)

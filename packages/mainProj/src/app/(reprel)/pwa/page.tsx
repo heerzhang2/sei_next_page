@@ -4,8 +4,8 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useClient } from "@urql/next"
 import { ReportQuery } from "@/component/rep/report-data"
-import {Button} from "@/components/ui";
-import {Home} from "lucide-react";
+import { Button } from "@/components/ui"
+import { Home } from "lucide-react"
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -48,7 +48,7 @@ interface CacheStatus {
     templateChangeTime?: number
 }
 /**需外部配合向localStorage("offline-reports")注入离线报告的id;
-* */
+ * */
 export default function Page() {
     const client = useClient()
     const [precacheStatus, setPrecacheStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -76,7 +76,7 @@ export default function Page() {
     const [isFetching, setIsFetching] = useState(false)
     const [cacheSize, setCacheSize] = useState<string>("0 KB")
     const [isCalculatingCache, setIsCalculatingCache] = useState(false)
-    const [showCustomUrlSection, setShowCustomUrlSection] = useState(false);
+    const [showCustomUrlSection, setShowCustomUrlSection] = useState(false)
 
     const checkCacheStatus = async (setCacheStatusList: any, setAutoUpdateAvailable: any) => {
         console.log("checkCacheStatus function is called")
@@ -219,7 +219,7 @@ export default function Page() {
                     index === self.findIndex((s) => s.templateId === status.templateId && s.version === status.version),
             )
             setReportTemplates(tmplAllList)
-            console.log("[v0] 更新报告数据:", updatedReports, "setReportTemplates?=",tmplAllList)
+            console.log("[v0] 更新报告数据:", updatedReports, "setReportTemplates?=", tmplAllList)
         }
     }, [reportQueries, offlineReports]) // 依赖于 reportQueries 和 offlineReports
 
@@ -328,9 +328,9 @@ export default function Page() {
                     const response = await cache.match(request)
                     if (response) {
                         // 尝试获取Content-Length头信息
-                        const contentLength = response.headers.get('content-length')
+                        const contentLength = response.headers.get("content-length")
                         if (contentLength) {
-                            totalSize += parseInt(contentLength, 10)
+                            totalSize += Number.parseInt(contentLength, 10)
                         } else {
                             // 如果没有Content-Length头，则读取整个响应体来计算大小
                             const blob = await response.blob()
@@ -378,7 +378,7 @@ export default function Page() {
     const cleanupOldCacheTimes = () => {
         try {
             const cacheTimeData = getCacheTimeData()
-            const twoMonthsAgo = Date.now() - (60 * 24 * 60 * 60 * 1000) // 60天的毫秒数
+            const twoMonthsAgo = Date.now() - 60 * 24 * 60 * 60 * 1000 // 60天的毫秒数
 
             let hasChanges = false
 
@@ -513,14 +513,33 @@ export default function Page() {
 
     const checkSerwistCacheExpiration = async (url: string, templateChangeTime: number): Promise<boolean> => {
         try {
-            // Open the Serwist cache database (not expiration database)
+            // Open the Serwist cache database with proper initialization
             const db = await new Promise<IDBDatabase>((resolve, reject) => {
                 const request = indexedDB.open("serwist-expiration", 1)
+
+                // Initialize database schema if needed
+                request.onupgradeneeded = (event) => {
+                    const db = (event.target as IDBOpenDBRequest).result
+
+                    // Create cache-entries object store if it doesn't exist
+                    if (!db.objectStoreNames.contains("cache-entries")) {
+                        console.log("[v0] 创建 Serwist cache-entries 对象存储")
+                        db.createObjectStore("cache-entries")
+                    }
+                }
+
                 request.onsuccess = () => resolve(request.result)
                 request.onerror = () => reject(request.error)
             })
 
-            // Use cache-entries object store instead of expiration
+            // Check if the object store exists
+            if (!db.objectStoreNames.contains("cache-entries")) {
+                console.warn("cache-entries 对象存储不存在，需要缓存")
+                db.close()
+                return true // Need to cache if object store doesn't exist
+            }
+
+            // Use cache-entries object store
             const transaction = db.transaction(["cache-entries"], "readonly")
             const store = transaction.objectStore("cache-entries")
 
@@ -784,8 +803,8 @@ export default function Page() {
                         <div className="flex items-center space-x-2">
                             <span className="text-sm font-medium text-gray-700">缓存大小:</span>
                             <span className="text-base font-semibold text-blue-600">
-                        {isCalculatingCache ? "计算中..." : cacheSize}
-                    </span>
+                {isCalculatingCache ? "计算中..." : cacheSize}
+              </span>
                             <button
                                 onClick={calculateCacheSize}
                                 disabled={isCalculatingCache}
@@ -793,7 +812,12 @@ export default function Page() {
                                 title="刷新缓存大小"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                    />
                                 </svg>
                             </button>
                         </div>
@@ -809,15 +833,15 @@ export default function Page() {
                             <div className="flex items-center gap-4">
                                 <button
                                     onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowCustomUrlForm(!showCustomUrlForm);
+                                        e.stopPropagation()
+                                        setShowCustomUrlForm(!showCustomUrlForm)
                                     }}
                                     className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm mr-2"
                                 >
                                     {showCustomUrlForm ? "取消添加" : "添加 URL"}
                                 </button>
                                 <svg
-                                    className={`w-5 h-5 transform transition-transform ${showCustomUrlSection ? 'rotate-180' : ''}`}
+                                    className={`w-5 h-5 transform transition-transform ${showCustomUrlSection ? "rotate-180" : ""}`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -893,7 +917,12 @@ export default function Page() {
                                                     className="text-red-600 hover:text-red-800 transition-colors"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M6 18L18 6M6 6l12 12"
+                                                        />
                                                     </svg>
                                                 </button>
                                             </div>
@@ -920,7 +949,6 @@ export default function Page() {
                             </div>
                         )}
                     </div>
-
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                         <button

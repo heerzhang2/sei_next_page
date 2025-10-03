@@ -246,7 +246,10 @@ self.addEventListener("error", (event) => {
 })
 
 self.addEventListener("unhandledrejection", (event) => {
-    console.error("[SW] 未处理的 Promise 拒绝:", event.reason)
+    const isDev = self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1"
+    if (!isDev) {
+        console.error("sw.js:", event.reason)
+    }
 
     const error = event.reason
     if (

@@ -78,7 +78,7 @@ const updateLastFlushTime = (): void => {
 }
 
 /**用默认的没法满足要求,只好自己来定做：离线交换器工厂函数
- *【变更点】避免了请求没有成功发送但却丢失Metadata请求的情况，通过先读取现有Metadata、发送请求、收到成功响应后再删除的方式，确保了离线请求的可靠性。
+ *【变更点】避免了请求没有成功发送但却丢失Metadata请求的情况,通过先读取现有Metadata、发送请求、收到成功响应后再删除的方式，确保了离线请求的可靠性。
  *取代原本的 import { offlineExchange } from "@urql/exchange-graphcache" 默认工厂。
  *实际是模仿替代了"@urql/exchange-graphcache" : "7.2.2",包的里面的src/offlineExchange.ts。
  * */
@@ -115,6 +115,31 @@ export const customOfflineExchange =
                 let isFlushingQueue = false
                 let flushQueuePromise: Promise<void> | null = null
                 let onlineHandlerRegistered = false
+
+                const safeReadMetadata = async (): Promise<SerializedRequest[]> => {
+                    try {
+                        const result = await storage.readMetadata!()
+                        return result || []
+                    } catch (error: any) {
+                        // Check if it's an IndexedDB object store not found error
+                        if (error?.name === "NotFoundError" || error?.message?.includes("object stores was not found")) {
+                            console.warn("[v0] metadata对象存储不存在，可能是首次初始化，返回空数组")
+                            // Try to initialize the metadata by writing an empty array
+                            try {
+                                await storage.writeMetadata!([])
+                                console.log("[v0] 已初始化metadata对象存储")
+                                return []
+                            } catch (writeError) {
+                                console.error("[v0] 初始化metadata失败:", writeError)
+                                return []
+                            }
+                        }
+                        // For other errors, log and return empty array
+                        console.error("[v0] 读取metadata失败:", error)
+                        return []
+                    }
+                }
+
                 //只适合每一个可离线的mutation的：
                 const updateMetadata = async () => {
                     if (hasRehydrated) {
@@ -385,14 +410,22 @@ export const customOfflineExchange =
                             const hydrate = storage.readData()
                             return {
                                 async then(onEntries) {
-                                    const mutations = await storage.readMetadata!()
-                                    if (mutations && mutations.length > 0) {
-                                        console.log(`[v0] 从metadata读取${mutations.length}个离线请求`)
-                                        for (const request of mutations) {
-                                            const requestId = getRequestId(request)
-                                            pendingRequests.set(requestId, request)
+                                    try {
+                                        const mutations = await safeReadMetadata()
+                                        if (mutations && mutations.length > 0) {
+                                            console.log(`[v0] 从metadata读取${mutations.length}个离线请求`)
+                                            for (const request of mutations) {
+                                                const requestId = getRequestId(request)
+                                                pendingRequests.set(requestId, request)
+                                            }
+                                        } else {
+                                            console.log("[v0] metadata为空或不存在，使用空的离线队列")
                                         }
+                                    } catch (error) {
+                                        console.error("[v0] 读取metadata失败，使用空的离线队列:", error)
+                                        // Continue with empty pending requests - don't crash the app
                                     }
+
                                     onEntries!(await hydrate)
 
                                     // 防止重复注册 online 监听器
