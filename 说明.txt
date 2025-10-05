@@ -5,7 +5,7 @@ heerzhang3:: heerzhang3;  Your monthly credits reset in 24 days.
 2:: Your monthly credits reset in 19 days.
 1:: Your monthly credits reset in 11 days.
 herzhang:: 用完09/22;
-
+【在前面的某个提交位置开始继续作为master的基点进行开发】git reset --hard  ac227393 强制推送 git push origin master --force-with-lease
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :9872
 自签名证书Chrome_SSL_cert.sh,在linux系统跑的chmod +x Chrome_SSL_cert.sh  不用windows自带openssl64窗口。
 双击 `ssl\localhost.crt`选择"安装证书"选择"本地计算机"选择"将所有证书都放入下列存储" > "受信任的根证书颁发机构"》 windows服务器。
