@@ -83,4 +83,7 @@ const PAGES_CACHE_NAME = {
 compositeKey
 'report-pages-normalized|/rep/*/SLIDING_JJ/1/Survey'
 
-
+【urql offlinecahce问题】版本：
+1003 17：36； optimistic可能遭遇退回。第一次保存丢失，刷新后显示不一致，同步机会拖延，第一次的编辑区丢失更新。
+0928  10：21； 刷新较小的可能导致丢失，cache估计也没了，最后复原了。
+0926  06：30； 失效token、401导致?，有极小概率显示不一致的。小概率丢失:2个少了一个mutation。保存后死循环，刷新丢失列表。

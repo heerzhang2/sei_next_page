@@ -14,6 +14,7 @@ import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
 import { Save, Pencil } from "lucide-react"
 import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
+import {useDeviceFingerprint} from "@/report/hook/useDeviceFingerprint";
 
 // 将空字符串转为 undefined，但保留字段
 const convertEmptyToUndefined = (obj: any): any => {
@@ -187,6 +188,7 @@ export function useFormFramework({
                                      redId,
                                      modType,
                                  }: UseFormFrameworkProps) {
+    const { deviceFingerprint, isLoading } = useDeviceFingerprint();
     const abortControllerRef = useRef<AbortController | null>(null);
     const { storage, setStorage, setModified, modified } = useStorage()
 
@@ -239,7 +241,7 @@ export function useFormFramework({
             const result = await withTimeout(
                 updateOriginal({
                     id: subrid ?? rep?.id,
-                    operationType: 1,
+                    client: deviceFingerprint,
                     version: _version,
                     data: JSON.stringify(cleanedRepData),
                 }),
@@ -415,6 +417,7 @@ export function useFrameEditorBar({
                                       modType,
                                       root,
                                   }: UseFrameEditorBarProps) {
+    const { deviceFingerprint, isLoading } = useDeviceFingerprint();
     const abortControllerRef = useRef<AbortController | null>(null);
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified, modified } = useStorage()
@@ -454,7 +457,7 @@ export function useFrameEditorBar({
             const result = await withTimeout(
                 updateOriginal({
                     id: subrid ?? rep?.id,
-                    operationType: 1,
+                    client: deviceFingerprint,
                     version: _version,
                     data: JSON.stringify(cleanedRepData),
                 }),

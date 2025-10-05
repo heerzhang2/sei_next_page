@@ -102,15 +102,9 @@ export interface RepVwProps{
     unfold?: boolean;
 }
 
-
 export const OriginalDataMutation =gql`
-    mutation useOriginalDataMutation(
-        $id: ID!
-        $operationType:Int!
-        $data: String
-        $deduction: String, $version:Int
-    ) {
-        modifyOriginalRecordData(id: $id, operationType: $operationType, data: $data, deduction: $deduction,version: $version) {
+    mutation useOriginalDataMutation( $id: ID! $data: String $client: String!, $version:Int ) {
+        modifyOriginalRecordData(id: $id, data: $data, client: $client,version: $version) {
             id,version,type
             data
             snapshot
@@ -119,7 +113,6 @@ export const OriginalDataMutation =gql`
         }
     }
 `;
-
 
 export type SelectValDescPair = [string, string];    //一对的，转义说明和存储用字。
 
