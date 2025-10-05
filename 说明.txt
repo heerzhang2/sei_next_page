@@ -527,3 +527,4 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 0，【hez1】 authorization 【1】账户改的=  Bearer%20iNW8BnPJexI0MIInYjQwm4Qr  【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN 【3】Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
 https://v0.app/chat/metedata-pl7rXA23woe
 队列数据丢失
+验证：custom-offline-exchange.ts也不能用的
