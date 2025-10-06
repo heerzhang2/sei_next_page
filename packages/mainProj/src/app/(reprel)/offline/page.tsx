@@ -13,17 +13,18 @@ import {
     Wifi,
     WifiOff,
     Database,
-    HardDrive,
-    Server,
     User,
     Clock,
     RefreshCw,
-    CheckCircle,
     XCircle,
     AlertTriangle,
     Activity,
     Settings,
+    Shield,
+    Download,
 } from "lucide-react"
+import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
+import { toast } from "sonner"
 
 interface OfflineUserData {
     name?: string
@@ -47,6 +48,10 @@ export default function OfflinePage() {
         defaultValue: {},
         storage: "auto",
     })
+
+    const [compensationCount, setCompensationCount] = useState(0)
+    const [compensationBackups, setCompensationBackups] = useState<any[]>([])
+    const [isLoadingCompensation, setIsLoadingCompensation] = useState(false)
 
     useEffect(() => {
         const updateOnlineStatus = () => {
@@ -78,6 +83,66 @@ export default function OfflinePage() {
         }
     }, [session, isOnline])
 
+    useEffect(() => {
+        loadCompensationData()
+    }, [])
+
+    const loadCompensationData = async () => {
+        try {
+            await mutationCompensationStorage.init()
+            const backups = await mutationCompensationStorage.getAllBackups()
+            setCompensationBackups(backups)
+            setCompensationCount(backups.length)
+        } catch (error) {
+            console.error("Failed to load compensation data:", error)
+        }
+    }
+
+    const handleRestoreCompensation = async () => {
+        setIsLoadingCompensation(true)
+        try {
+            const restored = await mutationCompensationStorage.restoreToMetadata()
+            toast.success(`成功恢复 ${restored} 个mutation到离线队列`, {
+                description: "这些操作将在网络恢复后自动重试",
+                duration: 5000,
+            })
+            await loadCompensationData()
+        } catch (error) {
+            console.error("Failed to restore compensation:", error)
+            toast.error("恢复补偿存储失败", {
+                description: error instanceof Error ? error.message : "未知错误",
+            })
+        } finally {
+            setIsLoadingCompensation(false)
+        }
+    }
+
+    const handleClearCompensation = async () => {
+        if (!confirm("确定要清空补偿存储吗？这将删除所有备份的mutation。")) {
+            return
+        }
+        try {
+            await mutationCompensationStorage.clearAll()
+            toast.success("补偿存储已清空")
+            await loadCompensationData()
+        } catch (error) {
+            console.error("Failed to clear compensation:", error)
+            toast.error("清空补偿存储失败")
+        }
+    }
+
+    const handleDownloadCompensation = () => {
+        const dataStr = JSON.stringify(compensationBackups, null, 2)
+        const dataBlob = new Blob([dataStr], { type: "application/json" })
+        const url = URL.createObjectURL(dataBlob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `compensation-backups-${new Date().toISOString()}.json`
+        link.click()
+        URL.revokeObjectURL(url)
+        toast.success("补偿数据已下载")
+    }
+
     const displayUserName = offlineUserData?.name || offlineUserData?.username || session?.user?.name || "用户"
     const refreshPage = () => {
         window.location.reload()
@@ -91,9 +156,10 @@ export default function OfflinePage() {
                 </div>
 
                 <Tabs defaultValue="status" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="status">系统状态</TabsTrigger>
                         <TabsTrigger value="queue">队列管理</TabsTrigger>
+                        <TabsTrigger value="compensation">补偿存储</TabsTrigger>
                         <TabsTrigger value="settings">设置</TabsTrigger>
                     </TabsList>
 
@@ -183,9 +249,7 @@ export default function OfflinePage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                                 {storageError && (
                                     <Alert variant="destructive">
                                         <XCircle className="h-4 w-4" />
@@ -207,6 +271,107 @@ export default function OfflinePage() {
                             </CardHeader>
                             <CardContent>
                                 <OfflineQueueManager />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="compensation" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Shield className="w-5 h-5" />
+                                    补偿存储管理
+                                </CardTitle>
+                                <CardDescription>补偿存储是metadata队列的备份机制，防止队列被意外清空时丢失数据</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium">备份的Mutation数量</p>
+                                        <p className="text-2xl font-bold">{compensationCount}</p>
+                                    </div>
+                                    <Database className="w-8 h-8 text-muted-foreground" />
+                                </div>
+
+                                {compensationCount > 0 && (
+                                    <Alert>
+                                        <AlertTriangle className="h-4 w-4" />
+                                        <AlertDescription>
+                                            检测到 {compensationCount} 个备份的mutation。 如果metadata队列为空，您可以从补偿存储恢复这些操作。
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+
+                                <div className="flex flex-wrap gap-2">
+                                    <Button
+                                        onClick={handleRestoreCompensation}
+                                        disabled={compensationCount === 0 || isLoadingCompensation}
+                                        variant="default"
+                                    >
+                                        {isLoadingCompensation ? (
+                                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                            <RefreshCw className="w-4 h-4 mr-2" />
+                                        )}
+                                        恢复到队列
+                                    </Button>
+                                    <Button onClick={handleDownloadCompensation} disabled={compensationCount === 0} variant="outline">
+                                        <Download className="w-4 h-4 mr-2" />
+                                        下载备份
+                                    </Button>
+                                    <Button onClick={handleClearCompensation} disabled={compensationCount === 0} variant="destructive">
+                                        <XCircle className="w-4 h-4 mr-2" />
+                                        清空备份
+                                    </Button>
+                                    <Button onClick={loadCompensationData} variant="ghost">
+                                        <RefreshCw className="w-4 h-4 mr-2" />
+                                        刷新
+                                    </Button>
+                                </div>
+
+                                {compensationBackups.length > 0 && (
+                                    <div className="space-y-2">
+                                        <h4 className="text-sm font-medium">备份详情</h4>
+                                        <div className="max-h-96 overflow-y-auto space-y-2">
+                                            {compensationBackups.map((backup, index) => (
+                                                <div key={backup.id} className="p-3 border rounded-lg text-sm space-y-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="font-medium">Backup #{index + 1}</span>
+                                                        <Badge variant="outline">{new Date(backup.timestamp).toLocaleString()}</Badge>
+                                                    </div>
+                                                    {backup.variables?.id && (
+                                                        <p className="text-muted-foreground">记录ID: {backup.variables.id}</p>
+                                                    )}
+                                                    <p className="text-xs text-muted-foreground truncate">{backup.query.substring(0, 100)}...</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-lg">补偿存储工作原理</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                                <p>
+                                    <strong>自动备份：</strong> 每当mutation被加入metadata队列时，系统会自动在补偿存储中创建备份。
+                                </p>
+                                <p>
+                                    <strong>防止数据丢失：</strong> 如果metadata队列因为某些原因被清空（如用户误操作、浏览器问题等），
+                                    补偿存储可以作为最后的防线恢复这些操作。
+                                </p>
+                                <p>
+                                    <strong>自动清理：</strong> 当mutation成功执行后，对应的补偿备份会被自动删除，避免重复执行。
+                                </p>
+                                <p>
+                                    <strong>手动恢复：</strong> 您可以随时查看补偿存储的内容，并手动将备份恢复到metadata队列中。
+                                </p>
+                                <p>
+                                    <strong>数据导出：</strong> 支持将补偿数据导出为JSON文件，便于调试和数据分析。
+                                </p>
                             </CardContent>
                         </Card>
                     </TabsContent>

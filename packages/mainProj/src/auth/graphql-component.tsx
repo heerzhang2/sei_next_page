@@ -16,6 +16,7 @@ import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { MetadataWriteConfirmationModal } from "@/components/metadata-write-confirmation-modal"
+import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -408,6 +409,16 @@ const fetchAbortExchange: Exchange =
                 tap((op) => {}),
                 forward,
                 tap((result) => {
+                    if (result.operation.kind === "mutation" && !result.error && result.data) {
+                        const request: SerializedRequest = {
+                            query: result.operation.query.loc?.source?.body || "",
+                            variables: result.operation.variables,
+                            extensions: result.operation.extensions,
+                        }
+                        removeCompensationBackup(request)
+                        console.log("[CompensationBackup] Mutation成功，已清理备份")
+                    }
+
                     // 检测Java后端宕机错误 isJavaBackendDownError
                     if (result.error && isOfflineError(result.error)) {
                         //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
@@ -576,6 +587,14 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 ...storage,
                 writeMetadata: async (json: SerializedRequest[]) => {
                     console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
+
+                    if (json?.length > 0) {
+                        console.log("[CompensationBackup] 开始备份mutations到补偿存储")
+                        for (const request of json) {
+                            await backupMutationToCompensation(request)
+                        }
+                    }
+
                     if (isWriteConfirmedRef.current) {
                         console.log("[GraphQLProvider] 已确认写入，直接执行")
                         if (json?.length !== 0) {
@@ -751,4 +770,22 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             />
         </UrqlProvider>
     )
+}
+
+const backupMutationToCompensation = async (request: SerializedRequest) => {
+    try {
+        await mutationCompensationStorage.init()
+        await mutationCompensationStorage.addMutationBackup(request.query, request.variables, request.extensions)
+    } catch (error) {
+        console.error("[CompensationBackup] 备份mutation失败:", error)
+    }
+}
+
+const removeCompensationBackup = async (request: SerializedRequest) => {
+    try {
+        await mutationCompensationStorage.init()
+        await mutationCompensationStorage.removeMutationBackup(request.query, request.variables)
+    } catch (error) {
+        console.error("[CompensationBackup] 清理备份失败:", error)
+    }
 }
