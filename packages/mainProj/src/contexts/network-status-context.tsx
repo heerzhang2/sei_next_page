@@ -183,16 +183,12 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                     cache: "no-cache",
                     signal: controller.signal,
                 })
-
                 clearTimeout(timeoutId)
-
                 if (response.ok) {
                     const healthData = await response.json()
-                    const dbStatus =
-                        healthData.components?.db?.components?.hikariDataSource?.status || healthData.components?.db?.status
+                    const dbStatus = healthData.components?.cockroachDB?.status
                     return dbStatus === "UP"
                 }
-
                 if (attempt < retries) {
                     console.log(`健康检查失败，第${attempt + 1}次重试...`)
                     await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 15)))
