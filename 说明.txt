@@ -527,5 +527,8 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 /11【hez0】 authorization Bearer%20bx0DmDKUqOJPLuKsC7mUiKeQ 【1】账户/13=Bearer%20iNW8BnPJexI0MIInYjQwm4Qr  /26【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN /31【3】Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
 https://v0.app/chat/-6pi8E7npu2n
 writeMetadata ：拦截离线的mutation变更发起。 filteredRequests
-[数据库单节点的]保存，没响应，不会提醒务必重新登录，接口在死等啊的等到超时，graphql没有时间期限等待应答；
 
+后端宕机恢复：meta丢失概率大。补偿中保存。查看报告前比对补偿中的mutation。
+DB 3节点全关后恢复：丢失。 补偿中的 时间顺序有问题？mutation_410656653_1759874348293
+数据库单节点恢复是401应答：正常。发送mutation了没有收到保存应答，无法清理补偿中的列表遗留。
+【压缩多余的备份】补偿中都会备份但是清理？确定后端事务完成了，重复发送。
