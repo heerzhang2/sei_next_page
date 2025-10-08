@@ -1,3 +1,5 @@
+import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
+import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { IndexedDBCache, type BaseCacheItem } from "./indexeddb-cache"
 
 /**
@@ -311,7 +313,6 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
   async getAllBackups(): Promise<CompensationMutationItem[]> {
     return this.getAllCached()
   }
-
   /**
    * 将补偿存储恢复到URQL metadata队列
    */
@@ -324,33 +325,180 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
       return 0
     }
 
-    // 获取当前的metadata
-    const currentMetadata = localStorage.getItem("urql-metadata")
-    const metadata = currentMetadata ? JSON.parse(currentMetadata) : []
+    try {
+      // 获取URQL的metadata存储
+      const defaultStorage = makeDefaultStorage({
+        idbName: "graphcache-sei",
+        maxAge: 7,
+      })
 
-    let restoredCount = 0
+      // 读取现有的metadata
+      const existingMetadata = await defaultStorage.readMetadata() || []
 
-    for (const backup of backups) {
-      // 检查是否已存在相同的mutation
-      const exists = metadata.some(
-          (m: any) => m.query === backup.query && JSON.stringify(m.variables) === JSON.stringify(backup.variables)
-      )
+      let restoredCount = 0
+      const seen = new Map<string, boolean>()
 
-      if (!exists) {
-        metadata.push({
+      // 构建已存在请求的标识映射（用于去重）
+      for (const request of existingMetadata) {
+        const key = this.generateRequestKey(request)
+        seen.set(key, true)
+      }
+
+      // 添加备份的mutation到metadata
+      for (const backup of backups) {
+        const request: SerializedRequest = {
           query: backup.query,
           variables: backup.variables,
           extensions: backup.extensions,
-        })
-        restoredCount++
+        }
+
+        const key = this.generateRequestKey(request)
+
+        // 检查是否已存在相同的请求
+        if (!seen.has(key)) {
+          existingMetadata.push(request)
+          seen.set(key, true)
+          restoredCount++
+          console.log(`[CompensationBackup] 恢复mutation: ${backup.operationName}`)
+        }
       }
+
+      // 写入更新后的metadata
+      await defaultStorage.writeMetadata(existingMetadata)
+
+      // 更新localStorage中的metadata计数（用于UI显示）
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+            "urql-metadata",
+            JSON.stringify({
+              length: existingMetadata.length,
+              timestamp: new Date().toLocaleString(),
+              restoredFromCompensation: restoredCount,
+            })
+        )
+      }
+
+      console.log(`[CompensationBackup] 成功恢复 ${restoredCount} 个mutation到metadata队列`)
+
+      // 触发online事件，让URQL开始处理队列
+      window.dispatchEvent(new Event("online"))
+
+      return restoredCount
+
+    } catch (error) {
+      console.error("[CompensationBackup] 恢复metadata失败:", error)
+
+      // 降级方案：使用localStorage作为fallback
+      return await this.restoreToMetadataFallback(backups)
+    }
+  }
+  /**
+   * 生成请求的唯一标识（用于去重）
+   */
+  private generateRequestKey(request: SerializedRequest): string {
+    const { query, variables } = request
+    if (variables?.id) {
+      return `${query}-${variables.id}-${variables?.opType || ""}`
+    }
+    return `${query}-${JSON.stringify(variables || {})}`
+  }
+
+  /**
+   * 降级方案：使用localStorage存储metadata
+   */
+  private async restoreToMetadataFallback(backups: CompensationMutationItem[]): Promise<number> {
+    try {
+      // 读取现有的localStorage metadata
+      const currentMetadataStr = localStorage.getItem("urql-metadata-queue")
+      const currentMetadata = currentMetadataStr ? JSON.parse(currentMetadataStr) : []
+
+      let restoredCount = 0
+      const seen = new Map<string, boolean>()
+
+      // 构建已存在请求的标识映射
+      for (const request of currentMetadata) {
+        const key = this.generateRequestKey(request)
+        seen.set(key, true)
+      }
+
+      // 添加备份的mutation
+      for (const backup of backups) {
+        const request: SerializedRequest = {
+          query: backup.query,
+          variables: backup.variables,
+          extensions: backup.extensions,
+        }
+
+        const key = this.generateRequestKey(request)
+
+        if (!seen.has(key)) {
+          currentMetadata.push(request)
+          seen.set(key, true)
+          restoredCount++
+        }
+      }
+
+      // 保存到localStorage
+      localStorage.setItem("urql-metadata-queue", JSON.stringify(currentMetadata))
+
+      // 更新metadata计数显示
+      localStorage.setItem(
+          "urql-metadata",
+          JSON.stringify({
+            length: currentMetadata.length,
+            timestamp: new Date().toLocaleString(),
+            restoredFromCompensation: restoredCount,
+            usingFallback: true,
+          })
+      )
+
+      console.log(`[CompensationBackup] 使用fallback方案恢复 ${restoredCount} 个mutation`)
+
+      // 触发online事件
+      window.dispatchEvent(new Event("online"))
+
+      return restoredCount
+
+    } catch (fallbackError) {
+      console.error("[CompensationBackup] Fallback恢复也失败:", fallbackError)
+      throw new Error("恢复补偿存储失败，两种方案都不可用")
+    }
+  }
+  /**
+   * 获取当前URQL metadata队列状态
+   */
+  async getMetadataStatus(): Promise<{
+    compensationCount: number
+    metadataCount: number
+    usingFallback: boolean
+  }> {
+    await this.init()
+    const backups = await this.getAllCached()
+
+    let metadataCount = 0
+    let usingFallback = false
+
+    try {
+      // 尝试从IndexedDB获取metadata计数
+      const defaultStorage = makeDefaultStorage({
+        idbName: "graphcache-sei",
+        maxAge: 7,
+      })
+      const metadata = await defaultStorage.readMetadata() || []
+      metadataCount = metadata.length
+    } catch (error) {
+      // 降级到localStorage
+      const metadataStr = localStorage.getItem("urql-metadata-queue")
+      const metadata = metadataStr ? JSON.parse(metadataStr) : []
+      metadataCount = metadata.length
+      usingFallback = true
     }
 
-    // 保存更新后的metadata
-    localStorage.setItem("urql-metadata", JSON.stringify(metadata))
-
-    console.log(`[CompensationBackup] 成功恢复 ${restoredCount} 个mutation到metadata队列`)
-    return restoredCount
+    return {
+      compensationCount: backups.length,
+      metadataCount,
+      usingFallback,
+    }
   }
 }
 

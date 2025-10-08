@@ -103,14 +103,21 @@ export default function OfflinePage() {
         setIsLoadingCompensation(true)
         try {
             const restored = await mutationCompensationStorage.restoreToMetadata()
-            toast.success(`成功恢复 ${restored} 个mutation到离线队列`, {
-                description: "这些操作将在网络恢复后自动重试",
-                duration: 5000,
-            })
-            await loadCompensationData()
 
-            // 触发URQL重新处理metadata
-            window.dispatchEvent(new Event("online"))
+            if (restored > 0) {
+                toast.success(`成功恢复 ${restored} 个mutation到离线队列`, {
+                    description: "这些操作将在网络恢复后自动重试",
+                    duration: 5000,
+                })
+
+                // 可以获取状态信息用于显示
+                const status = await mutationCompensationStorage.getMetadataStatus()
+                console.log("当前队列状态:", status)
+            } else {
+                toast.info("没有需要恢复的mutation，队列中已存在相同的操作")
+            }
+
+            await loadCompensationData()
         } catch (error) {
             console.error("Failed to restore compensation:", error)
             toast.error("恢复补偿存储失败", {
