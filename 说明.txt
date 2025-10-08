@@ -1,8 +1,4 @@
-[Agent] v0app >> https://vercel.com/login?next=%2Fsingup          账户切换退出，删除cookie authorization=;
-https://v0.app/chat/serwist-urq-offline-cache-wnDI5hlCctH
-v0.app当前= 0;  https://v0.app/chat/id-sRSxMyX0hbg
-heerzhang3:: heerzhang3;  Your monthly credits reset in 24 days.
-
+[Agent] v0app >> https://vercel.com/login?next=%2Fsingup   账户切换退出，删除cookie authorization=;
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :9872
 自签名证书Chrome_SSL_cert.sh,在linux系统跑的chmod +x Chrome_SSL_cert.sh  不用windows自带openssl64窗口。
 双击 `ssl\localhost.crt`选择"安装证书"选择"本地计算机"选择"将所有证书都放入下列存储" > "受信任的根证书颁发机构"》 windows服务器。

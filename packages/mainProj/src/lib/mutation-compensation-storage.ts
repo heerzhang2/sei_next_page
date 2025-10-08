@@ -34,15 +34,23 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
    * 生成mutation的唯一ID
    */
   private generateMutationId(query: string, variables: any): string {
-    const content = `${query}_${JSON.stringify(variables || {})}`
-    // 简单hash函数
-    let hash = 0
-    for (let i = 0; i < content.length; i++) {
-      const char = content.charCodeAt(i)
-      hash = (hash << 5) - hash + char
-      hash = hash & hash // Convert to 32bit integer
+    // 针对 modifyOriginalRecordData 使用特殊标识
+    const isModifyMutation =query.includes('mutation modifyOriginalRecordData');
+    if (isModifyMutation && variables?.id) {
+      // 使用 id + version 作为标识
+      const version = variables.version || '0';
+      return `modify_${variables.id}_${version}_${Date.now()}`;
     }
-    return `mutation_${Math.abs(hash)}_${Date.now()}`
+    // 其他mutation使用原来的逻辑
+    const content = `${query}_${JSON.stringify(variables || {})}`;
+    // 简单hash函数
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return `mutation_${Math.abs(hash)}_${Date.now()}`;
   }
 
   /**
