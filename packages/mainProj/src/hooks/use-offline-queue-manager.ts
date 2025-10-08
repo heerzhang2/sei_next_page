@@ -402,15 +402,19 @@ export function useOfflineQueueManager(): OfflineQueueManager {
                 setTimeout(() => syncWithUrqlQueue(), 3000)
             }
         }
-
+        // 监听补偿存储恢复事件
+        const handleCompensationRestored = () => {
+            setTimeout(() => syncWithUrqlQueue(), 1000)
+        }
         window.addEventListener("storage", handleStorageChange)
         window.addEventListener("online", handleOnline)
-
+        window.addEventListener("urql:metadata-updated", handleCompensationRestored)
         return () => {
             mountedRef.current = false
             clearInterval(interval)
             window.removeEventListener("storage", handleStorageChange)
             window.removeEventListener("online", handleOnline)
+            window.removeEventListener("urql:metadata-updated", handleCompensationRestored)
         }
     }, [syncWithUrqlQueue])
 

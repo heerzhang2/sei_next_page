@@ -528,3 +528,4 @@ writeMetadata ：拦截离线的mutation变更发起。 filteredRequests
 DB 3节点全关后恢复：丢失。 补偿中的 时间顺序有问题？mutation_410656653_1759874348293
 数据库单节点恢复是401应答：正常。发送mutation了没有收到保存应答，无法清理补偿中的列表遗留。
 【压缩多余的备份】补偿中都会备份但是清理？确定后端事务完成了，重复发送。
+https://chat.deepseek.com/a/chat/s/43a6904a-a227-4d7a-87d5-0c51c3659c82

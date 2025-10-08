@@ -98,11 +98,32 @@ export default function OfflinePage() {
             console.error("Failed to load compensation data:", error)
         }
     }
+    const handleForceProcessQueue = async () => {
+        try {
+            // 强制触发 URQL 队列处理
+            window.dispatchEvent(new Event("online"))
+
+            // 检查 metadata 状态
+            const urqlMetadata = localStorage.getItem("urql-metadata")
+            console.log("[Debug] 当前 URQL metadata:", urqlMetadata)
+
+            toast.info("已强制触发队列处理")
+        } catch (error) {
+            console.error("强制处理队列失败:", error)
+        }
+    }
 
     const handleRestoreCompensation = async () => {
         setIsLoadingCompensation(true)
         try {
+            console.log("[Debug] 开始恢复补偿存储...")
+
+            // 先检查当前状态
+            const statusBefore = await mutationCompensationStorage.getMetadataStatus()
+            console.log("[Debug] 恢复前状态:", statusBefore)
+
             const restored = await mutationCompensationStorage.restoreToMetadata()
+            console.log("[Debug] 恢复结果:", restored)
 
             if (restored > 0) {
                 toast.success(`成功恢复 ${restored} 个mutation到离线队列`, {
@@ -110,16 +131,24 @@ export default function OfflinePage() {
                     duration: 5000,
                 })
 
-                // 可以获取状态信息用于显示
-                const status = await mutationCompensationStorage.getMetadataStatus()
-                console.log("当前队列状态:", status)
+                // 检查恢复后的状态
+                const statusAfter = await mutationCompensationStorage.getMetadataStatus()
+                console.log("[Debug] 恢复后状态:", statusAfter)
+
+                // 强制刷新队列显示
+                setTimeout(() => {
+                    window.dispatchEvent(new Event("storage"))
+                    window.dispatchEvent(new Event("urql:metadata-updated"))
+                }, 1000)
+
             } else {
                 toast.info("没有需要恢复的mutation，队列中已存在相同的操作")
             }
 
             await loadCompensationData()
+
         } catch (error) {
-            console.error("Failed to restore compensation:", error)
+            console.error("[Debug] 恢复补偿存储失败:", error)
             toast.error("恢复补偿存储失败", {
                 description: error instanceof Error ? error.message : "未知错误",
             })
@@ -127,7 +156,6 @@ export default function OfflinePage() {
             setIsLoadingCompensation(false)
         }
     }
-
     const handleClearCompensation = async () => {
         if (!confirm("确定要清空补偿存储吗？这将删除所有备份的mutation。")) {
             return
@@ -158,6 +186,130 @@ export default function OfflinePage() {
     const refreshPage = () => {
         window.location.reload()
     }
+
+    const handleForceRefreshUrqlCache = async () => {
+        try {
+            console.log("[Debug] 强制刷新 URQL 缓存...")
+
+            // 方法1: 重新初始化 URQL 客户端
+            if (typeof window !== 'undefined') {
+                // 触发自定义事件让 GraphQLProvider 重新创建客户端
+                window.dispatchEvent(new CustomEvent('urql:refresh-cache'))
+            }
+
+            // 方法2: 清除并重新加载 metadata
+            await clearAndReloadUrqlMetadata()
+
+            toast.success("URQL 缓存已刷新")
+
+            // 重新加载数据
+            await loadCompensationData()
+
+        } catch (error) {
+            console.error("强制刷新缓存失败:", error)
+            toast.error("刷新缓存失败")
+        }
+    }
+
+    /**
+     * 清除并重新加载 URQL metadata
+     */
+    const clearAndReloadUrqlMetadata = async (): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open("graphcache-sei", 1)
+
+            request.onsuccess = () => {
+                const db = request.result
+                if (!db.objectStoreNames.contains("metadata")) {
+                    resolve()
+                    return
+                }
+
+                const transaction = db.transaction(["metadata"], "readwrite")
+                const store = transaction.objectStore("metadata")
+
+                // 读取当前 metadata
+                const getRequest = store.get("metadata")
+                getRequest.onsuccess = () => {
+                    console.log("[Debug] 当前metadata:", getRequest.result)
+
+                    // 不删除，只是重新读取
+                    transaction.oncomplete = () => {
+                        console.log("[Debug] metadata 读取完成")
+                        resolve()
+                    }
+                }
+
+                getRequest.onerror = () => {
+                    console.error("[Debug] 读取metadata失败:", getRequest.error)
+                    resolve() // 即使失败也继续
+                }
+            }
+
+            request.onerror = () => {
+                console.error("[Debug] 打开数据库失败:", request.error)
+                reject(request.error)
+            }
+        })
+    }
+    // 在 page.tsx 的 useEffect 中添加 metadata 监控
+    useEffect(() => {
+        const monitorUrqlMetadata = async () => {
+            try {
+                const status = await mutationCompensationStorage.getMetadataStatus()
+                console.log("[Monitor] URQL Metadata 状态:", status)
+
+                // 直接读取 URQL 的 metadata 进行验证
+                const urqlMetadata = await readUrqlMetadataDirectly()
+                console.log("[Monitor] 直接读取的metadata:", urqlMetadata)
+
+            } catch (error) {
+                console.error("[Monitor] 监控metadata失败:", error)
+            }
+        }
+
+        // 初始监控
+        monitorUrqlMetadata()
+
+        // 定期监控
+        const interval = setInterval(monitorUrqlMetadata, 5000)
+
+        return () => clearInterval(interval)
+    }, [])
+
+    /**
+     * 直接读取 URQL metadata
+     */
+    const readUrqlMetadataDirectly = async (): Promise<any> => {
+        return new Promise((resolve) => {
+            const request = indexedDB.open("graphcache-sei", 1)
+
+            request.onsuccess = () => {
+                const db = request.result
+                if (!db.objectStoreNames.contains("metadata")) {
+                    resolve(null)
+                    return
+                }
+
+                const transaction = db.transaction(["metadata"], "readonly")
+                const store = transaction.objectStore("metadata")
+                const getRequest = store.get("metadata")
+
+                getRequest.onsuccess = () => {
+                    resolve(getRequest.result)
+                }
+
+                getRequest.onerror = () => {
+                    resolve(null)
+                }
+            }
+
+            request.onerror = () => {
+                resolve(null)
+            }
+        })
+    }
+
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl">
             <div className="space-y-6">
@@ -326,20 +478,28 @@ export default function OfflinePage() {
                                         )}
                                         恢复到队列
                                     </Button>
+
+                                    {/* 添加调试按钮 */}
+                                    <Button onClick={handleForceRefreshUrqlCache} variant="outline">
+                                        <Database className="w-4 h-4 mr-2" />
+                                        刷新缓存
+                                    </Button>
+
                                     <Button onClick={handleDownloadCompensation} disabled={compensationCount === 0} variant="outline">
                                         <Download className="w-4 h-4 mr-2" />
                                         下载备份
                                     </Button>
+
                                     <Button onClick={handleClearCompensation} disabled={compensationCount === 0} variant="destructive">
                                         <XCircle className="w-4 h-4 mr-2" />
                                         清空备份
                                     </Button>
+
                                     <Button onClick={loadCompensationData} variant="ghost">
                                         <RefreshCw className="w-4 h-4 mr-2" />
                                         刷新
                                     </Button>
                                 </div>
-
                                 {compensationBackups.length > 0 && (
                                     <div className="space-y-2">
                                         <h4 className="text-sm font-medium">备份详情</h4>

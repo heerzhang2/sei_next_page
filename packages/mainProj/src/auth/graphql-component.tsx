@@ -727,11 +727,17 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         const handleMetadataRestored = (event: CustomEvent) => {
             console.log(`[GraphQLProvider] Metadata已恢复: ${event.detail.count} 项`)
         }
-
+        const handleRefreshCache = () => {
+            console.log("[GraphQLProvider] 收到刷新缓存事件，重新创建客户端")
+            // 这里可以强制重新创建客户端
+            clientRef.current = null
+            lastTokenRef.current = null
+        }
         window.addEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
-
+        window.addEventListener('urql:refresh-cache', handleRefreshCache)
         return () => {
             window.removeEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
+            window.removeEventListener('urql:refresh-cache', handleRefreshCache)
         }
     }, [])
 

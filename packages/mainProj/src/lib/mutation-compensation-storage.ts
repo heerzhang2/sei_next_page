@@ -314,7 +314,7 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
     return this.getAllCached()
   }
   /**
-   * 将补偿存储恢复到URQL metadata队列
+   * 将补偿存储恢复到URQL metadata队列 - 修复版本
    */
   async restoreToMetadata(): Promise<number> {
     await this.init()
@@ -326,72 +326,199 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
     }
 
     try {
-      // 获取URQL的metadata存储
-      const defaultStorage = makeDefaultStorage({
-        idbName: "graphcache-sei",
-        maxAge: 7,
-      })
-
-      // 读取现有的metadata
-      const existingMetadata = await defaultStorage.readMetadata() || []
-
-      let restoredCount = 0
-      const seen = new Map<string, boolean>()
-
-      // 构建已存在请求的标识映射（用于去重）
-      for (const request of existingMetadata) {
-        const key = this.generateRequestKey(request)
-        seen.set(key, true)
-      }
-
-      // 添加备份的mutation到metadata
-      for (const backup of backups) {
-        const request: SerializedRequest = {
-          query: backup.query,
-          variables: backup.variables,
-          extensions: backup.extensions,
-        }
-
-        const key = this.generateRequestKey(request)
-
-        // 检查是否已存在相同的请求
-        if (!seen.has(key)) {
-          existingMetadata.push(request)
-          seen.set(key, true)
-          restoredCount++
-          console.log(`[CompensationBackup] 恢复mutation: ${backup.operationName}`)
-        }
-      }
-
-      // 写入更新后的metadata
-      await defaultStorage.writeMetadata(existingMetadata)
-
-      // 更新localStorage中的metadata计数（用于UI显示）
-      if (typeof window !== "undefined") {
-        localStorage.setItem(
-            "urql-metadata",
-            JSON.stringify({
-              length: existingMetadata.length,
-              timestamp: new Date().toLocaleString(),
-              restoredFromCompensation: restoredCount,
-            })
-        )
-      }
+      // 直接操作 URQL 的 IndexedDB 数据库
+      const restoredCount = await this.directWriteToUrqlMetadata(backups)
 
       console.log(`[CompensationBackup] 成功恢复 ${restoredCount} 个mutation到metadata队列`)
 
-      // 触发online事件，让URQL开始处理队列
-      window.dispatchEvent(new Event("online"))
+      // 触发 URQL 处理队列
+      this.triggerUrqlQueueProcessing()
 
       return restoredCount
 
     } catch (error) {
       console.error("[CompensationBackup] 恢复metadata失败:", error)
-
-      // 降级方案：使用localStorage作为fallback
+      // 尝试降级方案
       return await this.restoreToMetadataFallback(backups)
     }
   }
+
+  /**
+   * 直接写入到 URQL 的 metadata 存储 - 修复版本
+   */
+  private async directWriteToUrqlMetadata(backups: CompensationMutationItem[]): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open("graphcache-sei", 1)
+
+      request.onerror = () => reject(request.error)
+
+      request.onsuccess = () => {
+        const db = request.result
+
+        if (!db.objectStoreNames.contains("metadata")) {
+          console.warn("[CompensationBackup] URQL metadata store not found, creating...")
+          // 如果不存在，创建 metadata 存储
+          db.createObjectStore("metadata")
+        }
+
+        const transaction = db.transaction(["metadata"], "readwrite")
+        const store = transaction.objectStore("metadata")
+
+        // 读取现有的 metadata
+        const getRequest = store.get("metadata")
+
+        getRequest.onsuccess = () => {
+          try {
+            let existingMetadata: SerializedRequest[] = []
+
+            // 处理现有 metadata 数据
+            if (getRequest.result) {
+              if (Array.isArray(getRequest.result)) {
+                existingMetadata = getRequest.result
+              } else if (typeof getRequest.result === 'object') {
+                // 如果是对象，尝试转换为数组
+                existingMetadata = [getRequest.result]
+              }
+            }
+
+            console.log(`[CompensationBackup] 现有metadata数量: ${existingMetadata.length}`)
+
+            const seen = new Map<string, boolean>()
+            let restoredCount = 0
+
+            // 构建现有请求的标识映射
+            for (const request of existingMetadata) {
+              const key = this.generateRequestKey(request)
+              seen.set(key, true)
+            }
+
+            // 添加备份的 mutation
+            const requestsToAdd: SerializedRequest[] = []
+            for (const backup of backups) {
+              const request: SerializedRequest = {
+                query: backup.query,
+                variables: backup.variables,
+                extensions: backup.extensions,
+              }
+
+              const key = this.generateRequestKey(request)
+
+              // 检查是否已存在相同的请求
+              if (!seen.has(key)) {
+                requestsToAdd.push(request)
+                seen.set(key, true)
+                restoredCount++
+                console.log(`[CompensationBackup] 准备恢复mutation: ${backup.operationName}`, request.variables)
+              }
+            }
+
+            // 合并现有和新的请求
+            const updatedMetadata = [...existingMetadata, ...requestsToAdd]
+            console.log(`[CompensationBackup] 更新后metadata总数: ${updatedMetadata.length}`)
+
+            // 写入更新后的 metadata
+            const putRequest = store.put(updatedMetadata, "metadata")
+
+            putRequest.onsuccess = () => {
+              console.log(`[CompensationBackup] 成功写入metadata到IndexedDB，总数: ${updatedMetadata.length}`)
+
+              // 验证写入是否成功
+              const verifyRequest = store.get("metadata")
+              verifyRequest.onsuccess = () => {
+                const verifiedData = verifyRequest.result
+                console.log(`[CompensationBackup] 验证写入结果:`,
+                    Array.isArray(verifiedData) ? `数组长度: ${verifiedData.length}` : `类型: ${typeof verifiedData}`
+                )
+
+                // 更新 UI 显示
+                this.updateMetadataDisplay(updatedMetadata.length, restoredCount)
+                resolve(restoredCount)
+              }
+              verifyRequest.onerror = () => {
+                console.error("[CompensationBackup] 验证写入失败:", verifyRequest.error)
+                resolve(restoredCount) // 即使验证失败也返回成功计数
+              }
+            }
+
+            putRequest.onerror = () => {
+              console.error("[CompensationBackup] 写入metadata失败:", putRequest.error)
+              reject(putRequest.error)
+            }
+
+          } catch (error) {
+            console.error("[CompensationBackup] 处理metadata时出错:", error)
+            reject(error)
+          }
+        }
+
+        getRequest.onerror = () => {
+          console.error("[CompensationBackup] 读取metadata失败:", getRequest.error)
+          reject(getRequest.error)
+        }
+
+        transaction.oncomplete = () => {
+          console.log("[CompensationBackup] 事务完成")
+        }
+
+        transaction.onerror = () => {
+          console.error("[CompensationBackup] 事务失败:", transaction.error)
+        }
+      }
+
+      request.onupgradeneeded = (event) => {
+        console.log("[CompensationBackup] 数据库升级需要")
+        const db = (event.target as IDBOpenDBRequest).result
+        if (!db.objectStoreNames.contains("metadata")) {
+          console.log("[CompensationBackup] 创建metadata对象存储")
+          db.createObjectStore("metadata")
+        }
+      }
+    })
+  }
+
+  /**
+   * 触发 URQL 队列处理
+   */
+  private triggerUrqlQueueProcessing(): void {
+    // 方法1: 触发 online 事件
+    window.dispatchEvent(new Event("online"))
+
+    // 方法2: 触发自定义事件
+    window.dispatchEvent(new CustomEvent("urql:metadata-updated"))
+
+    // 方法3: 直接调用 URQL 的重试机制（如果可用）
+    if (typeof (window as any).__urql_client__ !== 'undefined') {
+      // 这里可以根据你的 URQL 客户端实例进行调整
+      console.log("[CompensationBackup] 检测到 URQL 客户端，触发重试")
+    }
+
+    // 方法4: 短暂离线再在线，强制刷新网络状态
+    setTimeout(() => {
+      window.dispatchEvent(new Event("offline"))
+      setTimeout(() => {
+        window.dispatchEvent(new Event("online"))
+      }, 100)
+    }, 500)
+  }
+
+  /**
+   * 更新 metadata 显示
+   */
+  private updateMetadataDisplay(totalCount: number, restoredCount: number): void {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+          "urql-metadata",
+          JSON.stringify({
+            length: totalCount,
+            timestamp: new Date().toLocaleString(),
+            restoredFromCompensation: restoredCount,
+            lastRestore: new Date().toISOString(),
+          })
+      )
+    }
+  }
+
+
   /**
    * 生成请求的唯一标识（用于去重）
    */
