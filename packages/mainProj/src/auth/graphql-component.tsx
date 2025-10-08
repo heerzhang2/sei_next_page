@@ -739,80 +739,16 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     )
 }
 
-const isModifyOriginalRecordDataMutation = (query: string): boolean => {
-    return query.includes('mutation modifyOriginalRecordData');
-};
-const generateModifyRecordKey = (variables: any): string => {
-    if (!variables?.id) return null;
-    // 使用 id 和 version 作为唯一标识
-    return `modify_${variables.id}_${variables.version || '0'}`;
-};
 const backupMutationToCompensation = async (request: SerializedRequest) => {
     try {
-        await mutationCompensationStorage.init();
-        // 检查是否为 modifyOriginalRecordData mutation
-        const isModifyMutation = isModifyOriginalRecordDataMutation(request.query);
-        if (isModifyMutation && request.variables?.id) {
-            const recordKey = generateModifyRecordKey(request.variables);
-            if (recordKey) {
-                // 获取所有现有的备份
-                const allBackups = await mutationCompensationStorage.getAllCached();
-                // 查找同一记录的所有备份
-                const existingBackupsForRecord = allBackups.filter(backup => {
-                    if (!isModifyOriginalRecordDataMutation(backup.query)) return false;
-                    const backupKey = generateModifyRecordKey(backup.variables);
-                    return backupKey && backupKey.startsWith(`modify_${request.variables.id}_`);
-                });
-                // 删除同一记录的旧备份
-                for (const oldBackup of existingBackupsForRecord) {
-                    await mutationCompensationStorage.removeMutationBackup(oldBackup.query, oldBackup.variables);
-                    console.log(`[CompensationBackup] 删除旧版本备份: ${oldBackup.operationName}, ID: ${oldBackup.variables.id}, Version: ${oldBackup.variables.version || '0'}`);
-                }
-                console.log(`[CompensationBackup] 已清理 ${existingBackupsForRecord.length} 个旧版本备份，保留最新版本`);
-            }
-        }
-        // 添加新备份
-        await mutationCompensationStorage.addMutationBackup(request.query, request.variables, request.extensions);
+        await mutationCompensationStorage.backupMutation(request.query, request.variables, request.extensions);
     } catch (error) {
         console.error("[CompensationBackup] 备份mutation失败:", error);
     }
 };
 const removeCompensationBackup = async (request: SerializedRequest) => {
     try {
-        await mutationCompensationStorage.init();
-        // 检查是否为 modifyOriginalRecordData mutation
-        const isModifyMutation = isModifyOriginalRecordDataMutation(request.query);
-        if (isModifyMutation && request.variables?.id) {
-            // 对于 modifyOriginalRecordData，根据 id 和 version 精确删除
-            const recordKey = generateModifyRecordKey(request.variables);
-            if (recordKey) {
-                // 获取所有备份
-                const allBackups = await mutationCompensationStorage.getAllCached();
-                // 查找完全匹配的备份
-                const exactMatchBackup = allBackups.find(backup => {
-                    if (!isModifyOriginalRecordDataMutation(backup.query)) return false;
-                    const backupKey = generateModifyRecordKey(backup.variables);
-                    return backupKey === recordKey;
-                });
-                if (exactMatchBackup) {
-                    await mutationCompensationStorage.removeMutationBackup(exactMatchBackup.query, exactMatchBackup.variables);
-                    console.log(`[CompensationBackup] 精确删除备份: ${exactMatchBackup.operationName}, ID: ${request.variables.id}, Version: ${request.variables.version || '0'}`);
-                } else {
-                    // 如果没有精确匹配，尝试删除同一id的所有备份（fallback）
-                    const backupsForId = allBackups.filter(backup => {
-                        if (!isModifyOriginalRecordDataMutation(backup.query)) return false;
-                        return backup.variables?.id === request.variables.id;
-                    });
-                    for (const backup of backupsForId) {
-                        await mutationCompensationStorage.removeMutationBackup(backup.query, backup.variables);
-                    }
-                    console.log(`[CompensationBackup] 删除ID为 ${request.variables.id} 的所有备份，数量: ${backupsForId.length}`);
-                }
-            }
-        } else {
-            // 对于其他mutation，使用原来的逻辑
-            await mutationCompensationStorage.removeMutationBackup(request.query, request.variables);
-        }
+        await mutationCompensationStorage.removeBackup(request.query, request.variables);
     } catch (error) {
         console.error("[CompensationBackup] 清理备份失败:", error);
     }

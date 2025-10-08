@@ -90,7 +90,8 @@ export default function OfflinePage() {
     const loadCompensationData = async () => {
         try {
             await mutationCompensationStorage.init()
-            const backups = await mutationCompensationStorage.getAllBackups()
+            // 使用 getAllCached（推荐）或 getAllBackups（如果添加了）
+            const backups = await mutationCompensationStorage.getAllCached()
             setCompensationBackups(backups)
             setCompensationCount(backups.length)
         } catch (error) {
@@ -107,6 +108,9 @@ export default function OfflinePage() {
                 duration: 5000,
             })
             await loadCompensationData()
+
+            // 触发URQL重新处理metadata
+            window.dispatchEvent(new Event("online"))
         } catch (error) {
             console.error("Failed to restore compensation:", error)
             toast.error("恢复补偿存储失败", {

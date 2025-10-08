@@ -31,11 +31,27 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
   }
 
   /**
+   * 检查是否为 modifyOriginalRecordData mutation
+   */
+  private isModifyOriginalRecordDataMutation(query: string): boolean {
+    return query.includes('mutation useOriginalDataMutation');
+  }
+
+  /**
+   * 生成针对 modifyOriginalRecordData 的唯一标识
+   */
+  private generateModifyRecordKey(variables: any): string {
+    if (!variables?.id) return null;
+    // 使用 id 和 version 作为唯一标识
+    return `modify_${variables.id}_${variables.version || '0'}`;
+  }
+
+  /**
    * 生成mutation的唯一ID
    */
   private generateMutationId(query: string, variables: any): string {
     // 针对 modifyOriginalRecordData 使用特殊标识
-    const isModifyMutation =query.includes('mutation modifyOriginalRecordData');
+    const isModifyMutation = this.isModifyOriginalRecordDataMutation(query);
     if (isModifyMutation && variables?.id) {
       // 使用 id + version 作为标识
       const version = variables.version || '0';
@@ -62,6 +78,46 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
   }
 
   /**
+   * 智能备份mutation，针对modifyOriginalRecordData只保留最新版本
+   * @param query GraphQL mutation查询
+   * @param variables 变量
+   * @param extensions 扩展信息
+   */
+  async backupMutation(query: string, variables: any, extensions?: Record<string, any>): Promise<string> {
+    await this.init();
+
+    // 检查是否为 modifyOriginalRecordData mutation
+    const isModifyMutation = this.isModifyOriginalRecordDataMutation(query);
+
+    if (isModifyMutation && variables?.id) {
+      const recordKey = this.generateModifyRecordKey(variables);
+
+      if (recordKey) {
+        // 获取所有现有的备份
+        const allBackups = await this.getAllCached();
+
+        // 查找同一记录的所有备份
+        const existingBackupsForRecord = allBackups.filter(backup => {
+          if (!this.isModifyOriginalRecordDataMutation(backup.query)) return false;
+          const backupKey = this.generateModifyRecordKey(backup.variables);
+          return backupKey && backupKey.startsWith(`modify_${variables.id}_`);
+        });
+
+        // 删除同一记录的旧备份
+        for (const oldBackup of existingBackupsForRecord) {
+          await this.removeMutationBackup(oldBackup.query, oldBackup.variables);
+          console.log(`[CompensationBackup] 删除旧版本备份: ${oldBackup.operationName}, ID: ${oldBackup.variables.id}, Version: ${oldBackup.variables.version || '0'}`);
+        }
+
+        console.log(`[CompensationBackup] 已清理 ${existingBackupsForRecord.length} 个旧版本备份，保留最新版本`);
+      }
+    }
+
+    // 添加新备份
+    return await this.addMutationBackup(query, variables, extensions);
+  }
+
+  /**
    * 添加mutation到补偿备份
    * @param query GraphQL mutation查询
    * @param variables 变量
@@ -84,9 +140,55 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
       status: "pending",
     }
 
-    await this.addItem(item, 200) // 最多保存200个备份
+    await this.addItem(item, 2000) // 最多保存2000个备份
     console.log(`[CompensationBackup] 已备份mutation: ${operationName} (ID: ${id})`)
     return id
+  }
+
+  /**
+   * 智能删除补偿备份，针对modifyOriginalRecordData根据id和version精确删除
+   */
+  async removeBackup(query: string, variables: any): Promise<void> {
+    await this.init();
+
+    // 检查是否为 modifyOriginalRecordData mutation
+    const isModifyMutation = this.isModifyOriginalRecordDataMutation(query);
+
+    if (isModifyMutation && variables?.id) {
+      // 对于 modifyOriginalRecordData，根据 id 和 version 精确删除
+      const recordKey = this.generateModifyRecordKey(variables);
+
+      if (recordKey) {
+        // 获取所有备份
+        const allBackups = await this.getAllCached();
+
+        // 查找完全匹配的备份
+        const exactMatchBackup = allBackups.find(backup => {
+          if (!this.isModifyOriginalRecordDataMutation(backup.query)) return false;
+          const backupKey = this.generateModifyRecordKey(backup.variables);
+          return backupKey === recordKey;
+        });
+
+        if (exactMatchBackup) {
+          await this.removeMutationBackup(exactMatchBackup.query, exactMatchBackup.variables);
+          console.log(`[CompensationBackup] 精确删除备份: ${exactMatchBackup.operationName}, ID: ${variables.id}, Version: ${variables.version || '0'}`);
+        } else {
+          // 如果没有精确匹配，尝试删除同一id的所有备份（fallback）
+          const backupsForId = allBackups.filter(backup => {
+            if (!this.isModifyOriginalRecordDataMutation(backup.query)) return false;
+            return backup.variables?.id === variables.id;
+          });
+
+          for (const backup of backupsForId) {
+            await this.removeMutationBackup(backup.query, backup.variables);
+          }
+          console.log(`[CompensationBackup] 删除ID为 ${variables.id} 的所有备份，数量: ${backupsForId.length}`);
+        }
+      }
+    } else {
+      // 对于其他mutation，使用原来的逻辑
+      await this.removeMutationBackup(query, variables);
+    }
   }
 
   /**
@@ -95,14 +197,14 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
   async findMutationBackup(query: string, variables: any): Promise<CompensationMutationItem | null> {
     const allBackups = await this.getAllCached()
     return (
-      allBackups.find((item) => {
-        return item.query === query && JSON.stringify(item.variables) === JSON.stringify(variables)
-      }) || null
+        allBackups.find((item) => {
+          return item.query === query && JSON.stringify(item.variables) === JSON.stringify(variables)
+        }) || null
     )
   }
 
   /**
-   * 删除成功的mutation备份
+   * 删除成功的mutation备份（原始方法，保持兼容性）
    */
   async removeMutationBackup(query: string, variables: any): Promise<void> {
     const backup = await this.findMutationBackup(query, variables)
@@ -201,6 +303,54 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
 
     console.log(`[CompensationBackup] 清理了 ${cleanedCount} 个旧备份`)
     return cleanedCount
+  }
+
+  /**
+   * 获取所有备份（getAllCached的别名，保持向后兼容）
+   */
+  async getAllBackups(): Promise<CompensationMutationItem[]> {
+    return this.getAllCached()
+  }
+
+  /**
+   * 将补偿存储恢复到URQL metadata队列
+   */
+  async restoreToMetadata(): Promise<number> {
+    await this.init()
+    const backups = await this.getAllCached()
+
+    if (backups.length === 0) {
+      console.log("[CompensationBackup] 没有备份需要恢复")
+      return 0
+    }
+
+    // 获取当前的metadata
+    const currentMetadata = localStorage.getItem("urql-metadata")
+    const metadata = currentMetadata ? JSON.parse(currentMetadata) : []
+
+    let restoredCount = 0
+
+    for (const backup of backups) {
+      // 检查是否已存在相同的mutation
+      const exists = metadata.some(
+          (m: any) => m.query === backup.query && JSON.stringify(m.variables) === JSON.stringify(backup.variables)
+      )
+
+      if (!exists) {
+        metadata.push({
+          query: backup.query,
+          variables: backup.variables,
+          extensions: backup.extensions,
+        })
+        restoredCount++
+      }
+    }
+
+    // 保存更新后的metadata
+    localStorage.setItem("urql-metadata", JSON.stringify(metadata))
+
+    console.log(`[CompensationBackup] 成功恢复 ${restoredCount} 个mutation到metadata队列`)
+    return restoredCount
   }
 }
 
