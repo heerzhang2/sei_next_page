@@ -1,36 +1,28 @@
+// components/offline-queue-manager.tsx
 "use client"
 
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { useOfflineQueueManager, type QueuedRequest, type QueueHistory } from "@/hooks/use-offline-queue-manager"
+import { useOfflineQueueManager, type QueuedRequest } from "@/hooks/use-offline-queue-manager"
 import {
     Clock,
     RefreshCw,
     X,
-    Play,
-    Pause,
     Trash2,
     Download,
     AlertTriangle,
     CheckCircle,
     XCircle,
-    Calendar,
     Activity,
     Database,
-    Shield,
-    History,
 } from "lucide-react"
 import { format } from "date-fns"
 
 export function OfflineQueueManager() {
     const {
         queuedRequests,
-        queueHistory,
         isProcessing,
         totalRequests,
         successCount,
@@ -40,12 +32,8 @@ export function OfflineQueueManager() {
         cancelRequest,
         retryAll,
         clearQueue,
-        clearHistory,
-        getHistoryByDate,
         exportQueueData,
     } = useOfflineQueueManager()
-
-    const [selectedDate, setSelectedDate] = useState(new Date())
 
     const getPriorityColor = (priority: string) => {
         switch (priority) {
@@ -107,8 +95,8 @@ export function OfflineQueueManager() {
                             {request.lastError && <p className="text-red-600">错误: {request.lastError}</p>}
                             {Object.keys(request.variables).length > 0 && (
                                 <details className="mt-2">
-                                   <summary className="cursor-pointer text-blue-600 hover:text-blue-800">查看参数</summary>
-                                   <pre className="mt-1 p-2 bg-gray-50 rounded text-xs overflow-auto">
+                                    <summary className="cursor-pointer text-blue-600 hover:text-blue-800">查看参数</summary>
+                                    <pre className="mt-1 p-2 bg-gray-50 rounded text-xs overflow-auto">
                                       {JSON.stringify(request.variables, null, 2)}
                                    </pre>
                                 </details>
@@ -229,6 +217,7 @@ export function OfflineQueueManager() {
                     </div>
                 </CardContent>
             </Card>
+
             {/* 队列详情 */}
             <Card>
                 <CardHeader>

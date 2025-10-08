@@ -1,20 +1,21 @@
+// hooks/use-offline-queue-manager.ts
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
 
-export interface EnhancedSerializedRequest extends SerializedRequest {
-    // 增强字段 - 仅用于UI显示和管理
-    enhancedId: string
+export interface QueuedRequest {
+    id: string
+    operationName: string
+    variables: any
+    query: string
     timestamp: number
     status: "pending" | "retrying" | "failed" | "success"
     retryCount: number
     lastError?: string
     priority: "high" | "medium" | "low"
     userCanCancel: boolean
-    operationName: string
-    backupTimestamp: number // 备份时间戳
 }
 
 export interface QueueHistory {
@@ -29,7 +30,7 @@ export interface QueueHistory {
 }
 
 export interface OfflineQueueManager {
-    queuedRequests: EnhancedSerializedRequest[]
+    queuedRequests: QueuedRequest[]
     queueHistory: QueueHistory[]
     isProcessing: boolean
     totalRequests: number
@@ -44,43 +45,71 @@ export interface OfflineQueueManager {
     clearQueue: () => Promise<void>
     clearHistory: () => Promise<void>
 
-    // 备份和恢复
-    backupQueue: () => Promise<void>
-    restoreFromBackup: (backupData: string) => Promise<void>
-
     // 历史管理
     getHistoryByDate: (date: Date) => QueueHistory[]
     exportQueueData: () => string
 }
 
-const HISTORY_KEY = "urql-queue-history"
-const BACKUP_KEY = "urql-queue-backup"
-const HISTORY_RETENTION_DAYS = 1
+// 生成请求标识的辅助函数
+const generateRequestId = (request: SerializedRequest): string => {
+    const operationName = extractOperationName(request.query)
+    return `${operationName}_${JSON.stringify(request.variables)}_${Date.now()}`
+}
+
+const extractOperationName = (query: string): string => {
+    const match = query.match(/(?:mutation|query)\s+(\w+)/)
+    return match?.[1] || "Unknown"
+}
 
 const openUrqlDatabase = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open("graphcache-sei")
+        const request = indexedDB.open("graphcache-sei", 1)
+
         request.onerror = () => reject(request.error)
         request.onsuccess = () => resolve(request.result)
+
+        request.onupgradeneeded = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result
+
+            // Create metadata object store if it doesn't exist
+            if (!db.objectStoreNames.contains("metadata")) {
+                console.log("[v0] 创建 metadata 对象存储")
+                db.createObjectStore("metadata")
+            }
+
+            if (!db.objectStoreNames.contains("entries")) {
+                console.log("[v0] 创建 entries 对象存储")
+                db.createObjectStore("entries")
+            }
+        }
     })
 }
 
 const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
     try {
         const db = await openUrqlDatabase()
-        const transaction = db?.transaction(["metadata"], "readonly") // 只读事务
-        const store = transaction?.objectStore("metadata")
+
+        if (!db.objectStoreNames.contains("metadata")) {
+            console.log("[v0] metadata 对象存储不存在，返回空数组")
+            return []
+        }
+
+        const transaction = db.transaction(["metadata"], "readonly")
+        const store = transaction.objectStore("metadata")
 
         return new Promise((resolve, reject) => {
             const request = store.get("metadata")
-            request.onerror = () => reject(request.error)
+            request.onerror = () => {
+                console.error("[v0] 读取 metadata 失败:", request.error)
+                resolve([])
+            }
             request.onsuccess = () => {
                 const result = request.result
                 if (result) {
                     try {
                         resolve(Array.isArray(result) ? result : [])
                     } catch (e) {
-                        console.error("【冲途中】解析URQL metadata失败:", e)
+                        console.error("[v0] 解析URQL metadata失败:", e)
                         resolve([])
                     }
                 } else {
@@ -89,17 +118,17 @@ const readUrqlMetadata = async (): Promise<SerializedRequest[]> => {
             }
         })
     } catch (error) {
-        console.log("读取URQL metadata失败:", error)
+        console.log("[v0] 读取URQL metadata失败:", error)
         return []
     }
 }
 
 export function useOfflineQueueManager(): OfflineQueueManager {
-    const [queuedRequests, setQueuedRequests] = useState<EnhancedSerializedRequest[]>([])
+    const [queuedRequests, setQueuedRequests] = useState<QueuedRequest[]>([])
     const [queueHistory, setQueueHistory] = useState<QueueHistory[]>([])
     const [isProcessing, setIsProcessing] = useState(false)
 
-    const queuedRequestsRef = useRef<EnhancedSerializedRequest[]>([])
+    const queuedRequestsRef = useRef<QueuedRequest[]>([])
     const lastSyncRef = useRef<string>("")
     const mountedRef = useRef(true)
 
@@ -137,23 +166,23 @@ export function useOfflineQueueManager(): OfflineQueueManager {
                 return
             }
 
-            const enhancedRequests: EnhancedSerializedRequest[] = urqlRequests.map((request, index) => {
+            const enhancedRequests: QueuedRequest[] = urqlRequests.map((request, index) => {
                 const operationName = extractOperationName(request.query)
                 const existingRequest = queuedRequestsRef.current.find(
                     (r) => r.operationName === operationName && JSON.stringify(r.variables) === JSON.stringify(request.variables),
                 )
 
                 return {
-                    ...request, // 保留所有URQL原始字段
-                    enhancedId: existingRequest?.enhancedId || `req_${Date.now()}_${index}`,
+                    id: existingRequest?.id || `req_${Date.now()}_${index}`,
                     operationName,
+                    query: request.query,
+                    variables: request.variables,
                     timestamp: existingRequest?.timestamp || Date.now(),
                     status: existingRequest?.status || "pending",
                     retryCount: existingRequest?.retryCount || 0,
                     lastError: existingRequest?.lastError,
                     priority: getPriority(operationName, request.variables),
                     userCanCancel: canUserCancel(operationName),
-                    backupTimestamp: Date.now(),
                 }
             })
 
@@ -163,11 +192,6 @@ export function useOfflineQueueManager(): OfflineQueueManager {
             console.error("[v0] 同步URQL队列失败:", error)
         }
     }, [])
-
-    const extractOperationName = (query: string): string => {
-        const match = query.match(/(?:mutation|query)\s+(\w+)/)
-        return match?.[1] || "Unknown"
-    }
 
     const getPriority = (operationName: string, variables: any): "high" | "medium" | "low" => {
         if (
@@ -191,30 +215,38 @@ export function useOfflineQueueManager(): OfflineQueueManager {
 
     const retryRequest = useCallback(
         async (id: string) => {
-            const request = queuedRequests.find((r) => r.enhancedId === id)
+            const request = queuedRequests.find((r) => r.id === id)
             if (!request) return
 
             setQueuedRequests((prev) =>
-                prev.map((r) => (r.enhancedId === id ? { ...r, status: "retrying", retryCount: r.retryCount + 1 } : r)),
+                prev.map((r) => (r.id === id ? { ...r, status: "retrying", retryCount: r.retryCount + 1 } : r)),
             )
 
             try {
-                // 触发网络状态变化，让URQL自动重试
-                window.dispatchEvent(new Event("online"))
+                // 生成请求标识并触发手动重试事件
+                const requestId = generateRequestId(request)
+                window.dispatchEvent(
+                    new CustomEvent("graphql-manual-retry", {
+                        detail: { requestId, retryAll: false },
+                    }),
+                )
+
+                // 强制触发 online 事件让 URQL 处理队列
+                if (typeof navigator !== 'undefined' && navigator.onLine) {
+                    window.dispatchEvent(new Event('online'))
+                }
 
                 toast.success(`操作 "${request.operationName}" 已触发重试`)
 
                 // 等待一段时间后检查状态
                 setTimeout(async () => {
                     await syncWithUrqlQueue()
-                }, 4000)
+                }, 2000)
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : "未知错误"
-
                 setQueuedRequests((prev) =>
-                    prev.map((r) => (r.enhancedId === id ? { ...r, status: "failed", lastError: errorMessage } : r)),
+                    prev.map((r) => (r.id === id ? { ...r, status: "failed", lastError: errorMessage } : r)),
                 )
-
                 toast.error(`操作 "${request.operationName}" 重试失败: ${errorMessage}`)
             }
         },
@@ -223,13 +255,13 @@ export function useOfflineQueueManager(): OfflineQueueManager {
 
     const cancelRequest = useCallback(
         async (id: string) => {
-            const request = queuedRequests.find((r) => r.enhancedId === id)
+            const request = queuedRequests.find((r) => r.id === id)
             if (!request || !request.userCanCancel) return
 
             try {
                 // 添加到历史记录
                 const historyItem: QueueHistory = {
-                    id: request.enhancedId,
+                    id: request.id,
                     operationName: request.operationName,
                     variables: request.variables,
                     query: request.query,
@@ -240,12 +272,11 @@ export function useOfflineQueueManager(): OfflineQueueManager {
 
                 setQueueHistory((prev) => {
                     const newHistory = [historyItem, ...prev]
-                    saveHistory(newHistory)
                     return newHistory
                 })
 
                 // 从UI中移除（不影响URQL的实际队列）
-                setQueuedRequests((prev) => prev.filter((r) => r.enhancedId !== id))
+                setQueuedRequests((prev) => prev.filter((r) => r.id !== id))
 
                 toast.info(`操作 "${request.operationName}" 已从监控中移除`)
             } catch (error) {
@@ -260,24 +291,40 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         setIsProcessing(true)
         const pendingRequests = queuedRequests.filter((r) => r.status === "pending" || r.status === "failed")
 
+        if (pendingRequests.length === 0) {
+            toast.info("没有需要重试的请求")
+            setIsProcessing(false)
+            return
+        }
+
         // 批量更新状态
         setQueuedRequests((prev) =>
             prev.map((r) =>
-                pendingRequests.some((p) => p.enhancedId === r.enhancedId)
+                pendingRequests.some((p) => p.id === r.id)
                     ? { ...r, status: "retrying" as const, retryCount: r.retryCount + 1 }
                     : r,
             ),
         )
 
-        // 触发网络重连事件，让URQL处理重试
-        window.dispatchEvent(new Event("online"))
+        // 触发批量重试事件
+        window.dispatchEvent(
+            new CustomEvent("graphql-manual-retry", {
+                detail: { retryAll: true },
+            }),
+        )
+
+        // 强制触发 URQL 的重试机制
+        if (typeof navigator !== 'undefined' && navigator.onLine) {
+            window.dispatchEvent(new Event('online'))
+        }
+
+        toast.success(`开始重试 ${pendingRequests.length} 个请求`)
 
         setTimeout(async () => {
             setIsProcessing(false)
             await syncWithUrqlQueue()
-            toast.success("所有请求重试完成")
-        }, 5000)
-    }, [queuedRequests,  syncWithUrqlQueue])
+        }, 3000)
+    }, [queuedRequests, syncWithUrqlQueue])
 
     const clearQueue = useCallback(async () => {
         try {
@@ -292,57 +339,7 @@ export function useOfflineQueueManager(): OfflineQueueManager {
     // 清空历史记录
     const clearHistory = useCallback(async () => {
         setQueueHistory([])
-        localStorage.removeItem(HISTORY_KEY)
         toast.success("历史记录已清空")
-    }, [])
-
-
-    const backupQueue = useCallback(async () => {
-        try {
-            const backupData = {
-                queuedRequests,
-                timestamp: Date.now(),
-                version: "2.0",
-            }
-            localStorage.setItem(BACKUP_KEY, JSON.stringify(backupData))
-
-            // 同时添加到历史记录
-            const historyItems: QueueHistory[] = queuedRequests.map((req) => ({
-                id: req.enhancedId,
-                operationName: req.operationName,
-                variables: req.variables,
-                query: req.query,
-                timestamp: req.timestamp,
-                status: "backed_up",
-                processedAt: Date.now(),
-            }))
-
-            setQueueHistory((prev) => {
-                const newHistory = [...historyItems, ...prev]
-                saveHistory(newHistory)
-                return newHistory
-            })
-
-            toast.success(`已备份 ${queuedRequests.length} 个请求`)
-        } catch (error) {
-            console.error("[v0] 备份队列失败:", error)
-            toast.error("备份队列失败")
-        }
-    }, [queuedRequests])
-
-    const restoreFromBackup = useCallback(async (backupData: string) => {
-        try {
-            const parsed = JSON.parse(backupData)
-            if (parsed.queuedRequests && Array.isArray(parsed.queuedRequests)) {
-                setQueuedRequests(parsed.queuedRequests)
-                toast.success(`已恢复 ${parsed.queuedRequests.length} 个请求`)
-            } else {
-                throw new Error("无效的备份数据格式")
-            }
-        } catch (error) {
-            console.error("[v0] 恢复备份失败:", error)
-            toast.error("恢复备份失败")
-        }
     }, [])
 
     // 按日期获取历史记录
@@ -383,7 +380,8 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         mountedRef.current = true
         const initialize = async () => {
             if (!mountedRef.current) return
-            //await syncWithUrqlQueue() 太早了 indexDB数据库可能还没有创建
+            // 初始同步
+            await syncWithUrqlQueue()
         }
         initialize()
 
@@ -429,8 +427,6 @@ export function useOfflineQueueManager(): OfflineQueueManager {
         retryAll,
         clearQueue,
         clearHistory,
-        backupQueue,
-        restoreFromBackup,
         getHistoryByDate,
         exportQueueData,
     }

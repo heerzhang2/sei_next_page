@@ -1,3 +1,4 @@
+// graphql-component.tsx
 "use client"
 
 import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/next"
@@ -17,6 +18,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { MetadataWriteConfirmationModal } from "@/components/metadata-write-confirmation-modal"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
+import { manualRetryExchange } from "@/lib/manual-retry-exchange" // 新增导入
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -38,11 +40,13 @@ export const isNetworkError = (error: any): boolean => {
         (error.name === "TypeError" && errorMessage.includes("fetch"))
     )
 }
+
 // 自定义网络错误处理 Exchange
 let errorCount = 0
 let lastErrorTime = 0
 const MAX_ERRORS_PER_MINUTE = 10
 const ERROR_RESET_TIME = 60000 // 1分钟
+
 //网络状态更新：
 const updateBackendStatusExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
@@ -95,6 +99,7 @@ const updateBackendStatusExchange = (
         }
     }
 }
+
 // 自定义 fetch exchange 来更好地处理网络错误
 const customFetchExchange: Exchange = ({ forward }) => {
     return (operations$) => {
@@ -143,6 +148,7 @@ const getStoredRefreshToken = (): string | null => {
     if (typeof window === "undefined") return null
     return localStorage.getItem("refresh_token")
 }
+
 const setStoredRefreshToken = (token: string | null): void => {
     if (typeof window === "undefined") return
     if (token) {
@@ -151,6 +157,7 @@ const setStoredRefreshToken = (token: string | null): void => {
         localStorage.removeItem("refresh_token")
     }
 }
+
 //直接post原生做法发送请求包了
 const refreshTokenDirectly = async (
     refreshToken: string,
@@ -199,6 +206,7 @@ const refreshTokenDirectly = async (
         return null
     }
 }
+
 const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; javaBackendReachable: boolean }> => {
     const results = await Promise.allSettled([
         // 检查Next.js服务器
@@ -216,6 +224,7 @@ const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; j
         javaBackendReachable: results[1].status === "fulfilled" && results[1].value,
     }
 }
+
 //清理PWA的/api/auth/session的缓存；
 const clearServiceWorkerAuthCache = async (): Promise<void> => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
@@ -241,6 +250,7 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
         console.error("清除Service Worker缓存失败:", error)
     }
 }
+
 //创建认证交换器
 const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print?: boolean) => {
     return authExchange(async (utils) => {
@@ -400,6 +410,7 @@ const isOfflineError = (error: any): boolean => {
     if (isVersionConflictError(error)) return false
     return has401Error
 }
+
 //避免变更保存按钮的无限等待。
 const fetchAbortExchange: Exchange =
     ({ forward, client }) =>
@@ -468,7 +479,7 @@ const isVersionConflictError = (error: any): boolean => {
  * 点击Link切换不同的报告，后端恢复能自动发出缓存的报告变更队列,【可能】操作数据记录已在其它设备或其他人改动？只能从graphqlCache缓存找回来?metadata已经被丢弃。
  * 业务上没法按照ACID事务性锁定，乐观锁version机制能用于PWA离线修改报告的做法，很容易遇到考虑数据版本的冲突：
  * 假如流程引擎修改导致的version变动，后端转Pdf就是这个情况，后端网页转为Pdf完成，导致version改了：假如还在改这报告面临无法提交！因version被后台变更导致无法成功提交修改；最好必须等待网页转为Pdf后台已处理完才能继续刷新报告再修改。
- * */
+ */
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const pathname = usePathname()
@@ -485,9 +496,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const handleWriteCancel = useCallback(() => {
         console.log("[GraphQLProvider] 用户取消了metadata写入操作")
     }, [])
+
     useEffect(() => {
         setIsClient(true)
     }, [])
+
     const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
     const mountCountRef = useRef(0)
 
@@ -565,7 +578,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             storage: {
                 ...storage,
                 writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json.length)
+                    console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json?.length || 0)
                     if (json?.length !== 0) {
                         const uniqueRequests: SerializedRequest[] = []
                         const seen = new Map<string, SerializedRequest>()
@@ -670,6 +683,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
                 cache,
+                manualRetryExchange, // 新增手动重试 exchange
                 makeAuthExchange(accessToken, update, print),
                 updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
                 ssr,
@@ -692,7 +706,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus]) // 移除isWriteConfirmed依赖
+    }, [accessToken, isClient, update, updateGraphQLBackendStatus])
 
     const memoizedClientRef = useRef<[any, any] | null>(null)
     const lastAccessTokenRef = useRef(accessToken)
@@ -733,7 +747,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 isOpen={isWriteModalOpen}
                 onConfirm={handleWriteConfirm}
                 onCancel={handleWriteCancel}
-                queueCount={ 0}
+                queueCount={0}
             />
         </UrqlProvider>
     )
@@ -746,6 +760,7 @@ const backupMutationToCompensation = async (request: SerializedRequest) => {
         console.error("[CompensationBackup] 备份mutation失败:", error);
     }
 };
+
 const removeCompensationBackup = async (request: SerializedRequest) => {
     try {
         await mutationCompensationStorage.removeBackup(request.query, request.variables);
