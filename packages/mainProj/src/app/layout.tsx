@@ -1,23 +1,21 @@
-import type {Metadata, Viewport} from "next";
-import { SessionProvider } from 'next-auth/react';
-import {auth} from "@/app/auth";
+import type { Metadata, Viewport } from "next"
+import { SessionProvider } from "next-auth/react"
+import { auth } from "@/app/auth"
 import { Provider } from "jotai"
-import {GraphQLProvider} from "@/auth/graphql-component";
-import { ThemeProvider } from 'next-themes'
+import { GraphQLProvider } from "@/auth/graphql-component"
+import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
 import "@/styles/print-styles.css"
-import {PrintSettingsProvider} from "@/contexts/print-settings-context";
+import { PrintSettingsProvider } from "@/contexts/print-settings-context"
 import type React from "react"
-import { notoSans, notoSerif } from '@/styles/fonts';
+import { notoSans, notoSerif } from "@/styles/fonts"
 import "./globals.css"
-import {AuthErrorBoundary} from "@/components/auth-error-boundary";
-import {OfflineStatusIndicator} from "@/components/offline-status-indicator";
-import {PWAInstaller} from "@/components/pwa-installer";
+import { OfflineStatusIndicator } from "@/components/offline-status-indicator"
+import { PWAInstaller } from "@/components/pwa-installer"
 import { NetworkStatusProvider } from "@/contexts/network-status-context"
 
-
-const APP_NAME = "报告编制系统";
-const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录";
+const APP_NAME = "报告编制系统"
+const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
 
 export const metadata: Metadata = {
     applicationName: APP_NAME,
@@ -39,7 +37,7 @@ export const metadata: Metadata = {
         shortcut: "/favicon.ico",
         apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
     },
-};
+}
 
 export const viewport: Viewport = {
     themeColor: "#000000",
@@ -50,7 +48,7 @@ export default async function RootLayout({
                                          }: {
     children: React.ReactNode
 }) {
-    const session = await auth();
+    const session = await auth()
     return (
         <html suppressHydrationWarning lang="zh-CN">
         <body
@@ -69,7 +67,7 @@ export default async function RootLayout({
                                 {children}
                                 {/* PWA 组件 */}
                                 <PWAInstaller />
-                                <Toaster richColors position="top-right" />
+                                <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
                             </GraphQLProvider>
                         </Provider>
                     </NetworkStatusProvider>
@@ -78,5 +76,5 @@ export default async function RootLayout({
         </ThemeProvider>
         </body>
         </html>
-    );
+    )
 }

@@ -6,82 +6,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useOfflineStorage } from "@/hooks/use-offline-storage"
 import { OfflineQueueManager } from "@/components/offline-queue-manager"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-    Wifi,
-    WifiOff,
-    Database,
-    User,
-    Clock,
-    RefreshCw,
-    XCircle,
-    AlertTriangle,
-    Activity,
-    Settings,
-    Shield,
-    Download,
-} from "lucide-react"
+import {Wifi, WifiOff, Database, User, RefreshCw, XCircle, AlertTriangle, Activity, Settings, Shield, Download, Home, CheckCircle,} from "lucide-react"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 import { toast } from "sonner"
-
-interface OfflineUserData {
-    name?: string
-    email?: string
-    username?: string
-    id?: string
-    lastSync?: string
-}
+import { VersionConflictManager } from "@/components/version-conflict-manager"
+import { useNetworkStatusContext } from "@/contexts/network-status-context"
+import { useQuery } from "@urql/next"
+import { AuthCompQuery } from "@/component/header-wrapper"
+import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
+import Link from "next/link"
 
 export default function OfflinePage() {
-    const { data: session, status } = useSession()
-    const [isOnline, setIsOnline] = useState(true)
-    const {
-        data: offlineUserData,
-        setData: setOfflineUserData,
-        storageType,
-        isSupported,
-        error: storageError,
-    } = useOfflineStorage<OfflineUserData>({
-        key: "offline_user_data",
-        defaultValue: {},
-        storage: "auto",
+    const { data: session } = useSession()
+    const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const [result] = useQuery({
+        query: AuthCompQuery,
+        variables: {},
+        requestPolicy: "cache-first",
     })
-
+    const { authUser } = result?.data || {}
+    const displayUserName = authUser?.username || "用户"
+    const { deviceFingerprint } = useDeviceFingerprint()
     const [compensationCount, setCompensationCount] = useState(0)
     const [compensationBackups, setCompensationBackups] = useState<any[]>([])
     const [isLoadingCompensation, setIsLoadingCompensation] = useState(false)
-
-    useEffect(() => {
-        const updateOnlineStatus = () => {
-            setIsOnline(navigator.onLine)
-        }
-        updateOnlineStatus()
-        window.addEventListener("online", updateOnlineStatus)
-        window.addEventListener("offline", updateOnlineStatus)
-
-        return () => {
-            window.removeEventListener("online", updateOnlineStatus)
-            window.removeEventListener("offline", updateOnlineStatus)
-        }
-    }, [])
-
-    useEffect(() => {
-        if (isOnline && session?.user) {
-            const userData: OfflineUserData = {
-                name: session.user.name || "",
-                email: session.user.email || "",
-                username: session.user.username || "",
-                id: session.user.id || "",
-                lastSync: new Date().toISOString(),
-            }
-
-            // setOfflineUserData(userData).catch((error) => {
-            //     console.error("Failed to save offline user data:", error)
-            // })
-        }
-    }, [session, isOnline])
 
     useEffect(() => {
         loadCompensationData()
@@ -96,20 +46,6 @@ export default function OfflinePage() {
             setCompensationCount(backups.length)
         } catch (error) {
             console.error("Failed to load compensation data:", error)
-        }
-    }
-    const handleForceProcessQueue = async () => {
-        try {
-            // 强制触发 URQL 队列处理
-            window.dispatchEvent(new Event("online"))
-
-            // 检查 metadata 状态
-            const urqlMetadata = localStorage.getItem("urql-metadata")
-            console.log("[Debug] 当前 URQL metadata:", urqlMetadata)
-
-            toast.info("已强制触发队列处理")
-        } catch (error) {
-            console.error("强制处理队列失败:", error)
         }
     }
 
@@ -159,28 +95,6 @@ export default function OfflinePage() {
         }
     }
 
-// 修改重试所有逻辑
-    const handleRetryAllSafe = async () => {
-        try {
-            // 设置安全标记
-            localStorage.setItem("isManualRetry", "true")
-
-            // 触发 URQL 处理队列
-            window.dispatchEvent(new Event("online"))
-
-            toast.info("开始处理队列中的操作")
-
-            // 3秒后清除标记
-            setTimeout(() => {
-                localStorage.removeItem("isManualRetry")
-            }, 3000)
-
-        } catch (error) {
-            console.error("安全重试失败:", error)
-            localStorage.removeItem("isManualRetry")
-        }
-    }
-
     const handleClearCompensation = async () => {
         if (!confirm("确定要清空补偿存储吗？这将删除所有备份的mutation。")) {
             return
@@ -206,12 +120,9 @@ export default function OfflinePage() {
         URL.revokeObjectURL(url)
         toast.success("补偿数据已下载")
     }
-
-    const displayUserName = offlineUserData?.name || offlineUserData?.username || session?.user?.name || "用户"
     const refreshPage = () => {
         window.location.reload()
     }
-
     const handleForceRefreshUrqlCache = async () => {
         try {
             console.log("[Debug] 强制刷新 URQL 缓存...")
@@ -235,7 +146,6 @@ export default function OfflinePage() {
             toast.error("刷新缓存失败")
         }
     }
-
     /**
      * 清除并重新加载 URQL metadata
      */
@@ -292,43 +202,34 @@ export default function OfflinePage() {
                 console.error("[Monitor] 监控metadata失败:", error)
             }
         }
-
         // 初始监控
         monitorUrqlMetadata()
-
         // 定期监控
         const interval = setInterval(monitorUrqlMetadata, 5000)
-
         return () => clearInterval(interval)
     }, [])
-
     /**
      * 直接读取 URQL metadata
      */
     const readUrqlMetadataDirectly = async (): Promise<any> => {
         return new Promise((resolve) => {
             const request = indexedDB.open("graphcache-sei", 1)
-
             request.onsuccess = () => {
                 const db = request.result
                 if (!db.objectStoreNames.contains("metadata")) {
                     resolve(null)
                     return
                 }
-
                 const transaction = db.transaction(["metadata"], "readonly")
                 const store = transaction.objectStore("metadata")
                 const getRequest = store.get("metadata")
-
                 getRequest.onsuccess = () => {
                     resolve(getRequest.result)
                 }
-
                 getRequest.onerror = () => {
                     resolve(null)
                 }
             }
-
             request.onerror = () => {
                 resolve(null)
             }
@@ -336,26 +237,31 @@ export default function OfflinePage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-8 max-w-6xl relative">
+            <Button asChild variant="outline" size="sm" className="absolute top-4 right-4 bg-transparent">
+                <Link href="/">
+                    <Home className="w-4 h-4 mr-2" />
+                    返回首页
+                </Link>
+            </Button>
             <div className="space-y-6">
                 <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold">离线模式管理</h1>
-                    <p className="text-gray-600 dark:text-gray-400">管理离线功能状态、用户信息和变更队列</p>
+                    <h1 className="text-3xl font-bold">离线问题排查</h1>
+                    <p className="text-gray-600 dark:text-gray-400">管理离线功能状态、变更队列、变更冲突的队列</p>
                 </div>
-
                 <Tabs defaultValue="status" className="w-full">
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="status">系统状态</TabsTrigger>
                         <TabsTrigger value="queue">队列管理</TabsTrigger>
                         <TabsTrigger value="compensation">补偿存储</TabsTrigger>
-                        <TabsTrigger value="settings">设置</TabsTrigger>
+                        <TabsTrigger value="conflict">版本冲突</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="status" className="space-y-6">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    {isOnline ? (
+                                    {isGraphQLBackendReachable ? (
                                         <Wifi className="w-5 h-5 text-green-500" />
                                     ) : (
                                         <WifiOff className="w-5 h-5 text-red-500" />
@@ -364,21 +270,72 @@ export default function OfflinePage() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="flex items-center justify-between">
-                                    <span>当前连接状态</span>
-                                    <Badge variant={isOnline ? "default" : "destructive"}>{isOnline ? "在线" : "离线"}</Badge>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            {isClientOnline ? (
+                                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                            ) : (
+                                                <XCircle className="w-4 h-4 text-red-500" />
+                                            )}
+                                            <span>客户端</span>
+                                        </div>
+                                        <Badge variant={isClientOnline ? "default" : "destructive"}>
+                                            {isClientOnline ? "在线" : "离线"}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            {isOnline ? (
+                                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                            ) : (
+                                                <XCircle className="w-4 h-4 text-red-500" />
+                                            )}
+                                            <span>前端服务器</span>
+                                        </div>
+                                        <Badge variant={isOnline ? "default" : "destructive"}>{isOnline ? "可用" : "不可用"}</Badge>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            {isGraphQLBackendReachable ? (
+                                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                            ) : (
+                                                <XCircle className="w-4 h-4 text-red-500" />
+                                            )}
+                                            <span>后端服务器</span>
+                                        </div>
+                                        <Badge variant={isGraphQLBackendReachable ? "default" : "destructive"}>
+                                            {isGraphQLBackendReachable ? "可用" : "不可用"}
+                                        </Badge>
+                                    </div>
                                 </div>
-                                {!isOnline && (
+
+                                {!isGraphQLBackendReachable && (
                                     <Alert className="mt-4">
                                         <AlertTriangle className="h-4 w-4" />
-                                        <AlertDescription>
-                                            您当前处于离线状态。应用将使用本地缓存的数据，某些功能可能受限。
-                                        </AlertDescription>
+                                        <AlertDescription>您当前处于离线状态。应用将使用本地缓存的数据,某些功能可能受限。</AlertDescription>
                                     </Alert>
                                 )}
                             </CardContent>
                         </Card>
-
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Settings className="w-5 h-5" />
+                                    系统操作
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex gap-4 justify-center">
+                                    <Button onClick={refreshPage} variant="outline">
+                                        <RefreshCw className="w-4 h-4 mr-2" />
+                                        刷新页面
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -388,30 +345,16 @@ export default function OfflinePage() {
                                 <CardDescription>{isOnline ? "当前会话信息" : "离线缓存的用户信息"}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {status === "loading" ? (
-                                    <div className="flex items-center gap-2">
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
-                                        <span>加载用户信息...</span>
-                                    </div>
-                                ) : session?.user || offlineUserData?.name ? (
+                                {session?.user ? (
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600">欢迎回来</span>
                                             <span className="font-medium">{displayUserName}</span>
                                         </div>
-                                        {(session?.user?.email || offlineUserData?.email) && (
+                                        {session?.user?.email && (
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm text-gray-600">邮箱</span>
-                                                <span className="text-sm">{session?.user?.email || offlineUserData?.email}</span>
-                                            </div>
-                                        )}
-                                        {offlineUserData?.lastSync && (
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm text-gray-600">最后同步</span>
-                                                <span className="text-sm flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                                                    {new Date(offlineUserData.lastSync).toLocaleString()}
-                        </span>
+                                                <span className="text-sm">{session?.user?.email}</span>
                                             </div>
                                         )}
                                     </div>
@@ -423,27 +366,12 @@ export default function OfflinePage() {
                                         </AlertDescription>
                                     </Alert>
                                 )}
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Database className="w-5 h-5" />
-                                    离线存储状态
-                                </CardTitle>
-                                <CardDescription>
-                                    当前使用的存储方案：{storageType} {isSupported ? "(支持)" : "(不支持)"}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-                                {storageError && (
-                                    <Alert variant="destructive">
-                                        <XCircle className="h-4 w-4" />
-                                        <AlertDescription>存储错误: {storageError}</AlertDescription>
-                                    </Alert>
-                                )}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-gray-600">客户端ID</span>
+                                        <span className="font-medium">{deviceFingerprint}</span>
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -571,55 +499,17 @@ export default function OfflinePage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
-
-                    <TabsContent value="settings" className="space-y-6">
+                    <TabsContent value="conflict" className="space-y-6">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Settings className="w-5 h-5" />
-                                    系统操作
+                                    <Activity className="w-5 h-5" />
+                                    版本冲突管理
                                 </CardTitle>
+                                <CardDescription>版本冲突的GraphQL变更请求队列，下载离线的请求</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="flex gap-4 justify-center">
-                                    <Button onClick={refreshPage} variant="outline">
-                                        <RefreshCw className="w-4 h-4 mr-2" />
-                                        刷新页面
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">关于离线功能</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                                <p>
-                                    <strong>智能队列管理：</strong> 系统会自动管理失败的变更请求，支持优先级排序、去重和智能重试机制。
-                                </p>
-                                <p>
-                                    <strong>用户控制：</strong> 您可以手动重试、取消或暂停队列处理，完全掌控离线操作的执行时机。
-                                </p>
-                                <p>
-                                    <strong>历史追踪：</strong> 所有操作都有完整的历史记录，支持导出和分析，保留1天的详细日志。
-                                </p>
-                                <p>
-                                    <strong>PWA 不依赖 Cache API：</strong> PWA 的核心功能是 Service Worker + Web App Manifest。 Cache API
-                                    只是用于优化离线体验的工具之一。
-                                </p>
-                                <p>
-                                    <strong>多种存储方案：</strong> 应用会自动选择最佳的存储方案（IndexedDB &gt; localStorage &gt;
-                                    sessionStorage）， 确保在不同环境下都能提供离线功能。
-                                </p>
-                                <p>
-                                    <strong>Service Worker 缓存：</strong> 即使 Cache API 不可用，Service Worker 也会使用 IndexedDB
-                                    作为备用方案来缓存资源和数据。
-                                </p>
-                                <p>
-                                    <strong>兼容性说明：</strong> 现代浏览器（Chrome 45+, Safari 11.1+, Firefox 44+）都支持这些功能。
-                                    如果遇到问题，请检查是否处于隐私/无痕模式。
-                                </p>
+                                <VersionConflictManager />
                             </CardContent>
                         </Card>
                     </TabsContent>
