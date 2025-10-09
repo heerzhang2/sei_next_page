@@ -313,35 +313,60 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
   async getAllBackups(): Promise<CompensationMutationItem[]> {
     return this.getAllCached()
   }
-  /**
-   * 将补偿存储恢复到URQL metadata队列 - 修复版本
-   */
-  async restoreToMetadata(): Promise<number> {
-    await this.init()
-    const backups = await this.getAllCached()
+    /**
+     * 将补偿存储恢复到URQL metadata队列 - 安全版本
+     */
+    async restoreToMetadata(): Promise<number> {
+        await this.init()
+        const backups = await this.getAllCached()
 
-    if (backups.length === 0) {
-      console.log("[CompensationBackup] 没有备份需要恢复")
-      return 0
+        if (backups.length === 0) {
+            console.log("[CompensationBackup] 没有备份需要恢复")
+            return 0
+        }
+
+        try {
+            // 设置恢复标记，防止URQL自动清空
+            localStorage.setItem("isRestoringMetadata", "true")
+
+            const restoredCount = await this.directWriteToUrqlMetadata(backups)
+
+            console.log(`[CompensationBackup] 成功恢复 ${restoredCount} 个mutation到metadata队列`)
+
+            // 不立即触发online事件，等待用户手动触发
+            console.log("[CompensationBackup] 恢复完成，等待用户手动重试队列")
+
+            // 清除恢复标记（设置短暂延迟确保URQL操作完成）
+            setTimeout(() => {
+                localStorage.removeItem("isRestoringMetadata")
+            }, 3000)
+
+            return restoredCount
+
+        } catch (error) {
+            console.error("[CompensationBackup] 恢复metadata失败:", error)
+            localStorage.removeItem("isRestoringMetadata")
+            // 尝试降级方案
+            return await this.restoreToMetadataFallback(backups)
+        }
     }
 
-    try {
-      // 直接操作 URQL 的 IndexedDB 数据库
-      const restoredCount = await this.directWriteToUrqlMetadata(backups)
+    /**
+     * 安全触发队列处理（不立即清空metadata）
+     */
+    async triggerSafeQueueProcessing(): Promise<void> {
+        // 设置标记防止清空
+        localStorage.setItem("isRestoringMetadata", "true")
 
-      console.log(`[CompensationBackup] 成功恢复 ${restoredCount} 个mutation到metadata队列`)
+        // 触发online事件，但metadata不会被清空
+        window.dispatchEvent(new Event("online"))
 
-      // 触发 URQL 处理队列
-      this.triggerUrqlQueueProcessing()
-
-      return restoredCount
-
-    } catch (error) {
-      console.error("[CompensationBackup] 恢复metadata失败:", error)
-      // 尝试降级方案
-      return await this.restoreToMetadataFallback(backups)
+        // 5秒后清除标记
+        setTimeout(() => {
+            localStorage.removeItem("isRestoringMetadata")
+            console.log("[CompensationBackup] 安全处理完成，清除恢复标记")
+        }, 5000)
     }
-  }
 
   /**
    * 直接写入到 URQL 的 metadata 存储 - 修复版本

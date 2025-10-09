@@ -577,8 +577,19 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
             storage: {
                 ...storage,
+                // 修改 writeMetadata 方法，防止自动清空
                 writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json?.length || 0)
+                    console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json?.length || 0, "调用栈:", new Error().stack)
+
+                    // 检查是否是恢复操作触发的清空
+                    const isRestoreOperation = localStorage.getItem("isRestoringMetadata") === "true"
+
+                    if (isRestoreOperation && json?.length === 0) {
+                        console.log("[GraphQLProvider] 检测到恢复操作期间的清空请求，跳过清空")
+                        localStorage.removeItem("isRestoringMetadata")
+                        return // 跳过清空操作
+                    }
+
                     if (json?.length !== 0) {
                         const uniqueRequests: SerializedRequest[] = []
                         const seen = new Map<string, SerializedRequest>()
@@ -617,14 +628,19 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             await backupMutationToCompensation(request)
                         }
                     } else {
-                        await storage.writeMetadata!(json)
-                        if (typeof window !== "undefined") {
-                            localStorage.setItem(
-                                "urql-metadata",
-                                JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
-                            )
+                        // 只有非恢复操作时才允许清空
+                        if (!isRestoreOperation) {
+                            await storage.writeMetadata!(json)
+                            if (typeof window !== "undefined") {
+                                localStorage.setItem(
+                                    "urql-metadata",
+                                    JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
+                                )
+                            }
+                            console.log("[offlineExchange] writeMetadata写:", 0, "items")
+                        } else {
+                            console.log("[GraphQLProvider] 恢复操作期间跳过metadata清空")
                         }
-                        console.log("[offlineExchange] writeMetadata写:", 0, "items")
                     }
                 },
             } as any,

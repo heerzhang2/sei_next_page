@@ -122,24 +122,20 @@ export default function OfflinePage() {
             const statusBefore = await mutationCompensationStorage.getMetadataStatus()
             console.log("[Debug] 恢复前状态:", statusBefore)
 
+            // 设置恢复标记
+            localStorage.setItem("isManualRestore", "true")
+
             const restored = await mutationCompensationStorage.restoreToMetadata()
             console.log("[Debug] 恢复结果:", restored)
 
             if (restored > 0) {
                 toast.success(`成功恢复 ${restored} 个mutation到离线队列`, {
-                    description: "这些操作将在网络恢复后自动重试",
+                    description: "请点击'重试所有'按钮来执行这些操作",
                     duration: 5000,
                 })
 
-                // 检查恢复后的状态
-                const statusAfter = await mutationCompensationStorage.getMetadataStatus()
-                console.log("[Debug] 恢复后状态:", statusAfter)
-
-                // 强制刷新队列显示
-                setTimeout(() => {
-                    window.dispatchEvent(new Event("storage"))
-                    window.dispatchEvent(new Event("urql:metadata-updated"))
-                }, 1000)
+                // 不立即触发处理，等待用户手动操作
+                console.log("[Debug] 恢复完成，等待用户手动重试")
 
             } else {
                 toast.info("没有需要恢复的mutation，队列中已存在相同的操作")
@@ -147,8 +143,14 @@ export default function OfflinePage() {
 
             await loadCompensationData()
 
+            // 清除标记
+            setTimeout(() => {
+                localStorage.removeItem("isManualRestore")
+            }, 2000)
+
         } catch (error) {
             console.error("[Debug] 恢复补偿存储失败:", error)
+            localStorage.removeItem("isManualRestore")
             toast.error("恢复补偿存储失败", {
                 description: error instanceof Error ? error.message : "未知错误",
             })
@@ -156,6 +158,29 @@ export default function OfflinePage() {
             setIsLoadingCompensation(false)
         }
     }
+
+// 修改重试所有逻辑
+    const handleRetryAllSafe = async () => {
+        try {
+            // 设置安全标记
+            localStorage.setItem("isManualRetry", "true")
+
+            // 触发 URQL 处理队列
+            window.dispatchEvent(new Event("online"))
+
+            toast.info("开始处理队列中的操作")
+
+            // 3秒后清除标记
+            setTimeout(() => {
+                localStorage.removeItem("isManualRetry")
+            }, 3000)
+
+        } catch (error) {
+            console.error("安全重试失败:", error)
+            localStorage.removeItem("isManualRetry")
+        }
+    }
+
     const handleClearCompensation = async () => {
         if (!confirm("确定要清空补偿存储吗？这将删除所有备份的mutation。")) {
             return
