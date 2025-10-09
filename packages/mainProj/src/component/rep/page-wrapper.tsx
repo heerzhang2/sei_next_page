@@ -1,3 +1,4 @@
+// page-wrapper.tsx
 "use client"
 import { useParams } from "next/navigation"
 import { useState, useEffect } from "react"
@@ -5,6 +6,7 @@ import type * as React from "react"
 import { useQuery } from "@urql/next"
 import { ReportQuery } from "@/component/rep/report-data"
 import { useActualRepId } from "@/report/hook/use-actual-rep-id"
+import { useAutoRestoreMutations } from "@/hooks/use-auto-restore-mutations"
 
 interface ReportPageWrapperProps {
     OriginalView: React.ComponentType<{
@@ -20,6 +22,12 @@ export function ReportPageWrapper({ OriginalView, verId = "1" }: ReportPageWrapp
     const repId = useActualRepId()
     const [action, setAction] = useState<string | null>(null)
 
+    // 使用自动恢复钩子
+    useAutoRestoreMutations({
+        repId: repId || "",
+        enabled: !!repId && repId !== "*"
+    })
+
     useEffect(() => {
         if (params && params.action) {
             setAction(params.action as string)
@@ -28,7 +36,7 @@ export function ReportPageWrapper({ OriginalView, verId = "1" }: ReportPageWrapp
 
     const [result] = useQuery({ query: ReportQuery, variables: { id: repId } })
     const { getReport: report } = result?.data || {}
-    // console.log("模板ReportPageWrapper进入", { repId, params, action, report })
+
     if (repId === "*") return null
 
     return action && <OriginalView action={action!} verId={verId} rep={report} />

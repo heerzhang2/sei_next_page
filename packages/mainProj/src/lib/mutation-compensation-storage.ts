@@ -652,6 +652,32 @@ export class MutationCompensationStorage extends IndexedDBCache<CompensationMuta
       usingFallback,
     }
   }
+    /**
+     * 获取特定repId的相关备份
+     */
+    async getBackupsByRepId(repId: string): Promise<CompensationMutationItem[]> {
+        await this.init()
+        const allBackups = await this.getAllCached()
+
+        return allBackups.filter(backup => {
+            const isModifyMutation = this.isModifyOriginalRecordDataMutation(backup.query)
+            const matchesRepId = backup.variables?.id === repId
+            return isModifyMutation && matchesRepId
+        })
+    }
+    /**
+     * 批量恢复备份到metadata
+     */
+    async restoreBackupsToMetadata(backups: CompensationMutationItem[]): Promise<number> {
+        const requests: SerializedRequest[] = backups.map(backup => ({
+            query: backup.query,
+            variables: backup.variables,
+            extensions: backup.extensions,
+        }))
+
+        return await this.directWriteToUrqlMetadata(requests)
+    }
+
 }
 
 // 创建单例实例
