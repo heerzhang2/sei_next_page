@@ -7,6 +7,7 @@ import { useQuery } from "@urql/next"
 import { ReportQuery } from "@/component/rep/report-data"
 import { useActualRepId } from "@/report/hook/use-actual-rep-id"
 import { useAutoRestoreMutations } from "@/hooks/use-auto-restore-mutations"
+import { AutoRestoreConfirmDialog } from "@/components/auto-restore-confirm-dialog"
 
 interface ReportPageWrapperProps {
     OriginalView: React.ComponentType<{
@@ -23,7 +24,11 @@ export function ReportPageWrapper({ OriginalView, verId = "1" }: ReportPageWrapp
     const [action, setAction] = useState<string | null>(null)
 
     // 使用自动恢复钩子
-    useAutoRestoreMutations({
+    const {
+        restoreDialog,
+        handleConfirmRefresh,
+        handleCancelRefresh
+    } = useAutoRestoreMutations({
         repId: repId || "",
         enabled: !!repId && repId !== "*"
     })
@@ -39,5 +44,17 @@ export function ReportPageWrapper({ OriginalView, verId = "1" }: ReportPageWrapp
 
     if (repId === "*") return null
 
-    return action && <OriginalView action={action!} verId={verId} rep={report} />
+    return (
+        <>
+            {action && <OriginalView action={action!} verId={verId} rep={report} />}
+
+            <AutoRestoreConfirmDialog
+                isOpen={restoreDialog.isOpen}
+                onConfirm={handleConfirmRefresh}
+                onCancel={handleCancelRefresh}
+                restoredCount={restoreDialog.restoredCount}
+                repId={repId || ""}
+            />
+        </>
+    )
 }

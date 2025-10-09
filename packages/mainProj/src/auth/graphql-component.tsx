@@ -16,9 +16,11 @@ import type { CombinedError, Exchange, Operation, OperationResult } from "@urql/
 import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
+import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { MetadataWriteConfirmationModal } from "@/components/metadata-write-confirmation-modal"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
-import { manualRetryExchange } from "@/lib/manual-retry-exchange" // 新增导入
+import { manualRetryExchange } from "@/lib/manual-retry-exchange"
+import {preventDuplicateExchange} from "@/lib/prevent-duplicate-exchange";
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -400,15 +402,147 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
     })
 }
 
+// 增强的离线错误检查
 const isOfflineError = (error: any): boolean => {
     if (!error) return false
+
     // Network errors should be treated as offline
     if (isNetworkError(error)) return true
+
     // 401 errors should be queued for retry after authentication
     const has401Error = error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
+
     // Version conflicts should NOT be queued (permanent failures)
     if (isVersionConflictError(error)) return false
+
     return has401Error
+}
+// 网络状态感知的离线交换器
+const createNetworkAwareOfflineExchange = (storage: any) => {
+    return offlineExchange({
+        schema,
+        keys: {
+            RepLink: () => null,
+        },
+        isOfflineError: (error: undefined | CombinedError, result: OperationResult) => {
+            const shouldQueue = isOfflineError(error)
+
+            if (shouldQueue && result.operation.kind === "mutation") {
+                const operationKey = generateOperationKey(result.operation)
+                console.log(
+                    "[offlineExchange] 将mutation加入离线队列:",
+                    result.operation.query.definitions[0]?.name?.value,
+                    "key:",
+                    operationKey,
+                    "error:",
+                    error?.message
+                )
+            }
+            return shouldQueue
+        },
+        storage: {
+            ...storage,
+            // 修改 writeMetadata 方法，添加网络状态检查
+            writeMetadata: async (json: SerializedRequest[]) => {
+                console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json?.length || 0)
+
+                // 检查是否是恢复操作触发的清空
+                const isRestoreOperation = localStorage.getItem("isRestoringMetadata") === "true"
+
+                if (isRestoreOperation && json?.length === 0) {
+                    console.log("[GraphQLProvider] 检测到恢复操作期间的清空请求，跳过清空")
+                    localStorage.removeItem("isRestoringMetadata")
+                    return // 跳过清空操作
+                }
+
+                if (json?.length !== 0) {
+                    const uniqueRequests: SerializedRequest[] = []
+                    const seen = new Map<string, SerializedRequest>()
+
+                    for (let i = json.length - 1; i >= 0; i--) {
+                        const request = json[i]
+                        const key = generateRequestKey(request)
+                        if (!seen.has(key)) {
+                            seen.set(key, request)
+                            uniqueRequests.unshift(request)
+                        }
+                    }
+
+                    const filteredRequests = uniqueRequests.filter((request) => {
+                        if (request.variables?.id && request.query.includes("mutation")) {
+                            return true
+                        }
+                        return true
+                    })
+
+                    await storage.writeMetadata!(filteredRequests)
+
+                    if (typeof window !== "undefined") {
+                        localStorage.setItem(
+                            "urql-metadata",
+                            JSON.stringify({
+                                length: filteredRequests.length,
+                                timestamp: new Date().toLocaleString(),
+                            }),
+                        )
+                    }
+                    console.log("[CompensationBackup] 开始备份mutations到补偿存储,长度", filteredRequests.length)
+                    for (const request of filteredRequests) {
+                        await backupMutationToCompensation(request)
+                    }
+                } else {
+                    // 只有非恢复操作时才允许清空
+                    if (!isRestoreOperation) {
+                        await storage.writeMetadata!(json)
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem(
+                                "urql-metadata",
+                                JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
+                            )
+                        }
+                        console.log("[offlineExchange] writeMetadata写:", 0, "items")
+                    } else {
+                        console.log("[GraphQLProvider] 恢复操作期间跳过metadata清空")
+                    }
+                }
+            },
+        } as any,
+        resolverExchange: false,
+        optimistic: {
+            modifyOriginalRecordData(args, cache, info) {
+                return {
+                    __typename: "Report",
+                    id: args.id,
+                    data: args.data,
+                }
+            },
+        },
+    })
+}
+
+// 生成请求的唯一标识
+function generateRequestKey(request: SerializedRequest): string {
+    const { query, variables } = request
+    if (variables?.id) {
+        // 针对 modifyOriginalRecordData 使用特殊标识
+        if (typeof query === 'string' && query.includes('mutation useOriginalDataMutation')) {
+            return `modify_${variables.id}_${variables.version || '0'}`
+        }
+        return `${query}-${variables.id}-${variables?.opType || ""}`
+    }
+    return `${query}-${JSON.stringify(variables || {})}`
+}
+
+// 生成操作唯一标识（用于防重复）
+function generateOperationKey(operation: Operation): string {
+    const { query, variables } = operation
+    const queryString = typeof query === 'string' ? query : query.loc?.source.body || ''
+
+    if (queryString.includes('mutation useOriginalDataMutation') && variables?.id) {
+        return `modify_${variables.id}_${variables.version || '0'}`
+    }
+
+    return `${queryString}_${JSON.stringify(variables || {})}`
 }
 
 //避免变更保存按钮的无限等待。
@@ -488,6 +622,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { update } = useSession()
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
+    const { addConflictRequest } = useVersionConflictManager()
     const [isWriteModalOpen, ] = useState(false)
     const handleWriteConfirm = useCallback(() => {
         console.log("[GraphQLProvider] 用户确认了metadata写入操作")
@@ -558,104 +693,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             }
         }
 
-        const cache = offlineExchange({
-            schema,
-            keys: {
-                RepLink: () => null,
-            },
-            isOfflineError: (error: undefined | CombinedError, result: OperationResult) => {
-                const shouldQueue = isOfflineError(error)
-                if (shouldQueue && result.operation.kind === "mutation") {
-                    console.log(
-                        "[offlineExchange] 将mutation加入离线队列:",
-                        result.operation.query.definitions[0]?.name?.value,
-                        "error:",
-                        error?.message,
-                    )
-                }
-                return shouldQueue
-            },
-            storage: {
-                ...storage,
-                // 修改 writeMetadata 方法，防止自动清空
-                writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json?.length || 0, "调用栈:", new Error().stack)
-
-                    // 检查是否是恢复操作触发的清空
-                    const isRestoreOperation = localStorage.getItem("isRestoringMetadata") === "true"
-
-                    if (isRestoreOperation && json?.length === 0) {
-                        console.log("[GraphQLProvider] 检测到恢复操作期间的清空请求，跳过清空")
-                        localStorage.removeItem("isRestoringMetadata")
-                        return // 跳过清空操作
-                    }
-
-                    if (json?.length !== 0) {
-                        const uniqueRequests: SerializedRequest[] = []
-                        const seen = new Map<string, SerializedRequest>()
-
-                        for (let i = json.length - 1; i >= 0; i--) {
-                            const request = json[i]
-                            const key = request.variables?.id
-                                ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
-                                : `${request.query}-${JSON.stringify(request.variables || {})}`
-                            if (!seen.has(key)) {
-                                seen.set(key, request)
-                                uniqueRequests.unshift(request)
-                            }
-                        }
-
-                        const filteredRequests = uniqueRequests.filter((request) => {
-                            if (request.variables?.id && request.query.includes("mutation")) {
-                                return true
-                            }
-                            return true
-                        })
-
-                        await storage.writeMetadata!(filteredRequests)
-
-                        if (typeof window !== "undefined") {
-                            localStorage.setItem(
-                                "urql-metadata",
-                                JSON.stringify({
-                                    length: filteredRequests.length,
-                                    timestamp: new Date().toLocaleString(),
-                                }),
-                            )
-                        }
-                        console.log("[CompensationBackup] 开始备份mutations到补偿存储,长度", filteredRequests.length)
-                        for (const request of filteredRequests) {
-                            await backupMutationToCompensation(request)
-                        }
-                    } else {
-                        // 只有非恢复操作时才允许清空
-                        if (!isRestoreOperation) {
-                            await storage.writeMetadata!(json)
-                            if (typeof window !== "undefined") {
-                                localStorage.setItem(
-                                    "urql-metadata",
-                                    JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
-                                )
-                            }
-                            console.log("[offlineExchange] writeMetadata写:", 0, "items")
-                        } else {
-                            console.log("[GraphQLProvider] 恢复操作期间跳过metadata清空")
-                        }
-                    }
-                },
-            } as any,
-            resolverExchange: false,
-            optimistic: {
-                modifyOriginalRecordData(args, cache, info) {
-                    return {
-                        __typename: "Report",
-                        id: args.id,
-                        data: args.data,
-                    }
-                },
-            },
-        })
-
+        const cache = createNetworkAwareOfflineExchange(storage)
         const ssr = ssrExchange({
             isClient: typeof window !== "undefined",
         })
@@ -686,7 +724,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                             })
                             return
                         }
-
+                        addConflictRequest(operation, error)
                         const has401Error =
                             error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
                         if (has401Error && operation.kind === "mutation") {
@@ -699,6 +737,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
                 cache,
+                preventDuplicateExchange, // 添加防重复 exchange
                 manualRetryExchange, // 新增手动重试 exchange
                 makeAuthExchange(accessToken, update, print),
                 updateBackendStatusExchange(updateGraphQLBackendStatus, storage),

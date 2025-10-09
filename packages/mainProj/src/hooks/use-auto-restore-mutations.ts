@@ -1,5 +1,5 @@
 // hooks/use-auto-restore-mutations.ts
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useState } from "react"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 import { toast } from "sonner"
 
@@ -8,9 +8,23 @@ interface UseAutoRestoreMutationsProps {
     enabled?: boolean
 }
 
+interface RestoreDialogState {
+    isOpen: boolean
+    restoredCount: number
+    backupsToRestore: any[]
+}
+
 export function useAutoRestoreMutations({ repId, enabled = true }: UseAutoRestoreMutationsProps) {
+    const [restoreDialog, setRestoreDialog] = useState<RestoreDialogState>({
+        isOpen: false,
+        restoredCount: 0,
+        backupsToRestore: []
+    })
+
+    const [hasChecked, setHasChecked] = useState(false)
+
     const checkAndRestoreMutations = useCallback(async () => {
-        if (!repId || repId === "*" || !enabled) return
+        if (!repId || repId === "*" || !enabled || hasChecked) return
 
         try {
             console.log(`[AutoRestore] 开始检查补偿存储，repId: ${repId}`)
@@ -30,6 +44,7 @@ export function useAutoRestoreMutations({ repId, enabled = true }: UseAutoRestor
 
             if (relevantBackups.length === 0) {
                 console.log(`[AutoRestore] 未找到repId ${repId} 的相关备份`)
+                setHasChecked(true)
                 return
             }
 
@@ -39,21 +54,19 @@ export function useAutoRestoreMutations({ repId, enabled = true }: UseAutoRestor
             const currentMetadata = await getCurrentUrqlMetadata()
             console.log(`[AutoRestore] 当前metadata队列数量: ${currentMetadata.length}`)
 
-            let needsRestore = false
             const backupsToRestore = []
 
             // 检查每个相关备份是否需要恢复
             for (const backup of relevantBackups) {
                 const shouldRestore = await shouldRestoreBackup(backup, currentMetadata)
                 if (shouldRestore) {
-                    needsRestore = true
                     backupsToRestore.push(backup)
                     console.log(`[AutoRestore] 需要恢复备份: ${backup.id}`, backup.variables)
                 }
             }
 
-            if (needsRestore && backupsToRestore.length > 0) {
-                console.log(`[AutoRestore] 开始恢复 ${backupsToRestore.length} 个备份到metadata队列`)
+            if (backupsToRestore.length > 0) {
+                console.log(`[AutoRestore] 需要恢复 ${backupsToRestore.length} 个备份到metadata队列`)
 
                 // 设置恢复标记，防止metadata被清空
                 localStorage.setItem("isAutoRestoring", "true")
@@ -64,16 +77,17 @@ export function useAutoRestoreMutations({ repId, enabled = true }: UseAutoRestor
                 console.log(`[AutoRestore] 成功恢复 ${restoredCount} 个mutation`)
 
                 if (restoredCount > 0) {
-                    toast.success(`已恢复 ${restoredCount} 个未保存的变更`, {
-                        description: "页面将刷新以同步最新数据",
-                        duration: 3000,
+                    // 显示确认对话框而不是自动刷新
+                    setRestoreDialog({
+                        isOpen: true,
+                        restoredCount,
+                        backupsToRestore
                     })
 
-                    // 短暂延迟后刷新页面
-                    setTimeout(() => {
-                        console.log("[AutoRestore] 自动刷新页面以同步数据")
-                        window.location.reload()
-                    }, 2000)
+                    toast.info(`已恢复 ${restoredCount} 个未保存的变更`, {
+                        description: "请确认是否刷新页面",
+                        duration: 5000,
+                    })
                 }
 
                 // 清除恢复标记
@@ -84,24 +98,57 @@ export function useAutoRestoreMutations({ repId, enabled = true }: UseAutoRestor
                 console.log("[AutoRestore] 无需恢复，所有备份已在metadata队列中")
             }
 
+            setHasChecked(true)
+
         } catch (error) {
             console.error("[AutoRestore] 自动恢复失败:", error)
             localStorage.removeItem("isAutoRestoring")
+            setHasChecked(true)
         }
-    }, [repId, enabled])
+    }, [repId, enabled, hasChecked])
+
+    const handleConfirmRefresh = useCallback(() => {
+        console.log("[AutoRestore] 用户确认刷新页面")
+        setRestoreDialog(prev => ({ ...prev, isOpen: false }))
+
+        // 短暂延迟后刷新页面
+        setTimeout(() => {
+            console.log("[AutoRestore] 刷新页面以同步数据")
+            window.location.reload()
+        }, 500)
+    }, [])
+
+    const handleCancelRefresh = useCallback(() => {
+        console.log("[AutoRestore] 用户取消刷新页面")
+        setRestoreDialog(prev => ({ ...prev, isOpen: false }))
+        toast.error("页面未刷新", {
+            description: "建议尽快手动刷新以确保数据一致性，若强行继续编辑保存，会丢弃上一次的数据！",
+            duration: 24*60*60*1000,
+        })
+    }, [])
 
     useEffect(() => {
-        if (enabled && repId && repId !== "*") {
+        if (enabled && repId && repId !== "*" && !hasChecked) {
             // 延迟执行，确保页面加载完成
             const timer = setTimeout(() => {
                 checkAndRestoreMutations()
-            }, 1000)
+            }, 1500) // 稍微延长延迟，确保页面完全加载
 
             return () => clearTimeout(timer)
         }
-    }, [repId, enabled, checkAndRestoreMutations])
+    }, [repId, enabled, checkAndRestoreMutations, hasChecked])
 
-    return { checkAndRestoreMutations }
+    // 当 repId 变化时重置检查状态
+    useEffect(() => {
+        setHasChecked(false)
+    }, [repId])
+
+    return {
+        checkAndRestoreMutations,
+        restoreDialog,
+        handleConfirmRefresh,
+        handleCancelRefresh
+    }
 }
 
 // 获取当前URQL metadata队列

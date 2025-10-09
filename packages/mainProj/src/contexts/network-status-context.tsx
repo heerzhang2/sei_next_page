@@ -66,13 +66,16 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         setShowQueueDialog(false)
 
         if (shouldProcess) {
+            // 设置处理标记，防止重复处理
+            localStorage.setItem("isProcessingQueue", "true")
+
             if (typeof window !== "undefined" && (window as any).pendingQueueCallback) {
                 console.log("[v0] 执行待处理的队列回调")
                 ;(window as any).pendingQueueCallback()
                 ;(window as any).pendingQueueCallback = null
             }
 
-            // Allow queue processing by updating backend status
+            // 允许队列处理
             setNetworkStatus((prev) => ({
                 ...prev,
                 isGraphQLBackendReachable: true,
@@ -81,12 +84,17 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             toast.success("正在发送离线操作到服务器...", {
                 duration: 3000,
             })
+
+            // 5秒后清除处理标记
+            setTimeout(() => {
+                localStorage.removeItem("isProcessingQueue")
+            }, 5000)
         } else {
             if (typeof window !== "undefined") {
                 ;(window as any).pendingQueueCallback = null
             }
 
-            // Keep backend as unreachable to prevent queue processing
+            // 保持后端为不可达状态，防止队列处理
             setNetworkStatus((prev) => ({
                 ...prev,
                 isGraphQLBackendReachable: false,
@@ -365,6 +373,10 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     // 预防网络短暂失败的额外检查
     useEffect(() => {
         const checkOfflineQueueInterval = setInterval(async () => {
+            // 如果正在处理队列，跳过检查
+            if (localStorage.getItem("isProcessingQueue") === "true") {
+                return
+            }
             if (networkStatus.isGraphQLBackendReachable) {
                 const queueStatus = await updateOfflineQueueStatus()
                 if (queueStatus.hasPendingMutations && queueStatus.queueLength > 0 && pathname!=="/login") {
