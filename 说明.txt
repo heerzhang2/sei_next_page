@@ -524,49 +524,5 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 https://v0.app/chat/-6pi8E7npu2n
 writeMetadata ：拦截离线的mutation变更发起。 filteredRequests
 
-后端宕机恢复：meta丢失概率大。补偿中保存。查看报告前比对补偿中的mutation。
-DB 3节点全关后恢复：丢失。 补偿中的 时间顺序有问题？mutation_410656653_1759874348293
-数据库单节点恢复是401应答：正常。发送mutation了没有收到保存应答，无法清理补偿中的列表遗留。
-【压缩多余的备份】补偿中都会备份但是清理？确定后端事务完成了，重复发送。
-【不用】方案4：终极解决方案 - 完全绕过 URQL 的自动清理
-    在 graphql-component.tsx 中添加一个自定义的恢复机制：
-    typescript
-    // 在 GraphQLProvider 组件中添加
-    const [manualQueue, setManualQueue] = useState<SerializedRequest[]>([])
-
-    // 手动恢复队列的方法
-    const restoreManualQueue = useCallback(async (requests: SerializedRequest[]) => {
-      console.log("[GraphQLProvider] 手动恢复队列:", requests.length)
-      setManualQueue(requests)
-
-      // 逐个执行手动队列中的请求
-      for (const request of requests) {
-        try {
-          console.log("[GraphQLProvider] 执行手动恢复的请求:", request)
-          // 这里可以使用 client 直接执行请求
-          if (clientRef.current) {
-            const result = await clientRef.current.mutation(
-              request.query,
-              request.variables,
-              request.extensions
-            ).toPromise()
-
-            if (result.error) {
-              console.error("[GraphQLProvider] 手动执行失败:", result.error)
-            } else {
-              console.log("[GraphQLProvider] 手动执行成功")
-            }
-          }
-        } catch (error) {
-          console.error("[GraphQLProvider] 手动执行异常:", error)
-        }
-      }
-
-      // 清空手动队列
-      setManualQueue([])
-    }, [])
-    最后考虑方案4 - 完全手动处理
-一直离线模式的：把补偿遗留列表复制到离线的队列之后必须刷新页面。 然后恢复在线401 token变动，又导致meta丢失了。有401错误必须再次刷新页面？
-恢复在线后的：把补偿遗留列表复制到离线的队列之后必须刷新页面。 不做立刻刷新的重试队列碰到了401 meta丢失；
-保存遇到会话更新的 丢失更新没实际保存？
-版本冲突没有写入队列。
+meta丢失+ 一直是离线模式的：把补偿遗留列表复制到离线的队列之后必须刷新页面。 然后恢复在线401 token变动，又导致meta丢失了。有401错误必须再次刷新页面？
+meta丢失+ 后端恢复在线后的：把补偿遗留列表复制到离线的队列之后必须刷新页面。 不做立刻刷新的重试队列碰到了401 meta丢失；

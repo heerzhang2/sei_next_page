@@ -139,12 +139,7 @@ export default function OfflinePage() {
         const monitorUrqlMetadata = async () => {
             try {
                 const status = await mutationCompensationStorage.getMetadataStatus()
-                console.log("[Monitor] URQL Metadata 状态:", status)
-
-                // 直接读取 URQL 的 metadata 进行验证
                 const urqlMetadata = await readUrqlMetadataDirectly()
-                console.log("[Monitor] 直接读取的metadata:", urqlMetadata)
-
             } catch (error) {
                 console.error("[Monitor] 监控metadata失败:", error)
             }
@@ -205,6 +200,7 @@ export default function OfflinePage() {
                     </TabsList>
 
                     <TabsContent value="status" className="space-y-6">
+                        <div className="m-auto max-w-[40rem]">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -321,6 +317,7 @@ export default function OfflinePage() {
                                 </div>
                             </CardContent>
                         </Card>
+                        </div>
                     </TabsContent>
 
                     <TabsContent value="queue" className="space-y-6">

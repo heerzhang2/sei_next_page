@@ -118,12 +118,12 @@ export function VersionConflictManager() {
     )
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-1">
             {/* 统计概览 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
                 <Card>
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
+                    <CardContent className="p-1">
+                        <div className="flex items-center gap-1">
                             <AlertTriangle className="w-5 h-5 text-red-500" />
                             <div>
                                 <p className="text-sm text-gray-600">版本冲突总数</p>
@@ -134,8 +134,8 @@ export function VersionConflictManager() {
                 </Card>
 
                 <Card>
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
+                    <CardContent className="p-1">
+                        <div className="flex items-center gap-1">
                             <CheckCircle className="w-5 h-5 text-green-500" />
                             <div>
                                 <p className="text-sm text-gray-600">已解决</p>
@@ -146,8 +146,8 @@ export function VersionConflictManager() {
                 </Card>
 
                 <Card>
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
+                    <CardContent className="p-1">
+                        <div className="flex items-center gap-1">
                             <EyeOff className="w-5 h-5 text-gray-500" />
                             <div>
                                 <p className="text-sm text-gray-600">已忽略</p>

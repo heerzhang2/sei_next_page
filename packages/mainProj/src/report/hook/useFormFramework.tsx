@@ -260,7 +260,7 @@ export function useFormFramework({
                 console.log("Oh no!", result.error)
             } else {
                 toast.success("数据已成功保存到服务器", {
-                    duration: 2000,
+                    duration: 3000,
                 })
                 // 保存成功后，设置 modified 为 false
                 setModified(false)
@@ -472,7 +472,7 @@ export function useFrameEditorBar({
                 console.log("Oh no!", result.error)
             } else {
                 toast.success("数据已成功保存到服务器", {
-                    duration: 2000,
+                    duration: 3000,
                 })
                 // 保存成功后，设置 modified 为 false
                 setModified(false)

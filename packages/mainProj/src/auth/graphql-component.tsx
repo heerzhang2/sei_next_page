@@ -328,8 +328,8 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                         }),
                                     )
                                 }
-                                toast.success("登录已刷新，会话已自动续期", {
-                                    duration: 2000,
+                                toast.warning("登录会话自动续期，影响正处理的变更保存！", {
+                                    duration: 5000,
                                 })
                                 return
                             }
@@ -400,8 +400,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
     })
 }
 
-// 增强的离线错误检查
-const isOfflineError = (error: any): boolean => {
+const shouldQueueOnErr = (error: any): boolean => {
     if (!error) return false
     // Network errors should be treated as offline
     if (isNetworkError(error)) return true
@@ -419,8 +418,7 @@ const createNetworkAwareOfflineExchange = (storage: any) => {
             RepLink: () => null,
         },
         isOfflineError: (error: undefined | CombinedError, result: OperationResult) => {
-            const shouldQueue = isOfflineError(error)
-
+            const shouldQueue = shouldQueueOnErr(error)
             if (shouldQueue && result.operation.kind === "mutation") {
                 const operationKey = generateOperationKey(result.operation)
                 console.log(
@@ -557,16 +555,22 @@ const fetchAbortExchange: Exchange =
                         removeCompensationBackup(request)
                         console.log("[CompensationBackup] Mutation成功，已清理备份")
                     }
-
+                    const error=result.error;
+                    let offlineError =false, authError = false;
+                    if(isNetworkError(error))  offlineError=true
+                    if(error?.response?.status === 401 || error?.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401)
+                        authError=true
+                    if(isVersionConflictError(error))  offlineError=false
                     // 检测Java后端宕机错误 isJavaBackendDownError
-                    if (result.error && isOfflineError(result.error)) {
+                    if (result.error && (offlineError || authError)) {
                         //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
                         if (result.operation.kind === "mutation") {
                             const operationName = result.operation.query?.definitions[0]?.name.value
                             if (operationName) {
-                                toast.success("离线或未登录", {
-                                    duration: 2 * 1000,
-                                })
+                                if(offlineError && !authError)
+                                    toast.success("离线中", {
+                                        duration: 2 * 1000,
+                                    })
                                 setTimeout(() => {
                                     if (typeof window !== "undefined") {
                                         window.dispatchEvent(
