@@ -134,49 +134,6 @@ export default function OfflinePage() {
             toast.error("刷新缓存失败")
         }
     }
-    // 在 page.tsx 的 useEffect 中添加 metadata 监控
-    useEffect(() => {
-        const monitorUrqlMetadata = async () => {
-            try {
-                const status = await mutationCompensationStorage.getMetadataStatus()
-                const urqlMetadata = await readUrqlMetadataDirectly()
-            } catch (error) {
-                console.error("[Monitor] 监控metadata失败:", error)
-            }
-        }
-        // 初始监控
-        monitorUrqlMetadata()
-        // 定期监控
-        const interval = setInterval(monitorUrqlMetadata, 3000)
-        return () => clearInterval(interval)
-    }, [])
-    /**
-     * 直接读取 URQL metadata
-     */
-    const readUrqlMetadataDirectly = async (): Promise<any> => {
-        return new Promise((resolve) => {
-            const request = indexedDB.open("graphcache-sei", 1)
-            request.onsuccess = () => {
-                const db = request.result
-                if (!db.objectStoreNames.contains("metadata")) {
-                    resolve(null)
-                    return
-                }
-                const transaction = db.transaction(["metadata"], "readonly")
-                const store = transaction.objectStore("metadata")
-                const getRequest = store.get("metadata")
-                getRequest.onsuccess = () => {
-                    resolve(getRequest.result)
-                }
-                getRequest.onerror = () => {
-                    resolve(null)
-                }
-            }
-            request.onerror = () => {
-                resolve(null)
-            }
-        })
-    }
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl relative">
@@ -189,7 +146,7 @@ export default function OfflinePage() {
             <div className="space-y-6">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold">离线问题排查</h1>
-                    <p className="text-gray-600 dark:text-gray-400">管理离线功能状态、变更队列、变更冲突的队列</p>
+                    <p className="text-gray-600 dark:text-gray-400">管理离线状态、报告的离线变更队列、变更保存冲突</p>
                 </div>
                 <Tabs defaultValue="status" className="w-full">
                     <TabsList className="grid w-full grid-cols-4">
