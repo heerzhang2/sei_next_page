@@ -199,17 +199,6 @@ export function OfflineQueueManager() {
                             <RefreshCw className={`w-4 h-4 ${isProcessing ? "animate-spin" : ""}`} />
                             重试所有
                         </Button>
-
-                        <Button
-                            onClick={clearQueue}
-                            variant="destructive"
-                            disabled={isProcessing || totalRequests === 0}
-                            className="flex items-center gap-2"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            清空队列
-                        </Button>
-
                         <Button onClick={handleExportData} variant="outline" className="flex items-center gap-2 bg-transparent">
                             <Download className="w-4 h-4" />
                             导出数据

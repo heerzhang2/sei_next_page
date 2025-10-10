@@ -78,7 +78,7 @@ export function AutoRestoreConfirmDialog({
                         onClick={onCancel}
                         className="flex-1"
                     >
-                        稍后处理
+                        稍后(我已经刷新)
                     </Button>
                     <Button
                         onClick={onConfirm}

@@ -367,7 +367,7 @@ export function PipingUnitList({
 
 const SORT_OPTIONS = [
     { value: "code", label: "单元编号" },
-    { value: "rno", label: "监察编���" },
+    { value: "rno", label: "监察编号" },
     { value: "name", label: "管道名称" },
     { value: "leng", label: "长度" },
     { value: "nxtd1", label: "年检日期" },

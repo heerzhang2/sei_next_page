@@ -1,4 +1,3 @@
-// graphql-component.tsx
 "use client"
 
 import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/next"
@@ -17,7 +16,6 @@ import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
-import { MetadataWriteConfirmationModal } from "@/components/metadata-write-confirmation-modal"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 import { manualRetryExchange } from "@/lib/manual-retry-exchange"
 import {preventDuplicateExchange} from "@/lib/prevent-duplicate-exchange";
@@ -110,7 +108,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
             map((operation: Operation) => {
                 // 为每个操作添加超时和错误处理
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 120 * 1000) //120秒超时查询或变更
+                const timeoutId = setTimeout(() => controller.abort(), 180 * 1000) //180秒查询或变更超时
                 return {
                     ...operation,
                     context: {
@@ -405,16 +403,12 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
 // 增强的离线错误检查
 const isOfflineError = (error: any): boolean => {
     if (!error) return false
-
     // Network errors should be treated as offline
     if (isNetworkError(error)) return true
-
     // 401 errors should be queued for retry after authentication
     const has401Error = error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
-
     // Version conflicts should NOT be queued (permanent failures)
     if (isVersionConflictError(error)) return false
-
     return has401Error
 }
 // 网络状态感知的离线交换器
@@ -545,7 +539,7 @@ function generateOperationKey(operation: Operation): string {
     return `${queryString}_${JSON.stringify(variables || {})}`
 }
 
-//避免变更保存按钮的无限等待。
+//避免变更保存按钮的无限等待。变更完成后移除补偿存储。
 const fetchAbortExchange: Exchange =
     ({ forward, client }) =>
         (ops$) => {
@@ -623,22 +617,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
     const { addConflictRequest } = useVersionConflictManager()
-    const [isWriteModalOpen, ] = useState(false)
-    const handleWriteConfirm = useCallback(() => {
-        console.log("[GraphQLProvider] 用户确认了metadata写入操作")
-    }, [])
-
-    const handleWriteCancel = useCallback(() => {
-        console.log("[GraphQLProvider] 用户取消了metadata写入操作")
-    }, [])
-
     useEffect(() => {
         setIsClient(true)
     }, [])
-
     const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
     const mountCountRef = useRef(0)
-
     useEffect(() => {
         mountCountRef.current++
         console.log(`[v0] GraphQLProvider mounted - 实例ID: ${instanceIdRef.current}, 挂载次数: ${mountCountRef.current}`)
@@ -647,12 +630,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             console.log(`[v0] GraphQLProvider unmounted - 实例ID: ${instanceIdRef.current}`)
         }
     }, [])
-
     const clientRef = useRef<any>(null)
     const ssrRef = useRef<any>(null)
     const lastTokenRef = useRef<string | null>(null)
     const initializedRef = useRef(false)
-
     useEffect(() => {
         if (!initializedRef.current) {
             initializedRef.current = true
@@ -706,25 +687,39 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         if (isVersionConflictError(error)) {
                             const errorMessage = error.message || error.graphQLErrors?.[0]?.message || "版本冲突错误"
                             const invalidId = error.graphQLErrors?.[0]?.extensions?.invalidId || "未知ID"
-                            toast.error("数据版本冲突", {
-                                description: (
-                                    <div className="space-y-2">
-                                        <p className="font-medium text-red-700">{errorMessage}</p>
-                                        <p className="text-sm text-gray-600">记录ID: {invalidId}</p>
-                                        <p className="text-sm text-gray-500">
-                                            该记录已被其他设备或用户修改，请刷新页面获取最新数据后重新操作。
-                                        </p>
-                                    </div>
-                                ),
-                                duration: 4 * 60 * 60 * 1000,
-                                action: {
-                                    label: "刷新页面",
-                                    onClick: () => window.location.reload(),
-                                },
-                            })
-                            return
+                            // 确保toast在下一个事件循环中显示，避免被其他逻辑阻塞
+                            setTimeout(() => {
+                                // 显示详细的版本冲突toast提示
+                                toast.error("数据版本冲突", {
+                                    description: (
+                                        <div className="space-y-2">
+                                            <p className="font-medium text-red-700">{errorMessage}</p>
+                                            <p className="text-sm text-gray-600">记录ID: {invalidId}</p>
+                                            <p className="text-sm text-gray-500">
+                                                该记录已被其他设备或用户修改，请刷新页面获取最新数据后重新操作。
+                                            </p>
+                                            <p className="text-sm text-blue-600">冲突请求已从离线队列中移除，并保存到版本冲突列表中。</p>
+                                        </div>
+                                    ),
+                                    duration: 24 * 60 * 60 * 1000, // 24小时
+                                    action: {
+                                        label: "刷新页面",
+                                        onClick: () => window.location.reload(),
+                                    },
+                                })
+                            }, 50)
+                            // 添加到版本冲突管理器
+                            addConflictRequest(operation, error)
+                            if (operation.kind === "mutation") {
+                                const request: SerializedRequest = {
+                                    query: operation.query.loc?.source?.body || "",
+                                    variables: operation.variables,
+                                    extensions: operation.extensions,
+                                }
+                                removeCompensationBackup(request)
+                                console.log("[CompensationBackup] Mutation版本冲突，清理补偿")
+                            }
                         }
-                        addConflictRequest(operation, error)
                         const has401Error =
                             error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
                         if (has401Error && operation.kind === "mutation") {
@@ -736,9 +731,9 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
-                cache,
-                preventDuplicateExchange, // 添加防重复 exchange
-                manualRetryExchange, // 新增手动重试 exchange
+                cache, //放在第二位来处理，处理后端应答放在倒数第二位。
+                preventDuplicateExchange,
+                manualRetryExchange,
                 makeAuthExchange(accessToken, update, print),
                 updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
                 ssr,
@@ -774,24 +769,18 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         }
         lastAccessTokenRef.current = accessToken
         const result = createClientStable()
-        memoizedClientRef.current = result
+        memoizedClientRef.current = result as [any, any] | null
         return result
     }, [accessToken, createClientStable, isClient])
 
     useEffect(() => {
-        const handleMetadataRestored = (event: CustomEvent) => {
-            console.log(`[GraphQLProvider] Metadata已恢复: ${event.detail.count} 项`)
-        }
         const handleRefreshCache = () => {
-            console.log("[GraphQLProvider] 收到刷新缓存事件，重新创建客户端")
             // 这里可以强制重新创建客户端
             clientRef.current = null
             lastTokenRef.current = null
         }
-        window.addEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
         window.addEventListener('urql:refresh-cache', handleRefreshCache)
         return () => {
-            window.removeEventListener("urql:metadata-restored", handleMetadataRestored as EventListener)
             window.removeEventListener('urql:refresh-cache', handleRefreshCache)
         }
     }, [])
@@ -804,12 +793,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         <UrqlProvider client={client} ssr={ssr}>
             {children}
             {pathname !== "/login" && ConfirmDialog}
-            <MetadataWriteConfirmationModal
-                isOpen={isWriteModalOpen}
-                onConfirm={handleWriteConfirm}
-                onCancel={handleWriteCancel}
-                queueCount={0}
-            />
         </UrqlProvider>
     )
 }

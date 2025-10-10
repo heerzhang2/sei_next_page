@@ -125,67 +125,14 @@ export default function OfflinePage() {
     }
     const handleForceRefreshUrqlCache = async () => {
         try {
-            console.log("[Debug] 强制刷新 URQL 缓存...")
-
-            // 方法1: 重新初始化 URQL 客户端
             if (typeof window !== 'undefined') {
-                // 触发自定义事件让 GraphQLProvider 重新创建客户端
                 window.dispatchEvent(new CustomEvent('urql:refresh-cache'))
             }
-
-            // 方法2: 清除并重新加载 metadata
-            await clearAndReloadUrqlMetadata()
-
             toast.success("URQL 缓存已刷新")
-
-            // 重新加载数据
-            await loadCompensationData()
-
         } catch (error) {
             console.error("强制刷新缓存失败:", error)
             toast.error("刷新缓存失败")
         }
-    }
-    /**
-     * 清除并重新加载 URQL metadata
-     */
-    const clearAndReloadUrqlMetadata = async (): Promise<void> => {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open("graphcache-sei", 1)
-
-            request.onsuccess = () => {
-                const db = request.result
-                if (!db.objectStoreNames.contains("metadata")) {
-                    resolve()
-                    return
-                }
-
-                const transaction = db.transaction(["metadata"], "readwrite")
-                const store = transaction.objectStore("metadata")
-
-                // 读取当前 metadata
-                const getRequest = store.get("metadata")
-                getRequest.onsuccess = () => {
-                    console.log("[Debug] 当前metadata:", getRequest.result)
-
-                    // 不删除，只是重新读取
-                    transaction.oncomplete = () => {
-                        console.log("[Debug] metadata 读取完成")
-                        resolve()
-                    }
-                }
-
-                getRequest.onerror = () => {
-                    console.error("[Debug] 读取metadata失败:", getRequest.error)
-                    resolve() // 即使失败也继续
-                }
-            }
-
-            request.onerror = () => {
-                console.error("[Debug] 打开数据库失败:", request.error)
-                reject(request.error)
-            }
-        })
     }
     // 在 page.tsx 的 useEffect 中添加 metadata 监控
     useEffect(() => {
@@ -205,7 +152,7 @@ export default function OfflinePage() {
         // 初始监控
         monitorUrqlMetadata()
         // 定期监控
-        const interval = setInterval(monitorUrqlMetadata, 5000)
+        const interval = setInterval(monitorUrqlMetadata, 3000)
         return () => clearInterval(interval)
     }, [])
     /**
@@ -398,12 +345,12 @@ export default function OfflinePage() {
                                     <Shield className="w-5 h-5" />
                                     补偿存储管理
                                 </CardTitle>
-                                <CardDescription>补偿存储是metadata队列的备份机制，防止队列被意外清空时丢失数据</CardDescription>
+                                <CardDescription>补偿存储是离线变更队列的备份机制，防止在小概率事件下离线变更队列被意外清空丢失数据后无法恢复，正常情况下是工作的，无需人工干预！</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                                     <div className="space-y-1">
-                                        <p className="text-sm font-medium">备份的Mutation数量</p>
+                                        <p className="text-sm font-medium">备份的离线变更个数</p>
                                         <p className="text-2xl font-bold">{compensationCount}</p>
                                     </div>
                                     <Database className="w-8 h-8 text-muted-foreground" />
@@ -413,7 +360,7 @@ export default function OfflinePage() {
                                     <Alert>
                                         <AlertTriangle className="h-4 w-4" />
                                         <AlertDescription>
-                                            检测到 {compensationCount} 个备份的mutation。 如果metadata队列为空，您可以从补偿存储恢复这些操作。
+                                            检测到 {compensationCount} 个变更在后端还未正常处理。 如果离线队列为空，您可以从补偿存储中恢复这些变更。
                                         </AlertDescription>
                                     </Alert>
                                 )}
@@ -431,26 +378,21 @@ export default function OfflinePage() {
                                         )}
                                         恢复到队列
                                     </Button>
-
-                                    {/* 添加调试按钮 */}
-                                    <Button onClick={handleForceRefreshUrqlCache} variant="outline">
-                                        <Database className="w-4 h-4 mr-2" />
-                                        刷新缓存
-                                    </Button>
-
                                     <Button onClick={handleDownloadCompensation} disabled={compensationCount === 0} variant="outline">
                                         <Download className="w-4 h-4 mr-2" />
                                         下载备份
                                     </Button>
-
-                                    <Button onClick={handleClearCompensation} disabled={compensationCount === 0} variant="destructive">
-                                        <XCircle className="w-4 h-4 mr-2" />
-                                        清空备份
-                                    </Button>
-
                                     <Button onClick={loadCompensationData} variant="ghost">
                                         <RefreshCw className="w-4 h-4 mr-2" />
                                         刷新
+                                    </Button>
+                                    <Button onClick={handleForceRefreshUrqlCache} variant="outline">
+                                        <Database className="w-4 h-4 mr-2" />
+                                        重置客户端
+                                    </Button>
+                                    <Button onClick={handleClearCompensation} disabled={compensationCount === 0} variant="destructive">
+                                        <XCircle className="w-4 h-4 mr-2" />
+                                        清空备份
                                     </Button>
                                 </div>
                                 {compensationBackups.length > 0 && (
@@ -460,7 +402,7 @@ export default function OfflinePage() {
                                             {compensationBackups.map((backup, index) => (
                                                 <div key={backup.id} className="p-3 border rounded-lg text-sm space-y-1">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="font-medium">Backup #{index + 1}</span>
+                                                        <span className="font-medium">变更 #{index + 1}</span>
                                                         <Badge variant="outline">{new Date(backup.timestamp).toLocaleString()}</Badge>
                                                     </div>
                                                     {backup.variables?.id && (
@@ -481,20 +423,13 @@ export default function OfflinePage() {
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
                                 <p>
-                                    <strong>自动备份：</strong> 每当mutation被加入metadata队列时，系统会自动在补偿存储中创建备份。
+                                    <strong>自动备份：</strong> 每当变更被加入离线变更队列时，系统会自动在补偿存储中创建备份。
                                 </p>
                                 <p>
-                                    <strong>防止数据丢失：</strong> 如果metadata队列因为某些原因被清空（如用户误操作、浏览器问题等），
-                                    补偿存储可以作为最后的防线恢复这些操作。
+                                    <strong>手动恢复：</strong> 您可以随时查看补偿存储的内容，并手动将备份恢复到变更队列中。
                                 </p>
                                 <p>
-                                    <strong>自动清理：</strong> 当mutation成功执行后，对应的补偿备份会被自动删除，避免重复执行。
-                                </p>
-                                <p>
-                                    <strong>手动恢复：</strong> 您可以随时查看补偿存储的内容，并手动将备份恢复到metadata队列中。
-                                </p>
-                                <p>
-                                    <strong>数据导出：</strong> 支持将补偿数据导出为JSON文件，便于调试和数据分析。
+                                    <strong>数据导出：</strong> 支持将补偿数据导出为JSON文件，便于用其他方式做数据恢复。
                                 </p>
                             </CardContent>
                         </Card>
