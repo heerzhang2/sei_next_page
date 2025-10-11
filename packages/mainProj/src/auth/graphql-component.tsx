@@ -18,7 +18,7 @@ import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 import { manualRetryExchange } from "@/lib/manual-retry-exchange"
-import {preventDuplicateExchange} from "@/lib/prevent-duplicate-exchange";
+import { preventDuplicateExchange } from "@/lib/prevent-duplicate-exchange"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -171,7 +171,7 @@ const refreshTokenDirectly = async (
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
+            body: JSON.JSON.stringify({
                 query: `
           mutation RefreshToken($refreshToken: String!) {
             refreshToken(refreshToken: $refreshToken) {
@@ -251,6 +251,10 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
     }
 }
 
+// **CHANGE**: Add state to track if token refresh is in progress
+let isTokenRefreshing = false
+let pendingMetadataBeforeRefresh: SerializedRequest[] = []
+
 //创建认证交换器
 const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print?: boolean) => {
     return authExchange(async (utils) => {
@@ -288,6 +292,13 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                     response.headers?.get("content-length") === "0" &&
                     response.headers?.get("content-type")?.includes("application/graphql-response+json")
                 const finalResult = hasGraphQLAuthError || hasNetworkAuthError || isSpecial500 || hasCustomAuthError
+
+                // **CHANGE**: Set token refreshing flag when auth error detected
+                if (finalResult) {
+                    isTokenRefreshing = true
+                    console.log("[AuthExchange] 检测到认证错误，设置token刷新标记")
+                }
+
                 return finalResult
             },
             async refreshAuth() {
@@ -328,7 +339,34 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                         }),
                                     )
                                 }
-                                toast.warning("登录会话自动续期，影响正处理的变更保存！", {
+
+                                // **CHANGE**: After token refresh, restore pending metadata and retry
+                                setTimeout(async () => {
+                                    isTokenRefreshing = false
+
+                                    if (pendingMetadataBeforeRefresh.length > 0) {
+                                        console.log(
+                                            "[AuthExchange] Token刷新完成，恢复pending metadata:",
+                                            pendingMetadataBeforeRefresh.length,
+                                        )
+
+                                        // Restore metadata to compensation storage
+                                        for (const request of pendingMetadataBeforeRefresh) {
+                                            await backupMutationToCompensation(request)
+                                        }
+
+                                        // Trigger retry
+                                        window.dispatchEvent(
+                                            new CustomEvent("graphql-manual-retry", {
+                                                detail: { retryAll: true },
+                                            }),
+                                        )
+
+                                        pendingMetadataBeforeRefresh = []
+                                    }
+                                }, 500)
+
+                                toast.warning("登录会话自动续期，正在重试中断的操作", {
                                     duration: 5000,
                                 })
                                 return
@@ -370,17 +408,54 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                     }),
                                 )
                             }
-                            toast.success("离线模式登录刷新直接,直接与后端服务器通信", {
+
+                            // **CHANGE**: After token refresh, restore pending metadata and retry
+                            setTimeout(async () => {
+                                isTokenRefreshing = false
+
+                                if (pendingMetadataBeforeRefresh.length > 0) {
+                                    console.log(
+                                        "[AuthExchange] 离线模式Token刷新完成，恢复pending metadata:",
+                                        pendingMetadataBeforeRefresh.length,
+                                    )
+
+                                    // Restore metadata to compensation storage
+                                    for (const request of pendingMetadataBeforeRefresh) {
+                                        await backupMutationToCompensation(request)
+                                    }
+
+                                    // Trigger retry
+                                    window.dispatchEvent(
+                                        new CustomEvent("graphql-manual-retry", {
+                                            detail: { retryAll: true },
+                                        }),
+                                    )
+
+                                    pendingMetadataBeforeRefresh = []
+                                }
+                            }, 500)
+
+                            toast.success("离线模式登录刷新成功，正在重试中断的操作", {
                                 duration: 3000,
                             })
                             return
                         }
                     }
+
+                    // **CHANGE**: Clear token refreshing flag on failure
+                    isTokenRefreshing = false
+                    pendingMetadataBeforeRefresh = []
+
                     toast.error("务必重新登录！", {
                         duration: 30 * 1000,
                     })
                 } catch (error) {
                     console.error("Token 刷新失败:", error)
+
+                    // **CHANGE**: Clear token refreshing flag on error
+                    isTokenRefreshing = false
+                    pendingMetadataBeforeRefresh = []
+
                     setStoredRefreshToken(null)
                     toast.error("登录已过期", {
                         description: "请重新登录",
@@ -427,7 +502,7 @@ const createNetworkAwareOfflineExchange = (storage: any) => {
                     "key:",
                     operationKey,
                     "error:",
-                    error?.message
+                    error?.message,
                 )
             }
             return shouldQueue
@@ -437,6 +512,18 @@ const createNetworkAwareOfflineExchange = (storage: any) => {
             // 修改 writeMetadata 方法，添加网络状态检查
             writeMetadata: async (json: SerializedRequest[]) => {
                 console.log("[GraphQLProvider] writeMetadata被调用，数据长度:", json?.length || 0)
+
+                // **CHANGE**: If token is refreshing and we're trying to clear metadata, save it first
+                if (isTokenRefreshing && json?.length === 0 && pendingMetadataBeforeRefresh.length === 0) {
+                    // Read current metadata before it gets cleared
+                    const currentMetadata = (await storage.readMetadata?.()) || []
+                    if (currentMetadata.length > 0) {
+                        pendingMetadataBeforeRefresh = currentMetadata
+                        console.log("[GraphQLProvider] Token刷新期间保存metadata，长度:", pendingMetadataBeforeRefresh.length)
+                        // Don't clear metadata during token refresh
+                        return
+                    }
+                }
 
                 // 检查是否是恢复操作触发的清空
                 const isRestoreOperation = localStorage.getItem("isRestoringMetadata") === "true"
@@ -484,7 +571,7 @@ const createNetworkAwareOfflineExchange = (storage: any) => {
                     }
                 } else {
                     // 只有非恢复操作时才允许清空
-                    if (!isRestoreOperation) {
+                    if (!isRestoreOperation && !isTokenRefreshing) {
                         await storage.writeMetadata!(json)
                         if (typeof window !== "undefined") {
                             localStorage.setItem(
@@ -494,7 +581,7 @@ const createNetworkAwareOfflineExchange = (storage: any) => {
                         }
                         console.log("[offlineExchange] writeMetadata写:", 0, "items")
                     } else {
-                        console.log("[GraphQLProvider] 恢复操作期间跳过metadata清空")
+                        console.log("[GraphQLProvider] Token刷新或恢复操作期间跳过metadata清空")
                     }
                 }
             },
@@ -517,24 +604,24 @@ function generateRequestKey(request: SerializedRequest): string {
     const { query, variables } = request
     if (variables?.id) {
         // 针对 modifyOriginalRecordData 使用特殊标识
-        if (typeof query === 'string' && query.includes('mutation useOriginalDataMutation')) {
-            return `modify_${variables.id}_${variables.version || '0'}`
+        if (typeof query === "string" && query.includes("mutation useOriginalDataMutation")) {
+            return `modify_${variables.id}_${variables.version || "0"}`
         }
         return `${query}-${variables.id}-${variables?.opType || ""}`
     }
-    return `${query}-${JSON.stringify(variables || {})}`
+    return `${query}-${JSON.JSON.stringify(variables || {})}`
 }
 
 // 生成操作唯一标识（用于防重复）
 function generateOperationKey(operation: Operation): string {
     const { query, variables } = operation
-    const queryString = typeof query === 'string' ? query : query.loc?.source.body || ''
+    const queryString = typeof query === "string" ? query : query.loc?.source.body || ""
 
-    if (queryString.includes('mutation useOriginalDataMutation') && variables?.id) {
-        return `modify_${variables.id}_${variables.version || '0'}`
+    if (queryString.includes("mutation useOriginalDataMutation") && variables?.id) {
+        return `modify_${variables.id}_${variables.version || "0"}`
     }
 
-    return `${queryString}_${JSON.stringify(variables || {})}`
+    return `${queryString}_${JSON.JSON.stringify(variables || {})}`
 }
 
 //避免变更保存按钮的无限等待。变更完成后移除补偿存储。
@@ -555,19 +642,20 @@ const fetchAbortExchange: Exchange =
                         removeCompensationBackup(request)
                         console.log("[CompensationBackup] Mutation成功，已清理备份")
                     }
-                    const error=result.error;
-                    let offlineError =false, authError = false;
-                    if(isNetworkError(error))  offlineError=true
-                    if(error?.response?.status === 401 || error?.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401)
-                        authError=true
-                    if(isVersionConflictError(error))  offlineError=false
+                    const error = result.error
+                    let offlineError = false,
+                        authError = false
+                    if (isNetworkError(error)) offlineError = true
+                    if (error?.response?.status === 401 || error?.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401)
+                        authError = true
+                    if (isVersionConflictError(error)) offlineError = false
                     // 检测Java后端宕机错误 isJavaBackendDownError
                     if (result.error && (offlineError || authError)) {
                         //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
                         if (result.operation.kind === "mutation") {
                             const operationName = result.operation.query?.definitions[0]?.name.value
                             if (operationName) {
-                                if(offlineError && !authError)
+                                if (offlineError && !authError)
                                     toast.success("离线中", {
                                         duration: 2 * 1000,
                                     })
@@ -656,6 +744,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         if (!isClient) {
             return [null, null]
         }
+
+        // **CHANGE**: Prevent client recreation during token refresh
+        if (isTokenRefreshing && lastTokenRef.current === accessToken && clientRef.current) {
+            console.log(`[v0] Token刷新中，复用现有客户端 - 实例ID: ${instanceIdRef.current}`)
+            return [clientRef.current, ssrRef.current]
+        }
+
         if (lastTokenRef.current === accessToken && clientRef.current) {
             return [clientRef.current, ssrRef.current]
         }
@@ -782,10 +877,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             // 这里可以强制重新创建客户端
             clientRef.current = null
             lastTokenRef.current = null
+            // **CHANGE**: Reset token refreshing flags on manual cache refresh
+            isTokenRefreshing = false
+            pendingMetadataBeforeRefresh = []
         }
-        window.addEventListener('urql:refresh-cache', handleRefreshCache)
+        window.addEventListener("urql:refresh-cache", handleRefreshCache)
         return () => {
-            window.removeEventListener('urql:refresh-cache', handleRefreshCache)
+            window.removeEventListener("urql:refresh-cache", handleRefreshCache)
         }
     }, [])
 
@@ -803,16 +901,16 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
 const backupMutationToCompensation = async (request: SerializedRequest) => {
     try {
-        await mutationCompensationStorage.backupMutation(request.query, request.variables, request.extensions);
+        await mutationCompensationStorage.backupMutation(request.query, request.variables, request.extensions)
     } catch (error) {
-        console.error("[CompensationBackup] 备份mutation失败:", error);
+        console.error("[CompensationBackup] 备份mutation失败:", error)
     }
-};
+}
 
 const removeCompensationBackup = async (request: SerializedRequest) => {
     try {
-        await mutationCompensationStorage.removeBackup(request.query, request.variables);
+        await mutationCompensationStorage.removeBackup(request.query, request.variables)
     } catch (error) {
-        console.error("[CompensationBackup] 清理备份失败:", error);
+        console.error("[CompensationBackup] 清理备份失败:", error)
     }
-};
+}
