@@ -1,0 +1,461 @@
+[Violation] 'click' handler took 459ms
+C:\home\sei_next_page\packages\mainProj\src\lib\prevent-duplicate-exchange.ts:44 [PreventDuplicate] 开始处理 mutation: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_285
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752 费用authorization Bearer: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzc5NCwiZXhwIjoxNzYwMTQ3ODU0fQ.DHn4FTibH2h8PW573SuKvz_zcuJMi3k4-3hRbwyXe7YnzhJDUKQMx46bjfI3OGaZcbo1qO007cnJ82cS8ZB1Jw
+GraphQLProvider.useCallback[createClientStable].client @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752
+appendHeaders @ urql-exchange-auth.mjs:51
+addAuthToOperation @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:271
+addAuthToOperation @ urql-exchange-auth.mjs:83
+eval @ urql-exchange-auth.mjs:107
+applyInnerSource @ wonka.mjs:272
+nextOperation @ urql-core.mjs:594
+source$ @ urql-core.mjs:132
+toPromise @ wonka.mjs:1232
+eval @ urql.es.js:136
+handleSubmit @ C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:242
+eval @ index.esm.mjs:2103
+await in eval
+executeDispatch @ react-dom-client.development.js:16971
+runWithFiberInDEV @ react-dom-client.development.js:872
+processDispatchQueue @ react-dom-client.development.js:17021
+eval @ react-dom-client.development.js:17622
+batchedUpdates$1 @ react-dom-client.development.js:3312
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:17175
+dispatchEvent @ react-dom-client.development.js:21358
+dispatchDiscreteEvent @ react-dom-client.development.js:21326
+react-dom-client.development.js:16844 [Violation] 'submit' handler took 533ms
+urql-core-chunk.mjs:529  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:132 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:137 碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失 fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
+eval @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:137
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status true
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:317 【终结】Mutation操作已完成: {operation: 'useOriginalDataMutation', variables: {…}, error: CombinedError: [Network]
+    at makeErrorResult (webpack-internal:///(app-pages-browser)/../../nod…, hasError: true}
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:269 updateOriginalResult=异常= AbortError: Aborted
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:271 请求已被取消
+handleSubmit @ C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:271
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752 费用authorization Bearer: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MiwiZXhwIjoxNzYwMTQ4MDUyfQ.dfTVJOiEsxzF1ji4R0nCGX6vYHGxOsSrSrHJC7YPCkkzODT5SAQGRQh5am-ln7PMld699uifubOMeqdJe_ofTA
+GraphQLProvider.useCallback[createClientStable].client @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752
+appendHeaders @ urql-exchange-auth.mjs:51
+addAuthToOperation @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:271
+addAuthToOperation @ urql-exchange-auth.mjs:83
+eval @ urql-exchange-auth.mjs:107
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-auth.mjs:27
+eval @ urql-exchange-auth.mjs:67
+Promise.then
+initAuth @ urql-exchange-auth.mjs:63
+eval @ urql-exchange-auth.mjs:75
+forward @ urql-core.mjs:528
+pipe @ wonka.mjs:1414
+eval @ C:\home\sei_next_page\packages\mainProj\src\lib\manual-retry-exchange.ts:41
+forward @ urql-core.mjs:528
+pipe @ wonka.mjs:1414
+eval @ C:\home\sei_next_page\packages\mainProj\src\lib\prevent-duplicate-exchange.ts:28
+forward @ urql-core.mjs:528
+forward @ urql-exchange-graphcache.mjs:2010
+eval @ urql-exchange-graphcache.mjs:1885
+eval @ urql-exchange-graphcache.mjs:2031
+forward @ urql-core.mjs:528
+eval @ urql-core.mjs:546
+Client @ urql-core.mjs:759
+GraphQLProvider.useCallback[createClientStable] @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:686
+GraphQLProvider.useMemo @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:775
+updateMemo @ react-dom-client.development.js:7887
+useMemo @ react-dom-client.development.js:24153
+exports.useMemo @ react.development.js:1240
+GraphQLProvider @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:767
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopSync @ react-dom-client.development.js:15547
+renderRootSync @ react-dom-client.development.js:15527
+performWorkOnRoot @ react-dom-client.development.js:14991
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752 费用authorization Bearer: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MiwiZXhwIjoxNzYwMTQ4MDUyfQ.dfTVJOiEsxzF1ji4R0nCGX6vYHGxOsSrSrHJC7YPCkkzODT5SAQGRQh5am-ln7PMld699uifubOMeqdJe_ofTA
+GraphQLProvider.useCallback[createClientStable].client @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752
+appendHeaders @ urql-exchange-auth.mjs:51
+addAuthToOperation @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:271
+addAuthToOperation @ urql-exchange-auth.mjs:83
+eval @ urql-exchange-auth.mjs:107
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:292
+eval @ wonka.mjs:1018
+eval @ wonka.mjs:290
+eval @ wonka.mjs:1013
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+nextOperation @ urql-core.mjs:594
+dispatchOperation @ urql-core.mjs:600
+eval @ urql-core.mjs:713
+eval @ wonka.mjs:391
+eval @ wonka.mjs:488
+eval @ wonka.mjs:386
+eval @ wonka.mjs:914
+source$ @ urql-core.mjs:132
+eval @ wonka.mjs:365
+eval @ wonka.mjs:793
+eval @ wonka.mjs:1119
+eval @ urql.es.js:231
+eval @ urql.es.js:252
+deferDispatch @ urql.es.js:118
+useQuery @ urql.es.js:252
+useQuery @ urql-next.mjs:173
+CommonReportData @ C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:201
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopConcurrentByScheduler @ react-dom-client.development.js:15721
+renderRootConcurrent @ react-dom-client.development.js:15696
+performWorkOnRoot @ react-dom-client.development.js:14990
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:439 [GraphQLProvider] writeMetadata被调用，数据长度: 0
+2C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752 费用authorization Bearer: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MiwiZXhwIjoxNzYwMTQ4MDUyfQ.dfTVJOiEsxzF1ji4R0nCGX6vYHGxOsSrSrHJC7YPCkkzODT5SAQGRQh5am-ln7PMld699uifubOMeqdJe_ofTA
+GraphQLProvider.useCallback[createClientStable].client @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752
+appendHeaders @ urql-exchange-auth.mjs:51
+addAuthToOperation @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:271
+addAuthToOperation @ urql-exchange-auth.mjs:83
+eval @ urql-exchange-auth.mjs:107
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:292
+eval @ wonka.mjs:1018
+eval @ wonka.mjs:290
+eval @ wonka.mjs:1013
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+nextOperation @ urql-core.mjs:594
+dispatchOperation @ urql-core.mjs:605
+Promise.then
+reexecuteOperation @ urql-core.mjs:680
+eval @ urql-exchange-graphcache.mjs:1870
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-graphcache.mjs:1969
+then @ urql-exchange-graphcache.mjs:1995
+await in then
+eval @ urql-exchange-graphcache.mjs:1658
+eval @ urql-exchange-graphcache.mjs:2000
+eval @ urql-core.mjs:519
+eval @ urql-core.mjs:517
+Client @ urql-core.mjs:753
+GraphQLProvider.useCallback[createClientStable] @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:686
+GraphQLProvider.useMemo @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:775
+updateMemo @ react-dom-client.development.js:7887
+useMemo @ react-dom-client.development.js:24153
+exports.useMemo @ react.development.js:1240
+GraphQLProvider @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:767
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopSync @ react-dom-client.development.js:15547
+renderRootSync @ react-dom-client.development.js:15527
+performWorkOnRoot @ react-dom-client.development.js:14991
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:495 [offlineExchange] writeMetadata写: 0 items
+scheduler.development.js:14 [Violation] 'message' handler took 569ms
+2C:\home\sei_next_page\packages\mainProj\src\hooks\use-offline-auth.ts:130 检测到token刷新事件
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:53 [v0] useAccessToken: 收到token刷新事件accessToken eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752 费用authorization Bearer: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+GraphQLProvider.useCallback[createClientStable].client @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752
+appendHeaders @ urql-exchange-auth.mjs:51
+addAuthToOperation @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:271
+addAuthToOperation @ urql-exchange-auth.mjs:83
+eval @ urql-exchange-auth.mjs:107
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-auth.mjs:27
+eval @ urql-exchange-auth.mjs:67
+Promise.then
+initAuth @ urql-exchange-auth.mjs:63
+eval @ urql-exchange-auth.mjs:75
+forward @ urql-core.mjs:528
+pipe @ wonka.mjs:1414
+eval @ C:\home\sei_next_page\packages\mainProj\src\lib\manual-retry-exchange.ts:41
+forward @ urql-core.mjs:528
+pipe @ wonka.mjs:1414
+eval @ C:\home\sei_next_page\packages\mainProj\src\lib\prevent-duplicate-exchange.ts:28
+forward @ urql-core.mjs:528
+forward @ urql-exchange-graphcache.mjs:2010
+eval @ urql-exchange-graphcache.mjs:1885
+eval @ urql-exchange-graphcache.mjs:2031
+forward @ urql-core.mjs:528
+eval @ urql-core.mjs:546
+Client @ urql-core.mjs:759
+GraphQLProvider.useCallback[createClientStable] @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:686
+GraphQLProvider.useMemo @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:775
+updateMemo @ react-dom-client.development.js:7887
+useMemo @ react-dom-client.development.js:24153
+exports.useMemo @ react.development.js:1240
+GraphQLProvider @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:767
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopSync @ react-dom-client.development.js:15547
+renderRootSync @ react-dom-client.development.js:15527
+performWorkOnRoot @ react-dom-client.development.js:14991
+performSyncWorkOnRoot @ react-dom-client.development.js:16831
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16677
+flushSyncWork$1 @ react-dom-client.development.js:15297
+f @ react-dom-client.development.js:25156
+exports.flushSync @ react-dom.development.js:140
+Toaster.Toaster.useEffect @ index.mjs:1079
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752 费用authorization Bearer: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+GraphQLProvider.useCallback[createClientStable].client @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752
+appendHeaders @ urql-exchange-auth.mjs:51
+addAuthToOperation @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:271
+addAuthToOperation @ urql-exchange-auth.mjs:83
+eval @ urql-exchange-auth.mjs:107
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+nextOperation @ urql-core.mjs:594
+dispatchOperation @ urql-core.mjs:600
+eval @ urql-core.mjs:713
+source$ @ urql-core.mjs:132
+eval @ urql.es.js:231
+eval @ urql.es.js:252
+deferDispatch @ urql.es.js:118
+useQuery @ urql.es.js:252
+useQuery @ urql-next.mjs:173
+CommonReportData @ C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:201
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopConcurrentByScheduler @ react-dom-client.development.js:15721
+renderRootConcurrent @ react-dom-client.development.js:15696
+performWorkOnRoot @ react-dom-client.development.js:14990
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
+urql-core-chunk.mjs:529  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+applyInnerSource @ wonka.mjs:272
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-auth.mjs:27
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:132 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:137 碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失 fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
+eval @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:137
+await in eval
+applyInnerSource @ wonka.mjs:272
+flushQueue @ urql-exchange-auth.mjs:27
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\lib\prevent-duplicate-exchange.ts:57 [PreventDuplicate] 完成处理 mutation: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_285 失败
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:424 [offlineExchange] 将mutation加入离线队列: useOriginalDataMutation key: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_285 error: [Network]
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:439 [GraphQLProvider] writeMetadata被调用，数据长度: 1
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:481 [CompensationBackup] 开始备份mutations到补偿存储,长度 1
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:394 [v0] 发现离线队列: 1
+C:\home\sei_next_page\packages\mainProj\src\lib\mutation-compensation-storage.ts:114 [CompensationBackup] 已清理 0 个旧版本备份，保留最新版本
+C:\home\sei_next_page\packages\mainProj\src\lib\mutation-compensation-storage.ts:146 [CompensationBackup] 已备份mutation: useOriginalDataMutation (ID: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_285_1760147992773)
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:439 [GraphQLProvider] writeMetadata被调用，数据长度: 0
+2C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752 费用authorization Bearer: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+GraphQLProvider.useCallback[createClientStable].client @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752
+appendHeaders @ urql-exchange-auth.mjs:51
+addAuthToOperation @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:271
+addAuthToOperation @ urql-exchange-auth.mjs:83
+eval @ urql-exchange-auth.mjs:107
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:292
+eval @ wonka.mjs:1018
+eval @ wonka.mjs:290
+eval @ wonka.mjs:1013
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+nextOperation @ urql-core.mjs:594
+dispatchOperation @ urql-core.mjs:605
+Promise.then
+reexecuteOperation @ urql-core.mjs:680
+eval @ urql-exchange-graphcache.mjs:1870
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-graphcache.mjs:1969
+then @ urql-exchange-graphcache.mjs:1995
+await in then
+eval @ urql-exchange-graphcache.mjs:1658
+eval @ urql-exchange-graphcache.mjs:2000
+eval @ urql-core.mjs:519
+eval @ urql-core.mjs:517
+Client @ urql-core.mjs:753
+GraphQLProvider.useCallback[createClientStable] @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:686
+GraphQLProvider.useMemo @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:775
+updateMemo @ react-dom-client.development.js:7887
+useMemo @ react-dom-client.development.js:24153
+exports.useMemo @ react.development.js:1240
+GraphQLProvider @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:767
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopSync @ react-dom-client.development.js:15547
+renderRootSync @ react-dom-client.development.js:15527
+performWorkOnRoot @ react-dom-client.development.js:14991
+performSyncWorkOnRoot @ react-dom-client.development.js:16831
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16677
+flushSyncWork$1 @ react-dom-client.development.js:15297
+f @ react-dom-client.development.js:25156
+exports.flushSync @ react-dom.development.js:140
+Toaster.Toaster.useEffect @ index.mjs:1079
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:495 [offlineExchange] writeMetadata写: 0 items
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status true
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+react-dom-client.development.js:16844 [Violation] 'complete' handler took 170ms
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:317 【终结】Mutation操作已完成: {operation: 'useOriginalDataMutation', variables: {…}, error: CombinedError: [Network]
+    at makeErrorResult (webpack-internal:///(app-pages-browser)/../../nod…, hasError: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status true
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status false
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+scheduler.development.js:14 [Violation] 'message' handler took 452ms
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:66 useAccessToken: update更新newsession {user: {…}, expires: '2025-10-12T01:59:53.211Z'}
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:90 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0Nzk5MSwiZXhwIjoxNzYwMTQ4MDUxfQ.M-KWETSGuVTnqa8XiLTCNeHJArI8Mcueu4le8yiXokPA939XTGycsYgTageOyvQegHhuG9wYBO3cNkKfPddz0g

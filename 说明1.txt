@@ -1,0 +1,73 @@
+C:\home\sei_next_page\packages\mainProj\src\lib\prevent-duplicate-exchange.ts:44 [PreventDuplicate] 开始处理 mutation: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_284
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752 费用authorization Bearer: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDE0MTk3MiwiZXhwIjoxNzYwMTQyMDMyfQ.fj9g7cJbxtl3nsFAdjEozHLSgB3gNl3lKxOxRiS5u-TuljX0furwcccl5ABZBqmsbQmtrq20l1n_gbmRoATlRg
+GraphQLProvider.useCallback[createClientStable].client @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:752
+appendHeaders @ urql-exchange-auth.mjs:51
+addAuthToOperation @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:271
+addAuthToOperation @ urql-exchange-auth.mjs:83
+eval @ urql-exchange-auth.mjs:107
+applyInnerSource @ wonka.mjs:272
+nextOperation @ urql-core.mjs:594
+eval @ urql-core.mjs:655
+source$ @ urql-core.mjs:132
+toPromise @ wonka.mjs:1232
+eval @ urql.es.js:136
+handleSubmit @ C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:242
+eval @ index.esm.mjs:2103
+await in eval
+executeDispatch @ react-dom-client.development.js:16971
+runWithFiberInDEV @ react-dom-client.development.js:872
+processDispatchQueue @ react-dom-client.development.js:17021
+eval @ react-dom-client.development.js:17622
+batchedUpdates$1 @ react-dom-client.development.js:3312
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:17175
+dispatchEvent @ react-dom-client.development.js:21358
+dispatchDiscreteEvent @ react-dom-client.development.js:21326
+react-dom-client.development.js:16844 [Violation] 'submit' handler took 393ms
+urql-core-chunk.mjs:529  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:132 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:137 碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失 fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
+eval @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:137
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status true
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:317 【终结】Mutation操作已完成: {operation: 'useOriginalDataMutation', variables: {…}, error: CombinedError: [Network]
+    at makeErrorResult (webpack-internal:///(app-pages-browser)/../../nod…, hasError: true}
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:269 updateOriginalResult=异常= AbortError: Aborted
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:271 请求已被取消
+handleSubmit @ C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:271
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:302  POST https://192.168.171.3:3765/api/refresh-token 401 (Unauthorized)
+refreshAuth @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:302
+await in refreshAuth
+refreshAuth @ urql-exchange-auth.mjs:79
+eval @ urql-exchange-auth.mjs:114
+urql-core-chunk.mjs:529  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+applyInnerSource @ wonka.mjs:272
+flushQueue @ urql-exchange-auth.mjs:27
+Promise.then
+refreshAuth @ urql-exchange-auth.mjs:79
+eval @ urql-exchange-auth.mjs:114
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:132 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:137 碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失 fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
+eval @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:137
+applyInnerSource @ wonka.mjs:272
+flushQueue @ urql-exchange-auth.mjs:27
+Promise.then
+refreshAuth @ urql-exchange-auth.mjs:79
+eval @ urql-exchange-auth.mjs:114
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\lib\prevent-duplicate-exchange.ts:57 [PreventDuplicate] 完成处理 mutation: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_284 失败
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:424 [offlineExchange] 将mutation加入离线队列: useOriginalDataMutation key: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_284 error: [Network]
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:439 [GraphQLProvider] writeMetadata被调用，数据长度: 1
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:481 [CompensationBackup] 开始备份mutations到补偿存储,长度 1
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status true
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:35 StorageContext: Setting offline status false
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:317 【终结】Mutation操作已完成: {operation: 'useOriginalDataMutation', variables: {…}, error: CombinedError: [Network]
+    at makeErrorResult (webpack-internal:///(app-pages-browser)/../../nod…, hasError: true}
+C:\home\sei_next_page\packages\mainProj\src\lib\mutation-compensation-storage.ts:114 [CompensationBackup] 已清理 0 个旧版本备份，保留最新版本
+C:\home\sei_next_page\packages\mainProj\src\lib\mutation-compensation-storage.ts:146 [CompensationBackup] 已备份mutation: useOriginalDataMutation (ID: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_284_1760147677969)
+4C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:394 [v0] 发现离线队列: 1
+C:\home\sei_next_page\packages\mainProj\src\hooks\use-offline-queue-manager.ts:190 [v0] 监控到URQL队列变化: 1 个请求
+:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/Witness#Witness:1 The resource https://192.168.171.3:3765/_next/static/css/app/layout.css?v=1760147566117 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
