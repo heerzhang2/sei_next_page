@@ -522,10 +522,3 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 {2}检测到401错误，token无效，准备触发刷新流程,app401= false
 /12【hez0】 authorization Bearer%20bx0DmDKUqOJPLuKsC7mUiKeQ 【1】账户/14=Bearer%20iNW8BnPJexI0MIInYjQwm4Qr  /22【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN /31【3】Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
 https://v0.app/chat/-6pi8E7npu2n
-writeMetadata ：拦截离线的mutation变更发起。 filteredRequests
-
-meta丢失+ 一直是离线模式的：把补偿遗留列表复制到离线的队列之后必须刷新页面。 然后恢复在线401 token变动，又导致meta丢失了。有401错误必须再次刷新页面？
-meta丢失+ 后端恢复在线后的：把补偿遗留列表复制到离线的队列之后必须刷新页面。 不做立刻刷新的重试队列碰到了401 meta丢失；
-后端在线的- 编辑1确认， 切换另外2编辑区再确认， 等到token失效去保存：按提醒需要2次点击保存 ，发出两次的变更请求？ 》第一次编辑区没有生效的？？
-
-https://chat.deepseek.com/a/chat/s/09892433-9262-4890-8ce2-19a67a82585f
