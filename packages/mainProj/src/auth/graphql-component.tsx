@@ -366,7 +366,7 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
                                     }
                                 }, 500)
 
-                                toast.warning("登录会话自动续期，若报告编辑中需刷新网页", {
+                                toast.warning("登录会话自动续期，若报告编辑修改了需刷新网页", {
                                     duration: 60*1000,
                                 })
                                 return
