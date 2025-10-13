@@ -19,6 +19,7 @@ import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 import { manualRetryExchange } from "@/lib/manual-retry-exchange"
 import { preventDuplicateExchange } from "@/lib/prevent-duplicate-exchange"
+import { getCookie } from 'cookies-next/client'
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -146,45 +147,70 @@ const customFetchExchange: Exchange = ({ forward }) => {
 
 const getStoredRefreshToken = (): string | null => {
     if (typeof window === "undefined") return null
-    return localStorage.getItem("refresh_token")
+    return getCookie('refresh_token') as string || null
 }
-
 const setStoredRefreshToken = (token: string | null): void => {
     if (typeof window === "undefined") return
     if (token) {
-        localStorage.setItem("refresh_token", token)
+        setCookie('refresh_token', token, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        })
     } else {
-        localStorage.removeItem("refresh_token")
+        deleteCookie('refresh_token')
     }
 }
-
-//直接post原生做法发送请求包了
-const refreshTokenDirectly = async (
-    refreshToken: string,
-): Promise<{ accessToken: string; refreshToken: string } | null> => {
+//直接post原生做法发送请求包了, 修改 refreshTokenDirectly 函数，从cookie读取
+const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshToken: string } | null> => {
     try {
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
+
+        // 判断当前环境：SSR还是浏览器直连
+        const isSSR = typeof window === "undefined"
+        let refreshToken: string | null = null
+
+        if (isSSR) {
+            // SSR模式：从localStorage获取（通过参数传递）
+            refreshToken = localStorage.getItem("refresh_token_ssr")
+        } else {
+            // 浏览器直连模式：从cookie获取
+            refreshToken = getCookie('refresh_token') as string || null
+        }
+
+        if (!refreshToken) {
+            throw new Error("No refresh token available")
+        }
+
+        const requestBody: any = {
+            query: `
+                mutation RefreshToken($refreshToken: String) {
+                    refreshToken(refreshToken: $refreshToken) {
+                        accessToken
+                        refreshToken
+                        user {
+                            id
+                        }
+                    }
+                }
+            `
+        }
+
+        // SSR模式：通过参数传递refreshToken
+        if (isSSR) {
+            requestBody.variables = { refreshToken }
+        }
+        // 浏览器直连模式：不传参数，依赖cookie
 
         const response = await fetch(`${endpoint}/graphql`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.JSON.stringify({
-                query: `
-          mutation RefreshToken($refreshToken: String!) {
-            refreshToken(refreshToken: $refreshToken) {
-              accessToken
-              refreshToken
-              user {
-                id
-              }
-            }
-          }
-        `,
-                variables: { refreshToken },
-            }),
+            credentials: 'include', // 重要：包含cookie
+            body: JSON.stringify(requestBody),
         })
 
         if (!response.ok) {

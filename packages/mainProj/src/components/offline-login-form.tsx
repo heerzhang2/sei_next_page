@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import {useSession} from "next-auth/react";
+import { setCookie, getCookie, deleteCookie } from 'cookies-next/client'
 
 // 离线认证函数
 const authenticateOffline = async (username: string, password: string) => {
@@ -67,7 +68,7 @@ const authenticateOffline = async (username: string, password: string) => {
 }
 
 // 存储离线认证信息
-const storeOfflineAuth = (authData: any) => {
+const storeOfflineAuth = (authData: any, shouldSetCookie: boolean = true) => {
     if (typeof window === "undefined") return
 
     // 存储到localStorage
@@ -75,15 +76,25 @@ const storeOfflineAuth = (authData: any) => {
         "offline_auth",
         JSON.stringify({
             accessToken: authData.accessToken,
-            refreshToken: authData.refreshToken,
             user: authData.user,
             timestamp: Date.now(),
-            expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24小时过期
+            expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         }),
     )
 
-    // 存储refreshToken用于后续刷新
-    localStorage.setItem("refresh_token", authData.refreshToken)
+    // 根据场景决定是否设置cookie
+    if (shouldSetCookie) {
+        // 浏览器直连模式：设置cookie
+        setCookie('refresh_token', authData.refreshToken, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        })
+    } else {
+        // SSR模式：只存储到localStorage，不设置cookie
+        localStorage.setItem("refresh_token_ssr", authData.refreshToken)
+    }
 
     // 触发自定义事件通知其他组件
     window.dispatchEvent(
@@ -91,6 +102,16 @@ const storeOfflineAuth = (authData: any) => {
             detail: authData,
         }),
     )
+}
+
+// 获取存储的refreshToken
+const getStoredRefreshToken = (): string | null => {
+    return getCookie('refresh_token') as string || null
+}
+
+// 清除refreshToken
+const clearStoredRefreshToken = (): void => {
+    deleteCookie('refresh_token')
 }
 
 export function OfflineLoginForm() {
@@ -113,8 +134,9 @@ export function OfflineLoginForm() {
 
             const authData = await authenticateOffline(email, password)
 
-            // 存储离线认证信息
-            storeOfflineAuth(authData)
+            // 存储离线认证信息 - 这里默认设置cookie，因为这是浏览器直连模式
+            storeOfflineAuth(authData, true)
+
             try {
                 //若是在Nextjs服务器离线情况下：这实际无效，是没法真正修改session的accessToken。
                 await update({

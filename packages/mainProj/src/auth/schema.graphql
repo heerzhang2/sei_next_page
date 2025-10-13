@@ -1321,7 +1321,7 @@ type Mutation {
   newReport(isp: ID!, master: ID, ispMens: [ID], reviewer: ID, approver: ID, modeltype: String!, modelversion: Int!): Report!
 
   """buildReport(isp: ID!,no: String!,path: String!) : Report!"""
-  modifyOriginalRecordData(id: ID!, operationType: Int!, data: String, deduction: String, version: Int): Report
+  modifyOriginalRecordData(id: ID!, data: String, client: String!, version: Int): Report
 
   """modifyOriginalRecordFiles(id: ID!, fileIDs: [ID]!) : Report"""
   deleteReport(repId: ID!, reason: String): Boolean!
@@ -1334,8 +1334,8 @@ type Mutation {
   newUnitPerson(unit: UnitCommonInput!, id: ID): Unit!
   newUnitExternalSource(unit: UnitCommonInput!): Unit!
   newUser(username: String!, password: String!, mobile: String!, external: String, eName: String, ePassword: String): Boolean!
-  authenticate(username: String!, password: String!): LoginResp
-  refreshToken(refreshToken: String!, userId: ID): LoginResp
+  authenticate(username: String!, password: String!, setCookie: Boolean): LoginResp
+  refreshToken(refreshToken: String): LoginResp
   signin(input: LoginInput): LoginResp
   logout: Boolean!
 }
