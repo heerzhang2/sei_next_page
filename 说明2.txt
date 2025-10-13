@@ -1,15 +1,6 @@
+DeviceInfo(deviceId=1871f07e-70f7-4f64-a498-481ca87cec5c,
+deviceType=WEB, deviceName=WEB Device, userAgent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36, ipAddress=192.168.0.100, lastActiveTime=1760364513450)
+c44b67e8-787d-49d6-a5f0-069f4c0f3a28
+c44b67e8-787d-49d6-a5f0-069f4c0f3a28
 
- {
-     "errors": [
-         {
-             "message": "Parameter [1] in public org.fjsei.yewu.dto.LoginResp org.fjsei.yewu.resolver.sei.BaseMutation.refreshToken(java.lang.String,java.lang.String,graphql.GraphQLContext,graphql.schema.DataFetchingEnvironment): was not recognized by any resolver and there is no source/parent either. Please, refer to the documentation for the full list of supported parameters.",
-             "extensions": {
-                 "invalidId": "Field{name='refreshToken', alias='null', arguments=[Argument{name='refreshToken', value=VariableReference{name='refreshToken'}}], directives=[], selectionSet=SelectionSet{selections=[Field{name='accessToken', alias='null', arguments=[], directives=[], selectionSet=null}, Field{name='refreshToken', alias='null', arguments=[], directives=[], selectionSet=null}, Field{name='user', alias='null', arguments=[], directives=[], selectionSet=SelectionSet{selections=[Field{name='id', alias='null', arguments=[], directives=[], selectionSet=null}]}}]}}",
-                 "classification": "DataFetchingException"
-             }
-         }
-     ],
-     "data": {
-         "refreshToken": null
-     }
- }
+https://chat.deepseek.com/a/chat/s/678818f0-d275-4c21-b372-8441ac21f0b1

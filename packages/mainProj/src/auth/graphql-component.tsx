@@ -19,7 +19,7 @@ import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 import { manualRetryExchange } from "@/lib/manual-retry-exchange"
 import { preventDuplicateExchange } from "@/lib/prevent-duplicate-exchange"
-import { getCookie } from 'cookies-next/client'
+import { setCookie, getCookie, deleteCookie } from 'cookies-next/client'
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -171,15 +171,7 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
         // 判断当前环境：SSR还是浏览器直连
         const isSSR = typeof window === "undefined"
         let refreshToken: string | null = null
-
-        if (isSSR) {
-            // SSR模式：从localStorage获取（通过参数传递）
-            refreshToken = localStorage.getItem("refresh_token_ssr")
-        } else {
-            // 浏览器直连模式：从cookie获取
-            refreshToken = getCookie('refresh_token') as string || null
-        }
-
+        refreshToken = getCookie('refresh_token') as string || null
         if (!refreshToken) {
             throw new Error("No refresh token available")
         }

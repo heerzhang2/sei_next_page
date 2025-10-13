@@ -68,7 +68,6 @@ export function useOfflineAuth() {
         if (typeof window === "undefined") return
 
         localStorage.removeItem("offline_auth")
-        localStorage.removeItem("refresh_token")
         setAuthState({
             isAuthenticated: false,
             user: null,

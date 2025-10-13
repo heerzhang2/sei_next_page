@@ -70,7 +70,6 @@ const authenticateOffline = async (username: string, password: string) => {
 // 存储离线认证信息
 const storeOfflineAuth = (authData: any, shouldSetCookie: boolean = true) => {
     if (typeof window === "undefined") return
-
     // 存储到localStorage
     localStorage.setItem(
         "offline_auth",
@@ -81,7 +80,6 @@ const storeOfflineAuth = (authData: any, shouldSetCookie: boolean = true) => {
             expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         }),
     )
-
     // 根据场景决定是否设置cookie
     if (shouldSetCookie) {
         // 浏览器直连模式：设置cookie
@@ -91,11 +89,7 @@ const storeOfflineAuth = (authData: any, shouldSetCookie: boolean = true) => {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict'
         })
-    } else {
-        // SSR模式：只存储到localStorage，不设置cookie
-        localStorage.setItem("refresh_token_ssr", authData.refreshToken)
     }
-
     // 触发自定义事件通知其他组件
     window.dispatchEvent(
         new CustomEvent("offline:login", {
@@ -125,18 +119,14 @@ export function OfflineLoginForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
-
         try {
             // 检查Java后端是否可达
             if (!networkStatus.isGraphQLBackendReachable) {
                 throw new Error("无法连接到认证服务器，请检查网络连接")
             }
-
             const authData = await authenticateOffline(email, password)
-
             // 存储离线认证信息 - 这里默认设置cookie，因为这是浏览器直连模式
             storeOfflineAuth(authData, true)
-
             try {
                 //若是在Nextjs服务器离线情况下：这实际无效，是没法真正修改session的accessToken。
                 await update({
@@ -153,7 +143,6 @@ export function OfflineLoginForm() {
             toast.success("Next离线情形下登录,与后端服务器连接", {
                 duration: 2000
             })
-
             // 跳转到首页
             router.push("/")
         } catch (error: any) {

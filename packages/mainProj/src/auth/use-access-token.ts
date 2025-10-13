@@ -21,11 +21,9 @@ const storeOfflineAuth = (authData: any) => {
             refreshToken: authData.refreshToken,
             user: authData.user,
             timestamp: Date.now(),
-            expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24小时过期
+            expiresAt: Date.now() + 15 * 24 * 60 * 60 * 1000,
         }),
     )
-    // 存储refreshToken用于后续刷新
-    localStorage.setItem("refresh_token", authData.refreshToken)
 }
 
 interface UseAccessTokenReturn {
