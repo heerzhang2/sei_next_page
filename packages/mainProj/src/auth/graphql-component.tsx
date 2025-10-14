@@ -284,11 +284,11 @@ let isTokenRefreshing = false
 let pendingMetadataBeforeRefresh: SerializedRequest[] = []
 
 //创建认证交换器
-const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print?: boolean) => {
+const makeAuthExchange = (getCurrentToken: () => string | null, updateSession?: (data: any) => Promise<any>, print?: boolean) => {
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
-                const currentToken = accessToken;
+                const currentToken = getCurrentToken(); // 动态获取最新 token
                 const deviceId = getDeviceId();
                 const headers: Record<string, string> = {};
                 if (deviceId) {
@@ -744,52 +744,23 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
     const { addConflictRequest } = useVersionConflictManager()
+    const currentTokenRef = useRef<string | null>(null)
     useEffect(() => {
         setIsClient(true)
     }, [])
-    const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
-    const mountCountRef = useRef(0)
     useEffect(() => {
-        mountCountRef.current++
-        console.log(`[v0] GraphQLProvider mounted - 实例ID: ${instanceIdRef.current}, 挂载次数: ${mountCountRef.current}`)
-
-        return () => {
-            console.log(`[v0] GraphQLProvider unmounted - 实例ID: ${instanceIdRef.current}`)
-        }
-    }, [])
+        currentTokenRef.current = accessToken
+        console.log(`[v0] Token更新: ${accessToken ? '有token' : '无token'}`)
+    }, [accessToken])
     const clientRef = useRef<any>(null)
     const ssrRef = useRef<any>(null)
-    const lastTokenRef = useRef<string | null>(null)
-    const initializedRef = useRef(false)
-    useEffect(() => {
-        if (!initializedRef.current) {
-            initializedRef.current = true
-        }
-        return () => {}
-    }, [])
-
-    useEffect(() => {
-        if (lastTokenRef.current !== accessToken) {
-            console.log(`[v0] 复用现有客户端 - 实例ID: ${instanceIdRef.current}`)
-            lastTokenRef.current = accessToken
-        }
-    }, [accessToken])
 
     const createClientStable = useCallback(() => {
         if (!isClient) {
             return [null, null]
         }
-
-        // **CHANGE**: Prevent client recreation during token refresh
-        if (isTokenRefreshing && lastTokenRef.current === accessToken && clientRef.current) {
-            console.log(`[v0] Token刷新中，复用现有客户端 - 实例ID: ${instanceIdRef.current}`)
-            return [clientRef.current, ssrRef.current]
-        }
-
-        if (lastTokenRef.current === accessToken && clientRef.current) {
-            return [clientRef.current, ssrRef.current]
-        }
-        lastTokenRef.current = accessToken
+        // 获取最新 token 的函数
+        const getCurrentToken = () => currentTokenRef.current
         let storage
         if (typeof window !== "undefined") {
             const defaultStorage = makeDefaultStorage({
@@ -868,7 +839,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 cache, //放在第二位来处理，处理后端应答放在倒数第二位。
                 preventDuplicateExchange,
                 manualRetryExchange,
-                makeAuthExchange(accessToken, update, print),
+                makeAuthExchange(getCurrentToken, update, print),
                 updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
                 ssr,
                 fetchAbortExchange,
@@ -894,28 +865,27 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus])
+    }, [isClient, update, updateGraphQLBackendStatus, print])
 
-    const memoizedClientRef = useRef<[any, any] | null>(null)
-    const lastAccessTokenRef = useRef(accessToken)
     const [client, ssr] = useMemo(() => {
-        if (!isClient) {
-            return [null, null]
+        if (!isClient) return [null, null]
+        // 只在首次挂载或 isClient 变化时创建客户端
+        if (clientRef.current) {
+            return [clientRef.current, ssrRef.current]
         }
-        if (lastAccessTokenRef.current === accessToken && memoizedClientRef.current) {
-            return memoizedClientRef.current
-        }
-        lastAccessTokenRef.current = accessToken
         const result = createClientStable()
-        memoizedClientRef.current = result as [any, any] | null
         return result
-    }, [accessToken, createClientStable, isClient])
-
+    }, [isClient, createClientStable])
+    // 监听 token 变化，手动更新客户端配置（如果需要）
+    useEffect(() => {
+        if (client && accessToken !== currentTokenRef.current) {
+            // 如果需要强制更新，可以在这里处理
+            // 但通常动态获取的方式已经足够
+            console.log(`[v0] Token变化，但客户端保持重用`)
+        }
+    }, [accessToken, client])
     useEffect(() => {
         const handleRefreshCache = () => {
-            // 这里可以强制重新创建客户端
-            clientRef.current = null
-            lastTokenRef.current = null
             // **CHANGE**: Reset token refreshing flags on manual cache refresh
             isTokenRefreshing = false
             pendingMetadataBeforeRefresh = []

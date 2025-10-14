@@ -1,0 +1,20 @@
+{
+    "success": true,
+    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNzI0OCwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI3MzA4fQ.7j65_4wTTcrmly_7rbHa_upXXYNOTKNTch-gKcAfn5jWY2J-8ATosrZ7iuCctE3KKssMZQIL4H00CknGm4TNyQ",
+    "refreshToken": "5425a50d-3545-4910-8453-2ff6aba0db8b"
+}
+eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNzMyMiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI3MzgyfQ.90KqxXLNdUNlTDbCO7RYAODDEgyyHT0ulNhQQ0FIQLCGqQYyKWqHrsOM9fsKoTn9IqpdjTREpm1HxcwDhsX78g
+{success: true,…}
+accessToken
+:
+"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNzMyMiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI3MzgyfQ.90KqxXLNdUNlTDbCO7RYAODDEgyyHT0ulNhQQ0FIQLCGqQYyKWqHrsOM9fsKoTn9IqpdjTREpm1HxcwDhsX78g"
+refreshToken
+:
+"ab0bbc5e-b64d-4d29-a8b5-03d9440b6e88"
+success
+:
+true
+
+Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNzMyMiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI3MzgyfQ.90KqxXLNdUNlTDbCO7RYAODDEgyyHT0ulNhQQ0FIQLCGqQYyKWqHrsOM9fsKoTn9IqpdjTREpm1HxcwDhsX78g
+cache-control
+no-cache
