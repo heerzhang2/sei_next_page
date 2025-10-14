@@ -149,9 +149,9 @@ export const authConfig: NextAuthConfig = {
                 }
             }
 
-            // 检查 access token 是否即将过期（提前 5 分钟刷新）
+            // 检查 access token 是否即将过期（提前 1 分钟刷新）
             const { accessToken, exp, deviceId } = token
-            const shouldRefresh = exp && Date.now() > ((exp as number) - 5 * 60) * 1000
+            const shouldRefresh = exp && Date.now() > ((exp as number) - 1 * 60) * 1000
 
             if(trigger === "update" || shouldRefresh || !accessToken){
                 if (shouldRefresh || !accessToken)
