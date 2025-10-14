@@ -1,6 +1,547 @@
-DeviceInfo(deviceId=1871f07e-70f7-4f64-a498-481ca87cec5c,
-deviceType=WEB, deviceName=WEB Device, userAgent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36, ipAddress=192.168.0.100, lastActiveTime=1760364513450)
-c44b67e8-787d-49d6-a5f0-069f4c0f3a28
-c44b67e8-787d-49d6-a5f0-069f4c0f3a28
-
-https://chat.deepseek.com/a/chat/s/678818f0-d275-4c21-b372-8441ac21f0b1
+[PreventDuplicate] 开始处理 mutation: modify_fbDjUTVZSha7EIr24Y0wjFJlcG9ydA_340
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:284 [v0] Skipping storage update - local data is newer {networkVersion: 340, localVersion: 340}
+react-dom-client.development.js:16844 [Violation] 'submit' handler took 398ms
+urql-core-chunk.mjs:529  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:143 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:148 碰到Token错误401，正进行修改保存的操作需新做一次避免更新丢失 fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
+eval @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:148
+eval @ wonka.mjs:378
+eval @ wonka.mjs:483
+eval @ wonka.mjs:292
+eval @ wonka.mjs:292
+eval @ wonka.mjs:379
+eval @ wonka.mjs:774
+eval @ wonka.mjs:356
+eval @ wonka.mjs:238
+eval @ wonka.mjs:943
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:334 [AuthExchange] 检测到认证错误，设置token刷新标记
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:549 [GraphQLProvider] writeMetadata被调用，数据长度: 0
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:284 [v0] Skipping storage update - local data is newer {networkVersion: 340, localVersion: 340}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:97 [StorageContext] Setting offline status: true
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:619 [GraphQLProvider] Token刷新或恢复操作期间跳过metadata清空
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:325 【终结】Mutation操作已完成: {operation: 'useOriginalDataMutation', variables: {…}, error: CombinedError: [Network]
+    at makeErrorResult (webpack-internal:///(app-pages-browser)/../../nod…, hasError: true}
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:277 updateOriginalResult=异常= AbortError: Aborted
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:279 请求已被取消
+handleSubmit @ C:\home\sei_next_page\packages\mainProj\src\report\hook\useFormFramework.tsx:279
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:549 [GraphQLProvider] writeMetadata被调用，数据长度: 0
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\lib\manual-retry-exchange.ts:41  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+await in eval
+eval @ wonka.mjs:352
+eval @ wonka.mjs:783
+eval @ wonka.mjs:375
+eval @ wonka.mjs:290
+eval @ wonka.mjs:371
+eval @ wonka.mjs:777
+eval @ wonka.mjs:365
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:483
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-auth.mjs:27
+eval @ urql-exchange-auth.mjs:67
+Promise.then
+initAuth @ urql-exchange-auth.mjs:63
+eval @ urql-exchange-auth.mjs:75
+forward @ urql-core.mjs:528
+pipe @ wonka.mjs:1414
+eval @ C:\home\sei_next_page\packages\mainProj\src\lib\manual-retry-exchange.ts:41
+forward @ urql-core.mjs:528
+pipe @ wonka.mjs:1414
+eval @ C:\home\sei_next_page\packages\mainProj\src\lib\prevent-duplicate-exchange.ts:28
+forward @ urql-core.mjs:528
+forward @ urql-exchange-graphcache.mjs:2010
+eval @ urql-exchange-graphcache.mjs:1885
+eval @ urql-exchange-graphcache.mjs:2031
+forward @ urql-core.mjs:528
+eval @ urql-core.mjs:546
+Client @ urql-core.mjs:759
+GraphQLProvider.useCallback[createClientStable] @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:816
+GraphQLProvider.useMemo @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:909
+updateMemo @ react-dom-client.development.js:7887
+useMemo @ react-dom-client.development.js:24153
+exports.useMemo @ react.development.js:1240
+GraphQLProvider @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:901
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopSync @ react-dom-client.development.js:15547
+renderRootSync @ react-dom-client.development.js:15527
+performWorkOnRoot @ react-dom-client.development.js:14991
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:201  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+await in eval
+eval @ wonka.mjs:352
+eval @ wonka.mjs:783
+eval @ wonka.mjs:375
+eval @ wonka.mjs:290
+eval @ wonka.mjs:371
+eval @ wonka.mjs:777
+eval @ wonka.mjs:365
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:483
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:292
+eval @ wonka.mjs:1018
+eval @ wonka.mjs:290
+eval @ wonka.mjs:1013
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+nextOperation @ urql-core.mjs:594
+dispatchOperation @ urql-core.mjs:600
+eval @ urql-core.mjs:713
+eval @ wonka.mjs:391
+eval @ wonka.mjs:488
+eval @ wonka.mjs:386
+eval @ wonka.mjs:914
+source$ @ urql-core.mjs:132
+eval @ wonka.mjs:365
+eval @ wonka.mjs:793
+eval @ wonka.mjs:1119
+eval @ urql.es.js:231
+eval @ urql.es.js:252
+deferDispatch @ urql.es.js:118
+useQuery @ urql.es.js:252
+useQuery @ urql-next.mjs:173
+CommonReportData @ C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:201
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopConcurrentByScheduler @ react-dom-client.development.js:15721
+renderRootConcurrent @ react-dom-client.development.js:15696
+performWorkOnRoot @ react-dom-client.development.js:14990
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:619 [GraphQLProvider] Token刷新或恢复操作期间跳过metadata清空
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:816  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+await in eval
+eval @ wonka.mjs:352
+eval @ wonka.mjs:783
+eval @ wonka.mjs:375
+eval @ wonka.mjs:290
+eval @ wonka.mjs:371
+eval @ wonka.mjs:777
+eval @ wonka.mjs:365
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:483
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:292
+eval @ wonka.mjs:1018
+eval @ wonka.mjs:290
+eval @ wonka.mjs:1013
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+nextOperation @ urql-core.mjs:594
+dispatchOperation @ urql-core.mjs:605
+Promise.then
+reexecuteOperation @ urql-core.mjs:680
+eval @ urql-exchange-graphcache.mjs:1870
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-graphcache.mjs:1969
+then @ urql-exchange-graphcache.mjs:1995
+await in then
+eval @ urql-exchange-graphcache.mjs:1658
+eval @ urql-exchange-graphcache.mjs:2000
+eval @ urql-core.mjs:519
+eval @ urql-core.mjs:517
+Client @ urql-core.mjs:753
+GraphQLProvider.useCallback[createClientStable] @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:816
+GraphQLProvider.useMemo @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:909
+updateMemo @ react-dom-client.development.js:7887
+useMemo @ react-dom-client.development.js:24153
+exports.useMemo @ react.development.js:1240
+GraphQLProvider @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:901
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopSync @ react-dom-client.development.js:15547
+renderRootSync @ react-dom-client.development.js:15527
+performWorkOnRoot @ react-dom-client.development.js:14991
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:284 [v0] Skipping storage update - local data is newer {networkVersion: 340, localVersion: 340}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:97 [StorageContext] Setting offline status: false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:816  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+await in eval
+eval @ wonka.mjs:352
+eval @ wonka.mjs:783
+eval @ wonka.mjs:375
+eval @ wonka.mjs:290
+eval @ wonka.mjs:371
+eval @ wonka.mjs:777
+eval @ wonka.mjs:365
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:483
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:292
+eval @ wonka.mjs:1018
+eval @ wonka.mjs:290
+eval @ wonka.mjs:1013
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+nextOperation @ urql-core.mjs:594
+dispatchOperation @ urql-core.mjs:605
+Promise.then
+reexecuteOperation @ urql-core.mjs:680
+eval @ urql-exchange-graphcache.mjs:1870
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-graphcache.mjs:1969
+then @ urql-exchange-graphcache.mjs:1995
+await in then
+eval @ urql-exchange-graphcache.mjs:1658
+eval @ urql-exchange-graphcache.mjs:2000
+eval @ urql-core.mjs:519
+eval @ urql-core.mjs:517
+Client @ urql-core.mjs:753
+GraphQLProvider.useCallback[createClientStable] @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:816
+GraphQLProvider.useMemo @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:909
+updateMemo @ react-dom-client.development.js:7887
+useMemo @ react-dom-client.development.js:24153
+exports.useMemo @ react.development.js:1240
+GraphQLProvider @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:901
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopSync @ react-dom-client.development.js:15547
+renderRootSync @ react-dom-client.development.js:15527
+performWorkOnRoot @ react-dom-client.development.js:14991
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:143 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:334 [AuthExchange] 检测到认证错误，设置token刷新标记
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:143 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:334 [AuthExchange] 检测到认证错误，设置token刷新标记
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:549 [GraphQLProvider] writeMetadata被调用，数据长度: 0
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:284 [v0] Skipping storage update - local data is newer {networkVersion: 340, localVersion: 340}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:97 [StorageContext] Setting offline status: true
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:619 [GraphQLProvider] Token刷新或恢复操作期间跳过metadata清空
+scheduler.development.js:14 [Violation] 'message' handler took 275ms
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:97 [StorageContext] Setting offline status: true
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\lib\manual-retry-exchange.ts:41  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+await in eval
+eval @ wonka.mjs:352
+eval @ wonka.mjs:783
+eval @ wonka.mjs:375
+eval @ wonka.mjs:290
+eval @ wonka.mjs:371
+eval @ wonka.mjs:777
+eval @ wonka.mjs:365
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:483
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+flushQueue @ urql-exchange-auth.mjs:27
+eval @ urql-exchange-auth.mjs:67
+Promise.then
+initAuth @ urql-exchange-auth.mjs:63
+eval @ urql-exchange-auth.mjs:75
+forward @ urql-core.mjs:528
+pipe @ wonka.mjs:1414
+eval @ C:\home\sei_next_page\packages\mainProj\src\lib\manual-retry-exchange.ts:41
+forward @ urql-core.mjs:528
+pipe @ wonka.mjs:1414
+eval @ C:\home\sei_next_page\packages\mainProj\src\lib\prevent-duplicate-exchange.ts:28
+forward @ urql-core.mjs:528
+forward @ urql-exchange-graphcache.mjs:2010
+eval @ urql-exchange-graphcache.mjs:1885
+eval @ urql-exchange-graphcache.mjs:2031
+forward @ urql-core.mjs:528
+eval @ urql-core.mjs:546
+Client @ urql-core.mjs:759
+GraphQLProvider.useCallback[createClientStable] @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:816
+GraphQLProvider.useMemo @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:909
+updateMemo @ react-dom-client.development.js:7887
+useMemo @ react-dom-client.development.js:24153
+exports.useMemo @ react.development.js:1240
+GraphQLProvider @ C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:901
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopSync @ react-dom-client.development.js:15547
+renderRootSync @ react-dom-client.development.js:15527
+performWorkOnRoot @ react-dom-client.development.js:14991
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:143 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:334 [AuthExchange] 检测到认证错误，设置token刷新标记
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:201  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+await in eval
+eval @ wonka.mjs:352
+eval @ wonka.mjs:783
+eval @ wonka.mjs:375
+eval @ wonka.mjs:290
+eval @ wonka.mjs:371
+eval @ wonka.mjs:777
+eval @ wonka.mjs:365
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:483
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:483
+eval @ wonka.mjs:483
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:292
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:483
+eval @ wonka.mjs:249
+eval @ wonka.mjs:238
+eval @ wonka.mjs:292
+eval @ wonka.mjs:379
+eval @ wonka.mjs:483
+eval @ wonka.mjs:292
+eval @ wonka.mjs:1018
+eval @ wonka.mjs:290
+eval @ wonka.mjs:1013
+applyInnerSource @ wonka.mjs:272
+eval @ wonka.mjs:296
+eval @ wonka.mjs:483
+next @ wonka.mjs:1031
+next @ wonka.mjs:1061
+nextOperation @ urql-core.mjs:594
+dispatchOperation @ urql-core.mjs:600
+eval @ urql-core.mjs:713
+eval @ wonka.mjs:391
+eval @ wonka.mjs:488
+eval @ wonka.mjs:386
+eval @ wonka.mjs:914
+source$ @ urql-core.mjs:132
+eval @ wonka.mjs:365
+eval @ wonka.mjs:793
+eval @ wonka.mjs:1119
+eval @ urql.es.js:231
+eval @ urql.es.js:252
+deferDispatch @ urql.es.js:118
+useQuery @ urql.es.js:252
+useQuery @ urql-next.mjs:173
+CommonReportData @ C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:201
+react_stack_bottom_frame @ react-dom-client.development.js:23584
+renderWithHooks @ react-dom-client.development.js:6793
+updateFunctionComponent @ react-dom-client.development.js:9247
+beginWork @ react-dom-client.development.js:10858
+runWithFiberInDEV @ react-dom-client.development.js:872
+performUnitOfWork @ react-dom-client.development.js:15727
+workLoopConcurrentByScheduler @ react-dom-client.development.js:15721
+renderRootConcurrent @ react-dom-client.development.js:15696
+performWorkOnRoot @ react-dom-client.development.js:14990
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16816
+performWorkUntilDeadline @ scheduler.development.js:45
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:97 [StorageContext] Setting offline status: true
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:143 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:334 [AuthExchange] 检测到认证错误，设置token刷新标记
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:549 [GraphQLProvider] writeMetadata被调用，数据长度: 0
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:619 [GraphQLProvider] Token刷新或恢复操作期间跳过metadata清空
+scheduler.development.js:14 [Violation] 'message' handler took 522ms
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:284 [v0] Skipping storage update - local data is newer {networkVersion: 340, localVersion: 340}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:97 [StorageContext] Setting offline status: false
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+2C:\home\sei_next_page\packages\mainProj\src\hooks\use-offline-auth.ts:129 检测到token刷新事件
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:51 [v0] useAccessToken: 收到token刷新事件accessToken eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:549 [GraphQLProvider] writeMetadata被调用，数据长度: 0
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:890 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:617 [offlineExchange] writeMetadata写: 0 items
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:284 [v0] Skipping storage update - local data is newer {networkVersion: 340, localVersion: 340}
+react-dom-client.development.js:16844 [Violation] 'complete' handler took 491ms
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+scheduler.development.js:14 [Violation] 'message' handler took 226ms
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:64 useAccessToken: update更新newsession null
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.ts:88 [v0] useAccessToken: 使用刚刷新的freshToken= eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MDQyNDA3NiwiZGV2aWNlSWQiOiJxbGhuNGxnIiwiZXhwIjoxNzYwNDI0MTM2fQ.uNsD5nCoOi9xGVWvhJfn5ykubHgjtpLImBgX4CfU_j7gZMlGOzfGNikaPcgyuYP1J6fBTM6Zb-cbFWWWiUpinA
