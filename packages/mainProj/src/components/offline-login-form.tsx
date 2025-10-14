@@ -11,9 +11,10 @@ import { toast } from "sonner"
 import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import {useSession} from "next-auth/react";
 import { setCookie, getCookie, deleteCookie } from 'cookies-next/client'
+import {useDeviceFingerprint} from "@/report/hook/useDeviceFingerprint";
 
 // 离线认证函数
-const authenticateOffline = async (username: string, password: string) => {
+const authenticateOffline = async (username: string, password: string, deviceId: string) => {
     try {
         // 客户端密码哈希（与服务端保持一致）
         const encoder = new TextEncoder()
@@ -24,11 +25,12 @@ const authenticateOffline = async (username: string, password: string) => {
 
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
-
+        //没有经过URQL直接发送
         const response = await fetch(`${endpoint}/graphql`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                'X-Device-Id': deviceId,
             },
             body: JSON.stringify({
                 query: `
@@ -115,6 +117,7 @@ export function OfflineLoginForm() {
     const router = useRouter()
     const networkStatus = useNetworkStatusContext()
     const { data: session, update } = useSession()
+    const { deviceFingerprint } = useDeviceFingerprint()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -124,7 +127,7 @@ export function OfflineLoginForm() {
             if (!networkStatus.isGraphQLBackendReachable) {
                 throw new Error("无法连接到认证服务器，请检查网络连接")
             }
-            const authData = await authenticateOffline(email, password)
+            const authData = await authenticateOffline(email, password, deviceFingerprint)
             // 存储离线认证信息 - 这里默认设置cookie，因为这是浏览器直连模式
             storeOfflineAuth(authData, true)
             try {

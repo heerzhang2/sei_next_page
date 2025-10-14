@@ -47,7 +47,11 @@ let errorCount = 0
 let lastErrorTime = 0
 const MAX_ERRORS_PER_MINUTE = 10
 const ERROR_RESET_TIME = 60000 // 1分钟
-
+// 获取设备ID的辅助函数
+const getDeviceId = (): string => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('clientId') || '';
+};
 //网络状态更新：
 const updateBackendStatusExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
@@ -110,6 +114,8 @@ const customFetchExchange: Exchange = ({ forward }) => {
                 // 为每个操作添加超时和错误处理
                 const controller = new AbortController()
                 const timeoutId = setTimeout(() => controller.abort(), 180 * 1000) //180秒查询或变更超时
+                const deviceId = getDeviceId();
+                const existingHeaders = operation.context.fetchOptions?.headers || {};
                 return {
                     ...operation,
                     context: {
@@ -117,10 +123,14 @@ const customFetchExchange: Exchange = ({ forward }) => {
                         fetchOptions: {
                             ...operation.context.fetchOptions,
                             signal: controller.signal,
-                            timeoutId: timeoutId, // 添加超时ID到上下文中
+                            timeoutId: timeoutId,
+                            headers: {
+                                ...existingHeaders,
+                                'X-Device-Id': deviceId,
+                            },
                         },
                     },
-                }
+                };
             }),
             forward,
             tap((result: OperationResult) => {
@@ -194,17 +204,17 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
         if (isSSR) {
             requestBody.variables = { refreshToken }
         }
-        // 浏览器直连模式：不传参数，依赖cookie
-
+        const deviceId = getDeviceId();
+        //浏览器直连模式：不传参数，依赖cookie 没有经过URQL直接发送
         const response = await fetch(`${endpoint}/graphql`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                'X-Device-Id': deviceId,
             },
             credentials: 'include', // 重要：包含cookie
             body: JSON.stringify(requestBody),
         })
-
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
@@ -278,21 +288,28 @@ const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
-                const currentToken = accessToken
+                const currentToken = accessToken;
+                const deviceId = getDeviceId();
+                const headers: Record<string, string> = {};
+                if (deviceId) {
+                    headers['X-Device-Id'] = deviceId;
+                }
                 if (!currentToken) {
-                    const refreshToken = getStoredRefreshToken()
+                    const refreshToken = getStoredRefreshToken();
                     if (refreshToken) {
-                        console.log("使用refreshToken作为认证fallback")
+                        console.error("使用refreshToken作为认证fallback");
                         return utils.appendHeaders(operation, {
-                            Authorization: `Bearer ${refreshToken}`,
-                            "X-Auth-Type": "refresh", // 标记这是refreshToken认证
-                        })
+                            ...headers,
+                            Authorization: `Bearer ${refreshToken}`,        //没法认证？
+                            "X-Auth-Type": "refresh",
+                        });
                     }
-                    return operation
+                    return utils.appendHeaders(operation, headers);
                 }
                 return utils.appendHeaders(operation, {
+                    ...headers,
                     Authorization: `Bearer ${currentToken}`,
-                })
+                });
             },
             didAuthError(error) {
                 // 检查 GraphQL 错误
@@ -861,15 +878,19 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             suspense: true,
             preferGetMethod: false,
             fetchOptions: () => {
-                const currentToken = accessToken
-                console.warn("费用authorization Bearer:", currentToken)
-                return {
-                    headers: {
-                        authorization: currentToken ? `Bearer ${currentToken}` : "",
-                    },
+                const currentToken = accessToken;
+                const deviceId = getDeviceId();
+                const headers: Record<string, string> = {};
+                if (deviceId) {
+                    headers['X-Device-Id'] = deviceId;
                 }
+                if (currentToken) {
+                    headers['Authorization'] = `Bearer ${currentToken}`;
+                }
+                console.log("请求头部:", { deviceId, hasToken: !!currentToken });
+                return { headers };
             },
-        })
+        });
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]

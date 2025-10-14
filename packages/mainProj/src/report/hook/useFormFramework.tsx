@@ -14,8 +14,12 @@ import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
 import { Save, Pencil } from "lucide-react"
 import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
-import {useDeviceFingerprint} from "@/report/hook/useDeviceFingerprint";
 
+// 在文件顶部添加设备ID获取函数
+const getDeviceId = (): string => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('clientId') || '';
+};
 // 将空字符串转为 undefined，但保留字段
 const convertEmptyToUndefined = (obj: any): any => {
     if (Array.isArray(obj)) {
@@ -188,7 +192,6 @@ export function useFormFramework({
                                      redId,
                                      modType,
                                  }: UseFormFrameworkProps) {
-    const { deviceFingerprint, isLoading } = useDeviceFingerprint();
     const abortControllerRef = useRef<AbortController | null>(null);
     const { storage, setStorage, setModified, modified } = useStorage()
 
@@ -214,6 +217,11 @@ export function useFormFramework({
         if (customOnSubmit) {
             await customOnSubmit(values)
             return
+        }
+        const deviceId = getDeviceId();
+        if (!deviceId) {
+            toast.error("无法获取设备信息，请刷新页面重试");
+            return;
         }
         // 默认提交处理
         // console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
@@ -241,7 +249,7 @@ export function useFormFramework({
             const result = await withTimeout(
                 updateOriginal({
                     id: subrid ?? rep?.id,
-                    client: deviceFingerprint,
+                    client: deviceId,
                     version: _version,
                     data: JSON.stringify(cleanedRepData),
                 }),
@@ -417,7 +425,6 @@ export function useFrameEditorBar({
                                       modType,
                                       root,
                                   }: UseFrameEditorBarProps) {
-    const { deviceFingerprint, isLoading } = useDeviceFingerprint();
     const abortControllerRef = useRef<AbortController | null>(null);
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified, modified } = useStorage()
@@ -431,7 +438,11 @@ export function useFrameEditorBar({
         abortControllerRef.current = new AbortController();
         const signal = abortControllerRef.current.signal;
         if (onVerify && !onVerify(values)) return
-        // 默认提交处理
+        const deviceId = getDeviceId();
+        if (!deviceId) {
+            toast.error("无法获取设备信息，请刷新页面重试");
+            return;
+        }
         // console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
         const oldStore = storage?.[`_${modType}_${redId}`]
 
@@ -457,7 +468,7 @@ export function useFrameEditorBar({
             const result = await withTimeout(
                 updateOriginal({
                     id: subrid ?? rep?.id,
-                    client: deviceFingerprint,
+                    client: deviceId,
                     version: _version,
                     data: JSON.stringify(cleanedRepData),
                 }),
