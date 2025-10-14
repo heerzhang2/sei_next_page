@@ -38,7 +38,7 @@ export function useAccessToken(): UseAccessTokenReturn {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
 
-    const { showConfirm, ConfirmDialog,hiddenConfirm} = useLoginRedirectConfirm()
+    const { showConfirm, ConfirmDialog, hiddenConfirm } = useLoginRedirectConfirm()
     const [hasShownDialog, setHasShownDialog] = useState(false)
     const lastDialogTimeRef = useRef<number>(0)
 
@@ -49,7 +49,23 @@ export function useAccessToken(): UseAccessTokenReturn {
     useEffect(() => {
         const handleTokenRefresh = async (event: CustomEvent) => {
             console.log("[v0] useAccessToken: 收到token刷新事件accessToken", event.detail?.accessToken)
-            const { accessToken } = event.detail
+            const { accessToken, skipUpdate } = event.detail
+
+            if (skipUpdate) {
+                console.log("[v0] useAccessToken: 跳过session更新（已由refreshAuth处理）")
+                if (accessToken) {
+                    setFreshToken(accessToken)
+                    freshTokenTimeRef.current = Date.now()
+                    setTimeout(
+                        () => {
+                            setFreshToken(null)
+                        },
+                        5 * 60 * 1000,
+                    )
+                }
+                return
+            }
+
             if (accessToken) {
                 setFreshToken(accessToken)
                 freshTokenTimeRef.current = Date.now()
@@ -157,9 +173,8 @@ export function useAccessToken(): UseAccessTokenReturn {
                         })
                     },
                 )
-            }else hiddenConfirm()
-        }
-        else hiddenConfirm()
+            } else hiddenConfirm()
+        } else hiddenConfirm()
     }, [shouldShowLoginDialog, hasShownDialog, showConfirm])
 
     return {

@@ -127,6 +127,10 @@ export function useOfflineAuth() {
         // 监听token刷新事件
         const handleTokenRefresh = (event: CustomEvent) => {
             console.log("检测到token刷新事件")
+            if (event.detail?.skipUpdate) {
+                console.log("[useOfflineAuth] 跳过离线认证更新（已由refreshAuth处理）")
+                return
+            }
             updateOfflineAuth({
                 accessToken: event.detail.accessToken,
                 refreshToken: event.detail.refreshToken,
