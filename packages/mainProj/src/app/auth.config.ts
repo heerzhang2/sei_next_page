@@ -2,10 +2,10 @@ import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { createServerUrqlClient } from "@/auth/urql"
 
-// GraphQL mutations
+// GraphQL mutations - 移除 deviceId 参数
 const AUTHENTICATE_MUTATION = `
   mutation Authenticate($username: String!, $password: String!) {
-    authenticate(username: $username, password: $password) {
+    authenticate(username: $username, password: $password, setCookie: false) {
       accessToken
       refreshToken
       user {
@@ -36,10 +36,12 @@ export async function refreshAccessToken(token: any) {
             throw new Error("No refresh token available")
         }
 
-        const client = createServerUrqlClient()
+        // 使用带设备ID的客户端
+        const client = createServerUrqlClient(token.deviceId)
         const result = await client
             .mutation(REFRESH_MUTATION, {
                 refreshToken: token.refreshToken,
+                // 不再通过参数传递 deviceId，而是通过请求头
             })
             .toPromise()
 
@@ -80,6 +82,7 @@ export const authConfig: NextAuthConfig = {
             credentials: {
                 username: { label: "用户名", type: "text" },
                 password: { label: "密码", type: "password" },
+                deviceId: { label: "设备ID", type: "text" }, // 添加设备ID字段
             },
             async authorize(credentials) {
                 if (!credentials?.username || !credentials?.password) {
@@ -88,12 +91,17 @@ export const authConfig: NextAuthConfig = {
 
                 try {
                     const hashedPassword = credentials.password as string
+                    const deviceId = credentials.deviceId as string
 
-                    const client = createServerUrqlClient()
+                    console.log("服务端认证请求，设备ID:", deviceId)
+
+                    // 使用带设备ID的客户端
+                    const client = createServerUrqlClient(deviceId)
                     const result = await client
                         .mutation(AUTHENTICATE_MUTATION, {
                             username: credentials.username,
                             password: hashedPassword,
+                            // 不再通过参数传递 deviceId，而是通过请求头
                         })
                         .toPromise()
 
@@ -114,6 +122,7 @@ export const authConfig: NextAuthConfig = {
                         accessToken: authData.accessToken,
                         refreshToken: authData.refreshToken,
                         accessTokenExpires: authData.accessTokenExpires,
+                        deviceId: deviceId, // 保存设备ID到token
                     }
                 } catch (error) {
                     console.error("Authentication error:", error)
@@ -131,6 +140,7 @@ export const authConfig: NextAuthConfig = {
                     accessToken: user.accessToken,
                     refreshToken: user.refreshToken,
                     accessTokenExpires: user.accessTokenExpires,
+                    deviceId: user.deviceId, // 保存设备ID
                     user: {
                         id: user.id,
                         name: user.name,
@@ -138,35 +148,39 @@ export const authConfig: NextAuthConfig = {
                     },
                 }
             }
-            // 检查 access token 是否即将过期（提前 5 分钟刷新）  token里面没有accessTokenExpires字段，而是用exp替代的
-            const {accessToken, exp }=token
-            // console.log("jwt. . .",{trigger, profile, token,user})
-            //accessToken是JWT字符串； 该如何提取accessToken有效期的？
+
+            // 检查 access token 是否即将过期（提前 5 分钟刷新）
+            const { accessToken, exp, deviceId } = token
             const shouldRefresh = exp && Date.now() > ((exp as number) - 5 * 60) * 1000
-            if(trigger==="update" || shouldRefresh || !accessToken){
+
+            if(trigger === "update" || shouldRefresh || !accessToken){
                 if (shouldRefresh || !accessToken)
-                    console.log("Token 即将过期，开始刷新...")
+                    console.log("Token 即将过期，开始刷新... 设备ID:", deviceId)
                 else
-                    console.log("trigger==update...刷新token=>")
+                    console.log("trigger==update...刷新token=> 设备ID:", deviceId)
+
                 const refreshedToken = await refreshAccessToken(token)
+
                 if (refreshedToken.error) {
                     console.error("Token刷新失败:", refreshedToken.error)
                     return null
                 }
-                const newJwt={
+
+                const newJwt = {
                     user: {
                         ...token.user,
                     },
-                    accessToken:   refreshedToken.accessToken,
-                    refreshToken:  refreshedToken.refreshToken,
+                    accessToken: refreshedToken.accessToken,
+                    refreshToken: refreshedToken.refreshToken,
                     accessTokenExpires: refreshedToken.accessTokenExpires,
+                    deviceId: token.deviceId, // 保持设备ID不变
                 };
                 return newJwt;
             }
             return token
         },
         async session({ session, token }) {
-            //这个执行频繁！   将 token 信息传递给 session
+            // 将 token 信息传递给 session
             if (token) {
                 session.user = {
                     ...session.user,
@@ -174,6 +188,7 @@ export const authConfig: NextAuthConfig = {
                     accessToken: token.accessToken as string,
                     refreshToken: token.refreshToken as string,
                     accessTokenExpires: token.exp as number,
+                    deviceId: token.deviceId as string, // 传递设备ID到session
                 }
                 // 如果有刷新错误，也传递给 session
                 if (token.error) {

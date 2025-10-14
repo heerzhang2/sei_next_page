@@ -1,12 +1,13 @@
 import { createClient, fetchExchange } from "@urql/core"
 import { cacheExchange } from "@urql/exchange-graphcache"
-import schema from "./urql-schema.json" // 确保你的 schema.json 路径正确
+import schema from "./urql-schema.json"
 import { registerUrql } from "@urql/next/rsc"
 import https from "https"
 import http from "http"
 
 const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
 const url = `${endpoint}/graphql`
+
 
 const createHttpAgent = () => {
     const isHttps = url.startsWith("https")
@@ -34,54 +35,54 @@ const getHttpAgent = () => {
     return httpAgent
 }
 
-const createFetchOptions = (accessToken?: string | null) => {
+// 修改 createFetchOptions 支持设备ID头部
+const createFetchOptions = (accessToken?: string | null, deviceId?: string) => {
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+
+    // 添加设备ID头部（如果提供）
+    if (deviceId) {
+        headers['X-Device-Id'] = deviceId;
+        console.log('服务端请求添加设备ID头部:', deviceId);
+    }
+
+    // 添加认证token
+    if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
     return {
         agent: getHttpAgent(),
-        method: 'POST', // 明确指定使用 POST 方法
-        headers: {
-            'Content-Type': 'application/json',
-            ...(accessToken && { authorization: `Bearer ${accessToken}` }),
-        },
-        timeout: 30000, //30秒
-    }
-}
+        method: 'POST',
+        headers,
+        timeout: 30000,
+    };
+};
 
-// 服务端 URQL 客户端工厂函数
-export const { get } = registerUrql(() => {
+// 修改服务端 URQL 客户端工厂函数，支持传递设备ID
+export const createServerUrqlClient = (deviceId?: string) => {
     return createClient({
         url,
         exchanges: [
             cacheExchange({
                 schema,
                 keys: {
-                    RepLink: () => null, // 不需要生成缓存键
-                },
-            }),
-            // 服务端不需要 authExchange 来刷新 token，因为 session 已经在 NextAuth 层面处理
-            // 但如果需要传递 token，可以在 fetchOptions 中处理
-            fetchExchange,
-        ],
-        fetchOptions: () => createFetchOptions(),
-    })
-})
-
-// 可选：如果你需要在服务端组件中使用 URQL（比如匿名查看报告）
-export function createServerUrqlClient(accessToken?: string | null) {
-    return createClient({
-        url,
-        exchanges: [
-            cacheExchange({
-                keys: {
-                    RepLink: () => null, // 不需要生成缓存键
+                    RepLink: () => null,
                 },
             }),
             fetchExchange,
         ],
-        fetchOptions: createFetchOptions(accessToken),
+        fetchOptions: createFetchOptions(undefined, deviceId), // 服务端请求不传token，但传设备ID
         // 服务端不需要 suspense
         suspense: false,
-    })
-}
+    });
+};
+
+// 保持原有的 get 函数兼容性
+export const { get } = registerUrql(() => {
+    return createServerUrqlClient();
+});
 
 export const cleanupServerConnections = () => {
     if (httpAgent) {
