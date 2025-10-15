@@ -37,19 +37,38 @@ export function useAccessToken(): UseAccessTokenReturn {
     const networkStatus = useNetworkStatusContext()
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
+
     const { showConfirm, ConfirmDialog, hiddenConfirm } = useLoginRedirectConfirm()
     const [hasShownDialog, setHasShownDialog] = useState(false)
     const lastDialogTimeRef = useRef<number>(0)
+
+    const [freshedToken, setFreshedToken] = useState<string | null>(null)
+    const freshTokenTimeRef = useRef<number>(0)
 
     useEffect(() => {
         const handleTokenRefresh = async (event: CustomEvent) => {
             console.log("[v0] useAccessToken: 收到token刷新事件accessToken", event.detail?.accessToken)
             const { accessToken, skipUpdate } = event.detail
+
             if (skipUpdate) {
-                console.log("useAccessToken: 跳过session更新（已由refreshAuth处理）")
+                console.log("[v0] useAccessToken: 跳过session更新（已由refreshAuth处理）")
+                if (accessToken) {
+                    setFreshedToken(accessToken)
+                    freshTokenTimeRef.current = Date.now()
+                    setTimeout(
+                        () => {
+                            setFreshedToken(null)
+                        },
+                        5 * 60 * 1000,
+                    )
+                }
                 return
             }
+
             if (accessToken) {
+                setFreshedToken(accessToken)
+                freshTokenTimeRef.current = Date.now()
+
                 try {
                     const newsession = await update({
                         user: {
@@ -57,29 +76,53 @@ export function useAccessToken(): UseAccessTokenReturn {
                             accessToken: accessToken,
                         },
                     })
-                    console.log("useAccessToken: update更新session",session,"更新后=",newsession)
+                    console.log("useAccessToken: update更新newsession", newsession)
                 } catch (error) {
                     console.error("useAccessToken: NextAuth更新失败", error)
                 }
+
+                setTimeout(
+                    () => {
+                        setFreshedToken(null)
+                    },
+                    5 * 60 * 1000,
+                )
             }
         }
+
         window.addEventListener("token:refreshed", handleTokenRefresh as EventListener)
         return () => {
             window.removeEventListener("token:refreshed", handleTokenRefresh as EventListener)
         }
-    }, [session, update])
+    }, [session, update]) // Updated dependency to session
 
     const accessToken = useMemo(() => {
-        if (session?.user?.accessToken) {
-            console.log("useAccessToken: 使用NextAuth token", session)
+        if (freshedToken && Date.now() - freshTokenTimeRef.current < 5 * 60 * 1000) {
+            console.error("不该发生的？！用刚刷新的freshToken=", freshedToken)
+            return freshedToken
+        }
+        if (session?.user) {
+            const user = { id: session?.user?.id }
+            const authData = {
+                accessToken: session?.user?.accessToken,
+                refreshToken: session?.user?.refreshToken,
+                user: user,
+            }
+            // storeOfflineAuth(authData)
+            console.log("更新离线TOKEN事件=?NEW=用offlineTokenRepl token authData", authData, "session", session)
+            return authData.accessToken
+        }
+        if (networkStatus.isOnline && session?.user?.accessToken) {
+            // console.log("[v0] useAccessToken: 使用NextAuth token", session)
             return session?.user?.accessToken
         }
+
         if (offlineAuth.isAuthenticated && offlineAuth.accessToken) {
-            console.log("useAccessToken: 使用 离线认证token")
+            // console.log("[v0] useAccessToken: 使用离线认证token作为备选")
             return offlineAuth.accessToken
         }
         return null
-    }, [session?.user?.accessToken,  offlineAuth])
+    }, [session, networkStatus, freshedToken, print, offlineAuth]) // Updated dependency to session
 
     const shouldShowLoginDialog = useMemo(() => {
         return (

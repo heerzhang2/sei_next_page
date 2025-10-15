@@ -30,15 +30,18 @@ const REFRESH_MUTATION = `
 // 刷新 access token
 export async function refreshAccessToken(token: any) {
     try {
+        console.log("开始刷新 token...")
+
         if (!token.refreshToken) {
             throw new Error("No refresh token available")
         }
+
         // 使用带设备ID的客户端
         const client = createServerUrqlClient(token.deviceId)
         const result = await client
             .mutation(REFRESH_MUTATION, {
                 refreshToken: token.refreshToken,
-                //不通过参数传递 deviceId，而是通过请求头传递
+                // 不再通过参数传递 deviceId，而是通过请求头
             })
             .toPromise()
 
@@ -147,13 +150,16 @@ export const authConfig: NextAuthConfig = {
             // 检查 access token 是否即将过期（提前 1 分钟刷新）
             const { accessToken, exp, deviceId } = token
             //主动刷新的
-            // const shouldRefresh = exp && Date.now() > ((exp as number) - 1 * 60) * 1000
-            if(trigger === "update" || !accessToken){
-                if (!accessToken)
+            const shouldRefresh = exp && Date.now() > ((exp as number) - 1 * 60) * 1000
+
+            if(trigger === "update" || shouldRefresh || !accessToken){
+                if (shouldRefresh || !accessToken)
                     console.log("Token 即将过期，开始刷新... 设备ID:", deviceId)
                 else
                     console.log("trigger==update...刷新token=> 设备ID:", deviceId)
+
                 const refreshedToken = await refreshAccessToken(token)
+
                 if (refreshedToken.error) {
                     console.error("Token刷新失败:", refreshedToken.error)
                     return null

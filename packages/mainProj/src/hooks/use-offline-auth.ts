@@ -27,32 +27,28 @@ export function useOfflineAuth() {
         isAuthenticated: false,
         user: null,
         accessToken: null,
-        refreshToken: null,
+        refreshToken: null,  //也没用到的
         isExpired: false,
     })
 
     const loadOfflineAuth = useCallback(() => {
         if (typeof window === "undefined") return
-
         try {
             const stored = localStorage.getItem("offline_auth")
             if (!stored) {
                 setAuthState((prev) => ({ ...prev, isAuthenticated: false }))
                 return
             }
-
             const authData: OfflineAuthData = JSON.parse(stored)
             const now = Date.now()
             const isExpired = now > authData.expiresAt
-
             setAuthState({
                 isAuthenticated: !isExpired,
                 user: authData.user,
                 accessToken: authData.accessToken,
-                refreshToken: authData.refreshToken,
+                refreshToken: null,     //refreshToken保存在cookie，无法用代码访问的！
                 isExpired,
             })
-
             if (isExpired) {
                 console.log("离线认证已过期")
                 localStorage.removeItem("offline_auth")
@@ -83,19 +79,16 @@ export function useOfflineAuth() {
     const updateOfflineAuth = useCallback(
         (authData: Partial<OfflineAuthData>) => {
             if (typeof window === "undefined") return
-
             try {
                 const existing = localStorage.getItem("offline_auth")
                 const current = existing ? JSON.parse(existing) : {}
-
                 const updated = {
                     ...current,
                     ...authData,
                     timestamp: Date.now(),
                 }
-
                 localStorage.setItem("offline_auth", JSON.stringify(updated))
-                loadOfflineAuth() // 重新加载状态
+                loadOfflineAuth()   //重新初始化 内存中的认证状态对象
             } catch (error) {
                 console.error("更新离线认证失败:", error)
             }
@@ -124,16 +117,12 @@ export function useOfflineAuth() {
             })
         }
 
-        // 监听token刷新事件
+        // 监听token刷新事件：不管nextjs离线与否两个模式
         const handleTokenRefresh = (event: CustomEvent) => {
             console.log("检测到token刷新事件")
-            if (event.detail?.skipUpdate) {
-                console.log("[useOfflineAuth] 跳过离线认证更新（已由refreshAuth处理）")
-                return
-            }
             updateOfflineAuth({
                 accessToken: event.detail.accessToken,
-                refreshToken: event.detail.refreshToken,
+                // refreshToken: event.detail.refreshToken,
                 expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 重新设置24小时过期
             } as Partial<OfflineAuthData>)
         }

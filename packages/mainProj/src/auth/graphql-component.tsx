@@ -158,58 +158,17 @@ const customFetchExchange: Exchange = ({ forward }) => {
 
 const getStoredRefreshToken = (): string | null => {
     if (typeof window === "undefined") return null
-    // Try cookies-next first
     let token = (getCookie("refresh_token") as string) || null
-    if (typeof document !== "undefined") {
-        const cookies = document.cookie.split(";")
-        for (const cookie of cookies) {
-            const [name, value] = cookie.trim().split("=")
-            if (name === "refresh_token") {
-                let token2 = decodeURIComponent(value)
-                console.log("[v0] Found refresh_token in document.cookie:", token ? "exists" : "null")
-                if(!token) return token2
-            }
-        }
-    }
-    console.log("[v0] getStoredRefreshToken result:", token ? "有token" : "无token")
     return token
 }
 
-const setStoredRefreshToken = (token: string | null): void => {
-    if (typeof window === "undefined") return
-    if (token) {
-        setCookie("refresh_token", token, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "/",
-            sameSite: "lax", // Changed from "strict" to "lax" for better compatibility
-            // httpOnly: true,
-            secure: true,
-        })
-        console.log("[v0] Saved refresh_token to cookie")
-    } else {
-        deleteCookie("refresh_token")
-        console.log("[v0] Deleted refresh_token from cookie")
-    }
-}
-
-//直接post原生做法发送请求包了, 修改 refreshTokenDirectly 函数，从cookie读取
+//Nextjs服务器离线的：直接刷新token直接post原生做法发送请求包了, 修改 refreshTokenDirectly 函数，从cookie读取
 const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshToken: string } | null> => {
     try {
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
-
-        // 判断当前环境：SSR还是浏览器直连
-        const isSSR = typeof window === "undefined"
-        let refreshToken: string | null = null
-        refreshToken = getStoredRefreshToken() // Use the enhanced getter
-
-        if (!refreshToken) {
-            console.error("[v0] refreshTokenDirectly: No refresh token available")
-            throw new Error("No refresh token available")
-        }
-
+        // refreshToken = getStoredRefreshToken() // Use the enhanced getter
         console.log("[v0] refreshTokenDirectly: Using refresh_token from cookie")
-
         const requestBody: any = {
             query: `
                 mutation RefreshToken($refreshToken: String) {
@@ -224,10 +183,6 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
             `,
         }
 
-        // SSR模式：通过参数传递refreshToken
-        if (isSSR) {
-            requestBody.variables = { refreshToken }
-        }
         const deviceId = getDeviceId()
         //浏览器直连模式：不传参数，依赖cookie 没有经过URQL直接发送
         const response = await fetch(`${endpoint}/graphql`, {
@@ -254,9 +209,8 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
             accessToken: result.data.refreshToken.accessToken,
             refreshToken: result.data.refreshToken.refreshToken,
         }
-        setStoredRefreshToken(newTokens.refreshToken)
+        // setStoredRefreshToken(newTokens.refreshToken)
         console.log("[v0] refreshTokenDirectly: Saved new refresh_token to cookie")
-
         return newTokens
     } catch (error) {
         console.error("Direct token refresh failed:", error)
@@ -329,7 +283,7 @@ const makeAuthExchange = (
                 if (!currentToken) {
                     const refreshToken = getStoredRefreshToken()
                     if (refreshToken) {
-                        console.log("[v0] Using refreshToken as auth fallback")
+                        console.error("不应该走到这步！")
                         return utils.appendHeaders(operation, {
                             ...headers,
                             Authorization: `Bearer ${refreshToken}`, //没法认证？
@@ -370,17 +324,8 @@ const makeAuthExchange = (
                 const result = await acquireRefreshLock(async () => {
                     try {
                         const connectivity = print ? undefined : await checkNetworkConnectivity()
-                        const refreshToken = getStoredRefreshToken()
-
-                        console.log("[v0] refreshAuth: refresh_token from cookie:", refreshToken ? "exists" : "null")
-
-                        if (!refreshToken && !print && (!connectivity || !connectivity.nextjsReachable)) {
-                            console.warn("没有refresh token且NextJS不可达，直接跳转登录页")
-                            throw new Error("没有refresh token且NextJS不可达，直接跳转登录页")
-                        }
-
+                        //const refreshToken = getStoredRefreshToken()
                         let tokenData: { accessToken: string; refreshToken: string } | null = null
-
                         if (print || (connectivity && connectivity.nextjsReachable)) {
                             console.log("[AuthExchange] 通过NextJS API刷新token")
                             const response = await fetch("/api/refresh-token", {
@@ -394,7 +339,7 @@ const makeAuthExchange = (
                                         accessToken: data.accessToken,
                                         refreshToken: data.refreshToken,
                                     }
-                                    setStoredRefreshToken(tokenData.refreshToken)
+                                    // setStoredRefreshToken(tokenData.refreshToken)
                                     console.log("[v0] refreshAuth (NextJS): Saved new refresh_token to cookie")
                                 }
                             }
@@ -402,17 +347,24 @@ const makeAuthExchange = (
                             !print &&
                             connectivity &&
                             !connectivity.nextjsReachable &&
-                            connectivity.javaBackendReachable &&
-                            refreshToken
+                            connectivity.javaBackendReachable
                         ) {
                             console.log("[AuthExchange] 离线模式直接刷新token")
                             tokenData = await refreshTokenDirectly()
                         }
-
-                        if (!tokenData) {
-                            throw new Error("Token刷新失败")
+                        else{
+                            if (!print && (!connectivity || !connectivity.nextjsReachable)) {
+                                throw new Error("没有refresh token且NextJS不可达，直接跳转登录页")
+                            }
                         }
-
+                        if (!tokenData) {
+                            pendingMetadataBeforeRefresh = []
+                            toast.error("登录已过期", {
+                                description: "请重新登录，点导航登录",
+                                duration: 24*60*60*1000,
+                            })
+                            return tokenData;
+                        }
                         // 清除Service Worker缓存
                         await clearServiceWorkerAuthCache()
 
@@ -470,20 +422,10 @@ const makeAuthExchange = (
                     } catch (error) {
                         console.error("Token 刷新失败:", error)
                         pendingMetadataBeforeRefresh = []
-                        setStoredRefreshToken(null)
                         toast.error("登录已过期", {
-                            description: "请重新登录",
-                            duration: 5000,
+                            description: "请重新登录，点导航登录",
+                            duration: 24*60*60*1000,
                         })
-                        setTimeout(() => {
-                            if (typeof window !== "undefined") {
-                                const protocol = window.location.protocol === "https:" ? "https:" : "http:"
-                                const host = window.location.host
-                                console.error("Token刷新失败，立即跳转login")
-                                window.location.href = `${protocol}//${host}/login`
-                            }
-                        }, 1000) // 减少到1秒，更快响应
-                        throw error
                     }
                 })
 
@@ -833,7 +775,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             suspense: true,
             preferGetMethod: false,
             fetchOptions: () => {
-                const currentToken = accessToken
+                const currentToken =getCurrentToken()
                 const deviceId = getDeviceId()
                 const headers: Record<string, string> = {}
                 if (deviceId) {
