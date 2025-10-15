@@ -158,22 +158,19 @@ const customFetchExchange: Exchange = ({ forward }) => {
 
 const getStoredRefreshToken = (): string | null => {
     if (typeof window === "undefined") return null
-
     // Try cookies-next first
     let token = (getCookie("refresh_token") as string) || null
-
-    if (!token && typeof document !== "undefined") {
+    if (typeof document !== "undefined") {
         const cookies = document.cookie.split(";")
         for (const cookie of cookies) {
             const [name, value] = cookie.trim().split("=")
             if (name === "refresh_token") {
-                token = decodeURIComponent(value)
+                let token2 = decodeURIComponent(value)
                 console.log("[v0] Found refresh_token in document.cookie:", token ? "exists" : "null")
-                break
+                if(!token) return token2
             }
         }
     }
-
     console.log("[v0] getStoredRefreshToken result:", token ? "有token" : "无token")
     return token
 }
@@ -184,8 +181,9 @@ const setStoredRefreshToken = (token: string | null): void => {
         setCookie("refresh_token", token, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
-            secure: process.env.NODE_ENV === "production",
             sameSite: "lax", // Changed from "strict" to "lax" for better compatibility
+            // httpOnly: true,
+            secure: true,
         })
         console.log("[v0] Saved refresh_token to cookie")
     } else {

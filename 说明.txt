@@ -527,3 +527,4 @@ nextjs宕机+PWA+后端正常：不断地要求重新登录，保存后URQL meta
 恢复到更安全的方案。关键改变：移除了 IndexedDB 的 token 存储功能，仅用于报告数据；refresh_token 完全由 Java 后端通过 httpOnly cookie 管理，JavaScript 无法读取；
 当 token 过期且无法刷新时（离线模式下 httpOnly cookie 无法被 JS 读取），系统会自动重定向到登录页面要求用户重新登录。这样虽然在离线模式下需要重新登录，
 但大大提高了安全性，防止 XSS 攻击窃取 token
+cookie使用 HTTPOnly Cookie 可以防止XSS攻击
