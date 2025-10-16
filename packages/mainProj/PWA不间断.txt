@@ -90,3 +90,57 @@ compositeKey
 1006---保存后死循环，刷新丢失列表。
       保存后期间若离线或401，可能导致第一次的mutation丢失。小概率丢失更新列表1/2个的。
 
+
+
+
+
+
+export function useAccessToken() {
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [user, setUser] = useState<any | null>(null)
+  const { update } = useSession()
+
+  useEffect(() => {
+    const fetchToken = async () => {
+      const token = getCookie("accessToken")
+      const userData = getCookie("user")
+      setAccessToken(token || null)
+      setUser(userData ? JSON.parse(userData) : null)
+    }
+
+    fetchToken()
+
+    const handleTokenRefreshed = (event: CustomEvent) => {
+      console.log("[useAccessToken] 检测到token刷新事件，更新token")
+      const { accessToken: newAccessToken, user: newUser } = event.detail
+      if (newAccessToken) {
+        setAccessToken(newAccessToken)
+        setUser(newUser)
+        console.log("[useAccessToken] Token已更新为新刷新的token")
+      }
+    }
+
+    window.addEventListener("token:refreshed", handleTokenRefreshed as EventListener)
+
+    const handleOfflineLogin = (event: CustomEvent) => {
+      console.log("[useAccessToken] 检测到离线登录事件，更新token")
+      const { accessToken: newAccessToken, user } = event.detail
+      if (newAccessToken) {
+        setAccessToken(newAccessToken)
+        setUser(user)
+        console.log("[useAccessToken] Token已更新为新登录的token")
+      }
+    }
+
+    window.addEventListener("offline:login", handleOfflineLogin as EventListener)
+
+    return () => {
+      window.removeEventListener("token:refreshed", handleTokenRefreshed as EventListener)
+      window.removeEventListener("offline:login", handleOfflineLogin as EventListener)
+    }
+  }, [update])
+
+  const ConfirmDialog = () => {}
+
+  return { accessToken, user, ConfirmDialog }
+}

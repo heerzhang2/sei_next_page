@@ -19,7 +19,6 @@ import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 import { manualRetryExchange } from "@/lib/manual-retry-exchange"
 import { preventDuplicateExchange } from "@/lib/prevent-duplicate-exchange"
-import { setCookie, getCookie, deleteCookie } from "cookies-next/client"
 import { acquireRefreshLock, isTokenRefreshing as checkTokenRefreshing } from "@/lib/token-refresh-lock"
 
 // 检查是否为网络错误
@@ -157,7 +156,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
 }
 
 //Nextjs服务器离线的：直接刷新token直接post原生做法发送请求包了, 修改 refreshTokenDirectly 函数，从cookie读取
-const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshToken: string,user:any } | null> => {
+const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshToken: string; user: any } | null> => {
     try {
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
@@ -310,8 +309,8 @@ const makeAuthExchange = (
                 const result = await acquireRefreshLock(async () => {
                     try {
                         const connectivity = print ? undefined : await checkNetworkConnectivity()
-                        let tokenData: {user: any; accessToken: string; refreshToken: string } | null = null
-                        let fromNextjs=true;    //来自nextjs服务器的token更新流程的应答
+                        let tokenData: { user: any; accessToken: string; refreshToken: string } | null = null
+                        let fromNextjs = true //来自nextjs服务器的token更新流程的应答
                         if (print || (connectivity && connectivity.nextjsReachable)) {
                             console.log("[AuthExchange] 通过NextJS API刷新token")
                             const response = await fetch("/api/refresh-token", {
@@ -329,17 +328,11 @@ const makeAuthExchange = (
                                     console.log("[v0] refreshAuth (NextJS): Saved new refresh_token to cookie")
                                 }
                             }
-                        } else if (
-                            !print &&
-                            connectivity &&
-                            !connectivity.nextjsReachable &&
-                            connectivity.javaBackendReachable
-                        ) {
+                        } else if (!print && connectivity && !connectivity.nextjsReachable && connectivity.javaBackendReachable) {
                             console.log("[AuthExchange] 离线模式直接刷新token")
                             tokenData = await refreshTokenDirectly()
-                            if(tokenData)   fromNextjs=false;
-                        }
-                        else{
+                            if (tokenData) fromNextjs = false
+                        } else {
                             if (!print && (!connectivity || !connectivity.nextjsReachable)) {
                                 throw new Error("没有refresh token且NextJS不可达，直接跳转登录页")
                             }
@@ -348,9 +341,9 @@ const makeAuthExchange = (
                             pendingMetadataBeforeRefresh = []
                             toast.error("登录已过期", {
                                 description: "请重新登录，点导航登录",
-                                duration: 60*60*1000,
+                                duration: 60 * 60 * 1000,
                             })
-                            return tokenData;
+                            return tokenData
                         }
                         // 清除Service Worker缓存
                         await clearServiceWorkerAuthCache()
@@ -361,7 +354,7 @@ const makeAuthExchange = (
                                     detail: {
                                         accessToken: tokenData.accessToken,
                                         refreshToken: tokenData.refreshToken,
-                                        fromNextjs,     //判定nextjs离线与否
+                                        fromNextjs, //判定nextjs离线与否
                                         user: tokenData.user,
                                     },
                                 }),
@@ -393,7 +386,7 @@ const makeAuthExchange = (
                         pendingMetadataBeforeRefresh = []
                         toast.error("登录已过期", {
                             description: "请重新登录，点导航登录",
-                            duration: 60*60*1000,
+                            duration: 60 * 60 * 1000,
                         })
                     }
                 })
@@ -652,7 +645,31 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             return [null, null]
         }
         // 获取最新 token 的函数
-        const getCurrentToken = () => currentTokenRef.current
+        const getCurrentToken = () => {
+            // First try: read from ref (updated by useEffect)
+            if (currentTokenRef.current) {
+                return currentTokenRef.current
+            }
+
+            // Fallback: read from localStorage (offline login scenario)
+            if (typeof window !== "undefined") {
+                try {
+                    const offlineAuth = localStorage.getItem("offline_auth")
+                    if (offlineAuth) {
+                        const authData = JSON.parse(offlineAuth)
+                        if (authData.accessToken && authData.expiresAt > Date.now()) {
+                            console.log("[getCurrentToken] 从localStorage读取token作为fallback")
+                            return authData.accessToken
+                        }
+                    }
+                } catch (error) {
+                    console.error("[getCurrentToken] 读取localStorage失败:", error)
+                }
+            }
+
+            return null
+        }
+
         let storage
         if (typeof window !== "undefined") {
             const defaultStorage = makeDefaultStorage({
@@ -741,7 +758,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             suspense: true,
             preferGetMethod: false,
             fetchOptions: () => {
-                const currentToken =getCurrentToken()
+                const currentToken = getCurrentToken()
                 const deviceId = getDeviceId()
                 const headers: Record<string, string> = {}
                 if (deviceId) {
@@ -777,6 +794,23 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         window.addEventListener("urql:refresh-cache", handleRefreshCache)
         return () => {
             window.removeEventListener("urql:refresh-cache", handleRefreshCache)
+        }
+    }, [])
+
+    useEffect(() => {
+        const handleOfflineLogin = (event: CustomEvent) => {
+            console.log("[GraphQLProvider] 检测到离线登录，强制更新token ref")
+            const { accessToken: newAccessToken } = event.detail
+            if (newAccessToken) {
+                currentTokenRef.current = newAccessToken
+                console.log("[GraphQLProvider] Token ref已更新")
+            }
+        }
+
+        window.addEventListener("offline:login", handleOfflineLogin as EventListener)
+
+        return () => {
+            window.removeEventListener("offline:login", handleOfflineLogin as EventListener)
         }
     }, [])
 
