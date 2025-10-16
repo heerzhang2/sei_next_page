@@ -33,6 +33,7 @@ interface UseAccessTokenReturn {
 
 export function useAccessToken(): UseAccessTokenReturn {
     const { data: session, update } = useSession()
+    //在nextjs服务器离线模式下的 用户认证信息存储：
     const offlineAuth = useOfflineAuth()
     const networkStatus = useNetworkStatusContext()
     const searchParams = useSearchParams()
@@ -70,16 +71,29 @@ export function useAccessToken(): UseAccessTokenReturn {
     }, [session, update])
 
     const accessToken = useMemo(() => {
-        if (session?.user?.accessToken) {
-            console.log("useAccessToken: 使用NextAuth token", session)
-            return session?.user?.accessToken
+        //必须按网络区分：不能都用session?.user?.accessToken
+        if (print || (networkStatus.isOnline)) {
+            if (session?.user?.accessToken) {
+                return session?.user?.accessToken
+            }
         }
-        if (offlineAuth.isAuthenticated && offlineAuth.accessToken) {
-            console.log("useAccessToken: 使用 离线认证token")
-            return offlineAuth.accessToken
+        else if (
+            !print &&
+            !networkStatus.isOnline &&
+            networkStatus.isGraphQLBackendReachable
+        ) {
+            if (offlineAuth.isAuthenticated && offlineAuth.accessToken) {
+                return offlineAuth.accessToken
+            }
+            if(offlineAuth)
+                console.log("useAccessToken:不正常没法用offlineAuth",offlineAuth)
         }
+        console.log("useAccessToken:=NULL时",networkStatus,session,offlineAuth)
         return null
-    }, [session?.user?.accessToken,  offlineAuth])
+    },
+      [networkStatus.isOnline, networkStatus.isGraphQLBackendReachable, session?.user?.accessToken,
+        offlineAuth.isAuthenticated, offlineAuth.accessToken, print]
+    )
 
     const shouldShowLoginDialog = useMemo(() => {
         return (

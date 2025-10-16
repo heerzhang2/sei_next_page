@@ -88,7 +88,7 @@ const storeOfflineAuth = (authData: any, shouldSetCookie: boolean = true) => {
         setCookie('refresh_token', authData.refreshToken, {
             maxAge: 30 * 24 * 60 * 60,
             path: '/',
-            secure: process.env.NODE_ENV === 'production',
+            secure: true,   //process.env.NODE_ENV === 'production',
             sameSite: 'strict'
         })
     }

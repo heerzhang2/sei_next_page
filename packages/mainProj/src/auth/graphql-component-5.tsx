@@ -212,7 +212,6 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
     }
 }
 
-//在刷新accessToken之前简易地判定网络状态。
 const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; javaBackendReachable: boolean }> => {
     const results = await Promise.allSettled([
         // 检查Next.js服务器
@@ -414,6 +413,8 @@ const makeAuthExchange = (
                         })
                     }
                 })
+
+                // Return void as expected by authExchange
                 return
             },
         }

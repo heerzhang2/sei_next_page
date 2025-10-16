@@ -70,7 +70,7 @@ module.exports = async (phase) => {
         maximumFileSizeToCacheInBytes: 9000000, // 减小到9MB
         additionalPrecacheEntries: [
             { url: "/~offline", revision },
-            { url: "/login", revision:null },
+            { url: "/login", revision },
             { url: "/", revision }
         ],
     })
