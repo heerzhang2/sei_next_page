@@ -539,3 +539,73 @@ cookie使用 HTTPOnly Cookie 可以防止XSS攻击
             expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         }),
     )
+
+
+
+                if (typeof window !== "undefined") {
+                    console.log("signIn完成token:refreshed session=",session)
+                    try {
+                        const stored = localStorage.getItem("offline_auth") || "{}"
+                        const authData: OfflineAuthData = JSON.parse(stored)
+                        //不管哪一种模式都要存储到offline_auth：
+                        localStorage.setItem(
+                            "offline_auth",
+                            JSON.stringify({
+                                ...authData,
+                                accessToken: session?.user?.accessToken,
+                                user: {id: session?.user?.id as string},
+                                timestamp: Date.now(),
+                                expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+                            }),
+                        )
+                    } catch (error) {
+                        console.error("保存认证失败:", error)
+                    }
+                    window.dispatchEvent(
+                        new CustomEvent("token:refreshed", {
+                            detail: {
+                                accessToken: null,
+                                refreshToken: session?.user?.refreshToken,
+                            },
+                        }),
+                    )
+                }
+
+
+                                        if (updateSession) {
+                                            try {
+                                                console.log("[AuthExchange] 更新NextAuth session")
+                                                await updateSession({
+                                                    accessToken: tokenData.accessToken,
+                                                    refreshToken: tokenData.refreshToken,
+                                                })
+                                                await new Promise((resolve) => setTimeout(resolve, 100))
+                                            } catch (error) {
+                                                console.error("更新session失败:", error)
+                                            }
+                                        }
+
+
+// 存储离线认证信息
+const storeOfflineAuth = (authData: any) => {
+    if (typeof window === "undefined") return
+    // 存储到localStorage
+    localStorage.setItem(
+        "offline_auth",
+        JSON.stringify({
+            accessToken: authData.accessToken,
+            user: authData.user,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + 15 * 24 * 60 * 60 * 1000,
+        }),
+    )
+}
+
+
+PHWXcKaUpQlcHJVfSnfAp3J72qdUEvzDFQ_Q"
+expiresAt
+:
+1760690018569
+timestamp
+:
+1760603618569

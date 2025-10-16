@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
                 success:  newsession!==null,
                 accessToken: newsession?.user?.accessToken,
                 refreshToken: newsession?.user?.refreshToken,
+                user: {
+                    id: newsession?.user?.id
+                },
             })
         } catch (refreshError) {
             console.error("Token刷新过程中出错:", refreshError)

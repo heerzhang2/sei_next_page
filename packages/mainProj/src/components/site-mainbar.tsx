@@ -136,6 +136,7 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
                             { userInfo?.name?? ''}
                             {(userInfo?.name) ? <Button variant="ghost" size="icon" onClick={() => signOut()}>
                                     <LogOut className="h-4 w-4" />
+                                    {/*客户注销 应该还需要清理登录认证的存储*/}
                                     <span className="sr-only">注销</span>
                                 </Button>
                                 :

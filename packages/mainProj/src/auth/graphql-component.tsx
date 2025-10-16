@@ -157,7 +157,7 @@ const customFetchExchange: Exchange = ({ forward }) => {
 }
 
 //Nextjs服务器离线的：直接刷新token直接post原生做法发送请求包了, 修改 refreshTokenDirectly 函数，从cookie读取
-const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshToken: string } | null> => {
+const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshToken: string,user:any } | null> => {
     try {
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
@@ -202,8 +202,8 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
         const newTokens = {
             accessToken: result.data.refreshToken.accessToken,
             refreshToken: result.data.refreshToken.refreshToken,
+            user: result.data.user,
         }
-        // setStoredRefreshToken(newTokens.refreshToken)
         console.log("[v0] refreshTokenDirectly: Saved new refresh_token to cookie")
         return newTokens
     } catch (error) {
@@ -310,8 +310,8 @@ const makeAuthExchange = (
                 const result = await acquireRefreshLock(async () => {
                     try {
                         const connectivity = print ? undefined : await checkNetworkConnectivity()
-                        //const refreshToken = getStoredRefreshToken()
-                        let tokenData: { accessToken: string; refreshToken: string } | null = null
+                        let tokenData: {user: any; accessToken: string; refreshToken: string } | null = null
+                        let fromNextjs=true;    //来自nextjs服务器的token更新流程的应答
                         if (print || (connectivity && connectivity.nextjsReachable)) {
                             console.log("[AuthExchange] 通过NextJS API刷新token")
                             const response = await fetch("/api/refresh-token", {
@@ -324,8 +324,8 @@ const makeAuthExchange = (
                                     tokenData = {
                                         accessToken: data.accessToken,
                                         refreshToken: data.refreshToken,
+                                        user: data.user,
                                     }
-                                    // setStoredRefreshToken(tokenData.refreshToken)
                                     console.log("[v0] refreshAuth (NextJS): Saved new refresh_token to cookie")
                                 }
                             }
@@ -337,6 +337,7 @@ const makeAuthExchange = (
                         ) {
                             console.log("[AuthExchange] 离线模式直接刷新token")
                             tokenData = await refreshTokenDirectly()
+                            if(tokenData)   fromNextjs=false;
                         }
                         else{
                             if (!print && (!connectivity || !connectivity.nextjsReachable)) {
@@ -347,26 +348,12 @@ const makeAuthExchange = (
                             pendingMetadataBeforeRefresh = []
                             toast.error("登录已过期", {
                                 description: "请重新登录，点导航登录",
-                                duration: 24*60*60*1000,
+                                duration: 60*60*1000,
                             })
                             return tokenData;
                         }
                         // 清除Service Worker缓存
                         await clearServiceWorkerAuthCache()
-
-                        if (updateSession) {
-                            try {
-                                console.log("[AuthExchange] 更新NextAuth session")
-                                await updateSession({
-                                    accessToken: tokenData.accessToken,
-                                    refreshToken: tokenData.refreshToken,
-                                })
-                                await new Promise((resolve) => setTimeout(resolve, 100))
-                            } catch (error) {
-                                console.error("更新session失败:", error)
-                            }
-                        }
-
                         if (typeof window !== "undefined") {
                             console.log("[AuthExchange] 触发token:refreshed事件")
                             window.dispatchEvent(
@@ -374,7 +361,8 @@ const makeAuthExchange = (
                                     detail: {
                                         accessToken: tokenData.accessToken,
                                         refreshToken: tokenData.refreshToken,
-                                        skipUpdate: true, // Add flag to prevent listeners from updating again
+                                        fromNextjs,     //判定nextjs离线与否
+                                        user: tokenData.user,
                                     },
                                 }),
                             )
@@ -383,34 +371,29 @@ const makeAuthExchange = (
                         setTimeout(async () => {
                             if (pendingMetadataBeforeRefresh.length > 0) {
                                 console.log("[AuthExchange] Token刷新完成，恢复pending metadata:", pendingMetadataBeforeRefresh.length)
-
                                 // Restore metadata to compensation storage
                                 for (const request of pendingMetadataBeforeRefresh) {
                                     await backupMutationToCompensation(request)
                                 }
-
                                 // Trigger retry
                                 window.dispatchEvent(
                                     new CustomEvent("graphql-manual-retry", {
                                         detail: { retryAll: true },
                                     }),
                                 )
-
                                 pendingMetadataBeforeRefresh = []
                             }
                         }, 500)
-
-                        toast.warning("登录会话自动续期，若报告编辑修改了需刷新网页", {
-                            duration: 60 * 1000,
+                        toast.warning("会话自动续期，若报告修改需刷新", {
+                            duration: 20 * 1000,
                         })
-
                         return tokenData
                     } catch (error) {
                         console.error("Token 刷新失败:", error)
                         pendingMetadataBeforeRefresh = []
                         toast.error("登录已过期", {
                             description: "请重新登录，点导航登录",
-                            duration: 24*60*60*1000,
+                            duration: 60*60*1000,
                         })
                     }
                 })

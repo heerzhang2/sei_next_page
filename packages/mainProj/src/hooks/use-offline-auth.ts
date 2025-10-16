@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-interface OfflineAuthData {
+export interface OfflineAuthData {
     accessToken: string
-    refreshToken: string
+    // refreshToken: string
     user: {
         id: string
         name?: string
@@ -12,13 +12,14 @@ interface OfflineAuthData {
     }
     timestamp: number
     expiresAt: number
+    fromNextjs: boolean
 }
 
 interface OfflineAuthState {
     isAuthenticated: boolean
     user: OfflineAuthData["user"] | null
     accessToken: string | null
-    refreshToken: string | null
+    // refreshToken: string | null
     isExpired: boolean
 }
 
@@ -27,7 +28,6 @@ export function useOfflineAuth() {
         isAuthenticated: false,
         user: null,
         accessToken: null,
-        refreshToken: null,  //也没用到的
         isExpired: false,
     })
 
@@ -46,7 +46,7 @@ export function useOfflineAuth() {
                 isAuthenticated: !isExpired,
                 user: authData.user,
                 accessToken: authData.accessToken,
-                refreshToken: null,     //refreshToken保存在cookie，无法用代码访问的！
+                // refreshToken: null,     //refreshToken保存在cookie，无法用代码访问的！
                 isExpired,
             })
             if (isExpired) {
@@ -68,7 +68,7 @@ export function useOfflineAuth() {
             isAuthenticated: false,
             user: null,
             accessToken: null,
-            refreshToken: null,
+            // refreshToken: null,
             isExpired: false,
         })
 
@@ -112,7 +112,7 @@ export function useOfflineAuth() {
                 isAuthenticated: false,
                 user: null,
                 accessToken: null,
-                refreshToken: null,
+                // refreshToken: null,
                 isExpired: false,
             })
         }
@@ -120,10 +120,13 @@ export function useOfflineAuth() {
         // 监听token刷新事件：不管nextjs离线与否两个模式
         const handleTokenRefresh = (event: CustomEvent) => {
             console.log("检测到token刷新事件")
+            //预留 event.detail.fromNextjs = 来自nextjs服务器刷新的结果；
+            //【问题】用户切换，重新登录：必须检查 user{id }一致性？ 避免混乱！
             updateOfflineAuth({
                 accessToken: event.detail.accessToken,
-                // refreshToken: event.detail.refreshToken,
+                user: event.detail.user,
                 expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 重新设置24小时过期
+                fromNextjs: event.detail.fromNextjs,
             } as Partial<OfflineAuthData>)
         }
 

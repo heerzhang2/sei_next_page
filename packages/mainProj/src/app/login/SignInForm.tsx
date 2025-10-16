@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { useRouter, useSearchParams } from "next/navigation"
 import {useDeviceFingerprint} from "@/report/hook/useDeviceFingerprint";
+import {OfflineAuthData} from "@/hooks/use-offline-auth";
 
 async function sha256Hash(message: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(message)
@@ -32,7 +33,7 @@ export default function SignInForm() {
     const router = useRouter()
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
-    const { data: session } = useSession()
+    const { data: session, update: updateSession } = useSession()
     const searchParams = useSearchParams()
     const rawCallbackUrl = searchParams.get('callbackUrl');
     const callbackUrl = rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl)
@@ -61,20 +62,9 @@ export default function SignInForm() {
             if (result?.error) {
                 return `登录失败: ${result.error}`
             } else {
-                if (typeof window !== "undefined") {
-                    console.log("signIn完成token:refreshed session=",session)
-                    window.dispatchEvent(
-                        new CustomEvent("token:refreshed", {
-                            detail: {
-                                accessToken: null,
-                                refreshToken: session?.user?.refreshToken,
-                            },
-                        }),
-                    )
-                }
-                // 登录成功，跳转到回调URL或首页
-                router.push(callbackUrl)
-                return "登录成功"
+                // 触发 session 更新
+                await updateSession()
+                return "登录成功" // 让 useEffect 处理跳转和存储
             }
         } catch (error) {
             console.error("登录过程中出错:", error)
@@ -86,7 +76,6 @@ export default function SignInForm() {
     const usernameRef = useRef<HTMLInputElement>(null)
     const [error, setError] = React.useState("")
     const { deviceFingerprint: deviceId } = useDeviceFingerprint()
-
     // 当 response 有错误信息时显示
     useEffect(() => {
         if (response && response !== "登录成功") {
@@ -95,6 +84,30 @@ export default function SignInForm() {
             setError("")
         }
     }, [response])
+    // 添加 useEffect 监听登录成功后的处理
+    useEffect(() => {
+        if (response === "登录成功" && session?.user?.accessToken) {
+            console.log("检测到登录成功，处理 session 存储", session)
+            try {
+                const stored = localStorage.getItem("offline_auth") || "{}"
+                const authData: OfflineAuthData = JSON.parse(stored)
+                localStorage.setItem(
+                    "offline_auth",
+                    JSON.stringify({
+                        ...authData,
+                        accessToken: session.user.accessToken,
+                        user: { id: session.user.id as string },
+                        timestamp: Date.now(),
+                        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+                    }),
+                )
+                // 存储完成后再跳转
+                router.push(callbackUrl)
+            } catch (error) {
+                console.error("保存认证失败:", error)
+            }
+        }
+    }, [response, session, router, callbackUrl])
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
