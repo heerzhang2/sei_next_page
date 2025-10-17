@@ -14,8 +14,7 @@ interface UseAccessTokenReturn {
     accessToken: string | null
     ConfirmDialog: React.ComponentType
 }
-/** 避免混乱，
- * 只能统一都 依照localStorage里面的"offline_auth"来读取：
+/**双重保障？ GraphQLProvider里面还会依据Event即可修改发送用的currentTokenRef的。
 * */
 export function useAccessToken() {
     const [accessToken, setAccessToken] = useState<string | null>(null)
@@ -28,8 +27,7 @@ export function useAccessToken() {
     const { showConfirm, ConfirmDialog, hiddenConfirm } = useLoginRedirectConfirm()
     const [hasShownDialog, setHasShownDialog] = useState(false)
     const lastDialogTimeRef = useRef<number>(0)
-
-    const offlineAuth = useOfflineAuth()
+    // const offlineAuth = useOfflineAuth()
 
     useEffect(() => {
         const fetchToken = async () => {
