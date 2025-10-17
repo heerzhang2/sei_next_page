@@ -528,3 +528,7 @@ nextjs宕机+PWA+后端正常：不断地要求重新登录，保存后URQL meta
 当 token 过期且无法刷新时（离线模式下 httpOnly cookie 无法被 JS 读取），系统会自动重定向到登录页面要求用户重新登录。这样虽然在离线模式下需要重新登录，
 但大大提高了安全性，防止 XSS 攻击窃取 token
 cookie使用 HTTPOnly Cookie 可以防止XSS攻击
+e572fda8-9ecb-4e46-8876-da9b9a922390
+console.log('refresh_token cookie:', document.cookie);
+25050936-8f13-4c9f-a2b4-8e99d93fc839
+57275a06-3cda-442a-abd4-7b1e4b4f5966

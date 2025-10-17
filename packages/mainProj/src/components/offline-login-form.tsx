@@ -82,14 +82,14 @@ const storeOfflineAuth = (authData: any, shouldSetCookie = true) => {
             expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         }),
     )
-    // 根据场景决定是否设置cookie
+    //http应答设置cookie但是跨域没有自动带上。需从数据包提取Token再倒腾一手了。
     if (shouldSetCookie) {
-        // 浏览器直连模式：设置cookie
         setCookie("refresh_token", authData.refreshToken, {
-            maxAge: 30 * 24 * 60 * 60,
+            // httpOnly: true,
+            secure: true,
+            maxAge: 61 * 24 * 60 * 60,
             path: "/",
-            secure: true, //process.env.NODE_ENV === 'production',
-            sameSite: "strict",
+            sameSite: "none",
         })
     }
     // 触发自定义事件通知其他组件

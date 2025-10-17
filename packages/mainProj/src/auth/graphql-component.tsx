@@ -190,6 +190,7 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
+        console.log("refreshTokenDirectly Set-Cookie header:", response.headers.get('set-cookie'));
         const result = await response.json()
         if (result.errors) {
             throw new Error(result.errors[0]?.message || "GraphQL error")
