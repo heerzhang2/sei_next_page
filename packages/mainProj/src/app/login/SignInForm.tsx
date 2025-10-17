@@ -3,14 +3,14 @@
 import * as React from "react"
 import Link from "next/link"
 import { useActionState, useEffect, useRef, useState } from "react"
-import {signIn, useSession} from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { useRouter, useSearchParams } from "next/navigation"
-import {useDeviceFingerprint} from "@/report/hook/useDeviceFingerprint";
-import {OfflineAuthData} from "@/hooks/use-offline-auth";
+import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
+import type { OfflineAuthData } from "@/hooks/use-offline-auth"
 
 async function sha256Hash(message: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(message)
@@ -22,10 +22,10 @@ async function sha256Hash(message: string): Promise<string> {
 
 const isValidCallbackUrl = (url: string): boolean => {
     try {
-        const parsedUrl = new URL(url, window.location.origin);
-        return parsedUrl.origin === window.location.origin;
+        const parsedUrl = new URL(url, window.location.origin)
+        return parsedUrl.origin === window.location.origin
     } catch {
-        return false;
+        return false
     }
 }
 
@@ -35,12 +35,10 @@ export default function SignInForm() {
     const [password, setPassword] = useState("")
     const { data: session, update: updateSession } = useSession()
     const searchParams = useSearchParams()
-    const rawCallbackUrl = searchParams.get('callbackUrl');
-    const callbackUrl = rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl)
-        ? rawCallbackUrl
-        : '/';
+    const rawCallbackUrl = searchParams.get("callbackUrl")
+    const callbackUrl = rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl) ? rawCallbackUrl : "/"
 
-    console.log("signIn登录render：——session=",session)
+    console.log("signIn登录render：——session=", session)
 
     const signInAction = async (_prevState: string | undefined, formData: FormData) => {
         const username = formData.get("username") as string
@@ -101,6 +99,16 @@ export default function SignInForm() {
                         expiresAt: Date.now() + 24 * 60 * 60 * 1000,
                     }),
                 )
+                window.dispatchEvent(
+                    new CustomEvent("token:refreshed", {
+                        detail: {
+                            accessToken: session.user.accessToken,
+                            user: { id: session.user.id as string },
+                            fromNextjs: true,
+                        },
+                    }),
+                )
+                console.log("[SignInForm] 已触发token:refreshed事件通知新token")
                 // 存储完成后再跳转
                 router.push(callbackUrl)
             } catch (error) {

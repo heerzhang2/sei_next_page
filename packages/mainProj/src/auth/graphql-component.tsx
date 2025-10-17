@@ -807,10 +807,21 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             }
         }
 
+        const handleTokenRefreshed = (event: CustomEvent) => {
+            console.log("[GraphQLProvider] 检测到token刷新，更新token ref")
+            const { accessToken: newAccessToken } = event.detail
+            if (newAccessToken) {
+                currentTokenRef.current = newAccessToken
+                console.log("[GraphQLProvider] Token ref已从token:refreshed事件更新")
+            }
+        }
+
         window.addEventListener("offline:login", handleOfflineLogin as EventListener)
+        window.addEventListener("token:refreshed", handleTokenRefreshed as EventListener)
 
         return () => {
             window.removeEventListener("offline:login", handleOfflineLogin as EventListener)
+            window.removeEventListener("token:refreshed", handleTokenRefreshed as EventListener)
         }
     }, [])
 

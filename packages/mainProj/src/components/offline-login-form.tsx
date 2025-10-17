@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import {useNetworkStatusContext} from "@/contexts/network-status-context";
-import {useSession} from "next-auth/react";
-import { setCookie, getCookie, deleteCookie } from 'cookies-next/client'
-import {useDeviceFingerprint} from "@/report/hook/useDeviceFingerprint";
+import { useNetworkStatusContext } from "@/contexts/network-status-context"
+import { useSession } from "next-auth/react"
+import { setCookie, getCookie, deleteCookie } from "cookies-next/client"
+import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
 
 // 离线认证函数
 const authenticateOffline = async (username: string, password: string, deviceId: string) => {
@@ -30,7 +30,7 @@ const authenticateOffline = async (username: string, password: string, deviceId:
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                'X-Device-Id': deviceId,
+                "X-Device-Id": deviceId,
             },
             body: JSON.stringify({
                 query: `
@@ -70,7 +70,7 @@ const authenticateOffline = async (username: string, password: string, deviceId:
 }
 
 // 存储离线认证信息
-const storeOfflineAuth = (authData: any, shouldSetCookie: boolean = true) => {
+const storeOfflineAuth = (authData: any, shouldSetCookie = true) => {
     if (typeof window === "undefined") return
     // 存储到localStorage
     localStorage.setItem(
@@ -85,11 +85,11 @@ const storeOfflineAuth = (authData: any, shouldSetCookie: boolean = true) => {
     // 根据场景决定是否设置cookie
     if (shouldSetCookie) {
         // 浏览器直连模式：设置cookie
-        setCookie('refresh_token', authData.refreshToken, {
+        setCookie("refresh_token", authData.refreshToken, {
             maxAge: 30 * 24 * 60 * 60,
-            path: '/',
-            secure: true,   //process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
+            path: "/",
+            secure: true, //process.env.NODE_ENV === 'production',
+            sameSite: "strict",
         })
     }
     // 触发自定义事件通知其他组件
@@ -102,12 +102,12 @@ const storeOfflineAuth = (authData: any, shouldSetCookie: boolean = true) => {
 
 // 获取存储的refreshToken
 const getStoredRefreshToken = (): string | null => {
-    return getCookie('refresh_token') as string || null
+    return (getCookie("refresh_token") as string) || null
 }
 
 // 清除refreshToken
 const clearStoredRefreshToken = (): void => {
-    deleteCookie('refresh_token')
+    deleteCookie("refresh_token")
 }
 
 export function OfflineLoginForm() {
@@ -143,8 +143,20 @@ export function OfflineLoginForm() {
                 console.error("OfflineLoginForm:更新NextAuth session失败", error)
             }
 
+            window.dispatchEvent(
+                new CustomEvent("token:refreshed", {
+                    detail: {
+                        accessToken: authData.accessToken,
+                        refreshToken: authData.refreshToken,
+                        user: authData.user,
+                        fromNextjs: false,
+                    },
+                }),
+            )
+            console.log("[OfflineLoginForm] 已触发token:refreshed事件")
+
             toast.success("Next离线情形下登录,与后端服务器连接", {
-                duration: 2000
+                duration: 2000,
             })
             // 跳转到首页
             router.push("/")
@@ -163,9 +175,7 @@ export function OfflineLoginForm() {
             <CardHeader>
                 <CardTitle className="text-2xl">离线登录</CardTitle>
                 <CardDescription>
-                    {networkStatus.isOnline
-                        ? "Next.js服务器正常，建议使用标准登录"
-                        : "Next.js服务器离线，使用直连后端登录"}
+                    {networkStatus.isOnline ? "Next.js服务器正常，建议使用标准登录" : "Next.js服务器离线，使用直连后端登录"}
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
