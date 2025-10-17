@@ -816,12 +816,22 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             }
         }
 
+        const handleLogout = () => {
+            console.log("[GraphQLProvider] 检测到注销事件，清空token ref")
+            currentTokenRef.current = null
+            console.log("[GraphQLProvider] Token ref已清空")
+        }
+
         window.addEventListener("offline:login", handleOfflineLogin as EventListener)
         window.addEventListener("token:refreshed", handleTokenRefreshed as EventListener)
+        window.addEventListener("auth:logout", handleLogout)
+        window.addEventListener("user:logout", handleLogout)
 
         return () => {
             window.removeEventListener("offline:login", handleOfflineLogin as EventListener)
             window.removeEventListener("token:refreshed", handleTokenRefreshed as EventListener)
+            window.removeEventListener("auth:logout", handleLogout)
+            window.removeEventListener("user:logout", handleLogout)
         }
     }, [])
 

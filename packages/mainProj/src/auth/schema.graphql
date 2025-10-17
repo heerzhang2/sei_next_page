@@ -1336,7 +1336,6 @@ type Mutation {
   newUser(username: String!, password: String!, mobile: String!, external: String, eName: String, ePassword: String): Boolean!
   authenticate(username: String!, password: String!, setCookie: Boolean): LoginResp
   refreshToken(refreshToken: String): LoginResp
-  signin(input: LoginInput): LoginResp
   logout: Boolean!
 }
 
