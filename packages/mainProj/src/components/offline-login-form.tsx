@@ -25,6 +25,7 @@ const authenticateOffline = async (username: string, password: string, deviceId:
 
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
+
         //没有经过URQL直接发送
         const response = await fetch(`${endpoint}/graphql`, {
             method: "POST",
@@ -32,6 +33,7 @@ const authenticateOffline = async (username: string, password: string, deviceId:
                 "Content-Type": "application/json",
                 "X-Device-Id": deviceId,
             },
+            credentials: "include", // 关键：允许跨域请求发送和接收cookie
             body: JSON.stringify({
                 query: `
           mutation Authenticate($username: String!, $password: String!) {
@@ -87,6 +89,7 @@ const storeOfflineAuth = (authData: any, shouldSetCookie = true) => {
         setCookie("refresh_token", authData.refreshToken, {
             // httpOnly: true,
             secure: true,
+            // domain: "192.168.0.100",
             maxAge: 61 * 24 * 60 * 60,
             path: "/",
             sameSite: "none",
