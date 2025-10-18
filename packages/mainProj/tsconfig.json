@@ -42,7 +42,7 @@
     "src/**/*.tsx",
     "src/**/*.js",
     "src/**/*.jsx",
-    "middleware.ts",
+    "src/middleware.ts",
     "pipeline/**/*.ts",
     "pipeline/**/*.tsx",
     "comp/**/*.ts",

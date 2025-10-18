@@ -8,7 +8,6 @@ import http from "http"
 const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
 const url = `${endpoint}/graphql`
 
-
 const createHttpAgent = () => {
     const isHttps = url.startsWith("https")
     const AgentClass = isHttps ? https.Agent : http.Agent
@@ -38,27 +37,27 @@ const getHttpAgent = () => {
 // 修改 createFetchOptions 支持设备ID头部
 const createFetchOptions = (accessToken?: string | null, deviceId?: string) => {
     const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-    };
+        "Content-Type": "application/json",
+    }
 
     // 添加设备ID头部（如果提供）
     if (deviceId) {
-        headers['X-Device-Id'] = deviceId;
-        console.log('服务端请求添加设备ID头部:', deviceId);
+        headers["X-Device-Id"] = deviceId
+        console.log("服务端请求添加设备ID头部:", deviceId)
     }
 
     // 添加认证token
     if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
+        headers["Authorization"] = `Bearer ${accessToken}`
     }
 
     return {
         agent: getHttpAgent(),
-        method: 'POST',
+        method: "POST",
         headers,
         timeout: 30000,
-    };
-};
+    }
+}
 
 // 修改服务端 URQL 客户端工厂函数，支持传递设备ID
 export const createServerUrqlClient = (deviceId?: string) => {
@@ -76,13 +75,13 @@ export const createServerUrqlClient = (deviceId?: string) => {
         fetchOptions: createFetchOptions(undefined, deviceId), // 服务端请求不传token，但传设备ID
         // 服务端不需要 suspense
         suspense: false,
-    });
-};
+    })
+}
 
 // 保持原有的 get 函数兼容性
 export const { get } = registerUrql(() => {
-    return createServerUrqlClient();
-});
+    return createServerUrqlClient()
+})
 
 export const cleanupServerConnections = () => {
     if (httpAgent) {
@@ -91,7 +90,7 @@ export const cleanupServerConnections = () => {
     }
 }
 
-if (typeof process !== "undefined") {
+if (typeof process !== "undefined" && typeof process.on === "function") {
     process.on("exit", cleanupServerConnections)
     process.on("SIGINT", cleanupServerConnections)
     process.on("SIGTERM", cleanupServerConnections)
@@ -113,7 +112,7 @@ export const urqlClient = (accessToken?: string | null) => {
         fetchOptions: createFetchOptions(accessToken),
         // 服务端不需要 suspense
         suspense: false,
-        requestPolicy: 'network-only', // 可选：确保总是发起网络请求
+        requestPolicy: "network-only", // 可选：确保总是发起网络请求
         preferGetMethod: false,
     })
 }

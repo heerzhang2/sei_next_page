@@ -86,14 +86,14 @@ const storeOfflineAuth = (authData: any, shouldSetCookie = true) => {
     )
     //http应答设置cookie但是跨域没有自动带上。需从数据包提取Token再倒腾一手了。
     if (shouldSetCookie) {
-        setCookie("refresh_token", authData.refreshToken, {
-            // httpOnly: true,
-            secure: true,
-            // domain: "192.168.0.100",
-            maxAge: 61 * 24 * 60 * 60,
-            path: "/",
-            sameSite: "none",
-        })
+        // setCookie("refresh_token", authData.refreshToken, {
+        //     // httpOnly: true,
+        //     secure: true,
+        //     // domain: "192.168.0.100",
+        //     maxAge: 61 * 24 * 60 * 60,
+        //     path: "/",
+        //     sameSite: "none",
+        // })
     }
     // 触发自定义事件通知其他组件
     window.dispatchEvent(
