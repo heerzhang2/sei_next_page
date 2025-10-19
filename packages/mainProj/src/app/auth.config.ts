@@ -22,6 +22,7 @@ export const authConfig: NextAuthConfig = {
             credentials: {
                 username: { label: "用户名", type: "text" },
                 password: { label: "密码", type: "password" },
+                deviceId: { label: "设备ID", type: "text" },
             },
             async authorize(credentials) {
                 if (!credentials?.username || !credentials?.password) {
@@ -30,10 +31,9 @@ export const authConfig: NextAuthConfig = {
 
                 try {
                     const hashedPassword = credentials.password as string
-
-                    console.log("服务端认证请求")
-
-                    const client = createServerUrqlClient()
+                    const deviceId = credentials.deviceId as string
+                    console.log("服务端认证请求，设备ID:", deviceId)
+                    const client = createServerUrqlClient(deviceId)
                     const result = await client
                         .mutation(AUTHENTICATE_MUTATION, {
                             username: credentials.username,
@@ -58,6 +58,7 @@ export const authConfig: NextAuthConfig = {
                         accessToken: authData.accessToken,
                         refreshToken: authData.refreshToken,
                         accessTokenExpires: authData.accessTokenExpires,
+                        deviceId: deviceId,
                     }
                 } catch (error) {
                     console.error("Authentication error:", error)

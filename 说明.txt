@@ -534,5 +534,3 @@ cookie使用 HTTPOnly Cookie 可以防止XSS攻击
 - 使用不同的域名/子域名（如`frontend.example.com`和`backend.example.com`）
 - 或者使用不同的IP地址
 - 这样可以完全隔离cookie
-TE5cu0Bw3gwuWSriA3Bgq5kX0G9Q0RCECnlujOcqmtrCg
-ODRK0Gk5yvoP_QrXNaIk2PTmxe6_NlmNf7QM-H-TE5cu0Bw3gwuWSriA3Bgq5kX0G9Q0RCECnlujOcqmtrCg",
