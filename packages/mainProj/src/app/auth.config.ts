@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { createServerUrqlClient } from "@/auth/urql"
+import { canRefreshToken, markRefreshStarted } from "@/lib/token-refresh-lock"
 
 // GraphQL mutations - 移除 deviceId 参数
 const AUTHENTICATE_MUTATION = `
@@ -30,9 +31,18 @@ const REFRESH_MUTATION = `
 // 刷新 access token
 export async function refreshAccessToken(token: any) {
     try {
+        if (!canRefreshToken()) {
+            console.log("[next-auth] Token刷新被跳过，距离上次刷新时间过短，防止重复刷新")
+            return token // Return existing token without refreshing
+        }
+
         if (!token.refreshToken) {
             throw new Error("No refresh token available")
         }
+
+        markRefreshStarted()
+        console.log("[next-auth] 开始刷新token")
+
         // 使用带设备ID的客户端
         const client = createServerUrqlClient(token.deviceId)
         const result = await client
@@ -51,12 +61,12 @@ export async function refreshAccessToken(token: any) {
         }
 
         const refreshData = result.data.refreshToken
-        console.log("Token 刷新成功=", refreshData)
+        console.log("[next-auth] Token 刷新成功")
         return {
             ...token,
             accessToken: refreshData.accessToken,
             refreshToken: refreshData.refreshToken,
-            accessTokenExpires: Date.now() + 60 * 60 * 1000,  //实际有效期是java后端决定的！
+            accessTokenExpires: Date.now() + 60 * 60 * 1000, //实际有效期是java后端决定的！
             user: {
                 ...token.user,
                 ...refreshData.user,
@@ -148,11 +158,15 @@ export const authConfig: NextAuthConfig = {
             const { accessToken, exp, deviceId } = token
             //主动刷新的
             // const shouldRefresh = exp && Date.now() > ((exp as number) - 1 * 60) * 1000
-            if(trigger === "update" || !accessToken){
-                if (!accessToken)
-                    console.log("Token 即将过期，开始刷新... 设备ID:", deviceId)
-                else
-                    console.log("trigger==update...刷新token=> 设备ID:", deviceId)
+            if (trigger === "update" || !accessToken) {
+                if (!canRefreshToken()) {
+                    console.log("[next-auth JWT] Token刷新被跳过，防止与urql的刷新冲突")
+                    return token // Return existing token
+                }
+
+                if (!accessToken) console.log("[next-auth JWT] Token 即将过期，开始刷新... 设备ID:", deviceId)
+                else console.log("[next-auth JWT] trigger==update...刷新token=> 设备ID:", deviceId)
+
                 const refreshedToken = await refreshAccessToken(token)
                 if (refreshedToken.error) {
                     console.error("Token刷新失败:", refreshedToken.error)
@@ -167,8 +181,8 @@ export const authConfig: NextAuthConfig = {
                     refreshToken: refreshedToken.refreshToken,
                     accessTokenExpires: refreshedToken.accessTokenExpires,
                     deviceId: token.deviceId, // 保持设备ID不变
-                };
-                return newJwt;
+                }
+                return newJwt
             }
             return token
         },
@@ -196,7 +210,7 @@ export const authConfig: NextAuthConfig = {
     },
     session: {
         strategy: "jwt",
-        maxAge: 7* 24 * 60 * 60,    //7天
+        maxAge: 7 * 24 * 60 * 60, //7天
     },
     secret: process.env.NEXTAUTH_SECRET,
 }

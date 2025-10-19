@@ -190,7 +190,7 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
-        console.log("refreshTokenDirectly Set-Cookie header:", response.headers.get('set-cookie'));
+        console.log("refreshTokenDirectly Set-Cookie header:", response.headers.get("set-cookie"))
         const result = await response.json()
         if (result.errors) {
             throw new Error(result.errors[0]?.message || "GraphQL error")
@@ -326,7 +326,7 @@ const makeAuthExchange = (
                                         refreshToken: data.refreshToken,
                                         user: data.user,
                                     }
-                                    console.log("[v0] refreshAuth (NextJS): Saved new refresh_token to cookie")
+                                    console.log("[AuthExchange] NextJS API刷新成功")
                                 }
                             }
                         } else if (!print && connectivity && !connectivity.nextjsReachable && connectivity.javaBackendReachable) {
