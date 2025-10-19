@@ -22,6 +22,7 @@ export const authConfig: NextAuthConfig = {
             credentials: {
                 username: { label: "用户名", type: "text" },
                 password: { label: "密码", type: "password" },
+                deviceId: { label: "设备ID", type: "text" },
             },
             async authorize(credentials) {
                 if (!credentials?.username || !credentials?.password) {
@@ -30,10 +31,11 @@ export const authConfig: NextAuthConfig = {
 
                 try {
                     const hashedPassword = credentials.password as string
+                    const deviceId = credentials.deviceId as string
 
-                    console.log("服务端认证请求")
+                    console.log("服务端认证请求，设备ID:", deviceId)
 
-                    const client = createServerUrqlClient()
+                    const client = createServerUrqlClient(deviceId)
                     const result = await client
                         .mutation(AUTHENTICATE_MUTATION, {
                             username: credentials.username,
@@ -58,6 +60,7 @@ export const authConfig: NextAuthConfig = {
                         accessToken: authData.accessToken,
                         refreshToken: authData.refreshToken,
                         accessTokenExpires: authData.accessTokenExpires,
+                        deviceId: deviceId,
                     }
                 } catch (error) {
                     console.error("Authentication error:", error)
@@ -67,7 +70,7 @@ export const authConfig: NextAuthConfig = {
         }),
     ],
     callbacks: {
-        async jwt({ token, user, trigger, session }) {
+        async jwt({ token, user, trigger }) {
             // Token refresh is now handled exclusively by client-side urql authExchange
 
             // 初次登录时，将用户信息保存到 token
@@ -86,20 +89,11 @@ export const authConfig: NextAuthConfig = {
                 }
             }
 
-            if (trigger === "update" && session?.user) {
-                console.log("[next-auth JWT] 接收更新的token，合并新的refreshToken")
-                return {
-                    ...token,
-                    accessToken: session.user.accessToken || token.accessToken,
-                    refreshToken: session.user.refreshToken || token.refreshToken,
-                    accessTokenExpires: session.user.accessTokenExpires || token.accessTokenExpires,
-                    user: {
-                        ...token.user,
-                        id: session.user.id || token.user?.id,
-                        name: session.user.name || token.user?.name,
-                        email: session.user.email || token.user?.email,
-                    },
-                }
+            // This allows client-side token refresh to update the session
+            if (trigger === "update") {
+                console.log("[next-auth JWT] 接收客户端更新的token")
+                // The token parameter already contains the updated values from update() call
+                return token
             }
 
             // If token is expired, client-side urql will handle the refresh

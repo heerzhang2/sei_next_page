@@ -349,7 +349,7 @@ const makeAuthExchange = (
                         // 清除Service Worker缓存
                         await clearServiceWorkerAuthCache()
                         if (typeof window !== "undefined") {
-                            console.log("[AuthExchange] 触发token:refreshed事件")
+                            console.log("[AuthExchange] 触发token:refreshed事件并更新next-auth session")
                             window.dispatchEvent(
                                 new CustomEvent("token:refreshed", {
                                     detail: {
@@ -357,9 +357,12 @@ const makeAuthExchange = (
                                         refreshToken: tokenData.refreshToken,
                                         fromNextjs, //判定nextjs离线与否
                                         user: tokenData.user,
+                                        skipUpdate: false, // Allow SessionSync to update the session
                                     },
                                 }),
                             )
+
+                            // This ensures next-auth's session stays in sync with urql's tokens
                         }
 
                         setTimeout(async () => {
