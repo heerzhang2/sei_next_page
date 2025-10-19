@@ -34,12 +34,12 @@ export async function acquireRefreshLock(
             console.error("[TokenRefreshLock] Token刷新失败:", error)
             throw error
         } finally {
-            // 延迟释放锁，确保所有监听器都能收到事件
+            // 延迟释放锁，确保所有监听器都能收到事件，最少间隔10秒才能再次刷新token
             setTimeout(() => {
                 isRefreshing = false
                 refreshPromise = null
                 console.log("[TokenRefreshLock] 刷新锁已释放")
-            }, 1000)
+            }, 10000)
         }
     })()
 
