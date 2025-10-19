@@ -7,27 +7,13 @@ const authMiddleware = NextAuth(authConfig).auth
 
 // 创建一个处理函数来添加缓存控制头
 export async function middleware(request: NextRequest) {
-  // 记录所有收到的cookies
-  const refreshToken = request.cookies.get("refresh_token")
-  if (refreshToken) {
-    console.log("[v0] Next.js服务器收到了refresh_token cookie:", {
-      url: request.url,
-      origin: request.headers.get("origin"),
-      host: request.headers.get("host"),
-      cookieValue: refreshToken.value.substring(0, 20) + "...", // 只显示前20个字符
-    })
-  }
-
   // 首先应用 NextAuth 中间件
   const response = await authMiddleware(request)
-
   if (!response) {
     // 如果 authMiddleware 没有返回响应，创建一个新的响应
     const newResponse = NextResponse.next()
-
     // 添加缓存控制头
     addNoCacheHeaders(newResponse.headers)
-
     return newResponse
   }
 
