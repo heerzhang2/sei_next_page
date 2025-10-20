@@ -444,11 +444,11 @@ function CommonReportDataSub({
                     currentVersion: currentStorageVersion,
                 })
                 setStorage(newSubData)
-                setSubrType(reportSub.modeltype)
                 prevDataRef.current = newSubData
             } else {
                 console.log("[v0] Skipping sub-report storage update - local data is newer")
             }
+            setSubrType(reportSub.modeltype)        //独立流转子报告只显示一小部分的标志
         }
 
         const newParData = dat

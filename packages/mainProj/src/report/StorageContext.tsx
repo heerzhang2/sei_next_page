@@ -45,10 +45,10 @@ export function StorageProvider({ children }: { children: ReactNode }) {
             .load(repId)
             .then((restored) => {
                 if (restored) {
-                    setStorageState(restored.storage)
-                    // setSubrType(restored.metadata.subrType)
-                    setParrepfs(restored.metadata.parrepfs || {})
-                    setModified(restored.metadata.modified || false)
+                    // setStorageState(restored.storage)
+                    //  // setSubrType(restored.metadata.subrType)    //独立流转的子报告情形
+                    // setParrepfs(restored.metadata.parrepfs || {})
+                    // setModified(restored.metadata.modified || false)
                     console.log("[StorageContext] Restored from IndexedDB")
                 }
                 setIsInitialized(true)
