@@ -43,6 +43,8 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
             searchParams.delete("from")
             searchParams.delete("original")
             searchParams.delete("unitIndex")
+                //控制器情况
+            searchParams.delete("modelkey")
 
             const isRSC = request.headers.get("RSC") === "1"
             const suffix = isRSC ? "#rsc" : "#html"

@@ -1,6 +1,6 @@
 import * as React from "react";
 import {InternalItemProps, OriginalViewProps} from "@/report/common/base";
-import {aggregateProj, createItem} from "@/report/common/eHelper";
+import {aggregateProj, createItem, crtUrlRegistGen} from "@/report/common/eHelper";
 import {DeviceSurveyD, DeviceSurveyFx} from "@/report/common/survey";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
@@ -30,6 +30,7 @@ import {CardContent} from "@/components/ui";
 import {CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {DevToolsSection, useEntranceSetup} from "@/report/hook/useEntranceSetup"
+import {setupItemAreaRoute} from "@/report/recreation/slidingJj/slidingJjO1";
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
  *  因为模板已经里另外做一个ConcAppendix附页编辑器了，参数na:不需要再设置了 ha:也不要用;
@@ -173,12 +174,4 @@ export const OriginalView = ({ action, verId, rep }: OriginalViewProps) => {
     return <>{list}</>
 }
 
-export function registerUrl(template: string, version: string): string[] {
-    const baseUrl = `/rep/*/${template}/${version}`
-    // Define all action routes that need to be cached for this template
-    const actions = ["ALL", "ProjectList", "Survey", "ConcAppendix", "MaterialReview",
-        "TkmsInstrument", "Conclusion","Accessories","RadoInstrument","Solidify","MangInstrument"
-    ]
-    const urls=actions.map((action) => `${baseUrl}/${action}`)
-    return [baseUrl, ...urls]
-}
+export const registerUrl = crtUrlRegistGen(createRecordList(),['_Controller']);

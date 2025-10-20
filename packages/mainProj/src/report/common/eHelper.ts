@@ -255,19 +255,34 @@ export function assertNamesUnique(arr: PlainArConfigs[]) :boolean {
 }
 
 export function crtUrlRegistGen(recordPrintList: EditorAreaConfig[], itemActions: string[]) {
-  return function registerUrl(template: string, version: string): string[] {
-    const baseUrl = `/rep/*/${template}/${version}`;
-    // 从 recordPrintList 中提取所有 itemArea，然后过滤掉机电报告的记录列表占位符"Item"
-    const plainrs = recordPrintList
-        .map(item => item.itemArea)
-        .filter(itemArea => itemArea !== "Item");
+    return function registerUrl(template: string, version: string): string[] {
+        const baseUrl = `/rep/*/${template}/${version}`;
 
-    const actions = [
-      "ALL",
-      ...plainrs,
-      ...itemActions,
-    ];
-    const urls = actions.map((action) => `${baseUrl}/${action}`);
-    return [baseUrl, ...urls];
-  };
+        const extractAllItemAreas = (items: EditorAreaConfig[]): string[] => {
+            const areas: string[] = [];
+            const stack = [...items];
+
+            while (stack.length > 0) {
+                const item = stack.pop()!;
+                if (item.subrType && Array.isArray(item.zoneContent)) {
+                    stack.push(...(item.zoneContent as EditorAreaConfig[]));
+                }
+                else
+                    areas.push(item.itemArea);
+            }
+
+            return areas;
+        };
+
+        const allAreas = extractAllItemAreas(recordPrintList);
+        const plainrs = allAreas.filter(itemArea => itemArea !== "Item");
+
+        const actions = [
+            "ALL",
+            ...plainrs,
+            ...itemActions,
+        ];
+        const urls = actions.map((action) => `${baseUrl}/${action}`);
+        return [baseUrl, ...urls];
+    };
 }

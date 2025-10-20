@@ -7,6 +7,7 @@ import { indexedDBStorage } from "@/lib/indexed-db-storage"
 interface StorageContextType {
     storage: any
     setStorage: (data: any) => void
+    //subrType这个字段是根据URL当中的"subrid"来决定的，是在底下的ReportData组件动态设置的！
     subrType: string | undefined
     setSubrType: (type: string | undefined) => void
     parrepfs: any
@@ -39,13 +40,13 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         if (!repId || repId === "*") return
 
         console.log("[StorageContext] Initializing for repId:", repId)
-
+        //因为PWA离线状态，点击报告链接导航不同项目都会引起重新初始化从而使当前的StorageProvider丢失，需保存当前修改状态！！
         indexedDBStorage
             .load(repId)
             .then((restored) => {
                 if (restored) {
                     setStorageState(restored.storage)
-                    setSubrType(restored.metadata.subrType)
+                    // setSubrType(restored.metadata.subrType)
                     setParrepfs(restored.metadata.parrepfs || {})
                     setModified(restored.metadata.modified || false)
                     console.log("[StorageContext] Restored from IndexedDB")
@@ -65,7 +66,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         const timeoutId = setTimeout(() => {
             indexedDBStorage
                 .save(repId, storage, {
-                    subrType,
+                    // subrType,
                     parrepfs,
                     modified,
                 })
@@ -75,7 +76,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         }, 500)
 
         return () => clearTimeout(timeoutId)
-    }, [storage, subrType, parrepfs, modified, repId, isInitialized])
+    }, [storage, parrepfs, modified, repId, isInitialized])
 
     const setStorage = useCallback((data: any) => {
         if (typeof data === "function") {
