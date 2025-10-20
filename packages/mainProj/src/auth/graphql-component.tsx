@@ -342,7 +342,7 @@ const makeAuthExchange = (
                             pendingMetadataBeforeRefresh = []
                             toast.error("登录已过期", {
                                 description: "请重新登录，点导航登录",
-                                duration: 60 * 60 * 1000,
+                                duration: 60 * 1000,
                             })
                             return tokenData
                         }
@@ -381,8 +381,8 @@ const makeAuthExchange = (
                                 pendingMetadataBeforeRefresh = []
                             }
                         }, 500)
-                        toast.warning("会话自动续期，若报告修改需刷新", {
-                            duration: 20 * 1000,
+                        toast.info("会话自动续期", {
+                            duration: 3 * 1000,
                         })
                         return tokenData
                     } catch (error) {
@@ -390,7 +390,7 @@ const makeAuthExchange = (
                         pendingMetadataBeforeRefresh = []
                         toast.error("登录已过期", {
                             description: "请重新登录，点导航登录",
-                            duration: 60 * 60 * 1000,
+                            duration:  60 * 1000,
                         })
                     }
                 })
