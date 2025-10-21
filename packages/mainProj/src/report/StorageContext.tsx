@@ -2,12 +2,12 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
 import { useActualRepId } from "@/report/hook/use-actual-rep-id"
+import { useSearchParams } from "next/navigation"
 import { indexedDBStorage } from "@/lib/indexed-db-storage"
 
 interface StorageContextType {
     storage: any
     setStorage: (data: any) => void
-    //subrType这个字段是根据URL当中的"subrid"来决定的，是在底下的ReportData组件动态设置的！
     subrType: string | undefined
     setSubrType: (type: string | undefined) => void
     parrepfs: any
@@ -22,12 +22,14 @@ const StorageContext = createContext<StorageContextType | undefined>(undefined)
 
 export function StorageProvider({ children }: { children: ReactNode }) {
     const repId = useActualRepId()
+    const searchParams = useSearchParams()
+    const subrid = searchParams?.get("subrid") || undefined
 
     const [storage, setStorageState] = useState<any>({})
     const [subrType, setSubrType] = useState<string | undefined>(undefined)
     const [parrepfs, setParrepfs] = useState<any>({})
     const [offline, setOfflineState] = useState<boolean>(false)
-    const [modified, setModified] = useState<boolean>(false)
+    const [modified, setModifiedState] = useState<boolean>(false)
     const [isInitialized, setIsInitialized] = useState(false)
 
     useEffect(() => {
@@ -37,18 +39,16 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     }, [])
 
     useEffect(() => {
-        if (!repId || repId === "*") return
+        if (!repId || repId === "*" || !modified) return
 
-        console.log("[StorageContext] Initializing for repId:", repId)
-        //因为PWA离线状态，点击报告链接导航不同项目都会引起重新初始化从而使当前的StorageProvider丢失，需保存当前修改状态！！
+        console.log("[StorageContext] Initializing storage for:", { repId, subrid, modified })
+
         indexedDBStorage
-            .load(repId)
+            .load(repId, subrid)
             .then((restored) => {
                 if (restored) {
                     setStorageState(restored.storage)
-                     // setSubrType(restored.metadata.subrType)    //独立流转的子报告情形
                     setParrepfs(restored.metadata.parrepfs || {})
-                    setModified(restored.metadata.modified || false)
                     console.log("[StorageContext] Restored from IndexedDB")
                 }
                 setIsInitialized(true)
@@ -57,26 +57,66 @@ export function StorageProvider({ children }: { children: ReactNode }) {
                 console.error("[StorageContext] Failed to restore:", error)
                 setIsInitialized(true)
             })
-    }, [repId])
+    }, [repId, subrid, modified])
+
+    const saveImmediately = useCallback(() => {
+        if (!repId || repId === "*") return
+
+        console.log("[StorageContext] Saving immediately for repId:", repId)
+        indexedDBStorage.save(repId, storage, { parrepfs, modified }, subrid).catch((error) => {
+            console.error("[StorageContext] Immediate save failed:", error)
+        })
+    }, [storage, parrepfs, modified, repId, subrid])
 
     useEffect(() => {
-        if (!isInitialized || !repId || repId === "*") return
+        window.addEventListener("beforeunload", saveImmediately)
+        return () => window.removeEventListener("beforeunload", saveImmediately)
+    }, [saveImmediately])
 
-        // Debounce persistence to avoid excessive writes
+    useEffect(() => {
+        return () => {
+            console.log("[StorageContext] Component unmounting, saving immediately")
+            saveImmediately()
+        }
+    }, [saveImmediately])
+
+    useEffect(() => {
+        if (typeof window === "undefined") return
+
+        const handleRouteChange = () => {
+            console.log("[StorageContext] Route changing, saving immediately")
+            saveImmediately()
+        }
+
+        const handleClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement
+            const link = target.closest("a")
+            if (link && link.href && link.href.startsWith(window.location.origin)) {
+                console.log("[StorageContext] Link clicked, saving immediately")
+                saveImmediately()
+            }
+        }
+
+        window.addEventListener("popstate", handleRouteChange)
+        document.addEventListener("click", handleClick, true)
+
+        return () => {
+            window.removeEventListener("popstate", handleRouteChange)
+            document.removeEventListener("click", handleClick, true)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!isInitialized || !repId || repId === "*" || !modified) return
+
         const timeoutId = setTimeout(() => {
-            indexedDBStorage
-                .save(repId, storage, {
-                    // subrType,
-                    parrepfs,
-                    modified,
-                })
-                .catch((error) => {
-                    console.error("[StorageContext] Failed to persist:", error)
-                })
+            indexedDBStorage.save(repId, storage, { parrepfs, modified }, subrid).catch((error) => {
+                console.error("[StorageContext] Failed to persist:", error)
+            })
         }, 500)
 
         return () => clearTimeout(timeoutId)
-    }, [storage, parrepfs, modified, repId, isInitialized])
+    }, [storage, parrepfs, modified, repId, subrid, isInitialized])
 
     const setStorage = useCallback((data: any) => {
         if (typeof data === "function") {
@@ -98,6 +138,20 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         console.log("[StorageContext] Setting offline status:", isOffline)
         setOfflineState(isOffline)
     }, [])
+
+    const setModified = useCallback(
+        (value: boolean) => {
+            console.log("[StorageContext] Setting modified:", value)
+            setModifiedState(value)
+
+            if (!value && repId && repId !== "*") {
+                indexedDBStorage.markAsSaved(repId, subrid).catch((error) => {
+                    console.error("[StorageContext] Failed to mark as saved:", error)
+                })
+            }
+        },
+        [repId, subrid],
+    )
 
     const value: StorageContextType = {
         storage,
@@ -123,10 +177,10 @@ export function useStorage() {
     return context
 }
 
-export async function clearPersistedStorage(repId: string) {
+export async function clearPersistedStorage(repId: string, subrid?: string) {
     try {
-        await indexedDBStorage.remove(repId)
-        console.log("[StorageContext] Cleared persisted storage for repId:", repId)
+        await indexedDBStorage.remove(repId, subrid)
+        console.log("[StorageContext] Cleared persisted storage for:", { repId, subrid })
     } catch (error) {
         console.error("[StorageContext] Failed to clear persisted storage:", error)
     }

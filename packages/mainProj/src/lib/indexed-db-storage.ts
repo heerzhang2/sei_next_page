@@ -4,18 +4,20 @@
  */
 
 const DB_NAME = "ReportStorageDB"
-const DB_VERSION = 1
+const DB_VERSION = 1 // Reverted to version 1, removing token store
 const STORE_NAME = "reportStorage"
 const STORAGE_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+const POST_SAVE_CLEANUP_TTL = 60 * 60 * 1000 // 1 hour in milliseconds
 
 interface StorageEntry {
-    repId: string
+    storageKey: string // Format: "repId" or "repId:subrid"
     storage: any
     metadata: {
         subrType?: string
         parrepfs?: any
         modified?: boolean
         timestamp: number
+        lastSaveTime?: number
     }
 }
 
@@ -52,11 +54,12 @@ class IndexedDBStorage {
             request.onupgradeneeded = (event) => {
                 const db = (event.target as IDBOpenDBRequest).result
 
-                // Create object store if it doesn't exist
+                // Create report storage object store if it doesn't exist
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    const objectStore = db.createObjectStore(STORE_NAME, { keyPath: "repId" })
+                    const objectStore = db.createObjectStore(STORE_NAME, { keyPath: "storageKey" })
                     objectStore.createIndex("timestamp", "metadata.timestamp", { unique: false })
-                    console.log("[IndexedDB] Object store created")
+                    objectStore.createIndex("lastSaveTime", "metadata.lastSaveTime", { unique: false })
+                    console.log("[IndexedDB] Report object store created")
                 }
             }
         })
@@ -65,15 +68,28 @@ class IndexedDBStorage {
     }
 
     /**
-     * Save report data to IndexedDB
+     * Generate storage key from repId and optional subrid
      */
-    async save(repId: string, storage: any, metadata: any): Promise<void> {
+    private getStorageKey(repId: string, subrid?: string): string {
+        return subrid ? `${repId}:${subrid}` : repId
+    }
+
+    /**
+     * Save report data to IndexedDB
+     * @param repId - Report ID
+     * @param subrid - Optional sub-report ID
+     * @param storage - Storage data
+     * @param metadata - Metadata including modified flag
+     */
+    async save(repId: string, storage: any, metadata: any, subrid?: string): Promise<void> {
         try {
             await this.init()
             if (!this.db) throw new Error("Database not initialized")
 
+            const storageKey = this.getStorageKey(repId, subrid)
+
             const entry: StorageEntry = {
-                repId,
+                storageKey,
                 storage,
                 metadata: {
                     ...metadata,
@@ -88,9 +104,10 @@ class IndexedDBStorage {
 
                 request.onsuccess = () => {
                     console.log("[IndexedDB] Saved report data:", {
-                        repId,
+                        storageKey,
                         dataKeys: Object.keys(storage),
                         size: JSON.stringify(entry).length,
+                        modified: metadata.modified,
                     })
                     resolve()
                 }
@@ -109,15 +126,17 @@ class IndexedDBStorage {
     /**
      * Load report data from IndexedDB
      */
-    async load(repId: string): Promise<{ storage: any; metadata: any } | null> {
+    async load(repId: string, subrid?: string): Promise<{ storage: any; metadata: any } | null> {
         try {
             await this.init()
             if (!this.db) throw new Error("Database not initialized")
 
+            const storageKey = this.getStorageKey(repId, subrid)
+
             return new Promise((resolve, reject) => {
                 const transaction = this.db!.transaction([STORE_NAME], "readonly")
                 const objectStore = transaction.objectStore(STORE_NAME)
-                const request = objectStore.get(repId)
+                const request = objectStore.get(storageKey)
 
                 request.onsuccess = () => {
                     const entry = request.result as StorageEntry | undefined
@@ -131,18 +150,19 @@ class IndexedDBStorage {
                     const age = Date.now() - entry.metadata.timestamp
                     if (age > STORAGE_TTL) {
                         console.log("[IndexedDB] Data expired, removing:", {
-                            repId,
+                            storageKey,
                             ageHours: Math.round(age / 1000 / 60 / 60),
                         })
-                        this.remove(repId) // Clean up expired data
+                        this.remove(repId, subrid)
                         resolve(null)
                         return
                     }
 
                     console.log("[IndexedDB] Loaded report data:", {
-                        repId,
+                        storageKey,
                         dataKeys: Object.keys(entry.storage),
                         ageMinutes: Math.round(age / 1000 / 60),
+                        modified: entry.metadata.modified,
                     })
 
                     resolve({
@@ -165,18 +185,20 @@ class IndexedDBStorage {
     /**
      * Remove report data from IndexedDB
      */
-    async remove(repId: string): Promise<void> {
+    async remove(repId: string, subrid?: string): Promise<void> {
         try {
             await this.init()
             if (!this.db) throw new Error("Database not initialized")
 
+            const storageKey = this.getStorageKey(repId, subrid)
+
             return new Promise((resolve, reject) => {
                 const transaction = this.db!.transaction([STORE_NAME], "readwrite")
                 const objectStore = transaction.objectStore(STORE_NAME)
-                const request = objectStore.delete(repId)
+                const request = objectStore.delete(storageKey)
 
                 request.onsuccess = () => {
-                    console.log("[IndexedDB] Removed report data:", repId)
+                    console.log("[IndexedDB] Removed report data:", storageKey)
                     resolve()
                 }
 
@@ -192,7 +214,55 @@ class IndexedDBStorage {
     }
 
     /**
-     * Clean up old entries based on TTL
+     * Mark data as saved (for 1-hour cleanup timer)
+     */
+    async markAsSaved(repId: string, subrid?: string): Promise<void> {
+        try {
+            await this.init()
+            if (!this.db) throw new Error("Database not initialized")
+
+            const storageKey = this.getStorageKey(repId, subrid)
+
+            return new Promise((resolve, reject) => {
+                const transaction = this.db!.transaction([STORE_NAME], "readwrite")
+                const objectStore = transaction.objectStore(STORE_NAME)
+                const getRequest = objectStore.get(storageKey)
+
+                getRequest.onsuccess = () => {
+                    const entry = getRequest.result as StorageEntry | undefined
+                    if (!entry) {
+                        resolve()
+                        return
+                    }
+
+                    entry.metadata.lastSaveTime = Date.now()
+
+                    const putRequest = objectStore.put(entry)
+
+                    putRequest.onsuccess = () => {
+                        console.log("[IndexedDB] Marked as saved:", storageKey)
+                        resolve()
+                    }
+
+                    putRequest.onerror = () => {
+                        console.error("[IndexedDB] Failed to mark as saved:", putRequest.error)
+                        reject(putRequest.error)
+                    }
+                }
+
+                getRequest.onerror = () => {
+                    console.error("[IndexedDB] Failed to get entry:", getRequest.error)
+                    reject(getRequest.error)
+                }
+            })
+        } catch (error) {
+            console.error("[IndexedDB] Mark as saved error:", error)
+            throw error
+        }
+    }
+
+    /**
+     * Clean up old entries based on TTL and post-save cleanup
      */
     async cleanup(): Promise<void> {
         try {
@@ -202,8 +272,7 @@ class IndexedDBStorage {
             return new Promise((resolve, reject) => {
                 const transaction = this.db!.transaction([STORE_NAME], "readwrite")
                 const objectStore = transaction.objectStore(STORE_NAME)
-                const index = objectStore.index("timestamp")
-                const request = index.openCursor()
+                const request = objectStore.openCursor()
 
                 const now = Date.now()
                 let removedCount = 0
@@ -215,9 +284,19 @@ class IndexedDBStorage {
                         const entry = cursor.value as StorageEntry
                         const age = now - entry.metadata.timestamp
 
-                        if (age > STORAGE_TTL) {
+                        // 1. Remove if older than 7 days
+                        // 2. Remove if saved more than 1 hour ago
+                        const shouldRemove =
+                            age > STORAGE_TTL ||
+                            (entry.metadata.lastSaveTime && now - entry.metadata.lastSaveTime > POST_SAVE_CLEANUP_TTL)
+
+                        if (shouldRemove) {
                             cursor.delete()
                             removedCount++
+                            console.log("[IndexedDB] Cleaned up entry:", {
+                                storageKey: entry.storageKey,
+                                reason: age > STORAGE_TTL ? "expired" : "post-save-cleanup",
+                            })
                         }
 
                         cursor.continue()
