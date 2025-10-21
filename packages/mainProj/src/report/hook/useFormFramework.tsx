@@ -1,6 +1,8 @@
 "use client"
 
-import type React from "react"
+import React from "react"
+
+import type { ReactNode } from "react"
 import { useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import type { z } from "zod"
@@ -159,7 +161,7 @@ interface UseFormFrameworkProps {
     schema: z.ZodObject<any>
     defaultValues: Record<string, any>
     //[可选方式一]接收外部传入的内容渲染函数工厂，从构造函数传递form环境的。[可选方式二]是用本hook返回的form在上外部组件直接引用然后传递给render()的做法。
-    contentRendererFactory?: (form: any, arrays?: Record<string, any>) => React.ReactNode
+    contentRendererFactory?: (form: any, arrays?: Record<string, any>) => ReactNode
     // 数组字段配置
     arrayFields?: {
         name: string //每一张表格存储名；
@@ -407,8 +409,10 @@ export const ModificationIndicator = () => {
  */
 interface UseFrameEditorBarProps {
     rep?: any
-    //必须相对于根部存储的，或者可重复分项情况下的是分项相对根部存储。
-    values: Record<string, any>
+    // 这样 hook 可以自动从 storage 中获取最新数据，无需组件手动同步
+    storageKeys: string[]
+    // 可选：用于转换 storage 数据的函数
+    transformValues?: (storage: any) => Record<string, any>
     //校验当前编辑区域的字段取值合理性,或给出提醒信息；
     onVerify?: (values: any) => boolean
     onReset?: () => void
@@ -424,11 +428,11 @@ interface UseFrameEditorBarProps {
 }
 /**不依赖react-hook-form环境的版本，表单简单的情形下就可以使用，【缺点】需自己管理表单状态。
  * 支持声明 modType && redId 或者subrid 来申明存储的实际位置转移：存储到分项数据结构中。
- * 【nextjs服务器离线模式】必须添加useEffect(() setEditForm(    }  }, [storage?.])
  * */
 export function useFrameEditorBar({
                                       rep,
-                                      values,
+                                      storageKeys,
+                                      transformValues,
                                       onReset,
                                       onVerify,
                                       subrid,
@@ -439,6 +443,21 @@ export function useFrameEditorBar({
     const abortControllerRef = useRef<AbortController | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified, modified } = useStorage()
+
+    // 当 storage 更新时（如从 IndexedDB 加载），values 会自动更新
+    const values = React.useMemo(() => {
+        if (transformValues) {
+            return transformValues(storage)
+        }
+
+        // 默认行为：从 storage 中提取指定的 keys
+        const result: Record<string, any> = {}
+        storageKeys.forEach((key) => {
+            result[key] = storage?.[key]
+        })
+        return result
+    }, [storage, storageKeys, transformValues])
+
     //用URQL mutation来保存变更数据到后端数据库的
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
     //保存：处理表单提交

@@ -82,49 +82,40 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
     const [endIndex, setEndIndex] = useState<number>(1)
     const [targetIndex, setTargetIndex] = useState<number>(1)
 
-    const [editForm, setEditForm] = React.useState<EditorItem>({
-        单元表: (storage?.["单元表"] as IPipingUnitEntity[]) || [],
-        单图表: (storage?.["单图表"] as IPipingUnitEntity[]) || [],
-    })
-    const [oldValue] = React.useState<EditorItem>({
-        单元表: (storage?.["单元表"] as IPipingUnitEntity[]) || [],
-        单图表: (storage?.["单图表"] as IPipingUnitEntity[]) || [],
-    })
+    const currentUnits = (storage?.["单元表"] as IPipingUnitEntity[]) || []
+    const currentDiagrams = (storage?.["单图表"] as IPipingUnitEntity[]) || []
+
+    const [localUnits, setLocalUnits] = React.useState<IPipingUnitEntity[]>(currentUnits)
+    const [localDiagrams, setLocalDiagrams] = React.useState<IPipingUnitEntity[]>(currentDiagrams)
 
     useEffect(() => {
-        if (storage?.["单元表"] || storage?.["单图表"]) {
-            console.log("[v0] Storage updated, syncing editForm with new data")
-            setEditForm({
-                单元表: (storage?.["单元表"] as IPipingUnitEntity[]) || [],
-                单图表: (storage?.["单图表"] as IPipingUnitEntity[]) || [],
-            })
-        }
+        setLocalUnits((storage?.["单元表"] as IPipingUnitEntity[]) || [])
+        setLocalDiagrams((storage?.["单图表"] as IPipingUnitEntity[]) || [])
     }, [storage?.["单元表"], storage?.["单图表"]])
 
-    const currentUnits = editForm.单元表 || []
     // 根据unitIndex参数自动选择单元
     useEffect(() => {
-        if (unitIndexParam && currentUnits.length > 0) {
+        if (unitIndexParam && localUnits.length > 0) {
             const index = Number.parseInt(unitIndexParam, 10)
             // 验证索引是否有效
-            if (index >= 0 && index < currentUnits.length) {
+            if (index >= 0 && index < localUnits.length) {
                 setSelectedIndex(index)
-                setMemoText(currentUnits[index].mm || "")
+                setMemoText(localUnits[index].mm || "")
             } else {
-                console.warn(`无效的单元索引: ${index}, 当前单元总数: ${currentUnits.length}`)
+                console.warn(`无效的单元索引: ${index}, 当前单元总数: ${localUnits.length}`)
                 toast.error(`无效的单元序号: ${index + 1}`)
             }
         }
-    }, [unitIndexParam, currentUnits])
+    }, [unitIndexParam, localUnits])
 
     // 选择单元处理
     const handleSelectUnit = useCallback(
         (index: number) => {
             setSelectedIndex(index)
-            setMemoText(currentUnits[index]?.mm || "")
+            setMemoText(localUnits[index]?.mm || "")
             setIsEditingMemo(false)
         },
-        [currentUnits],
+        [localUnits],
     )
 
     // 保存备注
@@ -133,18 +124,14 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
             toast.error("请先选择一个管道单元")
             return
         }
-        const newUnits = [...editForm.单元表]
+        const newUnits = [...localUnits]
         newUnits[selectedIndex] = {
             ...newUnits[selectedIndex],
             mm: memoText.trim() || undefined,
         }
-        setEditForm((prev) => ({
-            ...prev,
-            单元表: newUnits,
-        }))
+        setLocalUnits(newUnits)
         setIsEditingMemo(false)
-        // toast.success("备注保存成功")
-    }, [selectedIndex, memoText, editForm.单元表])
+    }, [selectedIndex, memoText, localUnits])
 
     // 问题2：删除当前选中的管道单元
     const handleDeleteUnit = useCallback(() => {
@@ -153,15 +140,12 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
             return
         }
 
-        const unitToDelete = editForm.单元表[selectedIndex]
+        const unitToDelete = localUnits[selectedIndex]
         if (!unitToDelete) return
 
-        const newUnits = editForm.单元表.filter((_, index) => index !== selectedIndex)
+        const newUnits = localUnits.filter((_, index) => index !== selectedIndex)
 
-        setEditForm((prev) => ({
-            ...prev,
-            单元表: newUnits,
-        }))
+        setLocalUnits(newUnits)
 
         // 重置选择状态
         setSelectedIndex(-1)
@@ -169,7 +153,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
         setIsEditingMemo(false)
 
         toast.success(`已删除管道单元: ${unitToDelete.code}`)
-    }, [selectedIndex, editForm.单元表])
+    }, [selectedIndex, localUnits])
 
     const handleSyncFromBus = useCallback(
         (e: React.MouseEvent) => {
@@ -180,8 +164,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                 return
             }
 
-            const currentUnits = editForm.单元表 || []
-            const newUnits = [...currentUnits]
+            const newUnits = [...localUnits]
 
             // 创建业务单元的映射，便于快速查找
             const busUnitsMap = new Map<string, IPipingUnitEntity>()
@@ -211,7 +194,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
             }
 
             // 第二步：添加新的业务单元到末尾
-            const existingIds = new Set(currentUnits.filter((unit) => unit && unit.id).map((unit) => unit.id))
+            const existingIds = new Set(localUnits.filter((unit) => unit && unit.id).map((unit) => unit.id))
 
             busPipingList.forEach((busUnit: IPipingUnitEntity) => {
                 if (!existingIds.has(busUnit.id)) {
@@ -222,15 +205,12 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                 }
             })
 
-            // 更新 editForm
-            setEditForm((prev) => ({
-                ...prev,
-                单元表: newUnits,
-            }))
+            // 更新本地状态
+            setLocalUnits(newUnits)
 
             toast.success(`同步完成，共处理 ${newUnits.length} 个单元`)
         },
-        [busPipingList, editForm.单元表],
+        [busPipingList, localUnits],
     )
 
     // 问题2：移动单元顺序
@@ -238,8 +218,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
         (e: React.MouseEvent) => {
             e.preventDefault()
 
-            const currentUnits = editForm.单元表 || []
-            if (currentUnits.length === 0) {
+            if (localUnits.length === 0) {
                 toast.error("单元表为空，无法移动")
                 return
             }
@@ -254,8 +233,8 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                 return
             }
 
-            if (start >= currentUnits.length || end >= currentUnits.length || target > currentUnits.length) {
-                toast.error(`序号超出范围，当前共有 ${currentUnits.length} 个单元`)
+            if (start >= localUnits.length || end >= localUnits.length || target > localUnits.length) {
+                toast.error(`序号超出范围，当前共有 ${localUnits.length} 个单元`)
                 return
             }
 
@@ -265,7 +244,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
             }
 
             // 执行移动操作
-            const newUnits = [...currentUnits]
+            const newUnits = [...localUnits]
 
             // 提取要移动的单元
             const unitsToMove = newUnits.splice(start, end - start + 1)
@@ -279,29 +258,31 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
             // 插入到目标位置
             newUnits.splice(actualTarget, 0, ...unitsToMove)
 
-            // 更新 editForm
-            setEditForm((prev) => ({
-                ...prev,
-                单元表: newUnits,
-            }))
+            // 更新本地状态
+            setLocalUnits(newUnits)
 
             toast.success(`成功移动单元 ${startIndex}-${endIndex} 到位置 ${targetIndex}`)
         },
-        [editForm.单元表, startIndex, endIndex, targetIndex],
+        [localUnits, startIndex, endIndex, targetIndex],
     )
 
     const onReset = () => {
-        setEditForm({ ...oldValue })
+        setLocalUnits((storage?.["单元表"] as IPipingUnitEntity[]) || [])
+        setLocalDiagrams((storage?.["单图表"] as IPipingUnitEntity[]) || [])
         // 重置选择状态
         setSelectedIndex(-1)
         setMemoText("")
         setIsEditingMemo(false)
         toast.success("已重置到初始状态")
     }
-    // const [editErr, setEditErr] = React.useState<string>()
+
     const [render] = useFrameEditorBar({
         rep,
-        values: { ...editForm },
+        storageKeys: ["单元表", "单图表"],
+        transformValues: () => ({
+            单元表: localUnits,
+            单图表: localDiagrams,
+        }),
         onReset,
     })
 
@@ -325,7 +306,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                             className="grid grid-cols-1 @md:grid-cols-2 @5xl:grid-cols-3 gap-2 overflow-y-auto border rounded p-2"
                             style={{ maxHeight: "min(calc(100vh - 4rem), 36rem)" }}
                         >
-                            {currentUnits.map((unit, index) => (
+                            {localUnits.map((unit, index) => (
                                 <div
                                     key={unit.id || index}
                                     className={`p-2 border rounded cursor-pointer transition-colors ${
@@ -347,8 +328,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
 
                         {selectedIndex !== -1 && (
                             <div className="text-sm text-blue-600">
-                                已选择: 序号{selectedIndex + 1} - {currentUnits[selectedIndex]?.code} -{" "}
-                                {currentUnits[selectedIndex]?.name}
+                                已选择: 序号{selectedIndex + 1} - {localUnits[selectedIndex]?.code} - {localUnits[selectedIndex]?.name}
                             </div>
                         )}
                     </div>
@@ -387,7 +367,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                         {selectedIndex !== -1 && (
                             <div className="space-y-3">
                                 <div className="text-sm text-muted-foreground">
-                                    为管道单元 "序号{selectedIndex + 1} - {currentUnits[selectedIndex]?.code}" 编辑备注
+                                    为管道单元 "序号{selectedIndex + 1} - {localUnits[selectedIndex]?.code}" 编辑备注
                                 </div>
 
                                 {isEditingMemo ? (
@@ -406,7 +386,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                                                 type="button"
                                                 variant="outline"
                                                 onClick={() => {
-                                                    setMemoText(currentUnits[selectedIndex]?.mm || "")
+                                                    setMemoText(localUnits[selectedIndex]?.mm || "")
                                                     setIsEditingMemo(false)
                                                 }}
                                                 size="sm"
@@ -417,8 +397,8 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                                     </div>
                                 ) : (
                                     <div className="p-3 bg-gray-50 rounded border min-h-[100px]">
-                                        {currentUnits[selectedIndex]?.mm ? (
-                                            <div className="whitespace-pre-wrap">{currentUnits[selectedIndex].mm}</div>
+                                        {localUnits[selectedIndex]?.mm ? (
+                                            <div className="whitespace-pre-wrap">{localUnits[selectedIndex].mm}</div>
                                         ) : (
                                             <div className="text-muted-foreground italic">暂无备注信息</div>
                                         )}
@@ -435,7 +415,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                         <h6 className="font-medium">业务数据同步</h6>
                         <div className="flex items-center gap-4">
                             <div className="text-sm text-muted-foreground">
-                                业务单元数: {busPipingList?.length || 0} | 报告单元数: {currentUnits.length}
+                                业务单元数: {busPipingList?.length || 0} | 报告单元数: {localUnits.length}
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -458,7 +438,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                     <div className="space-y-4">
                         <h6 className="font-medium">单元顺序管理</h6>
                         <div className="text-sm text-muted-foreground mb-2">
-                            当前共有 {currentUnits.length} 个单元，可以移动指定范围的单元到新位置
+                            当前共有 {localUnits.length} 个单元，可以移动指定范围的单元到新位置
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -468,7 +448,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                                     id="startIxPsol"
                                     type="number"
                                     min={1}
-                                    max={currentUnits.length}
+                                    max={localUnits.length}
                                     value={startIndex}
                                     onChange={(e) => setStartIndex(Number(e.target.value))}
                                     placeholder="起始序号"
@@ -481,7 +461,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                                     id="endIdxPsol"
                                     type="number"
                                     min={1}
-                                    max={currentUnits.length}
+                                    max={localUnits.length}
                                     value={endIndex}
                                     onChange={(e) => setEndIndex(Number(e.target.value))}
                                     placeholder="结束序号"
@@ -494,7 +474,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                                     id="targetIxPSol"
                                     type="number"
                                     min={1}
-                                    max={currentUnits.length + 1}
+                                    max={localUnits.length + 1}
                                     value={targetIndex}
                                     onChange={(e) => setTargetIndex(Number(e.target.value))}
                                     placeholder="目标位置"
@@ -504,7 +484,7 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
                             <Button
                                 type="button"
                                 onClick={handleMoveUnits}
-                                disabled={currentUnits.length === 0}
+                                disabled={localUnits.length === 0}
                                 className="flex items-center gap-2"
                             >
                                 <ArrowRight className="h-4 w-4" />
