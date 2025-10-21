@@ -207,7 +207,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     const { data, fetching, error } = result
     const report = data && data.getReport
-    const { setStorage, setSubrType, setOffline, storage } = useStorage()
+    const { setStorage, setSubrType, setOffline, storage, modified } = useStorage()
 
     const refreshData = useCallback(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) {
@@ -271,23 +271,30 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         const isNewerVersion = !currentStorageVersion || report.version > currentStorageVersion
 
         if (JSON.stringify(newData) !== JSON.stringify(prevDataRef.current)) {
-            if (isNewerVersion || Object.keys(storage).length <= 1) {
-                console.log("[v0] Updating storage with network data", {
-                    version: report.version,
-                    currentVersion: currentStorageVersion,
-                    isNewer: isNewerVersion,
-                })
-                setStorage(newData)
-                setSubrType(undefined)
-                prevDataRef.current = newData
-            } else {
-                console.log("[v0] Skipping storage update - local data is newer", {
+            if (modified) {
+                console.log("[v0] Skipping storage update - user has unsaved modifications")
+                return
+            }
+
+            if (Object.keys(storage).length > 1 && !isNewerVersion) {
+                console.log("[v0] Skipping storage update - local data exists and is not older", {
                     networkVersion: report.version,
                     localVersion: currentStorageVersion,
+                    localKeys: Object.keys(storage).length,
                 })
+                return
             }
+
+            console.log("[v0] Updating storage with network data", {
+                version: report.version,
+                currentVersion: currentStorageVersion,
+                isNewer: isNewerVersion,
+            })
+            setStorage(newData)
+            setSubrType(undefined)
+            prevDataRef.current = newData
         }
-    }, [report, storage, setStorage, setSubrType])
+    }, [report, storage, setStorage, setSubrType, modified])
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error)
@@ -376,7 +383,7 @@ function CommonReportDataSub({
         return subrepObj
     }, [dataSub, subrid])
 
-    const { setStorage, setSubrType, setParrepfs, setOffline, storage } = useStorage()
+    const { setStorage, setSubrType, setParrepfs, setOffline, storage, modified } = useStorage()
 
     const refreshData = useCallback(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) {
@@ -438,17 +445,26 @@ function CommonReportDataSub({
         const isNewerVersion = !currentStorageVersion || reportSub.version > currentStorageVersion
 
         if (JSON.stringify(newSubData) !== JSON.stringify(prevDataRef.current)) {
-            if (isNewerVersion || Object.keys(storage).length <= 1) {
-                console.log("[v0] Updating sub-report storage with network data", {
-                    version: reportSub.version,
-                    currentVersion: currentStorageVersion,
-                })
-                setStorage(newSubData)
-                prevDataRef.current = newSubData
-            } else {
-                console.log("[v0] Skipping sub-report storage update - local data is newer")
+            if (modified) {
+                console.log("[v0] Skipping sub-report storage update - user has unsaved modifications")
+                return
             }
-            setSubrType(reportSub.modeltype)        //独立流转子报告只显示一小部分的标志
+
+            if (Object.keys(storage).length > 1 && !isNewerVersion) {
+                console.log("[v0] Skipping sub-report storage update - local data exists and is not older", {
+                    networkVersion: reportSub.version,
+                    localVersion: currentStorageVersion,
+                })
+                return
+            }
+
+            console.log("[v0] Updating sub-report storage with network data", {
+                version: reportSub.version,
+                currentVersion: currentStorageVersion,
+            })
+            setStorage(newSubData)
+            prevDataRef.current = newSubData
+            setSubrType(reportSub.modeltype)
         }
 
         const newParData = dat
@@ -458,7 +474,7 @@ function CommonReportDataSub({
             setParrepfs(newParData)
             prevParrepfsRef.current = newParData
         }
-    }, [report, reportSub, storage, setStorage, setSubrType, setParrepfs])
+    }, [report, reportSub, storage, setStorage, setSubrType, setParrepfs, modified])
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react"
 import { useActualRepId } from "@/report/hook/use-actual-rep-id"
 import { useSearchParams } from "next/navigation"
 import { indexedDBStorage } from "@/lib/indexed-db-storage"
@@ -32,6 +32,9 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [modified, setModifiedState] = useState<boolean>(false)
     const [isInitialized, setIsInitialized] = useState(false)
 
+    const hasLoadedRef = useRef(false)
+    const storageKeyRef = useRef<string>("")
+
     useEffect(() => {
         indexedDBStorage.cleanup().catch((error) => {
             console.error("[StorageContext] Cleanup failed:", error)
@@ -39,28 +42,58 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     }, [])
 
     useEffect(() => {
-        if (!repId || repId === "*" || !modified) return
+        if (!repId || repId === "*") return
 
-        console.log("[StorageContext] Initializing storage for:", { repId, subrid, modified })
+        const currentKey = `${repId}${subrid ? `-${subrid}` : ""}`
+
+        // Skip if already loaded for this key
+        if (hasLoadedRef.current && storageKeyRef.current === currentKey) {
+            console.log("[StorageContext] Already loaded for this key, skipping")
+            return
+        }
+
+        console.log("[StorageContext] Loading from IndexedDB for:", { repId, subrid })
 
         indexedDBStorage
             .load(repId, subrid)
             .then((restored) => {
-                if (restored) {
+                if (restored && restored.metadata.modified) {
+                    console.log("[StorageContext] Restored user edits from IndexedDB", {
+                        keys: Object.keys(restored.storage).length,
+                    })
                     setStorageState(restored.storage)
                     setParrepfs(restored.metadata.parrepfs || {})
-                    console.log("[StorageContext] Restored from IndexedDB")
+                    setModifiedState(true) // Restore modified state
+                } else {
+                    console.log("[StorageContext] No user edits found in IndexedDB")
                 }
                 setIsInitialized(true)
+                hasLoadedRef.current = true
+                storageKeyRef.current = currentKey
             })
             .catch((error) => {
                 console.error("[StorageContext] Failed to restore:", error)
                 setIsInitialized(true)
+                hasLoadedRef.current = true
+                storageKeyRef.current = currentKey
             })
-    }, [repId, subrid, modified])
+    }, [repId, subrid])
+
+    useEffect(() => {
+        const currentKey = `${repId}${subrid ? `-${subrid}` : ""}`
+        if (storageKeyRef.current && storageKeyRef.current !== currentKey) {
+            console.log("[StorageContext] Report/subrid changed, resetting state")
+            hasLoadedRef.current = false
+            setIsInitialized(false)
+            setModifiedState(false) // Reset modified state on navigation
+        }
+    }, [repId, subrid])
 
     const saveImmediately = useCallback(() => {
-        if (!repId || repId === "*") return
+        if (!repId || repId === "*" || !modified) {
+            console.log("[StorageContext] Skipping save - not modified yet")
+            return
+        }
 
         console.log("[StorageContext] Saving immediately for repId:", repId)
         indexedDBStorage.save(repId, storage, { parrepfs, modified }, subrid).catch((error) => {
@@ -75,25 +108,31 @@ export function StorageProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         return () => {
-            console.log("[StorageContext] Component unmounting, saving immediately")
-            saveImmediately()
+            if (modified) {
+                console.log("[StorageContext] Component unmounting, saving immediately")
+                saveImmediately()
+            }
         }
-    }, [saveImmediately])
+    }, [saveImmediately, modified])
 
     useEffect(() => {
         if (typeof window === "undefined") return
 
         const handleRouteChange = () => {
-            console.log("[StorageContext] Route changing, saving immediately")
-            saveImmediately()
+            if (modified) {
+                console.log("[StorageContext] Route changing, saving immediately")
+                saveImmediately()
+            }
         }
 
         const handleClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement
             const link = target.closest("a")
             if (link && link.href && link.href.startsWith(window.location.origin)) {
-                console.log("[StorageContext] Link clicked, saving immediately")
-                saveImmediately()
+                if (modified) {
+                    console.log("[StorageContext] Link clicked, saving immediately")
+                    saveImmediately()
+                }
             }
         }
 
@@ -104,12 +143,13 @@ export function StorageProvider({ children }: { children: ReactNode }) {
             window.removeEventListener("popstate", handleRouteChange)
             document.removeEventListener("click", handleClick, true)
         }
-    }, [])
+    }, [saveImmediately, modified])
 
     useEffect(() => {
         if (!isInitialized || !repId || repId === "*" || !modified) return
 
         const timeoutId = setTimeout(() => {
+            console.log("[StorageContext] Auto-saving to IndexedDB")
             indexedDBStorage.save(repId, storage, { parrepfs, modified }, subrid).catch((error) => {
                 console.error("[StorageContext] Failed to persist:", error)
             })
@@ -123,13 +163,13 @@ export function StorageProvider({ children }: { children: ReactNode }) {
             setStorageState((prev: any) => {
                 const newData = data(prev)
                 console.log("[StorageContext] Storage updated (function)", {
-                    prevKeys: Object.keys(prev),
-                    newKeys: Object.keys(newData),
+                    prevKeys: Object.keys(prev).length,
+                    newKeys: Object.keys(newData).length,
                 })
                 return newData
             })
         } else {
-            console.log("[StorageContext] Storage updated (direct)", { keys: Object.keys(data) })
+            console.log("[StorageContext] Storage updated (direct)", { keys: Object.keys(data).length })
             setStorageState(data)
         }
     }, [])
