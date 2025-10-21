@@ -4,7 +4,18 @@ import * as React from "react"
 import { useSearchParams } from "next/navigation"
 import type { InternalItemProps } from "../common/base"
 import { useStorage } from "@/report/StorageContext"
-import {Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Label, Separator, Textarea,} from "@/components/ui"
+import {
+    Button,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    Input,
+    Label,
+    Separator,
+    Textarea,
+} from "@/components/ui"
 import { CollapsibleFormSection } from "@/components/chub"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import type { IPipingUnitEntity } from "@/types/piping-unit"
@@ -46,16 +57,14 @@ interface EditorItem {
 }
 export const itemA单特性 = ["单元表", "单图表"]
 //特性表-管道单元管理：同步 排序
-export const PropertySolidify = (
-    { children, show, label='特性表-管道单元的管理', rep }: InternalItemProps
-) => {
+export const PropertySolidify = ({ children, show, label = "特性表-管道单元的管理", rep }: InternalItemProps) => {
     const searchParams = useSearchParams()
     const unitIndexParam = searchParams?.get("unitIndex") // 从URL获取单元序号
 
     const [searchResult, reQuerysearch] = useQuery({
         query: LIST_ALL_PIPINGUNIT,
         variables: { detId: rep?.isp?.bus?.id },
-        requestPolicy: 'cache-and-network',     //不能用'network-only'了，因在这组合配套情况下会触发2次的后端请求。
+        requestPolicy: "cache-and-network", //不能用'network-only'了，因在这组合配套情况下会触发2次的后端请求。
         pause: false,
     })
     const { data, fetching, error } = searchResult
@@ -81,6 +90,16 @@ export const PropertySolidify = (
         单元表: (storage?.["单元表"] as IPipingUnitEntity[]) || [],
         单图表: (storage?.["单图表"] as IPipingUnitEntity[]) || [],
     })
+
+    useEffect(() => {
+        if (storage?.["单元表"] || storage?.["单图表"]) {
+            console.log("[v0] Storage updated, syncing editForm with new data")
+            setEditForm({
+                单元表: (storage?.["单元表"] as IPipingUnitEntity[]) || [],
+                单图表: (storage?.["单图表"] as IPipingUnitEntity[]) || [],
+            })
+        }
+    }, [storage?.["单元表"], storage?.["单图表"]])
 
     const currentUnits = editForm.单元表 || []
     // 根据unitIndex参数自动选择单元
@@ -302,8 +321,9 @@ export const PropertySolidify = (
                     {/* 单元选择区域 */}
                     <div className="space-y-4">
                         <h6 className="font-medium">管道单元选择</h6>
-                        <div className="grid grid-cols-1 @md:grid-cols-2 @5xl:grid-cols-3 gap-2 overflow-y-auto border rounded p-2"
-                             style={{maxHeight: "min(calc(100vh - 4rem), 36rem)"}}
+                        <div
+                            className="grid grid-cols-1 @md:grid-cols-2 @5xl:grid-cols-3 gap-2 overflow-y-auto border rounded p-2"
+                            style={{ maxHeight: "min(calc(100vh - 4rem), 36rem)" }}
                         >
                             {currentUnits.map((unit, index) => (
                                 <div
