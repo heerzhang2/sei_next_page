@@ -207,7 +207,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     const { data, fetching, error } = result
     const report = data && data.getReport
-    const { setStorage, setSubrType, setOffline, storage, modified } = useStorage()
+    const { setStorage, setSubrType, setOffline, storage, modified, isLoadingFromIndexedDB } = useStorage()
 
     const refreshData = useCallback(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) {
@@ -271,6 +271,11 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         const isNewerVersion = !currentStorageVersion || report.version > currentStorageVersion
 
         if (JSON.stringify(newData) !== JSON.stringify(prevDataRef.current)) {
+            if (isLoadingFromIndexedDB) {
+                console.log("[v0] Skipping storage update - loading from IndexedDB")
+                return
+            }
+
             if (modified) {
                 console.log("[v0] Skipping storage update - user has unsaved modifications")
                 return
@@ -294,7 +299,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
             setSubrType(undefined)
             prevDataRef.current = newData
         }
-    }, [report, storage, setStorage, setSubrType, modified])
+    }, [report, storage, setStorage, setSubrType, modified, isLoadingFromIndexedDB])
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error)
@@ -383,7 +388,7 @@ function CommonReportDataSub({
         return subrepObj
     }, [dataSub, subrid])
 
-    const { setStorage, setSubrType, setParrepfs, setOffline, storage, modified } = useStorage()
+    const { setStorage, setSubrType, setParrepfs, setOffline, storage, modified, isLoadingFromIndexedDB } = useStorage()
 
     const refreshData = useCallback(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) {
@@ -445,6 +450,11 @@ function CommonReportDataSub({
         const isNewerVersion = !currentStorageVersion || reportSub.version > currentStorageVersion
 
         if (JSON.stringify(newSubData) !== JSON.stringify(prevDataRef.current)) {
+            if (isLoadingFromIndexedDB) {
+                console.log("[v0] Skipping sub-report storage update - loading from IndexedDB")
+                return
+            }
+
             if (modified) {
                 console.log("[v0] Skipping sub-report storage update - user has unsaved modifications")
                 return
@@ -474,7 +484,7 @@ function CommonReportDataSub({
             setParrepfs(newParData)
             prevParrepfsRef.current = newParData
         }
-    }, [report, reportSub, storage, setStorage, setSubrType, setParrepfs, modified])
+    }, [report, reportSub, storage, setStorage, setSubrType, setParrepfs, modified, isLoadingFromIndexedDB])
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)

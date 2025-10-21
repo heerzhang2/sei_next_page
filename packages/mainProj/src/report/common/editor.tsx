@@ -470,6 +470,7 @@ export const WitnessSimple = ({
         itemA技术见证.forEach((name) => {
             fields[name] = storage[name] ?? ""
         })
+        console.log("WitnessSimple编辑器初始化fields大备注={}",fields['大备注'])
         return fields
     }, [storage])
     const {render, form, } = useFormFramework({schema, defaultValues, rep})

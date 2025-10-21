@@ -520,7 +520,8 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 
 {1}两个的，reload， 就会丢了一个。
 {2}检测到401错误，token无效，准备触发刷新流程,app401= false
-/12【hez0】 authorization Bearer%20bx0DmDKUqOJPLuKsC7mUiKeQ 【1】账户/14=Bearer%20iNW8BnPJexI0MIInYjQwm4Qr  /22【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN /31【3】Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
+/12【hez0】 authorization Bearer%20bx0DmDKUqOJPLuKsC7mUiKeQ Bearer%20ny4yrhjZTHQPlp8L23aCKNEy
+【1】账户/14=Bearer%20iNW8BnPJexI0MIInYjQwm4Qr /22【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN /31【3】Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
 https://v0.app/chat/-6pi8E7npu2n
 Java后端离线情况，保存第一次有，第二次保存丢失；
 nextjs宕机+PWA+后端正常：不断地要求重新登录，保存后URQL metadata和补偿列表还会驻留的！
@@ -537,3 +538,4 @@ cookie使用 HTTPOnly Cookie 可以防止XSS攻击
 
 https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/_Controller?subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&modelkey=MAGNT_TS
 独立子报告 左边不是局部化掉的：
+https://v0.app/chat/401-7vFT5QkWkhY

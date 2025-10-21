@@ -1,3 +1,7 @@
-关键改进：只有当 `modified=true` 时才保存到IndexedDB，避免保存未修改的数据；在组件挂载时立即从IndexedDB加载用户编辑的数据（只加载 `modified=true` 的数据），并恢复 `modified` 状态
-；在ReportData中增强检查逻辑，不仅检查 `modified` 状态，还检查本地storage是否已有数据，
-避免网络数据覆盖用户编辑或IndexedDB恢复的数据。这样确保用户的编辑在导航时被保存和恢复，不会被网络数据覆盖。
+24167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 222
+sw.js:2 normalizeReportCacheKey URL {origin: 'https://192.168.171.3:3765', protocol: 'https:', username: '', password: '', host: '192.168.171.3:3765', …}
+4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 222
+4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 222
+6629-4ae0237af3fd8396.js:1 WitnessSimple编辑器初始化fields大备注={} 222
+3681-7ec741c9b0744846.js:1 [AutoRestore] 开始检查补偿存储，repId: fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
+3681-7ec741c9b0744846.js:1 [AutoRestore] 未找到repId fbDjUTVZSha7EIr24Y0wjFJlcG9ydA 的相关备份

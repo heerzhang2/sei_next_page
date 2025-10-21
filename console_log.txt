@@ -2,42 +2,14 @@
 layout-7616058add3b6e65.js:1 [getCurrentToken] 从localStorage读取token作为fallback
 layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
 9875-346fd38c4f6b0288.js:2  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
-j @ 9875-346fd38c4f6b0288.js:2
-(anonymous) @ 9875-346fd38c4f6b0288.js:1
-await in (anonymous)
-(anonymous) @ 9875-346fd38c4f6b0288.js:1
-
-(anonymous) @ 9875-346fd38c4f6b0288.js:1
-next @ 9875-346fd38c4f6b0288.js:1
-
-iX @ 87c73c54-dd8d81ac9604067c.js:1
-M @ 3492-decd221604915c63.js:1
 layout-7616058add3b6e65.js:1 检测到401错误，token无效，准备触发刷新流程,app401= false
 550-464a0ada2f474bda.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
 layout-7616058add3b6e65.js:1 [AuthExchange] 检测到认证错误
 layout-7616058add3b6e65.js:1 [TokenRefreshLock] 获取刷新锁，开始刷新token
-layout-7616058add3b6e65.js:1 [TokenRefreshLock] 标记刷新开始时间: 2025-10-21T03:09:08.552Z
+layout-7616058add3b6e65.js:1 [TokenRefreshLock] 标记刷新开始时间: 2025-10-21T07:05:58.701Z
 layout-7616058add3b6e65.js:1 [GraphQLProvider] writeMetadata被调用，数据长度: 0
 layout-7616058add3b6e65.js:1 [GraphQLProvider] Token刷新或恢复操作期间跳过metadata清空
 550-464a0ada2f474bda.js:1  HEAD https://192.168.171.3:3765/api/nextLive net::ERR_CONNECTION_REFUSED
-(anonymous) @ 550-464a0ada2f474bda.js:1
-
-(anonymous) @ 87c73c54-dd8d81ac9604067c.js:1
-M @ 3492-decd221604915c63.js:1
-550-464a0ada2f474bda.js:1 Next.js服务器连接检查失败: TypeError: Failed to fetch
-
-(anonymous) @ 87c73c54-dd8d81ac9604067c.js:1
-M @ 3492-decd221604915c63.js:1
-550-464a0ada2f474bda.js:1  HEAD https://192.168.171.3:3765/api/nextLive net::ERR_CONNECTION_REFUSED
-
-(anonymous) @ 87c73c54-dd8d81ac9604067c.js:1
-M @ 3492-decd221604915c63.js:1
-550-464a0ada2f474bda.js:1 Next.js服务器连接检查失败: TypeError: Failed to fetch
-
-(anonymous) @ 87c73c54-dd8d81ac9604067c.js:1
-M @ 3492-decd221604915c63.js:1
-layout-7616058add3b6e65.js:1  HEAD https://192.168.171.3:3765/api/nextLive net::ERR_CONNECTION_REFUSED
-M @ 3492-decd221604915c63.js:1
 layout-7616058add3b6e65.js:1 [AuthExchange] 离线模式直接刷新token
 layout-7616058add3b6e65.js:1 [v0] refreshTokenDirectly: Using refresh_token from cookie
 layout-7616058add3b6e65.js:1 refreshTokenDirectly Set-Cookie header: null
@@ -49,198 +21,29 @@ layout-7616058add3b6e65.js:1 [GraphQLProvider] 检测到token刷新，更新toke
 layout-7616058add3b6e65.js:1 [GraphQLProvider] Token ref已从token:refreshed事件更新
 layout-7616058add3b6e65.js:1 [TokenRefreshLock] Token刷新成功
 layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
-sw.js:2 normalizeReportCacheKey URL {origin: 'https://192.168.171.3:3765', protocol: 'https:', username: '', password: '', host: '192.168.171.3:3765', …}
-11The FetchEvent for "<URL>" resulted in a network error response: the promise was rejected.
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/Survey?original=1&_rsc=k8nc0#Survey"}]
-    at $._handle (sw.js:1:10973)
-    at async $._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
 550-464a0ada2f474bda.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
 layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= undefined
 layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
 layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
-layout-15b3ce4e3fa4b921.js:1 [v0] Updating storage with network data {version: 809, currentVersion: undefined, isNewer: true}
-4167-463e5bb14e727441.js:1 [StorageContext] Storage updated (direct) {keys: Array(131)}
-4167-463e5bb14e727441.js:1 [StorageContext] Setting offline status: false
-4167-463e5bb14e727441.js:1 [IndexedDB] Database opened successfully
-4167-463e5bb14e727441.js:1 [StorageContext] Component unmounting, saving immediately
-3492-decd221604915c63.js:1 [Violation] 'message' handler took 212ms
-[Violation] Forced reflow while executing JavaScript took 169ms
+layout-69de0712cb044599.js:1 [v0] Updating storage with network data {version: 826, currentVersion: undefined, isNewer: true}
+4167-2ed89e6503b984fd.js:1 [StorageContext] Storage updated (direct) {keys: 131}
+4167-2ed89e6503b984fd.js:1 [StorageContext] Setting offline status: false
+4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 获得更好的
+4167-2ed89e6503b984fd.js:1 [IndexedDB] Database opened successfully
+4167-2ed89e6503b984fd.js:1 [StorageContext] Loading from IndexedDB for: {repId: 'fbDjUTVZSha7EIr24Y0wjFJlcG9ydA', subrid: undefined}
+4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 获得更好的
+6629-4ae0237af3fd8396.js:1 WitnessSimple编辑器初始化fields大备注={} 获得更好的
+3492-decd221604915c63.js:1 [Violation] 'message' handler took 239ms
+[Violation] Forced reflow while executing JavaScript took 185ms
+4167-2ed89e6503b984fd.js:1 [IndexedDB] Loaded report data: {storageKey: 'fbDjUTVZSha7EIr24Y0wjFJlcG9ydA', dataKeys: Array(132), ageMinutes: 0, modified: true}
+4167-2ed89e6503b984fd.js:1 [StorageContext] Restored user edits from IndexedDB {keys: 132, modified: true}
+4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 222
+6629-4ae0237af3fd8396.js:1 WitnessSimple编辑器初始化fields大备注={} 222
 550-464a0ada2f474bda.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
 550-464a0ada2f474bda.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
-3681-79e7d9b1e502132b.js:1 [AutoRestore] 开始检查补偿存储，repId: fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
-3681-79e7d9b1e502132b.js:1 [AutoRestore] 未找到repId fbDjUTVZSha7EIr24Y0wjFJlcG9ydA 的相关备份
-:3765/images/seal.png:1  GET https://192.168.171.3:3765/images/seal.png net::ERR_FAILED
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/images/seal.png"}]
-    at eE._handle (sw.js:2:9530)
-    at async eE._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/images/reportNoQR.png"}]
-    at eE._handle (sw.js:2:9530)
-    at async eE._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
-:3765/images/reportNoQR.png:1  GET https://192.168.171.3:3765/images/reportNoQR.png net::ERR_FAILED
-sw.js:2 normalizeReportCacheKey URL {origin: 'https://192.168.171.3:3765', protocol: 'https:', username: '', password: '', host: '192.168.171.3:3765', …}
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/Survey?original=1&_rsc=1aier#Survey"}]
-    at $._handle (sw.js:1:10973)
-    at async $._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
-3492-decd221604915c63.js:1  GET https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/Survey?original=1&_rsc=1aier net::ERR_FAILED
-
-3492-decd221604915c63.js:1 Failed to fetch RSC payload for https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/Survey?original=1#Survey. Falling back to browser navigation. TypeError: Failed to fetch
-    at y (3492-decd221604915c63.js:1:2179)
-    at _ (3492-decd221604915c63.js:1:1049)
-    at 3492-decd221604915c63.js:1:9444
-    at Object.u [as task] (3492-decd221604915c63.js:1:23569)
-    at s.c (3492-decd221604915c63.js:1:24274)
-    at s.enqueue (3492-decd221604915c63.js:1:23699)
-    at c (3492-decd221604915c63.js:1:9407)
-    at i (3492-decd221604915c63.js:1:8923)
-    at l (3492-decd221604915c63.js:1:92273)
-    at Object.prefetch (3492-decd221604915c63.js:1:6569)
-_ @ 3492-decd221604915c63.js:1
-await in _
-(anonymous) @ 3492-decd221604915c63.js:1
-u @ 3492-decd221604915c63.js:1
-c @ 3492-decd221604915c63.js:1
-enqueue @ 3492-decd221604915c63.js:1
-c @ 3492-decd221604915c63.js:1
-i @ 3492-decd221604915c63.js:1
-l @ 3492-decd221604915c63.js:1
-prefetch @ 3492-decd221604915c63.js:1
-(anonymous) @ 1701-7e6f2a618ca48578.js:1
-i8 @ 87c73c54-dd8d81ac9604067c.js:1
-(anonymous) @ 87c73c54-dd8d81ac9604067c.js:1
-nz @ 87c73c54-dd8d81ac9604067c.js:1
-sn @ 87c73c54-dd8d81ac9604067c.js:1
-cc @ 87c73c54-dd8d81ac9604067c.js:1
-cs @ 87c73c54-dd8d81ac9604067c.js:1
-sw.js:2 normalizeReportCacheKey URL {origin: 'https://192.168.171.3:3765', protocol: 'https:', username: '', password: '', host: '192.168.171.3:3765', …}
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/Conclusion?_rsc=1aier#Conclusion"}]
-    at $._handle (sw.js:1:10973)
-    at async $._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
-3492-decd221604915c63.js:1  GET https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/Conclusion?_rsc=1aier net::ERR_FAILED
-
-3492-decd221604915c63.js:1 Failed to fetch RSC payload for https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/Conclusion#Conclusion. Falling back to browser navigation. TypeError: Failed to fetch
-    at y (3492-decd221604915c63.js:1:2179)
-
-cs @ 87c73c54-dd8d81ac9604067c.js:1
-sw.js:2 normalizeReportCacheKey URL {origin: 'https://192.168.171.3:3765', protocol: 'https:', username: '', password: '', host: '192.168.171.3:3765', …}
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/T2-1?_rsc=1aier#T2-1"}]
-    at $._handle (sw.js:1:10973)
-    at async $._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
-3492-decd221604915c63.js:1  GET https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/T2-1?_rsc=1aier net::ERR_FAILED
-y @ 3492-decd221604915c63.js:1
-_ @ 3492-decd221604915c63.js:1
-(anonymous) @ 3492-decd221604915c63.js:1
-u @ 3492-decd221604915c63.js:1
-c @ 3492-decd221604915c63.js:1
-enqueue @ 3492-decd221604915c63.js:1
-c @ 3492-decd221604915c63.js:1
-i @ 3492-decd221604915c63.js:1
-l @ 3492-decd221604915c63.js:1
-prefetch @ 3492-decd221604915c63.js:1
-(anonymous) @ 1701-7e6f2a618ca48578.js:1
-i8 @ 87c73c54-dd8d81ac9604067c.js:1
-(anonymous) @ 87c73c54-dd8d81ac9604067c.js:1
-nz @ 87c73c54-dd8d81ac9604067c.js:1
-sn @ 87c73c54-dd8d81ac9604067c.js:1
-cc @ 87c73c54-dd8d81ac9604067c.js:1
-cs @ 87c73c54-dd8d81ac9604067c.js:1
-3492-decd221604915c63.js:1 Failed to fetch RSC payload for https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/T2-1#T2-1. Falling back to browser navigation. TypeError: Failed to fetch
-
-sw.js:2 normalizeReportCacheKey URL {origin: 'https://192.168.171.3:3765', protocol: 'https:', username: '', password: '', host: '192.168.171.3:3765', …}
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/T1-1?_rsc=1aier#T1-1"}]
-    at $._handle (sw.js:1:10973)
-    at async $._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
-3492-decd221604915c63.js:1  GET https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/T1-1?_rsc=1aier net::ERR_FAILED
-y @ 3492-decd221604915c63.js:1
-_ @ 3492-decd221604915c63.js:1
-(anonymous) @ 3492-decd221604915c63.js:1
-u @ 3492-decd221604915c63.js:1
-c @ 3492-decd221604915c63.js:1
-enqueue @ 3492-decd221604915c63.js:1
-c @ 3492-decd221604915c63.js:1
-i @ 3492-decd221604915c63.js:1
-l @ 3492-decd221604915c63.js:1
-prefetch @ 3492-decd221604915c63.js:1
-(anonymous) @ 1701-7e6f2a618ca48578.js:1
-i8 @ 87c73c54-dd8d81ac9604067c.js:1
-(anonymous) @ 87c73c54-dd8d81ac9604067c.js:1
-nz @ 87c73c54-dd8d81ac9604067c.js:1
-sn @ 87c73c54-dd8d81ac9604067c.js:1
-cc @ 87c73c54-dd8d81ac9604067c.js:1
-cs @ 87c73c54-dd8d81ac9604067c.js:1
-3492-decd221604915c63.js:1 Failed to fetch RSC payload for https://192.168.171.3:3765/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1/T1-1#T1-1. Falling back to browser navigation. TypeError: Failed to fetch
-    at y (3492-decd221604915c63.js:1:2179)
-    at _ (3492-decd221604915c63.js:1:1049)
-    at 3492-decd221604915c63.js:1:9444
-    at Object.u [as task] (3492-decd221604915c63.js:1:23569)
-    at s.c (3492-decd221604915c63.js:1:24274)
-    at s.enqueue (3492-decd221604915c63.js:1:23699)
-    at c (3492-decd221604915c63.js:1:9407)
-    at i (3492-decd221604915c63.js:1:8923)
-    at l (3492-decd221604915c63.js:1:92273)
-    at Object.prefetch (3492-decd221604915c63.js:1:6569)
-_ @ 3492-decd221604915c63.js:1
-await in _
-(anonymous) @ 3492-decd221604915c63.js:1
-u @ 3492-decd221604915c63.js:1
-c @ 3492-decd221604915c63.js:1
-enqueue @ 3492-decd221604915c63.js:1
-c @ 3492-decd221604915c63.js:1
-i @ 3492-decd221604915c63.js:1
-l @ 3492-decd221604915c63.js:1
-prefetch @ 3492-decd221604915c63.js:1
-(anonymous) @ 1701-7e6f2a618ca48578.js:1
-i8 @ 87c73c54-dd8d81ac9604067c.js:1
-(anonymous) @ 87c73c54-dd8d81ac9604067c.js:1
-nz @ 87c73c54-dd8d81ac9604067c.js:1
-sn @ 87c73c54-dd8d81ac9604067c.js:1
-cc @ 87c73c54-dd8d81ac9604067c.js:1
-cs @ 87c73c54-dd8d81ac9604067c.js:1
+4167-2ed89e6503b984fd.js:1 [StorageContext] Auto-saving to IndexedDB
+4167-2ed89e6503b984fd.js:1 [IndexedDB] Saved report data: {storageKey: 'fbDjUTVZSha7EIr24Y0wjFJlcG9ydA', dataKeys: Array(132), size: 3856, modified: true}
+3681-7ec741c9b0744846.js:1 [AutoRestore] 开始检查补偿存储，repId: fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
+3681-7ec741c9b0744846.js:1 [AutoRestore] 未找到repId fbDjUTVZSha7EIr24Y0wjFJlcG9ydA 的相关备份
 layout-7616058add3b6e65.js:1 [TokenRefreshLock] 刷新锁已释放
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/api/auth/session","error":{}}]
-    at H._handle (sw.js:1:11824)
-    at async H._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
-254-a28606f860d11cad.js:1  GET https://192.168.171.3:3765/api/auth/session net::ERR_FAILED
-q @ 254-a28606f860d11cad.js:1
-er @ 254-a28606f860d11cad.js:1
-(anonymous) @ 254-a28606f860d11cad.js:1
-n @ 254-a28606f860d11cad.js:1
-254-a28606f860d11cad.js:1 J: Failed to fetch. Read more at https://errors.authjs.dev#autherror
-    at q (254-a28606f860d11cad.js:1:2694)
-    at async er (254-a28606f860d11cad.js:1:4344)
-    at async Object._getSession (254-a28606f860d11cad.js:1:7050)
-q @ 254-a28606f860d11cad.js:1
-await in q
-er @ 254-a28606f860d11cad.js:1
-(anonymous) @ 254-a28606f860d11cad.js:1
-n @ 254-a28606f860d11cad.js:1
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/api/auth/session","error":{}}]
-    at H._handle (sw.js:1:11824)
-    at async H._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
-254-a28606f860d11cad.js:1  GET https://192.168.171.3:3765/api/auth/session net::ERR_FAILED
-q @ 254-a28606f860d11cad.js:1
-er @ 254-a28606f860d11cad.js:1
-(anonymous) @ 254-a28606f860d11cad.js:1
-e @ 254-a28606f860d11cad.js:1
-254-a28606f860d11cad.js:1 J: Failed to fetch. Read more at https://errors.authjs.dev#autherror
-    at q (254-a28606f860d11cad.js:1:2694)
-    at async er (254-a28606f860d11cad.js:1:4344)
-    at async Object._getSession (254-a28606f860d11cad.js:1:6928)
-q @ 254-a28606f860d11cad.js:1
-await in q
-er @ 254-a28606f860d11cad.js:1
-(anonymous) @ 254-a28606f860d11cad.js:1
-e @ 254-a28606f860d11cad.js:1
-4634-505ee0850e383415.js:1 [v0] Session unauthenticated, double-checking network status
-sw.js:2 [SW] 未处理的 Promise 拒绝: no-response: no-response :: [{"url":"https://192.168.171.3:3765/api/nextLive"}]
-    at $._handle (sw.js:1:10973)
-    at async $._getResponse (sw.js:1:9715)
-(anonymous) @ sw.js:2
