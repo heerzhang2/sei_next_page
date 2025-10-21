@@ -424,6 +424,7 @@ interface UseFrameEditorBarProps {
 }
 /**不依赖react-hook-form环境的版本，表单简单的情形下就可以使用，【缺点】需自己管理表单状态。
  * 支持声明 modType && redId 或者subrid 来申明存储的实际位置转移：存储到分项数据结构中。
+ * 【nextjs服务器离线模式】必须添加useEffect(() setEditForm(    }  }, [storage?.])
  * */
 export function useFrameEditorBar({
                                       rep,

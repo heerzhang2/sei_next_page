@@ -1,5 +1,6 @@
 [Agent] v0app >> https://vercel.com/login?next=%2Fsingup   账户切换退出，删除cookie authorization=;
 dev/被锁住：无法删除.next/  按 端口号 找 node程序 netstat -ano | findstr :9872
+`property-solidify.tsx` 组件使用 `useState` 初始化 `editForm`，但当从 IndexedDB 加载更新的 storage 时，这个状态不会自动更新。我需要添加一个 `useEffect` 来监听 storage 的变化并更新 `editForm`。
 自签名证书Chrome_SSL_cert.sh,在linux系统跑的chmod +x Chrome_SSL_cert.sh  不用windows自带openssl64窗口。
 双击 `ssl\localhost.crt`选择"安装证书"选择"本地计算机"选择"将所有证书都放入下列存储" > "受信任的根证书颁发机构"》 windows服务器。
 CMD \sei_next_page\mainProj>  yarn sei_code_tools --help
@@ -524,4 +525,3 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 【1】账户/14=Bearer%20iNW8BnPJexI0MIInYjQwm4Qr /22【2】Bearer%20WaOeTjhIIRZ711MPEWJY8AmN /31【3】Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
 
 https://v0.app/chat/refresh-token-uszIIasJSdX
-
