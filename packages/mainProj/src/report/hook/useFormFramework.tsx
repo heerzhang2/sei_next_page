@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect,useRef } from "react"
+import { useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -17,9 +17,9 @@ import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
 
 // 在文件顶部添加设备ID获取函数
 const getDeviceId = (): string => {
-    if (typeof window === 'undefined') return '';
-    return localStorage.getItem('clientId') || '';
-};
+    if (typeof window === "undefined") return ""
+    return localStorage.getItem("clientId") || ""
+}
 // 将空字符串转为 undefined，但保留字段
 const convertEmptyToUndefined = (obj: any): any => {
     if (Array.isArray(obj)) {
@@ -133,30 +133,26 @@ const serializeErrors = (errors: any): string => {
     }
 }
 
-export const withTimeout = <T,>(
-    promise: Promise<T>,
-    timeoutMs = 5*60*1000,
-    signal?: AbortSignal
-): Promise<T> => {
+export const withTimeout = <T,>(promise: Promise<T>, timeoutMs = 5 * 60 * 1000, signal?: AbortSignal): Promise<T> => {
     if (signal?.aborted) {
-        return Promise.reject(new DOMException('Aborted', 'AbortError'));
+        return Promise.reject(new DOMException("Aborted", "AbortError"))
     }
     return Promise.race([
         promise,
         new Promise<T>((_, reject) => {
             const timeoutId = setTimeout(() => {
-                reject(new Error(`操作超时 (${timeoutMs}ms)`));
-            }, timeoutMs);
+                reject(new Error(`操作超时 (${timeoutMs}ms)`))
+            }, timeoutMs)
             // 如果提供了 signal，监听取消事件
             if (signal) {
-                signal.addEventListener('abort', () => {
-                    clearTimeout(timeoutId);
-                    reject(new DOMException('Aborted', 'AbortError'));
-                });
+                signal.addEventListener("abort", () => {
+                    clearTimeout(timeoutId)
+                    reject(new DOMException("Aborted", "AbortError"))
+                })
             }
         }),
-    ]);
-};
+    ])
+}
 
 interface UseFormFrameworkProps {
     // 接收外部传入的schema和默认值
@@ -192,7 +188,7 @@ export function useFormFramework({
                                      redId,
                                      modType,
                                  }: UseFormFrameworkProps) {
-    const abortControllerRef = useRef<AbortController | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null)
     const { storage, setStorage, setModified, modified } = useStorage()
 
     // 创建表单
@@ -200,6 +196,16 @@ export function useFormFramework({
         resolver: zodResolver(schema),
         defaultValues: defaultValues as any,
     })
+
+    const prevDefaultValuesRef = useRef<string>("")
+    useEffect(() => {
+        const currentDefaultValuesStr = JSON.stringify(defaultValues)
+        if (prevDefaultValuesRef.current && prevDefaultValuesRef.current !== currentDefaultValuesStr) {
+            console.log("[v0] defaultValues changed, resetting form with new values")
+            form.reset(defaultValues as any)
+        }
+        prevDefaultValuesRef.current = currentDefaultValuesStr
+    }, [defaultValues, form])
 
     // 使用自定义 hook 处理数组字段
     const arrayControls = useFieldArrays(form.control, arrayFields)
@@ -210,18 +216,18 @@ export function useFormFramework({
     //保存：处理表单提交
     const handleSubmit = async (values: any) => {
         if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
+            abortControllerRef.current.abort()
         }
-        abortControllerRef.current = new AbortController();
-        const signal = abortControllerRef.current.signal;
+        abortControllerRef.current = new AbortController()
+        const signal = abortControllerRef.current.signal
         if (customOnSubmit) {
             await customOnSubmit(values)
             return
         }
-        const deviceId = getDeviceId();
+        const deviceId = getDeviceId()
         if (!deviceId) {
-            toast.error("无法获取设备信息，请刷新页面重试");
-            return;
+            toast.error("无法获取设备信息，请刷新页面重试")
+            return
         }
         // 默认提交处理
         // console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉")
@@ -254,11 +260,11 @@ export function useFormFramework({
                     data: JSON.stringify(cleanedRepData),
                 }),
                 120000, // 超时时间
-                signal // 传递 abort signal
-            );
+                signal, // 传递 abort signal
+            )
             if (signal.aborted) {
-                console.log("请求已被取消");
-                return;
+                console.log("请求已被取消")
+                return
             }
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
@@ -275,9 +281,9 @@ export function useFormFramework({
             }
         } catch (error) {
             console.log("updateOriginalResult=异常=", error)
-            if (error.name === 'AbortError') {
-                console.warn("请求已被取消");
-                return;
+            if (error.name === "AbortError") {
+                console.warn("请求已被取消")
+                return
             }
             if (error instanceof Error && error.message.includes("操作超时")) {
                 toast.error("保存超时，请检查网络连接后重试", {
@@ -321,20 +327,24 @@ export function useFormFramework({
 
     useEffect(() => {
         const handleMutationCompleted = (event: CustomEvent) => {
-            const objId= subrid ?? rep?.id;
-            console.log('【终结】Mutation操作已完成:', event.detail);
-            if(event.detail.hasError && 'useOriginalDataMutation'===event.detail.operation && objId===event.detail.variables.id) {
+            const objId = subrid ?? rep?.id
+            console.log("【终结】Mutation操作已完成:", event.detail)
+            if (
+                event.detail.hasError &&
+                "useOriginalDataMutation" === event.detail.operation &&
+                objId === event.detail.variables.id
+            ) {
                 if (abortControllerRef.current) {
-                    abortControllerRef.current.abort();  //但是不会影响后端JAVA数据库事务的执行。
+                    abortControllerRef.current.abort() //但是不会影响后端JAVA数据库事务的执行。
                 }
-                form.reset({}, { keepValues: true });
+                form.reset({}, { keepValues: true })
             }
-        };
-        window.addEventListener('mutation-completed', handleMutationCompleted as EventListener);
+        }
+        window.addEventListener("mutation-completed", handleMutationCompleted as EventListener)
         return () => {
-            window.removeEventListener('mutation-completed', handleMutationCompleted as EventListener);
-        };
-    }, [rep?.id, subrid, form]);
+            window.removeEventListener("mutation-completed", handleMutationCompleted as EventListener)
+        }
+    }, [rep?.id, subrid, form])
 
     // 使用contentRendererFactory创建内容渲染器
     const contentRenderer = contentRendererFactory ? contentRendererFactory(form, arrayControls) : null
@@ -425,7 +435,7 @@ export function useFrameEditorBar({
                                       modType,
                                       root,
                                   }: UseFrameEditorBarProps) {
-    const abortControllerRef = useRef<AbortController | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified, modified } = useStorage()
     //用URQL mutation来保存变更数据到后端数据库的
@@ -433,15 +443,15 @@ export function useFrameEditorBar({
     //保存：处理表单提交
     const handleSubmit = async () => {
         if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
+            abortControllerRef.current.abort()
         }
-        abortControllerRef.current = new AbortController();
-        const signal = abortControllerRef.current.signal;
+        abortControllerRef.current = new AbortController()
+        const signal = abortControllerRef.current.signal
         if (onVerify && !onVerify(values)) return
-        const deviceId = getDeviceId();
+        const deviceId = getDeviceId()
         if (!deviceId) {
-            toast.error("无法获取设备信息，请刷新页面重试");
-            return;
+            toast.error("无法获取设备信息，请刷新页面重试")
+            return
         }
         // console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
         const oldStore = storage?.[`_${modType}_${redId}`]
@@ -473,7 +483,7 @@ export function useFrameEditorBar({
                     data: JSON.stringify(cleanedRepData),
                 }),
                 120000, // 超时时间
-                signal // 传递 abort signal
+                signal, // 传递 abort signal
             )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
@@ -533,19 +543,23 @@ export function useFrameEditorBar({
     }
     useEffect(() => {
         const handleMutationCompleted = (event: CustomEvent) => {
-            const objId= subrid ?? rep?.id;
-            console.log('【终结】Mutation操作已完成:', event.detail);
-            if(event.detail.hasError && 'useOriginalDataMutation'===event.detail.operation && objId===event.detail.variables.id) {
+            const objId = subrid ?? rep?.id
+            console.log("【终结】Mutation操作已完成:", event.detail)
+            if (
+                event.detail.hasError &&
+                "useOriginalDataMutation" === event.detail.operation &&
+                objId === event.detail.variables.id
+            ) {
                 if (abortControllerRef.current) {
-                    abortControllerRef.current.abort();
+                    abortControllerRef.current.abort()
                 }
             }
-        };
-        window.addEventListener('mutation-completed', handleMutationCompleted as EventListener);
+        }
+        window.addEventListener("mutation-completed", handleMutationCompleted as EventListener)
         return () => {
-            window.removeEventListener('mutation-completed', handleMutationCompleted as EventListener);
-        };
-    }, [rep?.id, subrid]);
+            window.removeEventListener("mutation-completed", handleMutationCompleted as EventListener)
+        }
+    }, [rep?.id, subrid])
     // 创建渲染函数：只提供按钮条，不依赖于Form环境的。
     const render = () => (
         <div className="flex gap-4 justify-end">

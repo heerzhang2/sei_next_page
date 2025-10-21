@@ -16,7 +16,6 @@ interface StorageContextType {
     setOffline: (offline: boolean) => void
     modified?: boolean
     setModified?: (modified: boolean) => void
-    isLoadingFromIndexedDB?: boolean
 }
 
 const StorageContext = createContext<StorageContextType | undefined>(undefined)
@@ -32,8 +31,6 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [offline, setOfflineState] = useState<boolean>(false)
     const [modified, setModifiedState] = useState<boolean>(false)
     const [isInitialized, setIsInitialized] = useState(false)
-    const [isLoadingFromIndexedDB, setIsLoadingFromIndexedDB] = useState(false)
-
     const hasLoadedRef = useRef(false)
     const storageKeyRef = useRef<string>("")
 
@@ -54,7 +51,6 @@ export function StorageProvider({ children }: { children: ReactNode }) {
             return
         }
 
-        setIsLoadingFromIndexedDB(true)
         console.log("[StorageContext] Loading from IndexedDB for:", { repId, subrid })
 
         indexedDBStorage
@@ -74,14 +70,12 @@ export function StorageProvider({ children }: { children: ReactNode }) {
                 setIsInitialized(true)
                 hasLoadedRef.current = true
                 storageKeyRef.current = currentKey
-                setIsLoadingFromIndexedDB(false)
             })
             .catch((error) => {
                 console.error("[StorageContext] Failed to restore:", error)
                 setIsInitialized(true)
                 hasLoadedRef.current = true
                 storageKeyRef.current = currentKey
-                setIsLoadingFromIndexedDB(false)
             })
     }, [repId, subrid])
 
@@ -92,7 +86,6 @@ export function StorageProvider({ children }: { children: ReactNode }) {
             hasLoadedRef.current = false
             setIsInitialized(false)
             setModifiedState(false) // Reset modified state on navigation
-            setIsLoadingFromIndexedDB(false)
         }
     }, [repId, subrid])
 
@@ -211,9 +204,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         setOffline,
         modified,
         setModified,
-        isLoadingFromIndexedDB,
     }
-    console.log("追踪 大备注 字段=", storage?.['大备注'])
     return <StorageContext.Provider value={value}>{children}</StorageContext.Provider>
 }
 
