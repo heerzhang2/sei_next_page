@@ -6,20 +6,19 @@ import { ssrExchange as ssrExchangeNext } from "@urql/next"
 import { useAccessToken } from "./use-access-token"
 import { authExchange } from "@urql/exchange-auth"
 import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
-import { offlineExchange } from "@urql/exchange-graphcache"
-import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import schema from "./urql-schema.json"
-import type { SerializedRequest } from "@urql/exchange-graphcache"
 import { toast } from "sonner"
 import type { CombinedError, Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
-import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 import { manualRetryExchange } from "@/lib/manual-retry-exchange"
 import { preventDuplicateExchange } from "@/lib/prevent-duplicate-exchange"
 import { acquireRefreshLock, isTokenRefreshing as checkTokenRefreshing } from "@/lib/token-refresh-lock"
+import { offlineExchange } from "@urql/exchange-offline"
+import type { SerializedRequest } from "@urql/exchange-offline"
+import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 
 // 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
@@ -55,7 +54,6 @@ const getDeviceId = (): string => {
 //网络状态更新：
 const updateBackendStatusExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
-    storage: any,
 ): Exchange => {
     return ({ forward, client }) => {
         return (operations$) => {
@@ -78,15 +76,6 @@ const updateBackendStatusExchange = (
                             lastErrorTime = now
                             if (errorCount <= MAX_ERRORS_PER_MINUTE) {
                                 updateGraphQLBackendStatus(false, false)
-                            }
-                            if (result.error.isImmediateError) {
-                                return {
-                                    ...result,
-                                    error: {
-                                        ...result.error,
-                                        message: result.error.message || "网络连接失败，请检查网络后重试",
-                                    },
-                                }
                             }
                         } else {
                             if (result.data) {
@@ -390,7 +379,7 @@ const makeAuthExchange = (
                         pendingMetadataBeforeRefresh = []
                         toast.error("登录已过期", {
                             description: "请重新登录，点导航登录",
-                            duration:  60 * 1000,
+                            duration: 60 * 1000,
                         })
                     }
                 })
@@ -674,25 +663,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             return null
         }
 
-        let storage
-        if (typeof window !== "undefined") {
-            const defaultStorage = makeDefaultStorage({
-                idbName: "graphcache-sei",
-                maxAge: 7,
-            })
-            storage = {
-                ...defaultStorage,
-            }
-        } else {
-            storage = {
-                writeData: (data: any) => Promise.resolve(),
-                readData: () => Promise.resolve(null),
-                writeMetadata: (data: any) => Promise.resolve(),
-                readMetadata: () => Promise.resolve(null),
-            }
-        }
-
-        const cache = createNetworkAwareOfflineExchange(storage)
         const ssr = ssrExchangeNext({
             isClient: typeof window !== "undefined",
         })
@@ -749,11 +719,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
-                cache, //放在第二位来处理，处理后端应答放在倒数第二位。
                 preventDuplicateExchange,
                 manualRetryExchange,
                 makeAuthExchange(getCurrentToken, undefined, print),
-                updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
+                updateBackendStatusExchange(updateGraphQLBackendStatus),
                 ssr,
                 fetchAbortExchange,
                 customFetchExchange,
@@ -778,7 +747,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         clientRef.current = client
         ssrRef.current = ssr
         return [client, ssr]
-    }, [isClient, updateGraphQLBackendStatus, print])
+    }, [isClient, updateGraphQLBackendStatus, print, addConflictRequest])
 
     const [client, ssr] = useMemo(() => {
         if (!isClient) return [null, null]

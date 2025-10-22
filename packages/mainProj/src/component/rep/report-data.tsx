@@ -7,6 +7,8 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { toast } from "sonner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertTriangle } from "lucide-react"
 
 export interface ReportParams {
     repId: string
@@ -187,15 +189,12 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         setMounted(true)
     }, [])
 
-    // console.log("当前CommonReportData状态:", { mounted, isClient, repId })
-
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
-    //有四种策略 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
     const requestPolicy = useMemo(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) {
             return "cache-first"
         }
-        return "cache-and-network" //在线时先用缓存，同时同步请求网络
+        return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable])
 
     const [result, reexecuteQuery] = useQuery({
@@ -299,7 +298,6 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     useEffect(() => {
         const hasNetworkError = isNetworkError(error)
         const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable
-        //这儿设置内部用的状态 后续也都没有用到的； 只能是猜测Java后端不可用状态，很可能被限制限速，后端太慢。
         setOffline(shouldBeOffline)
     }, [error, isClientOnline, isGraphQLBackendReachable, setOffline])
 
@@ -308,13 +306,24 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     }
     if (!isClientOnline || !isGraphQLBackendReachable) {
         if (data && report) {
-            return children
+            return (
+                <>
+                    <Alert className="mb-4 bg-yellow-50 border-yellow-300">
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                        <AlertDescription className="text-yellow-800">
+                            <strong>本地缓存数据</strong> - 当前使用本地缓存的报告数据。
+                            {modified && '您有未保存的修改，请在网络恢复后点击"保存"按钮发送到服务器。'}
+                        </AlertDescription>
+                    </Alert>
+                    {children}
+                </>
+            )
         }
     }
     if (fetching && !data && Date.now() < pausedUntilRef.current) {
         return <div className="p-4 text-sm text-muted-foreground">查询已暂停，请稍后...</div>
     }
-    if (fetching && !data) return <div className="p-4">加载中...</div>
+    if (fetching && !data) return <div>加载中...</div>
     if (error) {
         if (isNetworkError(error)) {
             return report && data && children
@@ -347,7 +356,6 @@ function CommonReportDataSub({
     const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
 
     useEffect(() => setMounted(true), [])
-    // console.log("CommonReportDataSub编辑需要子报告单独查", { repId, subrid })
 
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
@@ -355,7 +363,7 @@ function CommonReportDataSub({
         if (!isClientOnline || !isGraphQLBackendReachable) {
             return "cache-first"
         }
-        return "cache-and-network" //在线时先用缓存，同时同步请求网络
+        return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable])
 
     const [result] = useQuery({
@@ -375,7 +383,6 @@ function CommonReportDataSub({
     const { data, fetching, error } = result
     const { data: dataSub, fetching: fetchingSub, error: errorSub } = resultSub
     const report = data && data?.getReport
-    //离线缓存情形下：若子查询失败，允许利用主查询的。
     const reportSub = React.useMemo(() => {
         const reportSub = dataSub && dataSub?.getReport
         if (reportSub || !report) return reportSub
@@ -488,7 +495,18 @@ function CommonReportDataSub({
     if (error || errorSub) {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
         if (hasNetworkError) {
-            return report && reportSub && children
+            return report && reportSub ? (
+                <>
+                    <Alert className="mb-4 bg-yellow-50 border-yellow-300">
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                        <AlertDescription className="text-yellow-800">
+                            <strong>本地缓存数据</strong> - 当前使用本地缓存的子报告数据。
+                            {modified && '您有未保存的修改，请在网络恢复后点击"保存"按钮发送到服务器。'}
+                        </AlertDescription>
+                    </Alert>
+                    {children}
+                </>
+            ) : null
         } else {
             return <div>报告取数据错: {error?.message || errorSub?.message}</div>
         }

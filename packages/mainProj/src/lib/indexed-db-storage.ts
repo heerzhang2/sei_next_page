@@ -353,6 +353,69 @@ class IndexedDBStorage {
             return []
         }
     }
+
+    /**
+     * Get all modified reports (modified=true)
+     */
+    async getAllModified(): Promise<
+        Array<{
+            repId: string
+            subrid?: string
+            storage: any
+            metadata: any
+        }>
+    > {
+        try {
+            await this.init()
+            if (!this.db) throw new Error("Database not initialized")
+
+            return new Promise((resolve, reject) => {
+                const transaction = this.db!.transaction([STORE_NAME], "readonly")
+                const objectStore = transaction.objectStore(STORE_NAME)
+                const request = objectStore.openCursor()
+
+                const modifiedReports: Array<{
+                    repId: string
+                    subrid?: string
+                    storage: any
+                    metadata: any
+                }> = []
+
+                request.onsuccess = (event) => {
+                    const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null
+
+                    if (cursor) {
+                        const entry = cursor.value as StorageEntry
+
+                        // Only include entries with modified=true
+                        if (entry.metadata.modified) {
+                            const [repId, subrid] = entry.storageKey.split(":")
+                            modifiedReports.push({
+                                repId,
+                                subrid,
+                                storage: entry.storage,
+                                metadata: entry.metadata,
+                            })
+                        }
+
+                        cursor.continue()
+                    } else {
+                        // Finished iterating
+                        console.log("[IndexedDB] Found modified reports:", modifiedReports.length)
+                        resolve(modifiedReports)
+                    }
+                }
+
+                request.onerror = () => {
+                    console.error("[IndexedDB] Failed to get modified reports:", request.error)
+                    reject(request.error)
+                }
+            })
+        } catch (error) {
+            console.error("[IndexedDB] GetAllModified error:", error)
+            return []
+        }
+    }
 }
 
 // Singleton instance

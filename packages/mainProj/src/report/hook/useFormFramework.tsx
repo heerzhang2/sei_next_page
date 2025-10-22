@@ -278,8 +278,12 @@ export function useFormFramework({
                 toast.success("数据已成功保存到服务器", {
                     duration: 3000,
                 })
-                // 保存成功后，设置 modified 为 false
                 setModified(false)
+
+                // Auto-refresh page after successful save
+                setTimeout(() => {
+                    window.location.reload()
+                }, 500)
             }
         } catch (error) {
             console.log("updateOriginalResult=异常=", error)
@@ -371,7 +375,11 @@ export function useFormFramework({
                             <Button type="button" variant="outline" onClick={handleConfirm}>
                                 确认
                             </Button>
-                            <Button type="submit" disabled={(form.formState.isSubmitting && updateResult?.fetching) || !modified}>
+                            <Button
+                                type="submit"
+                                disabled={(form.formState.isSubmitting && updateResult?.fetching) || !modified}
+                                title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
+                            >
                                 {form.formState.isSubmitting && updateResult?.fetching ? "保存到后端..." : "保存"}
                             </Button>
                         </div>
@@ -513,8 +521,12 @@ export function useFrameEditorBar({
                 toast.success("数据已成功保存到服务器", {
                     duration: 3000,
                 })
-                // 保存成功后，设置 modified 为 false
                 setModified(false)
+
+                // Auto-refresh page after successful save
+                setTimeout(() => {
+                    window.location.reload()
+                }, 500)
             }
         } catch (error) {
             console.log("updateOriginalResult=异常=", error)
@@ -587,7 +599,12 @@ export function useFrameEditorBar({
             <Button type="button" variant="outline" onClick={handleConfirm}>
                 确认
             </Button>
-            <Button type="submit" disabled={(isSaving && updateResult?.fetching) || !modified} onClick={handleSubmit}>
+            <Button
+                type="submit"
+                disabled={(isSaving && updateResult?.fetching) || !modified}
+                onClick={handleSubmit}
+                title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
+            >
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving && updateResult?.fetching ? "保存到后端..." : "保存"}
             </Button>
