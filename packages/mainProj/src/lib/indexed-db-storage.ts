@@ -7,7 +7,7 @@ const DB_NAME = "ReportStorageDB"
 const DB_VERSION = 1 // Reverted to version 1, removing token store
 const STORE_NAME = "reportStorage"
 const STORAGE_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
-const POST_SAVE_CLEANUP_TTL = 60 * 60 * 1000 // 1 hour in milliseconds
+const POST_SAVE_CLEANUP_TTL = 30 * 60 * 1000 // 30 minutes in milliseconds
 
 interface StorageEntry {
     storageKey: string // Format: "repId" or "repId:subrid"
@@ -222,7 +222,7 @@ class IndexedDBStorage {
     }
 
     /**
-     * Mark data as saved (for 1-hour cleanup timer)
+     * Mark data as saved (for 30-minute cleanup timer)
      */
     async markAsSaved(repId: string, subrid?: string): Promise<void> {
         try {
@@ -244,11 +244,12 @@ class IndexedDBStorage {
                     }
 
                     entry.metadata.lastSaveTime = Date.now()
+                    entry.metadata.modified = false
 
                     const putRequest = objectStore.put(entry)
 
                     putRequest.onsuccess = () => {
-                        console.log("[IndexedDB] Marked as saved:", storageKey)
+                        console.log("[IndexedDB] Marked as saved and cleared modified flag:", storageKey)
                         resolve()
                     }
 
@@ -292,8 +293,6 @@ class IndexedDBStorage {
                         const entry = cursor.value as StorageEntry
                         const age = now - entry.metadata.timestamp
 
-                        // 1. Remove if older than 7 days
-                        // 2. Remove if saved more than 1 hour ago
                         const shouldRemove =
                             age > STORAGE_TTL ||
                             (entry.metadata.lastSaveTime && now - entry.metadata.lastSaveTime > POST_SAVE_CLEANUP_TTL)
@@ -303,7 +302,7 @@ class IndexedDBStorage {
                             removedCount++
                             console.log("[IndexedDB] Cleaned up entry:", {
                                 storageKey: entry.storageKey,
-                                reason: age > STORAGE_TTL ? "expired" : "post-save-cleanup",
+                                reason: age > STORAGE_TTL ? "expired (7 days)" : "post-save-cleanup (30 min)",
                             })
                         }
 

@@ -224,12 +224,20 @@ export function StorageProvider({ children }: { children: ReactNode }) {
             setModifiedState(value)
 
             if (!value && repId && repId !== "*") {
-                indexedDBStorage.markAsSaved(repId, subrid).catch((error) => {
-                    console.error("[StorageContext] Failed to mark as saved:", error)
-                })
+                console.log("[StorageContext] Saving with modified=false to IndexedDB")
+                // Save immediately with modified=false to update the IndexedDB entry
+                indexedDBStorage
+                    .save(repId, storage, { parrepfs, modified: false }, subrid)
+                    .then(() => {
+                        // Also mark as saved to start the 30-minute cleanup timer
+                        return indexedDBStorage.markAsSaved(repId, subrid)
+                    })
+                    .catch((error) => {
+                        console.error("[StorageContext] Failed to update modified flag in IndexedDB:", error)
+                    })
             }
         },
-        [repId, subrid],
+        [repId, subrid, storage, parrepfs],
     )
 
     const value: StorageContextType = {
