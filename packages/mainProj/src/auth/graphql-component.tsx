@@ -16,8 +16,9 @@ import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { manualRetryExchange } from "@/lib/manual-retry-exchange"
 import { preventDuplicateExchange } from "@/lib/prevent-duplicate-exchange"
 import { acquireRefreshLock, isTokenRefreshing as checkTokenRefreshing } from "@/lib/token-refresh-lock"
-import { offlineExchange } from "@urql/exchange-offline"
-import type { SerializedRequest } from "@urql/exchange-offline"
+import { offlineExchange } from "@urql/exchange-graphcache"
+import type { SerializedRequest } from "@urql/exchange-graphcache"
+import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import { mutationCompensationStorage } from "@/lib/mutation-compensation-storage"
 
 // 检查是否为网络错误
@@ -662,7 +663,24 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
             return null
         }
-
+        let storage
+        if (typeof window !== "undefined") {
+            const defaultStorage = makeDefaultStorage({
+                idbName: "graphcache-sei",
+                maxAge: 7,
+            })
+            storage = {
+                ...defaultStorage,
+            }
+        } else {
+            storage = {
+                writeData: (data: any) => Promise.resolve(),
+                readData: () => Promise.resolve(null),
+                writeMetadata: (data: any) => Promise.resolve(),
+                readMetadata: () => Promise.resolve(null),
+            }
+        }
+        const cache = createNetworkAwareOfflineExchange(storage)
         const ssr = ssrExchangeNext({
             isClient: typeof window !== "undefined",
         })
@@ -719,6 +737,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
+                cache, //放在第二位来处理，处理后端应答放在倒数第二位。
                 preventDuplicateExchange,
                 manualRetryExchange,
                 makeAuthExchange(getCurrentToken, undefined, print),
