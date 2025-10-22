@@ -1,49 +1,114 @@
-[getCurrentToken] 从localStorage读取token作为fallback
-layout-7616058add3b6e65.js:1 [getCurrentToken] 从localStorage读取token作为fallback
-layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
-9875-346fd38c4f6b0288.js:2  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
-layout-7616058add3b6e65.js:1 检测到401错误，token无效，准备触发刷新流程,app401= false
-550-464a0ada2f474bda.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
-layout-7616058add3b6e65.js:1 [AuthExchange] 检测到认证错误
-layout-7616058add3b6e65.js:1 [TokenRefreshLock] 获取刷新锁，开始刷新token
-layout-7616058add3b6e65.js:1 [TokenRefreshLock] 标记刷新开始时间: 2025-10-21T07:05:58.701Z
-layout-7616058add3b6e65.js:1 [GraphQLProvider] writeMetadata被调用，数据长度: 0
-layout-7616058add3b6e65.js:1 [GraphQLProvider] Token刷新或恢复操作期间跳过metadata清空
-550-464a0ada2f474bda.js:1  HEAD https://192.168.171.3:3765/api/nextLive net::ERR_CONNECTION_REFUSED
-layout-7616058add3b6e65.js:1 [AuthExchange] 离线模式直接刷新token
-layout-7616058add3b6e65.js:1 [v0] refreshTokenDirectly: Using refresh_token from cookie
-layout-7616058add3b6e65.js:1 refreshTokenDirectly Set-Cookie header: null
-layout-7616058add3b6e65.js:1 [v0] refreshTokenDirectly: Saved new refresh_token to cookie
-layout-7616058add3b6e65.js:1 [AuthExchange] 触发token:refreshed事件并更新next-auth session
-layout-7616058add3b6e65.js:1 [useAccessToken] 检测到token刷新事件，更新token
-layout-7616058add3b6e65.js:1 [useAccessToken] Token已更新为新刷新的token
-layout-7616058add3b6e65.js:1 [GraphQLProvider] 检测到token刷新，更新token ref
-layout-7616058add3b6e65.js:1 [GraphQLProvider] Token ref已从token:refreshed事件更新
-layout-7616058add3b6e65.js:1 [TokenRefreshLock] Token刷新成功
-layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
-550-464a0ada2f474bda.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
-layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
-4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= undefined
-layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
-layout-7616058add3b6e65.js:1 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
-layout-69de0712cb044599.js:1 [v0] Updating storage with network data {version: 826, currentVersion: undefined, isNewer: true}
-4167-2ed89e6503b984fd.js:1 [StorageContext] Storage updated (direct) {keys: 131}
-4167-2ed89e6503b984fd.js:1 [StorageContext] Setting offline status: false
-4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 获得更好的
-4167-2ed89e6503b984fd.js:1 [IndexedDB] Database opened successfully
-4167-2ed89e6503b984fd.js:1 [StorageContext] Loading from IndexedDB for: {repId: 'fbDjUTVZSha7EIr24Y0wjFJlcG9ydA', subrid: undefined}
-4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 获得更好的
-6629-4ae0237af3fd8396.js:1 WitnessSimple编辑器初始化fields大备注={} 获得更好的
-3492-decd221604915c63.js:1 [Violation] 'message' handler took 239ms
-[Violation] Forced reflow while executing JavaScript took 185ms
-4167-2ed89e6503b984fd.js:1 [IndexedDB] Loaded report data: {storageKey: 'fbDjUTVZSha7EIr24Y0wjFJlcG9ydA', dataKeys: Array(132), ageMinutes: 0, modified: true}
-4167-2ed89e6503b984fd.js:1 [StorageContext] Restored user edits from IndexedDB {keys: 132, modified: true}
-4167-2ed89e6503b984fd.js:1 追踪 大备注 字段= 222
-6629-4ae0237af3fd8396.js:1 WitnessSimple编辑器初始化fields大备注={} 222
-550-464a0ada2f474bda.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
-550-464a0ada2f474bda.js:1 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
-4167-2ed89e6503b984fd.js:1 [StorageContext] Auto-saving to IndexedDB
-4167-2ed89e6503b984fd.js:1 [IndexedDB] Saved report data: {storageKey: 'fbDjUTVZSha7EIr24Y0wjFJlcG9ydA', dataKeys: Array(132), size: 3856, modified: true}
-3681-7ec741c9b0744846.js:1 [AutoRestore] 开始检查补偿存储，repId: fbDjUTVZSha7EIr24Y0wjFJlcG9ydA
-3681-7ec741c9b0744846.js:1 [AutoRestore] 未找到repId fbDjUTVZSha7EIr24Y0wjFJlcG9ydA 的相关备份
-layout-7616058add3b6e65.js:1 [TokenRefreshLock] 刷新锁已释放
+[StorageContext] Storage updated (function) {prevKeys: 137, newKeys: 137}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:200 [StorageContext] Setting modified: true
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA'}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:181 [StorageContext] Storage updated (function) {prevKeys: 137, newKeys: 137}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA'}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:161 [v0] Auto-save triggered: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:181 [StorageContext] Storage updated (function) {prevKeys: 137, newKeys: 137}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:200 [StorageContext] Setting modified: true
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA'}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:181 [StorageContext] Storage updated (function) {prevKeys: 137, newKeys: 137}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA'}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:121 [StorageContext] Component unmounting, saving immediately
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:100 [v0] saveImmediately called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:161 [v0] Auto-save triggered: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:181 [StorageContext] Storage updated (function) {prevKeys: 137, newKeys: 137}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:200 [StorageContext] Setting modified: true
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA'}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:181 [StorageContext] Storage updated (function) {prevKeys: 137, newKeys: 137}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA'}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:121 [StorageContext] Component unmounting, saving immediately
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:100 [v0] saveImmediately called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:161 [v0] Auto-save triggered: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:181 [StorageContext] Storage updated (function) {prevKeys: 137, newKeys: 137}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:200 [StorageContext] Setting modified: true
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA'}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:181 [StorageContext] Storage updated (function) {prevKeys: 137, newKeys: 137}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA'}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:121 [StorageContext] Component unmounting, saving immediately
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:100 [v0] saveImmediately called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:161 [v0] Auto-save triggered: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:142 [StorageContext] Link clicked, saving immediately
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:100 [v0] saveImmediately called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\sw.ts:30 normalizeReportCacheKey URL {origin: 'https://192.168.171.3:3765', protocol: 'https:', username: '', password: '', host: '192.168.171.3:3765', …}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+layout-router.js:100 Skipping auto-scroll behavior due to `position: sticky` or `position: fixed` on element: <div class=​"fixed top-4 left-10 z-50">​</div>​
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:121 [StorageContext] Component unmounting, saving immediately
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:100 [v0] saveImmediately called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:665 [getCurrentToken] 从localStorage读取token作为fallback
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:665 [getCurrentToken] 从localStorage读取token作为fallback
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:774 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:275 [v0] Skipping storage update - user has unsaved modifications
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:194 [StorageContext] Setting offline status: false
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:56 [StorageContext] Loading from IndexedDB for: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:87 [StorageContext] Report/subrid changed, resetting state
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:665 [getCurrentToken] 从localStorage读取token作为fallback
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:665 [getCurrentToken] 从localStorage读取token作为fallback
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:774 请求头部: {deviceId: 'qlhn4lg', hasToken: true}
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:275 [v0] Skipping storage update - user has unsaved modifications
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:194 [StorageContext] Setting offline status: false
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:121 [StorageContext] Component unmounting, saving immediately
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:100 [v0] saveImmediately called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined, storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\hooks\use-media-print.tsx:30 [10:35:59] 媒体类型切换打印助手已加载
+C:\home\sei_next_page\packages\mainProj\src\hooks\use-media-print.tsx:30 [10:35:59] 已添加自定义纸张样式: 尺寸=A4, 边距=1cm
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:288 [v0] Updating storage with network data {version: 1066, currentVersion: 164, isNewer: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:188 [StorageContext] Storage updated (direct) {keys: 137}
+C:\home\sei_next_page\packages\mainProj\src\hooks\use-media-print.tsx:30 [10:35:59] 媒体类型切换打印助手已加载
+C:\home\sei_next_page\packages\mainProj\src\hooks\use-media-print.tsx:30 [10:35:59] 已添加自定义纸张样式: 尺寸=A4, 边距=1cm
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+scheduler.development.js:14 [Violation] 'message' handler took 1422ms
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: 'KQcbgDF9RO21DgA92H3tQVJlcG9ydA', storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:91 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined, storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', modified: true, stackTrace: ''}
+[Violation] Forced reflow while executing JavaScript took 234ms
+urql-core-chunk.mjs:529  POST https://192.168.171.3:8673/graphql 401 (Unauthorized)
+fetchOperation @ urql-core-chunk.mjs:529
+eval @ wonka.mjs:934
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:KQcbgDF9RO21DgA92H3tQVJlcG9ydA', dataKeys: Array(137), size: 25209, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:143 检测到401错误，token无效，准备触发刷新流程,app401= false
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: false, isClientOnline: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:304 [AuthExchange] 检测到认证错误
+C:\home\sei_next_page\packages\mainProj\src\lib\token-refresh-lock.ts:33 [TokenRefreshLock] 获取刷新锁，开始刷新token
+C:\home\sei_next_page\packages\mainProj\src\lib\token-refresh-lock.ts:89 [TokenRefreshLock] 标记刷新开始时间: 2025-10-22T02:36:01.335Z
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:70 [StorageContext] No user edits found in IndexedDB
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:194 [StorageContext] Setting offline status: true
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+scheduler.development.js:14 [Violation] 'message' handler took 187ms
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:316 [AuthExchange] 通过NextJS API刷新token
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:114 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(137), size: 25178, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:194 [StorageContext] Setting offline status: false
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:28 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:329 [AuthExchange] NextJS API刷新成功
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:352 [AuthExchange] 触发token:refreshed事件并更新next-auth session
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.tsx:43 [useAccessToken] 检测到token刷新事件，更新token
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.tsx:48 [useAccessToken] Token已更新为新刷新的token
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:815 [GraphQLProvider] 检测到token刷新，更新token ref
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:819 [GraphQLProvider] Token ref已从token:refreshed事件更新
+C:\home\sei_next_page\packages\mainProj\src\components\session-sync.tsx:26 [SessionSync] 收到token:refreshed事件，更新next-auth session
+C:\home\sei_next_page\packages\mainProj\src\hooks\use-offline-auth.ts:122 检测到token刷新事件
+C:\home\sei_next_page\packages\mainProj\src\lib\token-refresh-lock.ts:40 [TokenRefreshLock] Token刷新成功
+C:\home\sei_next_page\packages\mainProj\src\components\session-sync.tsx:32 [SessionSync] next-auth session已更新
+C:\home\sei_next_page\packages\mainProj\src\contexts\network-status-context.tsx:267 [v0] 外部更新GraphQL后端状态: {isReachable: true, isClientOnline: true}
+scheduler.development.js:14 [Violation] 'message' handler took 402ms
+C:\home\sei_next_page\packages\mainProj\src\lib\token-refresh-lock.ts:50 [TokenRefreshLock] 刷新锁已释放

@@ -88,6 +88,14 @@ class IndexedDBStorage {
 
             const storageKey = this.getStorageKey(repId, subrid)
 
+            console.log("[v0] IndexedDB save called:", {
+                repId,
+                subrid,
+                storageKey,
+                modified: metadata.modified,
+                stackTrace: new Error().stack?.split("\n").slice(2, 5).join("\n"),
+            })
+
             const entry: StorageEntry = {
                 storageKey,
                 storage,

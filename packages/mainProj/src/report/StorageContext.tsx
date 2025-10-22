@@ -25,6 +25,8 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const subrid = searchParams?.get("subrid") || undefined
 
+    console.log("[v0] StorageProvider render:", { repId, subrid })
+
     const [storage, setStorageState] = useState<any>({})
     const [subrType, setSubrType] = useState<string | undefined>(undefined)
     const [parrepfs, setParrepfs] = useState<any>({})
@@ -33,6 +35,8 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [isInitialized, setIsInitialized] = useState(false)
     const hasLoadedRef = useRef(false)
     const storageKeyRef = useRef<string>("")
+    const activeStorageKeyRef = useRef<string>("")
+    const isTransitioningRef = useRef(false)
 
     useEffect(() => {
         indexedDBStorage.cleanup().catch((error) => {
@@ -40,13 +44,28 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         })
     }, [])
 
+    const currentKey = `${repId}${subrid ? `:${subrid}` : ""}`
+    if (activeStorageKeyRef.current && activeStorageKeyRef.current !== currentKey) {
+        console.log("[StorageContext] Report/subrid changed synchronously, resetting state", {
+            oldKey: activeStorageKeyRef.current,
+            newKey: currentKey,
+        })
+        isTransitioningRef.current = true
+        setModifiedState(false)
+        setStorageState({}) // Clear old storage data
+        setParrepfs({}) // Clear old parent report data
+        hasLoadedRef.current = false
+        setIsInitialized(false)
+    }
+    activeStorageKeyRef.current = currentKey
+
     useEffect(() => {
         if (!repId || repId === "*") return
 
-        const currentKey = `${repId}${subrid ? `-${subrid}` : ""}`
+        const loadKey = `${repId}${subrid ? `-${subrid}` : ""}`
 
         // Skip if already loaded for this key
-        if (hasLoadedRef.current && storageKeyRef.current === currentKey) {
+        if (hasLoadedRef.current && storageKeyRef.current === loadKey) {
             console.log("[StorageContext] Already loaded for this key, skipping")
             return
         }
@@ -69,33 +88,46 @@ export function StorageProvider({ children }: { children: ReactNode }) {
                 }
                 setIsInitialized(true)
                 hasLoadedRef.current = true
-                storageKeyRef.current = currentKey
+                storageKeyRef.current = loadKey
+                isTransitioningRef.current = false
             })
             .catch((error) => {
                 console.error("[StorageContext] Failed to restore:", error)
                 setIsInitialized(true)
                 hasLoadedRef.current = true
-                storageKeyRef.current = currentKey
+                storageKeyRef.current = loadKey
+                isTransitioningRef.current = false
             })
     }, [repId, subrid])
 
-    useEffect(() => {
-        const currentKey = `${repId}${subrid ? `-${subrid}` : ""}`
-        if (storageKeyRef.current && storageKeyRef.current !== currentKey) {
-            console.log("[StorageContext] Report/subrid changed, resetting state")
-            hasLoadedRef.current = false
-            setIsInitialized(false)
-            setModifiedState(false) // Reset modified state on navigation
-        }
-    }, [repId, subrid])
-
     const saveImmediately = useCallback(() => {
+        if (isTransitioningRef.current) {
+            console.log("[StorageContext] Skipping save - transitioning between reports")
+            return
+        }
+
         if (!repId || repId === "*" || !modified) {
             console.log("[StorageContext] Skipping save - not modified yet")
             return
         }
 
-        console.log("[StorageContext] Saving immediately for repId:", repId)
+        const expectedKey = `${repId}${subrid ? `:${subrid}` : ""}`
+        if (activeStorageKeyRef.current !== expectedKey) {
+            console.log("[StorageContext] Skipping save - storage key mismatch", {
+                active: activeStorageKeyRef.current,
+                expected: expectedKey,
+            })
+            return
+        }
+
+        console.log("[v0] saveImmediately called:", {
+            repId,
+            subrid,
+            storageKey: subrid ? `${repId}:${subrid}` : repId,
+            modified,
+            storageKeys: Object.keys(storage).slice(0, 5),
+        })
+
         indexedDBStorage.save(repId, storage, { parrepfs, modified }, subrid).catch((error) => {
             console.error("[StorageContext] Immediate save failed:", error)
         })
@@ -149,7 +181,14 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         if (!isInitialized || !repId || repId === "*" || !modified) return
 
         const timeoutId = setTimeout(() => {
-            console.log("[StorageContext] Auto-saving to IndexedDB")
+            console.log("[v0] Auto-save triggered:", {
+                repId,
+                subrid,
+                storageKey: subrid ? `${repId}:${subrid}` : repId,
+                modified,
+                storageKeys: Object.keys(storage).slice(0, 5),
+            })
+
             indexedDBStorage.save(repId, storage, { parrepfs, modified }, subrid).catch((error) => {
                 console.error("[StorageContext] Failed to persist:", error)
             })
