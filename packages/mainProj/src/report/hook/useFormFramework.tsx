@@ -410,8 +410,8 @@ export const ModificationIndicator = () => {
 interface UseFrameEditorBarProps {
     rep?: any
     // 这样 hook 可以自动从 storage 中获取最新数据，无需组件手动同步
-    storageKeys: string[]
-    // 可选：用于转换 storage 数据的函数
+    storageKeys?: string[]
+    //可代替storageKeys：用于转换 storage 数据的函数
     transformValues?: (storage: any) => Record<string, any>
     //校验当前编辑区域的字段取值合理性,或给出提醒信息；
     onVerify?: (values: any) => boolean
@@ -426,7 +426,8 @@ interface UseFrameEditorBarProps {
     //逻辑上优先！强调确保是根路径存储的； #针对分项控制器的特别情况的：不嵌套。
     root?: boolean
 }
-/**不依赖react-hook-form环境的版本，表单简单的情形下就可以使用，【缺点】需自己管理表单状态。
+/**不依赖react-hook-form环境的版本，表单简单的情形下就可以使用，
+ * 【缺点】调用的组件需自己管理表单状态，须依据storage加载到局部化的状态变量。nextjs离线模式需确保从storage动态恢复最新数据！
  * 支持声明 modType && redId 或者subrid 来申明存储的实际位置转移：存储到分项数据结构中。
  * */
 export function useFrameEditorBar({
@@ -443,21 +444,18 @@ export function useFrameEditorBar({
     const abortControllerRef = useRef<AbortController | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified, modified } = useStorage()
-
     // 当 storage 更新时（如从 IndexedDB 加载），values 会自动更新
     const values = React.useMemo(() => {
         if (transformValues) {
             return transformValues(storage)
         }
-
         // 默认行为：从 storage 中提取指定的 keys
         const result: Record<string, any> = {}
-        storageKeys.forEach((key) => {
+        storageKeys?.forEach((key) => {
             result[key] = storage?.[key]
         })
         return result
     }, [storage, storageKeys, transformValues])
-
     //用URQL mutation来保存变更数据到后端数据库的
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
     //保存：处理表单提交

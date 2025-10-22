@@ -278,11 +278,11 @@ export const PropertySolidify = ({ children, show, label = "特性表-管道单�
 
     const [render] = useFrameEditorBar({
         rep,
-        storageKeys: ["单元表", "单图表"],
         transformValues: () => ({
             单元表: localUnits,
             单图表: localDiagrams,
         }),
+        //storageKeys: ["单元表", "单图表"],
         onReset,
     })
 
