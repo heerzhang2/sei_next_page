@@ -18,6 +18,7 @@ interface StorageEntry {
         modified?: boolean
         timestamp: number
         lastSaveTime?: number
+        lastError?: string
     }
 }
 
@@ -414,6 +415,54 @@ class IndexedDBStorage {
         } catch (error) {
             console.error("[IndexedDB] GetAllModified error:", error)
             return []
+        }
+    }
+
+    /**
+     * Save error information when report send fails
+     */
+    async saveError(repId: string, error: string, subrid?: string): Promise<void> {
+        try {
+            await this.init()
+            if (!this.db) throw new Error("Database not initialized")
+
+            const storageKey = this.getStorageKey(repId, subrid)
+
+            return new Promise((resolve, reject) => {
+                const transaction = this.db!.transaction([STORE_NAME], "readwrite")
+                const objectStore = transaction.objectStore(STORE_NAME)
+                const getRequest = objectStore.get(storageKey)
+
+                getRequest.onsuccess = () => {
+                    const entry = getRequest.result as StorageEntry | undefined
+                    if (!entry) {
+                        resolve()
+                        return
+                    }
+
+                    entry.metadata.lastError = error
+
+                    const putRequest = objectStore.put(entry)
+
+                    putRequest.onsuccess = () => {
+                        console.log("[IndexedDB] Saved error info:", storageKey, error)
+                        resolve()
+                    }
+
+                    putRequest.onerror = () => {
+                        console.error("[IndexedDB] Failed to save error:", putRequest.error)
+                        reject(putRequest.error)
+                    }
+                }
+
+                getRequest.onerror = () => {
+                    console.error("[IndexedDB] Failed to get entry:", getRequest.error)
+                    reject(getRequest.error)
+                }
+            })
+        } catch (error) {
+            console.error("[IndexedDB] Save error info failed:", error)
+            throw error
         }
     }
 }
