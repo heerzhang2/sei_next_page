@@ -1,17 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { indexedDBStorage } from "@/lib/indexed-db-storage"
 import { toast } from "sonner"
-import { RefreshCw, Send, Trash2, ExternalLink, AlertTriangle, CheckCircle } from "lucide-react"
+import { RefreshCw, Send, Trash2, ExternalLink, AlertTriangle, CheckCircle, X } from "lucide-react"
 import Link from "next/link"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { useMutation } from "@urql/next"
 import { OriginalDataMutation } from "@/report/common/base"
+import { useSearchParams } from "next/navigation"
 
 interface PendingReport {
     repId: string
@@ -70,12 +71,67 @@ const cleanEmptyFields = (obj: any): any => {
     return obj
 }
 
+function DeleteConfirmDialog({
+                                 isOpen,
+                                 onClose,
+                                 onConfirm,
+                                 reportInfo,
+                             }: {
+    isOpen: boolean
+    onClose: () => void
+    onConfirm: () => void
+    reportInfo: string
+}) {
+    if (!isOpen) return null
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-lg font-semibold">确认删除</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+                    确定要删除这个待发送的报告吗？本地修改将丢失且无法恢复。
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                    {reportInfo}
+                </p>
+                <div className="flex gap-3 justify-end">
+                    <Button onClick={onClose} variant="outline">
+                        取消
+                    </Button>
+                    <Button onClick={onConfirm} variant="destructive">
+                        确认删除
+                    </Button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export function PendingReportsManager() {
     const [pendingReports, setPendingReports] = useState<PendingReport[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [sendingReports, setSendingReports] = useState<Set<string>>(new Set())
     const { isGraphQLBackendReachable } = useNetworkStatusContext()
     const [, updateOriginal] = useMutation(OriginalDataMutation)
+    const searchParams = useSearchParams()
+    const highlightedReportRef = useRef<HTMLDivElement>(null)
+
+    const [deleteDialog, setDeleteDialog] = useState<{
+        isOpen: boolean
+        repId: string
+        subrid?: string
+        reportInfo: string
+    }>({
+        isOpen: false,
+        repId: "",
+        subrid: undefined,
+        reportInfo: "",
+    })
 
     const loadPendingReports = async () => {
         setIsLoading(true)
@@ -94,11 +150,30 @@ export function PendingReportsManager() {
         loadPendingReports()
     }, [])
 
-    const handleDelete = async (repId: string, subrid?: string) => {
-        if (!confirm("确定要删除这个待发送的报告吗？本地修改将丢失。")) {
-            return
+    useEffect(() => {
+        const highlight = searchParams.get("highlight")
+        if (highlight && pendingReports.length > 0 && highlightedReportRef.current) {
+            setTimeout(() => {
+                highlightedReportRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                })
+            }, 300)
         }
+    }, [searchParams, pendingReports])
 
+    const handleDelete = async (repId: string, subrid?: string) => {
+        const reportInfo = `报告ID: ${repId}${subrid ? ` / 子报告ID: ${subrid}` : ""}`
+        setDeleteDialog({
+            isOpen: true,
+            repId,
+            subrid,
+            reportInfo,
+        })
+    }
+
+    const confirmDelete = async () => {
+        const { repId, subrid } = deleteDialog
         try {
             await indexedDBStorage.remove(repId, subrid)
             toast.success("已删除待发送报告")
@@ -106,6 +181,8 @@ export function PendingReportsManager() {
         } catch (error) {
             console.error("Failed to delete pending report:", error)
             toast.error("删除失败")
+        } finally {
+            setDeleteDialog({ isOpen: false, repId: "", subrid: undefined, reportInfo: "" })
         }
     }
 
@@ -194,7 +271,6 @@ export function PendingReportsManager() {
     }
 
     const getReportUrl = (repId: string, subrid?: string, modeltype?: string, modelversion?: string) => {
-        // Default values if not provided
         const type = modeltype || "INDPL_DJ"
         const version = modelversion || "1"
 
@@ -204,8 +280,17 @@ export function PendingReportsManager() {
         return `/rep/${repId}/${type}/${version}/`
     }
 
+    const highlightKey = searchParams.get("highlight")
+
     return (
         <div className="space-y-4">
+            <DeleteConfirmDialog
+                isOpen={deleteDialog.isOpen}
+                onClose={() => setDeleteDialog({ isOpen: false, repId: "", subrid: undefined, reportInfo: "" })}
+                onConfirm={confirmDelete}
+                reportInfo={deleteDialog.reportInfo}
+            />
+
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <p className="text-sm font-medium">待发送报告数量</p>
@@ -237,9 +322,16 @@ export function PendingReportsManager() {
                         {pendingReports.map((report, index) => {
                             const reportKey = `${report.repId}${report.subrid ? `:${report.subrid}` : ""}`
                             const isSending = sendingReports.has(reportKey)
+                            const isHighlighted = highlightKey === reportKey
 
                             return (
-                                <div key={reportKey} className="p-3 border rounded-lg space-y-2">
+                                <div
+                                    key={reportKey}
+                                    ref={isHighlighted ? highlightedReportRef : null}
+                                    className={`p-3 border rounded-lg space-y-2 transition-colors duration-500 ${
+                                        isHighlighted ? "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 animate-pulse" : ""
+                                    }`}
+                                >
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1 flex-1">
                                             <div className="flex items-center gap-2">

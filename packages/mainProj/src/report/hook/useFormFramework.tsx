@@ -14,8 +14,9 @@ import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
-import { Save, Pencil } from "lucide-react"
+import { Save, Pencil, ExternalLink } from "lucide-react"
 import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
+import Link from "next/link"
 
 // 在文件顶部添加设备ID获取函数
 const getDeviceId = (): string => {
@@ -355,7 +356,13 @@ export function useFormFramework({
     // 使用contentRendererFactory创建内容渲染器
     const contentRenderer = contentRendererFactory ? contentRendererFactory(form, arrayControls) : null
 
-    // 创建渲染函数 把@container上移给CollapsibleFormSection;这里node和contentRendererFactory其中之一必须有注入的，因为Form必须在最外面。
+    const pendingReportsUrl = React.useMemo(() => {
+        const repId = rep?.id
+        if (!repId) return "/offline?tab=pending"
+        const reportKey = `${repId}${subrid ? `:${subrid}` : ""}`
+        return `/offline?tab=pending&highlight=${encodeURIComponent(reportKey)}`
+    }, [rep?.id, subrid])
+
     const render = (node: any) => (
         <>
             <Form {...form}>
@@ -381,6 +388,12 @@ export function useFormFramework({
                                 title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
                             >
                                 {form.formState.isSubmitting && updateResult?.fetching ? "保存到后端..." : "保存"}
+                            </Button>
+                            <Button asChild variant="outline" type="button">
+                                <Link href={pendingReportsUrl} title="查看待发送报告列表">
+                                    <ExternalLink className="w-4 h-4 mr-2" />
+                                    待发送
+                                </Link>
                             </Button>
                         </div>
                     </CardFooter>
@@ -590,7 +603,13 @@ export function useFrameEditorBar({
             window.removeEventListener("mutation-completed", handleMutationCompleted as EventListener)
         }
     }, [rep?.id, subrid])
-    // 创建渲染函数：只提供按钮条，不依赖于Form环境的。
+    const pendingReportsUrl = React.useMemo(() => {
+        const repId = rep?.id
+        if (!repId) return "/offline?tab=pending"
+        const reportKey = `${repId}${subrid ? `:${subrid}` : ""}`
+        return `/offline?tab=pending&highlight=${encodeURIComponent(reportKey)}`
+    }, [rep?.id, subrid])
+
     const render = () => (
         <div className="flex gap-4 justify-end">
             <Button type="button" variant="outline" onClick={onReset}>
@@ -607,6 +626,12 @@ export function useFrameEditorBar({
             >
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving && updateResult?.fetching ? "保存到后端..." : "保存"}
+            </Button>
+            <Button asChild variant="outline" type="button">
+                <Link href={pendingReportsUrl} title="查看待发送报告列表">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    待发送
+                </Link>
             </Button>
         </div>
     )

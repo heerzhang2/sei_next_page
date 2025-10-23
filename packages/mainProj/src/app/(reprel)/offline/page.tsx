@@ -1,4 +1,5 @@
 "use client"
+import { useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -28,6 +29,9 @@ import { PendingReportsManager } from "@/components/pending-reports-manager"
 export default function OfflinePage() {
     const { data: session } = useSession()
     const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const searchParams = useSearchParams()
+    const activeTab = searchParams.get("tab") || "status"
+
     const [result] = useQuery({
         query: AuthCompQuery,
         variables: {},
@@ -54,7 +58,7 @@ export default function OfflinePage() {
                     <h1 className="text-3xl font-bold">离线问题排查</h1>
                     <p className="text-gray-600 dark:text-gray-400">管理离线状态、报告的离线变更队列、变更保存冲突</p>
                 </div>
-                <Tabs defaultValue="status" className="w-full">
+                <Tabs value={activeTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="status">系统状态</TabsTrigger>
                         <TabsTrigger value="pending">待发送报告</TabsTrigger>
