@@ -524,10 +524,13 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 /12【hez0】 authorization Bearer%20bx0DmDKUqOJPLuKsC7mUiKeQ Bearer%20ny4yrhjZTHQPlp8L23aCKNEy
 【1】账户/14=Bearer%20BJoVvp4No8YPbQm4mPHeOpI5  left=1.44
 【2】/22 Bearer%200dC3iEdcH8fHkIizhxvwpJV0
-【3】/31 Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
+【3】/26 Bearer%20QV3h0HqkovvfTvRQTU2zK0RW
 context简化和防丢失
 https://v0.app/chat/refresh-token-uszIIasJSdX
 
   sub-rep.tsx src/component/rep/sub-rep.tsx
 heerzhang2@163.com
 https://v0.app/chat/context-c63kO9rBc4w
+https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&redId=2#MangInstrument
+
+https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA?subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA

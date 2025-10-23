@@ -7,8 +7,8 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { toast } from "sonner"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertTriangle } from "lucide-react"
+import { indexedDBStorage } from "@/lib/indexed-db-storage"
 
 export interface ReportParams {
     repId: string
@@ -176,13 +176,16 @@ function isNetworkError(error: any) {
 
 function CommonReportData({ repId, children }: { repId: string; children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false)
-    const [queryEnabled, setQueryEnabled] = useState(true) //避免死循环地查询
+    const [queryEnabled, setQueryEnabled] = useState(true)
     const queryCountRef = useRef(0)
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
 
     const [isClient, setIsClient] = useState(false)
     const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const searchParams = useSearchParams()
+    const isPrintMode = searchParams?.get("print") === "1"
 
     useEffect(() => {
         setIsClient(true)
@@ -206,7 +209,39 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     const { data, fetching, error } = result
     const report = data && data.getReport
-    const { setStorage, setSubrType, setOffline, storage, modified } = useStorage()
+    const { setStorage, setSubrType, setOffline, storage, modified, setModeltype, setModelversion } = useStorage()
+
+    useEffect(() => {
+        if (report) {
+            setModeltype?.(report.modeltype)
+            setModelversion?.(report.modelversion)
+        }
+    }, [report, setModeltype, setModelversion])
+
+    useEffect(() => {
+        const checkUnsavedChanges = async () => {
+            if (!report) return
+
+            const mainReportData = await indexedDBStorage.load(repId)
+            if (mainReportData?.metadata?.modified) {
+                setHasUnsavedChanges(true)
+                return
+            }
+
+            const subReports = report.isp?.reps?.edges || []
+            for (const { node } of subReports) {
+                const subReportData = await indexedDBStorage.load(repId, node.id)
+                if (subReportData?.metadata?.modified) {
+                    setHasUnsavedChanges(true)
+                    return
+                }
+            }
+
+            setHasUnsavedChanges(false)
+        }
+
+        checkUnsavedChanges()
+    }, [report, repId, modified])
 
     const refreshData = useCallback(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) {
@@ -304,22 +339,6 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     if (!isClient || !mounted) {
         return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     }
-    if (!isClientOnline || !isGraphQLBackendReachable) {
-        if (data && report) {
-            return (
-                <>
-                    <Alert className="mb-4 bg-yellow-50 border-yellow-300">
-                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                        <AlertDescription className="text-yellow-800">
-                            <strong>本地缓存数据</strong> - 当前使用本地缓存的报告数据。
-                            {modified && '您有未保存的修改，请在网络恢复后点击"保存"按钮发送到服务器。'}
-                        </AlertDescription>
-                    </Alert>
-                    {children}
-                </>
-            )
-        }
-    }
     if (fetching && !data && Date.now() < pausedUntilRef.current) {
         return <div className="p-4 text-sm text-muted-foreground">查询已暂停，请稍后...</div>
     }
@@ -339,7 +358,36 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
             </div>
         )
     }
-    return children
+
+    return (
+        <>
+            {hasUnsavedChanges && (
+                <>
+                    <style jsx>{`
+                        @media print {
+                            .unsaved-warning {
+                                background-color: rgb(0, 0, 0) !important;
+                                opacity: 1 !important;
+                            }
+                        }
+                    `}</style>
+                    <div
+                        className="unsaved-warning fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg"
+                        style={{
+                            right: "calc(1rem + var(--scrollbar-width, 0px))",
+                            backgroundColor: isPrintMode ? "rgba(220, 38, 38, 0.9)" : "rgba(234, 179, 8, 0.9)",
+                            color: "white",
+                        }}
+                    >
+                        <div className="flex items-center gap-0">
+                            <AlertTriangle className="h-3 w-3" />
+                        </div>
+                    </div>
+                </>
+            )}
+            {children}
+        </>
+    )
 }
 
 function CommonReportDataSub({
@@ -354,6 +402,9 @@ function CommonReportDataSub({
     const pausedUntilRef = useRef(0)
 
     const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const searchParams = useSearchParams()
+    const isPrintMode = searchParams?.get("print") === "1"
 
     useEffect(() => setMounted(true), [])
 
@@ -390,7 +441,24 @@ function CommonReportDataSub({
         return subrepObj
     }, [dataSub, subrid])
 
-    const { setStorage, setSubrType, setParrepfs, setOffline, storage, modified } = useStorage()
+    const { setStorage, setSubrType, setParrepfs, setOffline, storage, modified, setModeltype, setModelversion } =
+        useStorage()
+
+    useEffect(() => {
+        if (report) {
+            setModeltype?.(report.modeltype)
+            setModelversion?.(report.modelversion)
+        }
+    }, [report, setModeltype, setModelversion])
+
+    useEffect(() => {
+        const checkUnsavedChanges = async () => {
+            const subReportData = await indexedDBStorage.load(repId, subrid)
+            setHasUnsavedChanges(modified || !!subReportData?.metadata?.modified)
+        }
+
+        checkUnsavedChanges()
+    }, [repId, subrid, modified])
 
     const refreshData = useCallback(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) {
@@ -495,18 +563,7 @@ function CommonReportDataSub({
     if (error || errorSub) {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
         if (hasNetworkError) {
-            return report && reportSub ? (
-                <>
-                    <Alert className="mb-4 bg-yellow-50 border-yellow-300">
-                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                        <AlertDescription className="text-yellow-800">
-                            <strong>本地缓存数据</strong> - 当前使用本地缓存的子报告数据。
-                            {modified && '您有未保存的修改，请在网络恢复后点击"保存"按钮发送到服务器。'}
-                        </AlertDescription>
-                    </Alert>
-                    {children}
-                </>
-            ) : null
+            return report && reportSub ? children : null
         } else {
             return <div>报告取数据错: {error?.message || errorSub?.message}</div>
         }
@@ -526,7 +583,36 @@ function CommonReportDataSub({
             </div>
         )
     }
-    return children
+
+    return (
+        <>
+            {hasUnsavedChanges && (
+                <>
+                    <style jsx>{`
+                        @media print {
+                            .unsaved-warning {
+                                background-color: rgb(0, 0, 0) !important;
+                                opacity: 1 !important;
+                            }
+                        }
+                    `}</style>
+                    <div
+                        className="unsaved-warning fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg"
+                        style={{
+                            right: "calc(1rem + var(--scrollbar-width, 0px))",
+                            backgroundColor: isPrintMode ? "rgba(220, 38, 38, 0.9)" : "rgba(234, 179, 8, 0.9)",
+                            color: "white",
+                        }}
+                    >
+                        <div className="flex items-center gap-0">
+                            <AlertTriangle className="h-3 w-3" />
+                        </div>
+                    </div>
+                </>
+            )}
+            {children}
+        </>
+    )
 }
 
 export default function ReportData({ repId, children }: { repId: string; children: React.ReactNode }) {

@@ -22,6 +22,8 @@ interface PendingReport {
         parrepfs?: any
         timestamp?: number
         lastError?: string
+        modeltype?: string
+        modelversion?: string
     }
 }
 
@@ -191,12 +193,15 @@ export function PendingReportsManager() {
         await loadPendingReports()
     }
 
-    const getReportUrl = (repId: string, subrid?: string) => {
-        // Construct the URL based on your routing structure
+    const getReportUrl = (repId: string, subrid?: string, modeltype?: string, modelversion?: string) => {
+        // Default values if not provided
+        const type = modeltype || "INDPL_DJ"
+        const version = modelversion || "1"
+
         if (subrid) {
-            return `/rep/${repId}?subrid=${subrid}`
+            return `/rep/${repId}/${type}/${version}/?subrid=${subrid}`
         }
-        return `/rep/${repId}`
+        return `/rep/${repId}/${type}/${version}/`
     }
 
     return (
@@ -268,7 +273,14 @@ export function PendingReportsManager() {
                                                 {isSending ? "发送中..." : "发送"}
                                             </Button>
                                             <Button asChild variant="outline" size="sm">
-                                                <Link href={getReportUrl(report.repId, report.subrid)}>
+                                                <Link
+                                                    href={getReportUrl(
+                                                        report.repId,
+                                                        report.subrid,
+                                                        report.metadata.modeltype,
+                                                        report.metadata.modelversion,
+                                                    )}
+                                                >
                                                     <ExternalLink className="w-4 h-4" />
                                                 </Link>
                                             </Button>

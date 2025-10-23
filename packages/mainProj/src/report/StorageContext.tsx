@@ -16,6 +16,10 @@ interface StorageContextType {
     setOffline: (offline: boolean) => void
     modified?: boolean
     setModified?: (modified: boolean) => void
+    modeltype?: string
+    setModeltype?: (type: string | undefined) => void
+    modelversion?: string
+    setModelversion?: (version: string | undefined) => void
 }
 
 const StorageContext = createContext<StorageContextType | undefined>(undefined)
@@ -32,6 +36,8 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     const [parrepfs, setParrepfs] = useState<any>({})
     const [offline, setOfflineState] = useState<boolean>(false)
     const [modified, setModifiedState] = useState<boolean>(false)
+    const [modeltype, setModeltypeState] = useState<string | undefined>(undefined)
+    const [modelversion, setModelversionState] = useState<string | undefined>(undefined)
     const [isInitialized, setIsInitialized] = useState(false)
     const hasLoadedRef = useRef(false)
     const storageKeyRef = useRef<string>("")
@@ -52,8 +58,10 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         })
         isTransitioningRef.current = true
         setModifiedState(false)
-        setStorageState({}) // Clear old storage data
-        setParrepfs({}) // Clear old parent report data
+        setStorageState({})
+        setParrepfs({})
+        setModeltypeState(undefined)
+        setModelversionState(undefined)
         hasLoadedRef.current = false
         setIsInitialized(false)
     }
@@ -64,7 +72,6 @@ export function StorageProvider({ children }: { children: ReactNode }) {
 
         const loadKey = `${repId}${subrid ? `-${subrid}` : ""}`
 
-        // Skip if already loaded for this key
         if (hasLoadedRef.current && storageKeyRef.current === loadKey) {
             console.log("[StorageContext] Already loaded for this key, skipping")
             return
@@ -82,7 +89,9 @@ export function StorageProvider({ children }: { children: ReactNode }) {
                     })
                     setStorageState(restored.storage)
                     setParrepfs(restored.metadata.parrepfs || {})
-                    setModifiedState(true) // Restore modified state
+                    setModifiedState(true)
+                    setModeltypeState(restored.metadata.modeltype)
+                    setModelversionState(restored.metadata.modelversion)
                 } else {
                     console.log("[StorageContext] No user edits found in IndexedDB")
                 }
@@ -128,10 +137,10 @@ export function StorageProvider({ children }: { children: ReactNode }) {
             storageKeys: Object.keys(storage).slice(0, 5),
         })
 
-        indexedDBStorage.save(repId, storage, { parrepfs, modified }, subrid).catch((error) => {
+        indexedDBStorage.save(repId, storage, { parrepfs, modified, modeltype, modelversion }, subrid).catch((error) => {
             console.error("[StorageContext] Immediate save failed:", error)
         })
-    }, [storage, parrepfs, modified, repId, subrid])
+    }, [storage, parrepfs, modified, repId, subrid, modeltype, modelversion])
 
     useEffect(() => {
         window.addEventListener("beforeunload", saveImmediately)
@@ -189,13 +198,13 @@ export function StorageProvider({ children }: { children: ReactNode }) {
                 storageKeys: Object.keys(storage).slice(0, 5),
             })
 
-            indexedDBStorage.save(repId, storage, { parrepfs, modified }, subrid).catch((error) => {
+            indexedDBStorage.save(repId, storage, { parrepfs, modified, modeltype, modelversion }, subrid).catch((error) => {
                 console.error("[StorageContext] Failed to persist:", error)
             })
         }, 500)
 
         return () => clearTimeout(timeoutId)
-    }, [storage, parrepfs, modified, repId, subrid, isInitialized])
+    }, [storage, parrepfs, modified, repId, subrid, isInitialized, modeltype, modelversion])
 
     const setStorage = useCallback((data: any) => {
         if (typeof data === "function") {
@@ -225,11 +234,9 @@ export function StorageProvider({ children }: { children: ReactNode }) {
 
             if (!value && repId && repId !== "*") {
                 console.log("[StorageContext] Saving with modified=false to IndexedDB")
-                // Save immediately with modified=false to update the IndexedDB entry
                 indexedDBStorage
-                    .save(repId, storage, { parrepfs, modified: false }, subrid)
+                    .save(repId, storage, { parrepfs, modified: false, modeltype, modelversion }, subrid)
                     .then(() => {
-                        // Also mark as saved to start the 30-minute cleanup timer
                         return indexedDBStorage.markAsSaved(repId, subrid)
                     })
                     .catch((error) => {
@@ -237,8 +244,18 @@ export function StorageProvider({ children }: { children: ReactNode }) {
                     })
             }
         },
-        [repId, subrid, storage, parrepfs],
+        [repId, subrid, storage, parrepfs, modeltype, modelversion],
     )
+
+    const setModeltype = useCallback((type: string | undefined) => {
+        console.log("[StorageContext] Setting modeltype:", type)
+        setModeltypeState(type)
+    }, [])
+
+    const setModelversion = useCallback((version: string | undefined) => {
+        console.log("[StorageContext] Setting modelversion:", version)
+        setModelversionState(version)
+    }, [])
 
     const value: StorageContextType = {
         storage,
@@ -251,6 +268,10 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         setOffline,
         modified,
         setModified,
+        modeltype,
+        setModeltype,
+        modelversion,
+        setModelversion,
     }
     return <StorageContext.Provider value={value}>{children}</StorageContext.Provider>
 }

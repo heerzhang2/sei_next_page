@@ -19,6 +19,8 @@ interface StorageEntry {
         timestamp: number
         lastSaveTime?: number
         lastError?: string
+        modeltype?: string
+        modelversion?: string
     }
 }
 
