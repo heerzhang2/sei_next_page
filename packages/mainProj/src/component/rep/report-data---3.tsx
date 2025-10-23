@@ -363,15 +363,15 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         <>
             {hasUnsavedChanges && (
                 <div
-                    className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:border-8 print:border-black print:bg-white print:shadow-none"
+                    className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:bg-black print:opacity-100"
                     style={{
                         right: "calc(1rem + var(--scrollbar-width, 0px))",
                         backgroundColor: isPrintMode ? "rgba(220, 38, 38, 0.9)" : "rgba(234, 179, 8, 0.9)",
                         color: "white",
                     }}
                 >
-                    <div className="flex items-center gap-0 print:gap-2">
-                        <AlertTriangle className="h-3 w-3 print:text-black print:h-5 print:w-5" />
+                    <div className="flex items-center gap-0">
+                        <AlertTriangle className="h-3 w-3" />
                     </div>
                 </div>
             )}
@@ -578,15 +578,15 @@ function CommonReportDataSub({
         <>
             {hasUnsavedChanges && (
                 <div
-                    className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:border-8 print:border-black print:bg-white print:shadow-none"
+                    className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:bg-black print:opacity-100"
                     style={{
                         right: "calc(1rem + var(--scrollbar-width, 0px))",
                         backgroundColor: isPrintMode ? "rgba(220, 38, 38, 0.9)" : "rgba(234, 179, 8, 0.9)",
                         color: "white",
                     }}
                 >
-                    <div className="flex items-center gap-0 print:gap-2">
-                        <AlertTriangle className="h-3 w-3 print:text-black print:h-5 print:w-5" />
+                    <div className="flex items-center gap-0">
+                        <AlertTriangle className="h-3 w-3" />
                     </div>
                 </div>
             )}

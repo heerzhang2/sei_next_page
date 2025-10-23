@@ -14,18 +14,27 @@ const REFRESH_TOKEN_MUTATION = `
   }
 `
 
+const maskToken = (token: string): string => {
+    if (!token || token.length < 8) return "***"
+    return `${token.substring(0, 4)}...${token.substring(token.length - 4)}`
+}
+
 export async function POST(request: NextRequest) {
     try {
         const session = await auth()
         if (!session?.user?.refreshToken) {
+            console.error("[API] 未找到刷新令牌")
             return NextResponse.json({ error: "未找到刷新令牌" }, { status: 401 })
         }
 
-        try {
-            console.log("[API] 开始刷新token，使用refresh_token")
+        console.log("[API] 开始刷新token，使用refresh_token:", maskToken(session.user.refreshToken))
 
+        try {
             const deviceId = session.user.deviceId || "server-refresh"
             const client = createServerUrqlClient(deviceId)
+
+            console.log("[API] 发送refreshToken mutation到后端")
+            const mutationStartTime = Date.now()
 
             const result = await client
                 .mutation(REFRESH_TOKEN_MUTATION, {
@@ -33,8 +42,13 @@ export async function POST(request: NextRequest) {
                 })
                 .toPromise()
 
+            console.log(`[API] refreshToken mutation响应时间: ${Date.now() - mutationStartTime}ms`)
+
             if (result.error) {
                 console.error("[API] Token刷新GraphQL错误:", result.error)
+                if (result.error.message?.includes("refresh") || result.error.message?.includes("token")) {
+                    console.error("[API] 可能是refresh token已被使用或无效")
+                }
                 return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
             }
 
@@ -44,7 +58,14 @@ export async function POST(request: NextRequest) {
             }
 
             const refreshData = result.data.refreshToken
-            console.log("[API] Token刷新成功，更新session")
+
+            console.log("[API] Token刷新成功，收到新token:")
+            console.log("  - 新accessToken:", maskToken(refreshData.accessToken))
+            console.log("  - 新refreshToken:", maskToken(refreshData.refreshToken))
+            console.log("  - 旧refreshToken:", maskToken(session.user.refreshToken))
+
+            console.log("[API] 开始更新session")
+            const sessionUpdateStartTime = Date.now()
 
             const updatedSession = await updateSession({
                 ...session,
@@ -58,7 +79,11 @@ export async function POST(request: NextRequest) {
                 },
             })
 
-            console.log("[API] Session更新完成，新refreshToken已保存")
+            console.log(`[API] Session更新完成，耗时: ${Date.now() - sessionUpdateStartTime}ms`)
+            console.log("[API] 新refreshToken已保存到session")
+
+            await new Promise((resolve) => setTimeout(resolve, 100))
+            console.log("[API] Session持久化延迟完成")
 
             return NextResponse.json({
                 success: true,
@@ -72,6 +97,10 @@ export async function POST(request: NextRequest) {
             })
         } catch (refreshError) {
             console.error("[API] Token刷新过程中出错:", refreshError)
+            if (refreshError instanceof Error) {
+                console.error("[API] 错误详情:", refreshError.message)
+                console.error("[API] 错误堆栈:", refreshError.stack)
+            }
             return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
         }
     } catch (error) {

@@ -54,6 +54,11 @@ const getDeviceId = (): string => {
     return localStorage.getItem("clientId") || ""
 }
 
+const maskToken = (token: string | null): string => {
+    if (!token || token.length < 8) return "***"
+    return `${token.substring(0, 4)}...${token.substring(token.length - 4)}`
+}
+
 //网络状态更新：
 const updateBackendStatusExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
@@ -269,6 +274,7 @@ const makeAuthExchange = (
                 if (!currentToken) {
                     return utils.appendHeaders(operation, headers)
                 }
+                console.log(`[AuthExchange] 为操作添加token: ${maskToken(currentToken)}`)
                 return utils.appendHeaders(operation, {
                     ...headers,
                     Authorization: `Bearer ${currentToken}`,
@@ -292,23 +298,34 @@ const makeAuthExchange = (
                 const finalResult = hasGraphQLAuthError || hasNetworkAuthError || isSpecial500 || hasCustomAuthError
 
                 if (finalResult) {
-                    console.log("[AuthExchange] 检测到认证错误")
+                    const currentToken = getCurrentToken()
+                    console.log("[AuthExchange] 检测到认证错误，当前token:", maskToken(currentToken))
                 }
 
                 return finalResult
             },
             async refreshAuth() {
+                const tokenBeforeRefresh = getCurrentToken()
+                console.log("[AuthExchange] 准备刷新token，当前token:", maskToken(tokenBeforeRefresh))
+
                 const result = await acquireRefreshLock(async () => {
                     try {
+                        console.log("[AuthExchange] 已获取refresh锁")
+
                         const connectivity = print ? undefined : await checkNetworkConnectivity()
                         let tokenData: { user: any; accessToken: string; refreshToken: string } | null = null
                         let fromNextjs = true //来自nextjs服务器的token更新流程的应答
                         if (print || (connectivity && connectivity.nextjsReachable)) {
                             console.log("[AuthExchange] 通过NextJS API刷新token")
+                            const refreshStartTime = Date.now()
+
                             const response = await fetch("/api/refresh-token", {
                                 method: "POST",
                                 credentials: "include",
                             })
+
+                            console.log(`[AuthExchange] NextJS API响应时间: ${Date.now() - refreshStartTime}ms`)
+
                             if (response.ok) {
                                 const data = await response.json()
                                 if (data.success) {
@@ -318,12 +335,23 @@ const makeAuthExchange = (
                                         user: data.user,
                                     }
                                     console.log("[AuthExchange] NextJS API刷新成功")
+                                    console.log("  - 新accessToken:", maskToken(tokenData.accessToken))
+                                    console.log("  - 新refreshToken:", maskToken(tokenData.refreshToken))
                                 }
+                            } else {
+                                console.error(`[AuthExchange] NextJS API刷新失败: ${response.status} ${response.statusText}`)
+                                const errorText = await response.text()
+                                console.error("[AuthExchange] 错误响应:", errorText)
                             }
                         } else if (!print && connectivity && !connectivity.nextjsReachable && connectivity.javaBackendReachable) {
                             console.log("[AuthExchange] 离线模式直接刷新token")
                             tokenData = await refreshTokenDirectly()
-                            if (tokenData) fromNextjs = false
+                            if (tokenData) {
+                                fromNextjs = false
+                                console.log("[AuthExchange] 直接刷新成功")
+                                console.log("  - 新accessToken:", maskToken(tokenData.accessToken))
+                                console.log("  - 新refreshToken:", maskToken(tokenData.refreshToken))
+                            }
                         } else {
                             if (!print && (!connectivity || !connectivity.nextjsReachable)) {
                                 throw new Error("没有refresh token且NextJS不可达，直接跳转登录页")
@@ -331,6 +359,7 @@ const makeAuthExchange = (
                         }
                         if (!tokenData) {
                             pendingMetadataBeforeRefresh = []
+                            console.error("[AuthExchange] Token刷新失败，无tokenData返回")
                             toast.error("登录已过期", {
                                 description: "请重新登录，点导航登录",
                                 duration: 60 * 1000,
@@ -371,10 +400,13 @@ const makeAuthExchange = (
                                 )
                                 pendingMetadataBeforeRefresh = []
                             }
-                        }, 500)
+                        }, 800) // Increased from 500ms to 800ms
+
                         toast.info("会话自动续期", {
                             duration: 3 * 1000,
                         })
+
+                        console.log("[AuthExchange] Token刷新流程完成")
                         return tokenData
                     } catch (error) {
                         console.error("Token 刷新失败:", error)
@@ -385,6 +417,8 @@ const makeAuthExchange = (
                         })
                     }
                 })
+
+                console.log("[AuthExchange] Refresh锁已释放")
                 return
             },
         }
