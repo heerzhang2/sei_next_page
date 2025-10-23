@@ -44,7 +44,7 @@ export default function OfflinePage() {
     const refreshPage = () => {
         window.location.reload()
     }
-
+    // value={activeTab}
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl relative">
             <Button asChild variant="outline" size="sm" className="absolute top-4 right-4 bg-transparent">
@@ -58,7 +58,7 @@ export default function OfflinePage() {
                     <h1 className="text-3xl font-bold">离线问题排查</h1>
                     <p className="text-gray-600 dark:text-gray-400">管理离线状态、报告的离线变更队列、变更保存冲突</p>
                 </div>
-                <Tabs value={activeTab} className="w-full">
+                <Tabs defaultValue={activeTab}  className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="status">系统状态</TabsTrigger>
                         <TabsTrigger value="pending">待发送报告</TabsTrigger>

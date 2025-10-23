@@ -366,12 +366,12 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
                     className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:border-8 print:border-black print:bg-white print:shadow-none"
                     style={{
                         right: "calc(1rem + var(--scrollbar-width, 0px))",
-                        backgroundColor: isPrintMode ? "rgba(220, 38, 38, 0.9)" : "rgba(234, 179, 8, 0.9)",
+                        backgroundColor: isPrintMode ? "rgba(220, 38, 38, 1)" : "rgba(170,125,80,0.9)",
                         color: "white",
                     }}
                 >
                     <div className="flex items-center gap-0 print:gap-2">
-                        <AlertTriangle className="h-3 w-3 print:text-black print:h-5 print:w-5" />
+                        <AlertTriangle className="h-1.5 w-1.5 md:h-2.5 md:w-2.5 print:text-black print:h-4 print:w-4" />
                     </div>
                 </div>
             )}
@@ -581,12 +581,12 @@ function CommonReportDataSub({
                     className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:border-8 print:border-black print:bg-white print:shadow-none"
                     style={{
                         right: "calc(1rem + var(--scrollbar-width, 0px))",
-                        backgroundColor: isPrintMode ? "rgba(220, 38, 38, 0.9)" : "rgba(234, 179, 8, 0.9)",
+                        backgroundColor: isPrintMode ? "rgba(220, 38, 38, 1)" : "rgba(170,125,80,0.9)",
                         color: "white",
                     }}
                 >
                     <div className="flex items-center gap-0 print:gap-2">
-                        <AlertTriangle className="h-3 w-3 print:text-black print:h-5 print:w-5" />
+                        <AlertTriangle className="h-1.5 w-1.5 md:h-2.5 md:w-2.5 print:text-black print:h-4 print:w-4" />
                     </div>
                 </div>
             )}

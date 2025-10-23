@@ -334,7 +334,7 @@ export function PendingReportsManager() {
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1 flex-1">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2">
                                                 <span className="font-medium">报告 #{index + 1}</span>
                                                 {report.subrid && <Badge variant="outline">子报告</Badge>}
                                                 <Badge variant="secondary">{report.metadata.modified ? "已修改" : "未修改"}</Badge>
@@ -354,7 +354,7 @@ export function PendingReportsManager() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap max-w-1/3 gap-2">
                                             <Button
                                                 onClick={() => handleSendReport(report)}
                                                 variant="default"
