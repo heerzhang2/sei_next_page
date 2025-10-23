@@ -2707,6 +2707,14 @@
     "@urql/core" "^6.0.0"
     wonka "^6.3.2"
 
+"@urql/exchange-persisted@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.npmmirror.com/@urql/exchange-persisted/-/exchange-persisted-5.0.1.tgz#4b6322ea6668abae0f7191a45d1fe9a050a3cc70"
+  integrity sha512-tV8gR2ZdYBocZH6FMGp9vFjXA6lz3yVQfYuBSzmPwaKU38yMNJd+HOxa8u4GFg1cCS6mfhdhkR51HuSaDZFblQ==
+  dependencies:
+    "@urql/core" "^6.0.1"
+    wonka "^6.3.2"
+
 "@urql/introspection@^1.2.1":
   version "1.2.1"
   resolved "https://registry.npmjs.org/@urql/introspection/-/introspection-1.2.1.tgz"
