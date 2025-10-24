@@ -4,6 +4,7 @@ import { createServerUrqlClient } from "@/auth/urql"
 import { appendFile, mkdir } from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
+import { cookies } from "next/headers"
 
 const REFRESH_TOKEN_MUTATION = `
   mutation RefreshToken($refreshToken: String!) {
@@ -62,20 +63,27 @@ const logRefreshTokenUsageToFile = async (
 
 export async function POST(request: NextRequest) {
     try {
+        const cookieStore = await cookies()
+        const refreshTokenFromCookie = cookieStore.get("refreshToken")?.value
         const session = await auth()
-        if (!session?.user?.refreshToken) {
-            console.error("[API] 未找到刷新令牌")
+        //增强方案：Use cookie value if available, otherwise use session value,避免session还用旧的refreshToken情况出现！
+        const currentRefreshToken = refreshTokenFromCookie || session?.user?.refreshToken
+
+        if (!currentRefreshToken) {
+            console.error("[API] 未找到刷新令牌 (cookie和session都没有)")
             await logRefreshTokenUsageToFile("", null, "刷新失败-无token", false, "未找到刷新令牌")
             return NextResponse.json({ error: "未找到刷新令牌" }, { status: 401 })
         }
-
-        const oldRefreshToken = session.user.refreshToken
+        if(refreshTokenFromCookie !==session?.user?.refreshToken)
+            console.error("cookie和session不一致的：",refreshTokenFromCookie, session?.user?.refreshToken)
+        const oldRefreshToken = currentRefreshToken
         console.log("[API] 开始刷新token，使用refresh_token:", maskToken(oldRefreshToken))
+        console.log("[API] Token来源:", refreshTokenFromCookie ? "Cookie" : "Session")
 
         await logRefreshTokenUsageToFile(oldRefreshToken, null, "发送刷新请求到Java后端", true)
 
         try {
-            const deviceId = session.user.deviceId || "server-refresh"
+            const deviceId = session?.user?.deviceId || "server-refresh"
             const client = createServerUrqlClient(deviceId)
 
             console.log("[API] 发送refreshToken mutation到后端")
@@ -118,28 +126,43 @@ export async function POST(request: NextRequest) {
 
             await logRefreshTokenUsageToFile(oldRefreshToken, newRefreshToken, "刷新成功-收到新token", true)
 
+            console.log("[API] 立即将新refreshToken保存到Cookie")
+            //不同于：java后端在nextjs服务器离线模式下也有做个类似的 refresh_token cookie的。
+            cookieStore.set("refreshToken", newRefreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "lax",
+                maxAge: 60 * 60 * 24 * 60,
+                path: "/api/refresh-token",
+            })
+
             console.log("[API] 开始更新session")
             const sessionUpdateStartTime = Date.now()
 
-            const updatedSession = await updateSession({
-                ...session,
-                user: {
-                    ...session.user,
-                    accessToken: refreshData.accessToken,
-                    refreshToken: newRefreshToken,
-                    id: refreshData.user.id,
-                    name: refreshData.user.name || refreshData.user.username,
-                    email: refreshData.user.email,
-                },
-            })
+            if (session) {
+                const updatedSession = await updateSession({
+                    ...session,
+                    user: {
+                        ...session.user,
+                        accessToken: refreshData.accessToken,
+                        refreshToken: newRefreshToken,
+                        id: refreshData.user.id,
+                        name: refreshData.user.name || refreshData.user.username,
+                        email: refreshData.user.email,
+                    },
+                })
 
-            console.log(`[API] Session更新完成，耗时: ${Date.now() - sessionUpdateStartTime}ms`)
-            console.log("[API] 新refreshToken已保存到session")
+                console.log(`[API] Session更新完成，耗时: ${Date.now() - sessionUpdateStartTime}ms`)
+            } else {
+                console.log("[API] 无session，仅使用Cookie存储token")
+            }
+
+            console.log("[API] 新refreshToken已保存到Cookie和Session")
 
             await new Promise((resolve) => setTimeout(resolve, 100))
-            console.log("[API] Session持久化延迟完成")
+            console.log("[API] 持久化延迟完成")
 
-            await logRefreshTokenUsageToFile(oldRefreshToken, newRefreshToken, "Session更新完成", true)
+            await logRefreshTokenUsageToFile(oldRefreshToken, newRefreshToken, "Cookie和Session更新完成", true)
 
             return NextResponse.json({
                 success: true,
