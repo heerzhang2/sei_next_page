@@ -308,13 +308,17 @@ const makeAuthExchange = (
                 const tokenBeforeRefresh = getCurrentToken()
                 console.log("[AuthExchange] 准备刷新token，当前token:", maskToken(tokenBeforeRefresh))
 
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("token:refresh-start"))
+                }
+
                 const result = await acquireRefreshLock(async () => {
                     try {
                         console.log("[AuthExchange] 已获取refresh锁")
 
                         const connectivity = print ? undefined : await checkNetworkConnectivity()
                         let tokenData: { user: any; accessToken: string; refreshToken: string } | null = null
-                        let fromNextjs = true //来自nextjs服务器的token更新流程的应答
+                        let fromNextjs = true
                         if (print || (connectivity && connectivity.nextjsReachable)) {
                             console.log("[AuthExchange] 通过NextJS API刷新token")
                             const refreshStartTime = Date.now()
@@ -342,6 +346,31 @@ const makeAuthExchange = (
                                 console.error(`[AuthExchange] NextJS API刷新失败: ${response.status} ${response.statusText}`)
                                 const errorText = await response.text()
                                 console.error("[AuthExchange] 错误响应:", errorText)
+
+                                if (response.status === 401) {
+                                    if (typeof window !== "undefined") {
+                                        window.dispatchEvent(new CustomEvent("token:refresh-failed"))
+                                    }
+
+                                    console.log("[AuthExchange] 401错误，清除认证信息并重定向到首页")
+
+                                    if (typeof window !== "undefined") {
+                                        localStorage.removeItem("offline_auth")
+                                    }
+
+                                    toast.error("登录已失效", {
+                                        description: "您的登录凭证已过期，请重新登录",
+                                        duration: 5000,
+                                    })
+
+                                    setTimeout(() => {
+                                        if (typeof window !== "undefined") {
+                                            window.location.href = "/"
+                                        }
+                                    }, 1000)
+
+                                    return null
+                                }
                             }
                         } else if (!print && connectivity && !connectivity.nextjsReachable && connectivity.javaBackendReachable) {
                             console.log("[AuthExchange] 离线模式直接刷新token")
@@ -351,22 +380,52 @@ const makeAuthExchange = (
                                 console.log("[AuthExchange] 直接刷新成功")
                                 console.log("  - 新accessToken:", maskToken(tokenData.accessToken))
                                 console.log("  - 新refreshToken:", maskToken(tokenData.refreshToken))
+                            } else {
+                                console.error("[AuthExchange] 直接刷新失败")
+
+                                if (typeof window !== "undefined") {
+                                    window.dispatchEvent(new CustomEvent("token:refresh-failed"))
+                                }
+
+                                if (typeof window !== "undefined") {
+                                    localStorage.removeItem("offline_auth")
+                                }
+
+                                toast.error("登录已失效", {
+                                    description: "您的登录凭证已过期，请重新登录",
+                                    duration: 5000,
+                                })
+
+                                setTimeout(() => {
+                                    if (typeof window !== "undefined") {
+                                        window.location.href = "/"
+                                    }
+                                }, 1000)
+
+                                return null
                             }
                         } else {
                             if (!print && (!connectivity || !connectivity.nextjsReachable)) {
+                                if (typeof window !== "undefined") {
+                                    window.dispatchEvent(new CustomEvent("token:refresh-failed"))
+                                }
                                 throw new Error("没有refresh token且NextJS不可达，直接跳转登录页")
                             }
                         }
                         if (!tokenData) {
                             pendingMetadataBeforeRefresh = []
                             console.error("[AuthExchange] Token刷新失败，无tokenData返回")
+
+                            if (typeof window !== "undefined") {
+                                window.dispatchEvent(new CustomEvent("token:refresh-failed"))
+                            }
+
                             toast.error("登录已过期", {
                                 description: "请重新登录，点导航登录",
                                 duration: 60 * 1000,
                             })
                             return tokenData
                         }
-                        // 清除Service Worker缓存
                         await clearServiceWorkerAuthCache()
                         if (typeof window !== "undefined") {
                             console.log("[AuthExchange] 触发token:refreshed事件并更新next-auth session")
@@ -375,24 +434,19 @@ const makeAuthExchange = (
                                     detail: {
                                         accessToken: tokenData.accessToken,
                                         refreshToken: tokenData.refreshToken,
-                                        fromNextjs, //判定nextjs离线与否
+                                        fromNextjs,
                                         user: tokenData.user,
-                                        skipUpdate: false, // Allow SessionSync to update the session
+                                        skipUpdate: false,
                                     },
                                 }),
                             )
-
-                            // This ensures next-auth's session stays in sync with urql's tokens
                         }
 
                         setTimeout(async () => {
                             if (pendingMetadataBeforeRefresh.length > 0) {
                                 console.log("[AuthExchange] Token刷新完成，恢复pending metadata:", pendingMetadataBeforeRefresh.length)
-                                // Restore metadata to compensation storage
                                 for (const request of pendingMetadataBeforeRefresh) {
-                                    // await backupMutationToCompensation(request)
                                 }
-                                // Trigger retry
                                 window.dispatchEvent(
                                     new CustomEvent("graphql-manual-retry", {
                                         detail: { retryAll: true },
@@ -400,7 +454,7 @@ const makeAuthExchange = (
                                 )
                                 pendingMetadataBeforeRefresh = []
                             }
-                        }, 800) // Increased from 500ms to 800ms
+                        }, 800)
 
                         toast.info("会话自动续期", {
                             duration: 3 * 1000,
@@ -411,6 +465,11 @@ const makeAuthExchange = (
                     } catch (error) {
                         console.error("Token 刷新失败:", error)
                         pendingMetadataBeforeRefresh = []
+
+                        if (typeof window !== "undefined") {
+                            window.dispatchEvent(new CustomEvent("token:refresh-failed"))
+                        }
+
                         toast.error("登录已过期", {
                             description: "请重新登录，点导航登录",
                             duration: 60 * 1000,
@@ -495,7 +554,7 @@ const isVersionConflictError = (error: any): boolean => {
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const pathname = usePathname()
-    const print = "1" === searchParams!.get("print") // 进入页面是打印目的的\
+    const print = "1" === searchParams!.get("print") // 进入页面是打印目的的
     const { accessToken, ConfirmDialog } = useAccessToken() // Use the correct useAccessToken hook instead of useSession
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)

@@ -14,6 +14,7 @@ import { OfflineStatusIndicator } from "@/components/offline-status-indicator"
 import { PWAInstaller } from "@/components/pwa-installer"
 import { NetworkStatusProvider } from "@/contexts/network-status-context"
 import { SessionSync } from "@/components/session-sync"
+import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
 
 const APP_NAME = "报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
@@ -65,6 +66,7 @@ export default async function RootLayout({
                             <GraphQLProvider>
                                 <SessionSync />
                                 {/* 离线状态指示器 */}
+                                <TokenRefreshOverlay />
                                 <OfflineStatusIndicator />
                                 {children}
                                 {/* PWA 组件 */}
