@@ -59,6 +59,35 @@ const maskToken = (token: string | null): string => {
     return `${token.substring(0, 4)}...${token.substring(token.length - 4)}`
 }
 
+const logRefreshTokenUsage = (token: string, location: string, action: string) => {
+    if (typeof window === "undefined") return
+
+    try {
+        const logEntry = {
+            token: maskToken(token),
+            fullTokenHash: token.substring(0, 8), // Store first 8 chars for identification
+            location,
+            action,
+            timestamp: new Date().toISOString(),
+            timestampMs: Date.now(),
+        }
+
+        const existingLogs = sessionStorage.getItem("refresh_token_usage_log")
+        const logs = existingLogs ? JSON.parse(existingLogs) : []
+        logs.push(logEntry)
+
+        // Keep only last 50 entries to avoid storage overflow
+        if (logs.length > 50) {
+            logs.shift()
+        }
+
+        sessionStorage.setItem("refresh_token_usage_log", JSON.stringify(logs))
+        console.log(`[TokenUsageLog] ${action} at ${location}:`, logEntry)
+    } catch (error) {
+        console.error("[TokenUsageLog] Failed to log token usage:", error)
+    }
+}
+
 //网络状态更新：
 const updateBackendStatusExchange = (
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
@@ -158,6 +187,19 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
         console.log("[v0] refreshTokenDirectly: Using refresh_token from cookie")
+
+        const offlineAuth = typeof window !== "undefined" ? localStorage.getItem("offline_auth") : null
+        if (offlineAuth) {
+            try {
+                const authData = JSON.parse(offlineAuth)
+                if (authData.refreshToken) {
+                    logRefreshTokenUsage(authData.refreshToken, "refreshTokenDirectly", "发送刷新请求(直连模式)")
+                }
+            } catch (e) {
+                console.error("Failed to parse offline_auth for logging")
+            }
+        }
+
         const requestBody: any = {
             query: `
                 mutation RefreshToken($refreshToken: String) {
@@ -200,6 +242,9 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
             refreshToken: result.data.refreshToken.refreshToken,
             user: result.data.user,
         }
+
+        logRefreshTokenUsage(newTokens.refreshToken, "refreshTokenDirectly", "收到新refreshToken(直连模式)")
+
         console.log("[v0] refreshTokenDirectly: Saved new refresh_token to cookie")
         return newTokens
     } catch (error) {
@@ -309,6 +354,20 @@ const makeAuthExchange = (
                 console.log("[AuthExchange] 准备刷新token，当前token:", maskToken(tokenBeforeRefresh))
 
                 if (typeof window !== "undefined") {
+                    try {
+                        const offlineAuth = localStorage.getItem("offline_auth")
+                        if (offlineAuth) {
+                            const authData = JSON.parse(offlineAuth)
+                            if (authData.refreshToken) {
+                                logRefreshTokenUsage(authData.refreshToken, "refreshAuth", "准备刷新token")
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Failed to log refresh token usage")
+                    }
+                }
+
+                if (typeof window !== "undefined") {
                     window.dispatchEvent(new CustomEvent("token:refresh-start"))
                 }
 
@@ -338,6 +397,9 @@ const makeAuthExchange = (
                                         refreshToken: data.refreshToken,
                                         user: data.user,
                                     }
+
+                                    logRefreshTokenUsage(tokenData.refreshToken, "refreshAuth-NextJS", "收到新refreshToken(NextJS API)")
+
                                     console.log("[AuthExchange] NextJS API刷新成功")
                                     console.log("  - 新accessToken:", maskToken(tokenData.accessToken))
                                     console.log("  - 新refreshToken:", maskToken(tokenData.refreshToken))
@@ -365,9 +427,9 @@ const makeAuthExchange = (
 
                                     setTimeout(() => {
                                         if (typeof window !== "undefined") {
-                                            window.location.href = "/"
+                                            window.location.href = "/login"
                                         }
-                                    }, 1000)
+                                    }, 4000)
 
                                     return null
                                 }
@@ -398,9 +460,9 @@ const makeAuthExchange = (
 
                                 setTimeout(() => {
                                     if (typeof window !== "undefined") {
-                                        window.location.href = "/"
+                                        window.location.href = "/login"
                                     }
-                                }, 1000)
+                                }, 4000)
 
                                 return null
                             }
@@ -620,9 +682,9 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             isClient: typeof window !== "undefined",
         })
 
-        const epoint = process.env.NEXT_PUBLIC_BACK_END
+        const endpoint = process.env.NEXT_PUBLIC_BACK_END
         const client = createClient({
-            url: `${epoint}/graphql`,
+            url: `${endpoint}/graphql`,
             exchanges: [
                 errorExchange({
                     onError: (error, operation) => {
@@ -740,11 +802,34 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         }
 
         const handleTokenRefreshed = (event: CustomEvent) => {
-            console.log("[GraphQLProvider] 检测到token刷新，更新token ref")
-            const { accessToken: newAccessToken } = event.detail
+            console.log("[GraphQLProvider] 检测到token刷新，更新token ref和localStorage")
+            const { accessToken: newAccessToken, refreshToken: newRefreshToken, user: newUser } = event.detail
             if (newAccessToken) {
                 currentTokenRef.current = newAccessToken
                 console.log("[GraphQLProvider] Token ref已从token:refreshed事件更新")
+
+                // Also update localStorage to keep it in sync
+                if (typeof window !== "undefined") {
+                    try {
+                        const offlineAuth = localStorage.getItem("offline_auth")
+                        if (offlineAuth) {
+                            const authData = JSON.parse(offlineAuth)
+                            authData.accessToken = newAccessToken
+                            if (newRefreshToken) {
+                                authData.refreshToken = newRefreshToken
+                            }
+                            if (newUser) {
+                                authData.user = newUser
+                            }
+                            // Update expiration time (assume 1 hour for access token)
+                            authData.expiresAt = Date.now() + 60 * 60 * 1000
+                            localStorage.setItem("offline_auth", JSON.stringify(authData))
+                            console.log("[GraphQLProvider] localStorage已同步更新新token")
+                        }
+                    } catch (error) {
+                        console.error("[GraphQLProvider] 更新localStorage失败:", error)
+                    }
+                }
             }
         }
 

@@ -1,9 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth, unstable_update as updateSession } from "@/app/auth"
 import { createServerUrqlClient } from "@/auth/urql"
-import { appendFile, mkdir } from "fs/promises"
-import { existsSync } from "fs"
-import path from "path"
 
 const REFRESH_TOKEN_MUTATION = `
   mutation RefreshToken($refreshToken: String!) {
@@ -22,57 +19,15 @@ const maskToken = (token: string): string => {
     return `${token.substring(0, 4)}...${token.substring(token.length - 4)}`
 }
 
-const logRefreshTokenUsageToFile = async (
-    oldToken: string,
-    newToken: string | null,
-    action: string,
-    success: boolean,
-    error?: string,
-) => {
-    try {
-        const logDir = path.join(process.cwd(), "logs")
-        const logFile = path.join(logDir, "refresh-token-usage.log")
-
-        // Create logs directory if it doesn't exist
-        if (!existsSync(logDir)) {
-            await mkdir(logDir, { recursive: true })
-        }
-
-        const timestamp = new Date().toISOString()
-        const logEntry = {
-            timestamp,
-            timestampMs: Date.now(),
-            action,
-            success,
-            oldToken: maskToken(oldToken),
-            oldTokenHash: oldToken.substring(0, 8),
-            newToken: newToken ? maskToken(newToken) : null,
-            newTokenHash: newToken ? newToken.substring(0, 8) : null,
-            error: error || null,
-        }
-
-        const logLine = `${timestamp} | ${action} | Success: ${success} | Old: ${logEntry.oldTokenHash} | New: ${logEntry.newTokenHash || "N/A"} | Error: ${error || "None"}\n`
-
-        await appendFile(logFile, logLine, "utf-8")
-        console.log(`[ServerTokenLog] Logged to file:`, logEntry)
-    } catch (error) {
-        console.error("[ServerTokenLog] Failed to write log file:", error)
-    }
-}
-
 export async function POST(request: NextRequest) {
     try {
         const session = await auth()
         if (!session?.user?.refreshToken) {
             console.error("[API] 未找到刷新令牌")
-            await logRefreshTokenUsageToFile("", null, "刷新失败-无token", false, "未找到刷新令牌")
             return NextResponse.json({ error: "未找到刷新令牌" }, { status: 401 })
         }
 
-        const oldRefreshToken = session.user.refreshToken
-        console.log("[API] 开始刷新token，使用refresh_token:", maskToken(oldRefreshToken))
-
-        await logRefreshTokenUsageToFile(oldRefreshToken, null, "发送刷新请求到Java后端", true)
+        console.log("[API] 开始刷新token，使用refresh_token:", maskToken(session.user.refreshToken))
 
         try {
             const deviceId = session.user.deviceId || "server-refresh"
@@ -83,7 +38,7 @@ export async function POST(request: NextRequest) {
 
             const result = await client
                 .mutation(REFRESH_TOKEN_MUTATION, {
-                    refreshToken: oldRefreshToken,
+                    refreshToken: session.user.refreshToken,
                 })
                 .toPromise()
 
@@ -94,29 +49,20 @@ export async function POST(request: NextRequest) {
                 if (result.error.message?.includes("refresh") || result.error.message?.includes("token")) {
                     console.error("[API] 可能是refresh token已被使用或无效")
                 }
-
-                await logRefreshTokenUsageToFile(oldRefreshToken, null, "刷新失败-GraphQL错误", false, result.error.message)
-
                 return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
             }
 
             if (!result.data?.refreshToken) {
                 console.error("[API] Token刷新失败：无数据返回")
-
-                await logRefreshTokenUsageToFile(oldRefreshToken, null, "刷新失败-无数据返回", false, "无数据返回")
-
                 return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
             }
 
             const refreshData = result.data.refreshToken
-            const newRefreshToken = refreshData.refreshToken
 
             console.log("[API] Token刷新成功，收到新token:")
             console.log("  - 新accessToken:", maskToken(refreshData.accessToken))
-            console.log("  - 新refreshToken:", maskToken(newRefreshToken))
-            console.log("  - 旧refreshToken:", maskToken(oldRefreshToken))
-
-            await logRefreshTokenUsageToFile(oldRefreshToken, newRefreshToken, "刷新成功-收到新token", true)
+            console.log("  - 新refreshToken:", maskToken(refreshData.refreshToken))
+            console.log("  - 旧refreshToken:", maskToken(session.user.refreshToken))
 
             console.log("[API] 开始更新session")
             const sessionUpdateStartTime = Date.now()
@@ -126,7 +72,7 @@ export async function POST(request: NextRequest) {
                 user: {
                     ...session.user,
                     accessToken: refreshData.accessToken,
-                    refreshToken: newRefreshToken,
+                    refreshToken: refreshData.refreshToken,
                     id: refreshData.user.id,
                     name: refreshData.user.name || refreshData.user.username,
                     email: refreshData.user.email,
@@ -139,12 +85,10 @@ export async function POST(request: NextRequest) {
             await new Promise((resolve) => setTimeout(resolve, 100))
             console.log("[API] Session持久化延迟完成")
 
-            await logRefreshTokenUsageToFile(oldRefreshToken, newRefreshToken, "Session更新完成", true)
-
             return NextResponse.json({
                 success: true,
                 accessToken: refreshData.accessToken,
-                refreshToken: newRefreshToken,
+                refreshToken: refreshData.refreshToken,
                 user: {
                     id: refreshData.user.id,
                     name: refreshData.user.name || refreshData.user.username,
@@ -156,18 +100,11 @@ export async function POST(request: NextRequest) {
             if (refreshError instanceof Error) {
                 console.error("[API] 错误详情:", refreshError.message)
                 console.error("[API] 错误堆栈:", refreshError.stack)
-
-                await logRefreshTokenUsageToFile(oldRefreshToken, null, "刷新过程异常", false, refreshError.message)
             }
             return NextResponse.json({ error: "Token refresh failed" }, { status: 401 })
         }
     } catch (error) {
         console.error("[API] Token刷新API错误:", error)
-
-        if (error instanceof Error) {
-            await logRefreshTokenUsageToFile("", null, "API错误", false, error.message)
-        }
-
         return NextResponse.json({ error: "服务器内部错误" }, { status: 500 })
     }
 }
