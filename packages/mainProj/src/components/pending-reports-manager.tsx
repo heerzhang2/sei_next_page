@@ -90,11 +90,18 @@ function DeleteConfirmDialog({
                 <div className="flex items-start justify-between mb-4">
                     <h3 className="text-lg font-semibold">确认删除</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                        <X className="w-5 h-5" />
+                        <X className="w-5 h-5"/>
                     </button>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+                <p className="text-sm text-gray-600 mb-4">
                     确定要删除这个待发送的报告吗？本地修改将丢失且无法恢复。
+                </p>
+                <hr className="my-4"/>
+                <p className="text-sm text-gray-600 mb-4">
+                    <strong>注意！</strong>
+                    新上传的图片文件附件将会丢失所依附的管理者，所以
+                    <span className="text-red-500 font-bold text-lg">务必提前删除</span>
+                    相关的已经上传文件，避免存储空间浪费。
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 bg-gray-100 dark:bg-gray-700 p-2 rounded">
                     {reportInfo}
@@ -116,7 +123,7 @@ export function PendingReportsManager() {
     const [pendingReports, setPendingReports] = useState<PendingReport[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [sendingReports, setSendingReports] = useState<Set<string>>(new Set())
-    const { isGraphQLBackendReachable } = useNetworkStatusContext()
+    const {isGraphQLBackendReachable} = useNetworkStatusContext()
     const [, updateOriginal] = useMutation(OriginalDataMutation)
     const searchParams = useSearchParams()
     const highlightedReportRef = useRef<HTMLDivElement>(null)
@@ -401,7 +408,7 @@ export function PendingReportsManager() {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
                     <p>
-                        <strong>确认按钮：</strong> 点击"确认"按钮将数据暂存到本地IndexedDB，不会发送到服务器。
+                        <strong>确认按钮：</strong> 点击"确认"按钮将数据暂存到本地IndexedDB，不会发送到服务器。图片文件附件的上传是需在线操作的，假如不发送保存的就应删除。
                     </p>
                     <p>
                         <strong>保存按钮：</strong> 点击"保存"按钮将当前打开的报告发送到Java后端服务器。
@@ -413,7 +420,7 @@ export function PendingReportsManager() {
                         <strong>单独发送：</strong> 点击每个报告旁边的"发送"按钮可以单独发送该报告。
                     </p>
                     <p>
-                        <strong>删除报告：</strong> 删除待发送报告将清除本地修改，无法恢复。
+                        <strong>删除报告：</strong> 删除待发送报告将清除本地修改，无法恢复，新上传的图片文件附件将会丢失。
                     </p>
                 </CardContent>
             </Card>

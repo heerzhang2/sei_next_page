@@ -391,7 +391,7 @@ export function useFormFramework({
                             </Button>
                             <Button asChild variant="outline" type="button">
                                 <Link href={pendingReportsUrl} title="查看待发送报告列表">
-                                    <ExternalLink className="w-4 h-4 mr-2" />
+                                    <ExternalLink className="w-4 h-4" />
                                 </Link>
                             </Button>
                         </div>
@@ -628,7 +628,7 @@ export function useFrameEditorBar({
             </Button>
             <Button asChild variant="outline" type="button">
                 <Link href={pendingReportsUrl} title="查看待发送报告列表">
-                    <ExternalLink className="w-4 h-4 mr-2" />
+                    <ExternalLink className="w-4 h-4" />
                 </Link>
             </Button>
         </div>

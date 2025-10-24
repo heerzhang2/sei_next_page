@@ -108,55 +108,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         setQueueDialogData(null)
     }, [])
 
-    // 显示刷新提示
-    const showRefreshPrompt = useCallback(async () => {
-        try {
-            const modifiedReports = await indexedDBStorage.getAllModified()
-            const queueLength = modifiedReports.length
-
-            if (queueLength === 0) {
-                return
-            }
-
-            toast.warning(
-                <div className="bg-white border border-gray-200 shadow-xl rounded-lg p-1 max-w-md w-full mx-1">
-                    <h3 className="text-base font-semibold text-red-700 mb-1 text-center">网络已恢复</h3>
-                    <p className="text-sm text-gray-600 mb-1 text-center">
-                        检测到 {queueLength} 个修改的报告等待发送。
-                        <br />
-                        刷新页面以同步数据？
-                    </p>
-                    <div className="flex justify-center gap-x-4">
-                        <button
-                            onClick={() => {
-                                window.location.reload()
-                                toast.dismiss()
-                            }}
-                            className="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-1 rounded-md transition-colors"
-                        >
-                            立即刷新
-                        </button>
-                        <button
-                            onClick={() => toast.dismiss()}
-                            className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-1 px-1 rounded-md transition-colors"
-                        >
-                            稍后处理
-                        </button>
-                    </div>
-                </div>,
-                {
-                    duration: 99999000,
-                    dismissible: false,
-                    closeButton: true,
-                    position: "top-center",
-                },
-            )
-        } catch (error) {
-            console.error("Failed to check modified reports:", error)
-        }
-    }, [])
-
-    // 更新离线队列状态
+     // 更新离线队列状态
     const updateOfflineQueueStatus = useCallback(async () => {
         const queueStatus = await checkOfflineQueue()
         setNetworkStatus((prev) => ({
@@ -257,17 +209,11 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 lastOfflineTime: !isOnline ? new Date() : prev.lastOfflineTime,
                 connectionType,
             }))
-
-            // 如果后端从离线恢复在线，检查离线队列
-            if (wasBackendOffline && isBackendNowOnline && isClientOnline) {
-                await showRefreshPrompt()
-            }
         },
         [
             checkNextJSServerConnectivity,
             checkGraphQLBackendConnectivity,
             getConnectionInfo,
-            showRefreshPrompt,
             networkStatus.isGraphQLBackendReachable,
         ],
     )
@@ -330,11 +276,6 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
                     // 定期检查离线队列
                     await updateOfflineQueueStatus()
-
-                    // 如果后端从离线恢复在线，提示用户
-                    if (wasBackendOffline && isBackendNowOnline) {
-                        await showRefreshPrompt()
-                    }
                 }
             }, 80000)
 
@@ -373,25 +314,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         getConnectionInfo,
         print,
         updateOfflineQueueStatus,
-        showRefreshPrompt,
     ])
-
-    // 预防网络短暂失败的额外检查
-    useEffect(() => {
-        const checkModifiedReportsInterval = setInterval(async () => {
-            // 如果正在处理队列，跳过检查
-            if (localStorage.getItem("isProcessingQueue") === "true") {
-                return
-            }
-            if (networkStatus.isGraphQLBackendReachable && pathname !== "/login") {
-                const modifiedReports = await indexedDBStorage.getAllModified()
-                if (modifiedReports.length > 0) {
-                    await showRefreshPrompt()
-                }
-            }
-        }, 30000)
-        return () => clearInterval(checkModifiedReportsInterval)
-    }, [pathname, networkStatus.isGraphQLBackendReachable, showRefreshPrompt])
 
     useEffect(() => {
         const checkInitialQueue = async () => {

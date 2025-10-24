@@ -366,7 +366,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
                     className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:border-8 print:border-black print:bg-white print:shadow-none"
                     style={{
                         right: "calc(1rem + var(--scrollbar-width, 0px))",
-                        backgroundColor: isPrintMode ? "rgba(220, 38, 38, 1)" : "rgba(170,125,80,0.9)",
+                        backgroundColor: isPrintMode ? "rgba(220, 38, 38, 1)" : "rgba(108,101,39,0.9)",
                         color: "white",
                     }}
                 >
@@ -581,7 +581,7 @@ function CommonReportDataSub({
                     className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:border-8 print:border-black print:bg-white print:shadow-none"
                     style={{
                         right: "calc(1rem + var(--scrollbar-width, 0px))",
-                        backgroundColor: isPrintMode ? "rgba(220, 38, 38, 1)" : "rgba(170,125,80,0.9)",
+                        backgroundColor: isPrintMode ? "rgba(220, 38, 38, 1)" : "rgba(108,101,39,0.9)",
                         color: "white",
                     }}
                 >
