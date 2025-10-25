@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { createServerUrqlClient } from "@/auth/urql"
+import { cookies } from "next/headers"
 
 // GraphQL mutations - 移除 deviceId 参数
 const AUTHENTICATE_MUTATION = `
@@ -51,6 +52,17 @@ export const authConfig: NextAuthConfig = {
                     }
 
                     const authData = result.data.authenticate
+
+                    const cookieStore = await cookies()
+                    cookieStore.set("refreshToken", authData.refreshToken, {
+                        httpOnly: true,
+                        secure: true,
+                        sameSite: "lax",
+                        maxAge: 60 * 60 * 24 * 60, // 60 days
+                        path: "/api/refresh-token",
+                    })
+                    console.log("[Login] refreshToken cookie已设置")
+
                     return {
                         id: authData.user.id,
                         name: authData.user.name || authData.user.username,

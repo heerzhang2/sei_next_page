@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { useSession } from "next-auth/react"
-import { setCookie, getCookie, deleteCookie } from "cookies-next/client"
 import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
 
 // 离线认证函数
@@ -71,10 +70,9 @@ const authenticateOffline = async (username: string, password: string, deviceId:
     }
 }
 
-// 存储离线认证信息
-const storeOfflineAuth = (authData: any, shouldSetCookie = true) => {
+const storeOfflineAuth = (authData: any) => {
     if (typeof window === "undefined") return
-    // 存储到localStorage
+    // 存储到localStorage - 只存储accessToken和user信息，不存储refreshToken
     localStorage.setItem(
         "offline_auth",
         JSON.stringify({
@@ -84,33 +82,13 @@ const storeOfflineAuth = (authData: any, shouldSetCookie = true) => {
             expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         }),
     )
-    //http应答设置cookie但是跨域没有自动带上。需从数据包提取Token再倒腾一手了。
-    if (shouldSetCookie) {
-        // setCookie("refresh_token", authData.refreshToken, {
-        //     // httpOnly: true,
-        //     secure: true,
-        //     // domain: "192.168.0.100",
-        //     maxAge: 61 * 24 * 60 * 60,
-        //     path: "/",
-        //     sameSite: "none",
-        // })
-    }
+
     // 触发自定义事件通知其他组件
     window.dispatchEvent(
         new CustomEvent("offline:login", {
             detail: authData,
         }),
     )
-}
-
-// 获取存储的refreshToken
-const getStoredRefreshToken = (): string | null => {
-    return (getCookie("refresh_token") as string) || null
-}
-
-// 清除refreshToken
-const clearStoredRefreshToken = (): void => {
-    deleteCookie("refresh_token")
 }
 
 export function OfflineLoginForm() {
@@ -131,8 +109,7 @@ export function OfflineLoginForm() {
                 throw new Error("无法连接到认证服务器，请检查网络连接")
             }
             const authData = await authenticateOffline(email, password, deviceFingerprint)
-            // 存储离线认证信息 - 这里默认设置cookie，因为这是浏览器直连模式
-            storeOfflineAuth(authData, true)
+            storeOfflineAuth(authData)
             try {
                 //若是在Nextjs服务器离线情况下：这实际无效，是没法真正修改session的accessToken。
                 await update({
@@ -150,13 +127,12 @@ export function OfflineLoginForm() {
                 new CustomEvent("token:refreshed", {
                     detail: {
                         accessToken: authData.accessToken,
-                        refreshToken: authData.refreshToken,
                         user: authData.user,
                         fromNextjs: false,
                     },
                 }),
             )
-            console.log("[OfflineLoginForm] 已触发token:refreshed事件")
+            console.log("[OfflineLoginForm] 已触发token:refreshed事件，refreshToken存储在cookie中")
 
             toast.success("Next离线情形下登录,与后端服务器连接", {
                 duration: 2000,
