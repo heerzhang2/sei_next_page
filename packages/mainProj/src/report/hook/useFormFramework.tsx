@@ -271,7 +271,7 @@ export function useFormFramework({
             }
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败,断网会自动重新再发送...", {
+                toast.error("保存失败", {
                     duration: 2000,
                 })
                 console.log("Oh no!", result.error)
@@ -297,7 +297,7 @@ export function useFormFramework({
                     duration: 3000,
                 })
             } else {
-                toast.error("保存失败,断网会自动重新再发送...", {
+                toast.error("保存失败", {
                     duration: 2000,
                 })
             }
@@ -525,7 +525,7 @@ export function useFrameEditorBar({
             )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败,若因断网原因会自动重新发。", {
+                toast.error("保存失败", {
                     duration: 2000,
                 })
                 console.log("Oh no!", result.error)
@@ -548,7 +548,7 @@ export function useFrameEditorBar({
                     duration: 3000,
                 })
             } else {
-                toast.error("保存失败,若因断网原因会自动重新发。", {
+                toast.error("保存失败", {
                     duration: 2000,
                 })
             }

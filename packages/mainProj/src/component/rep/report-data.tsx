@@ -209,7 +209,6 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     const { data, fetching, error } = result
     const report = data && data.getReport
-    console.log("前一段查到：",{report, requestPolicy,repId})
     const { setStorage, setSubrType, setOffline, storage, modified, setModeltype, setModelversion } = useStorage()
 
     useEffect(() => {
@@ -297,14 +296,12 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const prevDataRef = useRef<any>(null)
     useEffect(() => {
         if (!report) return
-
         const snap = report.snapshot && JSON.parse(report.snapshot)
         const dat = report.data && JSON.parse(report.data || "{}")
         const newData = dat ? { ...dat, ...snap, _version: report.version } : { ...(snap || {}), _version: report.version }
 
         const currentStorageVersion = storage?._version
         const isNewerVersion = !currentStorageVersion || report.version > currentStorageVersion
-        console.log("中段查探的是",{newData,isNewerVersion })
         if (JSON.stringify(newData) !== JSON.stringify(prevDataRef.current)) {
             if (modified) {
                 console.log("[v0] Skipping storage update - user has unsaved modifications")
@@ -325,7 +322,6 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
                 currentVersion: currentStorageVersion,
                 isNewer: isNewerVersion,
             })
-            console.log("真的变动段查探",{newData })
             setStorage(newData)
             setSubrType(undefined)
             prevDataRef.current = newData
@@ -337,7 +333,6 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable
         setOffline(shouldBeOffline)
     }, [error, isClientOnline, isGraphQLBackendReachable, setOffline])
-    console.log("最后段查探的是",{storage })
     if (!isClient || !mounted) {
         return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     }
@@ -468,10 +463,8 @@ function CommonReportDataSub({
 
     useEffect(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) return
-
         if (fetching || fetchingSub) {
             const now = Date.now()
-
             if (now < pausedUntilRef.current) {
                 return
             }
