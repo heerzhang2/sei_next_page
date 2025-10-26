@@ -435,11 +435,6 @@ const makeAuthExchange = (
                                 pendingMetadataBeforeRefresh = []
                             }
                         }, 800)
-
-                        toast.info("会话自动续期", {
-                            duration: 3 * 1000,
-                        })
-
                         console.log("[AuthExchange] Token刷新流程完成")
                         return tokenData
                     } catch (error) {
@@ -510,7 +505,6 @@ const fetchAbortExchange: Exchange =
                 }),
             )
         }
-}
 
 const isVersionConflictError = (error: any): boolean => {
     if (!error) return false
@@ -527,7 +521,7 @@ const isVersionConflictError = (error: any): boolean => {
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const pathname = usePathname()
-    const print = "1" === searchParams?.get(\"print")
+    const print = "1" === searchParams?.get("print")
     const { accessToken, ConfirmDialog } = useAccessToken()
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
     const [isClient, setIsClient] = useState(false)
@@ -549,29 +543,28 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         if (!isClient) {
             return [null, null]
         }
-    \
-    const getCurrentToken = () => {
-        if (currentTokenRef.current) {
-            return currentTokenRef.current
-        }
-
-        if (typeof window !== "undefined") {
-            try {
-                const offlineAuth = localStorage.getItem("offline_auth")
-                if (offlineAuth) {
-                    const authData = JSON.parse(offlineAuth)
-                    if (authData.accessToken && authData.expiresAt > Date.now()) {
-                        console.log("[getCurrentToken] 从localStorage读取token作为fallback")
-                        return authData.accessToken
-                    }
-                }
-            } catch (error) {
-                console.error("[getCurrentToken] 读取localStorage失败:", error)
+        const getCurrentToken = () => {
+            if (currentTokenRef.current) {
+                return currentTokenRef.current
             }
-        }
 
-        return null
-    }
+            if (typeof window !== "undefined") {
+                try {
+                    const offlineAuth = localStorage.getItem("offline_auth")
+                    if (offlineAuth) {
+                        const authData = JSON.parse(offlineAuth)
+                        if (authData.accessToken && authData.expiresAt > Date.now()) {
+                            console.log("[getCurrentToken] 从localStorage读取token作为fallback")
+                            return authData.accessToken
+                        }
+                    }
+                } catch (error) {
+                    console.error("[getCurrentToken] 读取localStorage失败:", error)
+                }
+            }
+
+            return null
+        }
 
         const storage = makeDefaultStorage({
             idbName: "graphcache-sei",

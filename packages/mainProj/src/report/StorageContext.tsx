@@ -24,8 +24,8 @@ interface StorageContextType {
 
 const StorageContext = createContext<StorageContextType | undefined>(undefined)
 
-export function StorageProvider({ children }: { children: ReactNode }) {
-    const repId = useActualRepId()
+export function StorageProvider({ children, repId }: { children: ReactNode, repId:string }) {
+    // const repId = useActualRepId()
     const searchParams = useSearchParams()
     const subrid = searchParams?.get("subrid") || undefined
 
@@ -51,6 +51,9 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     }, [])
 
     const currentKey = `${repId}${subrid ? `:${subrid}` : ""}`
+    if(repId==="*"){
+        console.error("[StorageContext]-星号id的:", { repId, subrid })
+    }
     if (activeStorageKeyRef.current && activeStorageKeyRef.current !== currentKey) {
         console.log("[StorageContext] Report/subrid changed synchronously, resetting state", {
             oldKey: activeStorageKeyRef.current,

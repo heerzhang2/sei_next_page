@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { WifiOff, RefreshCw, Home } from "lucide-react"
+import {WifiOff, RefreshCw, Home, Activity} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
@@ -51,7 +51,13 @@ export default function OfflinePage() {
                         <RefreshCw className="w-4 h-4 mr-2" />
                         重试连接
                     </Button>
-                    <Button asChild>
+                    <Button asChild className="bg-amber-300">
+                        <Link href="/offline">
+                            <Activity className="w-4 h-4 mr-2" />
+                            离线队列
+                        </Link>
+                    </Button>
+                    <Button asChild className="bg-blue-300">
                         <Link href="/">
                             <Home className="w-4 h-4 mr-2" />
                             返回首页

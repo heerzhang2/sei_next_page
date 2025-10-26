@@ -282,9 +282,9 @@ export function useFormFramework({
                 setModified(false)
 
                 // Auto-refresh page after successful save
-                setTimeout(() => {
-                    window.location.reload()
-                }, 500)
+                // setTimeout(() => {
+                //     window.location.reload()
+                // }, 1000)
             }
         } catch (error) {
             console.log("updateOriginalResult=异常=", error)
@@ -536,9 +536,9 @@ export function useFrameEditorBar({
                 setModified(false)
 
                 // Auto-refresh page after successful save
-                setTimeout(() => {
-                    window.location.reload()
-                }, 500)
+                // setTimeout(() => {
+                //     window.location.reload()
+                // }, 1000)
             }
         } catch (error) {
             console.log("updateOriginalResult=异常=", error)

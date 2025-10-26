@@ -1,3 +1,4 @@
-问题1：refreshToken不要放入localStorage的offline_auth对象中保存。 问题2：目前token刷新有cookieStore.set("refreshToken", newRefreshToken, {； 但是登录却没有设置refreshToken，所以src/app/api/refresh-token/route.ts第24行refreshTokenFromCookie不是Nextjs服务器在线模式的登录时刻要返回的最新refreshToken, 因此是无效的，如何避免?
-
-https://v0.app/chat/offline-TDXIektmdCO?ref=3TUSKY
+if (!r.objectStoreNames.contains("cache-entries"))
+                        return console.warn("[v0] Serwist cache-entries 对象存储不存在，可能 Serwist 尚未初始化，需要缓存"),
+                        r.close(),
+                        !0;

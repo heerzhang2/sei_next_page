@@ -1,13 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { WifiOff, Database, CloudOff, Clock, AlertTriangle, Send } from "lucide-react"
+import { WifiOff, Database, CloudOff, AlertTriangle } from "lucide-react"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
-import { useOfflineQueueManager } from "@/hooks/use-offline-queue-manager"
 
 export function OfflineStatusIndicator() {
     const { isClientOnline, isOnline, isGraphQLBackendReachable, offlineQueue } = useNetworkStatusContext()
-    const { totalRequests, pendingCount } = useOfflineQueueManager()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
 
     const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
@@ -58,20 +56,13 @@ export function OfflineStatusIndicator() {
 
     useEffect(() => {
         setShowOfflineBar(
-            !isClientOnline || !isOnline || !isGraphQLBackendReachable || totalRequests > 0 || showEmptyArrayReminder,
+            !isClientOnline || !isOnline || !isGraphQLBackendReachable || showEmptyArrayReminder,
         )
-    }, [isClientOnline, isOnline, isGraphQLBackendReachable, totalRequests, showEmptyArrayReminder])
+    }, [isClientOnline, isOnline, isGraphQLBackendReachable, showEmptyArrayReminder])
 
     if (!showOfflineBar) return null
 
     const getStatusMessage = () => {
-        if (totalRequests > 0) {
-            return {
-                icon: Clock,
-                message: `离线队列: ${pendingCount}个待处理`,
-                color: "bg-blue-100 border-blue-300 text-blue-900",
-            }
-        }
         if (!isClientOnline) {
             return {
                 icon: WifiOff,
@@ -122,9 +113,6 @@ export function OfflineStatusIndicator() {
         >
             <Icon className="h-4 w-4" />
             <span>{message}</span>
-            {totalRequests > 0 && !showEmptyArrayReminder && (
-                <span className="ml-2 px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs">点击管理</span>
-            )}
         </div>
     )
 }
