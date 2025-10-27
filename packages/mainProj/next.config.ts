@@ -73,8 +73,6 @@ module.exports = async (phase) => {
             { url: "/login", revision },
             { url: "/~offline", revision },
             { url: "/offline", revision },
-            { url: "/rep/*/SLIDING_JJ/1", revision },
-            { url: "/rep/*/SLIDING_JJ/1/Witness", revision },
         ],
     })
     return withSerwist(nextConfig)
