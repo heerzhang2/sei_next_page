@@ -78,6 +78,8 @@ export default function Page() {
     const [isCalculatingCache, setIsCalculatingCache] = useState(false)
     const [showCustomUrlSection, setShowCustomUrlSection] = useState(false)
 
+    const [showAutoWarmupPrompt, setShowAutoWarmupPrompt] = useState(false)
+
     const checkCacheStatus = async (setCacheStatusList: any, setAutoUpdateAvailable: any) => {
         console.log("checkCacheStatus function is called")
         try {
@@ -232,6 +234,24 @@ export default function Page() {
             checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
         }
     }, [reportTemplates])
+
+    useEffect(() => {
+        const checkNeedWarmup = () => {
+            // 检查是否是首次访问或缓存已过期
+            const lastWarmup = localStorage.getItem("last-cache-warmup")
+            const lastWarmupTime = lastWarmup ? Number.parseInt(lastWarmup) : 0
+            const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
+
+            if (lastWarmupTime < oneDayAgo && reportTemplates.length > 0) {
+                setShowAutoWarmupPrompt(true)
+            }
+        }
+
+        if (reportTemplates.length > 0) {
+            checkNeedWarmup()
+        }
+    }, [reportTemplates])
+
     const handleHardRefresh = () => {
         // 硬刷新页面，相当于 Ctrl+Shift+R
         window.location.reload()
@@ -630,6 +650,12 @@ export default function Page() {
             console.warn(`验证模板 ${templateId}/${version} 缓存失败:`, error)
             return true // If we can't validate, assume it needs updating
         }
+    }
+
+    const handleAutoWarmup = async () => {
+        setShowAutoWarmupPrompt(false)
+        await handlePrecacheReports()
+        localStorage.setItem("last-cache-warmup", Date.now().toString())
     }
 
     return (
@@ -1124,6 +1150,43 @@ export default function Page() {
                         </div>
                     </div>
                 </div>
+
+                {showAutoWarmupPrompt && (
+                    <div className="fixed top-20 right-4 max-w-md bg-white border-l-4 border-blue-500 rounded-lg shadow-lg p-4 z-50">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                            </div>
+                            <div className="ml-3 flex-1">
+                                <h3 className="text-sm font-medium text-blue-800">建议预热缓存</h3>
+                                <div className="mt-1 text-sm text-blue-700">
+                                    检测到有 {reportTemplates.length} 个模板需要缓存，建议现在预热缓存以确保离线可用。
+                                </div>
+                                <div className="mt-3 flex gap-2">
+                                    <button
+                                        onClick={handleAutoWarmup}
+                                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+                                    >
+                                        立即预热
+                                    </button>
+                                    <button
+                                        onClick={() => setShowAutoWarmupPrompt(false)}
+                                        className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300 transition-colors"
+                                    >
+                                        稍后
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <footer className="text-center py-8 text-gray-500">
                     <p>© 2024 报告管理系统 - Powered by Next.js & Serwist PWA</p>

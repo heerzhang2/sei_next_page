@@ -1,6 +1,8 @@
 import {
+    CacheFirst,
     ExpirationPlugin,
-    NetworkFirst, NetworkOnly,
+    NetworkFirst,
+    NetworkOnly,
     type PrecacheEntry,
     type RuntimeCaching,
     type SerwistGlobalConfig,
@@ -31,8 +33,8 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
     // 提取路径部分，移除动态的 repid
     const pathParts = url.pathname.split("/")
     if (pathParts[1] === "rep" && pathParts.length >= 4) {
-        const hasAction=(pathParts.length>=5 && pathParts[5]!=="")       //若有编辑器的子路由
-        if(hasAction){
+        const hasAction = pathParts.length >= 5 && pathParts[5] !== "" //若有编辑器的子路由
+        if (hasAction) {
             // 重构路径：/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
             const normalizedPath = `/rep/*/${pathParts.slice(3).join("/")}`
             // 移除 subrid 查询参数 subrid from utm_idx #这些参数还需要在整个路由之内做协调统一的。
@@ -43,7 +45,7 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
             searchParams.delete("from")
             searchParams.delete("original")
             searchParams.delete("unitIndex")
-                //控制器情况
+            //控制器情况
             searchParams.delete("modelkey")
 
             const isRSC = request.headers.get("RSC") === "1"
@@ -51,8 +53,7 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
             // 构建标准化的缓存键
             const normalizedUrl = `${url.origin}${normalizedPath}${searchParams.toString() ? "?" + searchParams.toString() : ""}${suffix}`
             return normalizedUrl
-        }
-        else{
+        } else {
             const normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`
             // 移除 ?print=1 查询参数
             const searchParams = new URLSearchParams(url.search)
@@ -71,13 +72,29 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
 const customCache: RuntimeCaching[] = [
     {
         matcher: ({ url: { pathname }, sameOrigin }) =>
-            sameOrigin && pathname.startsWith("/rep/"),
+            sameOrigin &&
+            (pathname.startsWith("/_next/static/chunks/") ||
+                pathname.startsWith("/_next/static/css/") ||
+                pathname.includes("webpack-")),
+        handler: new CacheFirst({
+            cacheName: "next-chunks",
+            plugins: [
+                new ExpirationPlugin({
+                    maxEntries: 2000, // 从 500 增加到 2000，允许缓存更多版本的 chunks
+                    maxAgeSeconds: 90 * 24 * 60 * 60, // 从 30 天增加到 90 天
+                    maxAgeFrom: "last-used", // 基于最后使用时间，而不是缓存时间
+                }),
+            ],
+        }),
+    },
+    {
+        matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && pathname.startsWith("/rep/"),
         handler: new NetworkFirst({
             cacheName: "report-pages-normalized",
             plugins: [
                 createCacheKeyPlugin(normalizeReportCacheKey), // Apply normalization plugin
                 new ExpirationPlugin({
-                    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days for report pages
+                    maxAgeSeconds: 30 * 24 * 60 * 60, // 从 7 天增加到 30 天
                     maxAgeFrom: "last-used",
                 }),
             ],
@@ -116,7 +133,7 @@ const customCache: RuntimeCaching[] = [
         }),
     },
     {
-        matcher: ({ url: { pathname }, sameOrigin }) => !sameOrigin && pathname==="/actuator/health",
+        matcher: ({ url: { pathname }, sameOrigin }) => !sameOrigin && pathname === "/actuator/health",
         method: "GET",
         handler: new NetworkOnly(),
     },
@@ -128,7 +145,7 @@ const customCache: RuntimeCaching[] = [
             plugins: [
                 new ExpirationPlugin({
                     maxEntries: 2000,
-                    maxAgeSeconds: 4 * 60 * 60,     //4 hour
+                    maxAgeSeconds: 4 * 60 * 60, //4 hour
                 }),
             ],
             networkTimeoutSeconds: 10,
@@ -137,7 +154,6 @@ const customCache: RuntimeCaching[] = [
 
     ...defaultCache,
 ]
-
 
 const serwist = new Serwist({
     precacheEntries: self.__SW_MANIFEST,
@@ -164,10 +180,23 @@ const serwist = new Serwist({
 
 serwist.addEventListeners()
 
-
 // 监听来自主页面的消息
 self.addEventListener("message", (event) => {
     const { data } = event
+
+    if (data?.type === "CACHE_URLS") {
+        event.waitUntil(
+            cacheUrls(data.payload.urlsToCache)
+                .then((success) => {
+                    event.ports[0]?.postMessage(success)
+                })
+                .catch((error) => {
+                    console.error("[SW] 批量缓存失败:", error)
+                    event.ports[0]?.postMessage(false)
+                }),
+        )
+        return
+    }
 
     if (data?.type === "CLEAR_AUTH_CACHE") {
         event.waitUntil(
@@ -181,7 +210,161 @@ self.addEventListener("message", (event) => {
         )
         return
     }
+})
 
+async function cacheUrls(urls: string[]): Promise<boolean> {
+    try {
+        console.log(`[SW] 开始批量缓存 ${urls.length} 个 URLs`)
+
+        const cachePromises = urls.map(async (url) => {
+            try {
+                // 为每个 URL 缓存 HTML 和 RSC 两个版本
+                const htmlRequest = new Request(url, {
+                    headers: { Accept: "text/html" },
+                })
+                const rscRequest = new Request(url, {
+                    headers: { RSC: "1", Accept: "text/x-component" },
+                })
+
+                // 并行获取两个版本
+                const [htmlResponse, rscResponse] = await Promise.all([
+                    fetch(htmlRequest).catch((e) => {
+                        console.warn(`[SW] HTML 请求失败: ${url}`, e)
+                        return null
+                    }),
+                    fetch(rscRequest).catch((e) => {
+                        console.warn(`[SW] RSC 请求失败: ${url}`, e)
+                        return null
+                    }),
+                ])
+
+                // 缓存成功的响应
+                const reportCache = await caches.open("report-pages-normalized")
+
+                if (htmlResponse && htmlResponse.ok) {
+                    // 使用标准化的缓存键
+                    const normalizedHtmlKey = await normalizeReportCacheKey({
+                        request: htmlRequest,
+                    })
+                    await reportCache.put(normalizedHtmlKey, htmlResponse.clone())
+                    console.log(`[SW] ✓ 缓存 HTML: ${url}`)
+                }
+
+                if (rscResponse && rscResponse.ok) {
+                    const normalizedRscKey = await normalizeReportCacheKey({
+                        request: rscRequest,
+                    })
+                    await reportCache.put(normalizedRscKey, rscResponse.clone())
+                    console.log(`[SW] ✓ 缓存 RSC: ${url}`)
+                }
+
+                return true
+            } catch (error) {
+                console.error(`[SW] 缓存失败: ${url}`, error)
+                return false
+            }
+        })
+
+        const results = await Promise.all(cachePromises)
+        const successCount = results.filter(Boolean).length
+
+        console.log(`[SW] 批量缓存完成: ${successCount}/${urls.length} 成功`)
+        return successCount > 0
+    } catch (error) {
+        console.error("[SW] 批量缓存过程出错:", error)
+        return false
+    }
+}
+
+self.addEventListener("install", (event) => {
+    console.log("[SW] Service Worker 安装中...")
+
+    event.waitUntil(
+        (async () => {
+            // 强制等待，确保新 SW 完全安装后再激活
+            await self.skipWaiting()
+
+            // 预缓存关键的静态资源
+            try {
+                const cache = await caches.open("next-chunks")
+                // 这里可以添加关键的 chunk 文件，但由于文件名是动态的，
+                // 主要依赖运行时缓存策略
+                console.log("[SW] 关键资源预缓存完成")
+            } catch (error) {
+                console.warn("[SW] 预缓存关键资源失败:", error)
+            }
+
+            console.log("[SW] Service Worker 安装完成")
+        })(),
+    )
+})
+
+self.addEventListener("activate", (event) => {
+    console.log("[SW] Service Worker 激活中...")
+    event.waitUntil(
+        (async () => {
+            // 清理旧缓存
+            const cacheNames = await caches.keys()
+            const oldCaches = cacheNames.filter(
+                (name) =>
+                    (name.includes("workbox") || name.includes("sw-precache")) &&
+                    !name.includes("next-chunks") && // 保留 chunks 缓存
+                    !name.includes("report-pages"), // 保留报告页面缓存
+            )
+
+            await Promise.all(
+                oldCaches.map((cacheName) => {
+                    console.log("[SW] 删除旧缓存:", cacheName)
+                    return caches.delete(cacheName)
+                }),
+            )
+
+            const allCaches = await caches.keys()
+            for (const cacheName of allCaches) {
+                const cache = await caches.open(cacheName)
+                const keys = await cache.keys()
+                console.log(`[SW] 缓存 "${cacheName}" 包含 ${keys.length} 个条目`)
+            }
+
+            await self.clients.claim()
+            console.log("✅ 离线功能: 已激活并控制所有页面")
+        })(),
+    )
+})
+
+self.addEventListener("error", (event) => {
+    console.error("[SW] Service Worker 错误:", event.error)
+    notifyClientsOfError(event.error?.message || "未知的 Service Worker 错误", "SW_ERROR")
+})
+
+self.addEventListener("unhandledrejection", (event) => {
+    console.error("[SW] 未处理的 Promise 拒绝:", event.reason)
+
+    const error = event.reason
+    if (error && error.name === "no-response") {
+        const url = error.details?.url || "未知URL"
+        console.warn(`[SW] 资源未缓存且网络不可用: ${url}`)
+
+        // 提取文件名以提供更有用的错误信息
+        const fileName = url.split("/").pop() || url
+        notifyClientsOfError(
+            `离线模式下缺少必要资源: ${fileName}。\n\n建议：\n1. 在线时访问 /pwa 页面\n2. 点击"重新预缓存"按钮\n3. 等待缓存完成后再离线使用`,
+            "CACHE_MISS",
+        )
+    } else if (
+        error &&
+        (error.name === "InvalidStateError" ||
+            error.message?.includes("database connection is closing") ||
+            error.message?.includes("transaction") ||
+            error.message?.includes("IDBDatabase"))
+    ) {
+        notifyClientsOfError("IndexedDB 连接异常，建议刷新页面以重置缓存状态", "INDEXEDDB_ERROR")
+    } else {
+        notifyClientsOfError(error?.message || String(error) || "未知的异步错误", "ASYNC_ERROR")
+    }
+
+    // 防止错误在控制台显示为未处理
+    event.preventDefault()
 })
 
 async function clearAuthCache() {
@@ -202,71 +385,6 @@ async function clearAuthCache() {
         console.error("[SW] 清除认证缓存失败:", error)
     }
 }
-
-self.addEventListener("install", (event) => {
-    console.log("[SW] Service Worker 安装中...")
-
-    event.waitUntil(
-        (async () => {
-            // 强制等待，确保新 SW 完全安装后再激活
-            await self.skipWaiting()
-
-            // 这里可以添加关键路由的预缓存逻辑
-            console.log("[SW] Service Worker 安装完成")
-        })(),
-    )
-})
-
-self.addEventListener("activate", (event) => {
-    console.log("[SW] Service Worker 激活中...")
-    event.waitUntil(
-        (async () => {
-            // 清理旧缓存
-            const cacheNames = await caches.keys()
-            const oldCaches = cacheNames.filter(
-                (name) =>
-                    name.includes("workbox") || // 清理旧的 workbox 缓存
-                    name.includes("sw-precache"), // 清理旧的 sw-precache 缓存
-            )
-
-            await Promise.all(
-                oldCaches.map((cacheName) => {
-                    console.log("[SW] 删除旧缓存:", cacheName)
-                    return caches.delete(cacheName)
-                }),
-            )
-
-            // 立即控制所有客户端
-            await self.clients.claim()
-            console.log("✅ 离线功能: 已激活并控制所有页面")
-        })(),
-    )
-})
-
-self.addEventListener("error", (event) => {
-    console.error("[SW] Service Worker 错误:", event.error)
-    notifyClientsOfError(event.error?.message || "未知的 Service Worker 错误", "SW_ERROR")
-})
-
-self.addEventListener("unhandledrejection", (event) => {
-    console.error("[SW] 未处理的 Promise 拒绝:", event.reason)
-
-    const error = event.reason
-    if (
-        error &&
-        (error.name === "InvalidStateError" ||
-            error.message?.includes("database connection is closing") ||
-            error.message?.includes("transaction") ||
-            error.message?.includes("IDBDatabase"))
-    ) {
-        notifyClientsOfError("IndexedDB 连接异常，建议刷新页面以重置缓存状态", "INDEXEDDB_ERROR")
-    } else {
-        notifyClientsOfError(error?.message || String(error) || "未知的异步错误", "ASYNC_ERROR")
-    }
-
-    // 防止错误在控制台显示为未处理
-    event.preventDefault()
-})
 
 async function notifyClientsOfError(error: string, errorType = "CACHE_ERROR") {
     try {
