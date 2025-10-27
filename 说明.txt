@@ -521,7 +521,7 @@ NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动�
 
 {1}两个的，reload， 就会丢了一个。
 {2}检测到401错误，token无效，准备触发刷新流程,app401= false
-/12【hez0】 authorization Bearer%20bx0DmDKUqOJPLuKsC7mUiKeQ Bearer%20ny4yrhjZTHQPlp8L23aCKNEy
+/12【hez0】 authorization Bearer%20IYdANNMUbvbwsBloQ6RaF91x   vercel.com
 【1】账户/14=Bearer%203AsUvyRLABKw4jahh1rPyVea
 【2】/22 Bearer%200dC3iEdcH8fHkIizhxvwpJV0
 【3】/26 Bearer%20bMtCVMY2iC28dzdwXBv4uwTh

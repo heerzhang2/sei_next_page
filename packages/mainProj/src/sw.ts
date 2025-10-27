@@ -26,16 +26,16 @@ const createCacheKeyPlugin = (normalizeFunction: (param: { request: Request }) =
     cacheKeyWillBeUsed: normalizeFunction,
 })
 
-//报告路由约定使用的：这个并非preloadCache，没有参数自动过滤
+//报告路由约定使用的:这个并非preloadCache,没有参数自动过滤
 const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
     const url = new URL(request.url)
     console.log("normalizeReportCacheKey", url)
-    // 提取路径部分，移除动态的 repid
+    // 提取路径部分,移除动态的 repid
     const pathParts = url.pathname.split("/")
     if (pathParts[1] === "rep" && pathParts.length >= 4) {
         const hasAction = pathParts.length >= 5 && pathParts[5] !== "" //若有编辑器的子路由
         if (hasAction) {
-            // 重构路径：/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
+            // 重构路径:/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
             const normalizedPath = `/rep/*/${pathParts.slice(3).join("/")}`
             // 移除 subrid 查询参数 subrid from utm_idx #这些参数还需要在整个路由之内做协调统一的。
             const searchParams = new URLSearchParams(url.search)
@@ -68,7 +68,39 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
     return request.url
 }
 
-//【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker"，然后自己再修改！
+const createResponseValidationPlugin = () => ({
+    cachedResponseWillBeUsed: async ({
+                                         cachedResponse,
+                                         request,
+                                     }: { cachedResponse: Response | undefined; request: Request }) => {
+        if (!cachedResponse) return null
+
+        // 检查是否是导航请求(浏览器地址栏访问)
+        const isNavigationRequest = request.mode === "navigate" || request.destination === "document"
+
+        // 检查缓存响应的内容类型
+        const contentType = cachedResponse.headers.get("content-type") || ""
+        const isRSCResponse = contentType.includes("text/x-component")
+        const isHTMLResponse = contentType.includes("text/html")
+
+        // 如果是导航请求但缓存的是 RSC 响应,返回 null 强制重新获取
+        if (isNavigationRequest && isRSCResponse) {
+            console.warn("[SW] 检测到导航请求但缓存的是 RSC 响应,拒绝使用缓存")
+            return null
+        }
+
+        // 如果是 RSC 请求但缓存的是 HTML 响应,返回 null
+        const isRSCRequest = request.headers.get("RSC") === "1"
+        if (isRSCRequest && isHTMLResponse) {
+            console.warn("[SW] 检测到 RSC 请求但缓存的是 HTML 响应,拒绝使用缓存")
+            return null
+        }
+
+        return cachedResponse
+    },
+})
+
+//【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker",然后自己再修改!
 const customCache: RuntimeCaching[] = [
     {
         matcher: ({ url: { pathname }, sameOrigin }) =>
@@ -80,9 +112,9 @@ const customCache: RuntimeCaching[] = [
             cacheName: "next-chunks",
             plugins: [
                 new ExpirationPlugin({
-                    maxEntries: 2000, // 从 500 增加到 2000，允许缓存更多版本的 chunks
+                    maxEntries: 2000, // 从 500 增加到 2000,允许缓存更多版本的 chunks
                     maxAgeSeconds: 90 * 24 * 60 * 60, // 从 30 天增加到 90 天
-                    maxAgeFrom: "last-used", // 基于最后使用时间，而不是缓存时间
+                    maxAgeFrom: "last-used", // 基于最后使用时间,而不是缓存时间
                 }),
             ],
         }),
@@ -93,6 +125,7 @@ const customCache: RuntimeCaching[] = [
             cacheName: "report-pages-normalized",
             plugins: [
                 createCacheKeyPlugin(normalizeReportCacheKey), // Apply normalization plugin
+                createResponseValidationPlugin(), // 添加响应验证
                 new ExpirationPlugin({
                     maxAgeSeconds: 30 * 24 * 60 * 60, // 从 7 天增加到 30 天
                     maxAgeFrom: "last-used",
@@ -242,20 +275,30 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
                 const reportCache = await caches.open("report-pages-normalized")
 
                 if (htmlResponse && htmlResponse.ok) {
+                    const contentType = htmlResponse.headers.get("content-type") || ""
+                    if (!contentType.includes("text/html")) {
+                        console.warn(`[SW] HTML 请求返回了非 HTML 响应: ${url}, Content-Type: ${contentType}`)
+                    }
+
                     // 使用标准化的缓存键
                     const normalizedHtmlKey = await normalizeReportCacheKey({
                         request: htmlRequest,
                     })
                     await reportCache.put(normalizedHtmlKey, htmlResponse.clone())
-                    console.log(`[SW] ✓ 缓存 HTML: ${url}`)
+                    console.log(`[SW] ✓ 缓存 HTML: ${url} -> ${normalizedHtmlKey}`)
                 }
 
                 if (rscResponse && rscResponse.ok) {
+                    const contentType = rscResponse.headers.get("content-type") || ""
+                    if (!contentType.includes("text/x-component")) {
+                        console.warn(`[SW] RSC 请求返回了非 RSC 响应: ${url}, Content-Type: ${contentType}`)
+                    }
+
                     const normalizedRscKey = await normalizeReportCacheKey({
                         request: rscRequest,
                     })
                     await reportCache.put(normalizedRscKey, rscResponse.clone())
-                    console.log(`[SW] ✓ 缓存 RSC: ${url}`)
+                    console.log(`[SW] ✓ 缓存 RSC: ${url} -> ${normalizedRscKey}`)
                 }
 
                 return true
