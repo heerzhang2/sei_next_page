@@ -18,7 +18,6 @@ import { customQueryCacheExchange } from "@/lib/custom-query-cache-exchange"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
 import schema from "./urql-schema.json"
-import { persistedExchange } from "@urql/exchange-persisted"
 import { useAccessToken } from "./use-access-token"
 
 export const isNetworkError = (error: any): boolean => {
@@ -80,15 +79,24 @@ const updateBackendStatusExchange = (
                             lastErrorTime = now
                             if (errorCount <= MAX_ERRORS_PER_MINUTE) {
                                 updateGraphQLBackendStatus(false, false)
+                                if (typeof window !== "undefined") {
+                                    ;(window as any).__graphqlBackendReachable = false
+                                }
                             }
                         } else {
                             if (result.data) {
                                 updateGraphQLBackendStatus(true, true)
+                                if (typeof window !== "undefined") {
+                                    ;(window as any).__graphqlBackendReachable = true
+                                }
                                 errorCount = 0
                             }
                         }
                     } else if (result.data) {
                         updateGraphQLBackendStatus(true, true)
+                        if (typeof window !== "undefined") {
+                            ;(window as any).__graphqlBackendReachable = true
+                        }
                         errorCount = 0
                     }
                     return result
@@ -104,7 +112,11 @@ const customFetchExchange: Exchange = ({ forward }) => {
             operations$,
             map((operation: Operation) => {
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 180 * 1000)
+                const isOffline =
+                    typeof window !== "undefined" && (!(window as any).__graphqlBackendReachable || !navigator.onLine)
+                const timeout = isOffline ? 3000 : 180000
+                const timeoutId = setTimeout(() => controller.abort(), timeout)
+
                 const deviceId = getDeviceId()
                 const existingHeaders = operation.context.fetchOptions?.headers || {}
                 return {
@@ -633,9 +645,6 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                     },
                 }),
                 cache,
-                persistedExchange({
-                    generateHash: (_, document) => document.documentId,
-                }),
                 preventDuplicateExchange,
                 manualRetryExchange,
                 makeAuthExchange(getCurrentToken, undefined, print),
