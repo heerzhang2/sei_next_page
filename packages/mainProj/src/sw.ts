@@ -37,53 +37,66 @@ const createCacheKeyPlugin = (normalizeFunction: (param: { request: Request }) =
         const isRSCResponse = contentType.includes("text/x-component")
 
         if (isNavigationRequest && isRSCResponse) {
-            console.warn(`[SW] 导航请求不应返回 RSC 响应: ${request.url}`)
+            console.warn(`KeyPlugin导航请求不应返回 RSC 响应: ${request.url}`)
             return null
         }
 
         if (isRSCRequest && !isRSCResponse) {
-            console.warn(`[SW] RSC 请求不应返回 HTML 响应: ${request.url}`)
+            console.warn(`KeyPlugin请求不应返回 HTML 响应: ${request.url}`)
             return null
         }
 
-        console.log(`[SW] ✓ 返回匹配的缓存响应: ${request.url}, RSC=${isRSCResponse}`)
+        console.log(`KeyPlugin✓返回匹配的缓存响应: ${request.url}, RSC=${isRSCResponse}`)
         return cachedResponse
     },
 })
 
+//报告路由约定使用的：这个并非preloadCache，没有参数自动过滤
 const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
     const url = new URL(request.url)
-
+    console.log("normalizeReportCacheKey", url)
+    // 提取路径部分，移除动态的 repid
     const pathParts = url.pathname.split("/")
     if (pathParts[1] === "rep" && pathParts.length >= 4) {
-        const hasAction = pathParts.length >= 5 && pathParts[5] !== ""
-
-        let normalizedPath: string
+        const hasAction = pathParts.length >= 5 && pathParts[5] !== "" //若有编辑器的子路由
         if (hasAction) {
-            normalizedPath = `/rep/*/${pathParts.slice(3).join("/")}`
+            // 重构路径：/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
+            const normalizedPath = `/rep/*/${pathParts.slice(3).join("/")}`
+            // 移除 subrid 查询参数 subrid from utm_idx #这些参数还需要在整个路由之内做协调统一的。
+            const searchParams = new URLSearchParams(url.search)
+            searchParams.delete("subrid")
+            searchParams.delete("redId")
+
+            searchParams.delete("from")
+            searchParams.delete("original")
+            searchParams.delete("unitIndex")
+            //控制器情况
+            searchParams.delete("modelkey")
+
+            const isRSC = request.headers.get("RSC") === "1"
+            searchParams.set("_v", isRSC ? "rsc" : "html")
+
+            // 构建标准化的缓存键
+            const normalizedUrl = `${url.origin}${normalizedPath}?${searchParams.toString()}`
+            return normalizedUrl
         } else {
-            normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`
+            const normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`
+            // 移除 ?print=1 查询参数
+            const searchParams = new URLSearchParams(url.search)
+            searchParams.delete("original")
+
+            const isRSC = request.headers.get("RSC") === "1"
+            searchParams.set("_v", isRSC ? "rsc" : "html")
+
+            // 构建标准化的缓存键
+            const normalizedUrl = `${url.origin}${normalizedPath}?${searchParams.toString()}`
+            return normalizedUrl
         }
-
-        const searchParams = new URLSearchParams(url.search)
-        searchParams.delete("subrid")
-        searchParams.delete("redId")
-        searchParams.delete("from")
-        searchParams.delete("original")
-        searchParams.delete("unitIndex")
-        searchParams.delete("modelkey")
-
-        const isRSC = request.headers.get("RSC") === "1"
-        const suffix = isRSC ? "#rsc" : "#html"
-
-        const normalizedUrl = `${url.origin}${normalizedPath}${searchParams.toString() ? "?" + searchParams.toString() : ""}${suffix}`
-
-        console.log(`[SW] 标准化缓存键: ${request.url} -> ${normalizedUrl}`)
-        return normalizedUrl
     }
     return request.url
 }
 
+//实际上内容最多的页面缓存在next.config.ts里面的additionalPrecacheEntries定义，并存储在Cache: serwist-precache-v2-https底下的。
 const customCache: RuntimeCaching[] = [
     {
         matcher: ({ url: { pathname }, sameOrigin }) =>
@@ -92,7 +105,7 @@ const customCache: RuntimeCaching[] = [
                 pathname.startsWith("/_next/static/css/") ||
                 pathname.includes("webpack-")),
         handler: new CacheFirst({
-            cacheName: "next-chunks",
+            cacheName: "next-chunks", //静态资源,DEV模式用?
             plugins: [
                 new ExpirationPlugin({
                     maxEntries: 2000,
@@ -104,6 +117,7 @@ const customCache: RuntimeCaching[] = [
     },
     {
         matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && pathname.startsWith("/rep/"),
+        //CacheFirst=可能内容过时？[报告]只能手动更新的，不会主动获取最新页面代码
         handler: new CacheFirst({
             cacheName: "report-pages-normalized",
             plugins: [
@@ -113,7 +127,6 @@ const customCache: RuntimeCaching[] = [
                     maxAgeFrom: "last-used",
                 }),
             ],
-            networkTimeoutSeconds: 3,
         }),
     },
     {
@@ -194,7 +207,7 @@ serwist.addEventListeners()
 
 self.addEventListener("message", (event) => {
     const { data } = event
-
+    //针对CACHE_URLS实际上serwist默认能处理的，但是这里改成自定义代码处理。
     if (data?.type === "CACHE_URLS") {
         event.waitUntil(
             cacheUrls(data.payload.urlsToCache)
@@ -202,7 +215,7 @@ self.addEventListener("message", (event) => {
                     event.ports[0]?.postMessage(success)
                 })
                 .catch((error) => {
-                    console.error("[SW] 批量缓存失败:", error)
+                    console.error("[SW]cacheUrls 批量缓存失败:", error)
                     event.ports[0]?.postMessage(false)
                 }),
         )
@@ -225,8 +238,7 @@ self.addEventListener("message", (event) => {
 
 async function cacheUrls(urls: string[]): Promise<boolean> {
     try {
-        console.log(`[SW] 开始批量缓存 ${urls.length} 个 URLs`)
-
+        console.log(`[SW]cacheUrls 开始批量缓存 ${urls.length} 个 URLs`)
         const cachePromises = urls.map(async (url) => {
             try {
                 const htmlRequest = new Request(url, {
@@ -240,26 +252,30 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
                             "%5B%22%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%5D%7D%2Cnull%2Cnull%2Ctrue%5D",
                     },
                 })
-
+                //每个url都有两种请求：
                 const [htmlResponse, rscResponse] = await Promise.all([
                     fetch(htmlRequest).catch((e) => {
-                        console.warn(`[SW] HTML 请求失败: ${url}`, e)
+                        console.warn(`[SW]cacheUrls HTML 请求失败: ${url}`, e)
                         return null
                     }),
                     fetch(rscRequest).catch((e) => {
-                        console.warn(`[SW] RSC 请求失败: ${url}`, e)
+                        console.warn(`[SW]cacheUrls RSC 请求失败: ${url}`, e)
                         return null
                     }),
                 ])
 
                 const reportCache = await caches.open("report-pages-normalized")
 
+                let htmlCached = false
+                let rscCached = false
+
                 if (htmlResponse && htmlResponse.ok) {
                     const normalizedHtmlKey = await normalizeReportCacheKey({
                         request: htmlRequest,
                     })
                     await reportCache.put(normalizedHtmlKey, htmlResponse.clone())
-                    console.log(`[SW] ✓ 缓存 HTML: ${normalizedHtmlKey}`)
+                    htmlCached = true
+                    console.log(`[SW]cacheUrls ✓缓存 HTML: ${normalizedHtmlKey}`)
                 }
 
                 if (rscResponse && rscResponse.ok) {
@@ -267,12 +283,21 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
                         request: rscRequest,
                     })
                     await reportCache.put(normalizedRscKey, rscResponse.clone())
-                    console.log(`[SW] ✓ 缓存 RSC: ${normalizedRscKey}`)
+                    rscCached = true
+                    console.log(`[SW]cacheUrls ✓缓存 RSC: ${normalizedRscKey}`)
                 }
 
-                return true
+                if (htmlCached && rscCached) {
+                    console.log(`[SW]cacheUrls ✓✓ 完整缓存: ${url} (HTML + RSC)`)
+                } else if (htmlCached || rscCached) {
+                    console.warn(`[SW]cacheUrls ⚠️ 部分缓存: ${url} (HTML=${htmlCached}, RSC=${rscCached})`)
+                } else {
+                    console.error(`[SW]cacheUrls ✗✗ 缓存失败: ${url}`)
+                }
+
+                return htmlCached && rscCached
             } catch (error) {
-                console.error(`[SW] 缓存失败: ${url}`, error)
+                console.error(`[SW]cacheUrls 缓存失败: ${url}`, error)
                 return false
             }
         })
@@ -280,10 +305,10 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
         const results = await Promise.all(cachePromises)
         const successCount = results.filter(Boolean).length
 
-        console.log(`[SW] 批量缓存完成: ${successCount}/${urls.length} 成功`)
+        console.log(`[SW]cacheUrls 批量缓存完成: ${successCount}/${urls.length} 成功`)
         return successCount > 0
     } catch (error) {
-        console.error("[SW] 批量缓存过程出错:", error)
+        console.error("[SW]cacheUrls 批量缓存过程出错:", error)
         return false
     }
 }
@@ -325,8 +350,7 @@ self.addEventListener("error", (event) => {
 })
 
 self.addEventListener("unhandledrejection", (event) => {
-    console.error("[SW] 未处理的 Promise 拒绝:", event.reason)
-
+    console.error("[SW] 未处理的拒绝:", event.reason)
     const error = event.reason
     if (
         error &&
@@ -339,10 +363,10 @@ self.addEventListener("unhandledrejection", (event) => {
     } else {
         notifyClientsOfError(error?.message || String(error) || "未知的异步错误", "ASYNC_ERROR")
     }
-
     event.preventDefault()
 })
 
+//refreshAuth每次刷新登录信息后，需要清理过期的认证数据
 async function clearAuthCache() {
     try {
         const cacheNames = await caches.keys()

@@ -1,4 +1,5 @@
 不用生产版"start:https": "cross-env NODE_ENV=production "真的无法发挥PWA的全部功能。
+cacheName: "next-chunks", 静态资源,DEV模式才用? 但是dev没法用serwist没页面只显示rsc代码;
 serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
 D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Service worker is installing...
 D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker installed.
@@ -90,57 +91,66 @@ compositeKey
 1006---保存后死循环，刷新丢失列表。
       保存后期间若离线或401，可能导致第一次的mutation丢失。小概率丢失更新列表1/2个的。
 
+## 问题1: 为什么 #html 会变成 #rsc？
+
+**根本原因**：Cache API **不支持 URL fragment（#）作为缓存键的区分**！
+
+当你存储：
+
+- `https://example.com/page#html`
+- `https://example.com/page#rsc`
 
 
+Cache API 会**忽略 fragment 部分**，把它们当作**同一个键**！所以第二次 `cache.put()` 会覆盖第一次的内容。这就是为什么 `#html` 被 `#rsc` 覆盖的原因。
+
+**解决方案**：使用**查询参数**而不是 fragment 来区分 HTML 和 RSC。
+
+## 问题2: 为什么需要自定义处理 CACHE_URLS？
+
+Serwist 的内置消息处理只针对 **precache manifest**（`__SW_MANIFEST`），不支持：
+
+1. 运行时动态缓存用户指定的 URLs
+2. 同时缓存 HTML 和 RSC 两个版本
+3. 自定义缓存键标准化
+4. 错误处理和进度报告
 
 
+所以必须自定义代码来实现这些功能。
 
-export function useAccessToken() {
-  const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [user, setUser] = useState<any | null>(null)
-  const { update } = useSession()
+## 问题3: SPA vs Next.js PWA
 
-  useEffect(() => {
-    const fetchToken = async () => {
-      const token = getCookie("accessToken")
-      const userData = getCookie("user")
-      setAccessToken(token || null)
-      setUser(userData ? JSON.parse(userData) : null)
-    }
+**是的！SPA 的 PWA 实现简单得多**：
 
-    fetchToken()
+- ✓ 只有一个版本的页面（HTML + JS）
+- ✓ 不需要区分 HTML 和 RSC
+- ✓ 缓存策略简单直接
+- ✓ 没有服务端渲染的复杂性
 
-    const handleTokenRefreshed = (event: CustomEvent) => {
-      console.log("[useAccessToken] 检测到token刷新事件，更新token")
-      const { accessToken: newAccessToken, user: newUser } = event.detail
-      if (newAccessToken) {
-        setAccessToken(newAccessToken)
-        setUser(newUser)
-        console.log("[useAccessToken] Token已更新为新刷新的token")
-      }
-    }
 
-    window.addEventListener("token:refreshed", handleTokenRefreshed as EventListener)
+Next.js RSC 增加了复杂度，因为需要管理两个版本的页面和它们之间的关系。
 
-    const handleOfflineLogin = (event: CustomEvent) => {
-      console.log("[useAccessToken] 检测到离线登录事件，更新token")
-      const { accessToken: newAccessToken, user } = event.detail
-      if (newAccessToken) {
-        setAccessToken(newAccessToken)
-        setUser(user)
-        console.log("[useAccessToken] Token已更新为新登录的token")
-      }
-    }
+Chrome Cache Storage 限制详解
+全局共享限制
+6% 的磁盘空间：是所有网站 Cache Storage 的总容量
 
-    window.addEventListener("offline:login", handleOfflineLogin as EventListener)
+共享池：所有网站的 Service Worker 缓存都从这个池中分配
 
-    return () => {
-      window.removeEventListener("token:refreshed", handleTokenRefreshed as EventListener)
-      window.removeEventListener("offline:login", handleOfflineLogin as EventListener)
-    }
-  }, [update])
+竞争关系：如果一个网站使用了大量缓存，其他网站的可用空间就会减少
 
-  const ConfirmDialog = () => {}
+单个网站的实际限制
+虽然理论上没有硬性的单站限制，但实际上：
 
-  return { accessToken, user, ConfirmDialog }
-}
+动态分配：Chrome 根据网站使用频率和重要性动态分配
+
+LRU 策略：最少使用的缓存会被优先清理
+
+无保证配额：单个网站无法保证能用到特定大小的缓存
+缓存清理策略
+当达到全局限制时，Chrome 会：
+
+自动清理：基于 LRU（最近最少使用）算法
+
+跨站清理：可能清理其他网站的缓存
+
+无预警：不会通知网站缓存被清理
+主动管理：定期清理旧缓存，避免被系统自动清理重要数据
