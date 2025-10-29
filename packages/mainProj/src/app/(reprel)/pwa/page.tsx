@@ -592,14 +592,8 @@ export default function Page() {
                             </svg>
                         </div>
                         <div className="ml-3 flex-1">
-                            <div className="mt-1 text-sm text-orange-700">{swError}</div>
-                            <div className="mt-3 space-y-2">
-                                <div className="mt-1 p-1 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                                    <p className="font-medium">如果问题持续存在：</p>
-                                    <p>1. 点击"完全重置"清理所有数据</p>
-                                    <p>2. 手动重启浏览器（推荐）</p>
-                                    <p>3. 清理浏览器数据：设置 → 隐私 → 清除浏览数据</p>
-                                </div>
+                            <div className="mt-1 text-sm text-orange-700">{swError}
+                                {!navigator.serviceWorker.controller && 'SW未激活！'}
                             </div>
                         </div>
                     </div>
@@ -612,7 +606,7 @@ export default function Page() {
                     返回首页
                 </Link>
             </Button>
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto mb-24">
                 <header className="text-center py-1">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">待检验报告离线编制保障</h1>
                 </header>
@@ -1045,6 +1039,14 @@ export default function Page() {
                             </div>
                         </div>
                     )}
+                    <div className="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <h2 className="text-lg font-semibold text-blue-800 mb-2">最佳习惯提示</h2>
+                        <p>为了避免离线编辑报告出现无法访问的问题:</p>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                            <li>若您添加了新的报告编辑任务后，务必给每个新模板或版本号的报告，在这里点击“更新”按钮。</li>
+                            <li>如果首页出现服务器已重新构建的提示，那么必须做个彻底的更新，点击下方“完全重置”，然后点击“重新预缓存”。</li>
+                        </ul>
+                    </div>
                 </div>
 
                 {/* 底部按钮区域 */}
