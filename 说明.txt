@@ -506,27 +506,10 @@ https://v0.dev/chat/fork-of-customize-shadcn-component-neTlupAC7RM
 https://v0.dev/chat/-kzgHkcfksnz
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA","dP1At1q3QjidlXzd0wSsSlJlcG9ydA"]
 offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"]
-<1>windows登录，因为PWA浏览器
-?original=1
-[2]run build，重新启动后，必须再次缓存？不能多版本运行 在线正常访问的+PWA的版本js资源文件不一致的？？>=系统重新build部署的时间。
-【3】
-401-》5/api/refresh-token  确保下一次变更查询立刻使用新的token？
-[v0] useAccessToken: 使用刚刷新的token
-接续时机副作用的？
-<>
-》》2区域的点确认，相互抵消？只能保存一个的“”
-NOok、 9-22 17：19=NOok，有切换的两个报告就不行了；、需手动刷新、同一个报告确认情况两个页面就没了上一个
-【 】9-22： 06：10；= NOok的
-9-18 16：41 NOok   PWA配合
 
-{1}两个的，reload， 就会丢了一个。
-{2}检测到401错误，token无效，准备触发刷新流程,app401= false
-/12【hez0】 authorization Bearer%20IYdANNMUbvbwsBloQ6RaF91x   vercel.com
+【hez0】/12 authorization Bearer%20IYdANNMUbvbwsBloQ6RaF91x   vercel.com
 【1】账户/14=Bearer%203AsUvyRLABKw4jahh1rPyVea
 【2】/22 Bearer%200dC3iEdcH8fHkIizhxvwpJV0
 【3】/26 Bearer%20bMtCVMY2iC28dzdwXBv4uwTh
 当前=heerzhang3@163.com
 https://v0.app/chat/token-J33xrWw3SgI
-serwist  CACHE_OBJECT_STORE = "cache-entries";
-【问题】 next离线 java在：
-https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/ProjectList?from=2#ProjectList 遇到token刷新，丢失更新，保存旧版本的！

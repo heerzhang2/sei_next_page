@@ -37,16 +37,14 @@ interface OfflineReport {
 
 interface TemplateConfig {
     cacheUrls: string[]
-    changeTime: number // Added changeTime for template update tracking
 }
 
 interface CacheStatus {
     templateId: string
     version: string
-    needsUpdate: boolean
     lastCacheTime?: number
-    templateChangeTime?: number
 }
+
 /**需外部配合向localStorage("offline-reports")注入离线报告的id;
  * */
 export default function Page() {
@@ -70,7 +68,6 @@ export default function Page() {
     const [offlineReports, setOfflineReports] = useState<OfflineReport[]>([])
     const [reportTemplates, setReportTemplates] = useState<{ templateId: string; version: string }[]>([])
     const [cacheStatusList, setCacheStatusList] = useState<CacheStatus[]>([])
-    const [autoUpdateAvailable, setAutoUpdateAvailable] = useState(false)
 
     const [reportQueries, setReportQueries] = useState<any[]>([])
     const [isFetching, setIsFetching] = useState(false)
@@ -80,46 +77,33 @@ export default function Page() {
 
     const [showAutoWarmupPrompt, setShowAutoWarmupPrompt] = useState(false)
 
-    const checkCacheStatus = async (setCacheStatusList: any, setAutoUpdateAvailable: any) => {
+    const [currentBuildVersion, setCurrentBuildVersion] = useState<string>("")
+
+    // 简化的缓存状态检查 - 只检查是否有缓存时间
+    const checkCacheStatus = async () => {
         console.log("checkCacheStatus function is called")
         try {
             const statusList: CacheStatus[] = []
+            const cacheTimeData = localStorage.getItem("cache-time")
+            const cacheTimeObj = cacheTimeData ? JSON.parse(cacheTimeData) : {}
 
             for (const template of reportTemplates) {
-                const needsUpdate = await validateTemplateCacheFromSerwist(template.templateId, template.version)
-
-                // Get cache time from unified localStorage object
-                const cacheTimeData = localStorage.getItem("cache-time")
-                const cacheTimeObj = cacheTimeData ? JSON.parse(cacheTimeData) : {}
                 const templateKey = `${template.templateId}-${template.version}`
                 const lastCacheTime = cacheTimeObj[templateKey] ? Number.parseInt(cacheTimeObj[templateKey]) : undefined
-
-                // Get template change time
-                let templateChangeTime: number | undefined
-                try {
-                    const templateModule: TemplateConfig = await import(
-                        `../../rep/[repId]/${template.templateId}/${template.version}/config`
-                        )
-                    templateChangeTime = templateModule.changeTime
-                } catch (error) {
-                    console.warn(`无法加载模板配置: ${template.templateId}/${template.version}`)
-                }
 
                 statusList.push({
                     templateId: template.templateId,
                     version: template.version,
-                    needsUpdate,
                     lastCacheTime,
-                    templateChangeTime,
                 })
             }
 
             setCacheStatusList(statusList)
-            setAutoUpdateAvailable(statusList.some((status) => status.needsUpdate))
         } catch (error) {
             console.error("检查缓存状态失败:", error)
         }
     }
+
     // 加载离线报告的 useEffect - 应该只运行一次
     useEffect(() => {
         const loadOfflineReports = () => {
@@ -226,12 +210,8 @@ export default function Page() {
     }, [reportQueries, offlineReports]) // 依赖于 reportQueries 和 offlineReports
 
     useEffect(() => {
-        if (!autoUpdateAvailable) checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
-    }, [autoUpdateAvailable])
-
-    useEffect(() => {
         if (reportTemplates.length > 0) {
-            checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
+            checkCacheStatus()
         }
     }, [reportTemplates])
 
@@ -251,6 +231,22 @@ export default function Page() {
             checkNeedWarmup()
         }
     }, [reportTemplates])
+
+    useEffect(() => {
+        const fetchBuildVersion = async () => {
+            try {
+                const response = await fetch("/api/version", { cache: "no-store" })
+                if (response.ok) {
+                    const data = await response.json()
+                    setCurrentBuildVersion(data.version)
+                    console.log("[v0] 当前构建版本:", data.version)
+                }
+            } catch (error) {
+                console.error("获取构建版本失败:", error)
+            }
+        }
+        fetchBuildVersion()
+    }, [])
 
     const handleHardRefresh = () => {
         // 硬刷新页面，相当于 Ctrl+Shift+R
@@ -273,9 +269,14 @@ export default function Page() {
             sessionStorage.clear()
             // 4. 清理 IndexedDB
             if ("indexedDB" in window) {
-                // 这里可以添加更具体的 IndexedDB 清理逻辑
                 console.log("[v0] 正在清理 IndexedDB...")
             }
+
+            if (currentBuildVersion) {
+                localStorage.setItem("last-cache-warmup", currentBuildVersion)
+                console.log("[v0] 已设置 last-cache-warmup:", currentBuildVersion)
+            }
+
             setSwError("系统已完全重置，正在重新加载...")
             setTimeout(() => {
                 window.location.reload()
@@ -473,15 +474,16 @@ export default function Page() {
                     // 在这里更新 UI，例如设置成功状态、隐藏加载指示器等
                     setPrecacheStatus("success")
                     setPrecacheMessage(`成功预缓存 ${urlsToCache.length} 个项目`)
-                    const currentTime = Date.now()
+
+                    const cacheVersion = currentBuildVersion || Date.now().toString()
 
                     templatesToCache.forEach((template) => {
-                        setCacheTime(template.templateId, template.version, currentTime)
+                        setCacheTime(template.templateId, template.version, cacheVersion)
                     })
                     cleanupOldCacheTimes()
                     handlePrecacheSuccess()
                     setTimeout(async () => {
-                        await checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
+                        await checkCacheStatus()
                     }, 100)
                 } else {
                     console.error("缓存过程中可能发生了问题，部分url失败。")
@@ -513,17 +515,22 @@ export default function Page() {
             setPrecacheMessage(`预缓存失败: ${error instanceof Error ? error.message : "未知错误"}`)
         }
     }
-    const handleAutoUpdate = async () => {
-        const templatesToUpdate = cacheStatusList
-            .filter((status) => status.needsUpdate)
-            .map((status) => ({ templateId: status.templateId, version: status.version }))
 
-        if (templatesToUpdate.length > 0) {
-            await handlePrecacheReports(templatesToUpdate, false)
-            setTimeout(async () => {
-                await checkCacheStatus(setCacheStatusList, setAutoUpdateAvailable)
-            }, 500)
-        }
+    // 更新单个模板的缓存
+    const handleUpdateSingleTemplate = async (templateId: string, version: string) => {
+        const template = { templateId, version }
+        await handlePrecacheReports([template], false)
+        setTimeout(async () => {
+            await checkCacheStatus()
+        }, 500)
+    }
+
+    // 更新所有模板的缓存
+    const handleUpdateAllTemplates = async () => {
+        await handlePrecacheReports(reportTemplates, false)
+        setTimeout(async () => {
+            await checkCacheStatus()
+        }, 500)
     }
 
     const handleRetryFailed = () => {
@@ -531,131 +538,36 @@ export default function Page() {
         handlePrecacheReports(failedTemplates)
     }
 
-    const checkSerwistCacheExpiration = async (url: string, templateChangeTime: number): Promise<boolean> => {
-        try {
-            // Open the Serwist cache database (read-only, don't try to create)
-            const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                const request = indexedDB.open("serwist-expiration")
-
-                request.onsuccess = () => resolve(request.result)
-                request.onerror = () => reject(request.error)
-
-                // Don't handle onupgradeneeded - let Serwist create its own schema
-            })
-
-            // Check if the object store exists (Serwist should have created it)
-            if (!db.objectStoreNames.contains("cache-entries")) {
-                console.warn("[v0] Serwist cache-entries 对象存储不存在，可能 Serwist 尚未初始化，需要缓存")
-                db.close()
-                return true // Need to cache if Serwist hasn't initialized yet
-            }
-
-            // Use cache-entries object store
-            const transaction = db.transaction(["cache-entries"], "readonly")
-            const store = transaction.objectStore("cache-entries")
-
-            // Try different cache names that might contain this URL
-            const possibleCacheNames = ["report-pages-normalized"]
-            let cacheEntry = null
-
-            const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://192.168.171.3:3765"
-            const fullUrl = url.startsWith("http") ? url : `${currentOrigin}${url}`
-
-            // Search for the URL with different cache name prefixes
-            for (const cacheName of possibleCacheNames) {
-                const compositeKey = `${cacheName}|${fullUrl}`
-                const request = store.get(compositeKey)
-                const result = await new Promise<any>((resolve, reject) => {
-                    request.onsuccess = () => resolve(request.result)
-                    request.onerror = () => reject(request.error)
-                })
-
-                if (result) {
-                    cacheEntry = result
-                    break
-                }
-            }
-
-            db.close()
-
-            if (!cacheEntry) {
-                // URL not found in any cache, needs caching
-                console.log(`URL ${fullUrl} 未在缓存中找到，需要缓存`)
-                return true
-            }
-
-            const cacheTimestamp = cacheEntry.timestamp
-            const isExpired = cacheTimestamp < templateChangeTime
-
-            console.log(
-                `URL ${fullUrl} 缓存时间: ${new Date(cacheTimestamp).toLocaleString()}, 模板更新时间: ${new Date(templateChangeTime).toLocaleString()}, 是否过期: ${isExpired}`,
-            )
-
-            return isExpired
-        } catch (error) {
-            console.warn(`检查URL ${url} 的Serwist缓存过期状态失败:`, error)
-            // If we can't check, assume it needs updating
-            return true
-        }
-    }
-
-    const getCacheTimeData = (): Record<string, number> => {
+    const getCacheTimeData = (): Record<string, string> => {
         const cacheTimeStr = localStorage.getItem("cache-time")
         return cacheTimeStr ? JSON.parse(cacheTimeStr) : {}
     }
 
-    const setCacheTimeData = (data: Record<string, number>) => {
+    const setCacheTimeData = (data: Record<string, string>) => {
         localStorage.setItem("cache-time", JSON.stringify(data))
     }
 
-    const getCacheTime = (templateId: string, version: string): number => {
+    const getCacheTime = (templateId: string, version: string): string => {
         const cacheData = getCacheTimeData()
-        return cacheData[`${templateId}-${version}`] || 0
+        return cacheData[`${templateId}-${version}`] || ""
     }
 
-    const setCacheTime = (templateId: string, version: string, timestamp: number) => {
+    const setCacheTime = (templateId: string, version: string, buildVersion: string) => {
         const cacheData = getCacheTimeData()
-        cacheData[`${templateId}-${version}`] = timestamp
+        cacheData[`${templateId}-${version}`] = buildVersion
         setCacheTimeData(cacheData)
-    }
-
-    const validateTemplateCacheFromSerwist = async (templateId: string, version: string): Promise<boolean> => {
-        try {
-            // Import template config to get changeTime
-            const templateModule: TemplateConfig = await import(`../../rep/[repId]/${templateId}/${version}/config`)
-            const templateUrls = templateModule.cacheUrls || []
-
-            if (templateUrls.length === 0) {
-                console.warn(`模板 ${templateId}/${version} 没有缓存URL`)
-                return true // No URLs to cache, consider as needing update
-            }
-
-            // Check each URL in the template using template's changeTime
-            const expirationChecks = await Promise.all(
-                templateUrls.map((url) => checkSerwistCacheExpiration(url, templateModule.changeTime)),
-            )
-
-            // Use conservative approach: if any URL is expired, the template needs updating
-            const hasExpiredUrls = expirationChecks.some((isExpired) => isExpired)
-
-            console.log(`模板 ${templateId}/${version} 缓存检查:`, {
-                totalUrls: templateUrls.length,
-                expiredUrls: expirationChecks.filter(Boolean).length,
-                needsUpdate: hasExpiredUrls,
-                templateChangeTime: new Date(templateModule.changeTime).toLocaleString(),
-            })
-
-            return hasExpiredUrls
-        } catch (error) {
-            console.warn(`验证模板 ${templateId}/${version} 缓存失败:`, error)
-            return true // If we can't validate, assume it needs updating
-        }
     }
 
     const handleAutoWarmup = async () => {
         setShowAutoWarmupPrompt(false)
         await handlePrecacheReports()
-        localStorage.setItem("last-cache-warmup", Date.now().toString())
+    }
+
+    const needsUpdate = (templateId: string, version: string): boolean => {
+        if (!currentBuildVersion) return false
+        const cachedVersion = getCacheTime(templateId, version)
+        if (!cachedVersion) return true // 从未缓存
+        return cachedVersion !== currentBuildVersion // 版本不匹配
     }
 
     return (
@@ -682,20 +594,6 @@ export default function Page() {
                         <div className="ml-3 flex-1">
                             <div className="mt-1 text-sm text-orange-700">{swError}</div>
                             <div className="mt-3 space-y-2">
-                                <div className="flex flex-wrap gap-2 justify-evenly">
-                                    <button
-                                        onClick={handleHardRefresh}
-                                        className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-colors"
-                                    >
-                                        刷新
-                                    </button>
-                                    <button
-                                        onClick={handleCompleteReset}
-                                        className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors"
-                                    >
-                                        完全重置
-                                    </button>
-                                </div>
                                 <div className="mt-1 p-1 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
                                     <p className="font-medium">如果问题持续存在：</p>
                                     <p>1. 点击"完全重置"清理所有数据</p>
@@ -750,67 +648,64 @@ export default function Page() {
 
                 {cacheStatusList.length > 0 && (
                     <div className="bg-white rounded-lg shadow-md p-1 mb-1">
-                        <h2 className="text-base font-semibold text-gray-900 mb-4">缓存状态检查</h2>
-
-                        {autoUpdateAvailable && (
-                            <div className="mb-1 p-1 bg-amber-50 border border-amber-200 rounded-lg">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h3 className="font-medium text-amber-800">检测到模板更新</h3>
-                                        <p className="text-sm text-amber-700">
-                                            有 {cacheStatusList.filter((s) => s.needsUpdate).length} 个模板需要更新缓存
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={handleAutoUpdate}
-                                        className="px-4 py-1 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-                                    >
-                                        自动更新
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="space-y-1">
-                            {cacheStatusList.map((status, index) => (
-                                <div
-                                    key={`${status.templateId}-${status.version}`}
-                                    className={`flex items-center justify-between p-1 rounded-lg border ${
-                                        status.needsUpdate ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"
-                                    }`}
-                                >
-                                    <div>
-                                        <div className="font-medium">
-                                            {status.templateId} v{status.version}
-                                        </div>
-                                        <div className="text-sm text-gray-600">
-                                            {status.lastCacheTime ? (
-                                                <>上次缓存: {new Date(status.lastCacheTime).toLocaleString()}</>
-                                            ) : (
-                                                "从未缓存"
-                                            )}
-                                            {status.templateChangeTime && (
-                                                <> | 模板更新: {new Date(status.templateChangeTime).toLocaleString()}</>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div
-                                        className={`px-3 py-1 rounded text-sm ${
-                                            status.needsUpdate ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                                        }`}
-                                    >
-                                        {status.needsUpdate ? "需要更新" : "已是最新"}
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-base font-semibold text-gray-900">模板缓存管理</h2>
+                            <button
+                                onClick={handleUpdateAllTemplates}
+                                className="px-4 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                            >
+                                更新所有模板
+                            </button>
                         </div>
 
-                        {!autoUpdateAvailable && cacheStatusList.length > 0 && (
-                            <div className="mt-1 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <p className="text-green-800 font-medium">✓ 所有模板缓存都是最新的</p>
-                                <p className="text-sm text-green-700">无需重新预缓存</p>
-                            </div>
-                        )}
+                        <div className="space-y-1">
+                            {cacheStatusList.map((status, index) => {
+                                const needUpdate = needsUpdate(status.templateId, status.version)
+                                const cachedVersion = getCacheTime(status.templateId, status.version)
+
+                                return (
+                                    <div
+                                        key={`${status.templateId}-${status.version}`}
+                                        className="flex items-center justify-between p-1 rounded-lg border bg-gray-50 border-gray-200"
+                                    >
+                                        <div>
+                                            <div className="font-medium">
+                                                {status.templateId} v{status.version}
+                                            </div>
+                                            <div className="text-sm text-gray-600">
+                                                {cachedVersion ? (
+                                                    <>
+                                                        缓存版本: {cachedVersion}
+                                                        {needUpdate && <span className="text-orange-600 ml-2">(需要更新)</span>}
+                                                    </>
+                                                ) : (
+                                                    "从未缓存"
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className={`px-3 py-1 rounded text-sm ${
+                                                    cachedVersion && !needUpdate
+                                                        ? "bg-green-100 text-green-800"
+                                                        : needUpdate
+                                                            ? "bg-orange-100 text-orange-800"
+                                                            : "bg-gray-100 text-gray-800"
+                                                }`}
+                                            >
+                                                {cachedVersion && !needUpdate ? "已是最新" : needUpdate ? "需要更新" : "未缓存"}
+                                            </div>
+                                            <button
+                                                onClick={() => handleUpdateSingleTemplate(status.templateId, status.version)}
+                                                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                                            >
+                                                更新
+                                            </button>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
                 )}
 
@@ -1052,145 +947,149 @@ export default function Page() {
                                 ></div>
                             </div>
                             {precacheProgress.currentItem && (
-                                <p className="text-sm text-gray-500 mt-2">当前: {precacheProgress.currentItem}</p>
+                                <div className="text-xs text-gray-500 mt-2 truncate">当前: {precacheProgress.currentItem}</div>
                             )}
                         </div>
                     )}
 
                     {precacheResults.length > 0 && (
-                        <div className="mb-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-3">缓存结果</h3>
-                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                        <div className="mt-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">预缓存结果</h3>
+                            <div className="space-y-2">
                                 {precacheResults.map((result, index) => (
                                     <div
                                         key={index}
-                                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                                        className={`p-3 rounded-lg border ${
                                             result.pageSuccess && result.rscSuccess
                                                 ? "bg-green-50 border-green-200"
                                                 : "bg-red-50 border-red-200"
                                         }`}
                                     >
-                                        <div className="flex items-center space-x-3">
-                                            <div
-                                                className={`w-3 h-3 rounded-full ${
-                                                    result.pageSuccess && result.rscSuccess ? "bg-green-500" : "bg-red-500"
-                                                }`}
-                                            ></div>
-                                            <span className="font-medium">
-                        {result.template.templateId} v{result.template.version}
-                      </span>
+                                        <div className="font-medium">
+                                            {result.template.templateId} v{result.template.version}
                                         </div>
-                                        <div className="flex space-x-2 text-xs">
-                      <span
-                          className={`px-2 py-1 rounded ${result.pageSuccess ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                      >
-                        页面: {result.pageSuccess ? "✓" : "✗"}
-                      </span>
-                                            <span
-                                                className={`px-2 py-1 rounded ${result.rscSuccess ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                                            >
-                        RSC: {result.rscSuccess ? "✓" : "✗"}
-                      </span>
+                                        <div className="text-sm mt-1">
+                                            <div className="flex items-center space-x-2">
+                                                <span>页面:</span>
+                                                {result.pageSuccess ? (
+                                                    <span className="text-green-600 flex items-center">
+                            <svg
+                                className="w-4 h-4 mr-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                style={{ height: "2rem" }}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            成功
+                          </span>
+                                                ) : (
+                                                    <span className="text-red-600 flex items-center">
+                            <svg
+                                className="w-4 h-4 mr-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                style={{ height: "2rem" }}
+                            >
+                              <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                            失败: {result.pageError}
+                          </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <span>数据:</span>
+                                                {result.rscSuccess ? (
+                                                    <span className="text-green-600 flex items-center">
+                            <svg
+                                className="w-4 h-4 mr-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                style={{ height: "2rem" }}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            成功
+                          </span>
+                                                ) : (
+                                                    <span className="text-red-600 flex items-center">
+                            <svg
+                                className="w-4 h-4 mr-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                style={{ height: "2rem" }}
+                            >
+                              <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                            失败: {result.rscError}
+                          </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
+                </div>
 
-                    {failedItems.length > 0 && (
-                        <div className="mb-6">
-                            <h3 className="text-lg font-medium text-red-800 mb-3">失败项详情</h3>
-                            <div className="space-y-3 max-h-40 overflow-y-auto">
-                                {failedItems.map((item, index) => (
-                                    <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                        <div className="font-medium text-red-800 mb-1">
-                                            {item.template.templateId} v{item.template.version}
-                                        </div>
-                                        {item.pageError && <div className="text-sm text-red-600">页面错误: {item.pageError}</div>}
-                                        {item.rscError && <div className="text-sm text-red-600">RSC错误: {item.rscError}</div>}
-                                    </div>
-                                ))}
-                            </div>
+                {/* 底部按钮区域 */}
+                <div className="fixed bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
+                    <div className="flex justify-between items-center">
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={handleCompleteReset}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                            >
+                                完全重置
+                            </button>
+                            <button
+                                onClick={handleHardRefresh}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                            >
+                                刷新
+                            </button>
                         </div>
-                    )}
-
-                    <div className="text-sm text-gray-500">
-                        <p>预缓存项目包括:</p>
-                        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <p className="font-medium mb-2">基于离线报告的模板:</p>
-                                <ul className="space-y-1">
-                                    {reportTemplates.map((template, index) => (
-                                        <li key={index} className="flex items-center space-x-2">
-                                            <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                                            <span>
-                        {template.templateId} v{template.version}
-                      </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                                {reportTemplates.length === 0 && <p className="text-gray-400 italic">暂无模板</p>}
-                            </div>
-                            {customUrls.filter((u) => u.enabled).length > 0 && (
-                                <div>
-                                    <p className="font-medium mb-2">自定义 URL:</p>
-                                    <ul className="space-y-1">
-                                        {customUrls
-                                            .filter((u) => u.enabled)
-                                            .map((url) => (
-                                                <li key={url.id} className="flex items-center space-x-2">
-                                                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                                                    <span className="truncate">{url.description}</span>
-                                                </li>
-                                            ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
+                        <div className="text-sm text-gray-500">缓存大小: {isCalculatingCache ? "计算中..." : cacheSize}</div>
                     </div>
                 </div>
 
                 {showAutoWarmupPrompt && (
-                    <div className="fixed top-20 right-4 max-w-md bg-white border-l-4 border-blue-500 rounded-lg shadow-lg p-4 z-50">
-                        <div className="flex items-start">
-                            <div className="flex-shrink-0">
-                                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <div className="ml-3 flex-1">
-                                <h3 className="text-sm font-medium text-blue-800">建议预热缓存</h3>
-                                <div className="mt-1 text-sm text-blue-700">
-                                    检测到有 {reportTemplates.length} 个模板需要缓存，建议现在预热缓存以确保离线可用。
-                                </div>
-                                <div className="mt-3 flex gap-2">
-                                    <button
-                                        onClick={handleAutoWarmup}
-                                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
-                                    >
-                                        立即预热
-                                    </button>
-                                    <button
-                                        onClick={() => setShowAutoWarmupPrompt(false)}
-                                        className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300 transition-colors"
-                                    >
-                                        稍后
-                                    </button>
-                                </div>
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">自动缓存预热</h3>
+                            <p className="text-gray-600 mb-6">检测到您的缓存可能已过期。是否立即执行缓存预热以确保最佳离线体验？</p>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => setShowAutoWarmupPrompt(false)}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                >
+                                    稍后
+                                </button>
+                                <button
+                                    onClick={handleAutoWarmup}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    立即预热
+                                </button>
                             </div>
                         </div>
                     </div>
                 )}
-
-                <footer className="text-center py-8 text-gray-500">
-                    <p>© 2024 报告管理系统 - Powered by Next.js & Serwist PWA</p>
-                </footer>
             </div>
         </main>
     )
