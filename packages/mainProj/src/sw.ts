@@ -313,8 +313,10 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
     }
 }
 
+const APP_VERSION = "BUILD_TIMESTAMP_PLACEHOLDER" // 构建时替换
+
 self.addEventListener("install", (event) => {
-    console.log("[SW] Service Worker 安装中...")
+    console.log(`[SW] Service Worker 安装中... 版本: ${APP_VERSION}`)
 
     event.waitUntil(
         (async () => {
@@ -325,7 +327,7 @@ self.addEventListener("install", (event) => {
 })
 
 self.addEventListener("activate", (event) => {
-    console.log("[SW] Service Worker 激活中...")
+    console.log(`[SW] Service Worker 激活中... 版本: ${APP_VERSION}`)
     event.waitUntil(
         (async () => {
             const cacheNames = await caches.keys()
@@ -339,6 +341,15 @@ self.addEventListener("activate", (event) => {
             )
 
             await self.clients.claim()
+
+            const clients = await self.clients.matchAll({ type: "window" })
+            clients.forEach((client) => {
+                client.postMessage({
+                    type: "SW_UPDATED",
+                    version: APP_VERSION,
+                })
+            })
+
             console.log("✅ 离线功能: 已激活并控制所有页面")
         })(),
     )
