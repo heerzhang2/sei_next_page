@@ -1,5 +1,6 @@
 不用生产版"start:https": "cross-env NODE_ENV=production "真的无法发挥PWA的全部功能。
 cacheName: "next-chunks", 静态资源,DEV模式才用? 但是dev没法用serwist没页面只显示rsc代码;
+重新build导致的 /_next/static/开头资源，要求任何模板任意版本都需要重新做缓存的，否则无法确保能够访问。
 serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
 D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Service worker is installing...
 D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker installed.
