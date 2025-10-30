@@ -17,7 +17,7 @@ export function ChunkErrorHandler() {
                 console.error("[ChunkError] 检测到 chunk 加载失败:", error)
 
                 // 显示提示并自动刷新
-                toast.error("检测到新版本，正在刷新页面...", {
+                toast.error("检测到缓存问题1，应该前往/pwa 正在刷新页面...", {
                     duration: 2000,
                 })
 
@@ -30,10 +30,6 @@ export function ChunkErrorHandler() {
                 event.preventDefault()
             }
         }
-
-        // 监听未捕获的错误
-        window.addEventListener("error", handleError)
-
         // 监听未处理的 Promise 拒绝
         const handleRejection = (event: PromiseRejectionEvent) => {
             const error = event.reason
@@ -45,7 +41,7 @@ export function ChunkErrorHandler() {
             ) {
                 console.error("[ChunkError] 检测到 chunk 加载失败 (Promise):", error)
 
-                toast.error("检测到新版本，正在刷新页面...", {
+                toast.error("检测到缓存问题2，应该前往/pwa 正在刷新页面...", {
                     duration: 2000,
                 })
 
@@ -57,8 +53,9 @@ export function ChunkErrorHandler() {
             }
         }
 
-        window.addEventListener("unhandledrejection", handleRejection)
 
+        window.addEventListener("error", handleError)
+        window.addEventListener("unhandledrejection", handleRejection)
         return () => {
             window.removeEventListener("error", handleError)
             window.removeEventListener("unhandledrejection", handleRejection)

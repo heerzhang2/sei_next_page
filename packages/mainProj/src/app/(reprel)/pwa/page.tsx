@@ -74,9 +74,6 @@ export default function Page() {
     const [cacheSize, setCacheSize] = useState<string>("0 KB")
     const [isCalculatingCache, setIsCalculatingCache] = useState(false)
     const [showCustomUrlSection, setShowCustomUrlSection] = useState(false)
-
-    const [showAutoWarmupPrompt, setShowAutoWarmupPrompt] = useState(false)
-
     const [currentBuildVersion, setCurrentBuildVersion] = useState<string>("")
 
     // 简化的缓存状态检查 - 只检查是否有缓存时间
@@ -214,24 +211,6 @@ export default function Page() {
             checkCacheStatus()
         }
     }, [reportTemplates])
-
-    useEffect(() => {
-        const checkNeedWarmup = () => {
-            // 检查是否是首次访问或缓存已过期
-            const lastWarmup = localStorage.getItem("last-cache-warmup")
-            const lastWarmupTime = lastWarmup ? Number.parseInt(lastWarmup) : 0
-            const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
-
-            if (lastWarmupTime < oneDayAgo && reportTemplates.length > 0) {
-                setShowAutoWarmupPrompt(true)
-            }
-        }
-
-        if (reportTemplates.length > 0) {
-            checkNeedWarmup()
-        }
-    }, [reportTemplates])
-
     useEffect(() => {
         const fetchBuildVersion = async () => {
             try {
@@ -287,7 +266,73 @@ export default function Page() {
             setSwError("重置失败，请手动重启浏览器")
         }
     }
+    const handleClearCacheData = async () => {
+        if (!confirm("确定要清理所有缓存数据吗？这将删除页面缓存、IndexedDB数据和本地存储的缓存信息，需稍微等待才能真正地清空。")) {
+            return;
+        }
 
+        try {
+            // 1. 清理 Cache Storage 中所有 Serwist 相关的缓存
+            if ("caches" in window) {
+                const cacheNames = await caches.keys();
+                const serwistCaches = cacheNames.filter(name =>
+                    name.includes('serwist') ||
+                    name.includes('pages') ||
+                    name.includes('offline') ||
+                    name.includes('next-chunks')||
+                    name.includes('others')
+                );
+
+                await Promise.all(serwistCaches.map(name => caches.delete(name)));
+                console.log(`已清理 ${serwistCaches.length} 个缓存`);
+            }
+
+            // 2. 清理 IndexedDB 中 Serwist 相关的数据库
+            if ("indexedDB" in window) {
+                const dbs = await window.indexedDB.databases();
+                const serwistDBs = dbs.filter(db =>
+                        db.name && (
+                            db.name.includes('serwist') ||
+                            db.name.includes('expiration')
+                        )
+                );
+
+                for (const db of serwistDBs) {
+                    if (db.name) {
+                        window.indexedDB.deleteDatabase(db.name);
+                        console.log(`已删除 IndexedDB: ${db.name}`);
+                    }
+                }
+            }
+
+            // 3. 清理 localStorage 中的缓存相关数据
+            const itemsToRemove = [
+                "cache-time",
+                "last-cache-warmup"
+            ];
+
+            itemsToRemove.forEach(key => {
+                localStorage.removeItem(key);
+                console.log(`已清理 localStorage: ${key}`);
+            });
+
+            // 4. 更新状态
+            setCacheSize("0 KB");
+            setCacheStatusList([]);
+
+            alert("缓存数据清理完成！");
+
+            // 重新计算缓存大小
+            setTimeout(() => {
+                calculateCacheSize();
+                checkCacheStatus();
+            }, 500);
+
+        } catch (error) {
+            console.error("清理缓存数据失败:", error);
+            alert("清理缓存数据时出现错误");
+        }
+    };
     const saveCustomUrls = (urls: CustomUrlConfig[]) => {
         setCustomUrls(urls)
         localStorage.setItem("customPrecacheUrls", JSON.stringify(urls))
@@ -326,11 +371,7 @@ export default function Page() {
             return templateModule.cacheUrls || []
         } catch (error) {
             console.warn(`[v0] Failed to import cacheUrls from template ${templateId}/${version}:`, error)
-            return [
-                `/rep/sample/${templateId}/${version}/ALL`,
-                `/rep/sample/${templateId}/${version}/T607`,
-                `/rep/sample/${templateId}/${version}/T608`,
-            ]
+            return []
         }
     }
     const calculateCacheSize = async () => {
@@ -341,9 +382,18 @@ export default function Page() {
             const cacheNames = await caches.keys()
             let totalSize = 0
 
-            for (const cacheName of cacheNames) {
+            // 只处理 serwist-precache- 开头的缓存
+            const serwistPrecacheCaches = cacheNames.filter(name =>
+                name.startsWith('serwist-precache-')
+            )
+
+            console.log(`找到 ${serwistPrecacheCaches.length} 个 serwist-precache 缓存:`, serwistPrecacheCaches)
+
+            for (const cacheName of serwistPrecacheCaches) {
                 const cache = await caches.open(cacheName)
                 const requests = await cache.keys()
+
+                console.log(`缓存 ${cacheName} 中有 ${requests.length} 个请求`)
 
                 for (const request of requests) {
                     const response = await cache.match(request)
@@ -371,6 +421,7 @@ export default function Page() {
                 formattedSize = `${(totalSize / (1024 * 1024)).toFixed(2)} MB`
             }
 
+            console.log(`serwist-precache 缓存总大小: ${formattedSize}`)
             setCacheSize(formattedSize)
             return formattedSize
         } catch (error) {
@@ -442,9 +493,6 @@ export default function Page() {
                 urlsToCache.push(...templateUrls)
             } catch (error) {
                 console.error(`[v0] Error importing URLs for template ${template.templateId}/${template.version}:`, error)
-                urlsToCache.push(`/rep/sample/${template.templateId}/${template.version}/ALL`)
-                urlsToCache.push(`/rep/sample/${template.templateId}/${template.version}/T607`)
-                urlsToCache.push(`/rep/sample/${template.templateId}/${template.version}/T608`)
             }
         }
 
@@ -559,7 +607,6 @@ export default function Page() {
     }
 
     const handleAutoWarmup = async () => {
-        setShowAutoWarmupPrompt(false)
         await handlePrecacheReports()
     }
 
@@ -611,12 +658,35 @@ export default function Page() {
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">待检验报告离线编制保障</h1>
                 </header>
                 <div className="bg-white rounded-lg shadow-md p-1 mb-1">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">离线报告状态</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold text-gray-900">离线报告状态</h2>
+                        {offlineReports.length > 0 && (
+                            <button
+                                onClick={() => {
+                                    if (confirm("确定要清空所有离线报告列表吗？这将移除所有已添加的离线报告。")) {
+                                        // 清空状态
+                                        setOfflineReports([]);
+                                        // 清空 localStorage
+                                        localStorage.removeItem("offline-reports");
+                                        // 同时清空相关状态
+                                        setReportTemplates([]);
+                                        setCacheStatusList([]);
+                                        setReportQueries([]);
+                                        console.log("[v0] 已清空离线报告列表");
+                                    }
+                                }}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                            >
+                                清空列表
+                            </button>
+                        )}
+                    </div>
 
                     {offlineReports.length === 0 ? (
                         <div className="text-center py-1 text-gray-500">
-                            <p>暂无离线报告</p>
-                            <p className="text-sm mt-2">请在其他页面选择报告添加到离线列表</p>
+                            <p>暂无等待编制的报告。</p>
+                            <p className="text-sm mt-2">请在其他页面选择报告添加到离线列表，</p>
+                            <p className="text-red-500">报告添加完毕后，务必回到这里更新缓存，确保离线编制报告能力。</p>
                         </div>
                     ) : (
                         <div className="space-y-1">
@@ -639,7 +709,6 @@ export default function Page() {
                         </div>
                     )}
                 </div>
-
                 {cacheStatusList.length > 0 && (
                     <div className="bg-white rounded-lg shadow-md p-1 mb-1">
                         <div className="flex justify-between items-center mb-4">
@@ -670,7 +739,6 @@ export default function Page() {
                                                 {cachedVersion ? (
                                                     <>
                                                         缓存版本: {cachedVersion}
-                                                        {needUpdate && <span className="text-orange-600 ml-2">(需要更新)</span>}
                                                     </>
                                                 ) : (
                                                     "从未缓存"
@@ -707,7 +775,7 @@ export default function Page() {
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold text-gray-900">离线预缓存</h2>
                         <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium text-gray-700">缓存大小:</span>
+                            <span className="text-sm font-medium text-gray-700">基础缓存大小:</span>
                             <span className="text-base font-semibold text-blue-600">
                 {isCalculatingCache ? "计算中..." : cacheSize}
               </span>
@@ -876,6 +944,14 @@ export default function Page() {
                             )}
                         </button>
 
+                        {/* 新增清理缓存数据按钮 */}
+                        <button
+                            onClick={handleClearCacheData}
+                            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+                        >
+                            清理缓存数据
+                        </button>
+
                         {reportTemplates.length === 0 && (
                             <div className="text-sm text-amber-600">请先在其他页面添加报告到离线列表</div>
                         )}
@@ -888,7 +964,6 @@ export default function Page() {
                                 重试失败项 ({failedItems.length})
                             </button>
                         )}
-
                         {precacheMessage && (
                             <div
                                 className={`flex items-center space-x-2 px-1 py-1 rounded-lg ${
@@ -1043,8 +1118,8 @@ export default function Page() {
                         <h2 className="text-lg font-semibold text-blue-800 mb-2">最佳习惯提示</h2>
                         <p>为了避免离线编辑报告出现无法访问的问题:</p>
                         <ul className="list-disc pl-5 mt-2 space-y-1">
-                            <li>若您添加了新的报告编辑任务后，务必给每个新模板或版本号的报告，在这里点击“更新”按钮。</li>
-                            <li>如果首页出现服务器已重新构建的提示，那么必须做个彻底的更新，点击下方“完全重置”，然后点击“重新预缓存”。</li>
+                            <li>若您添加了新的报告编辑任务后，而且是新模板或新版本号的报告，请在模板列表点击对应的“更新”按钮。</li>
+                            <li>如果基础缓存的大小出现异常（最新基础缓存有13.38MB的），那么必须做个彻底地更新，请点下方“完全重置”，然后再点“重新预缓存”。</li>
                         </ul>
                     </div>
                 </div>
@@ -1065,33 +1140,23 @@ export default function Page() {
                             >
                                 刷新
                             </button>
+                            <button
+                                onClick={() => {
+                                    if (currentBuildVersion) {
+                                        localStorage.setItem("last-cache-warmup", currentBuildVersion);
+                                        alert(`已确认升级到版本 ${currentBuildVersion}，不再提醒`);
+                                    } else {
+                                        alert("无法获取当前版本信息");
+                                    }
+                                }}
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                            >
+                                升级确认
+                            </button>
                         </div>
-                        <div className="text-sm text-gray-500">缓存大小: {isCalculatingCache ? "计算中..." : cacheSize}</div>
                     </div>
                 </div>
 
-                {showAutoWarmupPrompt && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">自动缓存预热</h3>
-                            <p className="text-gray-600 mb-6">检测到您的缓存可能已过期。是否立即执行缓存预热以确保最佳离线体验？</p>
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    onClick={() => setShowAutoWarmupPrompt(false)}
-                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                                >
-                                    稍后
-                                </button>
-                                <button
-                                    onClick={handleAutoWarmup}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                >
-                                    立即预热
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </main>
     )

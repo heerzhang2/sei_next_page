@@ -7,6 +7,13 @@ export function VersionChecker() {
     useEffect(() => {
         const checkVersion = async () => {
             try {
+                // 检查是否有离线报告数据
+                const offlineReports = localStorage.getItem("offline-reports")
+                if (!offlineReports) return
+
+                // 检查当前页面是否是 /pwa
+                if (window.location.pathname === "/pwa") return
+
                 const response = await fetch("/api/version", {
                     cache: "no-store",
                 })
@@ -17,11 +24,11 @@ export function VersionChecker() {
 
                     const lastCacheWarmup = localStorage.getItem("last-cache-warmup")
 
-                    if (lastCacheWarmup && serverVersion !== lastCacheWarmup) {
+                    if (!lastCacheWarmup || (lastCacheWarmup && serverVersion !== lastCacheWarmup)) {
                         console.log("[Version] 检测到新构建版本:", serverVersion, "上次缓存版本:", lastCacheWarmup)
 
-                        toast.info("发现新版本", {
-                            description: "建议访问 /pwa 页面重新缓存以获取最新功能",
+                        toast.info("前端版本升级", {
+                            description: "建议访问 /pwa 页面重新缓存，以确保离线报告编制功能",
                             duration: 10000,
                             action: {
                                 label: "前往",
@@ -49,10 +56,17 @@ export function VersionChecker() {
     useEffect(() => {
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.addEventListener("controllerchange", () => {
+                // 检查是否有离线报告数据
+                const offlineReports = localStorage.getItem("offline-reports")
+                if (!offlineReports) return
+
+                // 检查当前页面是否是 /pwa
+                if (window.location.pathname === "/pwa") return
+
                 console.log("[SW] Service Worker 已更新")
 
                 toast.info("应用已更新", {
-                    description: "建议访问 /pwa 页面重新缓存",
+                    description: "建议访问 /pwa 页面重新做预缓存",
                     duration: 10000,
                     action: {
                         label: "前往",
