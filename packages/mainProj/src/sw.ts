@@ -104,12 +104,13 @@ const customCache: RuntimeCaching[] = [
             (pathname.startsWith("/_next/static/chunks/") ||
                 pathname.startsWith("/_next/static/css/") ||
                 pathname.includes("webpack-")),
-        handler: new CacheFirst({
+        handler: new NetworkFirst({
             cacheName: "next-chunks", //静态资源,DEV模式用?
+            networkTimeoutSeconds: 2,
             plugins: [
                 new ExpirationPlugin({
                     maxEntries: 2000,
-                    maxAgeSeconds: 90 * 24 * 60 * 60,
+                    maxAgeSeconds: 30 * 24 * 60 * 60,
                     maxAgeFrom: "last-used",
                 }),
             ],
@@ -117,13 +118,13 @@ const customCache: RuntimeCaching[] = [
     },
     {
         matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && pathname.startsWith("/rep/"),
-        //CacheFirst=可能内容过时？[报告]只能手动更新的，不会主动获取最新页面代码
-        handler: new CacheFirst({
+        handler: new NetworkFirst({
             cacheName: "report-pages-normalized",
+            networkTimeoutSeconds: 3,
             plugins: [
                 createCacheKeyPlugin(normalizeReportCacheKey),
                 new ExpirationPlugin({
-                    maxAgeSeconds: 30 * 24 * 60 * 60,
+                    maxAgeSeconds: 30 * 24 * 60 * 60, // 30天缓存
                     maxAgeFrom: "last-used",
                 }),
             ],
@@ -332,16 +333,13 @@ self.addEventListener("activate", (event) => {
         (async () => {
             const cacheNames = await caches.keys()
             const oldCaches = cacheNames.filter((name) => name.includes("workbox") || name.includes("sw-precache"))
-
             await Promise.all(
                 oldCaches.map((cacheName) => {
-                    console.log("[SW] 删除旧缓存:", cacheName)
+                    console.log("SW激活删缓存", cacheName)
                     return caches.delete(cacheName)
                 }),
             )
-
             await self.clients.claim()
-
             const clients = await self.clients.matchAll({ type: "window" })
             clients.forEach((client) => {
                 client.postMessage({
@@ -349,7 +347,6 @@ self.addEventListener("activate", (event) => {
                     version: APP_VERSION,
                 })
             })
-
             console.log("✅ 离线功能: 已激活并控制所有页面")
         })(),
     )
