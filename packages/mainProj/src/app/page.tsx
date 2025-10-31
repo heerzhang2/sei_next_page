@@ -22,7 +22,7 @@ export default function Home() {
                             <Link href="/deptask">每日采集 →</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/offline">离线99管理</Link>
+                            <Link href="/offline">离线011管理</Link>
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1">Precahe重新注册前3份报告-滑行车的</Link>
@@ -32,7 +32,7 @@ export default function Home() {
                             <Link href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1">查阅当前1份报告-管道的</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/login">登录。。。</Link>
+                            <Link href="/login">登录页。</Link>
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">查阅当前2份报告-滑行车</Link>

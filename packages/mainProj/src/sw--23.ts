@@ -201,7 +201,166 @@ const serwist = new Serwist({
     },
 })
 
-serwist.addEventListeners()
+// 保存原始的 fetch 函数
+const originalFetch = self.fetch;
+// 重写全局 fetch
+self.fetch = async function(...args) {
+    try {
+        return await originalFetch.apply(this, args);
+    } catch (error) {
+        const request = args[0] instanceof Request ? args[0] : new Request(args[0]);
+        console.error('[SW] Fetch 请求失败:', error);
+        if (isCriticalChunkError(error, request)) {
+            console.warn('[SW] 检测到严重资源加载错误');
+            // 如果是文档请求，返回错误页面
+            if (request.mode === 'navigate' || request.destination === 'document') {
+                return createErrorPageResponse({
+                    errorType: 'CHUNK_LOAD_ERROR',
+                    originalUrl: request.url,
+                    errorMessage: error.message
+                });
+            }
+            // 对于资源请求，可以返回一个空的响应或重试
+            return new Response(null, {
+                status: 408,
+                statusText: 'Resource Load Failed'
+            });
+        }
+        throw error;
+    }
+};
+// 判断是否为严重的 chunk 错误
+function isCriticalChunkError(error: any, request: Request): boolean {
+    const errorMessage = error?.message || String(error);
+    const requestUrl = request.url;
+    // 更精确的错误类型判断
+    const isChunkError =
+        error?.name === 'TypeError' ||
+        errorMessage.includes('Failed to fetch') ||
+        errorMessage.includes('NetworkError') ||
+        errorMessage.includes('Load failed') ||
+        errorMessage.includes('ERR_CONNECTION');
+    // 更精确的关键资源判断
+    const isCriticalResource =
+        requestUrl.includes('/_next/static/chunks/') ||
+        requestUrl.includes('/_next/static/css/') ||
+        requestUrl.includes('/_next/static/js/') ||
+        request.destination === 'document' ||
+        request.mode === 'navigate' ||
+        (request.headers.get('Accept') || '').includes('text/html');
+    return isChunkError && isCriticalResource;
+}
+// 创建错误页面响应
+function createErrorPageResponse(options: {
+    errorType: string;
+    originalUrl: string;
+    errorMessage: string;
+}): Response {
+    const errorPageHtml = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>应用程序加载失败</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 2rem; 
+            background: #f5f5f5; 
+            color: #333;
+            line-height: 1.6;
+        }
+        .error-container { 
+            max-width: 500px; 
+            margin: 4rem auto; 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .error-icon { 
+            font-size: 3rem; 
+            margin-bottom: 1rem; 
+        }
+        h1 { 
+            color: #e74c3c; 
+            margin-bottom: 1rem; 
+        }
+        .button { 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            padding: 0.75rem 1.5rem; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 0.5rem; 
+            font-size: 1rem;
+        }
+        .button:hover { 
+            background: #2980b9; 
+        }
+        .error-details {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h1>应用程序加载失败</h1>
+        <p>抱歉，应用程序所需的资源未能正确加载。这可能是由于网络问题或版本更新导致的。</p>
+        
+        <div class="error-details">
+            <strong>错误类型:</strong> ${options.errorType}<br>
+            <strong>请求资源:</strong> ${new URL(options.originalUrl).pathname}<br>
+            <strong>建议操作:</strong> 请尝试刷新页面或清除浏览器缓存
+        </div>
+        
+        <div>
+            <button class="button" onclick="window.location.reload()">🔄 刷新页面</button>
+            <button class="button" onclick="window.location.href='/'">🏠 返回首页</button>
+        </div>
+        
+        <p style="margin-top: 2rem; font-size: 0.9rem; color: #999;">
+            如果问题持续存在，请联系技术支持
+        </p>
+    </div>
+    
+    <script>
+        // 自动尝试重新加载（5秒后）
+        setTimeout(() => {
+            console.log('自动重试加载...');
+        }, 5000);
+        
+        // 监听网络恢复
+        window.addEventListener('online', () => {
+            console.log('网络恢复，尝试重新加载');
+            window.location.reload();
+        });
+    </script>
+</body>
+</html>`;
+
+    return new Response(errorPageHtml, {
+        status: 200,
+        statusText: 'OK',
+        headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
+    });
+}
+
+serwist.addEventListeners();
 
 self.addEventListener("message", (event) => {
     const { data } = event
@@ -311,7 +470,7 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
     }
 }
 
-const APP_VERSION = "1.0" // 构建时替换
+const APP_VERSION = "1.0"   // 构建时替换
 
 self.addEventListener("install", (event) => {
     console.log(`[SW] Service Worker 安装中... 版本: ${APP_VERSION}`)
@@ -354,37 +513,34 @@ self.addEventListener("error", (event) => {
     notifyClientsOfError(event.error?.message || "未知的 Service Worker 错误", "SW_ERROR")
 })
 
-self.addEventListener("unhandledrejection", (event) => {
-    console.log("[SW] 未处理的拒绝:", event.reason)
-    const error = event.reason
-    const errorMessage = error?.message || String(error)
-
-    if (
-        error?.name === "no-response" ||
-        errorMessage.includes("chunk") ||
-        errorMessage.includes("static/chunks") ||
-        errorMessage.includes("no-response")
-    ) {
-        const url = error?.url || event.reason?.url || event.reason?.details?.url || "未知URL"
+self.addEventListener('unhandledrejection', (event) => {
+    console.log('[SW] 未处理的拒绝:', event.reason);
+    const error = event.reason;
+    const errorMessage = error?.message || String(error);
+    // 检查是否是chunk加载相关的错误
+    if (error?.name === 'no-response' ||
+        errorMessage.includes('chunk') ||
+        errorMessage.includes('static/chunks') ||
+        errorMessage.includes('no-response')) {
+        const url = error?.url || event.reason?.url || event.reason?.details?.url || '未知URL';
         notifyClientsOfChunkError({
             url,
             error: `资源加载失败: ${url}`,
-            errorType: "CHUNK_LOAD_ERROR",
-        })
-    } else if (
-        error &&
-        (error.name === "InvalidStateError" ||
-            error.message?.includes("database connection is closing") ||
-            error.message?.includes("transaction") ||
-            error.message?.includes("IDBDatabase"))
-    ) {
-        notifyClientsOfError("IndexedDB 连接异常，建议刷新页面以重置缓存状态", "INDEXEDDB_ERROR")
+            errorType: 'CHUNK_LOAD_ERROR'
+        });
+    } else if (error &&
+        (error.name === 'InvalidStateError' ||
+            error.message?.includes('database connection is closing') ||
+            error.message?.includes('transaction') ||
+            error.message?.includes('IDBDatabase'))) {
+        notifyClientsOfError('IndexedDB 连接异常，建议刷新页面以重置缓存状态', 'INDEXEDDB_ERROR');
     } else {
-        notifyClientsOfError(errorMessage, "ASYNC_ERROR")
+        notifyClientsOfError(errorMessage, 'ASYNC_ERROR');
     }
-    event.preventDefault()
-})
+    event.preventDefault();
+});
 
+//refreshAuth每次刷新登录信息后，需要清理过期的认证数据
 async function clearAuthCache() {
     try {
         const cacheNames = await caches.keys()
@@ -419,26 +575,26 @@ async function notifyClientsOfError(error: string, errorType = "CACHE_ERROR") {
 }
 
 async function notifyClientsOfChunkError(errorDetails: {
-    url: string
-    error: string
-    errorType: string
+    url: string;
+    error: string;
+    errorType: string;
 }) {
     try {
         const clients = await self.clients.matchAll({
             includeUncontrolled: true,
-            type: "window",
-        })
+            type: 'window'
+        });
         clients.forEach((client) => {
             client.postMessage({
-                type: "CHUNK_LOAD_ERROR",
+                type: 'CHUNK_LOAD_ERROR',
                 error: errorDetails.error,
                 url: errorDetails.url,
                 errorType: errorDetails.errorType,
                 timestamp: Date.now(),
-                pathname: self.location.pathname,
-            })
-        })
+                pathname: self.location.pathname
+            });
+        });
     } catch (e) {
-        console.error("[SW] 无法通知客户端chunk错误:", e)
+        console.error('[SW] 无法通知客户端chunk错误:', e);
     }
 }

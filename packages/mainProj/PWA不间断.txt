@@ -158,3 +158,27 @@ LRU 策略：最少使用的缓存会被优先清理
 【失去效果】
 Q: 能否只缓存变化的模板？
 A: 可以！使用 changeTime 机制和"自动更新"功能，只更新实际修改的模板。但 Next.js 的共享 chunks 可能仍然需要更新。
+发送去主线程是=:
+url
+:
+"https://192.168.171.3:3765/_next/static/chunks/app/layout-4f5a4b6730e94150.js"
+
+[主线程]收到SW的SWChunk==
+error
+:
+"资源加载失败: https://192.168.171.3:3765/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?_rsc=3lb4g#T6-14"
+errorType
+:
+"CHUNK_LOAD_ERROR"
+pathname
+:
+"/sw.js"
+timestamp
+:
+1761881298831
+type
+:
+"CHUNK_LOAD_ERROR"
+url
+:
+"https://192.168.171.3:3765/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?_rsc=3lb4g#T6-14"

@@ -71,7 +71,7 @@ export default async function RootLayout({
                                 <SessionSync />
                                 <TokenRefreshOverlay />
                                 <OfflineStatusIndicator />
-                                {children}
+                                    {children}
                                 <PWAInstaller />
                                 <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
                             </GraphQLProvider>
