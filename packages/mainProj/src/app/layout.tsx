@@ -15,7 +15,7 @@ import { PWAInstaller } from "@/components/pwa-installer"
 import { NetworkStatusProvider } from "@/contexts/network-status-context"
 import { SessionSync } from "@/components/session-sync"
 import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
-import { ChunkErrorHandler } from "@/components/chunk-error-handler"
+import { SerwistMessageHandler } from "@/components/serwist-message-handler"
 import { VersionChecker } from "@/components/version-checker"
 
 const APP_NAME = "报告编制系统"
@@ -66,7 +66,7 @@ export default async function RootLayout({
                     <NetworkStatusProvider>
                         <Provider>
                             <GraphQLProvider>
-                                <ChunkErrorHandler />
+                                <SerwistMessageHandler />
                                 <VersionChecker />
                                 <SessionSync />
                                 <TokenRefreshOverlay />
