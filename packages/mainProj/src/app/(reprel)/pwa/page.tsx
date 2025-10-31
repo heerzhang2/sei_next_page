@@ -619,7 +619,7 @@ export default function Page() {
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-            {(swError || !navigator.serviceWorker.controller) && (
+            {(swError) && (
                 <div className="fixed top-4 right-4 max-w-md bg-white border-l-4 border-orange-500 rounded-lg shadow-lg p-4 z-50">
                     <div className="flex items-start">
                         <div className="flex-shrink-0">
@@ -640,7 +640,6 @@ export default function Page() {
                         </div>
                         <div className="ml-3 flex-1">
                             <div className="mt-1 text-sm text-orange-700">{swError}
-                                {!navigator.serviceWorker.controller && 'SW未激活！'}
                             </div>
                         </div>
                     </div>
@@ -923,8 +922,7 @@ export default function Page() {
                             </div>
                         )}
                     </div>
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+                    <div className="flex justify-between">
                         <button
                             onClick={() => handlePrecacheReports()}
                             disabled={precacheStatus === "loading" || reportTemplates.length === 0}
@@ -943,15 +941,15 @@ export default function Page() {
                                 `重新预缓存 (${reportTemplates.length + customUrls.filter((u) => u.enabled).length} 项)`
                             )}
                         </button>
-
                         {/* 新增清理缓存数据按钮 */}
                         <button
                             onClick={handleClearCacheData}
                             className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
                         >
-                            清理缓存数据
+                            删除全部缓存
                         </button>
-
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                         {reportTemplates.length === 0 && (
                             <div className="text-sm text-amber-600">请先在其他页面添加报告到离线列表</div>
                         )}
@@ -1115,11 +1113,11 @@ export default function Page() {
                         </div>
                     )}
                     <div className="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
-                        <h2 className="text-lg font-semibold text-blue-800 mb-2">最佳习惯提示</h2>
+                        <h2 className="text-lg font-semibold text-blue-800 mb-2">注意事项！</h2>
                         <p>为了避免离线编辑报告出现无法访问的问题:</p>
                         <ul className="list-disc pl-5 mt-2 space-y-1">
                             <li>若您添加了新的报告编辑任务后，而且是新模板或新版本号的报告，请在模板列表点击对应的“更新”按钮。</li>
-                            <li>如果基础缓存的大小出现异常（最新基础缓存有13.38MB的），那么必须做个彻底地更新，请点下方“完全重置”，然后再点“重新预缓存”。</li>
+                            <li>如果基础缓存的大小出现异常（最新基础缓存大约<strong> 13.38 MB</strong>的），那么必须做个彻底地更新，请点下方“完全重置”，然后再点“重新预缓存”。</li>
                         </ul>
                     </div>
                 </div>

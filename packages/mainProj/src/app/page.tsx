@@ -22,7 +22,7 @@ export default function Home() {
                             <Link href="/deptask">每日采集 →</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/offline">离线队014列管理</Link>
+                            <Link href="/offline">离线99管理</Link>
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1">Precahe重新注册前3份报告-滑行车的</Link>
