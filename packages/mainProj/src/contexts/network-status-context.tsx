@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 
 export interface NetworkStatus {
     isClientOnline: boolean
@@ -35,24 +36,67 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         isNextJSServerReachable: true,
         isGraphQLBackendReachable: true,
     })
-    // 检查Next.js服务器连通性
+
+    // 版本检查逻辑
+    const checkVersion = useCallback((data: any) => {
+        try {
+            // 检查是否有离线报告数据
+            const offlineReports = localStorage.getItem("offline-reports")
+            if (!offlineReports) return
+
+            // 检查当前页面是否是 /pwa
+            if (window.location.pathname === "/pwa") return
+
+            const serverVersion = data.version
+            const lastCacheWarmup = localStorage.getItem("last-cache-warmup")
+
+            if (!lastCacheWarmup || (lastCacheWarmup && serverVersion !== lastCacheWarmup)) {
+                console.log("[Version] 检测到新构建版本:", serverVersion, "上次缓存版本:", lastCacheWarmup)
+
+                toast.info("前端版本升级", {
+                    id: "serverVersion-pwa",
+                    description: "建议访问 /pwa 页面重新缓存，以确保离线报告编制功能",
+                    duration: 10000,
+                    action: {
+                        label: "前往",
+                        onClick: () => {
+                            window.location.href = "/pwa"
+                        },
+                    },
+                })
+            }
+        } catch (error) {
+            // 忽略错误
+            console.log("[Version] 版本检查过程中出错:", error)
+        }
+    }, [])
+
+    // 检查Next.js服务器连通性（现在包含版本检查）
     const checkNextJSServerConnectivity = useCallback(async () => {
         try {
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), 5000)
             const response = await fetch("/api/nextLive", {
-                method: "HEAD",
+                method: "GET",
                 cache: "no-cache",
                 signal: controller.signal,
             })
 
             clearTimeout(timeoutId)
-            return response.ok
+
+            if (response.ok) {
+                const data = await response.json()
+                // 在成功连接时检查版本，直接使用已获取的数据
+                checkVersion(data)
+                return true
+            }
+
+            return false
         } catch (error) {
             console.warn("Next.js服务器连接检查失败:", error)
             return false
         }
-    }, [])
+    }, [checkVersion])
 
     // 检查GraphQL后端连通性
     const checkGraphQLBackendConnectivity = useCallback(async (retries = 1) => {
@@ -146,6 +190,41 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     const contextValue: NetworkStatus = {
         ...networkStatus,
     }
+
+    useEffect(() => {
+        // Service Worker 更新监听
+        const handleServiceWorkerUpdate = () => {
+            // 检查是否有离线报告数据
+            const offlineReports = localStorage.getItem("offline-reports")
+            if (!offlineReports) return
+
+            // 检查当前页面是否是 /pwa
+            if (window.location.pathname === "/pwa") return
+
+            console.log("[SW] Service Worker 已更新")
+
+            toast.info("应用已更新", {
+                description: "建议访问 /pwa 页面重新做预缓存",
+                duration: 10000,
+                action: {
+                    label: "前往",
+                    onClick: () => {
+                        window.location.href = "/pwa"
+                    },
+                },
+            })
+        }
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.addEventListener("controllerchange", handleServiceWorkerUpdate)
+        }
+
+        return () => {
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.removeEventListener("controllerchange", handleServiceWorkerUpdate)
+            }
+        }
+    }, [])
 
     useEffect(() => {
         // 初始状态更新

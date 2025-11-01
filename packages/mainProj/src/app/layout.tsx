@@ -16,7 +16,6 @@ import { NetworkStatusProvider } from "@/contexts/network-status-context"
 import { SessionSync } from "@/components/session-sync"
 import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
 import { SerwistMessageHandler } from "@/components/serwist-message-handler"
-import { VersionChecker } from "@/components/version-checker"
 
 const APP_NAME = "报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
@@ -67,11 +66,10 @@ export default async function RootLayout({
                         <Provider>
                             <GraphQLProvider>
                                 <SerwistMessageHandler />
-                                <VersionChecker />
                                 <SessionSync />
                                 <TokenRefreshOverlay />
                                 <OfflineStatusIndicator />
-                                    {children}
+                                {children}
                                 <PWAInstaller />
                                 <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
                             </GraphQLProvider>

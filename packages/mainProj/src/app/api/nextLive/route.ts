@@ -1,18 +1,40 @@
+// /app/api/nextLive/route.ts
 import { NextResponse } from "next/server"
+import { readFileSync } from "fs"
+import { join } from "path"
 
-// export const dynamic = "force-static"
-// export const revalidate = false
+let cachedBuildInfo: { version: string; } | null = null
+
+function getBuildInfo() {
+    if (cachedBuildInfo) {
+        return cachedBuildInfo
+    }
+
+    try {
+        // 尝试从 public 目录读取 build-info.json
+        const buildInfoPath = join(process.cwd(), "public", "build-info.json")
+        const buildInfoContent = readFileSync(buildInfoPath, "utf-8")
+        cachedBuildInfo = JSON.parse(buildInfoContent)
+        return cachedBuildInfo
+    } catch (error) {
+        // 如果文件不存在，返回默认值
+        console.warn("build-info.json not found, using fallback version")
+        cachedBuildInfo = {
+            version: process.env.NEXT_PUBLIC_APP_VERSION || "dev",
+        }
+        return cachedBuildInfo
+    }
+}
 
 export async function GET() {
     try {
-        // 这里可以添加更复杂的健康检查逻辑
-        // 比如检查数据库连接、外部服务状态等
+        const buildInfo = getBuildInfo()
 
         const healthStatus = {
             status: "ok",
             timestamp: new Date().toISOString(),
             uptime: process.uptime(),
-            version: process.env.npm_package_version || "1.0.0",
+            version: buildInfo?.version,
             environment: process.env.NODE_ENV || "development",
         }
 
