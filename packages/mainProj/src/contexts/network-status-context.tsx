@@ -100,7 +100,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
     // 检查GraphQL后端连通性
     const checkGraphQLBackendConnectivity = useCallback(async (retries = 1) => {
-        for (let attempt = 0; attempt <= retries; attempt++) {
+        for (let attempt = 0; attempt < retries; attempt++) {
             try {
                 const controller = new AbortController()
                 const timeoutId = setTimeout(() => controller.abort(), 15000)
@@ -147,8 +147,8 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     // 更新网络状态
     const updateNetworkStatus = useCallback(
         async (isClientOnline: boolean, error: Error | null = null) => {
-            const isNextJSServerReachable = isClientOnline ? await checkNextJSServerConnectivity() : false
-            const isGraphQLBackendReachable = isClientOnline ? await checkGraphQLBackendConnectivity() : false
+            const isNextJSServerReachable = isClientOnline
+            const isGraphQLBackendReachable = isClientOnline
             const connectionType = getConnectionInfo()
             const isOnline = isClientOnline && isNextJSServerReachable
             setNetworkStatus((prev) => ({
@@ -172,7 +172,6 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     )
 
     const updateGraphQLBackendStatus = useCallback((isReachable: boolean, isClientOnline = true) => {
-        console.log("[v0] 外部更新GraphQL后端状态:", { isReachable, isClientOnline })
         setNetworkStatus((prev) => ({
             ...prev,
             isGraphQLBackendReachable: isReachable,
@@ -251,7 +250,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                         isOnline: prev.isClientOnline && isNextJSReachable,
                     }))
                 }
-            }, 80000)
+            }, 40000)
 
         const handleConnectionChange = () => {
             const connectionType = getConnectionInfo()
