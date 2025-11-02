@@ -109,9 +109,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
                 const response = await fetch(`${backendUrl}/actuator/health`, {
                     method: "GET",
-                    headers: { "Content-Type": "application/json" },
                     mode: "cors",
-                    credentials: "include",
                     cache: "no-cache",
                     signal: controller.signal,
                 })

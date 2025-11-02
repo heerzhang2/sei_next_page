@@ -214,7 +214,7 @@ export default function Page() {
     useEffect(() => {
         const fetchBuildVersion = async () => {
             try {
-                const response = await fetch("/api/version", { cache: "no-store" })
+                const response = await fetch("/api/nextLive", { cache: "no-store" })
                 if (response.ok) {
                     const data = await response.json()
                     setCurrentBuildVersion(data.version)
@@ -228,7 +228,7 @@ export default function Page() {
     }, [])
 
     const handleHardRefresh = () => {
-        // 硬刷新页面，相当于 Ctrl+Shift+R
+        //刷新页面
         window.location.reload()
     }
     const handleCompleteReset = async () => {

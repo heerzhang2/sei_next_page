@@ -38,30 +38,28 @@ interface FxDiagramProps  extends InternalItemProps{
 /**保留 编辑常见的范式；
  * 复杂的表单的确不采用useForm真不方便，编辑器简单的还可以对付。
  * */
-export const FxDiagram =
-({  rep,
-    children,
-    show = false,
-    label, maxFile=1, memo, pic, modType, subrid,redId,dlist
-}:FxDiagramProps) => {
+export const FxDiagram = ({
+                              rep,
+                              children,
+                              show = false,
+                              label, maxFile=1, memo, pic, modType, subrid,redId,dlist
+                          }:FxDiagramProps) => {
     const {storage,setStorage,subrType,modified,setModified} =useStorage();
     const subStore=storage?.[`_${modType}_${redId}`];
-    //原本editForm一表的其中一行对象。 但是这里改成非表格的模式：减少一层存储组织嵌套了。
-    const initialState=()=>(
-        {
-            [memo]:  subStore?.[memo] ?? "",
-        }  as any
-    );
+
+    const initialState=()=>({
+        [memo]:  subStore?.[memo] ?? "",
+    } as any);
+
     const [editForm, setEditForm] = React.useState<any>(()=>initialState())
-    //const [content, setContent]=React.useState<string>(storage?.[''] ??)不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent{某一个表行的记录对象再倒腾一次}。
     const [content, ] = React.useState<any>(()=>initialState())
     const [editErr, setEditErr] = React.useState<string>()
-    // 更新表单字段
+
     const updateFormField = (field: string, value: any) => {
         setEditForm((prev: any) => ({ ...prev, [field]: value }))
     }
+
     const onReset = () => {
-        //_FILE_S简图 : 特例对待的！ 必须保证一致性同步未见系统的数据，避免丢失文件管理者。_FILE_S简图：提取单独，自动确认的。
         setEditForm(content)
     }
     //依赖项必须加上， 否则：可能同一个上传文件，被保存给到多个分项的存储对象。
@@ -84,7 +82,14 @@ export const FxDiagram =
         liveDays:10, hash:"FxDiagram_pf"
     });
     //不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent {某一个表行的记录对象再倒腾一次}。
-    const [render] = useFrameEditorBar({ rep, values: { ...editForm }, onReset,subrid,redId,modType})
+    const [render] = useFrameEditorBar({
+        rep,
+        transformValues: () => ({ [memo]: editForm?.[memo] || "" }),
+        onReset,
+        subrid,
+        redId,
+        modType
+    })
     // const [render] = useFrameEditorBar({ rep, values: { ['仪器编号']: content }, onReset,subrid,redId,modType:"THICK_MS"})
 
     return (

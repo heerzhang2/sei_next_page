@@ -1,89 +1,7 @@
+官方文档 https://serwist.pages.dev/docs/serwist/runtime-caching/plugins
 不用生产版"start:https": "cross-env NODE_ENV=production "真的无法发挥PWA的全部功能。
 cacheName: "next-chunks", 静态资源,DEV模式才用? 但是dev没法用serwist没页面只显示rsc代码;
 重新build导致的 /_next/static/开头资源，要求任何模板任意版本都需要重新做缓存的，否则无法确保能够访问。
-serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Service worker is installing...
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker installed.
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker activated.
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist The registered service worker is active but not yet controlling the page. Reload or run `clients.claim()` in the service worker.
-Chromek开发者工具》 应用》》 [Service workers]标签页：
-   状态  O小圆圈#绿色的#  已激活 #299 次，当前正在运行  （停止）
-   状态  O#白底的# 正在尝试安装
-   状态  O#灰色的# 第 74 项为多余项                 #没激活的
-   更新周期里面的 Install Wait Activate 时间轴的长度 明显太短暂了。
-存储/ IndexedDB>> sersit-expiration 。。。
-
-
-serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist A service worker with the same script URL is already controlling this page.
-
-D:\home\sei_next_pag…tallDetails.js:1553 Uncaught unsupported-route-type: The supplied 'capture' parameter was an unsupported type. Please check the docs for serwist.undefined.parseRoute for valid input types.
-    at parseRoute (webpack-internal:///../../node_modules/serwist/dist/chunks/printInstallDetails.js:1587:11)
-    at Serwist.registerCapture (webpack-internal:///../../node_modules/serwist/dist/index.js:472:88)
-    at new Serwist (webpack-internal:///../../node_modules/serwist/dist/index.js:321:22)
-    at eval (webpack-internal:///./src/sw.ts:6:17)
-    at ./src/sw.ts (https://192.168.0.100:3765/sw.js:79:1)
-    at __webpack_require__ (https://192.168.0.100:3765/sw.js:106:42)
-    at https://192.168.0.100:3765/sw.js:203:37
-    at https://192.168.0.100:3765/sw.js:205:12
-
-D:\home\sei_next_pag…ks\waitUntil.js:274 serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
-D:\home\sei_next_pag…ks\waitUntil.js:274 serwist A service worker with the same script URL is already controlling this page.
-
-urlPattern
-  matcher: RegExp | string | RouteMatchCallback;
--猪扒是什么样serwist
-
-D:\home\sei_next_pag…rmFramework.tsx:407
- POST https://192.168.0.100:8673/graphql net::ERR_CONNECTION_REFUSED
-D:\home\sei_next_pag…l-component.tsx:232 [v0] customFetchExchange - 收到响应:
-{operationName: undefined, hasData: false, hasError: true, error: CombinedError: [Network] Failed to fetch
-    at makeErrorResult (webpack-internal:///(app-pages-bro…, response: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:254 [v0] customFetchExchange - 检测到网络错误，立即返回错误结果
-D:\home\sei_next_pag…l-component.tsx:119 [v0] networkErrorExchange - 原始错误对象:
-{error: {…}, networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, operation: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:144 网络错误检测到:
-{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
-D:\home\sei_next_pag…tus-context.tsx:210 [v0] 外部更新GraphQL后端状态:
-{isReachable: false, isClientOnline: false}
-D:\home\sei_next_pag…l-component.tsx:151 [v0] networkErrorExchange - 立即返回网络错误
-D:\home\sei_next_pag…l-component.tsx:426 [v0] authExchange.didAuthError - 详细错误信息:
-{error: {…}, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:461 [v0] authExchange.didAuthError - 认证错误判断结果:
-{hasGraphQLAuthError: false, hasNetworkAuthError: false, hasCustomAuthError: false, isSpecial500: false, finalResult: false}
-
-D:\home\sei_next_pag…l-component.tsx:775 [v0] errorExchange.onError - 完整错误信息:
-{operationName: undefined, operationType: 'mutation', error: {…}, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, …}
-D:\home\sei_next_pag…l-component.tsx:798 GraphQL 错误:
-{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
-D:\home\sei_next_pag…l-component.tsx:850 使用全局网络状态更新
-
-D:\home\sei_next_pag…rmFramework.tsx:414 updateOriginalResult=应答=
-{operation: {…}, data: undefined, error: {…}, extensions: undefined, hasNext: false, …}
-D:\home\sei_next_pag…rmFramework.tsx:419 Oh no!
-{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
-
-D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
-
-{id: 'report-pages-normalized|https://192.168.171.3:3765/rep/*/INDPL_DJ/1/Solidify',
- cacheName: 'report-pages-normalized',
-  url: 'https://192.168.171.3:3765/rep/*/INDPL_DJ/1/Solidify',
-   timestamp: 1758187720398}
-//【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker"，然后自己再修改！
-const PAGES_CACHE_NAME = {
-    rscPrefetch: "pages-rsc-prefetch",
-    rsc: "pages-rsc",
-    html: "pages",
-} as const
-
-compositeKey
-'report-pages-normalized|/rep/*/SLIDING_JJ/1/Survey'
 
 【urql offlinecahce问题】版本：
 1003 17：36； optimistic可能遭遇退回。第一次保存丢失，刷新后显示不一致，同步机会拖延，第一次的编辑区丢失更新。
@@ -167,18 +85,8 @@ url
 error
 :
 "资源加载失败: https://192.168.171.3:3765/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?_rsc=3lb4g#T6-14"
-errorType
-:
-"CHUNK_LOAD_ERROR"
-pathname
-:
-"/sw.js"
-timestamp
-:
-1761881298831
-type
-:
-"CHUNK_LOAD_ERROR"
-url
-:
-"https://192.168.171.3:3765/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?_rsc=3lb4g#T6-14"
+
+
+__Host-authjs.csrf-token=7d9deb9afa19fb298360ac304c23a65b0617b431fa47edd03a396dd94b63f862%7C51ae85798add3e3690d92972e8bca7ab3b4d11f75442293ee44dd374fc387a04; __Secure-authjs.callback-url=https%3A%2F%2F192.168.0.100%3A3765%2Flogin; __next_hmr_refresh_hash__=6aceba72def92d0c21156ec139f5cff1c34a80d9a05dfe66; __Secure-authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiWEF2ZGRyWGV3c25jQ0V5WE85XzVQZ1oyQ1pNeFVSZGVYZXBiSDF0c0V6cnNxbW9iY0owQ1N5Z1pSdEhrajlMOUdXZFk4Vndpc2pKbmh4dFlxVzZ6dUEifQ..Y6SXYAr-05X5_4Xf0p4oaw.7hxkc5PovEnY53ZD3mQYm4eLpv1VINRmS5wIxyGU9W0IsXiG1jbVufsfZJb9RnUw0Qmg1S7LxSzteOC3QR_3SjMJu9cNXnkhio0aS4pWxpL-X9HLdvEv09B9E70Zw25__Zjck_Z3TtNIuX3BcuelG1iZP-hlO3MZ0gMAfMjhwzbJnOyH1ti3lEnC-dl4DgM_hQb6CffuMzjxNT8TxMk_1n-Zc9fCJN7YeSq1amUKNHer5s0aobptrSeB8fNAwxfM99P-NICHstHZs92FcSXjOErPZttfhRR4flbky0GDCsDYKFQfQ1Gm_eFaNHk21w0vK7DB6M9jE8F6chHgERNlmwN6k1YMZHK86qVnQZp2F1n7oA_D5nN5RFDWEPUXjTyZmpNoo44nsB3j-ofTBiI1O2y6kPUJxHlIz0pqHNdOawseXfIkBrwT5jhR1y6vNtQtgDTwx7k-V-kMLV1CWKr3zGCLOOxsGX4bnUMQ0Xm1pak8iEjgz254z58eAIPxofuSPfaDReYovhSFPyubmM62u0-wE0KsoyUmBDgaFrI_ywDuI1WAnV83y8qlskI0zJibSQyDX9q77xyba2fJhUhvgJnGj1V-HUeX7bwIgQwt6CE.GRM9faxiK5FiJny1F3s5WtQeeRaC61o6Er4BG8IV79s
+host
+192.168.0.100:3765

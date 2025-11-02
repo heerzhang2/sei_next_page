@@ -10,7 +10,7 @@ import "@uppy/dashboard/dist/style.min.css"
 import "@uppy/webcam/dist/style.min.css"
 // Add custom styles to fix Tailwind conflicts
 import "./uppy-fixes.css"
-import { getAuthToken, refreshAuthToken } from "@/lib/auth-token"
+import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
 import { useCallback } from "react"
@@ -98,7 +98,7 @@ export function useUppyUpload({
             },
             async onAfterResponse(req, res) {
                 if (res.getStatus() === 401) {
-                    await refreshAuthToken()
+                    // window.location.href = "/login"
                     // 直接使用 newUppy 实例
                     newUppy.info("刷新token")
                 }
