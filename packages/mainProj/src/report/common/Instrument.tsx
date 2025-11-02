@@ -1,8 +1,8 @@
 import * as React from "react";
 // import {useTableEditor,} from "../hook/useRepTableEditor";
-import '@uppy/core/dist/style.min.css';
-import '@uppy/dashboard/dist/style.min.css';
-import '@uppy/webcam/dist/style.min.css';
+// import '@uppy/core/dist/style.min.css';
+// import '@uppy/dashboard/dist/style.min.css';
+// import '@uppy/webcam/dist/style.min.css';
 import {InternalItemProps} from "./base";
 // import {useMeasureInpFilter} from "./hooks";
 import {undefined, z} from "zod";

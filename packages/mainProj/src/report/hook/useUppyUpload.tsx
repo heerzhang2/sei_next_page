@@ -1,15 +1,20 @@
 "use client"
 import * as React from "react"
-import Uppy from "@uppy/core"
+import Uppy, {type UppyFile} from "@uppy/core"
 import Tus from "@uppy/tus"
+import XHRUpload from "@uppy/xhr-upload"
 // import Webcam from "@uppy/webcam";
 import useOssDeleteFileMutation from "../../hooks/useOssDeleteFileMutation"
-import { Dashboard } from "@uppy/react"
-import "@uppy/core/dist/style.min.css"
-import "@uppy/dashboard/dist/style.min.css"
-import "@uppy/webcam/dist/style.min.css"
+// import Dashboard from '@uppy/react/lib/Dashboard';
+import Dashboard from '@uppy/react/dashboard';
+import '@uppy/core/css/style.min.css';
+import '@uppy/dashboard/css/style.min.css';
+// import "@uppy/core/dist/style.min.css"
+// import "@uppy/dashboard/dist/style.min.css"
+// import "@uppy/webcam/dist/style.min.css"
 // Add custom styles to fix Tailwind conflicts
 import "./uppy-fixes.css"
+
 import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
@@ -36,14 +41,9 @@ export const useScrollHandler = (targetSelector: string) => {
         [targetSelector],
     )
 }
-//直接onClick={toggleUppy}的版本：
-// const toggleUppy = React.useCallback(
-//     (e: React.MouseEvent) => {
-//         e.preventDefault()
-//         setOpenUppy((prev) => !prev)
-//     },
-//     [],
-// )
+
+// 上传模式类型
+type UploadMode = 'tus' | 'xhr'
 
 /**可以支持一个页面 多个上传的面板同时存在的。
  * @param repId 分布式对象存储系统靠这个 rep ID来关联业务系统关系数据库的。
@@ -79,75 +79,115 @@ export function useUppyUpload({
 }) {
     const [openUppy, setOpenUppy] = React.useState(false)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
+    const [uploadMode, setUploadMode] = React.useState<UploadMode>('xhr')
 
-    // 创建 Uppy 实例的函数 - 移除 useCallback，直接在 useEffect 中创建
+    // 根据文件大小和模式决定使用哪种上传方式
+    const shouldUseTus = React.useCallback((file: any): boolean => {
+        if (uploadMode === 'tus') return true
+        if (uploadMode === 'xhr') return false
+
+        // auto 模式：大文件使用 tus
+        return file.size > 20 * 1024 * 1024 // 20MB 以上使用 tus
+    }, [uploadMode])
+
+    // 创建 Uppy 实例的函数
     const createUppyInstance = () => {
-        const uniqueId =id? id:`Report-${repId}-${hash || "default"}`;
+        const uniqueId = id ? id : `Report-${repId}-${hash || "default"}`
         // console.log(`Creating new Uppy instance: ${uniqueId}`)
         const newUppy = new Uppy({
             id: uniqueId,
             restrictions: { maxNumberOfFiles: maxFile },
-        }).use(Tus, {
-            endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
-            withCredentials: true,
-            async onBeforeRequest(req) {
-                const token = await getAuthToken()
-                if (token) {
-                    req.setHeader("Authorization", `Bearer ${token}`)
-                }
-            },
-            async onAfterResponse(req, res) {
-                if (res.getStatus() === 401) {
-                    // window.location.href = "/login"
-                    // 直接使用 newUppy 实例
-                    newUppy.info("刷新token")
-                }
-                const url = req.getURL()
-                const value = res.getHeader("Tus2minIoUrl")
-                var occur = value?.indexOf("DO NOT TRY:")
-                if (occur === 0) {
-                    newUppy.info("不要重试，报错" + value, "error", 999000)
-                    newUppy.pauseAll()
-                } else {
-                    const steob = {} as any
-                    steob[url] = value
-                    // 直接使用 newUppy 实例设置状态
-                    newUppy.setState({ ...steob })
-                    // console.log(`Setting state for ${url}: ${value}`)
-                }
-            },
         })
-
+        if (uploadMode === 'tus'){
+            // 配置 Tus 插件
+            newUppy.use(Tus, {
+                id: 'tus-upload',
+                endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
+                withCredentials: true,
+                chunkSize: 5 * 1024 * 1024, // 5MB 分片
+                retryDelays: [0, 1000, 3000, 5000],
+                async onBeforeRequest(req) {
+                    const token = await getAuthToken()
+                    if (token) {
+                        req.setHeader("Authorization", `Bearer ${token}`)
+                    }
+                },
+                async onAfterResponse(req, res) {
+                    if (res.getStatus() === 401) {
+                        newUppy.info("刷新token")
+                    }
+                    const url = req.getURL()
+                    const value = res.getHeader("Tus2minIoUrl")
+                    var occur = value?.indexOf("DO NOT TRY:")
+                    if (occur === 0) {
+                        newUppy.info("不要重试，报错" + value, "error", 999000)
+                        newUppy.pauseAll()
+                    } else {
+                        const steob = {} as any
+                        steob[url] = value
+                        newUppy.setState({ ...steob })
+                        // console.log(`Setting state for ${url}: ${value}`)
+                    }
+                },
+            })
+        }
+        else{
+            // 修复 XHR 插件的 onBeforeRequest
+            newUppy.use(XHRUpload, {
+                id: 'xhr-upload',
+                endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/api/upload`,
+                method: 'POST',
+                formData: true,
+                fieldName: 'files[]',
+                timeout: 300000,
+                limit: 3,
+                async onBeforeRequest(xhr) {
+                    const token =await getAuthToken()
+                    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                },
+                async getResponseData(response: XMLHttpRequest) {
+                    const text = await response.text()
+                    try {
+                        const data = JSON.parse(text)
+                        return data
+                    } catch (e) {
+                        return { url: text }
+                    }
+                },
+                async onAfterResponse(xhr) {
+                    if (xhr.status === 401) {
+                    }
+                    const url = xhr.body?.url || xhr.body?.fileUrl
+                    if (url) {
+                        const steob = {} as any
+                        steob[file.uploadURL] = url
+                        newUppy.setState({ ...steob })
+                    }
+                },
+            })
+        }
         return newUppy
     }
 
     // 初始化 Uppy 实例
     React.useEffect(() => {
-        // 如果实例不存在，创建新实例
         if (!uppyInstance) {
             const newUppy = createUppyInstance()
             setUppyInstance(newUppy)
-            // console.log(`Uppy instance created for repId: ${repId}, hash: ${hash}`)
-        }
-        // 当关键参数变化时，销毁旧实例并创建新实例
-        else {
-            // console.log(`Recreating Uppy instance due to parameter change`)
+        } else {
             uppyInstance.destroy()
             const newUppy = createUppyInstance()
             setUppyInstance(newUppy)
         }
-    }, [repId, hash, maxFile]) // 当这些关键参数变化时重新创建实例
+    }, [repId, hash, maxFile, uploadMode]) // 添加上传模式到依赖
 
     // 当关键参数变化时重新初始化 Uppy 状态
     React.useEffect(() => {
         if (uppyInstance) {
-            // 清理之前的状态
             uppyInstance.cancelAll()
             uppyInstance.setState({ oldfiles: undefined })
-            // 设置新的状态
             uppyInstance.setMeta({ rep: repId, liveDays })
             uppyInstance.setState({ oldfiles: maxFile > 1 ? storeObj : undefined })
-            // console.log(`Uppy state updated for repId: ${repId}, hash: ${hash}`)
         }
     }, [repId, liveDays, uppyInstance, maxFile, storeObj])
 
@@ -155,7 +195,6 @@ export function useUppyUpload({
     React.useEffect(() => {
         return () => {
             if (uppyInstance) {
-                // console.log(`Destroying Uppy instance for repId: ${repId}`)
                 uppyInstance.destroy()
             }
         }
@@ -177,16 +216,13 @@ export function useUppyUpload({
     //【上传应答】结束时刻回调
     const handleUpSuccess = React.useCallback(
         (result: { successful: any[] }) => {
-            // console.log(`Upload success for repId: ${repId}, hash: ${hash}`, result)
             if (!uppyInstance) {
                 console.error("Uppy instance is null in handleUpSuccess")
                 return
             }
             const newUppsta = uppyInstance.getState()
-            // console.log("Uppy state after upload:", newUppsta)
             const more = result.successful.map((up) => {
                 const fileUrl = newUppsta[up.uploadURL]
-                // console.log(`File ${up.name} uploaded to: ${fileUrl}`)
                 return { name: up.name, url: fileUrl, type: up.type }
             })
             const newarr = [...more]
@@ -200,7 +236,6 @@ export function useUppyUpload({
                         onFinish(newfile?.[0] || undefined, false)
                     } else {
                         const { oldfiles } = newUppsta
-                        // console.log("多文件上传完成 - oldfiles:", oldfiles, "newfile:", newfile)
                         const merged = [...((oldfiles as any[]) ?? []), ...(newfile as any[])]
                         onFinish(merged, false)
                     }
@@ -215,14 +250,17 @@ export function useUppyUpload({
         if (!uppyInstance) return
 
         uppyInstance.setOptions({
-            restrictions: { maxNumberOfFiles: thisMaxFiles, maxFileSize: maxSize * 1024 * 1024 },
+            restrictions: {
+                maxNumberOfFiles: thisMaxFiles,
+                maxFileSize: maxSize * 1024 * 1024
+            },
             locale: {
                 strings: {
                     cancel: "还是取消",
                 },
             },
         })
-        // 移除之前的监听器，添加新的
+
         // @ts-ignore
         uppyInstance.off("complete", handleUpSuccess)
         // @ts-ignore
@@ -234,10 +272,57 @@ export function useUppyUpload({
         }
     }, [thisMaxFiles, maxSize, handleUpSuccess, uppyInstance])
 
+    // 上传模式切换处理
+    const handleModeChange = (mode: UploadMode) => {
+        setUploadMode(mode)
+        // 重新验证所有文件的上传方式
+        if (uppyInstance) {
+            uppyInstance.getFiles().forEach(file => {
+                uppyInstance.setFileMeta(file.id, { forcedMode: mode })
+            })
+        }
+    }
+
+    // 上传模式选择器组件
+    const UploadModeSelector = () => (
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+                上传模式选择：
+            </label>
+            <div className="flex flex-wrap gap-2">
+                <button
+                    type="button"
+                    onClick={() => handleModeChange('tus')}
+                    className={`px-3 py-2 text-sm rounded-md transition-colors ${
+                        uploadMode === 'tus'
+                            ? 'bg-green-600 text-white'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                 断点续传模式
+                </button>
+                <button
+                    type="button"
+                    onClick={() => handleModeChange('xhr')}
+                    className={`px-3 py-2 text-sm rounded-md transition-colors ${
+                        uploadMode === 'xhr'
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                 常规模式
+                </button>
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+                {uploadMode === 'tus' && '用 TUS 协议，支持断点续传和超大文件上传'}
+                {uploadMode === 'xhr' && '用标准 HTTP 上传，事务性更好'}
+            </div>
+        </div>
+    )
+
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
     const whenDeleted = React.useCallback(
         (result: any, arIndex: number) => {
-            // console.log(`File deleted for repId: ${repId}, hash: ${hash}, index: ${arIndex}`)
             if ("成功" === result || "不存在" === result) {
                 if (1 === maxFile) {
                     onFinish && onFinish(undefined, true)
@@ -258,12 +343,14 @@ export function useUppyUpload({
     if (!uppyInstance) {
         return [<div key="loading">正在初始化上传组件...</div>]
     }
+
     //单一文件情况的：
     if (1 === maxFile) {
         const onlyOne = (
             <>
                 {openUppy ? (
                     <div key="dashboard">
+                        <UploadModeSelector />
                         <Dashboard uppy={uppyInstance} plugins={["Webcam"]} />
                     </div>
                 ) : storeObj1?.url ? (
@@ -289,13 +376,15 @@ export function useUppyUpload({
                                     e.preventDefault()
                                 }}
                             >
-                             删除旧的
+                                删除旧的
                             </Button>
                         </div>
                     ) : (
-                        <Button size="sm" onClick={scrollHandler}>
-                            {openUppy ? "关闭上传" : "开启上传"}
-                        </Button>
+                        <div className="space-y-2">
+                            <Button size="sm" onClick={scrollHandler}>
+                                {openUppy ? "关闭上传" : "开启上传"}
+                            </Button>
+                        </div>
                     )}
                 </div>
             </>
@@ -336,12 +425,15 @@ export function useUppyUpload({
                 <div className="text-center mt-4">
                     {openUppy && (
                         <div key="dashboard-multi">
+                            <UploadModeSelector />
                             <Dashboard uppy={uppyInstance} plugins={["Webcam"]} />
                         </div>
                     )}
-                    <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
-                        {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
-                    </Button>
+                    <div className="space-y-2">
+                        <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
+                            {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
+                        </Button>
+                    </div>
                 </div>
             </>
         )
