@@ -95,3 +95,39 @@ https://127.0.0.1:9000/ywmast/202511/0305/0ae846dc-ac49-4b79-8469-ca6d0f64f62f.p
 
 https://192.168.0.100:8673/uploadTUS/f53e6b82-b92c-41b5-a2fc-b75633113bb3 xhr
 CORS错误
+
+
+
+Name:
+14a84434-c76c-4cdf-bb4a-ed806330c2b7
+Size:
+2.9 MiB
+Versions:
+1 version, 2.9 MiB
+Last Modified:
+1 minute ago
+ETAG:
+afb61bffe7d1d40e8e974d31da0827a6
+Tags:
+N/A
+Legal Hold:
+Off
+Retention Policy:
+compliance
+Metadata
+Content-Type
+application/pdf
+X-Amz-Meta-Author
+herzhang
+X-Amz-Object-Lock-Mode
+COMPLIANCE
+
+X-Amz-Meta-Filename
+=?UTF-8?b?MzUwNVkxMDAxNTIt5oql5ZGKLnBkZg==?=
+X-Amz-Meta-Rep
+yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA
+
+X-Amz-Object-Lock-Retain-Until-Date
+2025-11-13T08:28:07.816Z
+String liveDays=metas.getOrDefault("liveDays","1");
+uppyInstance.setMeta({ rep: repId, liveDays })

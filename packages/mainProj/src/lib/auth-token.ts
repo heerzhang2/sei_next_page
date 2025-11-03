@@ -3,15 +3,18 @@ import { getSession } from 'next-auth/react';
 // import {useSession} from "next-auth/react";
 
 export async function getAuthToken() {
-  const session=await getSession()
-  if(session?.user?.accessToken)
-    return session?.user?.accessToken;
+    const session = await getSession()
+    if (session?.user?.accessToken) {
+        console.log("[getAuthToken]获得token", session?.user?.accessToken)
+        return session?.user?.accessToken;
+    }
   if (typeof window !== "undefined") {
     try {
       const offlineAuth = localStorage.getItem("offline_auth")
       if (offlineAuth) {
         const authData = JSON.parse(offlineAuth)
         if (authData.accessToken) {
+          console.log("[getAuthToken]获得token2", session?.user?.accessToken)
           return authData.accessToken
         }
         window.location.href = "/login"

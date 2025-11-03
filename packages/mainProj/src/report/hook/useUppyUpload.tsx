@@ -19,6 +19,7 @@ import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
 import { useCallback } from "react"
+import {useAccessToken} from "@/auth/use-access-token";
 
 export type FileStore = {
     name: string
@@ -77,19 +78,10 @@ export function useUppyUpload({
     hash?: string
     id?: string
 }) {
+    // const { accessToken } = useAccessToken()
     const [openUppy, setOpenUppy] = React.useState(false)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>('xhr')
-
-    // 根据文件大小和模式决定使用哪种上传方式
-    const shouldUseTus = React.useCallback((file: any): boolean => {
-        if (uploadMode === 'tus') return true
-        if (uploadMode === 'xhr') return false
-
-        // auto 模式：大文件使用 tus
-        return file.size > 20 * 1024 * 1024 // 20MB 以上使用 tus
-    }, [uploadMode])
-
     // 创建 Uppy 实例的函数
     const createUppyInstance = () => {
         const uniqueId = id ? id : `Report-${repId}-${hash || "default"}`
@@ -103,7 +95,7 @@ export function useUppyUpload({
             newUppy.use(Tus, {
                 id: 'tus-upload',
                 endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
-                withCredentials: true,
+                // withCredentials: true,   避免携带无用很多的cookie到java后端。
                 chunkSize: 5 * 1024 * 1024, // 5MB 分片
                 retryDelays: [0, 1000, 3000, 5000],
                 async onBeforeRequest(req) {
@@ -114,7 +106,7 @@ export function useUppyUpload({
                 },
                 async onAfterResponse(req, res) {
                     if (res.getStatus() === 401) {
-                        newUppy.info("刷新token")
+                        newUppy.info("请重新登录，刷新token")
                     }
                     const url = req.getURL()
                     const value = res.getHeader("Tus2minIoUrl")
@@ -139,29 +131,41 @@ export function useUppyUpload({
                 method: 'POST',
                 formData: true,
                 fieldName: 'files[]',
-                timeout: 300000,
-                limit: 3,
+                timeout: 600000,
+                limit: 1,
+                allowedMetaFields: true,
                 async onBeforeRequest(xhr) {
                     const token =await getAuthToken()
                     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
                 },
-                async getResponseData(response: XMLHttpRequest) {
-                    const text = await response.text()
+                async getResponseData(req: XMLHttpRequest) {
+                    const text = await req.response
                     try {
                         const data = JSON.parse(text)
-                        return data
+                        if (data?.successful) {
+                            //必须返回{url：}对象：这样才能在handleUpSuccess()里面result.successful才能看得到uploadURL，是uppy库转化生成的。
+                            return data?.successful[0]
+                        }
                     } catch (e) {
-                        return { url: text }
                     }
+                    return null
                 },
                 async onAfterResponse(xhr) {
                     if (xhr.status === 401) {
+                        newUppy.info("请重新登录，刷新token")
                     }
-                    const url = xhr.body?.url || xhr.body?.fileUrl
-                    if (url) {
-                        const steob = {} as any
-                        steob[file.uploadURL] = url
-                        newUppy.setState({ ...steob })
+                    try {
+                        const data = JSON.parse(xhr.response)
+                        if (data?.successful) {
+                            const steob = {} as any
+                            //类似TUS的做法，目的是给handleUpSuccess里面的统一处理做法提供支持。
+                            steob[data?.successful[0]?.url] = data?.successful[0]?.url
+                            newUppy.setState({ ...steob })
+                        }else{
+                            console.warn(`上传应答错误`)
+                        }
+                    } catch (e) {
+                        console.error(`上传错误`)
                     }
                 },
             })
@@ -248,24 +252,23 @@ export function useUppyUpload({
     // 设置 Uppy 选项和事件监听
     React.useEffect(() => {
         if (!uppyInstance) return
-
         uppyInstance.setOptions({
             restrictions: {
                 maxNumberOfFiles: thisMaxFiles,
                 maxFileSize: maxSize * 1024 * 1024
             },
             locale: {
+                //参看源代码 /@uppy/core/lib/locale.d.ts
                 strings: {
                     cancel: "还是取消",
                 },
             },
         })
-
+        // uppyInstance.getPlugin()
         // @ts-ignore
         uppyInstance.off("complete", handleUpSuccess)
         // @ts-ignore
         uppyInstance.on("complete", handleUpSuccess)
-
         return () => {
             // @ts-ignore
             uppyInstance.off("complete", handleUpSuccess)
@@ -314,8 +317,8 @@ export function useUppyUpload({
                 </button>
             </div>
             <div className="mt-2 text-xs text-gray-500">
-                {uploadMode === 'tus' && '用 TUS 协议，支持断点续传和超大文件上传'}
-                {uploadMode === 'xhr' && '用标准 HTTP 上传，事务性更好'}
+                {uploadMode === 'tus' && '用 TUS 协议，支持断点续传和巨大超大文件'}
+                {uploadMode === 'xhr' && '用标准 HTTP 上传，事务性更好，最大支持500兆的'}
             </div>
         </div>
     )
@@ -338,11 +341,30 @@ export function useUppyUpload({
 
     const { call: delOssFileFunc } = useOssDeleteFileMutation(whenDeleted)
     const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
-
+    const dashLocale={
+        //参考代码 /@uppy/dashboard/lib/locale.js
+        strings: {
+            browseFiles: '浏览文件夹',
+            dropPasteFiles: '文件拖拉进来或 %{browseFiles}',
+            addMore: '增加更多的',
+            xFilesSelected: {
+                0: '已选择 %{smart_count} 个',
+                1: '已选择 %{smart_count} 个',
+            },
+            uploadXFiles: {
+                0: '上传 %{smart_count}个 文件',
+                1: '上传 %{smart_count}个 文件',
+            },
+            addingMoreFiles: '加更多',
+        },
+    };
     // 如果 Uppy 实例还没有创建，显示加载状态
     if (!uppyInstance) {
         return [<div key="loading">正在初始化上传组件...</div>]
     }
+    // if(!accessToken)  return [ <div className="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
+    //     <h2 className="text-lg font-semibold text-blue-800 mb-2">需重新登录</h2>
+    // </div> ]
 
     //单一文件情况的：
     if (1 === maxFile) {
@@ -351,7 +373,7 @@ export function useUppyUpload({
                 {openUppy ? (
                     <div key="dashboard">
                         <UploadModeSelector />
-                        <Dashboard uppy={uppyInstance} plugins={["Webcam"]} />
+                        <Dashboard uppy={uppyInstance} plugins={["Webcam"]} locale={dashLocale}/>
                     </div>
                 ) : storeObj1?.url ? (
                     <div key="image">
@@ -426,7 +448,7 @@ export function useUppyUpload({
                     {openUppy && (
                         <div key="dashboard-multi">
                             <UploadModeSelector />
-                            <Dashboard uppy={uppyInstance} plugins={["Webcam"]} />
+                            <Dashboard uppy={uppyInstance} plugins={["Webcam"]} locale={dashLocale}/>
                         </div>
                     )}
                     <div className="space-y-2">

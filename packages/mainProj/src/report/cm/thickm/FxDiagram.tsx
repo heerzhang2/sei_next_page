@@ -79,7 +79,7 @@ export const FxDiagram = ({
     const [uploadDom]=useUppyUpload({ repId:rep?.id!,
         maxFile:maxFile, onFinish,
         storeObj: subStore?.[pic] || [],
-        liveDays:10, hash:"FxDiagram_pf"
+        liveDays: 10, hash:"FxDiagram_pf",
     });
     //不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent {某一个表行的记录对象再倒腾一次}。
     const [render] = useFrameEditorBar({
