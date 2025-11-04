@@ -514,3 +514,5 @@ offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9y
 当前=heerzhang3@163.com
 https://v0.app/chat/token-J33xrWw3SgI
 https://uppy.io/docs/uppy/
+不要重试，估计没可用空间:MinIO 上传失败: Failed to connect to /127.0.0.1:9000
+不要重试，估计没可用空间：DO NOT TRY:NoSpace

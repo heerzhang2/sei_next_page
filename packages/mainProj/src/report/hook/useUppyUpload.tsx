@@ -19,6 +19,7 @@ import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
 import { useCallback } from "react"
 import {useAccessToken} from "@/auth/use-access-token";
+import {toast} from "sonner";
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -59,6 +60,7 @@ export const DASH_LOCALE_CONFIG = {
         uploading: '努力上传中',
         uploadPaused: '暂停上传',
         paused: '暂停',
+        resume: '恢复上传',
         uploadComplete: '恭喜干完了',
         complete: '完事',
         done: '返回',
@@ -157,15 +159,16 @@ export function useUppyUpload({
                     }
                     const url = req.getURL()
                     const value = res.getHeader("Tus2minIoUrl")
-                    var occur = value?.indexOf("DO NOT TRY:")
-                    if (occur === 0) {
-                        newUppy.info("不要重试，估计没可用空间：" + value, "error", 999000)
+                    if (value && (value.includes("空间不足") || value.includes("存储服务异常") || value.includes("服务不可用"))) {
+                        newUppy.info("上传失败：" + value, "error", 999000)
+                        toast.error("上传失败", {
+                            description: value
+                        })
                         newUppy.pauseAll()
-                    } else {
+                    } else if (value) {
                         const steob = {} as any
                         steob[url] = value
                         newUppy.setState({ ...steob })
-                        // console.log(`Setting state for ${url}: ${value}`)
                     }
                 },
             })
@@ -187,15 +190,20 @@ export function useUppyUpload({
                 },
                 async getResponseData(req: XMLHttpRequest) {
                     const text = await req.response
+                    let errStr;
                     try {
                         const data = JSON.parse(text)
                         if (data?.successful) {
                             //必须返回{url：}对象：这样才能在handleUpSuccess()里面result.successful才能看得到uploadURL，是uppy库转化生成的。
-                            return data?.successful[0]
+                            const obj=data?.successful[0]
+                            errStr=obj?.error;
+                            if(obj?.url)  return obj
                         }
                     } catch (e) {
                     }
-                    return null
+                    newUppy.info("不要重试，估计没可用空间:"+errStr, "error", 999000)
+                    newUppy.cancelAll()
+                    return {}
                 },
                 async onAfterResponse(xhr) {
                     if (xhr.status === 401) {
@@ -385,10 +393,14 @@ export function useUppyUpload({
             </div>
         </div>
     )
-
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
     const whenDeleted = React.useCallback(
         (result: any, arIndex: number) => {
+            const isError = typeof result === 'string' && result.startsWith("OSS服务不可用");
+            const toastMethod = isError ? toast.error : toast.info;
+            toastMethod("OSS服务器", {
+                description: "文件删除:" + result,
+            });
             if ("成功" === result || "不存在" === result) {
                 if (1 === maxFile) {
                     onFinish && onFinish(undefined, true)
@@ -401,7 +413,6 @@ export function useUppyUpload({
         },
         [maxFile, onFinish, storeObj2, repId, hash],
     )
-
     const { call: delOssFileFunc } = useOssDeleteFileMutation(whenDeleted)
     const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
     const dashLocale = DASH_LOCALE_CONFIG
