@@ -132,3 +132,41 @@ X-Amz-Object-Lock-Retain-Until-Date
 String liveDays=metas.getOrDefault("liveDays","1");
 uppyInstance.setMeta({ rep: repId, liveDays })
 
+eid: repId, liveDays, business
+
+集群环境下，TUS 协议的 请求确实可能因为负载均衡而出现问题， 解决方案，会话超时时间足够长（≥ 文件上传最大预计时间）
+方案 1：会话亲和性（推荐）
+配置负载均衡器的 会话亲和性（Session Affinity）：
+假如# Nginx 配置 nginx
+upstream backend_servers {
+    ip_hash;  # 基于客户端 IP 的会话保持
+    server 192.168.1.10:8080;
+    server 192.168.1.11:8080;
+}
+
+# 或者基于 cookie 的会话保持
+upstream backend_servers {
+    server 192.168.1.10:8080;
+    server 192.168.1.11:8080;
+    sticky cookie srv_id expires=1h domain=.example.com path=/;
+}
+假如# Kubernetes 配置  yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: tus-backend
+spec:
+  selector:
+    app: tus-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  sessionAffinity: ClientIP  # 基于客户端 IP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3小时
+【增强模块】@uppy/golden-retriever 插件会将选中的文件保存在浏览器缓存中，这样即使浏览器崩溃或用户意外关闭标签页，Uppy也能恢复所有内容并继续上传，就像什么都没发生过一样。
+Upload complete
+Complete
+Done

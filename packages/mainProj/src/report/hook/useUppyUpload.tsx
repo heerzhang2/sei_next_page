@@ -14,12 +14,56 @@ import '@uppy/dashboard/css/style.min.css';
 // import "@uppy/webcam/dist/style.min.css"
 // Add custom styles to fix Tailwind conflicts
 import "./uppy-fixes.css"
-
 import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
 import { useCallback } from "react"
 import {useAccessToken} from "@/auth/use-access-token";
+
+// 在组件外部定义语言配置常量
+export const UPPY_LOCALE_CONFIG = {
+    strings: {
+        cancel: "还是取消",
+        failedToUpload: '上传失败 %{file}',
+        exceedsSize: '%{file} 大小超 %{size} 限制',
+        youCanOnlyUploadX: {
+            0: '只能传 %{smart_count} 个文件',
+            1: '只能传 %{smart_count} 个文件',
+        },
+    },
+}
+export const DASH_LOCALE_CONFIG = {
+    strings: {
+        browseFiles: '浏览文件夹',
+        dropPasteFiles: '文件拖拉进来或 %{browseFiles}',
+        addMore: '增加更多',
+        xFilesSelected: {
+            0: '已选择 %{smart_count} 个',
+            1: '已选择 %{smart_count} 个',
+        },
+        uploadXFiles: {
+            0: '上传 %{smart_count}个 文件',
+            1: '上传 %{smart_count}个 文件',
+        },
+        addingMoreFiles: '加更多',
+        retry: '努力再试',
+        uploadFailed: '失败,可能后端或存储系统问题',
+        uploadingXFiles: {
+            0: '在传 %{smart_count} 个文件',
+            1: '在传 %{smart_count} 个文件',
+        },
+        filesUploadedOfTotal: {
+            0: '合计%{smart_count}个 完成 %{complete} 个',
+            1: '合计%{smart_count}个 完成 %{complete} 个',
+        },
+        uploading: '努力上传中',
+        uploadPaused: '暂停上传',
+        paused: '暂停',
+        uploadComplete: '恭喜干完了',
+        complete: '完事',
+        done: '返回',
+    },
+}
 
 export type FileStore = {
     name: string
@@ -46,8 +90,9 @@ export const useScrollHandler = (targetSelector: string) => {
 // 上传模式类型
 type UploadMode = 'tus' | 'xhr'
 
-/**可以支持一个页面 多个上传的面板同时存在的。
- * @param repId 分布式对象存储系统靠这个 rep ID来关联业务系统关系数据库的。
+/**不支持切换页面后回来继续刚才的未完成的上传！tus断点续传也是要求当前网页需要保留在目前状态管理的，不能跳转其他网页去，否则不能正常完成上传。
+ * 可以支持一个页面 多个上传的面板同时存在的。
+ * @param repId 分布式对象存储系统靠这个 eid ID来关联业务系统关系数据库的。
  * @param field  inp?.[field]? 存储上传后的文件对象信息对应inp字段。 _FILE_为前缀的； 数据=可能是{}单个的，也可能多为文件形式[{ }, ]？
  * @param maxFile 设计上的最多文件个数【maxFile决定了file保存是数组还是对象】最多传几个文件； 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
  * @param maxSize  每一个文件大小最大 多少 MB 兆B单位。
@@ -64,10 +109,11 @@ export function useUppyUpload({
                                   storeObj,
                                   maxFile = 1,
                                   liveDays = 2,
-                                  maxSize = 3,
+                                  maxSize = 5,
                                   onFinish,
                                   hash,
                                   id,
+                                  business='rep'
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -77,12 +123,13 @@ export function useUppyUpload({
     onFinish?: (file: any, del: boolean) => void
     hash?: string
     id?: string
+    business?: string
 }) {
     // const { accessToken } = useAccessToken()
     const [openUppy, setOpenUppy] = React.useState(false)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>('xhr')
-    // 创建 Uppy 实例的函数
+    //Uppy实例初始化：【很大的局限性】无法恢复一次路由跳转出去后重新再进来本页面的，删一次挑选的那些尚未完成上传文件，就算TUS也不能恢复状态的，只能不离开页面TUS才能继续干活的。
     const createUppyInstance = () => {
         const uniqueId = id ? id : `Report-${repId}-${hash || "default"}`
         // console.log(`Creating new Uppy instance: ${uniqueId}`)
@@ -95,7 +142,7 @@ export function useUppyUpload({
             newUppy.use(Tus, {
                 id: 'tus-upload',
                 endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
-                // withCredentials: true,   避免携带无用很多的cookie到java后端。
+                withCredentials: true,  //后端集群负载均衡器的 会话亲和性可能需要用到的 基于 cookie 的会话保持
                 chunkSize: 5 * 1024 * 1024, // 5MB 分片
                 retryDelays: [0, 1000, 3000, 5000],
                 async onBeforeRequest(req) {
@@ -112,7 +159,7 @@ export function useUppyUpload({
                     const value = res.getHeader("Tus2minIoUrl")
                     var occur = value?.indexOf("DO NOT TRY:")
                     if (occur === 0) {
-                        newUppy.info("不要重试，报错" + value, "error", 999000)
+                        newUppy.info("不要重试，估计没可用空间：" + value, "error", 999000)
                         newUppy.pauseAll()
                     } else {
                         const steob = {} as any
@@ -190,19 +237,10 @@ export function useUppyUpload({
         if (uppyInstance) {
             uppyInstance.cancelAll()
             uppyInstance.setState({ oldfiles: undefined })
-            uppyInstance.setMeta({ rep: repId, liveDays })
+            uppyInstance.setMeta({ eid: repId, liveDays, business })
             uppyInstance.setState({ oldfiles: maxFile > 1 ? storeObj : undefined })
         }
     }, [repId, liveDays, uppyInstance, maxFile, storeObj])
-
-    // 组件卸载时清理 Uppy 实例
-    React.useEffect(() => {
-        return () => {
-            if (uppyInstance) {
-                uppyInstance.destroy()
-            }
-        }
-    }, [uppyInstance, repId])
 
     //验证存储对象类型
     if (storeObj) {
@@ -216,7 +254,6 @@ export function useUppyUpload({
     const storeObj1 = storeObj as FileStore
     const storeObj2 = storeObj as FileStore[]
     const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : 1
-
     //【上传应答】结束时刻回调
     const handleUpSuccess = React.useCallback(
         (result: { successful: any[] }) => {
@@ -225,16 +262,29 @@ export function useUppyUpload({
                 return
             }
             const newUppsta = uppyInstance.getState()
-            const more = result.successful.map((up) => {
-                const fileUrl = newUppsta[up.uploadURL]
-                return { name: up.name, url: fileUrl, type: up.type }
-            })
-            const newarr = [...more]
-            const cntfile = newarr.length
+            let failUploads = "";
+            const more = result.successful
+                .map((up) => {
+                    const fileUrl = newUppsta[up.uploadURL]
+                    if (!fileUrl) {
+                        failUploads += up.name + "; ";
+                        return null;
+                    }
+                    return { name: up.name, url: fileUrl, type: up.type }
+                })
+                .filter(item => item !== null); // 立即过滤
+            if (failUploads) {
+                uppyInstance.info("上传失败的文件：" + failUploads, "error", 5000);
+            }
+            const newarr = [...more];
+            const cntfile = newarr.length;
             if (cntfile > 0) {
                 setOpenUppy(false)
                 const newfile = newarr?.map(({ name, url }) => ({ name, url }))
-
+                // 上传成功后立即清理相关的 Tus 记录
+                setTimeout(() => {
+                    cleanupTusLocalStorage();
+                }, 2000);
                 if (onFinish) {
                     if (1 === maxFile) {
                         onFinish(newfile?.[0] || undefined, false)
@@ -248,7 +298,6 @@ export function useUppyUpload({
         },
         [maxFile, onFinish, uppyInstance, repId, hash],
     )
-
     // 设置 Uppy 选项和事件监听
     React.useEffect(() => {
         if (!uppyInstance) return
@@ -257,13 +306,7 @@ export function useUppyUpload({
                 maxNumberOfFiles: thisMaxFiles,
                 maxFileSize: maxSize * 1024 * 1024
             },
-            locale: {
-                //参看源代码 /@uppy/core/lib/locale.d.ts
-                strings: {
-                    cancel: "还是取消",
-                    failedToUpload: '上传失败 %{file}',
-                },
-            },
+            locale: UPPY_LOCALE_CONFIG, // 使用常量
         })
         // uppyInstance.getPlugin()
         // @ts-ignore
@@ -275,16 +318,35 @@ export function useUppyUpload({
             uppyInstance.off("complete", handleUpSuccess)
         }
     }, [thisMaxFiles, maxSize, handleUpSuccess, uppyInstance])
+    // 组件卸载时清理 Uppy 实例
+    React.useEffect(() => {
+        // 组件挂载时清理一次
+        cleanupTusLocalStorage();
+        return () => {
+            if (uppyInstance) {
+                uppyInstance.destroy()
+            }
+        }
+    }, [uppyInstance, repId])
 
     // 上传模式切换处理
     const handleModeChange = (mode: UploadMode) => {
         setUploadMode(mode)
-        // 重新验证所有文件的上传方式
         if (uppyInstance) {
+            // 重新设置语言配置
+            uppyInstance.setOptions({
+                locale: UPPY_LOCALE_CONFIG
+            })
+            // 重新验证所有文件的上传方式
             uppyInstance.getFiles().forEach(file => {
                 uppyInstance.setFileMeta(file.id, { forcedMode: mode })
             })
         }
+        // 强制重新渲染 Dashboard
+        setOpenUppy(false)
+        setTimeout(() => {
+            setOpenUppy(true)
+        }, 50) // 更短的延迟
     }
 
     // 上传模式选择器组件
@@ -342,33 +404,43 @@ export function useUppyUpload({
 
     const { call: delOssFileFunc } = useOssDeleteFileMutation(whenDeleted)
     const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
-    const dashLocale={
-        //参考代码 /@uppy/dashboard/lib/locale.js
-        strings: {
-            browseFiles: '浏览文件夹',
-            dropPasteFiles: '文件拖拉进来或 %{browseFiles}',
-            addMore: '增加更多',
-            xFilesSelected: {
-                0: '已选择 %{smart_count} 个',
-                1: '已选择 %{smart_count} 个',
-            },
-            uploadXFiles: {
-                0: '上传 %{smart_count}个 文件',
-                1: '上传 %{smart_count}个 文件',
-            },
-            addingMoreFiles: '加更多',
-            retry: '努力再试',
-            uploadFailed: '失败,可能后端或存储系统问题',
-            uploadingXFiles: {
-                0: '在传 %{smart_count} 个文件',
-                1: '在传 %{smart_count} 个文件',
-            },
-            filesUploadedOfTotal: {
-                0: '合计%{smart_count}个 完成 %{complete} 个',
-                1: '合计%{smart_count}个 完成 %{complete} 个',
-            },
-            uploading: '努力上传中',
-        },
+    const dashLocale = DASH_LOCALE_CONFIG
+    //清理函数
+    const cleanupTusLocalStorage = () => {
+        try {
+            const tusKeys = Object.keys(localStorage).filter(key =>
+                key.startsWith('tus::')
+            );
+            // 简化清理逻辑：只基于时间清理
+            tusKeys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    try {
+                        const tusData = JSON.parse(value);
+                        // 只根据创建时间清理，避免CORS问题
+                        if (tusData && tusData.creationTime) {
+                            const createTime = new Date(tusData.creationTime).getTime();
+                            const now = Date.now();
+                            //超过最大上传时限的时间（2小时），清理
+                            if (now - createTime > 2 * 60 * 60 * 1000) {
+                                localStorage.removeItem(key);
+                                console.log(`清理过期的 Tus 记录: ${key}`);
+                            }
+                        } else {
+                            // 没有创建时间的记录，直接清理
+                            localStorage.removeItem(key);
+                            console.log(`清理无效的 Tus 记录: ${key}`);
+                        }
+                    } catch (e) {
+                        // 解析失败的直接清理
+                        localStorage.removeItem(key);
+                        console.log(`清理格式错误的 Tus 记录: ${key}`);
+                    }
+                }
+            });
+        } catch (error) {
+            console.warn('清理 Tus localStorage 失败:', error);
+        }
     };
     // 如果 Uppy 实例还没有创建，显示加载状态
     if (!uppyInstance) {
@@ -406,7 +478,7 @@ export function useUppyUpload({
                                 size="sm"
                                 variant="destructive"
                                 onClick={(e) => {
-                                    delOssFileFunc(storeObj1?.url, 0, "rep", repId)
+                                    delOssFileFunc(storeObj1?.url, 0, "eid", repId)
                                     e.preventDefault()
                                 }}
                             >
@@ -446,7 +518,7 @@ export function useUppyUpload({
                                     type="button"
                                     variant="outline"
                                     onClick={(e) => {
-                                        delOssFileFunc(url, i, "rep", repId)
+                                        delOssFileFunc(url, i, "eid", repId)
                                         e.preventDefault()
                                     }}
                                 >
