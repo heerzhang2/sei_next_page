@@ -261,6 +261,7 @@ export function useUppyUpload({
                 //参看源代码 /@uppy/core/lib/locale.d.ts
                 strings: {
                     cancel: "还是取消",
+                    failedToUpload: '上传失败 %{file}',
                 },
             },
         })
@@ -346,7 +347,7 @@ export function useUppyUpload({
         strings: {
             browseFiles: '浏览文件夹',
             dropPasteFiles: '文件拖拉进来或 %{browseFiles}',
-            addMore: '增加更多的',
+            addMore: '增加更多',
             xFilesSelected: {
                 0: '已选择 %{smart_count} 个',
                 1: '已选择 %{smart_count} 个',
@@ -356,6 +357,17 @@ export function useUppyUpload({
                 1: '上传 %{smart_count}个 文件',
             },
             addingMoreFiles: '加更多',
+            retry: '努力再试',
+            uploadFailed: '失败,可能后端或存储系统问题',
+            uploadingXFiles: {
+                0: '在传 %{smart_count} 个文件',
+                1: '在传 %{smart_count} 个文件',
+            },
+            filesUploadedOfTotal: {
+                0: '合计%{smart_count}个 完成 %{complete} 个',
+                1: '合计%{smart_count}个 完成 %{complete} 个',
+            },
+            uploading: '努力上传中',
         },
     };
     // 如果 Uppy 实例还没有创建，显示加载状态
