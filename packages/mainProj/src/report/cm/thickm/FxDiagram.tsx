@@ -20,6 +20,7 @@ import {JumpTab} from "@/report/common/JumpTab";
 import {FootMensLine} from "@/report/common/view";
 import {ImageComponent} from "@/components/shub";
 import {cn} from "@/lib/utils";
+import {useOfflineUppyUpload} from "@/report/hook/useOfflineUppyUpload";
 
 /*上传图+说明;
 * */
@@ -76,10 +77,10 @@ export const FxDiagram = ({
     }, [modType,redId, storage, modified,pic, setStorage,setModified]);
 
     //【特殊】导航hash:"FxDiagram_pf"是给右边的编辑器用的，而通常的hash都是配合用于左边的著内容列表做的导航。
-    const [uploadDom]=useUppyUpload({ repId:rep?.id!,
+    const [uploadDom]=useOfflineUppyUpload({ repId:rep?.id!,
         maxFile:maxFile, onFinish,
         storeObj: subStore?.[pic] || [],
-        liveDays: 10, hash:"FxDiagram_pf", maxSize:6
+        liveDays: 10, hash:"FxDiagram_pf", maxSize:800
     });
     //不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent {某一个表行的记录对象再倒腾一次}。
     const [render] = useFrameEditorBar({

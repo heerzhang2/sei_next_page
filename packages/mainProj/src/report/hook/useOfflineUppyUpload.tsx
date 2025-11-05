@@ -1,9 +1,13 @@
+
 "use client"
 
 import { useEffect, useCallback, useRef } from "react"
 import { useUppyUpload, type FileStore } from "./useUppyUpload"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
+import {Button} from "@/components/ui/button"
+import { Clock } from "lucide-react"
+import { toast } from "sonner"
 
 /**
  * Enhanced useUppyUpload with offline support
@@ -112,5 +116,31 @@ export function useOfflineUppyUpload(params: {
         [onFinish, repId, hash],
     )
 
-    return [uploadDom]
+    const SaveStateButton = () => (
+        <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+                if (uppyInstanceRef.current) {
+                    await saveUppyState(uppyInstanceRef.current)
+                    toast.success("已保存", {
+                        description: "文件操作状态已保存，可稍后恢复",
+                    })
+                }
+            }}
+            className="mt-2"
+        >
+            <Clock className="w-4 h-4 mr-2" />
+            记住未完成的文件操作
+        </Button>
+    )
+
+    return [
+        <div key="offline-uppy-wrapper">
+            {uploadDom}
+            <SaveStateButton />
+        </div>,
+        saveUppyState,
+    ] as const
 }

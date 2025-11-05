@@ -25,6 +25,7 @@ import { AuthCompQuery } from "@/component/header-wrapper"
 import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
 import Link from "next/link"
 import { PendingReportsManager } from "@/components/pending-reports-manager"
+import { FileOperationsManager } from "@/components/file-operations-manager"
 
 export default function OfflinePage() {
     const { data: session } = useSession()
@@ -58,10 +59,11 @@ export default function OfflinePage() {
                     <h1 className="text-3xl font-bold">离线问题排查</h1>
                     <p className="text-gray-600 dark:text-gray-400">管理离线状态、报告的离线变更队列、变更保存冲突</p>
                 </div>
-                <Tabs defaultValue={activeTab}  className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                <Tabs defaultValue={activeTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="status">系统状态</TabsTrigger>
                         <TabsTrigger value="pending">待发送报告</TabsTrigger>
+                        <TabsTrigger value="files">文件操作队列</TabsTrigger>
                         <TabsTrigger value="conflict">版本冲突</TabsTrigger>
                     </TabsList>
 
@@ -199,6 +201,21 @@ export default function OfflinePage() {
                             </CardHeader>
                             <CardContent>
                                 <PendingReportsManager />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="files" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Activity className="w-5 h-5" />
+                                    文件操作队列管理
+                                </CardTitle>
+                                <CardDescription>管理待处理的文件上传和删除操作</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <FileOperationsManager />
                             </CardContent>
                         </Card>
                     </TabsContent>
