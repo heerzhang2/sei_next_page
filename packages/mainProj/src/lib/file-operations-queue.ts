@@ -24,7 +24,8 @@ export type FileOperation = {
         name: string
         type: string
         size: number
-        data: ArrayBuffer // File content
+        data?: File // Changed from ArrayBuffer to File
+        lastModified?: number
     }
     uploadMeta?: {
         eid: string
@@ -49,7 +50,8 @@ export type UppyStateSnapshot = {
         name: string
         type: string
         size: number
-        data?: ArrayBuffer
+        data?: File // Changed from ArrayBuffer to File
+        lastModified?: number
         progress?: number
         uploadURL?: string
     }>

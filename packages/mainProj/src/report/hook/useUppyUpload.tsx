@@ -230,7 +230,6 @@ export function useUppyUpload({
                     if (errStr.includes("Failed to connect to")) errStr = "OSS存储集群服务不可用"
                     toast.error("上传失败", {
                         description: errStr,
-                        duration: 9000,
                     })
                     newUppy.cancelAll()
                     return {}
@@ -299,14 +298,30 @@ export function useUppyUpload({
     const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : 1
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
     const whenDeleted = React.useCallback(
-        (result: any, arIndex: number) => {
+        async (result: any, arIndex: number) => {
             const isError = typeof result === "string" && (result.startsWith("OSS服务不可用") || result.startsWith("未登录"))
             const toastMethod = isError ? toast.error : toast.info
             toastMethod("文件删除", {
                 description: "结果: " + (result === "未登录" ? "失败，请重新登录" : result),
                 duration: isError ? 9000 : 2000,
             })
-            if ("成功" === result || "文件不存在" === result) {
+
+            if (isError) {
+                const deleteUrl = maxFile === 1 ? storeObj1?.url : storeObj2?.[arIndex]?.url
+                if (deleteUrl) {
+                    await fileOperationsQueue.addOperation({
+                        type: "delete",
+                        repId,
+                        hash: hash || "default",
+                        business,
+                        deleteUrl,
+                        deleteIndex: arIndex,
+                    })
+                    toast.info("已加入队列", {
+                        description: "删除操作将在网络恢复后自动重试",
+                    })
+                }
+            } else if ("成功" === result || "文件不存在" === result) {
                 if (1 === maxFile) {
                     onFinish && onFinish(undefined, true)
                 } else {
@@ -316,7 +331,7 @@ export function useUppyUpload({
                 }
             }
         },
-        [maxFile, onFinish, storeObj2, repId, hash],
+        [maxFile, onFinish, storeObj2, storeObj1, repId, hash, business],
     )
     const { call: delOssFileFunc } = useOssDeleteFileMutation(whenDeleted)
     //【上传应答】结束时刻回调
@@ -639,7 +654,7 @@ export function useUppyUpload({
             </>
         )
 
-        return [onlyOne]
+        return [onlyOne, uppyInstance] as const
     } else if (maxFile > 1) {
         const manyMore = (
             <>
@@ -662,6 +677,6 @@ export function useUppyUpload({
             </>
         )
 
-        return [manyMore]
-    } else return []
+        return [manyMore, uppyInstance] as const
+    } else return [null, null] as const
 }
