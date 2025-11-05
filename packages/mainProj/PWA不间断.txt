@@ -170,3 +170,20 @@ spec:
 Upload complete
 Complete
 Done
+
+
+https://192.168.171.3:8673/uploadTUS/
+
+authorization
+Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MjMwOTc1NCwiZGV2aWNlSWQiOiJlMnM4dGx5IiwiZXhwIjoxNzYyMzExNzU0fQ.0jnt30K4y67Fu7VxcSHopIu3-xF-eL9B38ZVsLIDMHLG74uUwv4gfrsVWftx20DB-uy4DUQKxcvMlVpHMlWdPg
+
+upload-metadata
+eid eUFFcThodmVTYS1aWGdVeUtIRUVIVkpsY0c5eWRB,liveDays MTA=,business cmVw,relativePath bnVsbA==,name 5Y6f5aeL6K6w5b2VKDAxKS5wZGY=,type YXBwbGljYXRpb24vcGRm,filetype YXBwbGljYXRpb24vcGRm,filename 5Y6f5aeL6K6w5b2VKDAxKS5wZGY=
+
+tus-resumable
+1.0.0
+upload-length
+1069974
+
+
+curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"  -H "Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MjMxMjI3NywiZGV2aWNlSWQiOiJlMnM4dGx5IiwiZXhwIjoxNzYyMzE0Mjc3fQ.wrXNrENlhSH3o_3BXlLkQxEXCuZqO3Tt14cBAYYQMofFjt4greMWdXxekaf9uuSJiDfWRBSGXuvTABc3Vo6S0A" -H "Tus-Resumable: 1.0.0"  -H "Upload-Length: 1024"  --http1.1  -k -v

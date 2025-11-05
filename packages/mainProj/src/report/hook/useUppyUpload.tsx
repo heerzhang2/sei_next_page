@@ -144,8 +144,8 @@ export function useUppyUpload({
             newUppy.use(Tus, {
                 id: 'tus-upload',
                 endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
-                withCredentials: true,  //后端集群负载均衡器的 会话亲和性可能需要用到的 基于 cookie 的会话保持
-                chunkSize: 5 * 1024 * 1024, // 5MB 分片
+                withCredentials: true,
+                chunkSize: 5 * 1024 * 1024,
                 retryDelays: [0, 1000, 3000, 5000],
                 async onBeforeRequest(req) {
                     const token = await getAuthToken()
@@ -154,21 +154,47 @@ export function useUppyUpload({
                     }
                 },
                 async onAfterResponse(req, res) {
-                    if (res.getStatus() === 401) {
-                        newUppy.info("请重新登录，刷新token")
+                    const status = res.getStatus()
+                    if (status === 401) {
+                        toast.error("上传失败", {
+                            description: "请重新登录，刷新token"
+                        })
                     }
                     const url = req.getURL()
                     const value = res.getHeader("Tus2minIoUrl")
-                    if (value && (value.includes("空间不足") || value.includes("存储服务异常") || value.includes("服务不可用"))) {
-                        newUppy.info("上传失败：" + value, "error", 999000)
-                        toast.error("上传失败", {
+        // 存储服务相关的错误
+                    if (status === 503) {
+                        const errorMessage = value || "无服务"
+                        newUppy.info(`Upload failed: ${errorMessage}`, "error", 999000)
+                        toast.error("OSS存储服务问题", {
+                            description: errorMessage,
+                            duration: 8000
+                        })
+                        newUppy.pauseAll()
+                    }
+        // 存储空间不足等业务错误
+                    else if (value && value.includes("Insufficient storage space")) {
+                        newUppy.info("Upload failed: Insufficient storage space", "error", 999000)
+                        toast.error("存储", {
+                            description: "可写磁盘容量不足"
+                        })
+                        newUppy.pauseAll()
+                    }
+        // 其他服务器错误
+                    else if (status >= 500) {
+                        toast.error("Server Error", {
                             description: value
                         })
                         newUppy.pauseAll()
-                    } else if (value) {
+                    }
+                    else if (value) {
                         const steob = {} as any
                         steob[url] = value
                         newUppy.setState({ ...steob })
+                        // 可选：显示成功提示
+                        toast.success("Upload successful", {
+                            description: "File uploaded successfully"
+                        })
                     }
                 },
             })
@@ -202,12 +228,22 @@ export function useUppyUpload({
                     } catch (e) {
                     }
                     newUppy.info("不要重试，估计没可用空间:"+errStr, "error", 999000)
+                    if(errStr.includes("Failed to connect to"))   errStr="OSS存储集群服务不可用";
+                    toast.error("上传失败", {
+                        description: errStr,
+                        duration: 9000
+                    })
                     newUppy.cancelAll()
                     return {}
                 },
                 async onAfterResponse(xhr) {
                     if (xhr.status === 401) {
                         newUppy.info("请重新登录，刷新token")
+                    }
+                    if (xhr.status === 403) {
+                        toast.error("上传失败", {
+                            description: "请重新登录，刷新token"
+                        })
                     }
                     try {
                         const data = JSON.parse(xhr.response)
@@ -396,12 +432,15 @@ export function useUppyUpload({
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
     const whenDeleted = React.useCallback(
         (result: any, arIndex: number) => {
-            const isError = typeof result === 'string' && result.startsWith("OSS服务不可用");
+            const isError = typeof result === 'string' && (result.startsWith("OSS服务不可用")
+                || result.startsWith("未登录")
+            );
             const toastMethod = isError ? toast.error : toast.info;
-            toastMethod("OSS服务器", {
-                description: "文件删除:" + result,
+            toastMethod("文件删除", {
+                description: "结果: " + (result==="未登录"? "失败，请重新登录": result),
+                duration: isError? 9000 : 2000,
             });
-            if ("成功" === result || "不存在" === result) {
+            if ("成功" === result || "文件不存在" === result) {
                 if (1 === maxFile) {
                     onFinish && onFinish(undefined, true)
                 } else {
