@@ -516,3 +516,65 @@ https://v0.app/chat/token-J33xrWw3SgI?utm_source=heerzhang3-9544&utm_medium=refe
 https://uppy.io/docs/uppy/
 File System Access API https://developer.chrome.google.cn/docs/capabilities/web-apis/file-system-access?hl=zh-cn
 授予访问权限的 FileSystemHandle 上调用过 FileSystemHandle.requestPermission() 方法
+
+{key: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:FxDiagram_pf', repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', hash: 'FxDiagram_pf', timestamp: 1762418108971, files: Array(1), …}
+files
+:
+Array(1)
+0
+:
+data
+:
+null
+fileHandle
+:
+{handle: FileSystemFileHandle, fileName: 'win7.exe', fileType: 'application/octet-stream', size: 11438400, lastModified: 1504749292000}
+id
+:
+"offline-1762418103938-0"
+isOffline
+:
+true
+lastModified
+:
+1504749292000
+name
+:
+"win7.exe"
+progress
+:
+0
+size
+:
+11438400
+type
+:
+"application/octet-stream"
+uploadURL
+:
+""
+length
+:
+1
+hash
+:
+"FxDiagram_pf"
+key
+:
+"yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:FxDiagram_pf"
+meta
+:
+No properties
+oldfiles
+:
+Array(0)
+length
+:
+0
+repId
+:
+"yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"
+timestamp
+:
+1762418108971
+

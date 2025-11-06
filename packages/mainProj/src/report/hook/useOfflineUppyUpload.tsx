@@ -2,12 +2,12 @@
 
 "use client"
 
-import { useEffect, useCallback, useRef } from "react"
+import { useEffect, useCallback, useRef, useState } from "react"
 import { useUppyUpload, type FileStore } from "./useUppyUpload"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
-import { Clock } from "lucide-react"
+import { Clock, Upload, FileText } from "lucide-react"
 import { toast } from "sonner"
 
 // 检查浏览器是否支持 File System Access API
@@ -19,9 +19,6 @@ const isFileSystemAccessSupported = () => {
 // 验证文件权限
 async function verifyPermission(fileHandle: FileSystemFileHandle, readWrite: boolean = false) {
     const options: any = {};
-    if (readWrite) {
-        options.mode = 'readwrite';
-    }
     // 检查是否已经获得权限
     if ((await fileHandle.queryPermission(options)) === 'granted') {
         return true;
@@ -34,22 +31,23 @@ async function verifyPermission(fileHandle: FileSystemFileHandle, readWrite: boo
     return false;
 }
 
-// 获取文件句柄（让用户选择原始文件）
-const getFileHandle = async (file: File): Promise<{
+// 选择文件并获取句柄（离线准备模式）
+const selectFilesForOffline = async (): Promise<Array<{
     handle: FileSystemFileHandle;
     fileName: string;
     fileType: string;
     size: number;
-    lastModified: number
-} | null> => {
+    lastModified: number;
+}> | null> => {
     if (!isFileSystemAccessSupported()) {
+        toast.error("浏览器不支持文件系统访问 API")
         return null
     }
 
     try {
-        // 使用 showOpenFilePicker 让用户选择原始文件
+        // 使用 showOpenFilePicker 让用户选择文件
         const handles = await (window as any).showOpenFilePicker({
-            multiple: false,
+            multiple: true,
             types: [{
                 description: 'All Files',
                 accept: { '*/*': [] },
@@ -60,40 +58,35 @@ const getFileHandle = async (file: File): Promise<{
             return null
         }
 
-        const handle = handles[0]
+        const fileHandles = await Promise.all(
+            handles.map(async (handle: FileSystemFileHandle) => {
+                // 验证权限
+                const hasPermission = await verifyPermission(handle, true)
+                if (!hasPermission) {
+                    throw new Error("用户未授予文件访问权限")
+                }
 
-        // 验证权限
-        const hasPermission = await verifyPermission(handle, false)
-        if (!hasPermission) {
-            console.warn("用户未授予文件访问权限")
-            return null
-        }
-
-        // 获取文件信息进行验证
-        const fileFromHandle = await handle.getFile()
-
-        // 验证文件是否匹配（大小和名称）
-        if (fileFromHandle.size !== file.size) {
-            console.warn("选择的文件大小不匹配")
-            toast.warning("文件不匹配", {
-                description: "请选择原始文件以确保正确恢复",
+                const file = await handle.getFile()
+                return {
+                    handle,
+                    fileName: file.name,
+                    fileType: file.type,
+                    size: file.size,
+                    lastModified: file.lastModified
+                }
             })
-            return null
-        }
+        )
 
-        return {
-            handle,
-            fileName: file.name,
-            fileType: file.type,
-            size: file.size,
-            lastModified: file.lastModified
-        }
+        return fileHandles
     } catch (error) {
         // 用户取消选择不是错误
         if (error instanceof DOMException && error.name === 'AbortError') {
             console.log("用户取消了文件选择")
         } else {
-            console.warn("Failed to get file handle, falling back to data storage:", error)
+            console.warn("Failed to select files for offline:", error)
+            toast.error("选择文件失败", {
+                description: "无法访问所选文件，请确保授予了必要的权限",
+            })
         }
         return null
     }
@@ -138,7 +131,7 @@ const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
     })
 }
 
-// 优化的文件存储策略
+// 优化的文件存储策略（用于 Uppy 文件的保存）
 const optimizeFileStorage = async (file: File): Promise<{
     data?: ArrayBuffer | File;
     fileHandle?: any;
@@ -187,6 +180,7 @@ export function useOfflineUppyUpload(params: {
     const { repId, hash, onFinish } = params
     const [uploadDom, uppyInstance] = useUppyUpload({...params, open: true})
     const uppyInstanceRef = useRef<Uppy | null>(null)
+    const [offlineFiles, setOfflineFiles] = useState<any[]>([])
     const stateKey = `${repId}${hash ? `:${hash}` : ""}`
 
     useEffect(() => {
@@ -195,6 +189,7 @@ export function useOfflineUppyUpload(params: {
         }
     }, [uppyInstance])
 
+    // 保存 Uppy 当前状态（正常上传模式）
     const saveUppyState = useCallback(
         async (uppy: Uppy) => {
             if (!uppy) return
@@ -264,58 +259,118 @@ export function useOfflineUppyUpload(params: {
         },
         [repId, hash, stateKey],
     )
+    // 选择文件用于离线模式
+    const selectOfflineFiles = useCallback(async () => {
+        const fileHandles = await selectFilesForOffline()
+        if (!fileHandles || fileHandles.length === 0) return
 
-    // 为文件获取持久化句柄
-    const getFileHandles = useCallback(async (uppy: Uppy) => {
-        if (!uppy) return
+        // 获取现有的 meta 数据
+        const currentState = await fileOperationsQueue.loadUppyState(repId, undefined, hash)
+        const existingMeta = currentState?.meta || {}
 
-        const files = uppy.getFiles()
-        if (files.length === 0) {
-            toast.info("没有需要保存的文件")
-            return
+        // 如果没有 meta 数据，创建默认的 meta
+        const defaultMeta = {
+            eid: repId,
+            liveDays: params.liveDays || 2,
+            business: params.business || "rep"
         }
+        const finalMeta = { ...defaultMeta, ...existingMeta }
 
-        let handledCount = 0
+        // 保存离线文件句柄到 IndexedDB
+        const offlineFilesData = fileHandles.map((fileHandle, index) => ({
+            id: `offline-${Date.now()}-${index}`,
+            name: fileHandle.fileName,
+            type: fileHandle.fileType,
+            size: fileHandle.size,
+            data: null,
+            fileHandle: fileHandle,
+            lastModified: fileHandle.lastModified,
+            progress: 0,
+            uploadURL: '',
+            isOffline: true, // 标记为离线文件
+            // 添加必要的 Uppy 文件属性
+            meta: {
+                name: fileHandle.fileName,
+                type: fileHandle.fileType,
+                size: fileHandle.size,
+                lastModified: fileHandle.lastModified,
+                relativePath: ''
+            }
+        }))
 
-        for (const file of files) {
-            if (!(file.data instanceof File)) continue
+        const existingFiles = currentState?.files || []
 
+        await fileOperationsQueue.saveUppyState({
+            key: stateKey,
+            repId,
+            hash: hash || "default",
+            timestamp: Date.now(),
+            files: [...existingFiles, ...offlineFilesData],
+            meta: finalMeta, // 使用正确的 meta 数据
+            oldfiles: currentState?.oldfiles || [],
+        })
+
+        setOfflineFiles(prev => [...prev, ...offlineFilesData])
+
+        toast.success("离线文件已保存", {
+            description: `已添加 ${fileHandles.length} 个文件到离线队列`,
+        })
+    }, [repId, hash, stateKey, params.liveDays, params.business])
+
+    // 将离线文件转移到 Uppy 进行上传;
+    const transferOfflineFilesToUppy = useCallback(async () => {
+        if (!uppyInstanceRef.current || offlineFiles.length === 0) return
+
+        let transferredCount = 0
+
+        // 获取当前的 meta 数据
+        const currentMeta = uppyInstanceRef.current.getState().meta || {}
+
+        for (const offlineFile of offlineFiles) {
             try {
-                toast.info(`请选择文件 "${file.name}" 的原始位置`, {
-                    duration: 3000,
-                })
-
-                const fileHandleData = await getFileHandle(file.data as File)
-                if (fileHandleData) {
-                    // 更新存储状态，添加文件句柄
-                    const currentState = await fileOperationsQueue.loadUppyState(repId, undefined, hash)
-                    if (currentState) {
-                        const updatedFiles = currentState.files.map(f =>
-                            f.id === file.id ? { ...f, fileHandle: fileHandleData } : f
-                        )
-
-                        await fileOperationsQueue.saveUppyState({
-                            ...currentState,
-                            files: updatedFiles,
-                            timestamp: Date.now(),
-                        })
-
-                        handledCount++
-                        console.log(`[OfflineUppy] Saved file handle for: ${file.name}`)
+                const file = await restoreFileFromHandle(offlineFile.fileHandle)
+                if (file) {
+                    const fileToAdd = {
+                        name: offlineFile.name,
+                        type: offlineFile.type,
+                        data: file,
+                        meta: {
+                            relativePath: '',
+                            lastModified: offlineFile.lastModified || Date.now(),
+                            ...currentMeta
+                        }
                     }
+
+                    uppyInstanceRef.current.addFile(fileToAdd)
+                    transferredCount++
+
+                    console.log(`[OfflineUppy] Transferred offline file to Uppy:`, offlineFile.name)
                 }
             } catch (error) {
-                console.warn(`Failed to get file handle for ${file.name}:`, error)
+                console.error("Failed to transfer offline file to Uppy:", offlineFile.name, error)
             }
         }
 
-        if (handledCount > 0) {
-            toast.success(`已为 ${handledCount} 个文件保存本地引用`)
-        } else {
-            toast.info("未保存任何文件引用")
-        }
-    }, [repId, hash])
+        if (transferredCount > 0) {
+            // 从状态中移除已转移的离线文件
+            const currentState = await fileOperationsQueue.loadUppyState(repId, undefined, hash)
+            if (currentState) {
+                const updatedFiles = currentState.files.filter(f => !f.isOffline)
+                await fileOperationsQueue.saveUppyState({
+                    ...currentState,
+                    files: updatedFiles,
+                })
+            }
 
+            setOfflineFiles([])
+            toast.success(`已转移 ${transferredCount} 个文件到上传队列`)
+
+            // Uppy 会自动处理文件添加和显示，不需要手动刷新
+            console.log(`[OfflineUppy] Successfully transferred ${transferredCount} files to Uppy`)
+        }
+    }, [offlineFiles, repId, hash])
+
+// 恢复状态（包括正常文件和离线文件）
     useEffect(() => {
         const restoreState = async () => {
             const snapshot = await fileOperationsQueue.loadUppyState(repId, undefined, hash)
@@ -324,8 +379,21 @@ export function useOfflineUppyUpload(params: {
             console.log("[OfflineUppy] Restoring state:", snapshot.files.length, "files")
             uppyInstanceRef.current.pauseAll()
 
+            // 先设置 meta 数据
+            if (snapshot.meta) {
+                uppyInstanceRef.current.setMeta(snapshot.meta)
+            } else {
+                // 设置默认 meta
+                uppyInstanceRef.current.setMeta({
+                    eid: repId,
+                    liveDays: params.liveDays || 2,
+                    business: params.business || "rep"
+                })
+            }
+
             let restoredCount = 0
             let fromHandleCount = 0
+            const offlineFilesList: any[] = []
 
             for (const fileData of snapshot.files) {
                 try {
@@ -337,11 +405,16 @@ export function useOfflineUppyUpload(params: {
                         if (fileToRestore) {
                             fromHandleCount++
                             console.log("[OfflineUppy] Restored from file handle:", fileData.name)
+
+                            // 如果是离线文件，保存到状态中
+                            if (fileData.isOffline) {
+                                offlineFilesList.push(fileData)
+                            }
                         }
                     }
 
-                    // 如果文件句柄恢复失败，尝试从数据恢复
-                    if (!fileToRestore && fileData.data) {
+                    // 如果文件句柄恢复失败，尝试从数据恢复（仅限正常文件）
+                    if (!fileToRestore && fileData.data && !fileData.isOffline) {
                         if (fileData.data instanceof File) {
                             fileToRestore = fileData.data
                         } else if (fileData.data instanceof ArrayBuffer) {
@@ -359,45 +432,46 @@ export function useOfflineUppyUpload(params: {
                         continue
                     }
 
-                    const files = uppyInstanceRef.current.getFiles()
-                    const fileExists = files.some(file =>
-                        file.name === fileData.name && file.size === fileData.size
-                    )
+                    // 只将正常文件添加到 Uppy，离线文件保持独立
+                    if (!fileData.isOffline) {
+                        const files = uppyInstanceRef.current.getFiles()
+                        const fileExists = files.some(file =>
+                            file.name === fileData.name && file.size === fileData.size
+                        )
 
-                    if (!fileExists) {
-                        const fileToAdd = {
-                            name: fileData.name,
-                            type: fileData.type,
-                            data: fileToRestore,
-                            meta: {
-                                relativePath: '',
-                                lastModified: fileData.lastModified || Date.now()
+                        if (!fileExists) {
+                            const fileToAdd = {
+                                name: fileData.name,
+                                type: fileData.type,
+                                data: fileToRestore,
+                                meta: {
+                                    relativePath: '',
+                                    lastModified: fileData.lastModified || Date.now(),
+                                    // 包含必要的 meta 数据
+                                    ...snapshot.meta
+                                }
                             }
+                            uppyInstanceRef.current.addFile(fileToAdd)
+                            restoredCount++
                         }
-                        uppyInstanceRef.current.addFile(fileToAdd)
-                        restoredCount++
                     }
                 } catch (error) {
                     console.error("[OfflineUppy] Failed to restore file:", fileData.name, error)
                 }
             }
 
-            if (snapshot.meta) {
-                uppyInstanceRef.current.setMeta(snapshot.meta)
-            }
+            // 更新离线文件状态
+            setOfflineFiles(offlineFilesList)
+
             if (snapshot.oldfiles) {
                 uppyInstanceRef.current.setState({ oldfiles: snapshot.oldfiles })
             }
 
-            console.log(`[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles)`)
+            console.log(`[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles), ${offlineFilesList.length} offline files`)
 
-            if (restoredCount > 0) {
-                toast.success(`已恢复 ${restoredCount} 个文件`, {
-                    description: "可以继续上传操作",
-                })
-            } else if (snapshot.files.length > 0) {
-                toast.warning("文件恢复失败", {
-                    description: "无法恢复已保存的文件状态，请重新选择文件",
+            if (restoredCount > 0 || offlineFilesList.length > 0) {
+                toast.success(`恢复完成`, {
+                    description: `已恢复 ${restoredCount} 个上传文件，${offlineFilesList.length} 个离线文件`,
                 })
             }
         }
@@ -405,7 +479,7 @@ export function useOfflineUppyUpload(params: {
         setTimeout(() => {
             restoreState()
         }, 100)
-    }, [repId, hash])
+    }, [repId, hash, params.liveDays, params.business])
 
     const enhancedOnFinish = useCallback(
         async (file: any, del: boolean) => {
@@ -417,44 +491,67 @@ export function useOfflineUppyUpload(params: {
         [onFinish, repId, hash],
     )
 
-    const SaveStateButton = () => (
-        <div className="flex gap-2 mt-2">
-            <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                    if (uppyInstanceRef.current) {
-                        await saveUppyState(uppyInstanceRef.current)
-                    }
-                }}
-            >
-                <Clock className="w-4 h-4 mr-2" />
-                保存上传状态
-            </Button>
-
-            {isFileSystemAccessSupported() && (
+    const ActionButtons = () => (
+        <div className="flex flex-col gap-2 mt-2">
+            {/* 正常上传模式操作 */}
+            <div className="flex gap-2">
                 <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={async () => {
                         if (uppyInstanceRef.current) {
-                            await getFileHandles(uppyInstanceRef.current)
+                            await saveUppyState(uppyInstanceRef.current)
                         }
                     }}
                 >
-                    <Clock className="w-4 h-4 mr-2" />
-                    关联本地文件
+                    <Upload className="w-4 h-4 mr-2" />
+                    保存上传状态
                 </Button>
-            )}
+            </div>
+
+            {/* 离线准备模式操作 */}
+            <div className="border-t pt-2">
+                <p className="text-xs text-gray-500 mb-2">离线准备模式：</p>
+                <div className="flex gap-2">
+                    {isFileSystemAccessSupported() && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={selectOfflineFiles}
+                        >
+                            <FileText className="w-4 h-4 mr-2" />
+                            选择离线文件
+                        </Button>
+                    )}
+
+                    {offlineFiles.length > 0 && (
+                        <Button
+                            type="button"
+                            variant="default"
+                            size="sm"
+                            onClick={transferOfflineFilesToUppy}
+                        >
+                            <Upload className="w-4 h-4 mr-2" />
+                            开始上传离线文件 ({offlineFiles.length})
+                        </Button>
+                    )}
+                </div>
+
+                {offlineFiles.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-600">
+                        已准备 {offlineFiles.length} 个离线文件等待上传
+                    </div>
+                )}
+            </div>
         </div>
     )
 
     return [
         <div key="offline-uppy-wrapper">
             {uploadDom}
-            <SaveStateButton />
+            <ActionButtons />
         </div>,
         saveUppyState,
     ] as const
