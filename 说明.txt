@@ -513,7 +513,6 @@ offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9y
 【3】/26 Bearer%20bMtCVMY2iC28dzdwXBv4uwTh
 当前=heerzhang3@163.com
 https://uppy.io/docs/uppy/
-不要重试，估计没可用空间:MinIO 上传失败: Failed to connect to /127.0.0.1:9000
-不要重试，估计没可用空间：DO NOT TRY:NoSpace
 https://v0.app/chat/token-J33xrWw3SgI
 File System Access API https://developer.chrome.google.cn/docs/capabilities/web-apis/file-system-access?hl=zh-cn
+授予访问权限的 FileSystemHandle 上调用过 FileSystemHandle.requestPermission() 方法

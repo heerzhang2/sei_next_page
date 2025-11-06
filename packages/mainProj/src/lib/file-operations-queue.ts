@@ -143,7 +143,9 @@ class FileOperationsQueue {
             const index = store.index("status")
             const request = index.getAll("pending")
 
-            request.onsuccess = () => resolve(request.result as FileOperation[])
+            request.onsuccess = () => resolve(
+                request.result as FileOperation[]
+            )
             request.onerror = () => reject(request.error)
         })
     }

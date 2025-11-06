@@ -237,6 +237,7 @@ export function useUppyUpload({
                 async onAfterResponse(xhr) {
                     if (xhr.status === 401) {
                         newUppy.info("请重新登录，刷新token")
+                        return
                     }
                     if (xhr.status === 403) {
                         toast.error("上传失败", {
