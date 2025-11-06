@@ -13,110 +13,7 @@ import { toast } from "sonner"
 // 检查浏览器是否支持 File System Access API
 const isFileSystemAccessSupported = () => {
     return typeof window !== 'undefined' &&
-        'showOpenFilePicker' in window
-}
-
-// 验证文件权限
-async function verifyPermission(fileHandle: FileSystemFileHandle, readWrite: boolean = false) {
-    const options: any = {};
-    if (readWrite) {
-        options.mode = 'readwrite';
-    }
-    // 检查是否已经获得权限
-    if ((await fileHandle.queryPermission(options)) === 'granted') {
-        return true;
-    }
-    // 请求权限
-    if ((await fileHandle.requestPermission(options)) === 'granted') {
-        return true;
-    }
-    // 用户未授予权限
-    return false;
-}
-
-// 获取文件句柄（让用户选择原始文件）
-const getFileHandle = async (file: File): Promise<{
-    handle: FileSystemFileHandle;
-    fileName: string;
-    fileType: string;
-    size: number;
-    lastModified: number
-} | null> => {
-    if (!isFileSystemAccessSupported()) {
-        return null
-    }
-
-    try {
-        // 使用 showOpenFilePicker 让用户选择原始文件
-        const handles = await (window as any).showOpenFilePicker({
-            multiple: false,
-            types: [{
-                description: 'All Files',
-                accept: { '*/*': [] },
-            }],
-        })
-
-        if (handles.length === 0) {
-            return null
-        }
-
-        const handle = handles[0]
-
-        // 验证权限
-        const hasPermission = await verifyPermission(handle, false)
-        if (!hasPermission) {
-            console.warn("用户未授予文件访问权限")
-            return null
-        }
-
-        // 获取文件信息进行验证
-        const fileFromHandle = await handle.getFile()
-
-        // 验证文件是否匹配（大小和名称）
-        if (fileFromHandle.size !== file.size) {
-            console.warn("选择的文件大小不匹配")
-            toast.warning("文件不匹配", {
-                description: "请选择原始文件以确保正确恢复",
-            })
-            return null
-        }
-
-        return {
-            handle,
-            fileName: file.name,
-            fileType: file.type,
-            size: file.size,
-            lastModified: file.lastModified
-        }
-    } catch (error) {
-        // 用户取消选择不是错误
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            console.log("用户取消了文件选择")
-        } else {
-            console.warn("Failed to get file handle, falling back to data storage:", error)
-        }
-        return null
-    }
-}
-
-// 从文件句柄恢复 File 对象
-const restoreFileFromHandle = async (fileHandleData: any): Promise<File | null> => {
-    if (!fileHandleData?.handle) return null
-
-    try {
-        // 验证权限
-        const hasPermission = await verifyPermission(fileHandleData.handle)
-        if (!hasPermission) {
-            console.warn("没有权限访问保存的文件句柄")
-            return null
-        }
-
-        const file = await fileHandleData.handle.getFile()
-        return file
-    } catch (error) {
-        console.error("Failed to restore file from handle:", error)
-        return null
-    }
+        'showSaveFilePicker' in window
 }
 
 // 辅助函数：将 ArrayBuffer 转换回 File 对象
@@ -128,7 +25,60 @@ const arrayBufferToFile = (arrayBuffer: ArrayBuffer, fileName: string, fileType:
     })
 }
 
-// 将 File 转换为 ArrayBuffer
+// 保存文件到文件系统并获取句柄
+const saveFileWithHandle = async (file: File): Promise<{
+    handle: FileSystemFileHandle;
+    fileName: string;
+    fileType: string;
+    size: number;
+    lastModified: number
+} | null> => {
+    if (!isFileSystemAccessSupported()) {
+        return null
+    }
+
+    try {
+        // 使用 showSaveFilePicker 让用户选择保存位置
+        const handle = await (window as any).showSaveFilePicker({
+            suggestedName: file.name,
+            types: [{
+                description: 'File',
+                accept: { [file.type]: [`.${file.name.split('.').pop()}`] },
+            }],
+        })
+
+        // 创建可写流并写入文件
+        const writable = await handle.createWritable()
+        await writable.write(file)
+        await writable.close()
+
+        return {
+            handle,
+            fileName: file.name,
+            fileType: file.type,
+            size: file.size,
+            lastModified: file.lastModified
+        }
+    } catch (error) {
+        console.warn("Failed to save file handle, falling back to data storage:", error)
+        return null
+    }
+}
+
+// 从文件句柄恢复 File 对象
+const restoreFileFromHandle = async (fileHandleData: any): Promise<File | null> => {
+    if (!fileHandleData?.handle) return null
+
+    try {
+        const file = await fileHandleData.handle.getFile()
+        return file
+    } catch (error) {
+        console.error("Failed to restore file from handle:", error)
+        return null
+    }
+}
+
+// 将 File 转换为 ArrayBuffer（用于不支持文件句柄的情况）
 const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
@@ -143,29 +93,38 @@ const optimizeFileStorage = async (file: File): Promise<{
     data?: ArrayBuffer | File;
     fileHandle?: any;
 }> => {
+    // 存储策略：
+    // - 小文件（< 2MB）：直接存储 File 对象（性能最佳）
+    // - 中等文件（2MB - 10MB）：存储 ArrayBuffer
+    // - 大文件（> 10MB）：警告用户可能无法离线保存
+
     if (file.size < 2 * 1024 * 1024) {
+        // 小文件：直接存储 File 对象
         return { data: file }
     } else if (file.size <= 10 * 1024 * 1024) {
+        // 中等文件：存储 ArrayBuffer
         try {
             const arrayBuffer = await fileToArrayBuffer(file)
             return { data: arrayBuffer }
         } catch (error) {
             console.warn("[OfflineUppy] Failed to convert file to ArrayBuffer:", error)
-            return { data: file }
+            return { data: file } // 回退到 File 对象
         }
     } else {
+        // 大文件：警告用户
         console.warn("[OfflineUppy] Large file detected, offline storage may be limited:", file.name, file.size)
         toast.warning("大文件提示", {
             description: `文件 "${file.name}" 较大，离线存储功能可能受限`,
             duration: 5000,
         })
 
+        // 仍然尝试存储 ArrayBuffer，但用户需知有风险
         try {
             const arrayBuffer = await fileToArrayBuffer(file)
             return { data: arrayBuffer }
         } catch (error) {
             console.warn("[OfflineUppy] Failed to process large file:", error)
-            return { data: file }
+            return { data: file } // 回退到 File 对象
         }
     }
 }
@@ -207,12 +166,14 @@ export function useOfflineUppyUpload(params: {
                 return
             }
 
+            // 显示保存提示
             toast.info("正在保存文件状态...", {
                 duration: 2000,
             })
 
             const filesWithData = await Promise.all(
                 files.map(async (file) => {
+                    // 检查文件数据是否为 File 对象
                     if (!(file.data instanceof File)) {
                         console.warn("[OfflineUppy] File data is not a File object:", file.name)
                         return {
@@ -229,6 +190,8 @@ export function useOfflineUppyUpload(params: {
                     }
 
                     const fileData = file.data as File
+
+                    // 使用优化的存储策略
                     const storageResult = await optimizeFileStorage(fileData)
 
                     return {
@@ -256,7 +219,10 @@ export function useOfflineUppyUpload(params: {
             })
 
             const fileCount = filesWithData.length
-            console.log(`[OfflineUppy] Saved state: ${stateKey}, ${fileCount} files`)
+            const smallFileCount = filesWithData.filter(f => f.data instanceof File).length
+            const arrayBufferCount = filesWithData.filter(f => f.data instanceof ArrayBuffer).length
+
+            console.log(`[OfflineUppy] Saved state: ${stateKey}, ${fileCount} files (${smallFileCount} small files, ${arrayBufferCount} buffers)`)
 
             toast.success("保存成功", {
                 description: `已保存 ${fileCount} 个文件的状态`,
@@ -265,56 +231,38 @@ export function useOfflineUppyUpload(params: {
         [repId, hash, stateKey],
     )
 
-    // 为文件获取持久化句柄
-    const getFileHandles = useCallback(async (uppy: Uppy) => {
+    // 单独的文件句柄保存函数（在用户手势中直接调用）
+    const saveFilesWithHandles = useCallback(async (uppy: Uppy) => {
         if (!uppy) return
 
         const files = uppy.getFiles()
-        if (files.length === 0) {
-            toast.info("没有需要保存的文件")
-            return
-        }
+        if (files.length === 0) return
 
-        let handledCount = 0
+        toast.info("请选择文件保存位置...", {
+            duration: 3000,
+        })
+
+        let savedCount = 0
 
         for (const file of files) {
             if (!(file.data instanceof File)) continue
 
             try {
-                toast.info(`请选择文件 "${file.name}" 的原始位置`, {
-                    duration: 3000,
-                })
-
-                const fileHandleData = await getFileHandle(file.data as File)
+                const fileHandleData = await saveFileWithHandle(file.data as File)
                 if (fileHandleData) {
-                    // 更新存储状态，添加文件句柄
-                    const currentState = await fileOperationsQueue.loadUppyState(repId, undefined, hash)
-                    if (currentState) {
-                        const updatedFiles = currentState.files.map(f =>
-                            f.id === file.id ? { ...f, fileHandle: fileHandleData } : f
-                        )
-
-                        await fileOperationsQueue.saveUppyState({
-                            ...currentState,
-                            files: updatedFiles,
-                            timestamp: Date.now(),
-                        })
-
-                        handledCount++
-                        console.log(`[OfflineUppy] Saved file handle for: ${file.name}`)
-                    }
+                    // 更新存储状态
+                    await fileOperationsQueue.updateUppyStateWithHandle(stateKey, file.id, fileHandleData)
+                    savedCount++
                 }
             } catch (error) {
-                console.warn(`Failed to get file handle for ${file.name}:`, error)
+                console.warn(`Failed to save file handle for ${file.name}:`, error)
             }
         }
 
-        if (handledCount > 0) {
-            toast.success(`已为 ${handledCount} 个文件保存本地引用`)
-        } else {
-            toast.info("未保存任何文件引用")
+        if (savedCount > 0) {
+            toast.success(`已保存 ${savedCount} 个文件的本地副本`)
         }
-    }, [repId, hash])
+    }, [stateKey])
 
     useEffect(() => {
         const restoreState = async () => {
@@ -322,20 +270,25 @@ export function useOfflineUppyUpload(params: {
             if (!snapshot || !uppyInstanceRef.current) return
 
             console.log("[OfflineUppy] Restoring state:", snapshot.files.length, "files")
+
+            // 先暂停 Uppy 的所有活动
             uppyInstanceRef.current.pauseAll()
 
             let restoredCount = 0
-            let fromHandleCount = 0
+            let smallFileCount = 0
+            let arrayBufferCount = 0
 
             for (const fileData of snapshot.files) {
                 try {
                     let fileToRestore: File | null = null
 
-                    // 优先从文件句柄恢复
+                    // 恢复策略：
+                    // 1. 优先从文件句柄恢复
+                    // 2. 然后从数据恢复（File 对象或 ArrayBuffer）
+
                     if (fileData.fileHandle) {
                         fileToRestore = await restoreFileFromHandle(fileData.fileHandle)
                         if (fileToRestore) {
-                            fromHandleCount++
                             console.log("[OfflineUppy] Restored from file handle:", fileData.name)
                         }
                     }
@@ -344,6 +297,8 @@ export function useOfflineUppyUpload(params: {
                     if (!fileToRestore && fileData.data) {
                         if (fileData.data instanceof File) {
                             fileToRestore = fileData.data
+                            smallFileCount++
+                            console.log("[OfflineUppy] Restored from File object:", fileData.name)
                         } else if (fileData.data instanceof ArrayBuffer) {
                             fileToRestore = arrayBufferToFile(
                                 fileData.data,
@@ -351,6 +306,8 @@ export function useOfflineUppyUpload(params: {
                                 fileData.type,
                                 fileData.lastModified
                             )
+                            arrayBufferCount++
+                            console.log("[OfflineUppy] Restored from ArrayBuffer:", fileData.name)
                         }
                     }
 
@@ -360,8 +317,11 @@ export function useOfflineUppyUpload(params: {
                     }
 
                     const files = uppyInstanceRef.current.getFiles()
+
+                    // 检查文件是否已经存在
                     const fileExists = files.some(file =>
-                        file.name === fileData.name && file.size === fileData.size
+                        file.name === fileData.name &&
+                        file.size === fileData.size
                     )
 
                     if (!fileExists) {
@@ -374,6 +334,7 @@ export function useOfflineUppyUpload(params: {
                                 lastModified: fileData.lastModified || Date.now()
                             }
                         }
+
                         uppyInstanceRef.current.addFile(fileToAdd)
                         restoredCount++
                     }
@@ -382,14 +343,17 @@ export function useOfflineUppyUpload(params: {
                 }
             }
 
+            // 恢复元数据
             if (snapshot.meta) {
                 uppyInstanceRef.current.setMeta(snapshot.meta)
             }
+
+            // 恢复 oldfiles 状态
             if (snapshot.oldfiles) {
                 uppyInstanceRef.current.setState({ oldfiles: snapshot.oldfiles })
             }
 
-            console.log(`[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles)`)
+            console.log(`[OfflineUppy] State restoration completed: ${restoredCount}/${snapshot.files.length} files restored (${smallFileCount} small files, ${arrayBufferCount} buffers)`)
 
             if (restoredCount > 0) {
                 toast.success(`已恢复 ${restoredCount} 个文件`, {
@@ -402,6 +366,7 @@ export function useOfflineUppyUpload(params: {
             }
         }
 
+        // 延迟恢复状态，确保 Uppy 完全初始化
         setTimeout(() => {
             restoreState()
         }, 100)
@@ -440,12 +405,12 @@ export function useOfflineUppyUpload(params: {
                     size="sm"
                     onClick={async () => {
                         if (uppyInstanceRef.current) {
-                            await getFileHandles(uppyInstanceRef.current)
+                            await saveFilesWithHandles(uppyInstanceRef.current)
                         }
                     }}
                 >
                     <Clock className="w-4 h-4 mr-2" />
-                    关联本地文件
+                    保存文件到本地
                 </Button>
             )}
         </div>

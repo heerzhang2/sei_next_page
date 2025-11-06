@@ -45,7 +45,7 @@ export type FileOperation = {
 }
 
 export type UppyStateSnapshot = {
-    key: string // Format: "repId:subrid:hash"
+    key: string
     repId: string
     subrid?: string
     hash: string
@@ -55,7 +55,8 @@ export type UppyStateSnapshot = {
         name: string
         type: string
         size: number
-        data?: File | ArrayBuffer // 允许 File 或 ArrayBuffer
+        data?: ArrayBuffer | File // 文件数据（ArrayBuffer 或 File 对象）
+        fileHandle?: any // 文件句柄（用于大文件）
         lastModified?: number
         progress?: number
         uploadURL?: string
