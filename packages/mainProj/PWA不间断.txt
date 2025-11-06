@@ -187,3 +187,6 @@ upload-length
 
 
 curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"  -H "Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MjMxMjI3NywiZGV2aWNlSWQiOiJlMnM4dGx5IiwiZXhwIjoxNzYyMzE0Mjc3fQ.wrXNrENlhSH3o_3BXlLkQxEXCuZqO3Tt14cBAYYQMofFjt4greMWdXxekaf9uuSJiDfWRBSGXuvTABc3Vo6S0A" -H "Tus-Resumable: 1.0.0"  -H "Upload-Length: 1024"  --http1.1  -k -v
+[文件离线问题]**通用回调处理器**方案
+序列化回调参数而不是函数本身。系统会在队列中存储 `modType`、`redId`、`fieldPath` 等参数，从 `/offline` 页面处理队列时，通用处理器根据这些参数直接更新 storageContext，无需导航到原始编辑器页面。这样既保持了灵活性，又避免了复杂的页面跳转逻辑。
+

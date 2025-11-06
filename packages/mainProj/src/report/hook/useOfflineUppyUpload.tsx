@@ -72,18 +72,18 @@ export function useOfflineUppyUpload(params: {
 
             for (const fileData of snapshot.files) {
                 // if (fileData.data instanceof File)
-                    try {
-                        const files=uppyInstanceRef.current.getFiles()
-                        if(files.length===0) {
-                            uppyInstanceRef.current.addFile({
-                                name: fileData.name,
-                                type: fileData.type,
-                                data: fileData.data,
-                            })
-                        }
-                    } catch (error) {
-                        console.error("[OfflineUppy] Failed to restore file:", fileData.name, error)
+                try {
+                    const files=uppyInstanceRef.current.getFiles()
+                    if(files.length===0) {
+                        uppyInstanceRef.current.addFile({
+                            name: fileData.name,
+                            type: fileData.type,
+                            data: fileData.data,
+                        })
                     }
+                } catch (error) {
+                    console.error("[OfflineUppy] Failed to restore file:", fileData.name, error)
+                }
             }
 
             if (snapshot.meta) {

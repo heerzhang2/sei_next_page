@@ -37,6 +37,11 @@ export type FileOperation = {
     deleteIndex?: number
     // Result data
     result?: any
+    callbackParams?: {
+        modType: string // e.g., "THICK_MS"
+        redId: string | number // Record ID
+        fieldPath: string // e.g., "_FILE_S简图"
+    }
 }
 
 export type UppyStateSnapshot = {
@@ -143,9 +148,7 @@ class FileOperationsQueue {
             const index = store.index("status")
             const request = index.getAll("pending")
 
-            request.onsuccess = () => resolve(
-                request.result as FileOperation[]
-            )
+            request.onsuccess = () => resolve(request.result as FileOperation[])
             request.onerror = () => reject(request.error)
         })
     }

@@ -231,7 +231,7 @@ export function useUppyUpload({
                     toast.error("上传失败", {
                         description: errStr,
                     })
-                    newUppy.cancelAll()
+                    // newUppy.cancelAll()
                     return {}
                 },
                 async onAfterResponse(xhr) {
