@@ -55,7 +55,7 @@ export type UppyStateSnapshot = {
         name: string
         type: string
         size: number
-        data?: File // Changed from ArrayBuffer to File
+        data?: File | ArrayBuffer // 允许 File 或 ArrayBuffer
         lastModified?: number
         progress?: number
         uploadURL?: string

@@ -117,6 +117,7 @@ export function useUppyUpload({
                                   hash,
                                   id,
                                   business = "rep",
+                                  open,
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -127,8 +128,9 @@ export function useUppyUpload({
     hash?: string
     id?: string
     business?: string
+    open?: boolean
 }) {
-    const [openUppy, setOpenUppy] = React.useState(false)
+    const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
     const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
@@ -525,7 +527,7 @@ export function useUppyUpload({
     )
 
     const renderSingleFile = () => {
-        if (openUppy) {
+        if (openUppy && uppyInstance) {
             return (
                 <div key="dashboard">
                     <UploadModeSelector />
@@ -571,7 +573,7 @@ export function useUppyUpload({
                     })}
                 </div>
                 <div className="text-center mt-4">
-                    {openUppy && (
+                    {openUppy && uppyInstance && (
                         <div key="dashboard-multi">
                             <UploadModeSelector />
                             <Dashboard uppy={uppyInstance} plugins={["Webcam"]} locale={dashLocale} />

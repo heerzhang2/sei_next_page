@@ -25,7 +25,7 @@ export function useOfflineFileOperations() {
         })
         return unsubscribe
     }, [])
-
+    //同一个报告同一个编辑器的文件处理组件： 合并/ 跳转当前的未处理/ 支持来源组件原位置能恢复记住的未完成操作 /或直接在offline页面一起排队处理了。
     const processUpload = useCallback(async (operation: FileOperation): Promise<void> => {
         if (!operation.file || !operation.uploadMeta) {
             throw new Error("Missing upload data")
@@ -41,6 +41,7 @@ export function useOfflineFileOperations() {
         formData.append("business", operation.uploadMeta.business)
 
         const token = await getAuthToken()
+        //XHR模式：不是恢复@uppy的组件UI然后再点击按钮做上传的：或者直接用tus-client.js做的？UI需要加载组件然后稳定了点击模拟触发等待事件应答-确认结束上传回调，结束继续队列下一个的操作。
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_END}/api/upload`, {
             method: "POST",
             headers: {
