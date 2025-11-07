@@ -14,24 +14,19 @@ const isFileSystemAccessSupported = () => {
     return typeof window !== 'undefined' &&
         'showOpenFilePicker' in window
 }
-
 // 验证文件权限
 async function verifyPermission(fileHandle: FileSystemFileHandle, readWrite: boolean = false) {
     const options: any = { mode: readWrite ? 'readwrite' : 'read' };
-
     try {
         // 检查当前权限状态
         let permission = await fileHandle.queryPermission(options);
         console.log(`[OfflineUppy] Current permission: ${permission}`);
-
         if (permission === 'granted') {
             return true;
         }
-
         // 请求权限
         permission = await fileHandle.requestPermission(options);
         console.log(`[OfflineUppy] Requested permission: ${permission}`);
-
         return permission === 'granted';
     } catch (error) {
         console.error("[OfflineUppy] Error verifying permission:", error);
@@ -69,7 +64,7 @@ const selectFilesWithHandles = async (): Promise<Array<{
         const fileHandles = await Promise.all(
             handles.map(async (handle: FileSystemFileHandle) => {
                 // 验证权限
-                const hasPermission = await verifyPermission(handle, true)
+                const hasPermission = await verifyPermission(handle, false)
                 if (!hasPermission) {
                     throw new Error("用户未授予文件访问权限")
                 }

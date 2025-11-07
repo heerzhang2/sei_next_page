@@ -100,6 +100,7 @@ type UploadMode = "tus" | "xhr"
  * @param storeObj 对象或数组， 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
  * @return {} 节点DOM
  * 【局限性】一个编辑器页面内不能放置多个useUppyUpload来做上传，因为uppy全局变量？，必须独立？ 走类似的useUppyUploadM。
+ * TUS目前在切换路由页面再回来组件重新加载场景下，从indexDB恢复旧的上传的情况下：不管那个记住方式都会从零开始重新上传，而不是接着上次暂停位置续传的，可能被中断很长的时间，集群#后端状态也没保存。
  * */
 export function useUppyUpload({
                                   repId,
@@ -154,9 +155,8 @@ export function useUppyUpload({
                 async onAfterResponse(req, res) {
                     const status = res.getStatus()
                     if (status === 401) {
-                        toast.error("上传失败", {
-                            description: "请重新登录，刷新token",
-                        })
+                        newUppy.info("需刷新token")
+                        window.dispatchEvent(new CustomEvent("token:refresh-needed"));
                     }
                     const url = req.getURL()
                     const value = res.getHeader("Tus2minIoUrl")
@@ -189,8 +189,8 @@ export function useUppyUpload({
                         steob[url] = value
                         newUppy.setState({ ...steob })
                         // 可选：显示成功提示
-                        toast.success("Upload successful", {
-                            description: "File uploaded successfully",
+                        toast.success("成功", {
+                            description: "上传完成",
                         })
                     }
                 },
