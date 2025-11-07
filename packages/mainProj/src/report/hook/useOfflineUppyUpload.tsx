@@ -6,8 +6,9 @@ import { useUppyUpload, type FileStore } from "./useUppyUpload"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
-import { Clock, Upload, FileText, FolderOpen } from "lucide-react"
+import { Clock, Upload, FileText, FolderOpen, Trash2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 // 检查浏览器是否支持 File System Access API
 const isFileSystemAccessSupported = () => {
@@ -238,10 +239,28 @@ const addFilesWithHandlesToUppy = async (uppy: Uppy, repId: string, business: st
 
     return addedCount
 }
-// 删除 selectOfflineFiles 函数
-// 删除 transferOfflineFilesToUppy 函数
-// 删除 offlineFiles 状态及相关逻辑
-// 简化 ActionButtons 组件
+// 生成状态存储的key
+const generateStateKey = (params: {
+    repId: string
+    subrid?: string
+    fieldPath?: string
+    hash?: string
+}) => {
+    const { repId, subrid, fieldPath, hash } = params
+    let key = repId
+    if (subrid) key += `:${subrid}`
+    if (fieldPath) key += `:${fieldPath}`
+    if (hash) key += `:${hash}`
+    return key
+}
+
+// 获取当前页面URL用于恢复
+const getCurrentPageUrl = () => {
+    if (typeof window !== 'undefined') {
+        return window.location.href
+    }
+    return ''
+}
 
 export function useOfflineUppyUpload(params: {
     repId: string
@@ -256,11 +275,20 @@ export function useOfflineUppyUpload(params: {
     modType?: string
     redId?: string
     fieldPath?: string
+    subrid?: string
 }) {
-    const { repId, hash, onFinish } = params
+    const { repId, hash, onFinish, subrid, fieldPath } = params
     const [uploadDom, uppyInstance] = useUppyUpload({...params, open: true})
     const uppyInstanceRef = useRef<Uppy | null>(null)
-    const stateKey = `${repId}${hash ? `:${hash}` : ""}`
+    const router = useRouter()
+
+    // 生成状态key
+    const stateKey = generateStateKey({
+        repId,
+        subrid,
+        fieldPath,
+        hash
+    })
 
     useEffect(() => {
         if (uppyInstance) {
@@ -268,15 +296,21 @@ export function useOfflineUppyUpload(params: {
         }
     }, [uppyInstance])
 
-    // 保存 Uppy 当前状态（正常上传模式）
+    // 保存 Uppy 当前状态（统一的手动保存）
     const saveUppyState = useCallback(
         async (uppy: Uppy) => {
-            if (!uppy) return
+            if (!uppy) {
+                toast.error("Uppy 实例未初始化")
+                return
+            }
 
             const files = uppy.getFiles()
-            if (files.length === 0) {
+            const oldfiles = uppy.getState().oldfiles || []
+
+            // 如果没有待上传文件且没有已上传文件，无需保存
+            if (files.length === 0 && oldfiles.length === 0) {
                 toast.info("无需保存", {
-                    description: "当前没有待上传的文件",
+                    description: "当前没有需要保存的文件状态",
                 })
                 return
             }
@@ -291,7 +325,7 @@ export function useOfflineUppyUpload(params: {
                     if (file.meta.fileHandle) {
                         console.log(`[FileHandle] Saving file with handle: ${file.name}`)
                         return {
-                            id: file.id, // 确保保存文件ID
+                            id: file.id,
                             name: file.name,
                             type: file.type,
                             size: file.size,
@@ -300,7 +334,7 @@ export function useOfflineUppyUpload(params: {
                             lastModified: file.data.lastModified,
                             progress: file.progress?.percentage,
                             uploadURL: file.uploadURL,
-                            isHandleMode: true, // 确保标记为文件句柄模式
+                            isHandleMode: true,
                         }
                     }
                     // 传统模式：保存文件数据
@@ -339,23 +373,60 @@ export function useOfflineUppyUpload(params: {
             await fileOperationsQueue.saveUppyState({
                 key: stateKey,
                 repId,
+                subrid,
                 hash: hash || "default",
                 timestamp: Date.now(),
                 files: filesWithData,
-                meta: uppy.getState().meta,
-                oldfiles: uppy.getState().oldfiles,
+                meta: {
+                    ...uppy.getState().meta,
+                    originalPageUrl: getCurrentPageUrl(), // 保存当前页面URL
+                    fieldPath: fieldPath, // 保存字段路径
+                },
+                oldfiles: oldfiles,
             })
 
             const fileCount = filesWithData.length
             const handleModeCount = filesWithData.filter(f => f.isHandleMode).length
-            console.log(`[OfflineUppy] Saved state: ${stateKey}, ${fileCount} files (${handleModeCount} with handles)`)
+            const oldFileCount = oldfiles.length
+
+            console.log(`[OfflineUppy] Saved state: ${stateKey}, ${fileCount} pending files (${handleModeCount} with handles), ${oldFileCount} uploaded files`)
 
             toast.success("保存成功", {
-                description: `已保存 ${fileCount} 个文件的状态（${handleModeCount} 个使用文件句柄）`,
+                description: `已保存 ${fileCount} 个待上传文件（${handleModeCount} 个使用文件句柄）和 ${oldFileCount} 个已上传文件的状态`,
             })
         },
-        [repId, hash, stateKey],
+        [repId, hash, stateKey, subrid, fieldPath],
     )
+
+    // 取消保存的状态
+    const cancelSavedState = useCallback(async () => {
+        try {
+            await fileOperationsQueue.removeUppyState(repId, subrid,
+                fieldPath ? `${fieldPath}${hash ? `:${hash}` : ''}` : hash)
+
+            toast.success("状态已清除", {
+                description: "已移除所有保存的文件状态",
+            })
+
+            // 可选：重新加载页面以清除所有状态
+            // window.location.reload()
+        } catch (error) {
+            console.error("[OfflineUppy] Failed to remove saved state:", error)
+            toast.error("清除状态失败")
+        }
+    }, [repId, subrid, fieldPath, hash])
+
+    // 检查是否有保存的状态
+    const [hasSavedState, setHasSavedState] = useState(false)
+
+    useEffect(() => {
+        const checkSavedState = async () => {
+            const snapshot = await fileOperationsQueue.loadUppyState(repId, subrid,
+                fieldPath ? `${fieldPath}${hash ? `:${hash}` : ''}` : hash)
+            setHasSavedState(!!snapshot)
+        }
+        checkSavedState()
+    }, [repId, subrid, fieldPath, hash])
 
     // 通过文件句柄方式添加文件到 Uppy
     const addFilesWithHandles = useCallback(async () => {
@@ -379,21 +450,21 @@ export function useOfflineUppyUpload(params: {
     // 恢复状态（包括正常文件和离线文件）
     useEffect(() => {
         const restoreState = async () => {
-            const snapshot = await fileOperationsQueue.loadUppyState(repId, undefined, hash)
+            const snapshot = await fileOperationsQueue.loadUppyState(repId, subrid,
+                fieldPath ? `${fieldPath}${hash ? `:${hash}` : ''}` : hash)
+
             if (!snapshot || !uppyInstanceRef.current) {
                 console.log("[OfflineUppy] No snapshot or Uppy instance available")
+                setHasSavedState(false)
                 return
             }
 
-            console.log("[OfflineUppy] Restoring state:", snapshot.files.length, "files")
-            console.log("[OfflineUppy] Snapshot details:", {
-                files: snapshot.files.map(f => ({
-                    name: f.name,
-                    hasHandle: !!f.fileHandle,
-                    isHandleMode: f.isHandleMode,
-                    hasData: !!f.data
-                }))
-            })
+            console.log("[OfflineUppy] Restoring state:", snapshot.files.length, "pending files", snapshot.oldfiles?.length, "uploaded files")
+
+            // 如果有原始页面URL且当前在离线页面，显示返回按钮
+            if (snapshot.meta?.originalPageUrl && window.location.pathname.includes('/offline')) {
+                console.log("[OfflineUppy] Currently in offline page, can return to:", snapshot.meta.originalPageUrl)
+            }
 
             uppyInstanceRef.current.pauseAll()
 
@@ -413,7 +484,7 @@ export function useOfflineUppyUpload(params: {
             let fromHandleCount = 0
             let handleFailures = 0
             let addFailures = 0
-
+            //文件恢复
             for (const fileData of snapshot.files) {
                 try {
                     console.log(`[OfflineUppy] Processing file: ${fileData.name}`, {
@@ -542,7 +613,7 @@ export function useOfflineUppyUpload(params: {
             }
 
             console.log(`[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles)`)
-            console.log(`[OfflineUppy] Restoration failures - handles: ${handleFailures}, adds: ${addFailures}`)
+            setHasSavedState(true)
 
             if (restoredCount > 0) {
                 toast.success(`恢复完成`, {
@@ -558,17 +629,18 @@ export function useOfflineUppyUpload(params: {
         // 延迟执行以确保 Uppy 完全初始化
         setTimeout(() => {
             restoreState()
-        }, 500) // 增加延迟时间
-    }, [repId, hash, params.liveDays, params.business])
+        }, 500)
+    }, [repId, hash, params.liveDays, params.business, subrid, fieldPath])
 
     const enhancedOnFinish = useCallback(
         async (file: any, del: boolean) => {
             if (onFinish) {
                 onFinish(file, del)
             }
-            await fileOperationsQueue.removeUppyState(repId, undefined, hash)
+            // 文件操作完成后不移除状态，由用户手动管理
+            // 用户可以选择手动清除或继续保留状态
         },
-        [onFinish, repId, hash],
+        [onFinish],
     )
 
     const ActionButtons = () => (
@@ -604,21 +676,44 @@ export function useOfflineUppyUpload(params: {
                 )}
             </div>
 
-            {/* 正常上传模式操作 */}
-            <div className="flex gap-2">
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                        if (uppyInstanceRef.current) {
-                            await saveUppyState(uppyInstanceRef.current)
-                        }
-                    }}
-                >
-                    <Upload className="w-4 h-4 mr-2" />
-                    保存上传状态
-                </Button>
+            {/* 状态管理操作 */}
+            <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                            if (uppyInstanceRef.current) {
+                                await saveUppyState(uppyInstanceRef.current)
+                                setHasSavedState(true)
+                            }
+                        }}
+                        className="flex items-center flex-1"
+                    >
+                        <Upload className="w-4 h-4 mr-2" />
+                        保存文件状态
+                    </Button>
+
+                    {hasSavedState && (
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={cancelSavedState}
+                            className="flex items-center"
+                        >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            清除状态
+                        </Button>
+                    )}
+                </div>
+
+                {hasSavedState && (
+                    <p className="text-xs text-blue-600">
+                        ✓ 有保存的状态，离线后可以恢复
+                    </p>
+                )}
             </div>
         </div>
     )
@@ -629,5 +724,7 @@ export function useOfflineUppyUpload(params: {
             <ActionButtons />
         </div>,
         saveUppyState,
+        cancelSavedState,
+        hasSavedState
     ] as const
 }
