@@ -189,63 +189,9 @@ upload-length
 curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"  -H "Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MjMxMjI3NywiZGV2aWNlSWQiOiJlMnM4dGx5IiwiZXhwIjoxNzYyMzE0Mjc3fQ.wrXNrENlhSH3o_3BXlLkQxEXCuZqO3Tt14cBAYYQMofFjt4greMWdXxekaf9uuSJiDfWRBSGXuvTABc3Vo6S0A" -H "Tus-Resumable: 1.0.0"  -H "Upload-Length: 1024"  --http1.1  -k -v
 [文件离线问题]**通用回调处理器**方案
 序列化回调参数而不是函数本身。系统会在队列中存储 `modType`、`redId`、`fieldPath` 等参数，从 `/offline` 页面处理队列时，通用处理器根据这些参数直接更新 storageContext，无需导航到原始编辑器页面。这样既保持了灵活性，又避免了复杂的页面跳转逻辑。
-
-{key: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:FxDiagram_pf', repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', hash: 'FxDiagram_pf', timestamp: 1762418256587, files: Array(1), …}
-files
-:
-Array(1)
-0
-:
-data
-:
-ArrayBuffer(11438400)
-id
-:
-"Report-yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA-FxDiagram_pf-win7/exe-1e-application/x-msdownload-11438400-1504749292000"
-name
-:
-"win7.exe"
-progress
-:
-100
-size
-:
-11438400
-type
-:
-"application/x-msdownload"
-uploadURL
-:
-undefined
-length
-:
-1
-hash
-:
-"FxDiagram_pf"
-key
-:
-"yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:FxDiagram_pf"
-meta
-:
-business
-:
-"rep"
-eid
-:
-"yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"
-liveDays
-:
-10
-oldfiles
-:
-Array(0)
-length
-:
-0
-repId
-:
-"yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"
-timestamp
-:
-1762418256587
+负载均衡的TUS协议问题：类比的@tus/server; https://github.com/tus/tusd/blob/main/examples/nginx.conf
+        # Disable request and response buffering
+        proxy_request_buffering  off;
+        # Add X-Forwarded-* headers
+        proxy_set_header X-Forwarded-Host $host:$server_port;   头部标识扩展
+        proxy_set_header X-Forwarded-Proto $scheme;

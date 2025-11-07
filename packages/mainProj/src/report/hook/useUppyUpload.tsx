@@ -3,16 +3,10 @@ import * as React from "react"
 import Uppy from "@uppy/core"
 import Tus from "@uppy/tus"
 import XHRUpload from "@uppy/xhr-upload"
-// import Webcam from "@uppy/webcam";
 import useOssDeleteFileMutation from "../../hooks/useOssDeleteFileMutation"
-// import Dashboard from '@uppy/react/lib/Dashboard';
 import Dashboard from "@uppy/react/dashboard"
 import "@uppy/core/css/style.min.css"
 import "@uppy/dashboard/css/style.min.css"
-// import "@uppy/core/dist/style.min.css"
-// import "@uppy/dashboard/dist/style.min.css"
-// import "@uppy/webcam/dist/style.min.css"
-// Add custom styles to fix Tailwind conflicts
 import "./uppy-fixes.css"
 import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
@@ -143,24 +137,6 @@ export function useUppyUpload({
             id: uniqueId,
             restrictions: { maxNumberOfFiles: maxFile },
         })
-        newUppy.on('file-added', (file) => {
-            console.log('[测试]Added file', {
-                source: file.source,
-                id: file.id,
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                hasHandle: !!file.meta.fileHandle,
-                handleMode: file.meta.isHandleMode,
-                meta: file.meta
-            });
-
-            if (file.meta.fileHandle) {
-                console.log('File has handle:', file.meta.fileHandle)
-            } else {
-                console.log('File added via traditional method, no handle available')
-            }
-        });
         if (uploadMode === "tus") {
             // 配置 Tus 插件
             newUppy.use(Tus, {
@@ -230,6 +206,9 @@ export function useUppyUpload({
                 timeout: 600000,
                 limit: 1,
                 allowedMetaFields: true,
+                shouldRetry: (xhr: XMLHttpRequest) => {
+                    return false;
+                },
                 async onBeforeRequest(xhr) {
                     const token = await getAuthToken()
                     xhr.setRequestHeader("Authorization", `Bearer ${token}`) // @ts-ignore
@@ -256,7 +235,9 @@ export function useUppyUpload({
                 },
                 async onAfterResponse(xhr) {
                     if (xhr.status === 401) {
-                        newUppy.info("请重新登录，刷新token")
+                        newUppy.info("需刷新token")
+                        window.dispatchEvent(new CustomEvent("token:refresh-needed"));
+                        // newUppy.pauseAll()
                         return
                     }
                     if (xhr.status === 403) {
@@ -301,9 +282,14 @@ export function useUppyUpload({
             uppyInstance.cancelAll()
             uppyInstance.setState({ oldfiles: undefined })
             uppyInstance.setMeta({ eid: repId, liveDays, business })
+        }
+    }, [repId, liveDays, uppyInstance])
+    //不能合并上面的，会造选择的文件失败就不见了。
+    React.useEffect(() => {
+        if (uppyInstance) {
             uppyInstance.setState({ oldfiles: maxFile > 1 ? storeObj : undefined })
         }
-    }, [repId, liveDays, uppyInstance, maxFile, storeObj])
+    }, [uppyInstance, maxFile, storeObj])
 
     //验证存储对象类型
     if (storeObj) {
@@ -449,6 +435,7 @@ export function useUppyUpload({
             setOpenUppy(true)
         }, 50) // 更短的延迟
     }
+
     // 上传模式选择器组件
     const UploadModeSelector = () => (
         <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -482,6 +469,65 @@ export function useUppyUpload({
                 {uploadMode === "xhr" && "用标准 HTTP 上传，事务性更好，最大支持500兆的"}
             </div>
         </div>
+    )
+
+    const saveCurrentState = React.useCallback(async () => {
+        if (!uppyInstance) return
+
+        const files = uppyInstance.getFiles()
+        if (files.length === 0) {
+            toast.info("无需保存", {
+                description: "当前没有待上传的文件",
+            })
+            return
+        }
+
+        const filesWithData = await Promise.all(
+            files.map(async (file) => {
+                let data: ArrayBuffer | undefined
+                if (file.data instanceof Blob) {
+                    data = await file.data.arrayBuffer()
+                }
+                return {
+                    id: file.id,
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    data,
+                    progress: file.progress?.percentage,
+                    uploadURL: file.uploadURL,
+                }
+            }),
+        )
+
+        const stateKey = `${repId}${hash ? `:${hash}` : ""}`
+        await fileOperationsQueue.saveUppyState({
+            key: stateKey,
+            repId,
+            hash: hash || "default",
+            timestamp: Date.now(),
+            files: filesWithData,
+            meta: uppyInstance.getState().meta,
+            oldfiles: uppyInstance.getState().oldfiles,
+        })
+
+        toast.success("已保存", {
+            description: `已保存 ${files.length} 个文件的状态，可稍后恢复`,
+        })
+    }, [uppyInstance, repId, hash])
+
+    const SaveStateButton = () => (
+        <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={saveCurrentState}
+            disabled={!uppyInstance}
+            className="ml-2 bg-transparent"
+        >
+            <Clock className="w-4 h-4 mr-2" />
+            记住未完成的文件操作
+        </Button>
     )
 
     const renderSingleFile = () => {
@@ -542,7 +588,7 @@ export function useUppyUpload({
                             <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
                                 {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
                             </Button>
-                            {/* 移除 SaveStateButton */}
+                            {openUppy && <SaveStateButton />}
                         </div>
                     </div>
                 </div>

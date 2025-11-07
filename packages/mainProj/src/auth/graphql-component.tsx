@@ -19,6 +19,7 @@ import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
 import schema from "./urql-schema.json"
 import { useAccessToken } from "./use-access-token"
+import {AuthCompQuery} from "@/component/header-wrapper";
 
 export const isNetworkError = (error: any): boolean => {
     if (!error) return false
@@ -750,6 +751,27 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             window.removeEventListener("user:logout", handleLogout)
         }
     }, [])
+
+    useEffect(() => {
+        const handleManualTokenRefresh = async () => {
+            if (clientRef.current) {
+                const tempClient = clientRef.current;
+                try {
+                    //发送一个测试查询来触发认证流程
+                    await tempClient.query(AuthCompQuery, { }, {requestPolicy: 'network-only'}).toPromise();
+                } catch (error) {
+                    console.log("[GraphQLProvider] 手动刷新触发完成");
+                }
+            }
+        };
+        const handleTokenRefreshNeeded = () => {
+            handleManualTokenRefresh();
+        };
+        window.addEventListener("token:refresh-needed", handleTokenRefreshNeeded);
+        return () => {
+            window.removeEventListener("token:refresh-needed", handleTokenRefreshNeeded);
+        };
+    }, []);
 
     if (!client) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
