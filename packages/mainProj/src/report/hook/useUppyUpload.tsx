@@ -14,7 +14,6 @@ import { ImageComponentNatural } from "@/components/natural"
 import { useCallback } from "react"
 import { toast } from "sonner"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
-import { Clock } from "lucide-react"
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -26,6 +25,7 @@ export const UPPY_LOCALE_CONFIG = {
             0: "只能传 %{smart_count} 个文件",
             1: "只能传 %{smart_count} 个文件",
         },
+        noDuplicates: "同一个文件 '%{fileName}',不允许添加",
     },
 }
 export const DASH_LOCALE_CONFIG = {
@@ -52,6 +52,7 @@ export const DASH_LOCALE_CONFIG = {
             0: "合计%{smart_count}个 完成 %{complete} 个",
             1: "合计%{smart_count}个 完成 %{complete} 个",
         },
+        upload: '上传',
         uploading: "努力上传中",
         uploadPaused: "暂停上传",
         paused: "暂停",
@@ -59,6 +60,11 @@ export const DASH_LOCALE_CONFIG = {
         uploadComplete: "恭喜干完了",
         complete: "完事",
         done: "返回",
+        back: '返回',
+        uploadXNewFiles: {
+            0: '添加 %{smart_count} 个文件',
+            1: '添加 %{smart_count} 个文件',
+        },
     },
 }
 
@@ -84,6 +90,14 @@ export const useScrollHandler = (targetSelector: string) => {
     )
 }
 
+type PendingDeleteOperation = {
+    deleteUrl: string;
+    deleteIndex: number;
+    repId: string;
+    hash: string;
+    business: string;
+    timestamp: number;
+}
 // 上传模式类型
 type UploadMode = "tus" | "xhr"
 
@@ -125,6 +139,8 @@ export function useUppyUpload({
     business?: string
     open?: boolean
 }) {
+    // 添加待删除操作状态
+    const [pendingDeleteOperations, setPendingDeleteOperations] = React.useState<PendingDeleteOperation[]>([]);
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
@@ -145,7 +161,7 @@ export function useUppyUpload({
                 endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
                 withCredentials: true,
                 chunkSize: 5 * 1024 * 1024,
-                retryDelays: [0, 1000, 3000, 5000],
+                retryDelays: [0, 2000, 7000, 15000],
                 async onBeforeRequest(req) {
                     const token = await getAuthToken()
                     if (token) {
@@ -155,15 +171,19 @@ export function useUppyUpload({
                 async onAfterResponse(req, res) {
                     const status = res.getStatus()
                     if (status === 401) {
-                        newUppy.info("需刷新token")
+                        newUppy.info("需刷新token", "error", 9000)
                         window.dispatchEvent(new CustomEvent("token:refresh-needed"));
+                        toast.error("身份认证失败", {
+                            description: "需重新登录，或刷新token",
+                            duration: 9000,
+                        })
                     }
                     const url = req.getURL()
                     const value = res.getHeader("Tus2minIoUrl")
                     // 存储服务相关的错误
                     if (status === 503) {
                         const errorMessage = value || "无服务"
-                        newUppy.info(`Upload failed: ${errorMessage}`, "error", 999000)
+                        newUppy.info(`Upload failed: ${errorMessage}`, "error", 9000)
                         toast.error("OSS存储服务问题", {
                             description: errorMessage,
                             duration: 8000,
@@ -172,7 +192,7 @@ export function useUppyUpload({
                     }
                     // 存储空间不足等业务错误
                     else if (value && value.includes("Insufficient storage space")) {
-                        newUppy.info("Upload failed: Insufficient storage space", "error", 999000)
+                        newUppy.info("Upload failed: Insufficient storage space", "error", 9000)
                         toast.error("存储", {
                             description: "可写磁盘容量不足",
                         })
@@ -225,8 +245,8 @@ export function useUppyUpload({
                             if (obj?.url) return obj
                         }
                     } catch (e) {}
-                    newUppy.info("不要重试，估计没可用空间:" + errStr, "error", 999000)
-                    if (errStr.includes("Failed to connect to")) errStr = "OSS存储集群服务不可用"
+                    newUppy.info("不要重试:" + errStr, "error", 9000)
+                    if(errStr.includes("Failed to connect to"))    errStr="OSS存储集群服务不可用"
                     toast.error("上传失败", {
                         description: errStr,
                     })
@@ -235,15 +255,15 @@ export function useUppyUpload({
                 },
                 async onAfterResponse(xhr) {
                     if (xhr.status === 401) {
-                        newUppy.info("需刷新token")
+                        newUppy.info("需刷新token", "error", 9000)
                         window.dispatchEvent(new CustomEvent("token:refresh-needed"));
-                        // newUppy.pauseAll()
                         return
                     }
                     if (xhr.status === 403) {
                         toast.error("上传失败", {
-                            description: "请重新登录，刷新token",
+                            description: "请重新登录", duration:9000
                         })
+                        return
                     }
                     try {
                         const data = JSON.parse(xhr.response)
@@ -316,16 +336,20 @@ export function useUppyUpload({
             if (isError) {
                 const deleteUrl = maxFile === 1 ? storeObj1?.url : storeObj2?.[arIndex]?.url
                 if (deleteUrl) {
-                    await fileOperationsQueue.addOperation({
-                        type: "delete",
+                    // 不再使用 fileOperationsQueue.addOperation，而是添加到本地状态
+                    const deleteOperation: PendingDeleteOperation = {
+                        deleteUrl,
+                        deleteIndex: arIndex,
                         repId,
                         hash: hash || "default",
                         business,
-                        deleteUrl,
-                        deleteIndex: arIndex,
-                    })
-                    toast.info("已加入队列", {
-                        description: "删除操作将在网络恢复后自动重试",
+                        timestamp: Date.now()
+                    }
+
+                    setPendingDeleteOperations(prev => [...prev, deleteOperation])
+
+                    toast.info("已加入待删除列表", {
+                        description: "删除操作将在保存状态后加入离线队列",
                     })
                 }
             } else if ("成功" === result || "文件不存在" === result) {
@@ -361,7 +385,7 @@ export function useUppyUpload({
                 })
                 .filter((item) => item !== null) // 立即过滤
             if (failUploads) {
-                uppyInstance.info("上传失败的文件：" + failUploads, "error", 5000)
+                uppyInstance.info("上传失败的文件：" + failUploads, "error", 9000)
             }
             const newarr = [...more]
             const cntfile = newarr.length
@@ -471,65 +495,6 @@ export function useUppyUpload({
         </div>
     )
 
-    const saveCurrentState = React.useCallback(async () => {
-        if (!uppyInstance) return
-
-        const files = uppyInstance.getFiles()
-        if (files.length === 0) {
-            toast.info("无需保存", {
-                description: "当前没有待上传的文件",
-            })
-            return
-        }
-
-        const filesWithData = await Promise.all(
-            files.map(async (file) => {
-                let data: ArrayBuffer | undefined
-                if (file.data instanceof Blob) {
-                    data = await file.data.arrayBuffer()
-                }
-                return {
-                    id: file.id,
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    data,
-                    progress: file.progress?.percentage,
-                    uploadURL: file.uploadURL,
-                }
-            }),
-        )
-
-        const stateKey = `${repId}${hash ? `:${hash}` : ""}`
-        await fileOperationsQueue.saveUppyState({
-            key: stateKey,
-            repId,
-            hash: hash || "default",
-            timestamp: Date.now(),
-            files: filesWithData,
-            meta: uppyInstance.getState().meta,
-            oldfiles: uppyInstance.getState().oldfiles,
-        })
-
-        toast.success("已保存", {
-            description: `已保存 ${files.length} 个文件的状态，可稍后恢复`,
-        })
-    }, [uppyInstance, repId, hash])
-
-    const SaveStateButton = () => (
-        <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={saveCurrentState}
-            disabled={!uppyInstance}
-            className="ml-2 bg-transparent"
-        >
-            <Clock className="w-4 h-4 mr-2" />
-            记住未完成的文件操作
-        </Button>
-    )
-
     const renderSingleFile = () => {
         if (openUppy && uppyInstance) {
             return (
@@ -588,7 +553,6 @@ export function useUppyUpload({
                             <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
                                 {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
                             </Button>
-                            {openUppy && <SaveStateButton />}
                         </div>
                     </div>
                 </div>
@@ -654,14 +618,13 @@ export function useUppyUpload({
                             <Button size="sm" onClick={scrollHandler}>
                                 {openUppy ? "关闭上传" : "开启上传"}
                             </Button>
-                            {openUppy && <SaveStateButton />}
                         </div>
                     )}
                 </div>
             </>
         )
 
-        return [onlyOne, uppyInstance] as const
+        return [onlyOne, uppyInstance, pendingDeleteOperations, () => setPendingDeleteOperations([])] as const
     } else if (maxFile > 1) {
         const manyMore = (
             <>
@@ -684,6 +647,6 @@ export function useUppyUpload({
             </>
         )
 
-        return [manyMore, uppyInstance] as const
-    } else return [null, null] as const
+        return [manyMore, uppyInstance, pendingDeleteOperations, () => setPendingDeleteOperations([])] as const
+    } else return [null, null, [], () => {}] as const
 }

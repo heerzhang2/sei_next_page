@@ -5,7 +5,7 @@
 
 const DB_NAME = "FileOperationsDB"
 const DB_VERSION = 1
-const QUEUE_STORE = "fileQueue"
+const DELETE_QUEUE = "deleteQueue"
 const STATE_STORE = "uppyState"
 
 export type FileOperation = {
@@ -92,8 +92,8 @@ class FileOperationsQueue {
             request.onupgradeneeded = (event) => {
                 const db = (event.target as IDBOpenDBRequest).result
 
-                if (!db.objectStoreNames.contains(QUEUE_STORE)) {
-                    const queueStore = db.createObjectStore(QUEUE_STORE, { keyPath: "id" })
+                if (!db.objectStoreNames.contains(DELETE_QUEUE)) {
+                    const queueStore = db.createObjectStore(DELETE_QUEUE, { keyPath: "id" })
                     queueStore.createIndex("repId", "repId", { unique: false })
                     queueStore.createIndex("status", "status", { unique: false })
                     queueStore.createIndex("timestamp", "timestamp", { unique: false })
@@ -126,8 +126,8 @@ class FileOperationsQueue {
         }
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([QUEUE_STORE], "readwrite")
-            const store = transaction.objectStore(QUEUE_STORE)
+            const transaction = this.db!.transaction([DELETE_QUEUE], "readwrite")
+            const store = transaction.objectStore(DELETE_QUEUE)
             const request = store.add(fullOperation)
 
             request.onsuccess = () => {
@@ -144,8 +144,8 @@ class FileOperationsQueue {
         if (!this.db) throw new Error("Database not initialized")
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([QUEUE_STORE], "readonly")
-            const store = transaction.objectStore(QUEUE_STORE)
+            const transaction = this.db!.transaction([DELETE_QUEUE], "readonly")
+            const store = transaction.objectStore(DELETE_QUEUE)
             const index = store.index("status")
             const request = index.getAll("pending")
 
@@ -159,8 +159,8 @@ class FileOperationsQueue {
         if (!this.db) throw new Error("Database not initialized")
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([QUEUE_STORE], "readonly")
-            const store = transaction.objectStore(QUEUE_STORE)
+            const transaction = this.db!.transaction([DELETE_QUEUE], "readonly")
+            const store = transaction.objectStore(DELETE_QUEUE)
             const index = store.index("repId")
             const request = index.getAll(repId)
 
@@ -178,8 +178,8 @@ class FileOperationsQueue {
         if (!this.db) throw new Error("Database not initialized")
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([QUEUE_STORE], "readwrite")
-            const store = transaction.objectStore(QUEUE_STORE)
+            const transaction = this.db!.transaction([DELETE_QUEUE], "readwrite")
+            const store = transaction.objectStore(DELETE_QUEUE)
             const getRequest = store.get(id)
 
             getRequest.onsuccess = () => {
@@ -207,8 +207,8 @@ class FileOperationsQueue {
         if (!this.db) throw new Error("Database not initialized")
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([QUEUE_STORE], "readwrite")
-            const store = transaction.objectStore(QUEUE_STORE)
+            const transaction = this.db!.transaction([DELETE_QUEUE], "readwrite")
+            const store = transaction.objectStore(DELETE_QUEUE)
             const request = store.delete(id)
 
             request.onsuccess = () => {
@@ -295,10 +295,10 @@ class FileOperationsQueue {
         let removedCount = 0
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([QUEUE_STORE, STATE_STORE], "readwrite")
+            const transaction = this.db!.transaction([DELETE_QUEUE, STATE_STORE], "readwrite")
 
             // Clean queue
-            const queueStore = transaction.objectStore(QUEUE_STORE)
+            const queueStore = transaction.objectStore(DELETE_QUEUE)
             const queueRequest = queueStore.openCursor()
 
             queueRequest.onsuccess = (event) => {

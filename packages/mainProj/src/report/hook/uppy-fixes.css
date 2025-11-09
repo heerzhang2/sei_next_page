@@ -11,6 +11,8 @@
 /* Ensure other critical Uppy styles aren't overridden */
 .uppy-Dashboard-inner {
   position: relative !important;
+  margin: auto;
+  max-height: 100vh;
 }
 
 .uppy-Dashboard-AddFiles {
