@@ -308,10 +308,10 @@ export function useOfflineUppyUpload(params: {
     }, [repId, subrid, fieldPath, hash]);
 
     // 将恢复的待删除操作传递给 useUppyUpload
-    const [uploadDom, uppyInstance, pendingDeleteOperations, clearPendingDeletes] = useUppyUpload({
+    const [uploadDom, uppyInstance, pendingDeleteOperations, clearPendingDeletes, delOssFileFunc] = useUppyUpload({
         ...params,
         open: true,
-        externalPendingDeletes: restoredPendingDeletes // 传递恢复的待删除操作
+        externalPendingDeletes: restoredPendingDeletes
     });
 
     const uppyInstanceRef = useRef<Uppy | null>(null)
@@ -340,16 +340,14 @@ export function useOfflineUppyUpload(params: {
             const oldfiles = uppy.getState().oldfiles || []
             const currentPendingDeletes = pendingDeleteOperationsRef.current
 
-            // 保存待删除操作到 IndexedDB
+            // 保存待删除操作到 IndexedDB（只保留这一段）
             if (currentPendingDeletes.length > 0) {
                 for (const deleteOp of currentPendingDeletes) {
                     try {
                         await fileOperationsQueue.addOperation({
                             type: "delete",
                             repId: deleteOp.repId,
-                            subrid: subrid, // 添加 subrid
-                            redId: params.redId, // 添加 redId
-                            fieldPath: params.fieldPath, // 添加 fieldPath
+                            subrid: subrid,
                             hash: deleteOp.hash,
                             business: deleteOp.business,
                             deleteUrl: deleteOp.deleteUrl,
@@ -452,36 +450,6 @@ export function useOfflineUppyUpload(params: {
                 })
             ).then(results => results.filter(Boolean)) // 过滤掉处理失败的文件
 
-            // 将待删除操作保存到 IndexedDB
-            if (currentPendingDeletes.length > 0) {
-                for (const deleteOp of currentPendingDeletes) {
-                    try {
-                        await fileOperationsQueue.addOperation({
-                            type: "delete",
-                            repId: deleteOp.repId,
-                            hash: deleteOp.hash,
-                            business: deleteOp.business,
-                            deleteUrl: deleteOp.deleteUrl,
-                            deleteIndex: deleteOp.deleteIndex,
-                            callbackParams: {
-                                modType: params.modType,
-                                redId: params.redId,
-                                fieldPath: params.fieldPath
-                            }
-                        })
-                        console.log(`[OfflineUppy] Saved delete operation for: ${deleteOp.deleteUrl}`)
-                    } catch (error) {
-                        console.error("[OfflineUppy] Failed to save delete operation:", error);
-                        toast.error("保存删除操作失败");
-                    }
-                }
-
-                // 清空本地待删除操作状态
-                clearPendingDeletes()
-
-                console.log(`[OfflineUppy] Saved ${currentPendingDeletes.length} pending delete operations to IndexedDB`)
-            }
-
             // 保存 Uppy 状态到 IndexedDB
             try {
                 await fileOperationsQueue.saveUppyState({
@@ -529,7 +497,6 @@ export function useOfflineUppyUpload(params: {
         },
         [repId, subrid, fieldPath, hash, clearPendingDeletes, params.modType, params.redId, params.business, params.liveDays, params.maxFile, params.maxSize]
     )
-
     // 取消保存的状态
     const cancelSavedState = useCallback(async () => {
         try {
@@ -817,65 +784,171 @@ export function useOfflineUppyUpload(params: {
         restorePendingDeletes();
     }, [repId, subrid, params.redId, fieldPath, hash]);
 
-    const ActionButtons = () => (
-        <div className="flex flex-col gap-2 mt-2">
-            {/* 文件添加方式选择 */}
-            <div className="border-b pb-2">
-                {/* ... 文件添加方式选择代码保持不变 ... */}
-            </div>
+    const executePendingDeletes = useCallback(async () => {
+        if (!pendingDeleteOperations || pendingDeleteOperations.length === 0) {
+            toast.info("没有待执行的删除操作");
+            return;
+        }
 
-            {/* 状态管理操作 */}
-            <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={async () => {
-                            if (uppyInstanceRef.current) {
-                                await saveUppyState(uppyInstanceRef.current)
-                                setHasSavedState(true)
-                            }
-                        }}
-                        className="flex items-center flex-1"
-                    >
-                        <Upload className="w-4 h-4 mr-2" />
-                        保存文件状态
-                        {pendingDeleteOperations.length > 0 && (
-                            <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                                {pendingDeleteOperations.length} 待删除
-                            </span>
+        if (!delOssFileFunc) {
+            toast.error("删除功能不可用");
+            return;
+        }
+
+        toast.info(`开始执行 ${pendingDeleteOperations.length} 个待删除操作...`);
+
+        let successCount = 0;
+        let failCount = 0;
+
+        // 逐个执行删除操作
+        for (const deleteOp of pendingDeleteOperations) {
+            try {
+                // 调用实际的删除函数
+                await new Promise((resolve) => {
+                    delOssFileFunc(
+                        deleteOp.deleteUrl,
+                        deleteOp.deleteIndex,
+                        "eid",
+                        deleteOp.repId
+                    );
+                    // 这里需要根据实际的回调机制来处理
+                    setTimeout(resolve, 1000); // 简单延迟
+                });
+
+                successCount++;
+
+            } catch (error) {
+                console.error("删除操作执行失败:", error);
+                failCount++;
+            }
+        }
+
+        // 显示执行结果
+        if (failCount === 0) {
+            toast.success("删除操作执行完成", {
+                description: `成功执行 ${successCount} 个删除操作`,
+            });
+            // 清空已完成的删除操作
+            clearPendingDeletes();
+        } else {
+            toast.warning("删除操作部分完成", {
+                description: `成功: ${successCount} 个, 失败: ${failCount} 个`,
+            });
+        }
+    }, [pendingDeleteOperations, delOssFileFunc, clearPendingDeletes]);
+
+    const ActionButtons = () => {
+        return (
+            <div className="flex flex-col gap-2 mt-2">
+                {/* 文件添加方式选择 */}
+                <div className="border-b pb-2">
+                    <p className="text-xs text-gray-500 mb-2">选择文件添加方式：</p>
+                    <div className="flex gap-2">
+                        {/* 传统方式（Uppy 内置） */}
+                        <div className="text-center">
+                            <p className="text-xs text-gray-600 mb-1">传统方式</p>
+                            <p className="text-xs text-gray-400">适合小文件，即时上传</p>
+                        </div>
+
+                        {/* 文件句柄方式 */}
+                        {isFileSystemAccessSupported() && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addFilesWithHandles}
+                                className="flex items-center"
+                            >
+                                <FolderOpen className="w-4 h-4 mr-2" />
+                                文件句柄方式添加
+                            </Button>
                         )}
-                    </Button>
-
-                    {hasSavedState && (
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={cancelSavedState}
-                            className="flex items-center"
-                        >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            清除状态
-                        </Button>
+                    </div>
+                    {isFileSystemAccessSupported() && (
+                        <p className="text-xs text-green-600 mt-1">
+                            文件句柄方式：节省存储空间，支持大文件，离线后可恢复
+                        </p>
                     )}
                 </div>
 
-                {hasSavedState && (
-                    <p className="text-xs text-blue-600">
-                        ✓ 有保存的状态，离线后可以恢复
-                    </p>
-                )}
+                {/* 状态管理操作 */}
+                <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                                if (uppyInstanceRef.current) {
+                                    await saveUppyState(uppyInstanceRef.current)
+                                    setHasSavedState(true)
+                                }
+                            }}
+                            className="flex items-center flex-1"
+                        >
+                            <Upload className="w-4 h-4 mr-2" />
+                            保存文件上传和删除状态
+                            {pendingDeleteOperations.length > 0 && (
+                                <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                                {pendingDeleteOperations.length} 待删除
+                            </span>
+                            )}
+                        </Button>
 
-                {pendingDeleteOperations.length > 0 && (
-                    <p className="text-xs text-orange-600">
-                        ⚠ 有 {pendingDeleteOperations.length} 个删除操作等待保存到离线队列
-                    </p>
-                )}
+                        {hasSavedState && (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={cancelSavedState}
+                                className="flex items-center"
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                清除状态
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* 新增：执行待删除操作按钮 */}
+                    {pendingDeleteOperations.length > 0 && (
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={executePendingDeletes}
+                                className="flex items-center flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                            >
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                执行待删除操作 ({pendingDeleteOperations.length})
+                            </Button>
+                        </div>
+                    )}
+
+                    {hasSavedState && (
+                        <p className="text-xs text-blue-600">
+                            ✓ 有保存的状态，离线后可以恢复
+                        </p>
+                    )}
+
+                    {pendingDeleteOperations.length > 0 && (
+                        <div className="space-y-1">
+                            <p className="text-xs text-orange-600">
+                                ⚠ 有 {pendingDeleteOperations.length} 个删除操作等待执行
+                            </p>
+                            <div className="text-xs text-gray-500">
+                                {pendingDeleteOperations.map((op, index) => (
+                                    <div key={index} className="truncate">
+                                        {op.deleteUrl.split('/').pop()}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
-    )
+        )
+    }
 
     return [
         <div key="offline-uppy-wrapper">

@@ -548,8 +548,8 @@ export function useUppyUpload({
         const isPendingDelete = isFilePendingDelete(file.url);
 
         return (
-            <div key={index}>
-                {index > 0 && <hr />}
+            <div key={index} className="mb-4 border rounded-lg p-3 bg-gray-50">
+                {index > 0 && <hr className="my-3" />}
                 <div id={(hash ?? "_pf") + `${index}`} className="flex justify-around items-center">
                     {file.url && (
                         <ImageComponentNatural
@@ -558,14 +558,75 @@ export function useUppyUpload({
                         />
                     )}
                 </div>
+
+                {/* 删除按钮放在图片下面 */}
+                <div className="mt-3 flex gap-2 justify-center">
+                    <Button
+                        type="button"
+                        variant={maxFile === 1 ? "destructive" : "outline"}
+                        size="sm"
+                        onClick={(e) => {
+                            delOssFileFunc(file.url, index, "eid", repId);
+                            e.preventDefault();
+                        }}
+                        className="relative"
+                        disabled={isPendingDelete}
+                    >
+                        {maxFile === 1 ? "删除文件" : `删除第${index + 1}个文件`}
+                        {isPendingDelete && (
+                            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
+                            !
+                        </span>
+                        )}
+                    </Button>
+
+                    {/* 取消删除按钮 */}
+                    {isPendingDelete && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                cancelPendingDelete(file.url);
+                            }}
+                        >
+                            取消删除
+                        </Button>
+                    )}
+                </div>
+
                 {isPendingDelete && (
-                    <div className="text-orange-600 text-sm mt-1 flex items-center">
+                    <div className="text-orange-600 text-sm mt-2 flex items-center justify-center">
                         <span className="animate-pulse">⚠️ 此文件已在待删除队列中</span>
                     </div>
                 )}
             </div>
         );
     };
+    //取消删除的函数
+    const cancelPendingDelete = useCallback((fileUrl: string) => {
+        setPendingDeleteOperations(prev =>
+            prev.filter(op => op.deleteUrl !== fileUrl)
+        );
+        toast.success("已取消删除操作", {
+            description: "文件已从待删除队列中移除",
+            duration: 2000,
+        });
+    }, []);
+    //批量取消删除的函数
+    const cancelAllPendingDeletes = useCallback(() => {
+        if (pendingDeleteOperations.length === 0) {
+            toast.info("没有待取消的删除操作");
+            return;
+        }
+
+        setPendingDeleteOperations([]);
+        toast.success("已取消所有删除操作", {
+            description: `已移除 ${pendingDeleteOperations.length} 个待删除文件`,
+            duration: 3000,
+        });
+    }, [pendingDeleteOperations.length]);
 
     // 添加统一的渲染函数
     const renderFiles = () => {
@@ -611,56 +672,18 @@ export function useUppyUpload({
         );
     };
 
-    const renderDeleteButtons = () => {
-        if (maxFile === 1) {
-            return storeObj1?.url ? (
-                <div className="space-x-2">
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={(e) => {
-                            delOssFileFunc(storeObj1?.url, 0, "eid", repId);
-                            e.preventDefault();
-                        }}
-                    >
-                        删除文件
-                        {isFilePendingDelete(storeObj1.url) && (
-                            <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-1 animate-pulse">
-              待删除
-            </span>
-                        )}
-                    </Button>
-                </div>
-            ) : null;
-        } else {
-            return storeObj2?.map(({ url }: any, i: number) => (
-                <Button
-                    key={i}
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                        delOssFileFunc(url, i, "eid", repId);
-                        e.preventDefault();
-                    }}
-                    className="relative"
-                >
-                    删除第{i + 1}个文件
-                    {isFilePendingDelete(url) && (
-                        <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-            !
-          </span>
-                    )}
-                </Button>
-            ));
-        }
-    };
     const unifiedComponent = (
         <>
             {renderFiles()}
             <div id={hash ?? "_pf"} className="text-center mt-2">
-                {renderDeleteButtons()}
             </div>
         </>
     );
-    return [unifiedComponent, uppyInstance, pendingDeleteOperations, () => setPendingDeleteOperations([])] as const;
+    return [
+        unifiedComponent,
+        uppyInstance,
+        pendingDeleteOperations,
+        () => setPendingDeleteOperations([]),
+        delOssFileFunc // 暴露删除函数
+    ] as const;
 }
