@@ -611,17 +611,43 @@ export function useOfflineUppyUpload(params: {
             restoreState()
         }, 500)
     }, [repId, hash, params.liveDays, params.business, subrid, fieldPath])
+    //待删除队列恢复逻辑
+    useEffect(() => {
+        const restorePendingDeletes = async () => {
+            try {
+                // 从 IndexedDB 加载当前报告相关的待删除操作
+                const pendingOps = await fileOperationsQueue.getOperationsByReport(repId, subrid);
 
-    const enhancedOnFinish = useCallback(
-        async (file: any, del: boolean) => {
-            if (onFinish) {
-                onFinish(file, del)
+                // 过滤出与当前 fieldPath 和 hash 相关的操作
+                const relevantOps = pendingOps.filter(op =>
+                    op.status === "pending" &&
+                    op.hash === (hash || "default") &&
+                    (!fieldPath || op.callbackParams?.fieldPath === fieldPath)
+                );
+
+                if (relevantOps.length > 0) {
+                    // 转换为 PendingDeleteOperation 格式
+                    const pendingDeleteOperations: PendingDeleteOperation[] = relevantOps.map(op => ({
+                        deleteUrl: op.deleteUrl!,
+                        deleteIndex: op.deleteIndex || 0,
+                        repId: op.repId,
+                        hash: op.hash,
+                        business: op.business,
+                        timestamp: op.timestamp
+                    }));
+
+                    // 更新待删除操作状态
+                    pendingDeleteOperationsRef.current = pendingDeleteOperations;
+                    // 这里需要调用 clearPendingDeletes 的更新函数，你可能需要调整 useUppyUpload 的接口
+                    console.log(`[OfflineUppy] Restored ${pendingDeleteOperations.length} pending delete operations`);
+                }
+            } catch (error) {
+                console.error("[OfflineUppy] Failed to restore pending delete operations:", error);
             }
-            // 文件操作完成后不移除状态，由用户手动管理
-            // 用户可以选择手动清除或继续保留状态
-        },
-        [onFinish],
-    )
+        };
+
+        restorePendingDeletes();
+    }, [repId, subrid, fieldPath, hash]);
 
     const ActionButtons = () => (
         <div className="flex flex-col gap-2 mt-2">

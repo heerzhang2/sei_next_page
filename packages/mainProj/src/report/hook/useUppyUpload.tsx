@@ -495,70 +495,6 @@ export function useUppyUpload({
         </div>
     )
 
-    const renderSingleFile = () => {
-        if (openUppy && uppyInstance) {
-            return (
-                <div key="dashboard">
-                    <UploadModeSelector />
-                    <Dashboard uppy={uppyInstance} plugins={["Webcam"]} locale={dashLocale} />
-                </div>
-            )
-        } else if (storeObj1?.url) {
-            return (
-                <div key="image">
-                    <ImageComponentNatural
-                        src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${storeObj1.url}` || "/placeholder.svg"}
-                        alt={storeObj1?.url || "图片"}
-                    />
-                </div>
-            )
-        } else {
-            return (
-                <div key="placeholder" className="text-center p-4 border-2 border-dashed border-gray-300 rounded-lg">
-                    <p className="text-gray-500">暂无图片</p>
-                </div>
-            )
-        }
-    }
-
-    const renderMultipleFiles = () => {
-        return (
-            <>
-                <div className="text-center">
-                    {storeObj2?.map(({ name, url }: any, i: number) => {
-                        return (
-                            <div key={i}>
-                                {i > 0 && <hr />}
-                                <div id={(hash ?? "_pf") + `${i}`} className="flex justify-around items-center">
-                                    {url && (
-                                        <ImageComponentNatural
-                                            src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${url}` || "/placeholder.svg"}
-                                            alt={url}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
-                <div className="text-center mt-4">
-                    {openUppy && uppyInstance && (
-                        <div key="dashboard-multi">
-                            <UploadModeSelector />
-                            <Dashboard uppy={uppyInstance} plugins={["Webcam"]} locale={dashLocale} />
-                        </div>
-                    )}
-                    <div className="space-y-2">
-                        <div className="flex justify-center items-center gap-2">
-                            <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
-                                {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </>
-        )
-    }
     //清理函数
     const cleanupTusLocalStorage = () => {
         try {
@@ -594,59 +530,133 @@ export function useUppyUpload({
             console.warn("清理 Tus localStorage 失败:", error)
         }
     }
+    const getPendingDeleteFiles = useCallback(() => {
+        return pendingDeleteOperations.map(op => op.deleteUrl);
+    }, [pendingDeleteOperations]);
 
-    if (1 === maxFile) {
-        const onlyOne = (
+// 检查特定文件是否在待删除队列中
+    const isFilePendingDelete = useCallback((fileUrl: string) => {
+        return pendingDeleteOperations.some(op => op.deleteUrl === fileUrl);
+    }, [pendingDeleteOperations]);
+
+// 在渲染文件时使用这些函数
+    const renderFileWithDeleteStatus = (file: FileStore, index: number, isSingle: boolean = false) => {
+        const isPendingDelete = isFilePendingDelete(file.url);
+
+        return (
+            <div key={index}>
+                {index > 0 && <hr />}
+                <div id={(hash ?? "_pf") + `${index}`} className="flex justify-around items-center">
+                    {file.url && (
+                        <ImageComponentNatural
+                            src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${file.url}` || "/placeholder.svg"}
+                            alt={file.url}
+                        />
+                    )}
+                </div>
+                {isPendingDelete && (
+                    <div className="text-orange-600 text-sm mt-1 flex items-center">
+                        <span className="animate-pulse">⚠️ 此文件已在待删除队列中</span>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // 添加统一的渲染函数
+    const renderFiles = () => {
+        const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || [];
+        const hasFiles = files.length > 0;
+
+        return (
             <>
-                {renderSingleFile()}
-                <div id={hash ?? "_pf"} className="text-center mt-2">
-                    {storeObj1?.url ? (
-                        <div className="space-x-2">
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={(e) => {
-                                    delOssFileFunc(storeObj1?.url, 0, "eid", repId)
-                                    e.preventDefault()
-                                }}
-                            >
-                                删除旧的
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="flex justify-center items-center gap-2">
-                            <Button size="sm" onClick={scrollHandler}>
-                                {openUppy ? "关闭上传" : "开启上传"}
-                            </Button>
+                {/* 显示已上传的文件 */}
+                <div className="text-center">
+                    {files.map((file, i) => renderFileWithDeleteStatus(file, i, maxFile === 1))}
+
+                    {!hasFiles && (
+                        <div key="placeholder" className="text-center p-4 border-2 border-dashed border-gray-300 rounded-lg">
+                            <p className="text-gray-500">暂无文件</p>
                         </div>
                     )}
                 </div>
-            </>
-        )
 
-        return [onlyOne, uppyInstance, pendingDeleteOperations, () => setPendingDeleteOperations([])] as const
-    } else if (maxFile > 1) {
-        const manyMore = (
-            <>
-                {renderMultipleFiles()}
-                <div id={hash ?? "_pf"} className="text-center mt-2">
-                    {storeObj2?.map(({ url }: any, i: number) => (
-                        <Button
-                            key={i}
-                            type="button"
-                            variant="outline"
-                            onClick={(e) => {
-                                delOssFileFunc(url, i, "eid", repId)
-                                e.preventDefault()
-                            }}
-                        >
-                            删除第{i + 1}个文件
-                        </Button>
-                    ))}
+                {/* 上传面板 */}
+                <div className="text-center mt-4">
+                    {openUppy && uppyInstance && (
+                        <div key="dashboard">
+                            <UploadModeSelector />
+                            <Dashboard uppy={uppyInstance} plugins={["Webcam"]} locale={dashLocale} />
+                        </div>
+                    )}
+
+                    {/* 操作按钮 */}
+                    <div className="space-y-2">
+                        <div className="flex justify-center items-center gap-2">
+                            <Button
+                                size="sm"
+                                disabled={!openUppy && thisMaxFiles <= 0}
+                                onClick={scrollHandler}
+                            >
+                                {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </>
-        )
+        );
+    };
 
-        return [manyMore, uppyInstance, pendingDeleteOperations, () => setPendingDeleteOperations([])] as const
-    } else return [null, null, [], () => {}] as const
+    const renderDeleteButtons = () => {
+        if (maxFile === 1) {
+            return storeObj1?.url ? (
+                <div className="space-x-2">
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={(e) => {
+                            delOssFileFunc(storeObj1?.url, 0, "eid", repId);
+                            e.preventDefault();
+                        }}
+                    >
+                        删除文件
+                        {isFilePendingDelete(storeObj1.url) && (
+                            <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-1 animate-pulse">
+              待删除
+            </span>
+                        )}
+                    </Button>
+                </div>
+            ) : null;
+        } else {
+            return storeObj2?.map(({ url }: any, i: number) => (
+                <Button
+                    key={i}
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                        delOssFileFunc(url, i, "eid", repId);
+                        e.preventDefault();
+                    }}
+                    className="relative"
+                >
+                    删除第{i + 1}个文件
+                    {isFilePendingDelete(url) && (
+                        <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
+            !
+          </span>
+                    )}
+                </Button>
+            ));
+        }
+    };
+    const unifiedComponent = (
+        <>
+            {renderFiles()}
+            <div id={hash ?? "_pf"} className="text-center mt-2">
+                {renderDeleteButtons()}
+            </div>
+        </>
+    );
+    return [unifiedComponent, uppyInstance, pendingDeleteOperations, () => setPendingDeleteOperations([])] as const;
 }
