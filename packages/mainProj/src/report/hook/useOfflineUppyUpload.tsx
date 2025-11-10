@@ -497,17 +497,33 @@ export function useOfflineUppyUpload(params: {
         },
         [repId, subrid, fieldPath, hash, clearPendingDeletes, params.modType, params.redId, params.business, params.liveDays, params.maxFile, params.maxSize]
     )
-    // 取消保存的状态
+// 取消保存的状态
     const cancelSavedState = useCallback(async () => {
         try {
+            // 删除 Uppy 状态
             await fileOperationsQueue.removeUppyState(repId, subrid,
                 fieldPath ? `${fieldPath}${hash ? `:${hash}` : ''}` : hash)
 
-            // 同时清空本地待删除操作
+            // 删除相关的待删除操作
+            const pendingOps = await fileOperationsQueue.getOperationsByReport(repId, subrid);
+            const relevantOps = pendingOps.filter(op =>
+                op.repId === repId &&
+                op.subrid === subrid &&
+                op.deleteUrl // 确保有 deleteUrl
+            );
+
+            // 删除所有相关的删除操作
+            for (const op of relevantOps) {
+                await fileOperationsQueue.removeOperation(op.id);
+            }
+
+            // 清空本地待删除操作
             clearPendingDeletes()
 
+            console.log(`[OfflineUppy] Removed ${relevantOps.length} delete operations from IndexedDB`);
+
             toast.success("状态已清除", {
-                description: "已移除所有保存的文件状态和待删除操作",
+                description: `已移除所有保存的文件状态和 ${relevantOps.length} 个待删除操作`,
             })
         } catch (error) {
             console.error("[OfflineUppy] Failed to remove saved state:", error)

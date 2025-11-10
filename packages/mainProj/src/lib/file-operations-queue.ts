@@ -8,40 +8,17 @@ const DB_VERSION = 1
 const DELETE_QUEUE = "deleteQueue"
 const STATE_STORE = "uppyState"
 
-export type FileOperation = {
+export type DeleteFileOperation = {
     id: string // Unique operation ID
-    type: "upload" | "delete"
     repId: string
     subrid?: string
-    hash: string // Editor hash (e.g., "FxDiagram_pf")
-    business: string
     timestamp: number
     status: "pending" | "processing" | "failed" | "completed"
     retryCount: number
     lastError?: string
-    // Upload-specific data
-    file?: {
-        name: string
-        type: string
-        size: number
-        data?: File // Changed from ArrayBuffer to File
-        lastModified?: number
-    }
-    uploadMeta?: {
-        eid: string
-        liveDays: number
-        business: string
-    }
     // Delete-specific data
-    deleteUrl?: string
-    deleteIndex?: number
-    // Result data
-    result?: any
-    callbackParams?: {
-        modType?: string // e.g., "THICK_MS"
-        redId?: string | number // Record ID
-        fieldPath?: string // e.g., "_FILE_S简图"
-    }
+    deleteUrl: string
+    deleteIndex: number
 }
 
 export type UppyStateSnapshot = {
@@ -68,7 +45,7 @@ export type UppyStateSnapshot = {
 class FileOperationsQueue {
     private db: IDBDatabase | null = null
     private initPromise: Promise<void> | null = null
-    private processingCallbacks: Set<(operations: FileOperation[]) => void> = new Set()
+    private processingCallbacks: Set<(operations: DeleteFileOperation[]) => void> = new Set()
 
     private async init(): Promise<void> {
         if (this.db) return
@@ -97,6 +74,7 @@ class FileOperationsQueue {
                     queueStore.createIndex("repId", "repId", { unique: false })
                     queueStore.createIndex("status", "status", { unique: false })
                     queueStore.createIndex("timestamp", "timestamp", { unique: false })
+                    queueStore.createIndex("deleteUrl", "deleteUrl", { unique: false }) // 新增索引，便于按URL查找
                     console.log("[FileQueue] Queue store created")
                 }
 
@@ -112,12 +90,12 @@ class FileOperationsQueue {
         return this.initPromise
     }
 
-    async addOperation(operation: Omit<FileOperation, "id" | "timestamp" | "status" | "retryCount">): Promise<string> {
+    async addOperation(operation: Omit<DeleteFileOperation, "id" | "timestamp" | "status" | "retryCount">): Promise<string> {
         await this.init()
         if (!this.db) throw new Error("Database not initialized")
 
-        const id = `${operation.type}-${operation.repId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        const fullOperation: FileOperation = {
+        const id = `delete-${operation.repId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        const fullOperation: DeleteFileOperation = {
             ...operation,
             id,
             timestamp: Date.now(),
@@ -131,7 +109,7 @@ class FileOperationsQueue {
             const request = store.add(fullOperation)
 
             request.onsuccess = () => {
-                console.log("[FileQueue] Added operation:", id, operation.type)
+                console.log("[FileQueue] Added operation:", id, operation.deleteUrl)
                 this.notifyProcessingCallbacks()
                 resolve(id)
             }
@@ -139,7 +117,7 @@ class FileOperationsQueue {
         })
     }
 
-    async getPendingOperations(): Promise<FileOperation[]> {
+    async getPendingOperations(): Promise<DeleteFileOperation[]> {
         await this.init()
         if (!this.db) throw new Error("Database not initialized")
 
@@ -149,12 +127,12 @@ class FileOperationsQueue {
             const index = store.index("status")
             const request = index.getAll("pending")
 
-            request.onsuccess = () => resolve(request.result as FileOperation[])
+            request.onsuccess = () => resolve(request.result as DeleteFileOperation[])
             request.onerror = () => reject(request.error)
         })
     }
 
-    async getOperationsByReport(repId: string, subrid?: string): Promise<FileOperation[]> {
+    async getOperationsByReport(repId: string, subrid?: string): Promise<DeleteFileOperation[]> {
         await this.init()
         if (!this.db) throw new Error("Database not initialized")
 
@@ -165,7 +143,7 @@ class FileOperationsQueue {
             const request = index.getAll(repId)
 
             request.onsuccess = () => {
-                const operations = request.result as FileOperation[]
+                const operations = request.result as DeleteFileOperation[]
                 const filtered = subrid ? operations.filter((op) => op.subrid === subrid) : operations
                 resolve(filtered)
             }
@@ -173,7 +151,51 @@ class FileOperationsQueue {
         })
     }
 
-    async updateOperation(id: string, updates: Partial<FileOperation>): Promise<void> {
+    // 新增：根据 deleteUrl 查找操作
+    async getOperationByDeleteUrl(deleteUrl: string): Promise<DeleteFileOperation | null> {
+        await this.init()
+        if (!this.db) throw new Error("Database not initialized")
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db!.transaction([DELETE_QUEUE], "readonly")
+            const store = transaction.objectStore(DELETE_QUEUE)
+            const index = store.index("deleteUrl")
+            const request = index.get(deleteUrl)
+
+            request.onsuccess = () => resolve(request.result as DeleteFileOperation || null)
+            request.onerror = () => reject(request.error)
+        })
+    }
+
+    // 新增：根据 deleteUrl 删除操作
+    async removeOperationByDeleteUrl(deleteUrl: string): Promise<void> {
+        await this.init()
+        if (!this.db) throw new Error("Database not initialized")
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db!.transaction([DELETE_QUEUE], "readwrite")
+            const store = transaction.objectStore(DELETE_QUEUE)
+            const index = store.index("deleteUrl")
+            const request = index.getKey(deleteUrl)
+
+            request.onsuccess = () => {
+                const id = request.result
+                if (id) {
+                    const deleteRequest = store.delete(id)
+                    deleteRequest.onsuccess = () => {
+                        console.log("[FileQueue] Removed operation by deleteUrl:", deleteUrl)
+                        resolve()
+                    }
+                    deleteRequest.onerror = () => reject(deleteRequest.error)
+                } else {
+                    resolve() // 没有找到对应的记录
+                }
+            }
+            request.onerror = () => reject(request.error)
+        })
+    }
+
+    async updateOperation(id: string, updates: Partial<DeleteFileOperation>): Promise<void> {
         await this.init()
         if (!this.db) throw new Error("Database not initialized")
 
@@ -183,7 +205,7 @@ class FileOperationsQueue {
             const getRequest = store.get(id)
 
             getRequest.onsuccess = () => {
-                const operation = getRequest.result as FileOperation
+                const operation = getRequest.result as DeleteFileOperation
                 if (!operation) {
                     resolve()
                     return
@@ -277,7 +299,7 @@ class FileOperationsQueue {
         })
     }
 
-    onProcessingNeeded(callback: (operations: FileOperation[]) => void): () => void {
+    onProcessingNeeded(callback: (operations: DeleteFileOperation[]) => void): () => void {
         this.processingCallbacks.add(callback)
         return () => this.processingCallbacks.delete(callback)
     }
@@ -304,7 +326,7 @@ class FileOperationsQueue {
             queueRequest.onsuccess = (event) => {
                 const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null
                 if (cursor) {
-                    const operation = cursor.value as FileOperation
+                    const operation = cursor.value as DeleteFileOperation
                     if (operation.status === "completed" && now - operation.timestamp > maxAge) {
                         cursor.delete()
                         removedCount++
