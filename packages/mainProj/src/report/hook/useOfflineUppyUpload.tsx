@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useCallback, useRef, useState } from "react"
-import { useUppyUpload, type FileStore } from "./useUppyUpload"
+import {useUppyUpload, type FileStore, PendingDeleteOperation} from "./useUppyUpload"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
@@ -156,37 +156,6 @@ const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
     })
 }
 
-// 优化的文件存储策略（用于 Uppy 文件的保存）
-const optimizeFileStorage = async (file: File): Promise<{
-    data?: ArrayBuffer | File;
-    fileHandle?: any;
-}> => {
-    if (file.size < 3 * 1024 * 1024) {
-        return { data: file }
-    } else if (file.size <= 20 * 1024 * 1024) {
-        try {
-            const arrayBuffer = await fileToArrayBuffer(file)
-            return { data: arrayBuffer }
-        } catch (error) {
-            console.warn("[OfflineUppy] Failed to convert file to ArrayBuffer:", error)
-            return { data: file }
-        }
-    } else {
-        console.warn("[OfflineUppy] Large file detected, offline storage may be limited:", file.name, file.size)
-        toast.warning("大文件提示", {
-            description: `文件 "${file.name}" 较大，会影响性能，存储要求大，建议用句柄方式添加文件`,
-            duration: 5000,
-        })
-        try {
-            const arrayBuffer = await fileToArrayBuffer(file)
-            return { data: arrayBuffer }
-        } catch (error) {
-            console.warn("[OfflineUppy] Failed to process large file:", error)
-            return { data: file }
-        }
-    }
-}
-
 // 专门通过文件句柄方式添加文件到 Uppy
 const addFilesWithHandlesToUppy = async (uppy: Uppy, repId: string, business: string, liveDays: number): Promise<number> => {
     if (!isFileSystemAccessSupported()) {
@@ -241,12 +210,14 @@ const addFilesWithHandlesToUppy = async (uppy: Uppy, repId: string, business: st
 const generateStateKey = (params: {
     repId: string
     subrid?: string
+    redId?: number
     fieldPath?: string
     hash?: string
 }) => {
-    const { repId, subrid, fieldPath, hash } = params
+    const { repId, subrid, redId, fieldPath, hash } = params
     let key = repId
     if (subrid) key += `:${subrid}`
+    if (redId) key += `:${redId}`
     if (fieldPath) key += `:${fieldPath}`
     if (hash) key += `:${hash}`
     return key
@@ -271,28 +242,85 @@ export function useOfflineUppyUpload(params: {
     id?: string
     business?: string
     modType?: string
-    redId?: string
+    redId?: number
     fieldPath?: string
     subrid?: string
 }) {
     const { repId, hash, onFinish, subrid, fieldPath } = params
-    const [uploadDom, uppyInstance, pendingDeleteOperations, clearPendingDeletes] = useUppyUpload({...params, open: true})
+    // 添加状态来存储恢复的待删除操作
+    const [restoredPendingDeletes, setRestoredPendingDeletes] = useState<PendingDeleteOperation[]>([]);
+    // 生成状态key
+    const stateKey = generateStateKey({
+        repId,
+        subrid,
+        redId: params.redId, // 添加 redId
+        fieldPath,
+        hash
+    })
+    // 待删除队列恢复逻辑 - 移动到 useUppyUpload 调用之前
+    useEffect(() => {
+        const restorePendingDeletes = async () => {
+            try {
+                // 从 IndexedDB 加载当前报告相关的待删除操作
+                const pendingOps = await fileOperationsQueue.getOperationsByReport(repId, subrid);
+
+                console.log(`[OfflineUppy] Found ${pendingOps.length} pending operations in IndexedDB`);
+
+                // 过滤出与当前 fieldPath 和 hash 相关的操作
+                const relevantOps = pendingOps.filter(op =>
+                    op.status === "pending" &&
+                    op.hash === (hash || "default") &&
+                    (!fieldPath || op.callbackParams?.fieldPath === fieldPath)
+                );
+
+                console.log(`[OfflineUppy] ${relevantOps.length} relevant pending delete operations for current component`);
+
+                if (relevantOps.length > 0) {
+                    // 转换为 PendingDeleteOperation 格式
+                    const pendingDeleteOperations: PendingDeleteOperation[] = relevantOps.map(op => ({
+                        deleteUrl: op.deleteUrl!,
+                        deleteIndex: op.deleteIndex || 0,
+                        repId: op.repId,
+                        hash: op.hash,
+                        business: op.business,
+                        timestamp: op.timestamp
+                    }));
+
+                    // 更新状态，这样会在 useUppyUpload 初始化时传递过去
+                    setRestoredPendingDeletes(pendingDeleteOperations);
+
+                    console.log(`[OfflineUppy] Restored ${pendingDeleteOperations.length} pending delete operations for initialization`);
+
+                    // 显示提示
+                    if (pendingDeleteOperations.length > 0) {
+                        toast.info("恢复待删除文件", {
+                            description: `发现 ${pendingDeleteOperations.length} 个文件在待删除队列中`,
+                            duration: 3000,
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("[OfflineUppy] Failed to restore pending delete operations:", error);
+            }
+        };
+
+        restorePendingDeletes();
+    }, [repId, subrid, fieldPath, hash]);
+
+    // 将恢复的待删除操作传递给 useUppyUpload
+    const [uploadDom, uppyInstance, pendingDeleteOperations, clearPendingDeletes] = useUppyUpload({
+        ...params,
+        open: true,
+        externalPendingDeletes: restoredPendingDeletes // 传递恢复的待删除操作
+    });
+
     const uppyInstanceRef = useRef<Uppy | null>(null)
     const pendingDeleteOperationsRef = useRef<any[]>([])
-    const router = useRouter()
 
     // 更新 ref 以获取最新的 pendingDeleteOperations
     useEffect(() => {
         pendingDeleteOperationsRef.current = pendingDeleteOperations
     }, [pendingDeleteOperations])
-
-    // 生成状态key
-    const stateKey = generateStateKey({
-        repId,
-        subrid,
-        fieldPath,
-        hash
-    })
 
     useEffect(() => {
         if (uppyInstance) {
@@ -300,7 +328,7 @@ export function useOfflineUppyUpload(params: {
         }
     }, [uppyInstance])
 
-    // 保存 Uppy 当前状态（统一的手动保存）
+    // 保存 Uppy 当前状态（统一的手动保存），确保包含当前的待删除操作
     const saveUppyState = useCallback(
         async (uppy: Uppy) => {
             if (!uppy) {
@@ -311,6 +339,39 @@ export function useOfflineUppyUpload(params: {
             const files = uppy.getFiles()
             const oldfiles = uppy.getState().oldfiles || []
             const currentPendingDeletes = pendingDeleteOperationsRef.current
+
+            // 保存待删除操作到 IndexedDB
+            if (currentPendingDeletes.length > 0) {
+                for (const deleteOp of currentPendingDeletes) {
+                    try {
+                        await fileOperationsQueue.addOperation({
+                            type: "delete",
+                            repId: deleteOp.repId,
+                            subrid: subrid, // 添加 subrid
+                            redId: params.redId, // 添加 redId
+                            fieldPath: params.fieldPath, // 添加 fieldPath
+                            hash: deleteOp.hash,
+                            business: deleteOp.business,
+                            deleteUrl: deleteOp.deleteUrl,
+                            deleteIndex: deleteOp.deleteIndex,
+                            callbackParams: {
+                                modType: params.modType,
+                                redId: params.redId,
+                                fieldPath: params.fieldPath,
+                                subrid: subrid
+                            }
+                        })
+                        console.log(`[OfflineUppy] Saved delete operation for: ${deleteOp.deleteUrl}`)
+                    } catch (error) {
+                        console.error("[OfflineUppy] Failed to save delete operation:", error);
+                        toast.error("保存删除操作失败");
+                    }
+                }
+
+                // 清空本地待删除操作状态
+                clearPendingDeletes()
+                console.log(`[OfflineUppy] Saved ${currentPendingDeletes.length} pending delete operations to IndexedDB`)
+            }
 
             // 如果没有待上传文件、没有已上传文件且没有待删除操作，无需保存
             if (files.length === 0 && oldfiles.length === 0 && currentPendingDeletes.length === 0) {
@@ -326,21 +387,93 @@ export function useOfflineUppyUpload(params: {
 
             const filesWithData = await Promise.all(
                 files.map(async (file) => {
-                    // ... 文件数据处理逻辑保持不变 ...
+                    try {
+                        // 检查是否为文件句柄模式
+                        const isHandleMode = file.meta?.fileHandle && file.meta?.isHandleMode;
+
+                        if (isHandleMode) {
+                            // 文件句柄模式：只保存句柄引用，不保存文件数据
+                            return {
+                                id: file.id,
+                                name: file.name,
+                                type: file.type,
+                                size: file.size,
+                                fileHandle: file.meta.fileHandle,
+                                lastModified: file.meta.lastModified || file.data.lastModified,
+                                progress: file.progress?.percentage || 0,
+                                uploadURL: file.uploadURL,
+                                isHandleMode: true
+                            }
+                        } else {
+                            // 传统模式：根据文件大小优化存储策略
+                            let fileData: ArrayBuffer | File | undefined;
+                            let useArrayBuffer = false;
+
+                            if (file.size < 3 * 1024 * 1024) {
+                                // 小文件：直接保存 File 对象
+                                fileData = file.data;
+                            } else if (file.size <= 20 * 1024 * 1024) {
+                                // 中等文件：转换为 ArrayBuffer
+                                try {
+                                    fileData = await fileToArrayBuffer(file.data);
+                                    useArrayBuffer = true;
+                                } catch (error) {
+                                    console.warn("[OfflineUppy] Failed to convert file to ArrayBuffer, falling back to File:", error);
+                                    fileData = file.data;
+                                }
+                            } else {
+                                // 大文件：提示用户使用句柄模式
+                                console.warn("[OfflineUppy] Large file detected, storing as File:", file.name, file.size);
+                                fileData = file.data;
+                                toast.warning("大文件存储提示", {
+                                    description: `文件 "${file.name}" 较大，建议使用文件句柄模式以获得更好的离线体验`,
+                                    duration: 4000,
+                                });
+                            }
+
+                            return {
+                                id: file.id,
+                                name: file.name,
+                                type: file.type,
+                                size: file.size,
+                                data: fileData,
+                                lastModified: file.data.lastModified,
+                                progress: file.progress?.percentage || 0,
+                                uploadURL: file.uploadURL,
+                                isHandleMode: false,
+                                useArrayBuffer
+                            }
+                        }
+                    } catch (error) {
+                        console.error("[OfflineUppy] Failed to process file for saving:", file.name, error);
+                        toast.error(`处理文件失败: ${file.name}`);
+                        return null;
+                    }
                 })
-            )
+            ).then(results => results.filter(Boolean)) // 过滤掉处理失败的文件
 
             // 将待删除操作保存到 IndexedDB
             if (currentPendingDeletes.length > 0) {
                 for (const deleteOp of currentPendingDeletes) {
-                    await fileOperationsQueue.addOperation({
-                        type: "delete",
-                        repId: deleteOp.repId,
-                        hash: deleteOp.hash,
-                        business: deleteOp.business,
-                        deleteUrl: deleteOp.deleteUrl,
-                        deleteIndex: deleteOp.deleteIndex,
-                    })
+                    try {
+                        await fileOperationsQueue.addOperation({
+                            type: "delete",
+                            repId: deleteOp.repId,
+                            hash: deleteOp.hash,
+                            business: deleteOp.business,
+                            deleteUrl: deleteOp.deleteUrl,
+                            deleteIndex: deleteOp.deleteIndex,
+                            callbackParams: {
+                                modType: params.modType,
+                                redId: params.redId,
+                                fieldPath: params.fieldPath
+                            }
+                        })
+                        console.log(`[OfflineUppy] Saved delete operation for: ${deleteOp.deleteUrl}`)
+                    } catch (error) {
+                        console.error("[OfflineUppy] Failed to save delete operation:", error);
+                        toast.error("保存删除操作失败");
+                    }
                 }
 
                 // 清空本地待删除操作状态
@@ -349,33 +482,52 @@ export function useOfflineUppyUpload(params: {
                 console.log(`[OfflineUppy] Saved ${currentPendingDeletes.length} pending delete operations to IndexedDB`)
             }
 
-            await fileOperationsQueue.saveUppyState({
-                key: stateKey,
-                repId,
-                subrid,
-                hash: hash || "default",
-                timestamp: Date.now(),
-                files: filesWithData,
-                meta: {
-                    ...uppy.getState().meta,
-                    originalPageUrl: getCurrentPageUrl(),
-                    fieldPath: fieldPath,
-                },
-                oldfiles: oldfiles,
-            })
+            // 保存 Uppy 状态到 IndexedDB
+            try {
+                await fileOperationsQueue.saveUppyState({
+                    key: stateKey,
+                    repId,
+                    subrid,
+                    hash: hash || "default",
+                    timestamp: Date.now(),
+                    files: filesWithData,
+                    meta: {
+                        ...uppy.getState().meta,
+                        originalPageUrl: getCurrentPageUrl(),
+                        fieldPath: fieldPath,
+                        modType: params.modType,
+                        redId: params.redId,
+                        business: params.business,
+                        liveDays: params.liveDays,
+                        maxFile: params.maxFile,
+                        maxSize: params.maxSize
+                    },
+                    oldfiles: oldfiles,
+                })
 
-            const fileCount = filesWithData.length
-            const handleModeCount = filesWithData.filter(f => f.isHandleMode).length
-            const oldFileCount = oldfiles.length
-            const deleteCount = currentPendingDeletes.length
+                const fileCount = filesWithData.length
+                const handleModeCount = filesWithData.filter(f => f.isHandleMode).length
+                const oldFileCount = oldfiles.length
+                const deleteCount = currentPendingDeletes.length
 
-            console.log(`[OfflineUppy] Saved state: ${stateKey}, ${fileCount} pending files (${handleModeCount} with handles), ${oldFileCount} uploaded files, ${deleteCount} pending deletes`)
+                console.log(`[OfflineUppy] Saved state: ${stateKey}, ${fileCount} pending files (${handleModeCount} with handles), ${oldFileCount} uploaded files, ${deleteCount} pending deletes`)
 
-            toast.success("保存成功", {
-                description: `已保存 ${fileCount} 个待上传文件（${handleModeCount} 个使用文件句柄）、${oldFileCount} 个已上传文件和 ${deleteCount} 个待删除操作的状态`,
-            })
+                toast.success("保存成功", {
+                    description: `已保存 ${fileCount} 个待上传文件（${handleModeCount} 个使用文件句柄）、${oldFileCount} 个已上传文件和 ${deleteCount} 个待删除操作的状态`,
+                    duration: 3000,
+                })
+
+                // 更新保存状态
+                setHasSavedState(true)
+
+            } catch (error) {
+                console.error("[OfflineUppy] Failed to save Uppy state:", error)
+                toast.error("保存失败", {
+                    description: "无法保存文件状态到本地存储",
+                })
+            }
         },
-        [repId, hash, stateKey, subrid, fieldPath, clearPendingDeletes],
+        [repId, subrid, fieldPath, hash, clearPendingDeletes, params.modType, params.redId, params.business, params.liveDays, params.maxFile, params.maxSize]
     )
 
     // 取消保存的状态
@@ -618,12 +770,20 @@ export function useOfflineUppyUpload(params: {
                 // 从 IndexedDB 加载当前报告相关的待删除操作
                 const pendingOps = await fileOperationsQueue.getOperationsByReport(repId, subrid);
 
-                // 过滤出与当前 fieldPath 和 hash 相关的操作
+                console.log(`[OfflineUppy] Found ${pendingOps.length} pending operations in IndexedDB`);
+
+                // 修复过滤逻辑 - 使用完整的匹配条件
                 const relevantOps = pendingOps.filter(op =>
                     op.status === "pending" &&
-                    op.hash === (hash || "default") &&
-                    (!fieldPath || op.callbackParams?.fieldPath === fieldPath)
+                    op.type === "delete" &&
+                    op.repId === repId &&
+                    op.subrid === subrid &&
+                    op.redId === params.redId &&
+                    op.fieldPath === fieldPath &&
+                    op.hash === (hash || "default")
                 );
+
+                console.log(`[OfflineUppy] ${relevantOps.length} relevant pending delete operations for current component`);
 
                 if (relevantOps.length > 0) {
                     // 转换为 PendingDeleteOperation 格式
@@ -636,10 +796,18 @@ export function useOfflineUppyUpload(params: {
                         timestamp: op.timestamp
                     }));
 
-                    // 更新待删除操作状态
-                    pendingDeleteOperationsRef.current = pendingDeleteOperations;
-                    // 这里需要调用 clearPendingDeletes 的更新函数，你可能需要调整 useUppyUpload 的接口
-                    console.log(`[OfflineUppy] Restored ${pendingDeleteOperations.length} pending delete operations`);
+                    // 更新状态，这样会在 useUppyUpload 初始化时传递过去
+                    setRestoredPendingDeletes(pendingDeleteOperations);
+
+                    console.log(`[OfflineUppy] Restored ${pendingDeleteOperations.length} pending delete operations for initialization`);
+
+                    // 显示提示
+                    if (pendingDeleteOperations.length > 0) {
+                        toast.info("恢复待删除文件", {
+                            description: `发现 ${pendingDeleteOperations.length} 个文件在待删除队列中`,
+                            duration: 3000,
+                        });
+                    }
                 }
             } catch (error) {
                 console.error("[OfflineUppy] Failed to restore pending delete operations:", error);
@@ -647,7 +815,7 @@ export function useOfflineUppyUpload(params: {
         };
 
         restorePendingDeletes();
-    }, [repId, subrid, fieldPath, hash]);
+    }, [repId, subrid, params.redId, fieldPath, hash]);
 
     const ActionButtons = () => (
         <div className="flex flex-col gap-2 mt-2">

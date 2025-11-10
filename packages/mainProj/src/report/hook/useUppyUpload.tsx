@@ -90,7 +90,7 @@ export const useScrollHandler = (targetSelector: string) => {
     )
 }
 
-type PendingDeleteOperation = {
+export type PendingDeleteOperation = {
     deleteUrl: string;
     deleteIndex: number;
     repId: string;
@@ -127,6 +127,7 @@ export function useUppyUpload({
                                   id,
                                   business = "rep",
                                   open,
+                                  externalPendingDeletes = [] // 新增参数
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -138,9 +139,10 @@ export function useUppyUpload({
     id?: string
     business?: string
     open?: boolean
+    externalPendingDeletes?: PendingDeleteOperation[] // 新增参数类型
 }) {
     // 添加待删除操作状态
-    const [pendingDeleteOperations, setPendingDeleteOperations] = React.useState<PendingDeleteOperation[]>([]);
+    const [pendingDeleteOperations, setPendingDeleteOperations] = React.useState<PendingDeleteOperation[]>(externalPendingDeletes);
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
@@ -530,10 +532,12 @@ export function useUppyUpload({
             console.warn("清理 Tus localStorage 失败:", error)
         }
     }
-    const getPendingDeleteFiles = useCallback(() => {
-        return pendingDeleteOperations.map(op => op.deleteUrl);
-    }, [pendingDeleteOperations]);
 
+    React.useEffect(() => {
+        if (externalPendingDeletes.length > 0) {
+            setPendingDeleteOperations(externalPendingDeletes);
+        }
+    }, [externalPendingDeletes]);
 // 检查特定文件是否在待删除队列中
     const isFilePendingDelete = useCallback((fileUrl: string) => {
         return pendingDeleteOperations.some(op => op.deleteUrl === fileUrl);

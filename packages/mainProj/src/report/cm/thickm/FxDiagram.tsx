@@ -89,7 +89,9 @@ export const FxDiagram = ({
         maxSize: 1500,
         modType,
         redId,
-        fieldPath: pic, // e.g., "_FILE_S简图"
+        fieldPath: pic,
+        subrid,
+        business: "rep",
     })
     //不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent {某一个表行的记录对象再倒腾一次}。
     const [render] = useFrameEditorBar({

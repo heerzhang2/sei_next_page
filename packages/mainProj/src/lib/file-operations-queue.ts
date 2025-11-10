@@ -38,9 +38,9 @@ export type FileOperation = {
     // Result data
     result?: any
     callbackParams?: {
-        modType: string // e.g., "THICK_MS"
-        redId: string | number // Record ID
-        fieldPath: string // e.g., "_FILE_S简图"
+        modType?: string // e.g., "THICK_MS"
+        redId?: string | number // Record ID
+        fieldPath?: string // e.g., "_FILE_S简图"
     }
 }
 
