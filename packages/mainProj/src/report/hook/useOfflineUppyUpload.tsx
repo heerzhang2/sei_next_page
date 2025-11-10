@@ -242,6 +242,139 @@ const getCurrentPageUrl = () => {
     return ''
 }
 
+// 提取的文件恢复逻辑函数
+const restoreFileFromSnapshot = async (
+    fileData: any,
+    uppyInstance: Uppy,
+    repId: string,
+    business: string,
+    liveDays: number,
+    snapshotMeta: any
+): Promise<{ restored: boolean; fromHandle: boolean }> => {
+    try {
+        console.log(`[OfflineUppy] Processing file: ${fileData.name}`, {
+            hasHandle: !!fileData.fileHandle,
+            isHandleMode: fileData.isHandleMode,
+            hasData: !!fileData.data
+        })
+
+        let fileToRestore: File | null = null
+        let fromHandle = false
+
+        // 优先从文件句柄恢复（文件句柄模式）
+        if (fileData.fileHandle && fileData.isHandleMode) {
+            console.log(`[OfflineUppy] Attempting to restore from handle: ${fileData.name}`)
+
+            try {
+                fileToRestore = await restoreFileFromHandle(fileData)
+                console.log(`[OfflineUppy] Handle restoration result for ${fileData.name}:`, {
+                    success: !!fileToRestore,
+                    fileType: fileToRestore?.type,
+                    fileSize: fileToRestore?.size
+                })
+            } catch (handleError) {
+                console.error(`[OfflineUppy] Handle restoration error for ${fileData.name}:`, handleError)
+                return { restored: false, fromHandle: false }
+            }
+
+            if (fileToRestore) {
+                fromHandle = true
+                console.log("[OfflineUppy] Successfully restored file from handle:", fileData.name)
+
+                // 修复：使用与文件句柄添加时相同的文件对象结构
+                const fileToAdd = {
+                    id: fileData.id || `file-handle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    name: fileData.name,
+                    type: fileData.type,
+                    data: fileToRestore,
+                    size: fileData.size,
+                    meta: {
+                        ...snapshotMeta,
+                        fileHandle: fileData.fileHandle, // 保持文件句柄
+                        relativePath: '',
+                        lastModified: fileData.lastModified || Date.now(),
+                        eid: repId,
+                        business: business,
+                        liveDays: liveDays,
+                        isHandleMode: true // 明确标记为句柄模式
+                    }
+                }
+
+                // 使用 Uppy 的 addFile 方法
+                try {
+                    const result = uppyInstance.addFile(fileToAdd)
+                    if (result) {
+                        console.log(`[OfflineUppy] Successfully added file handle to Uppy: ${fileData.name}`)
+                        return { restored: true, fromHandle: true }
+                    } else {
+                        console.error(`[OfflineUppy] Uppy addFile returned false for: ${fileData.name}`)
+                        return { restored: false, fromHandle: false }
+                    }
+                } catch (addError) {
+                    console.error(`[OfflineUppy] Failed to add file to Uppy: ${fileData.name}`, addError)
+                    return { restored: false, fromHandle: false }
+                }
+            } else {
+                console.warn(`[OfflineUppy] File handle restoration returned null for: ${fileData.name}`)
+                return { restored: false, fromHandle: false }
+            }
+        }
+        // 传统模式恢复
+        else if (!fileData.isHandleMode && fileData.data) {
+            console.log(`[OfflineUppy] Attempting traditional restore: ${fileData.name}`)
+
+            if (fileData.data instanceof File) {
+                fileToRestore = fileData.data
+            } else if (fileData.data instanceof ArrayBuffer) {
+                fileToRestore = arrayBufferToFile(
+                    fileData.data,
+                    fileData.name,
+                    fileData.type,
+                    fileData.lastModified
+                )
+            }
+
+            if (fileToRestore) {
+                const fileToAdd = {
+                    id: fileData.id,
+                    name: fileData.name,
+                    type: fileData.type,
+                    data: fileToRestore,
+                    size: fileData.size,
+                    meta: {
+                        relativePath: '',
+                        lastModified: fileData.lastModified || Date.now(),
+                        ...snapshotMeta
+                    }
+                }
+                try {
+                    const result = uppyInstance.addFile(fileToAdd)
+                    if (result) {
+                        console.log(`[OfflineUppy] Successfully added traditional file to Uppy: ${fileData.name}`)
+                        return { restored: true, fromHandle: false }
+                    } else {
+                        console.error(`[OfflineUppy] Uppy addFile returned false for traditional file: ${fileData.name}`)
+                        return { restored: false, fromHandle: false }
+                    }
+                } catch (addError) {
+                    console.error(`[OfflineUppy] Failed to add traditional file to Uppy: ${fileData.name}`, addError)
+                    return { restored: false, fromHandle: false }
+                }
+            }
+        } else {
+            console.warn(`[OfflineUppy] File cannot be restored - no valid data: ${fileData.name}`, {
+                hasHandle: !!fileData.fileHandle,
+                isHandleMode: fileData.isHandleMode,
+                hasData: !!fileData.data
+            })
+        }
+    } catch (error) {
+        console.error("[OfflineUppy] Failed to restore file:", fileData.name, error)
+    }
+
+    return { restored: false, fromHandle: false }
+}
+
 export function useOfflineUppyUpload(params: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -484,16 +617,52 @@ export function useOfflineUppyUpload(params: {
     // 取消保存的状态
     const cancelSavedState = useCallback(async () => {
         try {
-            console.log(`[OfflineUppy] Removing saved state with key: ${stateKey}`)
+            console.log(`[OfflineUppy] Removing saved state for key: ${stateKey}`)
 
-            // 删除 Uppy 状态（这会同时删除保存的待删除操作数组）
+            // 1. 删除 IndexedDB 中的 Uppy 状态
             await fileOperationsQueue.removeUppyState(stateKey)
 
-            // 清空恢复的待删除操作
+            // 2. 清空 Uppy 实例中的文件状态
+            if (uppyInstanceRef.current) {
+                // 暂停所有上传
+                uppyInstanceRef.current.pauseAll();
+
+                // 获取当前所有文件并逐个移除
+                const currentFiles = uppyInstanceRef.current.getFiles();
+                currentFiles.forEach(file => {
+                    try {
+                        uppyInstanceRef.current?.removeFile(file.id);
+                    } catch (error) {
+                        console.warn(`[OfflineUppy] Failed to remove file ${file.id}:`, error);
+                    }
+                });
+
+                // 清空 oldfiles 状态
+                uppyInstanceRef.current.setState({ oldfiles: [] });
+
+                // 重置 meta 数据
+                uppyInstanceRef.current.setMeta({
+                    eid: repId,
+                    liveDays: params.liveDays || 2,
+                    business: params.business || "rep"
+                });
+
+                console.log(`[OfflineUppy] Cleared ${currentFiles.length} files from Uppy instance`);
+            }
+
+            // 3. 清空恢复的待删除操作
             setRestoredPendingDeletes([]);
 
-            // 重新检查状态
+            // 4. 清空 useUppyUpload 中的待删除操作
+            if (clearPendingDeletes) {
+                clearPendingDeletes();
+            }
+
+            // 5. 重新检查状态
             await checkSavedState()
+
+            // 6. 更新保存状态
+            setHasSavedState(false)
 
             toast.success("状态已清除", {
                 description: "已移除所有保存的文件状态和待删除操作",
@@ -502,8 +671,7 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Failed to remove saved state:", error)
             toast.error("清除状态失败")
         }
-    }, [stateKey, checkSavedState])
-
+    }, [stateKey, checkSavedState, clearPendingDeletes, repId, params.liveDays, params.business])
     // 恢复状态时，从 Uppy state 的 meta 中恢复待删除操作
     useEffect(() => {
         const restoreState = async () => {
@@ -543,7 +711,6 @@ export function useOfflineUppyUpload(params: {
                 setRestoredPendingDeletes([]);
             }
 
-            // ... 其他恢复逻辑保持不变 ...
             uppyInstanceRef.current.pauseAll()
 
             // 先设置 meta 数据
@@ -561,127 +728,30 @@ export function useOfflineUppyUpload(params: {
             let restoredCount = 0
             let fromHandleCount = 0
             let handleFailures = 0
-            let addFailures = 0            // 文件恢复逻辑保持不变 ...
+            let addFailures = 0
+
+            // 使用提取的函数恢复每个文件
             for (const fileData of snapshot.files) {
-                try {
-                    console.log(`[OfflineUppy] Processing file: ${fileData.name}`, {
-                        hasHandle: !!fileData.fileHandle,
-                        isHandleMode: fileData.isHandleMode,
-                        hasData: !!fileData.data
-                    })
+                const result = await restoreFileFromSnapshot(
+                    fileData,
+                    uppyInstanceRef.current,
+                    repId,
+                    params.business || "rep",
+                    params.liveDays || 2,
+                    snapshot.meta
+                )
 
-                    let fileToRestore: File | null = null
-
-                    // 优先从文件句柄恢复（文件句柄模式）
+                if (result.restored) {
+                    restoredCount++
+                    if (result.fromHandle) {
+                        fromHandleCount++
+                    }
+                } else {
                     if (fileData.fileHandle && fileData.isHandleMode) {
-                        console.log(`[OfflineUppy] Attempting to restore from handle: ${fileData.name}`)
-
-                        try {
-                            fileToRestore = await restoreFileFromHandle(fileData)
-                            console.log(`[OfflineUppy] Handle restoration result for ${fileData.name}:`, {
-                                success: !!fileToRestore,
-                                fileType: fileToRestore?.type,
-                                fileSize: fileToRestore?.size
-                            })
-                        } catch (handleError) {
-                            console.error(`[OfflineUppy] Handle restoration error for ${fileData.name}:`, handleError)
-                            handleFailures++
-                            continue
-                        }
-
-                        if (fileToRestore) {
-                            fromHandleCount++
-                            console.log("[OfflineUppy] Successfully restored file from handle:", fileData.name)
-
-                            // 修复：使用与文件句柄添加时相同的文件对象结构
-                            const fileToAdd = {
-                                id: fileData.id || `file-handle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                                name: fileData.name,
-                                type: fileData.type,
-                                data: fileToRestore,
-                                size: fileData.size,
-                                meta: {
-                                    ...snapshot.meta,
-                                    fileHandle: fileData.fileHandle, // 保持文件句柄
-                                    relativePath: '',
-                                    lastModified: fileData.lastModified || Date.now(),
-                                    eid: repId,
-                                    business: params.business || "rep",
-                                    liveDays: params.liveDays || 2,
-                                    isHandleMode: true // 明确标记为句柄模式
-                                }
-                            }
-
-                            // 使用 Uppy 的 addFile 方法
-                            try {
-                                const result = uppyInstanceRef.current.addFile(fileToAdd)
-                                if (result) {
-                                    restoredCount++
-                                    console.log(`[OfflineUppy] Successfully added file handle to Uppy: ${fileData.name}`)
-                                } else {
-                                    console.error(`[OfflineUppy] Uppy addFile returned false for: ${fileData.name}`)
-                                    addFailures++
-                                }
-                            } catch (addError) {
-                                console.error(`[OfflineUppy] Failed to add file to Uppy: ${fileData.name}`, addError)
-                                addFailures++
-                            }
-                        } else {
-                            console.warn(`[OfflineUppy] File handle restoration returned null for: ${fileData.name}`)
-                            handleFailures++
-                        }
-                    }
-                    // 传统模式恢复
-                    else if (!fileData.isHandleMode && fileData.data) {
-                        console.log(`[OfflineUppy] Attempting traditional restore: ${fileData.name}`)
-
-                        if (fileData.data instanceof File) {
-                            fileToRestore = fileData.data
-                        } else if (fileData.data instanceof ArrayBuffer) {
-                            fileToRestore = arrayBufferToFile(
-                                fileData.data,
-                                fileData.name,
-                                fileData.type,
-                                fileData.lastModified
-                            )
-                        }
-
-                        if (fileToRestore) {
-                            const fileToAdd = {
-                                id: fileData.id,
-                                name: fileData.name,
-                                type: fileData.type,
-                                data: fileToRestore,
-                                size: fileData.size,
-                                meta: {
-                                    relativePath: '',
-                                    lastModified: fileData.lastModified || Date.now(),
-                                    ...snapshot.meta
-                                }
-                            }
-                            try {
-                                const result = uppyInstanceRef.current.addFile(fileToAdd)
-                                if (result) {
-                                    restoredCount++
-                                    console.log(`[OfflineUppy] Successfully added traditional file to Uppy: ${fileData.name}`)
-                                } else {
-                                    console.error(`[OfflineUppy] Uppy addFile returned false for traditional file: ${fileData.name}`)
-                                    addFailures++
-                                }
-                            } catch (addError) {
-                                console.error(`[OfflineUppy] Failed to add traditional file to Uppy: ${fileData.name}`, addError)
-                                addFailures++
-                            }
-                        }
+                        handleFailures++
                     } else {
-                        console.warn(`[OfflineUppy] File cannot be restored - no valid data: ${fileData.name}`, {
-                            hasHandle: !!fileData.fileHandle,
-                            isHandleMode: fileData.isHandleMode,
-                            hasData: !!fileData.data
-                        })
+                        addFailures++
                     }
-                } catch (error) {
-                    console.error("[OfflineUppy] Failed to restore file:", fileData.name, error)
                 }
             }
 
@@ -852,7 +922,9 @@ export function useOfflineUppyUpload(params: {
                                 type="button"
                                 variant="destructive"
                                 size="sm"
-                                onClick={cancelSavedState}
+                                onClick={async () => {
+                                    await cancelSavedState();
+                                }}
                                 className="flex items-center"
                             >
                                 <Trash2 className="w-4 h-4 mr-2" />
