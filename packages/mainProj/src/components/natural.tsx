@@ -27,6 +27,7 @@ export const ImageComponentNatural: React.FC<ImageProps> = ({ src, alt = "图片
     }
     img.onerror = () => {
       setIsLoading(false)
+      setDimensions({ width:0, height:0 })
     }
     img.src = src
 
