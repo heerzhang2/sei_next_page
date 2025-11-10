@@ -284,9 +284,12 @@ export function useOfflineUppyUpload(params: {
             console.log(`[OfflineUppy] Found snapshot:`, snapshot ? `yes, ${snapshot.files?.length || 0} files` : 'no')
             setHasSavedState(!!snapshot)
 
-            // 如果有快照，也检查其中的待删除操作
+            // 如果有快照，也恢复其中的待删除操作
             if (snapshot?.meta?.pendingDeleteOperations) {
                 console.log(`[OfflineUppy] Found ${snapshot.meta.pendingDeleteOperations.length} pending delete operations in snapshot`)
+                setRestoredPendingDeletes(snapshot.meta.pendingDeleteOperations);
+            } else {
+                setRestoredPendingDeletes([]);
             }
         } catch (error) {
             console.error("[OfflineUppy] Failed to check saved state:", error)
@@ -462,8 +465,8 @@ export function useOfflineUppyUpload(params: {
                     duration: 3000,
                 })
 
-                // 清空本地待删除操作状态（因为已经保存到 Uppy state 中）
-                clearPendingDeletes()
+                // 重要：保存后立即重新检查状态，确保 restoredPendingDeletes 更新
+                await checkSavedState();
 
                 // 更新保存状态
                 setHasSavedState(true)
@@ -475,7 +478,7 @@ export function useOfflineUppyUpload(params: {
                 })
             }
         },
-        [repId, subrid, fieldPath, hash, clearPendingDeletes, params.modType, params.redId, params.business, params.liveDays, params.maxFile, params.maxSize, stateKey]
+        [repId, subrid, fieldPath, hash, params.modType, params.redId, params.business, params.liveDays, params.maxFile, params.maxSize, stateKey, checkSavedState]
     )
 
     // 取消保存的状态
@@ -486,8 +489,8 @@ export function useOfflineUppyUpload(params: {
             // 删除 Uppy 状态（这会同时删除保存的待删除操作数组）
             await fileOperationsQueue.removeUppyState(stateKey)
 
-            // 清空本地待删除操作
-            clearPendingDeletes()
+            // 清空恢复的待删除操作
+            setRestoredPendingDeletes([]);
 
             // 重新检查状态
             await checkSavedState()
@@ -499,7 +502,7 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Failed to remove saved state:", error)
             toast.error("清除状态失败")
         }
-    }, [stateKey, clearPendingDeletes, checkSavedState])
+    }, [stateKey, checkSavedState])
 
     // 恢复状态时，从 Uppy state 的 meta 中恢复待删除操作
     useEffect(() => {
@@ -535,6 +538,9 @@ export function useOfflineUppyUpload(params: {
                         duration: 3000,
                     });
                 }
+            } else {
+                // 如果没有待删除操作，确保清空状态
+                setRestoredPendingDeletes([]);
             }
 
             // ... 其他恢复逻辑保持不变 ...
@@ -555,8 +561,7 @@ export function useOfflineUppyUpload(params: {
             let restoredCount = 0
             let fromHandleCount = 0
             let handleFailures = 0
-            let addFailures = 0
-            // 文件恢复逻辑保持不变 ...
+            let addFailures = 0            // 文件恢复逻辑保持不变 ...
             for (const fileData of snapshot.files) {
                 try {
                     console.log(`[OfflineUppy] Processing file: ${fileData.name}`, {
@@ -704,8 +709,12 @@ export function useOfflineUppyUpload(params: {
         }, 500)
     }, [repId, hash, params.liveDays, params.business, stateKey])
 
+    // 执行待删除操作 - 修复版本
     const executePendingDeletes = useCallback(async () => {
-        if (!pendingDeleteOperations || pendingDeleteOperations.length === 0) {
+        // 使用 restoredPendingDeletes 而不是 pendingDeleteOperations
+        const operationsToExecute = restoredPendingDeletes.length > 0 ? restoredPendingDeletes : pendingDeleteOperations;
+
+        if (!operationsToExecute || operationsToExecute.length === 0) {
             toast.info("没有待执行的删除操作");
             return;
         }
@@ -715,13 +724,13 @@ export function useOfflineUppyUpload(params: {
             return;
         }
 
-        toast.info(`开始执行 ${pendingDeleteOperations.length} 个待删除操作...`);
+        toast.info(`开始执行 ${operationsToExecute.length} 个待删除操作...`);
 
         let successCount = 0;
         let failCount = 0;
 
         // 逐个执行删除操作
-        for (const deleteOp of pendingDeleteOperations) {
+        for (const deleteOp of operationsToExecute) {
             try {
                 // 调用实际的删除函数
                 await new Promise((resolve) => {
@@ -749,13 +758,15 @@ export function useOfflineUppyUpload(params: {
                 description: `成功执行 ${successCount} 个删除操作`,
             });
             // 清空已完成的删除操作
-            clearPendingDeletes();
+            setRestoredPendingDeletes([]);
+            // 重新检查状态
+            await checkSavedState();
         } else {
             toast.warning("删除操作部分完成", {
                 description: `成功: ${successCount} 个, 失败: ${failCount} 个`,
             });
         }
-    }, [pendingDeleteOperations, delOssFileFunc, clearPendingDeletes]);
+    }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState]);
 
     // 通过文件句柄方式添加文件到 Uppy
     const addFilesWithHandles = useCallback(async () => {
@@ -777,6 +788,9 @@ export function useOfflineUppyUpload(params: {
     }, [repId, params.business, params.liveDays])
 
     const ActionButtons = () => {
+        // 使用 restoredPendingDeletes 来显示待删除操作数量
+        const displayPendingDeletes = restoredPendingDeletes.length > 0 ? restoredPendingDeletes : pendingDeleteOperations;
+
         return (
             <div className="flex flex-col gap-2 mt-2">
                 {/* 文件添加方式选择 */}
@@ -820,16 +834,15 @@ export function useOfflineUppyUpload(params: {
                             onClick={async () => {
                                 if (uppyInstanceRef.current) {
                                     await saveUppyState(uppyInstanceRef.current)
-                                    setHasSavedState(true)
                                 }
                             }}
                             className="flex items-center flex-1"
                         >
                             <Upload className="w-4 h-4 mr-2" />
                             保存文件上传和删除状态
-                            {pendingDeleteOperations.length > 0 && (
+                            {displayPendingDeletes.length > 0 && (
                                 <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                                {pendingDeleteOperations.length} 待删除
+                                {displayPendingDeletes.length} 待删除
                             </span>
                             )}
                         </Button>
@@ -849,7 +862,7 @@ export function useOfflineUppyUpload(params: {
                     </div>
 
                     {/* 新增：执行待删除操作按钮 */}
-                    {pendingDeleteOperations.length > 0 && (
+                    {displayPendingDeletes.length > 0 && (
                         <div className="flex gap-2">
                             <Button
                                 type="button"
@@ -859,7 +872,7 @@ export function useOfflineUppyUpload(params: {
                                 className="flex items-center flex-1 bg-orange-500 hover:bg-orange-600 text-white"
                             >
                                 <RotateCcw className="w-4 h-4 mr-2" />
-                                执行待删除操作 ({pendingDeleteOperations.length})
+                                执行待删除操作 ({displayPendingDeletes.length})
                             </Button>
                         </div>
                     )}
@@ -870,13 +883,13 @@ export function useOfflineUppyUpload(params: {
                         </p>
                     )}
 
-                    {pendingDeleteOperations.length > 0 && (
+                    {displayPendingDeletes.length > 0 && (
                         <div className="space-y-1">
                             <p className="text-xs text-orange-600">
-                                ⚠ 有 {pendingDeleteOperations.length} 个删除操作等待执行
+                                ⚠ 有 {displayPendingDeletes.length} 个删除操作等待执行
                             </p>
                             <div className="text-xs text-gray-500">
-                                {pendingDeleteOperations.map((op, index) => (
+                                {displayPendingDeletes.map((op, index) => (
                                     <div key={index} className="truncate">
                                         {op.deleteUrl.split('/').pop()}
                                     </div>
