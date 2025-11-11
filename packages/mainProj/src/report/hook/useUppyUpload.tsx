@@ -8,6 +8,7 @@ import Dashboard from "@uppy/react/dashboard"
 import "@uppy/core/css/style.min.css"
 import "@uppy/dashboard/css/style.min.css"
 import "./uppy-fixes.css"
+import "./popover-fixes.css"
 import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
@@ -52,7 +53,7 @@ export const DASH_LOCALE_CONFIG = {
             0: "合计%{smart_count}个 完成 %{complete} 个",
             1: "合计%{smart_count}个 完成 %{complete} 个",
         },
-        upload: '上传',
+        upload: "上传",
         uploading: "努力上传中",
         uploadPaused: "暂停上传",
         paused: "暂停",
@@ -60,10 +61,10 @@ export const DASH_LOCALE_CONFIG = {
         uploadComplete: "恭喜干完了",
         complete: "完事",
         done: "返回",
-        back: '返回',
+        back: "返回",
         uploadXNewFiles: {
-            0: '添加 %{smart_count} 个文件',
-            1: '添加 %{smart_count} 个文件',
+            0: "添加 %{smart_count} 个文件",
+            1: "添加 %{smart_count} 个文件",
         },
     },
 }
@@ -91,12 +92,12 @@ export const useScrollHandler = (targetSelector: string) => {
 }
 
 export type PendingDeleteOperation = {
-    deleteUrl: string;
-    deleteIndex: number;
-    repId: string;
-    hash: string;
-    business: string;
-    timestamp: number;
+    deleteUrl: string
+    deleteIndex: number
+    repId: string
+    hash: string
+    business: string
+    timestamp: number
 }
 // 上传模式类型
 type UploadMode = "tus" | "xhr"
@@ -110,7 +111,7 @@ type UploadMode = "tus" | "xhr"
  * 删除旧文件：关联的 rep+ repId必须的！
  * @param liveDays  该文件要求存储保留天数。 报告应该保留天数估计> 20年吧。
  * @param onFinish [可选参数] #立刻生效给context 避免 事务性的缺失。 【上传任务完成】保存回调。 可能有多个的已经上传的文件！若删除多文件其中一个文件的onFinish参数file是剩下的文件数组。
- *  参数 onFinish?的回调类型:(file:any,del:boolean)=>void；
+ *  参数 onFinish?的回调类型:(file:any,newUpload:boolean)=>void；
  * @param storeObj 对象或数组， 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
  * @return {} 节点DOM
  * 【局限性】一个编辑器页面内不能放置多个useUppyUpload来做上传，因为uppy全局变量？，必须独立？ 走类似的useUppyUploadM。
@@ -127,14 +128,14 @@ export function useUppyUpload({
                                   id,
                                   business = "rep",
                                   open,
-                                  externalPendingDeletes = [] // 新增参数
+                                  externalPendingDeletes = [], // 新增参数
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
     maxFile?: number
     liveDays?: number
     maxSize?: number
-    onFinish?: (file: any, del: boolean) => void
+    onFinish?: (file: any, newUpload: boolean) => void
     hash?: string
     id?: string
     business?: string
@@ -142,7 +143,8 @@ export function useUppyUpload({
     externalPendingDeletes?: PendingDeleteOperation[] // 新增参数类型
 }) {
     // 添加待删除操作状态
-    const [pendingDeleteOperations, setPendingDeleteOperations] = React.useState<PendingDeleteOperation[]>(externalPendingDeletes);
+    const [pendingDeleteOperations, setPendingDeleteOperations] =
+        React.useState<PendingDeleteOperation[]>(externalPendingDeletes)
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
@@ -174,7 +176,7 @@ export function useUppyUpload({
                     const status = res.getStatus()
                     if (status === 401) {
                         newUppy.info("需刷新token", "error", 9000)
-                        window.dispatchEvent(new CustomEvent("token:refresh-needed"));
+                        window.dispatchEvent(new CustomEvent("token:refresh-needed"))
                         toast.error("身份认证失败", {
                             description: "需重新登录，或刷新token",
                             duration: 9000,
@@ -229,7 +231,7 @@ export function useUppyUpload({
                 limit: 1,
                 allowedMetaFields: true,
                 shouldRetry: (xhr: XMLHttpRequest) => {
-                    return false;
+                    return false
                 },
                 async onBeforeRequest(xhr) {
                     const token = await getAuthToken()
@@ -248,7 +250,7 @@ export function useUppyUpload({
                         }
                     } catch (e) {}
                     newUppy.info("不要重试:" + errStr, "error", 9000)
-                    if(errStr.includes("Failed to connect to"))    errStr="OSS存储集群服务不可用"
+                    if (errStr.includes("Failed to connect to")) errStr = "OSS存储集群服务不可用"
                     toast.error("上传失败", {
                         description: errStr,
                     })
@@ -258,12 +260,13 @@ export function useUppyUpload({
                 async onAfterResponse(xhr) {
                     if (xhr.status === 401) {
                         newUppy.info("需刷新token", "error", 9000)
-                        window.dispatchEvent(new CustomEvent("token:refresh-needed"));
+                        window.dispatchEvent(new CustomEvent("token:refresh-needed"))
                         return
                     }
                     if (xhr.status === 403) {
                         toast.error("上传失败", {
-                            description: "请重新登录", duration:9000
+                            description: "请重新登录",
+                            duration: 9000,
                         })
                         return
                     }
@@ -302,18 +305,11 @@ export function useUppyUpload({
     React.useEffect(() => {
         if (uppyInstance) {
             uppyInstance.cancelAll()
-            uppyInstance.setState({ oldfiles: undefined })
             uppyInstance.setMeta({ eid: repId, liveDays, business })
         }
     }, [repId, liveDays, uppyInstance])
-    //不能合并上面的，会造选择的文件失败就不见了。
-    React.useEffect(() => {
-        if (uppyInstance) {
-            uppyInstance.setState({ oldfiles: maxFile > 1 ? storeObj : undefined })
-        }
-    }, [uppyInstance, maxFile, storeObj])
 
-    //验证存储对象类型
+    // 验证存储对象类型
     if (storeObj) {
         if (Array.isArray(storeObj)) {
             if (maxFile <= 1) throw new Error(`存储非法${maxFile}`)
@@ -345,10 +341,10 @@ export function useUppyUpload({
                         repId,
                         hash: hash || "default",
                         business,
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
                     }
 
-                    setPendingDeleteOperations(prev => [...prev, deleteOperation])
+                    setPendingDeleteOperations((prev) => [...prev, deleteOperation])
 
                     toast.info("已加入待删除列表", {
                         description: "删除操作将在保存状态后加入离线队列",
@@ -356,11 +352,11 @@ export function useUppyUpload({
                 }
             } else if ("成功" === result || "文件不存在" === result) {
                 if (1 === maxFile) {
-                    onFinish && onFinish(undefined, true)
+                    onFinish && onFinish(undefined, false)
                 } else {
                     const newStoreObj = [...storeObj2]
                     newStoreObj.splice(arIndex, 1)
-                    onFinish && onFinish(newStoreObj, true)
+                    onFinish && onFinish(newStoreObj, false)
                 }
             }
         },
@@ -400,16 +396,15 @@ export function useUppyUpload({
                 }, 2000)
                 if (onFinish) {
                     if (1 === maxFile) {
-                        onFinish(newfile?.[0] || undefined, false)
+                        onFinish(newfile?.[0] || undefined, true)
                     } else {
-                        const { oldfiles } = newUppsta
-                        const merged = [...((oldfiles as any[]) ?? []), ...(newfile as any[])]
-                        onFinish(merged, false)
+                        const merged = [...((storeObj2 as any[]) ?? []), ...(newfile as any[])]
+                        onFinish(merged, true)
                     }
                 }
             }
         },
-        [maxFile, onFinish, uppyInstance, repId, hash],
+        [maxFile, onFinish, uppyInstance, repId, hash, storeObj2],
     )
     // 设置 Uppy 选项和事件监听
     React.useEffect(() => {
@@ -535,17 +530,60 @@ export function useUppyUpload({
 
     React.useEffect(() => {
         if (externalPendingDeletes.length > 0) {
-            setPendingDeleteOperations(externalPendingDeletes);
+            setPendingDeleteOperations(externalPendingDeletes)
         }
-    }, [externalPendingDeletes]);
-// 检查特定文件是否在待删除队列中
-    const isFilePendingDelete = useCallback((fileUrl: string) => {
-        return pendingDeleteOperations.some(op => op.deleteUrl === fileUrl);
-    }, [pendingDeleteOperations]);
+    }, [externalPendingDeletes])
+    // 检查特定文件是否在待删除队列中
+    const isFilePendingDelete = useCallback(
+        (fileUrl: string) => {
+            return pendingDeleteOperations.some((op) => op.deleteUrl === fileUrl)
+        },
+        [pendingDeleteOperations],
+    )
 
-// 在渲染文件时使用这些函数
-    const renderFileWithDeleteStatus = (file: FileStore, index: number, isSingle: boolean = false) => {
-        const isPendingDelete = isFilePendingDelete(file.url);
+    // 在渲染文件时使用这些函数
+    const renderFileWithDeleteStatus = (file: FileStore, index: number, isSingle = false) => {
+        const isPendingDelete = isFilePendingDelete(file.url)
+        const popoverId = `move-popover-${index}-${hash || "_pf"}`
+
+        // Handle file move functionality
+        const handleMoveFile = (targetIndex: string) => {
+            const target = Number.parseInt(targetIndex, 10)
+            const currentFiles = maxFile === 1 ? [storeObj1] : storeObj2
+
+            if (isNaN(target) || target < 0 || target >= currentFiles.length) {
+                toast.error("无效的位置", {
+                    description: `请输入 0 到 ${currentFiles.length - 1} 之间的数字`,
+                    duration: 2000,
+                })
+                return
+            }
+
+            if (target === index) {
+                toast.info("位置相同", {
+                    description: "文件已在该位置",
+                    duration: 1500,
+                })
+                return
+            }
+
+            const newFiles = [...currentFiles]
+            const [movedFile] = newFiles.splice(index, 1)
+            newFiles.splice(target, 0, movedFile)
+
+            onFinish && onFinish(maxFile === 1 ? undefined : newFiles, false)
+
+            toast.success("移动成功", {
+                description: `文件已移动到位置 ${target + 1}`,
+                duration: 2000,
+            })
+
+            // Close popover after successful move
+            const popover = document.getElementById(popoverId) as HTMLElement
+            if (popover?.hidePopover) {
+                popover.hidePopover()
+            }
+        }
 
         return (
             <div key={index} className="mb-4 border rounded-lg p-3 bg-gray-50">
@@ -560,14 +598,14 @@ export function useUppyUpload({
                 </div>
 
                 {/* 删除按钮放在图片下面 */}
-                <div className="mt-3 flex gap-2 justify-center">
+                <div className="mt-3 flex gap-2 justify-center flex-wrap">
                     <Button
                         type="button"
                         variant={maxFile === 1 ? "destructive" : "outline"}
                         size="sm"
                         onClick={(e) => {
-                            delOssFileFunc(file.url, index, "eid", repId);
-                            e.preventDefault();
+                            delOssFileFunc(file.url, index, "eid", repId)
+                            e.preventDefault()
                         }}
                         className="relative"
                         disabled={isPendingDelete}
@@ -575,10 +613,27 @@ export function useUppyUpload({
                         {maxFile === 1 ? "删除文件" : `删除第${index + 1}个文件`}
                         {isPendingDelete && (
                             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-                            !
-                        </span>
+                !
+              </span>
                         )}
                     </Button>
+
+                    {maxFile > 1 && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                                e.preventDefault()
+                                const popover = document.getElementById(popoverId) as HTMLElement
+                                if (popover?.showPopover) {
+                                    popover.showPopover()
+                                }
+                            }}
+                        >
+                            移动到
+                        </Button>
+                    )}
 
                     {/* 取消删除按钮 */}
                     {isPendingDelete && (
@@ -587,13 +642,51 @@ export function useUppyUpload({
                             variant="outline"
                             size="sm"
                             onClick={(e) => {
-                                e.preventDefault();
-                                cancelPendingDelete(file.url);
+                                e.preventDefault()
+                                cancelPendingDelete(file.url)
                             }}
                         >
                             取消删除
                         </Button>
                     )}
+                </div>
+
+                <div id={popoverId} className="p-4 border rounded-lg shadow-lg bg-white">
+                    <h3 className="font-semibold mb-3 text-sm">移动文件到位置</h3>
+                    <p className="text-xs text-gray-600 mb-2">
+                        当前在位置 {index + 1}，共 {maxFile === 1 ? 1 : storeObj2?.length || 0} 个文件
+                    </p>
+                    <div className="flex gap-2">
+                        <input
+                            type="number"
+                            id={`move-input-${index}`}
+                            min="1"
+                            max={maxFile === 1 ? 1 : storeObj2?.length || 0}
+                            placeholder={`输入 1-${maxFile === 1 ? 1 : storeObj2?.length || 0}`}
+                            className="flex-1 px-2 py-1 text-sm border rounded"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    const input = (e.target as HTMLInputElement).value
+                                    const targetIndex = Number.parseInt(input, 10) - 1
+                                    handleMoveFile(targetIndex.toString())
+                                    ;(e.target as HTMLInputElement).value = ""
+                                }
+                            }}
+                        />
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="default"
+                            onClick={() => {
+                                const input = document.getElementById(`move-input-${index}`) as HTMLInputElement
+                                const targetIndex = Number.parseInt(input.value, 10) - 1
+                                handleMoveFile(targetIndex.toString())
+                                input.value = ""
+                            }}
+                        >
+                            确认
+                        </Button>
+                    </div>
                 </div>
 
                 {isPendingDelete && (
@@ -602,42 +695,41 @@ export function useUppyUpload({
                     </div>
                 )}
             </div>
-        );
-    };
-//取消删除的函数
+        )
+    }
+
+    //取消删除的函数
     const cancelPendingDelete = useCallback((fileUrl: string) => {
-        setPendingDeleteOperations(prev =>
-            prev.filter(op => op.deleteUrl !== fileUrl)
-        );
+        setPendingDeleteOperations((prev) => prev.filter((op) => op.deleteUrl !== fileUrl))
 
         // 同时从 IndexedDB 中删除对应的记录
-        fileOperationsQueue.removeOperationByDeleteUrl(fileUrl).catch(error => {
-            console.error("Failed to remove operation from IndexedDB:", error);
-        });
+        fileOperationsQueue.removeOperationByDeleteUrl(fileUrl).catch((error) => {
+            console.error("Failed to remove operation from IndexedDB:", error)
+        })
 
         toast.success("已取消删除操作", {
             description: "文件已从待删除队列中移除",
             duration: 2000,
-        });
-    }, []);
+        })
+    }, [])
     //批量取消删除的函数
     const cancelAllPendingDeletes = useCallback(() => {
         if (pendingDeleteOperations.length === 0) {
-            toast.info("没有待取消的删除操作");
-            return;
+            toast.info("没有待取消的删除操作")
+            return
         }
 
-        setPendingDeleteOperations([]);
+        setPendingDeleteOperations([])
         toast.success("已取消所有删除操作", {
             description: `已移除 ${pendingDeleteOperations.length} 个待删除文件`,
             duration: 3000,
-        });
-    }, [pendingDeleteOperations.length]);
+        })
+    }, [pendingDeleteOperations.length])
 
     // 添加统一的渲染函数
     const renderFiles = () => {
-        const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || [];
-        const hasFiles = files.length > 0;
+        const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
+        const hasFiles = files.length > 0
 
         return (
             <>
@@ -664,32 +756,27 @@ export function useUppyUpload({
                     {/* 操作按钮 */}
                     <div className="space-y-2">
                         <div className="flex justify-center items-center gap-2">
-                            <Button
-                                size="sm"
-                                disabled={!openUppy && thisMaxFiles <= 0}
-                                onClick={scrollHandler}
-                            >
+                            <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
                                 {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
                             </Button>
                         </div>
                     </div>
                 </div>
             </>
-        );
-    };
+        )
+    }
 
     const unifiedComponent = (
         <>
             {renderFiles()}
-            <div id={hash ?? "_pf"} className="text-center mt-2">
-            </div>
+            <div id={hash ?? "_pf"} className="text-center mt-2"></div>
         </>
-    );
+    )
     return [
         unifiedComponent,
         uppyInstance,
         pendingDeleteOperations,
         () => setPendingDeleteOperations([]),
-        delOssFileFunc // 暴露删除函数
-    ] as const;
+        delOssFileFunc, // 暴露删除函数
+    ] as const
 }

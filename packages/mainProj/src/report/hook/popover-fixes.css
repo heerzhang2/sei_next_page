@@ -1,0 +1,35 @@
+/* New file: Popover positioning improvements */
+
+/* 使popover居中显示，而不是默认的左上角 */
+[popover] {
+    /* 使用 top 和 left 将弹出框定位到视图中心 */
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+
+    /* 确保有足够的空间和阴影 */
+    max-width: calc(100vw - 32px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 当popover变为打开状态时的动画 */
+[popover]:popover-open {
+    animation: popoverFadeIn 0.2s ease-out;
+}
+
+@keyframes popoverFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* 确保popover在最顶层 */
+[popover]::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}

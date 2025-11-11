@@ -64,7 +64,7 @@ export const FxDiagram = ({
     }
     //依赖项必须加上， 否则：可能同一个上传文件，被保存给到多个分项的存储对象。
     const onFinish = React.useCallback(
-        async (upfile: any, del: boolean) => {
+        async (upfile: any, newUpload: boolean) => {
             // setStorage({...storage, [pic]: upfile});
             setStorage((prevStorage: any) => {
                 const oldStore = prevStorage?.[`_${modType}_${redId}`]
