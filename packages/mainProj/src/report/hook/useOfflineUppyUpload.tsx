@@ -854,17 +854,8 @@ export function useOfflineUppyUpload(params: {
                     prev.filter(op => !successfulOperations.some(successOp => successOp.deleteUrl === op.deleteUrl))
                 )
 
-                // 从 IndexedDB 中移除成功的操作
-                try {
-                    await Promise.all(
-                        successfulOperations.map(op =>
-                            fileOperationsQueue.removeOperationByDeleteUrl(op.deleteUrl)
-                        )
-                    )
-                    console.log(`[OfflineUppy] Removed ${successfulOperations.length} successful delete operations from IndexedDB`)
-                } catch (error) {
-                    console.error("[OfflineUppy] Failed to remove successful operations from IndexedDB:", error)
-                }
+                // 不再从 IndexedDB 的 DELETE_QUEUE 表中移除，因为现在使用 Uppy State 存储
+                console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations`)
             }
 
             // 显示结果

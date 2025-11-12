@@ -762,12 +762,6 @@ export function useUppyUpload({
     //取消删除的函数
     const cancelPendingDelete = useCallback((fileUrl: string) => {
         setPendingDeleteOperations((prev) => prev.filter((op) => op.deleteUrl !== fileUrl))
-
-        // 同时从 IndexedDB 中删除对应的记录
-        fileOperationsQueue.removeOperationByDeleteUrl(fileUrl).catch((error) => {
-            console.error("Failed to remove operation from IndexedDB:", error)
-        })
-
         toast.success("已取消删除操作", {
             description: "文件已从待删除队列中移除",
             duration: 2000,
