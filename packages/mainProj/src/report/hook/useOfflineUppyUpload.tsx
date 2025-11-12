@@ -793,9 +793,7 @@ export function useOfflineUppyUpload(params: {
             restoreState()
         }, 500)
     }, [repId, hash, params.liveDays, params.business, stateKey])
-
-    // 执行待删除操作
-    // 如果需要更精确的删除结果判断
+    // 执行待删除操作 - 使用动态回调版本
     const executePendingDeletes = useCallback(async () => {
         const operationsToExecute = restoredPendingDeletes.length > 0 ? restoredPendingDeletes : pendingDeleteOperations
 
@@ -811,72 +809,82 @@ export function useOfflineUppyUpload(params: {
 
         toast.info(`开始执行 ${operationsToExecute.length} 个待删除操作...`)
 
-        const results = await Promise.allSettled(
-            operationsToExecute.map(async (deleteOp) => {
-                return new Promise((resolve, reject) => {
-                    // 这里需要根据实际的删除回调机制
-                    // 假设 delOssFileFunc 会在删除完成后调用回调
-                    const deleteCallback = (result: any, fileUrl: string) => {
-                        if (result === "成功" || result === "文件不存在") {
-                            resolve({ success: true, operation: deleteOp })
-                        } else {
-                            reject(new Error(`删除失败: ${result}`))
-                        }
+        // 使用 Promise 包装每个删除操作，以便跟踪完成状态
+        const deletePromises = operationsToExecute.map((deleteOp) => {
+            return new Promise<{ success: boolean; operation: PendingDeleteOperation; result?: any }>((resolve) => {
+                // 为每个操作创建专门的回调
+                const operationCallback = (result: any, fileUrl: string) => {
+                    console.log(`[OfflineUppy] Delete operation result for ${fileUrl}:`, result)
+
+                    if (result === "成功" || result === "文件不存在") {
+                        resolve({ success: true, operation: deleteOp, result })
+                    } else {
+                        resolve({ success: false, operation: deleteOp, result })
                     }
+                }
 
-                    // 调用删除函数，需要确保回调机制正确
-                    delOssFileFunc(deleteOp.deleteUrl, "eid", deleteOp.repId)
-
-                    // 这里需要根据实际的异步机制调整
-                    // 如果是同步操作，可以简化处理
-                    setTimeout(() => resolve({ success: true, operation: deleteOp }), 1000)
-                })
+                // 调用删除函数，传递专门的回调
+                try {
+                    delOssFileFunc(deleteOp.deleteUrl, "eid", deleteOp.repId, operationCallback)
+                } catch (error) {
+                    console.error(`[OfflineUppy] Failed to execute delete for ${deleteOp.deleteUrl}:`, error)
+                    resolve({ success: false, operation: deleteOp, result: error })
+                }
             })
-        )
-
-        const successfulOperations: PendingDeleteOperation[] = []
-        const failedOperations: PendingDeleteOperation[] = []
-
-        results.forEach((result, index) => {
-            if (result.status === 'fulfilled' && result.value.success) {
-                successfulOperations.push(operationsToExecute[index])
-            } else {
-                failedOperations.push(operationsToExecute[index])
-            }
         })
 
-        // 清理成功的操作
-        if (successfulOperations.length > 0) {
-            setRestoredPendingDeletes(prev =>
-                prev.filter(op => !successfulOperations.some(successOp => successOp.deleteUrl === op.deleteUrl))
-            )
+        try {
+            const results = await Promise.all(deletePromises)
 
-            try {
-                await Promise.all(
-                    successfulOperations.map(op =>
-                        fileOperationsQueue.removeOperationByDeleteUrl(op.deleteUrl)
-                    )
+            const successfulOperations: PendingDeleteOperation[] = []
+            const failedOperations: PendingDeleteOperation[] = []
+
+            results.forEach((result) => {
+                if (result.success) {
+                    successfulOperations.push(result.operation)
+                } else {
+                    failedOperations.push(result.operation)
+                }
+            })
+
+            // 清理成功的操作
+            if (successfulOperations.length > 0) {
+                // 从状态中移除成功的操作
+                setRestoredPendingDeletes(prev =>
+                    prev.filter(op => !successfulOperations.some(successOp => successOp.deleteUrl === op.deleteUrl))
                 )
-                console.log(`[OfflineUppy] Removed ${successfulOperations.length} successful delete operations from IndexedDB`)
-            } catch (error) {
-                console.error("[OfflineUppy] Failed to remove successful operations from IndexedDB:", error)
+
+                // 从 IndexedDB 中移除成功的操作
+                try {
+                    await Promise.all(
+                        successfulOperations.map(op =>
+                            fileOperationsQueue.removeOperationByDeleteUrl(op.deleteUrl)
+                        )
+                    )
+                    console.log(`[OfflineUppy] Removed ${successfulOperations.length} successful delete operations from IndexedDB`)
+                } catch (error) {
+                    console.error("[OfflineUppy] Failed to remove successful operations from IndexedDB:", error)
+                }
             }
-        }
 
-        // 显示结果
-        if (failedOperations.length === 0) {
-            toast.success("删除操作执行完成", {
-                description: `成功执行 ${successfulOperations.length} 个删除操作`,
-            })
-        } else {
-            toast.warning("删除操作部分完成", {
-                description: `成功: ${successfulOperations.length} 个, 失败: ${failedOperations.length} 个`,
-            })
-        }
+            // 显示结果
+            if (failedOperations.length === 0) {
+                toast.success("删除操作执行完成", {
+                    description: `成功执行 ${successfulOperations.length} 个删除操作，已从队列中移除`,
+                })
+            } else {
+                toast.warning("删除操作部分完成", {
+                    description: `成功: ${successfulOperations.length} 个（已移除）, 失败: ${failedOperations.length} 个`,
+                })
+            }
 
-        await checkSavedState()
+            await checkSavedState()
+
+        } catch (error) {
+            console.error("[OfflineUppy] Error executing pending deletes:", error)
+            toast.error("执行删除操作时发生错误")
+        }
     }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState])
-
     // 通过文件句柄方式添加文件到 Uppy
     const addFilesWithHandles = useCallback(async () => {
         if (!uppyInstanceRef.current) {

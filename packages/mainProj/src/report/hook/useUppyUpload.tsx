@@ -321,7 +321,7 @@ export function useUppyUpload({
     const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : 1
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
     const whenDeleted = React.useCallback(
-        async (result: any, fileUrl: string) => { // 移除 arIndex 参数，改为 fileUrl
+        async (result: any, fileUrl: string) => {
             const isError = typeof result === "string" && (result.startsWith("OSS服务不可用") || result.startsWith("未登录"))
             const toastMethod = isError ? toast.error : toast.info
             toastMethod("文件删除", {
@@ -356,7 +356,11 @@ export function useUppyUpload({
         },
         [maxFile, onFinish, storeObj2, repId, hash, business],
     )
-    const { call: delOssFileFunc } = useOssDeleteFileMutation(whenDeleted)
+    const { call: delOssFileFunc } = useOssDeleteFileMutation()
+    // 创建包装函数，在调用时传递回调
+    const deleteFileWithCallback = React.useCallback((fileUrl: string, key?: string, value?: string) => {
+        delOssFileFunc(fileUrl, key, value, whenDeleted)
+    }, [delOssFileFunc, whenDeleted])
     //【上传应答】结束时刻回调
     const handleUpSuccess = React.useCallback(
         (result: { successful: any[] }) => {
@@ -641,17 +645,17 @@ export function useUppyUpload({
                         variant={maxFile === 1 ? "destructive" : "outline"}
                         size="sm"
                         onClick={(e) => {
-                            delOssFileFunc(file.url, "eid", repId)
+                            deleteFileWithCallback(file.url, "eid", repId)
                             e.preventDefault()
                         }}
                         className="relative"
                         disabled={isPendingDelete}
                     >
-                        {maxFile === 1 ? "删除" : `删除文件`} {/* 移除索引显示 */}
+                        {maxFile === 1 ? "删除" : `删除文件`}
                         {isPendingDelete && (
                             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-      !
-    </span>
+            !
+        </span>
                         )}
                     </Button>
 
@@ -834,7 +838,7 @@ export function useUppyUpload({
         uppyInstance,
         pendingDeleteOperations,
         setPendingDeleteOperations: () => setPendingDeleteOperations([]),
-        delOssFileFunc, // 暴露删除函数
+        delOssFileFunc,
         cancelAllPendingDeletes,
         popoverStyles,
     }

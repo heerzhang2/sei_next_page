@@ -1,21 +1,19 @@
+// useOssDeleteFileMutation.tsx - 修改版本
 "use client"
 import { gql, useMutation } from 'urql';
 import {toast} from "sonner";
 
-/**删除minIO文件： 真的删掉 ’成功‘ 若不存在该文件返回： '不存在'；
-* */
 const mutation = gql`
   mutation useOssDeleteFileMutation($file: String!,$key: String,$value: String) {
     ossDeleteFile(file: $file,key: $key,value:$value)
   }
 `;
 
-/** devs[] 可支持多个批量关联多个设备台账id。
- * 多个入口：都可能添加任务或给任务添加设备或只是改任务参数。 toast支持链接转移
- * */
-export default function useOssDeleteFileMutation(callback: (resp: any,fileUrl:string) => void) {
+// 支持动态回调的版本
+export default function useOssDeleteFileMutation() {
     const [updateResult, ossDeleteFile] = useMutation(mutation)
-    const onSubmit = (file: string, key?: string, value?: string) => { // 第二个参数改为 fileUrl
+
+    const onSubmit = (file: string, key?: string, value?: string, callback?: (resp: any, fileUrl: string) => void) => {
         ossDeleteFile({
             file,
             key,
@@ -28,11 +26,13 @@ export default function useOssDeleteFileMutation(callback: (resp: any,fileUrl:st
                     description: result.error.toString(),
                 })
                 console.log("Oh no!", result.error)
+                callback && callback(result.error.toString(), file)
             } else {
                 const {ossDeleteFile: ack } = result?.data
-                callback(ack, file);
+                callback && callback(ack, file)
             }
         })
     }
+
     return {call: onSubmit};
 }
