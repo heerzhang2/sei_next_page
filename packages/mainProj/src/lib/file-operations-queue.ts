@@ -9,16 +9,15 @@ const DELETE_QUEUE = "deleteQueue"
 const STATE_STORE = "uppyState"
 
 export type DeleteFileOperation = {
-    id: string // Unique operation ID
+    id: string
     repId: string
     subrid?: string
     timestamp: number
     status: "pending" | "processing" | "failed" | "completed"
     retryCount: number
     lastError?: string
-    // Delete-specific data
+    // 删除 deleteIndex 字段
     deleteUrl: string
-    deleteIndex: number
 }
 
 export type UppyStateSnapshot = {

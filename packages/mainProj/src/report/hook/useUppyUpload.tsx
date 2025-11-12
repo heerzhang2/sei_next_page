@@ -92,7 +92,6 @@ export const useScrollHandler = (targetSelector: string) => {
 
 export type PendingDeleteOperation = {
     deleteUrl: string
-    deleteIndex: number
     repId: string
     hash: string
     business: string
@@ -322,7 +321,7 @@ export function useUppyUpload({
     const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : 1
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
     const whenDeleted = React.useCallback(
-        async (result: any, arIndex: number) => {
+        async (result: any, fileUrl: string) => { // 移除 arIndex 参数，改为 fileUrl
             const isError = typeof result === "string" && (result.startsWith("OSS服务不可用") || result.startsWith("未登录"))
             const toastMethod = isError ? toast.error : toast.info
             toastMethod("文件删除", {
@@ -331,35 +330,31 @@ export function useUppyUpload({
             })
 
             if (isError) {
-                const deleteUrl = maxFile === 1 ? storeObj1?.url : storeObj2?.[arIndex]?.url
-                if (deleteUrl) {
-                    // 不再使用 fileOperationsQueue.addOperation，而是添加到本地状态
-                    const deleteOperation: PendingDeleteOperation = {
-                        deleteUrl,
-                        deleteIndex: arIndex,
-                        repId,
-                        hash: hash || "default",
-                        business,
-                        timestamp: Date.now(),
-                    }
-
-                    setPendingDeleteOperations((prev) => [...prev, deleteOperation])
-
-                    toast.info("已加入待删除列表", {
-                        description: "删除操作将在保存状态后加入离线队列",
-                    })
+                // 不再使用 fileOperationsQueue.addOperation，而是添加到本地状态
+                const deleteOperation: PendingDeleteOperation = {
+                    deleteUrl: fileUrl,
+                    repId,
+                    hash: hash || "default",
+                    business,
+                    timestamp: Date.now(),
                 }
+
+                setPendingDeleteOperations((prev) => [...prev, deleteOperation])
+
+                toast.info("已加入待删除列表", {
+                    description: "删除操作将在保存状态后加入离线队列",
+                })
             } else if ("成功" === result || "文件不存在" === result) {
                 if (1 === maxFile) {
                     onFinish && onFinish(undefined, false)
                 } else {
-                    const newStoreObj = [...storeObj2]
-                    newStoreObj.splice(arIndex, 1)
+                    // 使用文件URL来查找并删除文件，而不是索引
+                    const newStoreObj = [...storeObj2].filter(file => file.url !== fileUrl)
                     onFinish && onFinish(newStoreObj, false)
                 }
             }
         },
-        [maxFile, onFinish, storeObj2, storeObj1, repId, hash, business],
+        [maxFile, onFinish, storeObj2, repId, hash, business],
     )
     const { call: delOssFileFunc } = useOssDeleteFileMutation(whenDeleted)
     //【上传应答】结束时刻回调
@@ -646,17 +641,17 @@ export function useUppyUpload({
                         variant={maxFile === 1 ? "destructive" : "outline"}
                         size="sm"
                         onClick={(e) => {
-                            delOssFileFunc(file.url, index, "eid", repId)
+                            delOssFileFunc(file.url, "eid", repId)
                             e.preventDefault()
                         }}
                         className="relative"
                         disabled={isPendingDelete}
                     >
-                        {maxFile === 1 ? "删除" : `删除第${index + 1}个`}
+                        {maxFile === 1 ? "删除" : `删除文件`} {/* 移除索引显示 */}
                         {isPendingDelete && (
                             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-                !
-              </span>
+      !
+    </span>
                         )}
                     </Button>
 
