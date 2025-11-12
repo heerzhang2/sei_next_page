@@ -696,14 +696,17 @@ export function useUppyUpload({
                 <style>{popoverStyles}</style>
                 <div
                     id={popoverId}
+                    popover="auto"
                     className="p-4 border rounded-lg shadow-lg bg-white"
-                    style={{
-                        "--popover": "#fff",
-                        "--popover-foreground": "#000",
-                        "--border": "#ccc",
-                        "--radius": "4px",
-                        "--ring": "#000",
-                    }}
+                    style={
+                        {
+                            "--popover": "#fff",
+                            "--popover-foreground": "#000",
+                            "--border": "#ccc",
+                            "--radius": "4px",
+                            "--ring": "#000",
+                        } as React.CSSProperties
+                    }
                 >
                     <h3 className="font-semibold mb-3 text-sm">移动文件到位置</h3>
                     <p className="text-xs text-gray-600 mb-2">
@@ -723,10 +726,8 @@ export function useUppyUpload({
                                     const targetIndex = Number.parseInt(input, 10) - 1
                                     handleMoveFile(targetIndex.toString())
                                     ;(e.target as HTMLInputElement).value = ""
-                                    const popover = document.getElementById(popoverId) as HTMLElement
-                                    if (popover?.hidePopover) {
-                                        popover.hidePopover()
-                                    }
+                                    const popoverEl = document.getElementById(popoverId) as HTMLElement & { hidePopover?: () => void }
+                                    popoverEl?.hidePopover?.()
                                 }
                             }}
                         />
@@ -739,10 +740,8 @@ export function useUppyUpload({
                                 const targetIndex = Number.parseInt(input.value, 10) - 1
                                 handleMoveFile(targetIndex.toString())
                                 input.value = ""
-                                const popover = document.getElementById(popoverId) as HTMLElement
-                                if (popover?.hidePopover) {
-                                    popover.hidePopover()
-                                }
+                                const popoverEl = document.getElementById(popoverId) as HTMLElement & { hidePopover?: () => void }
+                                popoverEl?.hidePopover?.()
                             }}
                         >
                             确认
