@@ -793,6 +793,26 @@ export function useOfflineUppyUpload(params: {
             restoreState()
         }, 500)
     }, [repId, hash, params.liveDays, params.business, stateKey])
+    // 新增：只更新待删除操作的状态
+    const updatePendingDeletesState = useCallback(async (updatedDeletes: PendingDeleteOperation[]) => {
+        try {
+            const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
+            if (snapshot) {
+                const updatedState = {
+                    ...snapshot,
+                    meta: {
+                        ...snapshot.meta,
+                        pendingDeleteOperations: updatedDeletes,
+                    },
+                    timestamp: Date.now(),
+                }
+                await fileOperationsQueue.saveUppyState(updatedState)
+                console.log(`[OfflineUppy] Updated pending deletes state: ${updatedDeletes.length} operations`)
+            }
+        } catch (error) {
+            console.error("[OfflineUppy] Failed to update pending deletes state:", error)
+        }
+    }, [stateKey])
     // 执行待删除操作 - 使用动态回调版本
     const executePendingDeletes = useCallback(async () => {
         const operationsToExecute = restoredPendingDeletes.length > 0 ? restoredPendingDeletes : pendingDeleteOperations
@@ -817,6 +837,18 @@ export function useOfflineUppyUpload(params: {
                     console.log(`[OfflineUppy] Delete operation result for ${fileUrl}:`, result)
 
                     if (result === "成功" || result === "文件不存在") {
+                        // 成功删除后，需要调用 onFinish 更新存储状态
+                        if (onFinish) {
+                            if (params.maxFile === 1) {
+                                // 单文件模式：传递 undefined 表示文件已被删除
+                                onFinish(undefined, false)
+                            } else {
+                                // 多文件模式：需要从 storeObj 中过滤掉被删除的文件
+                                const currentStoreObj = Array.isArray(params.storeObj) ? params.storeObj : []
+                                const newStoreObj = currentStoreObj.filter((file: FileStore) => file.url !== fileUrl)
+                                onFinish(newStoreObj, false)
+                            }
+                        }
                         resolve({ success: true, operation: deleteOp, result })
                     } else {
                         resolve({ success: false, operation: deleteOp, result })
@@ -858,24 +890,31 @@ export function useOfflineUppyUpload(params: {
                 console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations`)
             }
 
-            // 显示结果
             if (failedOperations.length === 0) {
+                // 如果全部成功，只更新待删除操作
+                const updatedDeletes = pendingDeleteOperationsRef.current.filter(op =>
+                    !successfulOperations.some(successOp => successOp.deleteUrl === op.deleteUrl)
+                )
+                await updatePendingDeletesState(updatedDeletes)
                 toast.success("删除操作执行完成", {
-                    description: `成功执行 ${successfulOperations.length} 个删除操作，已从队列中移除`,
+                    description: `成功执行 ${successfulOperations.length} 个删除操作`,
                 })
             } else {
+                // 部分成功，只更新状态
                 toast.warning("删除操作部分完成", {
-                    description: `成功: ${successfulOperations.length} 个（已移除）, 失败: ${failedOperations.length} 个`,
+                    description: `成功: ${successfulOperations.length} 个, 失败: ${failedOperations.length} 个`,
                 })
+                // 重新保存状态以同步
+                if (uppyInstanceRef.current) {
+                    await saveUppyState(uppyInstanceRef.current)
+                }
             }
-
             await checkSavedState()
-
         } catch (error) {
             console.error("[OfflineUppy] Error executing pending deletes:", error)
             toast.error("执行删除操作时发生错误")
         }
-    }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState])
+    }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState, onFinish, params.maxFile, params.storeObj])
     // 通过文件句柄方式添加文件到 Uppy
     const addFilesWithHandles = useCallback(async () => {
         if (!uppyInstanceRef.current) {
