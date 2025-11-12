@@ -626,8 +626,8 @@ export function useUppyUpload({
                             onClick={(e) => {
                                 e.preventDefault()
                                 const popover = document.getElementById(popoverId) as HTMLElement
-                                if (popover?.showPopover) {
-                                    popover.showPopover()
+                                if (popover?.togglePopover) {
+                                    popover.togglePopover()
                                 }
                             }}
                         >
@@ -651,7 +651,7 @@ export function useUppyUpload({
                     )}
                 </div>
 
-                <div id={popoverId} className="p-4 border rounded-lg shadow-lg bg-white">
+                <div id={popoverId} popover="auto" className="p-4 border rounded-lg shadow-lg bg-white">
                     <h3 className="font-semibold mb-3 text-sm">移动文件到位置</h3>
                     <p className="text-xs text-gray-600 mb-2">
                         当前在位置 {index + 1}，共 {maxFile === 1 ? 1 : storeObj2?.length || 0} 个文件
@@ -670,6 +670,10 @@ export function useUppyUpload({
                                     const targetIndex = Number.parseInt(input, 10) - 1
                                     handleMoveFile(targetIndex.toString())
                                     ;(e.target as HTMLInputElement).value = ""
+                                    const popover = document.getElementById(popoverId) as HTMLElement
+                                    if (popover?.hidePopover) {
+                                        popover.hidePopover()
+                                    }
                                 }
                             }}
                         />
@@ -682,6 +686,10 @@ export function useUppyUpload({
                                 const targetIndex = Number.parseInt(input.value, 10) - 1
                                 handleMoveFile(targetIndex.toString())
                                 input.value = ""
+                                const popover = document.getElementById(popoverId) as HTMLElement
+                                if (popover?.hidePopover) {
+                                    popover.hidePopover()
+                                }
                             }}
                         >
                             确认

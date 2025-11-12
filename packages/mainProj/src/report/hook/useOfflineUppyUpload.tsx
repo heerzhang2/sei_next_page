@@ -654,9 +654,6 @@ export function useOfflineUppyUpload(params: {
                     }
                 })
 
-                // 清空 oldfiles 状态
-                uppyInstanceRef.current.setState({ oldfiles: [] })
-
                 // 重置 meta 数据
                 uppyInstanceRef.current.setMeta({
                     eid: repId,
