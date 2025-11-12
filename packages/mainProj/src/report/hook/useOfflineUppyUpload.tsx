@@ -442,7 +442,13 @@ export function useOfflineUppyUpload(params: {
     }, [checkSavedState])
 
     // 将恢复的待删除操作传递给 useUppyUpload
-    const [uploadDom, uppyInstance, pendingDeleteOperations, clearPendingDeletes, delOssFileFunc] = useUppyUpload({
+    const {
+        unifiedComponent: uploadDom,
+        uppyInstance,
+        pendingDeleteOperations,
+        delOssFileFunc,
+        cancelAllPendingDeletes: cancelAllPendingDeletesFromUppy,
+    } = useUppyUpload({
         ...params,
         open: true,
         externalPendingDeletes: restoredPendingDeletes,
@@ -668,8 +674,8 @@ export function useOfflineUppyUpload(params: {
             setRestoredPendingDeletes([])
 
             // 4. 清空 useUppyUpload 中的待删除操作
-            if (clearPendingDeletes) {
-                clearPendingDeletes()
+            if (cancelAllPendingDeletesFromUppy) {
+                cancelAllPendingDeletesFromUppy()
             }
 
             // 5. 重新检查状态
@@ -685,7 +691,7 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Failed to remove saved state:", error)
             toast.error("清除状态失败")
         }
-    }, [stateKey, checkSavedState, clearPendingDeletes, repId, params.liveDays, params.business])
+    }, [stateKey, checkSavedState, cancelAllPendingDeletesFromUppy, repId, params.liveDays, params.business])
     // 恢复状态时，从 Uppy state 的 meta 中恢复待删除操作
     useEffect(() => {
         const restoreState = async () => {
