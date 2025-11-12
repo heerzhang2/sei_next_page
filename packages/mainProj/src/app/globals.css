@@ -4,240 +4,241 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* 中文字体配置 - 优先使用思源字体 */
-  --font-sans: "Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "PingFang SC", "Hiragino Sans GB",
-  "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", system-ui, -apple-system, sans-serif;
+    /* 中文字体配置 - 优先使用思源字体 */
+    --font-sans: "Noto Sans SC", "Source Han Sans SC", "Source Han Sans CN", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", system-ui, -apple-system, sans-serif;
 
-  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "SimSun", "Times New Roman",
-  serif;
+    --font-serif: "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "SimSun", "Times New Roman",
+    serif;
 
-  --font-mono: "Noto Sans Mono", "Source Code Pro", "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Consolas",
-  monospace;
+    --font-mono: "Noto Sans Mono", "Source Code Pro", "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Consolas",
+    monospace;
 
-  /* 字体渲染优化 */
-  --font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-  --font-variant-ligatures: common-ligatures;
+    /* 字体渲染优化 */
+    --font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    --font-variant-ligatures: common-ligatures;
 
-  /* 行高配置 */
-  --line-height-tight: 1.25;
-  --line-height-normal: 1.5;
-  --line-height-relaxed: 1.75;
+    /* 行高配置 */
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.145 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.145 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.985 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.396 0.141 25.723);
+    --destructive-foreground: oklch(0.637 0.237 25.331);
+    --border: oklch(0.269 0 0);
+    --input: oklch(0.269 0 0);
+    --ring: oklch(0.439 0 0);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(0.269 0 0);
+    --sidebar-ring: oklch(0.439 0 0);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  /* Prevent Tailwind from resetting styles for Uppy components */
-  .uppy-Root *,
-  .uppy-Root *::before,
-  .uppy-Root *::after {
-    box-sizing: border-box;
-  }
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+    /* Prevent Tailwind from resetting styles for Uppy components */
+    .uppy-Root *,
+    .uppy-Root *::before,
+    .uppy-Root *::after {
+        box-sizing: border-box;
+    }
 }
 
+/* 添加原生 popover 样式，使用 Tailwind CSS 4 的方式定义 */
 /* 全局字体渲染优化 */
 * {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  font-feature-settings: var(--font-feature-settings);
-  font-variant-ligatures: var(--font-variant-ligatures);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: var(--font-feature-settings);
+    font-variant-ligatures: var(--font-variant-ligatures);
 }
 
 /* 中文字体特殊优化 */
 html {
-  font-family: var(--font-sans);
-  line-height: var(--line-height-normal);
+    font-family: var(--font-sans);
+    line-height: var(--line-height-normal);
 }
 
 /* 确保中文字符正确显示 */
 :lang(zh-CN) {
-  font-family: var(--font-sans);
-  word-break: break-all;
-  word-wrap: break-word;
+    font-family: var(--font-sans);
+    word-break: break-all;
+    word-wrap: break-word;
 }
 
 /* 英文字体优化 */
 :lang(en) {
-  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 /*试验首页面*/
 .custom-grid-rows {
-  grid-template-rows: 20px minmax(auto, 1fr) 20px;
+    grid-template-rows: 20px minmax(auto, 1fr) 20px;
 }
 
 /* 滚动条整体样式 */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+    width: 12px;
+    height: 12px;
 }
 
 /* 滚动条轨道样式 */
 ::-webkit-scrollbar-track {
-  background-color: #f1f1f1;
-  border-radius: 12px;
+    background-color: #f1f1f1;
+    border-radius: 12px;
 }
 
 /* 滚动条滑块样式 */
 ::-webkit-scrollbar-thumb {
-  background-color: #bdb5b5;
-  border-radius: 12px;
+    background-color: #bdb5b5;
+    border-radius: 12px;
 }
 
 /* 滚动条滑块悬停样式 */
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #555;
+    background-color: #555;
 }
 
 /* 修复容器响应式样式 */
 .container {
-  width: 100%;
+    width: 100%;
 }
 
 /* 使用正确的媒体查询语法 */
 @media (min-width: 640px) {
-  .container {
-    max-width: 640px;
-  }
+    .container {
+        max-width: 640px;
+    }
 }
 
 @media (min-width: 768px) {
-  .container {
-    max-width: 768px;
-  }
+    .container {
+        max-width: 768px;
+    }
 }
 
 @media (min-width: 1024px) {
-  .container {
-    max-width: 1024px;
-  }
+    .container {
+        max-width: 1024px;
+    }
 }
 
 @media (min-width: 1280px) {
-  .container {
-    max-width: 1280px;
-  }
+    .container {
+        max-width: 1280px;
+    }
 }
 
 @media (min-width: 1536px) {
-  .container {
-    max-width: 1536px;
-  }
+    .container {
+        max-width: 1536px;
+    }
 }
 
 /* 移除重复的高度断点媒体查询，现在由 Tailwind 配置处理 */
@@ -245,228 +246,228 @@ html {
 
 /*原始记录跨越2页3页的行打印*/
 body {
-  padding: 0;
-  margin: 0;
+    padding: 0;
+    margin: 0;
 }
 @page portraitPg {
-  size: a4 portrait;
+    size: a4 portrait;
 }
 @page landscapePg {
-  size: a4 landscape;
+    size: a4 landscape;
 }
 @media print {
-  .WideChapter {
-    page: landscapePg;
-  }
-  .UsualChapter {
-    page: portraitPg;
-  }
+    .WideChapter {
+        page: landscapePg;
+    }
+    .UsualChapter {
+        page: portraitPg;
+    }
 }
 
 /* Print styles for containers and cells */
 .print-contain-2 {
-  @media print {
-    position: relative;
-    &::after {
-      content: "";
-      display: block;
-      min-height: 2rem;
-      break-inside: avoid;
-      page-break-inside: avoid;
+    @media print {
+        position: relative;
+        &::after {
+            content: "";
+            display: block;
+            min-height: 2rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
     }
-  }
 }
 .print-contain-3 {
-  @media print {
-    position: relative;
-    &::after {
-      content: "";
-      display: block;
-      min-height: 3rem;
-      break-inside: avoid;
-      page-break-inside: avoid;
+    @media print {
+        position: relative;
+        &::after {
+            content: "";
+            display: block;
+            min-height: 3rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
     }
-  }
 }
 .print-contain-5 {
-  @media print {
-    position: relative;
-    &::after {
-      content: "";
-      display: block;
-      min-height: 5rem;
-      break-inside: avoid;
-      page-break-inside: avoid;
+    @media print {
+        position: relative;
+        &::after {
+            content: "";
+            display: block;
+            min-height: 5rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
     }
-  }
 }
 .print-contain-7 {
-  @media print {
-    position: relative;
-    &::after {
-      content: "";
-      display: block;
-      min-height: 7rem;
-      break-inside: avoid;
-      page-break-inside: avoid;
+    @media print {
+        position: relative;
+        &::after {
+            content: "";
+            display: block;
+            min-height: 7rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
     }
-  }
 }
 .print-contain-10 {
-  @media print {
-    position: relative;
-    &::after {
-      content: "";
-      display: block;
-      min-height: 10rem;
-      break-inside: avoid;
-      page-break-inside: avoid;
+    @media print {
+        position: relative;
+        &::after {
+            content: "";
+            display: block;
+            min-height: 10rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
     }
-  }
 }
 .print-contain-15 {
-  @media print {
-    position: relative;
-    &::after {
-      content: "";
-      display: block;
-      min-height: 15rem;
-      break-inside: avoid;
-      page-break-inside: avoid;
+    @media print {
+        position: relative;
+        &::after {
+            content: "";
+            display: block;
+            min-height: 15rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
     }
-  }
 }
 .print-contain-22 {
-  @media print {
-    position: relative;
-    &::after {
-      content: "";
-      display: block;
-      min-height: 22rem;
-      break-inside: avoid;
-      page-break-inside: avoid;
+    @media print {
+        position: relative;
+        &::after {
+            content: "";
+            display: block;
+            min-height: 22rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
     }
-  }
 }
 
 /* print-TR-contain孤儿高 */
 .print-avoid-break {
-  @media print {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+    @media print {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 
 .print-cell-m1-5 {
-  @media print {
-    min-height: 1.5rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+    @media print {
+        min-height: 1.5rem;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 .print-cell-m2 {
-  @media print {
-    min-height: 2rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+    @media print {
+        min-height: 2rem;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 .print-cell-m3 {
-  @media print {
-    min-height: 3rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+    @media print {
+        min-height: 3rem;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 .print-cell-m4 {
-  @media print {
-    min-height: 4rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+    @media print {
+        min-height: 4rem;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 .print-cell-m6 {
-  @media print {
-    min-height: 6rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+    @media print {
+        min-height: 6rem;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 .print-cell-m10 {
-  @media print {
-    min-height: 10rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+    @media print {
+        min-height: 10rem;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 
 @media print {
-  .print-cell-m18 {
-    min-height: 18rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+    .print-cell-m18 {
+        min-height: 18rem;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 /*孤儿测试*/
 @media print {
-  .print-container-min-5h {
-    position: relative; /* 为伪元素定位创建基准 */
-  }
+    .print-container-min-5h {
+        position: relative; /* 为伪元素定位创建基准 */
+    }
 
-  .print-container-min-5h::before {
-    content: "";
-    display: block;
-    height: 4rem; /* 创建5rem高度的占位空间 */
-    margin-bottom: -4rem; /* 负边距抵消占位高度 */
-    pointer-events: none; /* 禁用鼠标交互 */
-    page-break-after: avoid; /* 强制伪元素留在第一页 */
-    break-inside: avoid;
-  }
+    .print-container-min-5h::before {
+        content: "";
+        display: block;
+        height: 4rem; /* 创建5rem高度的占位空间 */
+        margin-bottom: -4rem; /* 负边距抵消占位高度 */
+        pointer-events: none; /* 禁用鼠标交互 */
+        page-break-after: avoid; /* 强制伪元素留在第一页 */
+        break-inside: avoid;
+    }
 }
 
 /*点击测量跳转 Add this to your globals.css file */
 a:visited {
-  color: rgb(16, 136, 41) !important; /* Darker gray for better visibility */
+    color: rgb(16, 136, 41) !important; /* Darker gray for better visibility */
 }
 /* Make sure the visited-link class has a darker color too */
 .visited-link {
-  color: rgb(16, 136, 41); /* Darker gray to match a:visited */
+    color: rgb(16, 136, 41); /* Darker gray to match a:visited */
 }
 /* Add print styles to ensure normal colors when printing */
 @media print {
-  a,
-  a:visited,
-  .visited-link {
-    color: inherit !important; /* Use normal text color when printing */
-  }
+    a,
+    a:visited,
+    .visited-link {
+        color: inherit !important; /* Use normal text color when printing */
+    }
 }
 
 /* 水平标签页增强样式 */
 .horizontal-tab-trigger {
-  position: relative;
-  overflow: hidden;
+    position: relative;
+    overflow: hidden;
 }
 /* 激活指示器动画 */
 .horizontal-tab-trigger::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%) scaleX(0);
-  width: 32px;
-  height: 4px;
-  background-color: currentColor;
-  border-radius: 2px;
-  transition: transform 0.3s ease;
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 32px;
+    height: 4px;
+    background-color: currentColor;
+    border-radius: 2px;
+    transition: transform 0.3s ease;
 }
 
 .horizontal-tab-trigger[data-state="active"]::after {
-  transform: translateX(-50%) scaleX(1);
+    transform: translateX(-50%) scaleX(1);
 }
 /* 手机端优化 */
 @media (max-width: 768px) {
-  .horizontal-tab-trigger {
-    font-size: 14px;
-    padding: 8px 16px;
-  }
+    .horizontal-tab-trigger {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
 }

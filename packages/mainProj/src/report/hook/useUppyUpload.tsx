@@ -8,7 +8,6 @@ import Dashboard from "@uppy/react/dashboard"
 import "@uppy/core/css/style.min.css"
 import "@uppy/dashboard/css/style.min.css"
 import "./uppy-fixes.css"
-import "./popover-fixes.css"
 import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
@@ -541,6 +540,49 @@ export function useUppyUpload({
         [pendingDeleteOperations],
     )
 
+    const popoverStyles = `
+    [popover] {
+      background-color: var(--popover);
+      color: var(--popover-foreground);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      padding: 1rem;
+      z-index: 50;
+      animation: popover-show 0.2s ease-out;
+    }
+
+    @keyframes popover-show {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    [popover] input[type="number"] {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      background-color: var(--input);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) - 2px);
+      color: var(--foreground);
+      font-size: 0.875rem;
+    }
+
+    [popover] input[type="number"]::placeholder {
+      color: var(--muted-foreground);
+    }
+
+    [popover] input[type="number"]:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--ring);
+    }
+  `
+
     // 在渲染文件时使用这些函数
     const renderFileWithDeleteStatus = (file: FileStore, index: number, isSingle = false) => {
         const isPendingDelete = isFilePendingDelete(file.url)
@@ -651,7 +693,18 @@ export function useUppyUpload({
                     )}
                 </div>
 
-                <div id={popoverId} popover="auto" className="p-4 border rounded-lg shadow-lg bg-white">
+                <style>{popoverStyles}</style>
+                <div
+                    id={popoverId}
+                    className="p-4 border rounded-lg shadow-lg bg-white"
+                    style={{
+                        "--popover": "#fff",
+                        "--popover-foreground": "#000",
+                        "--border": "#ccc",
+                        "--radius": "4px",
+                        "--ring": "#000",
+                    }}
+                >
                     <h3 className="font-semibold mb-3 text-sm">移动文件到位置</h3>
                     <p className="text-xs text-gray-600 mb-2">
                         当前在位置 {index + 1}，共 {maxFile === 1 ? 1 : storeObj2?.length || 0} 个文件
@@ -780,11 +833,13 @@ export function useUppyUpload({
             <div id={hash ?? "_pf"} className="text-center mt-2"></div>
         </>
     )
-    return [
+    return {
         unifiedComponent,
         uppyInstance,
         pendingDeleteOperations,
-        () => setPendingDeleteOperations([]),
+        setPendingDeleteOperations: () => setPendingDeleteOperations([]),
         delOssFileFunc, // 暴露删除函数
-    ] as const
+        cancelAllPendingDeletes,
+        popoverStyles,
+    }
 }
