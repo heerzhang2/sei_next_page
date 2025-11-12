@@ -594,8 +594,8 @@ export function useUppyUpload({
             const currentFiles = maxFile === 1 ? [storeObj1] : storeObj2
 
             if (isNaN(target) || target < 0 || target >= currentFiles.length) {
-                toast.error("无效的位置", {
-                    description: `请输入 0 到 ${currentFiles.length - 1} 之间的数字`,
+                toast.error("无效移动位置", {
+                    description: `请输入 1 到 ${currentFiles.length} 之间的数字`,
                     duration: 2000,
                 })
                 return
@@ -652,7 +652,7 @@ export function useUppyUpload({
                         className="relative"
                         disabled={isPendingDelete}
                     >
-                        {maxFile === 1 ? "删除文件" : `删除第${index + 1}个文件`}
+                        {maxFile === 1 ? "删除" : `删除第${index + 1}个`}
                         {isPendingDelete && (
                             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
                 !
@@ -673,7 +673,7 @@ export function useUppyUpload({
                                 }
                             }}
                         >
-                            移动到
+                          移动
                         </Button>
                     )}
 
@@ -688,7 +688,7 @@ export function useUppyUpload({
                                 cancelPendingDelete(file.url)
                             }}
                         >
-                            取消删除
+                          取消删除
                         </Button>
                     )}
                 </div>
@@ -697,7 +697,7 @@ export function useUppyUpload({
                 <div
                     id={popoverId}
                     popover="auto"
-                    className="p-4 border rounded-lg shadow-lg bg-white"
+                    className="p-4 border rounded-lg shadow-lg bg-white md:min-w-2xs"
                     style={
                         {
                             "--popover": "#fff",
@@ -705,6 +705,8 @@ export function useUppyUpload({
                             "--border": "#ccc",
                             "--radius": "4px",
                             "--ring": "#000",
+                            margin: "auto",
+                            border: "solid",
                         } as React.CSSProperties
                     }
                 >
