@@ -251,7 +251,6 @@ const getCurrentPageUrl = () => {
     }
     return ""
 }
-
 // 提取的文件恢复逻辑函数
 const restoreFileFromSnapshot = async (
     fileData: any,
@@ -310,8 +309,22 @@ const restoreFileFromSnapshot = async (
                     },
                 }
 
-                // 使用 Uppy 的 addFile 方法
+                // 使用 Uppy 的 addFile 方法，捕获可能的重复文件错误
                 try {
+                    // 先检查是否已存在相同文件
+                    const existingFiles = uppyInstance.getFiles()
+                    const isDuplicate = existingFiles.some(
+                        (file) => file.name === fileData.name && file.size === fileData.size
+                    )
+
+                    if (isDuplicate) {
+                        console.warn(`[OfflineUppy] File already exists in Uppy: ${fileData.name}`)
+                        toast.warning("文件已存在", {
+                            description: `文件 "${fileData.name}" 已在上传列表中，跳过恢复`,
+                        })
+                        return { restored: false, fromHandle: true }
+                    }
+
                     const result = uppyInstance.addFile(fileToAdd)
                     if (result) {
                         console.log(`[OfflineUppy] Successfully added file handle to Uppy: ${fileData.name}`)
@@ -320,7 +333,15 @@ const restoreFileFromSnapshot = async (
                         console.error(`[OfflineUppy] Uppy addFile returned false for: ${fileData.name}`)
                         return { restored: false, fromHandle: false }
                     }
-                } catch (addError) {
+                } catch (addError: any) {
+                    // 捕获 Uppy 的重复文件错误
+                    if (addError.message && addError.message.includes("不允许添加")) {
+                        console.warn(`[OfflineUppy] Duplicate file detected: ${fileData.name}`)
+                        toast.warning("重复文件", {
+                            description: `文件 "${fileData.name}" 已存在，跳过恢复`,
+                        })
+                        return { restored: false, fromHandle: true }
+                    }
                     console.error(`[OfflineUppy] Failed to add file to Uppy: ${fileData.name}`, addError)
                     return { restored: false, fromHandle: false }
                 }
@@ -352,7 +373,22 @@ const restoreFileFromSnapshot = async (
                         ...snapshotMeta,
                     },
                 }
+
                 try {
+                    // 先检查是否已存在相同文件
+                    const existingFiles = uppyInstance.getFiles()
+                    const isDuplicate = existingFiles.some(
+                        (file) => file.name === fileData.name && file.size === fileData.size
+                    )
+
+                    if (isDuplicate) {
+                        console.warn(`[OfflineUppy] File already exists in Uppy: ${fileData.name}`)
+                        toast.warning("文件已存在", {
+                            description: `文件 "${fileData.name}" 已在上传列表中，跳过恢复`,
+                        })
+                        return { restored: false, fromHandle: false }
+                    }
+
                     const result = uppyInstance.addFile(fileToAdd)
                     if (result) {
                         console.log(`[OfflineUppy] Successfully added traditional file to Uppy: ${fileData.name}`)
@@ -361,7 +397,15 @@ const restoreFileFromSnapshot = async (
                         console.error(`[OfflineUppy] Uppy addFile returned false for traditional file: ${fileData.name}`)
                         return { restored: false, fromHandle: false }
                     }
-                } catch (addError) {
+                } catch (addError: any) {
+                    // 捕获 Uppy 的重复文件错误
+                    if (addError.message && addError.message.includes("不允许添加")) {
+                        console.warn(`[OfflineUppy] Duplicate file detected: ${fileData.name}`)
+                        toast.warning("重复文件", {
+                            description: `文件 "${fileData.name}" 已存在，跳过恢复`,
+                        })
+                        return { restored: false, fromHandle: false }
+                    }
                     console.error(`[OfflineUppy] Failed to add traditional file to Uppy: ${fileData.name}`, addError)
                     return { restored: false, fromHandle: false }
                 }
@@ -741,13 +785,12 @@ export function useOfflineUppyUpload(params: {
                     business: params.business || "rep",
                 })
             }
-
+            // 在 restoreState 函数中更新恢复计数逻辑
             let restoredCount = 0
             let fromHandleCount = 0
             let handleFailures = 0
             let addFailures = 0
-
-            // 使用提取的函数恢复每个文件
+            let duplicateFiles = 0
             for (const fileData of snapshot.files) {
                 const result = await restoreFileFromSnapshot(
                     fileData,
@@ -769,22 +812,33 @@ export function useOfflineUppyUpload(params: {
                     } else {
                         addFailures++
                     }
+                    // 检查是否是重复文件导致的失败
+                    const existingFiles = uppyInstanceRef.current.getFiles()
+                    const isDuplicate = existingFiles.some(
+                        (file) => file.name === fileData.name && file.size === fileData.size
+                    )
+                    if (isDuplicate) {
+                        duplicateFiles++
+                    }
                 }
             }
-
             console.log(
-                `[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles)`,
+                `[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles), ${duplicateFiles} duplicates skipped`,
             )
-            setHasSavedState(true)
-
             if (restoredCount > 0) {
                 toast.success(`恢复完成`, {
-                    description: `已恢复 ${restoredCount} 个上传文件`,
+                    description: `已恢复 ${restoredCount} 个上传文件${duplicateFiles > 0 ? `，跳过 ${duplicateFiles} 个重复文件` : ''}`,
                 })
             } else if (snapshot.files.length > 0) {
-                toast.error("恢复失败", {
-                    description: `无法恢复 ${snapshot.files.length} 个文件，请重新选择文件`,
-                })
+                if (duplicateFiles > 0) {
+                    toast.info("恢复完成", {
+                        description: `所有文件已在上传列表中，无需重复恢复`, duration:9000
+                    })
+                } else {
+                    toast.error("恢复失败", {
+                        description: `无法恢复 ${snapshot.files.length} 个文件，请重新选择文件`,
+                    })
+                }
             }
         }
 
@@ -940,35 +994,26 @@ export function useOfflineUppyUpload(params: {
 
         return (
             <div className="flex flex-col gap-2 mt-2">
-                {/* 文件添加方式选择 */}
-                <div className="border-b pb-2">
-                    <p className="text-xs text-gray-500 mb-2">选择文件添加方式：</p>
-                    <div className="flex gap-2">
-                        {/* 传统方式（Uppy 内置） */}
-                        <div className="text-center">
-                            <p className="text-xs text-gray-600 mb-1">传统方式</p>
-                            <p className="text-xs text-gray-400">适合小文件，即时上传</p>
+                {isFileSystemAccessSupported() && (
+                    <div className="border-b pb-2">
+                        <div className="flex gap-2">
+                            {/* 文件句柄方式 */}
+                            {isFileSystemAccessSupported() && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addFilesWithHandles}
+                                    className="flex items-center bg-transparent"
+                                >
+                                    <FolderOpen className="w-4 h-4 mr-2" />
+                                    句柄方式添加到上传面板中
+                                </Button>
+                            )}
                         </div>
-
-                        {/* 文件句柄方式 */}
-                        {isFileSystemAccessSupported() && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={addFilesWithHandles}
-                                className="flex items-center bg-transparent"
-                            >
-                                <FolderOpen className="w-4 h-4 mr-2" />
-                                文件句柄方式添加
-                            </Button>
-                        )}
-                    </div>
-                    {isFileSystemAccessSupported() && (
                         <p className="text-xs text-green-600 mt-1">文件句柄方式：节省存储空间，支持大文件，离线后可恢复</p>
-                    )}
-                </div>
-
+                    </div>
+                )}
                 {/* 状态管理操作 */}
                 <div className="flex flex-col gap-2">
                     <div className="flex gap-2">
@@ -984,10 +1029,10 @@ export function useOfflineUppyUpload(params: {
                             className="flex items-center flex-1"
                         >
                             <Upload className="w-4 h-4 mr-2" />
-                            保存文件上传和删除状态
+                            保存上传和删除状态
                             {displayPendingDeletes.length > 0 && (
                                 <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                  {displayPendingDeletes.length} 待删除
+                  {displayPendingDeletes.length} 待删
                 </span>
                             )}
                         </Button>
@@ -1016,6 +1061,7 @@ export function useOfflineUppyUpload(params: {
                                 variant="default"
                                 size="sm"
                                 onClick={executePendingDeletes}
+                                disabled={!(displayPendingDeletes.length>0)}
                                 className="flex items-center flex-1 bg-orange-500 hover:bg-orange-600 text-white"
                             >
                                 <RotateCcw className="w-4 h-4 mr-2" />
@@ -1023,21 +1069,7 @@ export function useOfflineUppyUpload(params: {
                             </Button>
                         </div>
                     )}
-
                     {hasSavedState && <p className="text-xs text-blue-600">✓ 有保存的状态，离线后可以恢复</p>}
-
-                    {displayPendingDeletes.length > 0 && (
-                        <div className="space-y-1">
-                            <p className="text-xs text-orange-600">⚠ 有 {displayPendingDeletes.length} 个删除操作等待执行</p>
-                            <div className="text-xs text-gray-500">
-                                {displayPendingDeletes.map((op, index) => (
-                                    <div key={index} className="truncate">
-                                        {op.deleteUrl.split("/").pop()}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         )

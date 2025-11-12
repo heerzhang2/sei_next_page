@@ -633,7 +633,7 @@ export function useUppyUpload({
                     {file.url && (
                         <ImageComponentNatural
                             src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${file.url}` || "/placeholder.svg"}
-                            alt={file.url}
+                            alt={file.name}
                         />
                     )}
                 </div>
