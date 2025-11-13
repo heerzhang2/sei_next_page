@@ -515,7 +515,6 @@ export function useOfflineUppyUpload(params: {
             uppyInstanceRef.current = uppyInstance
         }
     }, [uppyInstance])
-
     // 保存 Uppy 当前状态（统一的手动保存），确保包含当前的待删除操作
     const saveUppyState = useCallback(
         async (uppy: Uppy) => {
@@ -524,7 +523,21 @@ export function useOfflineUppyUpload(params: {
                 return
             }
 
-            const files = uppy.getFiles()
+            // 修改：过滤掉已成功上传的文件
+            const allFiles = uppy.getFiles()
+            const files = allFiles.filter(file => {
+                // 排除已成功上传的文件
+                const isCompleted = file.progress?.uploadComplete &&
+                    file.progress?.percentage === 100 &&
+                    file.response?.uploadURL
+
+                if (isCompleted) {
+                    console.log(`[OfflineUppy] 排除已成功上传文件: ${file.name}`)
+                }
+
+                return !isCompleted
+            })
+
             const currentPendingDeletes = pendingDeleteOperationsRef.current
 
             // 如果没有待上传文件且没有待删除操作，无需保存
@@ -535,9 +548,16 @@ export function useOfflineUppyUpload(params: {
                 return
             }
 
+            // 修改：在提示信息中显示排除的文件数量
+            const excludedCount = allFiles.length - files.length
+            if (excludedCount > 0) {
+                toast.info(`排除了 ${excludedCount} 个已成功上传的文件`)
+            }
+
             toast.info("正在保存文件状态...", {
                 duration: 2000,
             })
+
             const filesWithData = await Promise.all(
                 files.map(async (file) => {
                     try {
@@ -595,6 +615,7 @@ export function useOfflineUppyUpload(params: {
                     }
                 }),
             ).then((results) => results.filter(Boolean))
+
             // 保存 Uppy 状态到 IndexedDB，包含待删除操作数组
             try {
                 const uppyState = {
@@ -627,6 +648,7 @@ export function useOfflineUppyUpload(params: {
                 console.log(`[OfflineUppy] Saving Uppy state with key: ${stateKey}`, {
                     files: filesWithData.length,
                     pendingDeletes: currentPendingDeletes.length,
+                    excludedCompleted: excludedCount,
                 })
 
                 await fileOperationsQueue.saveUppyState(uppyState)
@@ -636,11 +658,11 @@ export function useOfflineUppyUpload(params: {
                 const deleteCount = currentPendingDeletes.length
 
                 console.log(
-                    `[OfflineUppy] Saved state: ${stateKey}, ${fileCount} pending files (${handleModeCount} with handles), ${deleteCount} pending deletes`,
+                    `[OfflineUppy] Saved state: ${stateKey}, ${fileCount} pending files (${handleModeCount} with handles), ${deleteCount} pending deletes, ${excludedCount} completed files excluded`,
                 )
 
                 toast.success("保存成功", {
-                    description: `已保存 ${fileCount} 个待上传文件（${handleModeCount} 个使用文件句柄）、${deleteCount} 个待删除操作的状态`,
+                    description: `已保存 ${fileCount} 个待上传文件（${handleModeCount} 个使用文件句柄）、${deleteCount} 个待删除操作的状态，排除了 ${excludedCount} 个已成功上传的文件`,
                     duration: 3000,
                 })
 
@@ -671,7 +693,6 @@ export function useOfflineUppyUpload(params: {
             checkSavedState,
         ],
     )
-
     // 取消保存的状态
     const cancelSavedState = useCallback(async () => {
         try {

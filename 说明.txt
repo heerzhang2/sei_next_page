@@ -589,3 +589,9 @@ false
 length
 :
 2
+ossDeleteFile
+:
+"删除失败: Range [0, -1) out of bounds for length 176"
+
+Range [0, -1) out of bounds for length 176
+Storage service exception: MinIOX¨1%: java.lang.NullPointerException: Parameter specified as non-null is null: method okhttp3.Headers$Builder.addUnsafeNonAscii, parameter value
