@@ -238,19 +238,18 @@ export function useUppyUpload({
                 try {
                     const data = JSON.parse(text)
                     if (data?.successful) {
-                        //必须返回{url：}对象：这样才能在handleUpSuccess()里面result.successful才能看得到uploadURL，是uppy库转化生成的。
                         const obj = data?.successful[0]
                         errStr = obj?.error
                         if (obj?.url) return obj
                     }
                 } catch (e) {}
-                uppy.info("不要重试:" + errStr, "error", 9000)
-                if (errStr.includes("Failed to connect to")) errStr = "OSS存储集群服务不可用"
+                uppyInstance?.info("不要重试:" + errStr, "error", 9000)
+                if (errStr?.includes("Failed to connect to")) errStr = "OSS存储集群服务不可用"
                 toast.error("上传失败", {
                     description: errStr,
                 })
-                // uppy.cancelAll()
-                return {}
+                // 关键修复：抛出错误而不是返回空对象
+                throw new Error(errStr || "上传失败")
             },
             async onAfterResponse(xhr) {
                 if (xhr.status === 401) {
@@ -448,11 +447,14 @@ export function useUppyUpload({
     const handleModeChange = async (mode: UploadMode) => {
         if (!uppyInstance) return
         console.log(`Switching upload mode from ${uploadMode} to ${mode}`)
-        // 保存当前文件
+
+        // 保存当前文件状态
         const currentFiles = uppyInstance.getFiles()
         console.log(`Preserving ${currentFiles.length} files during mode switch`)
+
         // 暂停所有上传
         uppyInstance.pauseAll()
+
         try {
             // 移除所有上传插件
             const tusPlugin = uppyInstance.getPlugin('tus-upload')
@@ -472,21 +474,52 @@ export function useUppyUpload({
                 configureXHRPlugin(uppyInstance)
             }
 
+            // 关键修复：彻底重置文件状态
+            currentFiles.forEach(file => {
+                try {
+                    // 先移除文件
+                    uppyInstance.removeFile(file.id)
+
+                    // 重新添加文件，使用原始文件数据
+                    const fileData = file.data
+                    if (fileData) {
+                        const newFile = {
+                            id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 新的ID避免冲突
+                            name: file.name,
+                            type: file.type,
+                            data: fileData,
+                            size: file.size,
+                            meta: {
+                                ...file.meta,
+                                forcedMode: mode,
+                                // 清除所有上传相关状态
+                                uploadURL: undefined,
+                                tus: undefined,
+                                previousResponse: undefined,
+                            },
+                        }
+
+                        // 重新添加文件
+                        const result = uppyInstance.addFile(newFile)
+                        if (!result) {
+                            console.error(`Failed to re-add file: ${file.name}`)
+                            // 如果添加失败，尝试使用原始ID
+                            const fallbackFile = { ...newFile, id: file.id }
+                            uppyInstance.addFile(fallbackFile)
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error processing file ${file.name} during mode switch:`, error)
+                }
+            })
+
             // 更新模式状态
             setUploadMode(mode)
-
-            // 更新所有文件的 meta 数据
-            currentFiles.forEach(file => {
-                uppyInstance.setFileMeta(file.id, {
-                    ...file.meta,
-                    forcedMode: mode
-                })
-            })
 
             console.log(`Successfully switched to ${mode} mode, preserved ${currentFiles.length} files`)
 
             toast.success(`已切换到${mode === "tus" ? "断点续传" : "常规"}模式`, {
-                description: `已保留 ${currentFiles.length} 个已选择文件`,
+                description: `已保留 ${currentFiles.length} 个文件，可以重新上传`,
                 duration: 3000,
             })
 
