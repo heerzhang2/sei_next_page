@@ -13,7 +13,6 @@ import { Button } from "@/components/ui"
 import { ImageComponentNatural } from "@/components/natural"
 import { useCallback } from "react"
 import { toast } from "sonner"
-import { fileOperationsQueue } from "@/lib/file-operations-queue"
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -150,6 +149,9 @@ export function useUppyUpload({
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
     const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
     const dashLocale = DASH_LOCALE_CONFIG
+
+    const [successfulFileIds, setSuccessfulFileIds] = React.useState<Set<string>>(new Set())
+    const [successfulFiles, setSuccessfulFiles] = React.useState<Array<{ name: string; url: string }>>([])
 
     // 配置 Tus 插件的函数
     const configureTusPlugin = (uppy: Uppy) => {
@@ -358,7 +360,7 @@ export function useUppyUpload({
                     onFinish && onFinish(undefined, false)
                 } else {
                     // 使用文件URL来查找并删除文件，而不是索引
-                    const newStoreObj = [...storeObj2].filter(file => file.url !== fileUrl)
+                    const newStoreObj = [...storeObj2].filter((file) => file.url !== fileUrl)
                     onFinish && onFinish(newStoreObj, false)
                 }
             }
@@ -367,9 +369,12 @@ export function useUppyUpload({
     )
     const { call: delOssFileFunc } = useOssDeleteFileMutation()
     // 创建包装函数，在调用时传递回调
-    const deleteFileWithCallback = React.useCallback((fileUrl: string, key?: string, value?: string) => {
-        delOssFileFunc(fileUrl, key, value, whenDeleted)
-    }, [delOssFileFunc, whenDeleted])
+    const deleteFileWithCallback = React.useCallback(
+        (fileUrl: string, key?: string, value?: string) => {
+            delOssFileFunc(fileUrl, key, value, whenDeleted)
+        },
+        [delOssFileFunc, whenDeleted],
+    )
     //【上传应答】结束时刻回调
     const handleUpSuccess = React.useCallback(
         (result: { successful: any[] }) => {
@@ -386,7 +391,7 @@ export function useUppyUpload({
                         failUploads += up.name + "; "
                         return null
                     }
-                    return { name: up.name, url: fileUrl, type: up.type }
+                    return { name: up.name, url: fileUrl, type: up.type, id: up.id }
                 })
                 .filter((item) => item !== null) // 立即过滤
             if (failUploads) {
@@ -395,8 +400,17 @@ export function useUppyUpload({
             const newarr = [...more]
             const cntfile = newarr.length
             if (cntfile > 0) {
+                const newIds = new Set(successfulFileIds)
+                newarr.forEach((file: any) => {
+                    if (file.id) newIds.add(file.id)
+                })
+                setSuccessfulFileIds(newIds)
+
+                const successFiles = newarr.map(({ name, url }) => ({ name, url }))
+                setSuccessfulFiles((prev) => [...prev, ...successFiles])
+
                 setOpenUppy(false)
-                const newfile = newarr?.map(({ name, url }) => ({ name, url }))
+                const newfile = successFiles
                 // 上传成功后立即清理相关的 Tus 记录
                 setTimeout(() => {
                     cleanupTusLocalStorage()
@@ -411,7 +425,7 @@ export function useUppyUpload({
                 }
             }
         },
-        [maxFile, onFinish, uppyInstance, repId, hash, storeObj2],
+        [maxFile, onFinish, uppyInstance, repId, hash, storeObj2, successfulFileIds],
     )
     // 设置 Uppy 选项和事件监听
     React.useEffect(() => {
@@ -457,8 +471,8 @@ export function useUppyUpload({
 
         try {
             // 移除所有上传插件
-            const tusPlugin = uppyInstance.getPlugin('tus-upload')
-            const xhrPlugin = uppyInstance.getPlugin('xhr-upload')
+            const tusPlugin = uppyInstance.getPlugin("tus-upload")
+            const xhrPlugin = uppyInstance.getPlugin("xhr-upload")
 
             if (tusPlugin) {
                 uppyInstance.removePlugin(tusPlugin)
@@ -475,7 +489,7 @@ export function useUppyUpload({
             }
 
             // 关键修复：彻底重置文件状态
-            currentFiles.forEach(file => {
+            currentFiles.forEach((file) => {
                 try {
                     // 先移除文件
                     uppyInstance.removeFile(file.id)
@@ -522,7 +536,6 @@ export function useUppyUpload({
                 description: `已保留 ${currentFiles.length} 个文件，可以重新上传`,
                 duration: 3000,
             })
-
         } catch (error) {
             console.error("Failed to switch upload mode:", error)
             toast.error("模式切换失败", {
@@ -565,9 +578,7 @@ export function useUppyUpload({
                 {uploadMode === "xhr" && "用标准 HTTP 上传，事务性更好，最大支持500兆的"}
             </div>
             {uppyInstance && (
-                <div className="mt-1 text-xs text-blue-600">
-                    当前已选择 {uppyInstance.getFiles().length} 个文件
-                </div>
+                <div className="mt-1 text-xs text-blue-600">当前已选择 {uppyInstance.getFiles().length} 个文件</div>
             )}
         </div>
     )
@@ -618,6 +629,55 @@ export function useUppyUpload({
         },
         [pendingDeleteOperations],
     )
+
+    const handleExcludeCompleted = React.useCallback(() => {
+        if (!uppyInstance) return
+
+        const allFiles = uppyInstance.getFiles()
+        let excludedCount = 0
+
+        allFiles.forEach((file) => {
+            // 检查文件是否已成功上传
+            if (file.progress.uploadComplete || successfulFileIds.has(file.id)) {
+                uppyInstance.removeFile(file.id)
+                excludedCount++
+            }
+        })
+
+        if (excludedCount > 0) {
+            toast.success(`已排除 ${excludedCount} 个已完成文件`, {
+                description: "已从上传列表中移除已成功上传的文件",
+                duration: 3000,
+            })
+        } else {
+            toast.info("没有已完成的文件", {
+                description: "所有文件都是未完成状态",
+                duration: 2000,
+            })
+        }
+    }, [uppyInstance, successfulFileIds])
+
+    React.useEffect(() => {
+        if (!uppyInstance) return
+
+        const handleFileAdded = (file: any) => {
+            // 检查是否已在成功上传列表中
+            const isDuplicate = successfulFiles.some((sf) => sf.name === file.name && sf.url)
+
+            if (isDuplicate) {
+                // 给用户提示
+                toast.warning("检测到重复文件", {
+                    description: `文件 "${file.name}" 已成功上传过，是否继续上传？`,
+                    duration: 4000,
+                })
+            }
+        }
+
+        uppyInstance.on("file-added", handleFileAdded)
+        return () => {
+            uppyInstance.off("file-added", handleFileAdded)
+        }
+    }, [uppyInstance, successfulFiles])
 
     const popoverStyles = `
     [popover] {
@@ -733,8 +793,8 @@ export function useUppyUpload({
                         {maxFile === 1 ? "删除" : `删除文件`}
                         {isPendingDelete && (
                             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-            !
-        </span>
+                !
+              </span>
                         )}
                     </Button>
 
@@ -751,7 +811,7 @@ export function useUppyUpload({
                                 }
                             }}
                         >
-                          移动
+                            移动
                         </Button>
                     )}
 
@@ -766,7 +826,7 @@ export function useUppyUpload({
                                 cancelPendingDelete(file.url)
                             }}
                         >
-                          取消删除
+                            取消删除
                         </Button>
                     )}
                 </div>
@@ -859,153 +919,6 @@ export function useUppyUpload({
             duration: 3000,
         })
     }, [pendingDeleteOperations.length])
-// 排除已完成上传的文件
-    const removeCompletedFiles = React.useCallback(() => {
-        if (!uppyInstance) {
-            toast.error("Uppy 实例未初始化");
-            return;
-        }
-
-        const files = uppyInstance.getFiles();
-        if (files.length === 0) {
-            toast.info("没有需要处理的文件");
-            return;
-        }
-
-        let removedCount = 0;
-        let completedCount = 0;
-
-        files.forEach((file) => {
-            // 检查文件是否已经成功上传
-            const isCompleted = file.progress?.uploadComplete &&
-                file.progress?.percentage === 100 &&
-                file.response?.uploadURL;
-
-            if (isCompleted) {
-                try {
-                    uppyInstance.removeFile(file.id);
-                    removedCount++;
-                    completedCount++;
-                } catch (error) {
-                    console.warn(`移除已完成文件失败: ${file.name}`, error);
-                }
-            }
-        });
-
-        if (removedCount > 0) {
-            toast.success(`已排除 ${removedCount} 个已完成文件`, {
-                description: `清理了 ${completedCount} 个成功上传的文件`,
-                duration: 3000,
-            });
-        } else {
-            toast.info("没有发现已完成的上传文件");
-        }
-    }, [uppyInstance]);
-
-// 添加上传前的重复文件检查
-    const checkForDuplicateFiles = React.useCallback((newFiles: any[]) => {
-        if (!uppyInstance || newFiles.length === 0) return newFiles;
-
-        const existingFiles = uppyInstance.getFiles();
-        const storeFiles = maxFile === 1 ?
-            (storeObj1?.url ? [storeObj1] : []) :
-            storeObj2 || [];
-
-        // 检查重复的文件
-        const duplicates = newFiles.filter(newFile => {
-            // 检查是否已在 Uppy 文件列表中
-            const inUppy = existingFiles.some(existingFile =>
-                existingFile.name === newFile.name &&
-                existingFile.size === newFile.size && existingFile.progress.uploadComplete===true
-            );
-
-            // 检查是否已在存储的文件中
-            const inStore = storeFiles.some(storeFile =>
-                storeFile.name === newFile.name
-            );
-
-            return inUppy || inStore;
-        });
-
-        if (duplicates.length > 0) {
-            const duplicateNames = duplicates.map(f => f.name).join(', ');
-            toast.warning(`发现 ${duplicates.length} 个重复文件`, {
-                description: `以下文件已存在: ${duplicateNames}`,
-                duration: 5000,
-            });
-
-            // 过滤掉重复文件
-            return newFiles.filter(newFile =>
-                !duplicates.some(dup =>
-                    dup.name === newFile.name && dup.size === newFile.size
-                )
-            );
-        }
-
-        return newFiles;
-    }, [uppyInstance, storeObj1, storeObj2, maxFile]);
-// 在 Uppy 初始化后添加文件重复检查
-    React.useEffect(() => {
-        if (!uppyInstance) return;
-        // 监听文件添加事件，进行重复检查
-        const handleFileAdded = (file: any) => {
-            const files = [file];
-            const filteredFiles = checkForDuplicateFiles(files);
-
-            if (filteredFiles.length < files.length) {
-                // 有重复文件，从 Uppy 中移除
-                setTimeout(() => {
-                    try {
-                        uppyInstance.removeFile(file.id);
-                    } catch (error) {
-                        console.warn(`移除重复文件失败: ${file.name}`, error);
-                    }
-                }, 100);
-            }
-        };
-        const handleRetryAll = (fileIDs: any) => {
-            console.warn(`再试试:  fileIDs=`, fileIDs);
-        };
-        uppyInstance.on('file-added', handleFileAdded);
-        uppyInstance.on('retry-all', handleRetryAll);
-        return () => {
-            uppyInstance.off('file-added', handleFileAdded);
-            uppyInstance.off('retry-all', handleFileAdded);
-        };
-    }, [uppyInstance, checkForDuplicateFiles]);
-
-// 添加强制重新上传功能
-    const retryFailedUploads = React.useCallback(() => {
-        if (!uppyInstance) {
-            toast.error("Uppy 实例未初始化");
-            return;
-        }
-
-        const files = uppyInstance.getFiles();
-        const failedFiles = files.filter(file =>
-            file.error ||
-            (file.progress?.uploadComplete === false && file.progress?.percentage < 100)
-        );
-
-        if (failedFiles.length === 0) {
-            toast.info("没有发现失败的上传任务");
-            return;
-        }
-
-        // 重置失败的文件状态
-        failedFiles.forEach(file => {
-            try {
-                uppyInstance.resetProgress(file.id);
-                uppyInstance.retryUpload(file.id);
-            } catch (error) {
-                console.warn(`重置文件失败: ${file.name}`, error);
-            }
-        });
-
-        toast.info(`正在重试 ${failedFiles.length} 个失败的上传`, {
-            duration: 3000,
-        });
-    }, [uppyInstance]);
     // 添加统一的渲染函数
     const renderFiles = () => {
         const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
@@ -1037,36 +950,13 @@ export function useUppyUpload({
                     {/* 操作按钮 */}
                     <div className="space-y-2">
                         <div className="flex justify-center items-center gap-2">
-                            <Button
-                                size="sm"
-                                disabled={!openUppy && thisMaxFiles <= 0}
-                                onClick={scrollHandler}
-                            >
+                            <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
                                 {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
                                 {selectedFilesCount > 0 && ` | 已选 ${selectedFilesCount} 个`}
                             </Button>
-
-                            {/* 新增：排除已完成按钮 */}
-                            {uppyInstance && uppyInstance.getFiles().length > 0 && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={removeCompletedFiles}
-                                    className="ml-2"
-                                >
-                                    排除已完成
-                                </Button>
-                            )}
-                            {uppyInstance && uppyInstance.getFiles().some(file => file.error) && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={retryFailedUploads}
-                                    className="ml-2"
-                                >
-                                    重试失败上传
+                            {successfulFileIds.size > 0 && (
+                                <Button size="sm" variant="outline" onClick={handleExcludeCompleted}>
+                                    排除已完成 ({successfulFileIds.size})
                                 </Button>
                             )}
                         </div>

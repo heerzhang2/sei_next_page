@@ -267,7 +267,25 @@ const restoreFileFromSnapshot = async (
             hasHandle: !!fileData.fileHandle,
             isHandleMode: fileData.isHandleMode,
             hasData: !!fileData.data,
-        })
+        });
+
+        // 加强重复检查
+        const existingFiles = uppyInstance.getFiles();
+        const isDuplicate = existingFiles.some(
+            (file) =>
+                file.name === fileData.name &&
+                file.size === fileData.size &&
+                // 额外检查：如果文件已经成功上传，则视为重复
+                (file.progress?.uploadComplete || file.progress?.percentage === 100)
+        );
+
+        if (isDuplicate) {
+            console.log(`[OfflineUppy] 跳过重复文件（已成功上传）: ${fileData.name}`);
+            toast.warning("跳过重复文件", {
+                description: `文件 "${fileData.name}" 已成功上传，跳过恢复`,
+            });
+            return { restored: false, fromHandle: false };
+        }
 
         let fileToRestore: File | null = null
         let fromHandle = false
