@@ -128,7 +128,7 @@ export function useUppyUpload({
                                   id,
                                   business = "rep",
                                   open,
-                                  externalPendingDeletes = [], // 新增参数
+                                  externalPendingDeletes = [],
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -140,7 +140,7 @@ export function useUppyUpload({
     id?: string
     business?: string
     open?: boolean
-    externalPendingDeletes?: PendingDeleteOperation[] // 新增参数类型
+    externalPendingDeletes?: PendingDeleteOperation[]
 }) {
     // 添加待删除操作状态
     const [pendingDeleteOperations, setPendingDeleteOperations] =
@@ -150,142 +150,154 @@ export function useUppyUpload({
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
     const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
     const dashLocale = DASH_LOCALE_CONFIG
-    //Uppy实例初始化：【很大的局限性】无法恢复一次路由跳转出去后重新再进来本页面的，删一次挑选的那些尚未完成上传文件，就算TUS也不能恢复状态的，只能不离开页面TUS才能继续干活的。
+
+    // 配置 Tus 插件的函数
+    const configureTusPlugin = (uppy: Uppy) => {
+        uppy.use(Tus, {
+            id: "tus-upload",
+            endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
+            withCredentials: true,
+            chunkSize: 5 * 1024 * 1024,
+            retryDelays: [0, 2000, 7000, 15000],
+            async onBeforeRequest(req) {
+                const token = await getAuthToken()
+                if (token) {
+                    req.setHeader("Authorization", `Bearer ${token}`)
+                }
+            },
+            async onAfterResponse(req, res) {
+                const status = res.getStatus()
+                if (status === 401) {
+                    uppy.info("需刷新token", "error", 9000)
+                    window.dispatchEvent(new CustomEvent("token:refresh-needed"))
+                    toast.error("身份认证失败", {
+                        description: "需重新登录，或刷新token",
+                        duration: 9000,
+                    })
+                }
+                const url = req.getURL()
+                const value = res.getHeader("Tus2minIoUrl")
+                // 存储服务相关的错误
+                if (status === 503) {
+                    const errorMessage = value || "无服务"
+                    uppy.info(`Upload failed: ${errorMessage}`, "error", 9000)
+                    toast.error("OSS存储服务问题", {
+                        description: errorMessage,
+                        duration: 8000,
+                    })
+                    uppy.pauseAll()
+                }
+                // 存储空间不足等业务错误
+                else if (value && value.includes("Insufficient storage space")) {
+                    uppy.info("Upload failed: Insufficient storage space", "error", 9000)
+                    toast.error("存储", {
+                        description: "可写磁盘容量不足",
+                    })
+                    uppy.pauseAll()
+                }
+                // 其他服务器错误
+                else if (status >= 500) {
+                    toast.error("Server Error", {
+                        description: value,
+                    })
+                    uppy.pauseAll()
+                } else if (value) {
+                    const steob = {} as any
+                    steob[url] = value
+                    uppy.setState({ ...steob })
+                    // 可选：显示成功提示
+                    toast.success("成功", {
+                        description: "上传完成",
+                    })
+                }
+            },
+        })
+    }
+
+    // 配置 XHR 插件的函数
+    const configureXHRPlugin = (uppy: Uppy) => {
+        uppy.use(XHRUpload, {
+            id: "xhr-upload",
+            endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/api/upload`,
+            method: "POST",
+            formData: true,
+            fieldName: "files[]",
+            timeout: 600000,
+            limit: 1,
+            allowedMetaFields: true,
+            shouldRetry: (xhr: XMLHttpRequest) => {
+                return false
+            },
+            async onBeforeRequest(xhr) {
+                const token = await getAuthToken()
+                xhr.setRequestHeader("Authorization", `Bearer ${token}`) // @ts-ignore
+            },
+            async getResponseData(req: XMLHttpRequest) {
+                const text = await req.response
+                let errStr
+                try {
+                    const data = JSON.parse(text)
+                    if (data?.successful) {
+                        //必须返回{url：}对象：这样才能在handleUpSuccess()里面result.successful才能看得到uploadURL，是uppy库转化生成的。
+                        const obj = data?.successful[0]
+                        errStr = obj?.error
+                        if (obj?.url) return obj
+                    }
+                } catch (e) {}
+                uppy.info("不要重试:" + errStr, "error", 9000)
+                if (errStr.includes("Failed to connect to")) errStr = "OSS存储集群服务不可用"
+                toast.error("上传失败", {
+                    description: errStr,
+                })
+                // uppy.cancelAll()
+                return {}
+            },
+            async onAfterResponse(xhr) {
+                if (xhr.status === 401) {
+                    uppy.info("需刷新token", "error", 9000)
+                    window.dispatchEvent(new CustomEvent("token:refresh-needed"))
+                    return
+                }
+                if (xhr.status === 403) {
+                    toast.error("上传失败", {
+                        description: "请重新登录",
+                        duration: 9000,
+                    })
+                    return
+                }
+                try {
+                    const data = JSON.parse(xhr.response)
+                    if (data?.successful) {
+                        const steob = {} as any
+                        //类似TUS的做法，目的是给handleUpSuccess里面的统一处理做法提供支持。
+                        steob[data?.successful[0]?.url] = data?.successful[0]?.url
+                        uppy.setState({ ...steob })
+                    } else {
+                        console.warn(`上传应答错误`)
+                    }
+                } catch (e) {
+                    console.error(`上传错误`)
+                }
+            },
+        })
+    }
+
+    // 初始化 Uppy 实例 - 简化版本
     const createUppyInstance = () => {
         const uniqueId = id ? id : `Report-${repId}-${hash || "default"}`
-        // console.log(`Creating new Uppy instance: ${uniqueId}`)
+        console.log(`Creating new Uppy instance: ${uniqueId}`)
         const newUppy = new Uppy({
             id: uniqueId,
             restrictions: { maxNumberOfFiles: maxFile },
         })
+
+        // 根据当前模式配置插件
         if (uploadMode === "tus") {
-            // 配置 Tus 插件
-            newUppy.use(Tus, {
-                id: "tus-upload",
-                endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/uploadTUS/`,
-                withCredentials: true,
-                chunkSize: 5 * 1024 * 1024,
-                retryDelays: [0, 2000, 7000, 15000],
-                async onBeforeRequest(req) {
-                    const token = await getAuthToken()
-                    if (token) {
-                        req.setHeader("Authorization", `Bearer ${token}`)
-                    }
-                },
-                async onAfterResponse(req, res) {
-                    const status = res.getStatus()
-                    if (status === 401) {
-                        newUppy.info("需刷新token", "error", 9000)
-                        window.dispatchEvent(new CustomEvent("token:refresh-needed"))
-                        toast.error("身份认证失败", {
-                            description: "需重新登录，或刷新token",
-                            duration: 9000,
-                        })
-                    }
-                    const url = req.getURL()
-                    const value = res.getHeader("Tus2minIoUrl")
-                    // 存储服务相关的错误
-                    if (status === 503) {
-                        const errorMessage = value || "无服务"
-                        newUppy.info(`Upload failed: ${errorMessage}`, "error", 9000)
-                        toast.error("OSS存储服务问题", {
-                            description: errorMessage,
-                            duration: 8000,
-                        })
-                        newUppy.pauseAll()
-                    }
-                    // 存储空间不足等业务错误
-                    else if (value && value.includes("Insufficient storage space")) {
-                        newUppy.info("Upload failed: Insufficient storage space", "error", 9000)
-                        toast.error("存储", {
-                            description: "可写磁盘容量不足",
-                        })
-                        newUppy.pauseAll()
-                    }
-                    // 其他服务器错误
-                    else if (status >= 500) {
-                        toast.error("Server Error", {
-                            description: value,
-                        })
-                        newUppy.pauseAll()
-                    } else if (value) {
-                        const steob = {} as any
-                        steob[url] = value
-                        newUppy.setState({ ...steob })
-                        // 可选：显示成功提示
-                        toast.success("成功", {
-                            description: "上传完成",
-                        })
-                    }
-                },
-            })
+            configureTusPlugin(newUppy)
         } else {
-            // 修复 XHR 插件的 onBeforeRequest
-            newUppy.use(XHRUpload, {
-                id: "xhr-upload",
-                endpoint: `${process.env.NEXT_PUBLIC_BACK_END}/api/upload`,
-                method: "POST",
-                formData: true,
-                fieldName: "files[]",
-                timeout: 600000,
-                limit: 1,
-                allowedMetaFields: true,
-                shouldRetry: (xhr: XMLHttpRequest) => {
-                    return false
-                },
-                async onBeforeRequest(xhr) {
-                    const token = await getAuthToken()
-                    xhr.setRequestHeader("Authorization", `Bearer ${token}`) // @ts-ignore
-                },
-                async getResponseData(req: XMLHttpRequest) {
-                    const text = await req.response
-                    let errStr
-                    try {
-                        const data = JSON.parse(text)
-                        if (data?.successful) {
-                            //必须返回{url：}对象：这样才能在handleUpSuccess()里面result.successful才能看得到uploadURL，是uppy库转化生成的。
-                            const obj = data?.successful[0]
-                            errStr = obj?.error
-                            if (obj?.url) return obj
-                        }
-                    } catch (e) {}
-                    newUppy.info("不要重试:" + errStr, "error", 9000)
-                    if (errStr.includes("Failed to connect to")) errStr = "OSS存储集群服务不可用"
-                    toast.error("上传失败", {
-                        description: errStr,
-                    })
-                    // newUppy.cancelAll()
-                    return {}
-                },
-                async onAfterResponse(xhr) {
-                    if (xhr.status === 401) {
-                        newUppy.info("需刷新token", "error", 9000)
-                        window.dispatchEvent(new CustomEvent("token:refresh-needed"))
-                        return
-                    }
-                    if (xhr.status === 403) {
-                        toast.error("上传失败", {
-                            description: "请重新登录",
-                            duration: 9000,
-                        })
-                        return
-                    }
-                    try {
-                        const data = JSON.parse(xhr.response)
-                        if (data?.successful) {
-                            const steob = {} as any
-                            //类似TUS的做法，目的是给handleUpSuccess里面的统一处理做法提供支持。
-                            steob[data?.successful[0]?.url] = data?.successful[0]?.url
-                            newUppy.setState({ ...steob })
-                        } else {
-                            console.warn(`上传应答错误`)
-                        }
-                    } catch (e) {
-                        console.error(`上传错误`)
-                    }
-                },
-            })
+            configureXHRPlugin(newUppy)
         }
+
         return newUppy
     }
 
@@ -294,12 +306,8 @@ export function useUppyUpload({
         if (!uppyInstance) {
             const newUppy = createUppyInstance()
             setUppyInstance(newUppy)
-        } else {
-            uppyInstance.destroy()
-            const newUppy = createUppyInstance()
-            setUppyInstance(newUppy)
         }
-    }, [repId, hash, maxFile, uploadMode]) // 添加上传模式到依赖
+    }, [repId, hash, maxFile]) // 移除 uploadMode 依赖
 
     // 当关键参数变化时重新初始化 Uppy 状态
     React.useEffect(() => {
@@ -414,9 +422,9 @@ export function useUppyUpload({
                 maxNumberOfFiles: thisMaxFiles,
                 maxFileSize: maxSize * 1024 * 1024,
             },
-            locale: UPPY_LOCALE_CONFIG, // 使用常量
+            locale: UPPY_LOCALE_CONFIG,
         })
-        // uppyInstance.getPlugin()
+
         // @ts-ignore
         uppyInstance.off("complete", handleUpSuccess)
         // @ts-ignore
@@ -436,27 +444,59 @@ export function useUppyUpload({
             }
         }
     }, [uppyInstance, repId])
+    // 上传模式切换处理 - 动态切换插件版本
+    const handleModeChange = async (mode: UploadMode) => {
+        if (!uppyInstance) return
+        console.log(`Switching upload mode from ${uploadMode} to ${mode}`)
+        // 保存当前文件
+        const currentFiles = uppyInstance.getFiles()
+        console.log(`Preserving ${currentFiles.length} files during mode switch`)
+        // 暂停所有上传
+        uppyInstance.pauseAll()
+        try {
+            // 移除所有上传插件
+            const tusPlugin = uppyInstance.getPlugin('tus-upload')
+            const xhrPlugin = uppyInstance.getPlugin('xhr-upload')
 
-    // 上传模式切换处理
-    const handleModeChange = (mode: UploadMode) => {
-        setUploadMode(mode)
-        if (uppyInstance) {
-            // 重新设置语言配置
-            uppyInstance.setOptions({
-                locale: UPPY_LOCALE_CONFIG,
+            if (tusPlugin) {
+                uppyInstance.removePlugin(tusPlugin)
+            }
+            if (xhrPlugin) {
+                uppyInstance.removePlugin(xhrPlugin)
+            }
+
+            // 添加新的上传插件
+            if (mode === "tus") {
+                configureTusPlugin(uppyInstance)
+            } else {
+                configureXHRPlugin(uppyInstance)
+            }
+
+            // 更新模式状态
+            setUploadMode(mode)
+
+            // 更新所有文件的 meta 数据
+            currentFiles.forEach(file => {
+                uppyInstance.setFileMeta(file.id, {
+                    ...file.meta,
+                    forcedMode: mode
+                })
             })
-            // 重新验证所有文件的上传方式
-            uppyInstance.getFiles().forEach((file) => {
-                uppyInstance.setFileMeta(file.id, { forcedMode: mode })
+
+            console.log(`Successfully switched to ${mode} mode, preserved ${currentFiles.length} files`)
+
+            toast.success(`已切换到${mode === "tus" ? "断点续传" : "常规"}模式`, {
+                description: `已保留 ${currentFiles.length} 个已选择文件`,
+                duration: 3000,
+            })
+
+        } catch (error) {
+            console.error("Failed to switch upload mode:", error)
+            toast.error("模式切换失败", {
+                description: "请重试",
             })
         }
-        // 强制重新渲染 Dashboard
-        setOpenUppy(false)
-        setTimeout(() => {
-            setOpenUppy(true)
-        }, 50) // 更短的延迟
     }
-
     // 上传模式选择器组件
     const UploadModeSelector = () => (
         <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -470,6 +510,7 @@ export function useUppyUpload({
                             ? "bg-green-600 text-white"
                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                     }`}
+                    disabled={!uppyInstance}
                 >
                     断点续传模式
                 </button>
@@ -481,6 +522,7 @@ export function useUppyUpload({
                             ? "bg-purple-600 text-white"
                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                     }`}
+                    disabled={!uppyInstance}
                 >
                     常规模式
                 </button>
@@ -489,9 +531,13 @@ export function useUppyUpload({
                 {uploadMode === "tus" && "用 TUS 协议，支持断点续传和巨大超大文件"}
                 {uploadMode === "xhr" && "用标准 HTTP 上传，事务性更好，最大支持500兆的"}
             </div>
+            {uppyInstance && (
+                <div className="mt-1 text-xs text-blue-600">
+                    当前已选择 {uppyInstance.getFiles().length} 个文件
+                </div>
+            )}
         </div>
     )
-
     //清理函数
     const cleanupTusLocalStorage = () => {
         try {
@@ -527,7 +573,6 @@ export function useUppyUpload({
             console.warn("清理 Tus localStorage 失败:", error)
         }
     }
-
     React.useEffect(() => {
         if (externalPendingDeletes.length > 0) {
             setPendingDeleteOperations(externalPendingDeletes)
@@ -583,7 +628,6 @@ export function useUppyUpload({
       box-shadow: 0 0 0 2px var(--ring);
     }
   `
-
     // 在渲染文件时使用这些函数
     const renderFileWithDeleteStatus = (file: FileStore, index: number, isSingle = false) => {
         const isPendingDelete = isFilePendingDelete(file.url)
@@ -782,11 +826,11 @@ export function useUppyUpload({
             duration: 3000,
         })
     }, [pendingDeleteOperations.length])
-
     // 添加统一的渲染函数
     const renderFiles = () => {
         const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
         const hasFiles = files.length > 0
+        const selectedFilesCount = uppyInstance ? uppyInstance.getFiles().length : 0
 
         return (
             <>
@@ -813,8 +857,13 @@ export function useUppyUpload({
                     {/* 操作按钮 */}
                     <div className="space-y-2">
                         <div className="flex justify-center items-center gap-2">
-                            <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
+                            <Button
+                                size="sm"
+                                disabled={!openUppy && thisMaxFiles <= 0}
+                                onClick={scrollHandler}
+                            >
                                 {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
+                                {selectedFilesCount > 0 && ` | 已选 ${selectedFilesCount} 个`}
                             </Button>
                         </div>
                     </div>

@@ -955,9 +955,7 @@ export function useOfflineUppyUpload(params: {
     }, [repId, params.business, params.liveDays])
 
     const ActionButtons = () => {
-        // 使用 restoredPendingDeletes 来显示待删除操作数量
         const displayPendingDeletes = restoredPendingDeletes.length > 0 ? restoredPendingDeletes : pendingDeleteOperations
-
         return (
             <div className="flex flex-col gap-2 mt-2">
                 {isFileSystemAccessSupported() && (
@@ -1037,6 +1035,8 @@ export function useOfflineUppyUpload(params: {
                     )}
                     {hasSavedState && <p className="text-xs text-blue-600">✓ 保存状态，后端OSS恢复后可以继续做</p>}
                 </div>
+
+
             </div>
         )
     }
