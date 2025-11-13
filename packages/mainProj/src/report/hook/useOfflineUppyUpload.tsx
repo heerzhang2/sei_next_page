@@ -106,8 +106,8 @@ const restoreFileFromHandle = async (fileHandleData: any): Promise<File | null> 
     try {
         console.log("[OfflineUppy] Verifying file handle permissions...")
 
-        // 验证权限
-        const hasPermission = await verifyPermission(fileHandleData.handle)
+        // 验证权限 ds重复犯同一个错误:自动生成的.handle 需改成.fileHandle
+        const hasPermission = await verifyPermission(fileHandleData.fileHandle)
         if (!hasPermission) {
             console.warn("[OfflineUppy] No permission to access saved file handle")
             // 尝试重新请求权限
@@ -160,7 +160,6 @@ const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
         reader.readAsArrayBuffer(file)
     })
 }
-
 // 专门通过文件句柄方式添加文件到 Uppy
 const addFilesWithHandlesToUppy = async (
     uppy: Uppy,
@@ -181,7 +180,7 @@ const addFilesWithHandlesToUppy = async (
         try {
             const file = await fileHandle.handle.getFile()
 
-            // 创建符合 Uppy 要求的文件对象
+            // 创建符合 Uppy 要求的文件对象 - 修复：添加 isHandleMode 字段
             const fileToAdd = {
                 id: `file-handle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 name: fileHandle.fileName,
@@ -195,6 +194,7 @@ const addFilesWithHandlesToUppy = async (
                     eid: repId,
                     business,
                     liveDays,
+                    isHandleMode: true, //句柄模式
                 },
             }
 
@@ -203,7 +203,9 @@ const addFilesWithHandlesToUppy = async (
 
             if (result) {
                 addedCount++
-                console.log(`[FileHandle] Successfully added file to Uppy:`, fileHandle.fileName)
+                console.log(`[FileHandle] Successfully added file to Uppy:`, fileHandle.fileName, {
+                    isHandleMode: true, // 确认标记成功
+                })
             } else {
                 console.error(`[FileHandle] Failed to add file to Uppy:`, fileHandle.fileName)
                 toast.error(`添加文件失败: ${fileHandle.fileName}`)
@@ -308,23 +310,16 @@ const restoreFileFromSnapshot = async (
                         isHandleMode: true, // 明确标记为句柄模式
                     },
                 }
-
-                // 使用 Uppy 的 addFile 方法，捕获可能的重复文件错误
                 try {
                     // 先检查是否已存在相同文件
                     const existingFiles = uppyInstance.getFiles()
                     const isDuplicate = existingFiles.some(
                         (file) => file.name === fileData.name && file.size === fileData.size
                     )
-
                     if (isDuplicate) {
-                        console.warn(`[OfflineUppy] File already exists in Uppy: ${fileData.name}`)
-                        toast.warning("文件已存在", {
-                            description: `文件 "${fileData.name}" 已在上传列表中，跳过恢复`,
-                        })
+                        console.log(`文件已存在列表中: ${fileData.name}`)
                         return { restored: false, fromHandle: true }
                     }
-
                     const result = uppyInstance.addFile(fileToAdd)
                     if (result) {
                         console.log(`[OfflineUppy] Successfully added file handle to Uppy: ${fileData.name}`)
@@ -373,22 +368,15 @@ const restoreFileFromSnapshot = async (
                         ...snapshotMeta,
                     },
                 }
-
                 try {
-                    // 先检查是否已存在相同文件
                     const existingFiles = uppyInstance.getFiles()
                     const isDuplicate = existingFiles.some(
                         (file) => file.name === fileData.name && file.size === fileData.size
                     )
-
                     if (isDuplicate) {
-                        console.warn(`[OfflineUppy] File already exists in Uppy: ${fileData.name}`)
-                        toast.warning("文件已存在", {
-                            description: `文件 "${fileData.name}" 已在上传列表中，跳过恢复`,
-                        })
+                        console.log(`文件已存在列表中: ${fileData.name}`)
                         return { restored: false, fromHandle: false }
                     }
-
                     const result = uppyInstance.addFile(fileToAdd)
                     if (result) {
                         console.log(`[OfflineUppy] Successfully added traditional file to Uppy: ${fileData.name}`)
@@ -440,7 +428,6 @@ export function useOfflineUppyUpload(params: {
     subrid?: string
 }) {
     const { repId, hash, onFinish, subrid, fieldPath, redId } = params
-
     // 生成完整的状态key
     const stateKey = getFullStateKey({
         repId,
@@ -449,7 +436,6 @@ export function useOfflineUppyUpload(params: {
         fieldPath,
         hash,
     })
-
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
 
     // 添加状态来存储恢复的待删除操作
@@ -485,13 +471,13 @@ export function useOfflineUppyUpload(params: {
         checkSavedState()
     }, [checkSavedState])
 
-    // 将恢复的待删除操作传递给 useUppyUpload
+    //将恢复的待删除操作传递给 父类hook：useUppyUpload
     const {
-        unifiedComponent: uploadDom,
+        uploadDom,
         uppyInstance,
         pendingDeleteOperations,
         delOssFileFunc,
-        cancelAllPendingDeletes: cancelAllPendingDeletesFromUppy,
+        cancelPendingOperations,
     } = useUppyUpload({
         ...params,
         open: true,
@@ -534,25 +520,23 @@ export function useOfflineUppyUpload(params: {
             toast.info("正在保存文件状态...", {
                 duration: 2000,
             })
-
             const filesWithData = await Promise.all(
                 files.map(async (file) => {
                     try {
-                        // 检查是否为文件句柄模式
+                        // 关键修复：优先检查文件是否原本就是句柄模式
                         const isHandleMode = file.meta?.fileHandle && file.meta?.isHandleMode
-
                         if (isHandleMode) {
-                            // 文件句柄模式：只保存句柄引用，不保存文件数据
+                            // 文件句柄模式：保存句柄引用
                             return {
                                 id: file.id,
                                 name: file.name,
                                 type: file.type,
                                 size: file.size,
-                                fileHandle: file.meta.fileHandle,
-                                lastModified: file.meta.lastModified || file.data.lastModified,
+                                fileHandle: file.meta.fileHandle, // 保存文件句柄
+                                lastModified: file.meta.lastModified || file.data?.lastModified,
                                 progress: file.progress?.percentage || 0,
                                 uploadURL: file.uploadURL,
-                                isHandleMode: true,
+                                isHandleMode: true, // 明确标记为句柄模式
                             }
                         } else {
                             // 传统模式：根据文件大小优化存储策略
@@ -560,10 +544,8 @@ export function useOfflineUppyUpload(params: {
                             let useArrayBuffer = false
 
                             if (file.size < 3 * 1024 * 1024) {
-                                // 小文件：直接保存 File 对象
                                 fileData = file.data
                             } else if (file.size <= 20 * 1024 * 1024) {
-                                // 中等文件：转换为 ArrayBuffer
                                 try {
                                     fileData = await fileToArrayBuffer(file.data)
                                     useArrayBuffer = true
@@ -572,13 +554,7 @@ export function useOfflineUppyUpload(params: {
                                     fileData = file.data
                                 }
                             } else {
-                                // 大文件：提示用户使用句柄模式
-                                console.warn("[OfflineUppy] Large file detected, storing as File:", file.name, file.size)
                                 fileData = file.data
-                                toast.warning("大文件存储提示", {
-                                    description: `文件 "${file.name}" 较大，建议使用文件句柄模式以获得更好的离线体验`,
-                                    duration: 4000,
-                                })
                             }
 
                             return {
@@ -587,10 +563,10 @@ export function useOfflineUppyUpload(params: {
                                 type: file.type,
                                 size: file.size,
                                 data: fileData,
-                                lastModified: file.data.lastModified,
+                                lastModified: file.data?.lastModified,
                                 progress: file.progress?.percentage || 0,
                                 uploadURL: file.uploadURL,
-                                isHandleMode: false,
+                                isHandleMode: false, // 明确标记为非句柄模式
                                 useArrayBuffer,
                             }
                         }
@@ -600,8 +576,7 @@ export function useOfflineUppyUpload(params: {
                         return null
                     }
                 }),
-            ).then((results) => results.filter(Boolean)) // 过滤掉处理失败的文件
-
+            ).then((results) => results.filter(Boolean))
             // 保存 Uppy 状态到 IndexedDB，包含待删除操作数组
             try {
                 const uppyState = {
@@ -716,8 +691,8 @@ export function useOfflineUppyUpload(params: {
             setRestoredPendingDeletes([])
 
             // 4. 清空 useUppyUpload 中的待删除操作
-            if (cancelAllPendingDeletesFromUppy) {
-                cancelAllPendingDeletesFromUppy()
+            if (cancelPendingOperations) {
+                cancelPendingOperations()
             }
 
             // 5. 重新检查状态
@@ -733,12 +708,11 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Failed to remove saved state:", error)
             toast.error("清除状态失败")
         }
-    }, [stateKey, checkSavedState, cancelAllPendingDeletesFromUppy, repId, params.liveDays, params.business])
-    // 恢复状态时，从 Uppy state 的 meta 中恢复待删除操作
+    }, [stateKey, checkSavedState, cancelPendingOperations, repId, params.liveDays, params.business])
+    // 恢复状态时，从Uppy state恢复
     useEffect(() => {
         const restoreState = async () => {
             console.log(`[OfflineUppy] Restoring state for key: ${stateKey}`)
-
             const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
 
             if (!snapshot || !uppyInstanceRef.current) {
@@ -870,19 +844,11 @@ export function useOfflineUppyUpload(params: {
     // 执行待删除操作 - 使用动态回调版本
     const executePendingDeletes = useCallback(async () => {
         const operationsToExecute = restoredPendingDeletes.length > 0 ? restoredPendingDeletes : pendingDeleteOperations
-
         if (!operationsToExecute || operationsToExecute.length === 0) {
             toast.info("没有待执行的删除操作")
             return
         }
-
-        if (!delOssFileFunc) {
-            toast.error("删除功能不可用")
-            return
-        }
-
         toast.info(`开始执行 ${operationsToExecute.length} 个待删除操作...`)
-
         // 使用 Promise 包装每个删除操作，以便跟踪完成状态
         const deletePromises = operationsToExecute.map((deleteOp) => {
             return new Promise<{ success: boolean; operation: PendingDeleteOperation; result?: any }>((resolve) => {
@@ -1069,7 +1035,7 @@ export function useOfflineUppyUpload(params: {
                             </Button>
                         </div>
                     )}
-                    {hasSavedState && <p className="text-xs text-blue-600">✓ 有保存的状态，离线后可以恢复</p>}
+                    {hasSavedState && <p className="text-xs text-blue-600">✓ 保存状态，后端OSS恢复后可以继续做</p>}
                 </div>
             </div>
         )
@@ -1080,8 +1046,5 @@ export function useOfflineUppyUpload(params: {
             {uploadDom}
             <ActionButtons />
         </div>,
-        saveUppyState,
-        cancelSavedState,
-        hasSavedState,
     ] as const
 }

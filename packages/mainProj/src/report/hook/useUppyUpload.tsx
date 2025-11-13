@@ -111,6 +111,8 @@ type UploadMode = "tus" | "xhr"
  * @param onFinish [可选参数] #立刻生效给context 避免 事务性的缺失。 【上传任务完成】保存回调。 可能有多个的已经上传的文件！若删除多文件其中一个文件的onFinish参数file是剩下的文件数组。
  *  参数 onFinish?的回调类型:(file:any,newUpload:boolean)=>void；
  * @param storeObj 对象或数组， 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
+ * @param open 加载后就打开上传面板
+ * @param externalPendingDeletes 未完成删除文件的状态注入列表
  * @return {} 节点DOM
  * 【局限性】一个编辑器页面内不能放置多个useUppyUpload来做上传，因为uppy全局变量？，必须独立？ 走类似的useUppyUploadM。
  * TUS目前在切换路由页面再回来组件重新加载场景下，从indexDB恢复旧的上传的情况下：不管那个记住方式都会从零开始重新上传，而不是接着上次暂停位置续传的，可能被中断很长的时间，集群#后端状态也没保存。
@@ -768,7 +770,7 @@ export function useUppyUpload({
         })
     }, [])
     //批量取消删除的函数
-    const cancelAllPendingDeletes = useCallback(() => {
+    const cancelPendingOperations = useCallback(() => {
         if (pendingDeleteOperations.length === 0) {
             toast.info("没有待取消的删除操作")
             return
@@ -821,19 +823,17 @@ export function useUppyUpload({
         )
     }
 
-    const unifiedComponent = (
+    const uploadDom = (
         <>
             {renderFiles()}
             <div id={hash ?? "_pf"} className="text-center mt-2"></div>
         </>
     )
     return {
-        unifiedComponent,
+        uploadDom,
         uppyInstance,
         pendingDeleteOperations,
-        setPendingDeleteOperations: () => setPendingDeleteOperations([]),
         delOssFileFunc,
-        cancelAllPendingDeletes,
-        popoverStyles,
+        cancelPendingOperations,
     }
 }
