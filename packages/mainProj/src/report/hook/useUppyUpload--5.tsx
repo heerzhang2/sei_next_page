@@ -10,7 +10,7 @@ import "@uppy/dashboard/css/style.min.css"
 import "./uppy-fixes.css"
 import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
-import { FilePreview } from "@/components/file-preview"
+import { ImageComponentNatural } from "@/components/natural"
 import { useCallback } from "react"
 import { toast } from "sonner"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
@@ -71,7 +71,6 @@ export const DASH_LOCALE_CONFIG = {
 export type FileStore = {
     name: string
     url: string
-    mimeType?: string
 }
 export const useScrollHandler = (targetSelector: string) => {
     return useCallback(
@@ -390,7 +389,7 @@ export function useUppyUpload({
                         failUploads += up.name + "; "
                         return null
                     }
-                    return { name: up.name, url: fileUrl, type: up.type, mimeType: up.type }
+                    return { name: up.name, url: fileUrl, type: up.type }
                 })
                 .filter((item) => item !== null) // 立即过滤
             if (failUploads) {
@@ -400,7 +399,7 @@ export function useUppyUpload({
             const cntfile = newarr.length
             if (cntfile > 0) {
                 setOpenUppy(false)
-                const newfile = newarr?.map(({ name, url, mimeType }) => ({ name, url, mimeType }))
+                const newfile = newarr?.map(({ name, url }) => ({ name, url }))
                 // 上传成功后立即清理相关的 Tus 记录
                 setTimeout(() => {
                     cleanupTusLocalStorage()
@@ -714,9 +713,9 @@ export function useUppyUpload({
                 {index > 0 && <hr className="my-3" />}
                 <div id={(hash ?? "_pf") + `${index}`} className="flex justify-around items-center">
                     {file.url && (
-                        <FilePreview
-                            file={file}
-                            ossEndpoint={process.env.NEXT_PUBLIC_OSS_ENDP || ""}
+                        <ImageComponentNatural
+                            src={`${process.env.NEXT_PUBLIC_OSS_ENDP}/${file.url}` || "/placeholder.svg"}
+                            alt={file.name}
                         />
                     )}
                 </div>
@@ -737,8 +736,8 @@ export function useUppyUpload({
                         {maxFile === 1 ? "删除" : `删除文件`}
                         {isPendingDelete && (
                             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-                                !
-                            </span>
+            !
+        </span>
                         )}
                     </Button>
 
@@ -755,7 +754,7 @@ export function useUppyUpload({
                                 }
                             }}
                         >
-                            移动
+                          移动
                         </Button>
                     )}
 
@@ -770,7 +769,7 @@ export function useUppyUpload({
                                 cancelPendingDelete(file.url)
                             }}
                         >
-                            取消删除
+                          取消删除
                         </Button>
                     )}
                 </div>
@@ -974,7 +973,7 @@ export function useUppyUpload({
         uppyInstance.on('retry-all', handleRetryAll);
         return () => {
             uppyInstance.off('file-added', handleFileAdded);
-            uppyInstance.off('retry-all', handleRetryAll);
+            uppyInstance.off('retry-all', handleFileAdded);
         };
     }, [uppyInstance, checkForDuplicateFiles]);
 
