@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react'
 import { Download, File, FileImage, FileVideo, FileText, AlertCircle } from 'lucide-react'
 import { Button } from './ui/button'
+import {ImageComponentNatural} from "@/components/natural";
 
 export interface FileStore {
     name: string
@@ -113,7 +114,7 @@ const ImagePreview: React.FC<{ file: FileStore; maxWidth?: string; maxHeight?: s
                 <p className="text-sm text-gray-600">图片加载失败</p>
                 <a
                     href={file.url}
-                    target="_blank"
+                    download={file.name}
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:underline text-sm"
                 >
@@ -173,7 +174,7 @@ const AudioPreview: React.FC<{ file: FileStore }> = ({ file }) => {
 }
 
 // PDF 预览组件
-const PDFPreview: React.FC<{ file: FileStore; maxWidth?: string }> = ({ file, maxWidth = '400px' }) => {
+const PDFPreview: React.FC<{ file: FileStore; maxWidth?: string }> = ({ file, maxWidth = '200px' }) => {
     return (
         <div className="flex flex-col items-center gap-3" style={{ maxWidth }}>
             <div className="flex items-center justify-center w-full bg-red-50 rounded-lg p-6 border-2 border-red-200">
@@ -186,7 +187,7 @@ const PDFPreview: React.FC<{ file: FileStore; maxWidth?: string }> = ({ file, ma
                 size="sm"
                 className="w-full gap-2"
             >
-                <a href={file.url} target="_blank" rel="noopener noreferrer">
+                <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
                     <Download className="w-4 h-4" />
                     预览 / 下载
                 </a>
@@ -208,7 +209,7 @@ const DocumentPreview: React.FC<{ file: FileStore }> = ({ file }) => {
     return (
         <div className="flex flex-col items-center gap-3">
             <div className="flex items-center justify-center w-24 h-24 bg-blue-50 rounded-lg border-2 border-blue-200">
-                <FileText className="w-12 h-12 text-blue-600" />
+                <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div className="text-center">
                 <p className="text-sm font-medium text-gray-700">{getDocumentTypeLabel(file.mimeType)}</p>
@@ -220,7 +221,7 @@ const DocumentPreview: React.FC<{ file: FileStore }> = ({ file }) => {
                 size="sm"
                 className="w-full gap-2"
             >
-                <a href={file.url} target="_blank" rel="noopener noreferrer">
+                <a href={file.url} download={file.name} rel="noopener noreferrer">
                     <Download className="w-4 h-4" />
                     下载
                 </a>
@@ -248,7 +249,7 @@ const OtherFilePreview: React.FC<{ file: FileStore }> = ({ file }) => {
                 size="sm"
                 className="w-full gap-2"
             >
-                <a href={file.url} target="_blank" rel="noopener noreferrer">
+                <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
                     <Download className="w-4 h-4" />
                     下载
                 </a>
@@ -276,11 +277,12 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             </div>
         )
     }
-    const ossFile={...file, url: ossEndpoint+"/"+file.url }
+    const ossFile = { ...file, url: ossEndpoint ? `${ossEndpoint}/${file.url}` : file.url }
+        //图片不用 <ImagePreview file={ossFile} maxWidth={maxWidth} maxHeight={maxHeight}/>
     return (
         <div className="flex justify-center items-center">
             {fileType === 'image' && (
-                <ImagePreview file={ossFile} maxWidth={maxWidth} maxHeight={maxHeight} />
+                <ImageComponentNatural src={ossFile.url} alt={ossFile.name}/>
             )}
             {fileType === 'video' && (
                 <VideoPreview file={ossFile} maxWidth={maxWidth} />
@@ -289,7 +291,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 <AudioPreview file={ossFile} />
             )}
             {fileType === 'pdf' && (
-                <PDFPreview file={ossFile} maxWidth={maxWidth} />
+                <PDFPreview file={ossFile} maxWidth={'200px'} />
             )}
             {fileType === 'document' && (
                 <DocumentPreview file={ossFile} />
