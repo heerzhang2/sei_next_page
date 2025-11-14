@@ -518,80 +518,53 @@ File System Access API https://developer.chrome.google.cn/docs/capabilities/web-
 授予访问权限的 FileSystemHandle 上调用过 FileSystemHandle.requestPermission() 方法
 
 ywmast/202511/1013/a8711bef-047c-48f5-9797-1fbc9c543e5c.png
-
-files
+【auth》null》不能触发graph//啊】
+data
 :
-Array(2)
+{modifyOriginalRecordData: null}
+modifyOriginalRecordData
+:
+null
+errors
+:
+[{message: "没有登录不能改",…}]
 0
 :
-data
+{message: "没有登录不能改",…}
+extensions
 :
-File {name: '管理员 Windows PowerShell.txt', lastModified: 1748241816435, lastModifiedDate: Mon May 26 2025 14:43:36 GMT+0800 (中国标准时间), webkitRelativePath: '', size: 332797, …}
-id
+{invalidId: "KQcbgDF9RO21DgA92H3tQVJlcG9ydA", errorCode: "UNAUTHORIZED", httpStatusCode: 401,…}
+classification
 :
-"Report-yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA-FxDiagram_pf-////windows/powershell/txt-ut1-t06-l2o-10-10-1e-text/plain-332797-1748241816435"
-isHandleMode
+"DataFetchingException"
+errorCode
 :
-false
-lastModified
+"UNAUTHORIZED"
+httpStatusCode
 :
-1748241816435
-name
+401
+invalidId
 :
-"管理员 Windows PowerShell.txt"
-progress
+"KQcbgDF9RO21DgA92H3tQVJlcG9ydA"
+message
 :
-100
-size
-:
-332797
-type
-:
-"text/plain"
-uploadURL
-:
-"ywmast/202511/1314/e3620fbe-447d-4b51-9f3a-d08da22bd549.txt"
-useArrayBuffer
-:
-false
-1
-:
-data
-:
-File {name: '4a5e37b21b4546d495dde67bf922d3ea.doc', lastModified: 1752194759361, lastModifiedDate: Fri Jul 11 2025 08:45:59 GMT+0800 (中国标准时间), webkitRelativePath: '', size: 96455, …}
-id
-:
-"Report-yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA-FxDiagram_pf-4a5e37b21b4546d495dde67bf922d3ea/doc-1e-application/msword-96455-1752194759361"
-isHandleMode
-:
-false
-lastModified
-:
-1752194759361
-name
-:
-"4a5e37b21b4546d495dde67bf922d3ea.doc"
-progress
-:
-100
-size
-:
-96455
-type
-:
-"application/msword"
-uploadURL
-:
-undefined
-useArrayBuffer
-:
-false
-length
-:
-2
-ossDeleteFile
-:
-"删除失败: Range [0, -1) out of bounds for length 176"
+"没有登录不能改"
+目的，exchange》》
+https://192.168.171.3:3765/api/refresh-token
 
-Range [0, -1) out of bounds for length 176
-Storage service exception: MinIOX¨1%: java.lang.NullPointerException: Parameter specified as non-null is null: method okhttp3.Headers$Builder.addUnsafeNonAscii, parameter value
+.uppy-StatusBar-actionCircleBtn {
+    cursor: pointer;
+    line-height: 1;
+    margin: 3px;
+    opacity: .9;
+    height: 4rem;
+    width: 4rem;
+}
+
+uppy-DashboardContent-addMore
+uppy-StatusBar-actionBtn--retry
+
+.uppy-c-icon {
+    height: 2rem;
+    width: 3rem;
+}

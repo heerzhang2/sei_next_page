@@ -169,11 +169,13 @@ export function useUppyUpload({
                 const status = res.getStatus()
                 if (status === 401) {
                     uppy.info("需刷新token", "error", 9000)
-                    window.dispatchEvent(new CustomEvent("token:refresh-needed"))
                     toast.error("身份认证失败", {
                         description: "需重新登录，或刷新token",
                         duration: 9000,
                     })
+                    window.dispatchEvent(new CustomEvent("token:refresh-needed"))
+                    uppy.pauseAll()
+                    return
                 }
                 const url = req.getURL()
                 const value = res.getHeader("Tus2minIoUrl")
@@ -262,6 +264,7 @@ export function useUppyUpload({
                         description: "请重新登录",
                         duration: 9000,
                     })
+                    window.dispatchEvent(new CustomEvent("token:refresh-needed"))
                     return
                 }
                 try {

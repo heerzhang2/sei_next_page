@@ -54,7 +54,7 @@ export default function DepTask() {
                                 <Link href="http://ggzy.hebei.gov.cn/hbggfwpt/search/fullsearch.html?wd=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C">河北省公共资源交易平台</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="http://www.lnggzy.gov.cn/lnggzycs2/showinfo/jyxxsearch.aspx">公共资源交易平台（辽宁省）</Link>
+                                <Link href="http://www.lnggzy.gov.cn/trading">公共资源交易平台（辽宁省）</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://jxsggzy.cn/jyxx/002006/002006001/trade.html">江西省公共资源交易网+近1月</Link>

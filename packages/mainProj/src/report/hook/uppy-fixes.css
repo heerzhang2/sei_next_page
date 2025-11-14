@@ -39,3 +39,19 @@
 .uppy-Dashboard * {
   box-sizing: border-box !important;
 }
+
+/* Fix icon sizes in specific Uppy components */
+.uppy-StatusBar-actionCircleBtn .uppy-c-icon,
+.uppy-StatusBar-actionBtn--retry .uppy-c-icon {
+    height: 1.8rem !important;
+    width: 2.2rem !important;
+}
+
+/* 针对窄屏幕设备的自适应调整 */
+@media (max-width: 480px) {
+    .uppy-StatusBar-actionCircleBtn .uppy-c-icon,
+    .uppy-StatusBar-actionBtn--retry .uppy-c-icon {
+        height: 1.5rem !important;
+        width: 2rem !important;
+    }
+}
