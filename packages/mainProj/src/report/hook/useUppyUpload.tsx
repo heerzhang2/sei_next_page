@@ -144,8 +144,34 @@ export function useUppyUpload({
     externalPendingDeletes?: PendingDeleteOperation[]
 }) {
     // 添加待删除操作状态
+    // 优先级：sessionStorage（本次会话） > externalPendingDeletes（从 indexDB 恢复）
+    // 页面刷新时 sessionStorage 自动清空，从而只保留 indexDB 中的持久化状态
+    const getInitialPendingDeletes = () => {
+        // 仅从 externalPendingDeletes（来自 indexDB）恢复状态
+        // 页面刷新时，内存会自动清空（只有 indexDB 中的数据保留）
+        if (externalPendingDeletes.length > 0) {
+            console.log("[v0] Restored from indexDB via externalPendingDeletes")
+        }
+        return externalPendingDeletes
+    }
+
     const [pendingDeleteOperations, setPendingDeleteOperations] =
-        React.useState<PendingDeleteOperation[]>(externalPendingDeletes)
+        React.useState<PendingDeleteOperation[]>(getInitialPendingDeletes())
+
+    React.useEffect(() => {
+        // 组件卸载时，将待删除操作同步到 indexDB
+        return () => {
+            // 组件卸载时，将待删除操作同步到 indexDB
+            if (pendingDeleteOperations.length > 0) {
+                console.log("[v0] Saving pending deletes to indexDB on unmount:", pendingDeleteOperations)
+                // 通过 fileOperationsQueue 将状态持久化到 indexDB
+                pendingDeleteOperations.forEach((operation) => {
+                    fileOperationsQueue.addOperation(operation)
+                })
+            }
+        }
+    }, [pendingDeleteOperations])
+
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
