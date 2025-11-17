@@ -239,6 +239,7 @@ const restoreFileFromSnapshot = async (
             hasHandle: !!fileData.fileHandle,
             isHandleMode: fileData.isHandleMode,
             hasData: !!fileData.data,
+            hasFileMeta: !!fileData.meta,
         });
 
         // 加强重复检查
@@ -282,7 +283,8 @@ const restoreFileFromSnapshot = async (
                 fromHandle = true
                 console.log("[OfflineUppy] Successfully restored file from handle:", fileData.name)
 
-                // 修复：使用与文件句柄添加时相同的文件对象结构
+                // 修复：使用文件自身的 meta，不展开 snapshotMeta（避免包含 pendingDeleteOperations）
+                const fileMeta = fileData.meta || {}
                 const fileToAdd = {
                     id: fileData.id || `file-handle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     name: fileData.name,
@@ -290,16 +292,19 @@ const restoreFileFromSnapshot = async (
                     data: fileToRestore,
                     size: fileData.size,
                     meta: {
-                        ...snapshotMeta,
+                        // 只使用文件自身的 meta，不包含快照的顶层 meta
+                        ...fileMeta,
                         fileHandle: fileData.fileHandle, // 保持文件句柄
-                        relativePath: "",
-                        lastModified: fileData.lastModified || Date.now(),
-                        eid: repId,
-                        business: business,
-                        liveDays: liveDays,
+                        relativePath: fileMeta.relativePath || "",
+                        lastModified: fileMeta.lastModified || fileData.lastModified || Date.now(),
+                        eid: fileMeta.eid || repId,
+                        business: fileMeta.business || business,
+                        liveDays: fileMeta.liveDays || liveDays,
                         isHandleMode: true, // 明确标记为句柄模式
+                        // 不包含 pendingDeleteOperations
                     },
                 }
+
                 try {
                     // 先检查是否已存在相同文件
                     const existingFiles = uppyInstance.getFiles()
@@ -346,6 +351,8 @@ const restoreFileFromSnapshot = async (
             }
 
             if (fileToRestore) {
+                // 修复：使用文件自身的 meta
+                const fileMeta = fileData.meta || {}
                 const fileToAdd = {
                     id: fileData.id,
                     name: fileData.name,
@@ -353,9 +360,15 @@ const restoreFileFromSnapshot = async (
                     data: fileToRestore,
                     size: fileData.size,
                     meta: {
-                        relativePath: "",
-                        lastModified: fileData.lastModified || Date.now(),
-                        ...snapshotMeta,
+                        // 只使用文件自身的 meta
+                        ...fileMeta,
+                        relativePath: fileMeta.relativePath || "",
+                        lastModified: fileMeta.lastModified || fileData.lastModified || Date.now(),
+                        eid: fileMeta.eid || repId,
+                        business: fileMeta.business || business,
+                        liveDays: fileMeta.liveDays || liveDays,
+                        isHandleMode: false,
+                        // 不包含 pendingDeleteOperations
                     },
                 }
                 try {
@@ -393,6 +406,7 @@ const restoreFileFromSnapshot = async (
                 hasHandle: !!fileData.fileHandle,
                 isHandleMode: fileData.isHandleMode,
                 hasData: !!fileData.data,
+                hasMeta: !!fileData.meta,
             })
         }
     } catch (error) {
@@ -488,21 +502,20 @@ export function useOfflineUppyUpload(params: {
                 return
             }
 
-            // 修改：过滤掉已成功上传的文件
+            // 修复：正确获取文件数组，确保是数组类型
             const allFiles = uppy.getFiles()
-            const files = allFiles.filter(file => {
+            // 确保 files 是数组，不是对象
+            const filesArray =allFiles   //Array.isArray(allFiles) ? allFiles : Object.values(allFiles)
+            const files = filesArray.filter(file => {
                 // 排除已成功上传的文件
                 const isCompleted = file.progress?.uploadComplete &&
                     file.progress?.percentage === 100 &&
                     file.response?.uploadURL
-
                 if (isCompleted) {
                     console.log(`[OfflineUppy] 排除已成功上传文件: ${file.name}`)
                 }
-
                 return !isCompleted
             })
-
             const currentPendingDeletes = pendingDeleteOperationsRef.current
 
             // 如果没有待上传文件且没有待删除操作，无需保存
@@ -514,7 +527,7 @@ export function useOfflineUppyUpload(params: {
             }
 
             // 修改：在提示信息中显示排除的文件数量
-            const excludedCount = allFiles.length - files.length
+            const excludedCount = filesArray.length - files.length
             if (excludedCount > 0) {
                 toast.info(`排除了 ${excludedCount} 个已成功上传的文件`)
             }
@@ -540,6 +553,16 @@ export function useOfflineUppyUpload(params: {
                                 progress: file.progress?.percentage || 0,
                                 uploadURL: file.uploadURL,
                                 isHandleMode: true, // 明确标记为句柄模式
+                                // 修复：只保存文件自身的 meta，不包含 pendingDeleteOperations
+                                meta: {
+                                    fileHandle: file.meta.fileHandle,
+                                    lastModified: file.meta.lastModified,
+                                    eid: file.meta.eid,
+                                    business: file.meta.business,
+                                    liveDays: file.meta.liveDays,
+                                    isHandleMode: true,
+                                    // 不包含 pendingDeleteOperations
+                                }
                             }
                         } else {
                             // 传统模式：根据文件大小优化存储策略
@@ -571,6 +594,15 @@ export function useOfflineUppyUpload(params: {
                                 uploadURL: file.uploadURL,
                                 isHandleMode: false, // 明确标记为非句柄模式
                                 useArrayBuffer,
+                                // 修复：只保存必要的文件 meta
+                                meta: {
+                                    lastModified: file.data?.lastModified,
+                                    eid: file.meta?.eid,
+                                    business: file.meta?.business,
+                                    liveDays: file.meta?.liveDays,
+                                    isHandleMode: false,
+                                    // 不包含 pendingDeleteOperations
+                                }
                             }
                         }
                     } catch (error) {
@@ -583,15 +615,18 @@ export function useOfflineUppyUpload(params: {
 
             // 保存 Uppy 状态到 IndexedDB，包含待删除操作数组
             try {
+                // 修复：确保 files 是数组类型
+                const filesArrayForSave = Array.isArray(filesWithData) ? filesWithData : Object.values(filesWithData)
+
                 const uppyState = {
                     key: stateKey,
                     repId,
                     subrid,
                     hash: hash || "default",
                     timestamp: Date.now(),
-                    files: filesWithData,
+                    files: filesArrayForSave, // 确保是数组
                     meta: {
-                        ...uppy.getState().meta,
+                        // 只保存顶层的 meta，不包含文件级别的 meta
                         originalPageUrl: getCurrentPageUrl(),
                         modType: params.modType,
                         redId: params.redId,
@@ -609,16 +644,18 @@ export function useOfflineUppyUpload(params: {
                         })),
                     },
                 }
+
                 console.log(`[OfflineUppy] Saving Uppy state with key: ${stateKey}`, {
-                    files: filesWithData.length,
+                    files: filesArrayForSave.length,
+                    filesType: Array.isArray(filesArrayForSave) ? 'array' : typeof filesArrayForSave,
                     pendingDeletes: currentPendingDeletes.length,
                     excludedCompleted: excludedCount,
                 })
 
                 await fileOperationsQueue.saveUppyState(uppyState)
 
-                const fileCount = filesWithData.length
-                const handleModeCount = filesWithData.filter((f) => f.isHandleMode).length
+                const fileCount = filesArrayForSave.length
+                const handleModeCount = filesArrayForSave.filter((f) => f.isHandleMode).length
                 const deleteCount = currentPendingDeletes.length
 
                 console.log(
