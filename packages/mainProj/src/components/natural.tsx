@@ -39,7 +39,7 @@ export const ImageComponentNatural: React.FC<ImageProps> = ({ src, alt = "图片
   }, [src])
 
   return (
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-0">
           <div id={id} className="flex justify-around items-center mb-2">
               {isLoading ? (
                   <div className="animate-pulse bg-gray-200 rounded" style={{ width: 300, height: 200 }}></div>

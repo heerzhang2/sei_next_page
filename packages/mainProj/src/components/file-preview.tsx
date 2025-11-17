@@ -154,16 +154,18 @@ const VideoPreview: React.FC<{ file: FileStore; maxWidth?: string }> = ({ file, 
         </div>
     )
 }
-
 // 音频预览组件
-const AudioPreview: React.FC<{ file: FileStore }> = ({ file }) => {
+const AudioPreview: React.FC<{ file: FileStore; minWidth?: string }> = ({
+                                                                            file,
+                                                                            minWidth = '300px' // 设置默认最小宽度，与 VideoPreview 的 maxWidth 一致
+                                                                        }) => {
     return (
-        <div className="flex flex-col items-center gap-2 w-full">
+        <div
+            className="flex flex-col items-center gap-2 w-full"
+            style={{ minWidth }} // 应用 minWidth 样式
+        >
             <div className="w-full bg-gray-100 rounded-lg p-4 border border-gray-200">
-                <audio
-                    controls
-                    className="w-full"
-                >
+                <audio controls className="w-full">
                     <source src={file.url} type={file.mimeType || 'audio/mpeg'} />
                     您的浏览器不支持此音频格式
                 </audio>
@@ -172,92 +174,120 @@ const AudioPreview: React.FC<{ file: FileStore }> = ({ file }) => {
         </div>
     )
 }
-
 // PDF 预览组件
-const PDFPreview: React.FC<{ file: FileStore; maxWidth?: string }> = ({ file, maxWidth = '200px' }) => {
+const PDFPreview: React.FC<{ file: FileStore; maxWidth?: string }> = ({ file, maxWidth = '100%' }) => {
     return (
-        <div className="flex flex-col items-center gap-3" style={{ maxWidth }}>
-            <div className="flex items-center justify-center w-full bg-red-50 rounded-lg p-6 border-2 border-red-200">
-                <FileText className="w-12 h-12 text-red-600" />
+        <div
+            className="flex items-center gap-2 p-2 bg-red-50 rounded-md border border-red-200 w-full min-w-80"
+            style={{ maxWidth }} // 保留 maxWidth 的控制
+        >
+            <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-red-100 rounded border border-red-300">
+                <FileText className="w-6 h-6 text-red-600" />
             </div>
-            <p className="text-sm font-medium text-gray-700 text-center break-all">{file.name}</p>
-            <Button
-                asChild
-                variant="default"
-                size="sm"
-                className="w-full gap-2"
-            >
-                <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                    <Download className="w-4 h-4" />
-                    预览 / 下载
-                </a>
-            </Button>
+            <div className="flex-grow flex flex-col min-w-0">
+                <span className="text-xs text-gray-700 break-words text-left">
+                    {file.name}
+                </span>
+                <Button
+                    asChild
+                    variant="link"
+                    size="sm"
+                    className="flex justify-center items-center p-0 mt-1 h-auto text-xs text-blue-600 hover:text-blue-800"
+                >
+                    <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                        <Download className="w-3 h-3 flex-shrink-0" />
+                        预览 / 下载
+                    </a>
+                </Button>
+            </div>
         </div>
     )
 }
-
 // 文档预览组件
 const DocumentPreview: React.FC<{ file: FileStore }> = ({ file }) => {
     const getDocumentTypeLabel = (mimeType?: string): string => {
         if (!mimeType) return '文档'
-        if (mimeType.includes('word')) return 'Word 文档'
-        if (mimeType.includes('spreadsheet')) return '电子表格'
-        if (mimeType.includes('presentation')) return '演示文稿'
+        if (mimeType.includes('word')) return 'Word'
+        if (mimeType.includes('spreadsheet')) return '表格'
+        if (mimeType.includes('presentation')) return '演示'
         return '文档'
     }
 
+    // 简化标签以适应水平布局
+    const simplifiedLabel = getDocumentTypeLabel(file.mimeType);
+
     return (
-        <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center justify-center w-24 h-24 bg-blue-50 rounded-lg border-2 border-blue-200">
-                <FileText className="w-5 h-5 text-blue-600" />
+        // 主容器：水平排列，有内边距和边框
+        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md border border-gray-200 w-full">
+
+            {/* 图标容器：固定大小 */}
+            <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-blue-50 rounded border border-blue-200">
+                <FileText className="w-6 h-6 text-blue-600" />
             </div>
-            <div className="text-center">
-                <p className="text-sm font-medium text-gray-700">{getDocumentTypeLabel(file.mimeType)}</p>
-                <p className="text-xs text-gray-500 break-all">{file.name}</p>
+
+            {/* 信息和按钮容器：占据剩余空间，内部纵向排列 */}
+            <div className="flex-grow flex flex-col min-w-0">
+
+                {/* 文件类型和名称 */}
+                <div className="flex-grow flex flex-col min-w-0">
+                    <span className="text-xs font-medium text-gray-700 whitespace-nowrap truncate">
+                        {simplifiedLabel}
+                    </span>
+                    <span className="text-xs text-gray-500 break-words text-left">
+                         {file.name}
+                    </span>
+                </div>
+
+                {/* 下载按钮：居中显示 */}
+                <Button
+                    asChild
+                    variant="link"
+                    size="sm"
+                    // 核心：使用 flex 布局使其内容居中
+                    className="flex justify-center items-center p-0 mt-1 h-auto text-xs text-blue-600 hover:text-blue-800"
+                >
+                    <a href={file.url} download={file.name} rel="noopener noreferrer" className="flex items-center gap-1">
+                        <Download className="w-3 h-3 flex-shrink-0" />
+                        下载
+                    </a>
+                </Button>
             </div>
-            <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="w-full gap-2"
-            >
-                <a href={file.url} download={file.name} rel="noopener noreferrer">
-                    <Download className="w-4 h-4" />
-                    下载
-                </a>
-            </Button>
         </div>
     )
 }
-
 // 其他文件预览组件
 const OtherFilePreview: React.FC<{ file: FileStore }> = ({ file }) => {
     const fileExtension = file.name.split('.').pop()?.toUpperCase() || '文件'
-
     return (
-        <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center justify-center w-24 h-24 bg-gray-100 rounded-lg border-2 border-gray-300">
-                <File className="w-12 h-12 text-gray-600" />
+        // 主容器：水平排列，紧凑，有内边距和边框
+        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md border border-gray-200 w-full">
+            <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-gray-100 rounded border border-gray-300">
+                <File className="w-6 h-6 text-gray-600" />
             </div>
-            <div className="text-center">
-                <p className="text-sm font-medium text-gray-700">{fileExtension} 文件</p>
-                <p className="text-xs text-gray-500 break-all max-w-xs">{file.name}</p>
+            <div className="flex-grow flex flex-col min-w-0">
+                <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-medium text-gray-700 whitespace-nowrap truncate">
+                        {fileExtension} 文件
+                    </span>
+                    <span className="text-xs text-gray-500 break-words text-left">
+                        {file.name}
+                    </span>
+                </div>
+                <Button
+                    asChild
+                    variant="link"
+                    size="sm"
+                    className="flex justify-center items-center p-0 mt-1 h-auto text-xs text-blue-600 hover:text-blue-800"
+                >
+                    <a href={file.url} download={file.name} rel="noopener noreferrer" className="flex items-center gap-1">
+                        <Download className="w-3 h-3 flex-shrink-0" />
+                        下载
+                    </a>
+                </Button>
             </div>
-            <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="w-full gap-2"
-            >
-                <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                    <Download className="w-4 h-4" />
-                    下载
-                </a>
-            </Button>
         </div>
     )
 }
-
 // 主组件
 export const FilePreview: React.FC<FilePreviewProps> = ({
                                                             file,

@@ -722,7 +722,7 @@ export function useUppyUpload({
                 </div>
 
                 {/* 删除按钮放在图片下面 */}
-                <div className="mt-3 flex gap-2 justify-center flex-wrap">
+                <div className="mt-0.5 flex gap-2 justify-center flex-wrap">
                     <Button
                         type="button"
                         variant={maxFile === 1 ? "destructive" : "outline"}
