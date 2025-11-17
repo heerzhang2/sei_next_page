@@ -1094,32 +1094,6 @@ export function useUppyUpload({
         )
     }
 
-    React.useEffect(() => {
-        return () => {
-            if (uppyInstance && stateKey) {
-                const currentMeta = uppyInstance.getState().meta
-                uppyInstance.setMeta({
-                    ...currentMeta,
-                    pendingDeleteOperations: pendingDeleteOperations,
-                })
-
-                // 立即保存 uppy 状态到 indexDB
-                const uppyState = uppyInstance.getState()
-                fileOperationsQueue.saveUppyState({
-                    key: stateKey,
-                    repId,
-                    hash: hash || "default",
-                    timestamp: Date.now(),
-                    files: (uppyState.files || []),
-                    meta: uppyInstance.getState().meta,
-                    oldfiles: maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2,
-                }).catch((error) => {
-                    console.error("[v0] Failed to persist pending deletes on unmount:", error)
-                })
-            }
-        }
-    }, [pendingDeleteOperations,stateKey,repId, hash, uppyInstance, business, storeObj1, storeObj2, maxFile])
-
     const uploadDom = (
         <>
             {renderFiles()}

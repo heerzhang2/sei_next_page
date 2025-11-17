@@ -531,11 +531,6 @@ export function useOfflineUppyUpload(params: {
             if (excludedCount > 0) {
                 toast.info(`排除了 ${excludedCount} 个已成功上传的文件`)
             }
-
-            toast.info("正在保存文件状态...", {
-                duration: 2000,
-            })
-
             const filesWithData = await Promise.all(
                 files.map(async (file) => {
                     try {
@@ -974,6 +969,35 @@ export function useOfflineUppyUpload(params: {
             toast.error("执行删除操作时发生错误")
         }
     }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState, onFinish, params.maxFile, params.storeObj])
+    // 仅在屏幕方向改变时保存一次状态（防意外丢失）
+    useEffect(() => {
+        if (!uppyInstanceRef.current || !stateKey) return;
+        const handleOrientationChange = () => {
+            console.log('[OfflineUppy] Screen orientation changed, saving state...');
+            // 静默保存，不要 toast！
+            saveUppyState(uppyInstanceRef.current!)
+                .catch(error => {
+                    console.error('[OfflineUppy] Save on orientation change failed:', error);
+                });
+        };
+        // 注意：有些浏览器更推荐使用 'resize' + 检测 innerWidth/Height， 但 'orientationchange' 在移动端更直接
+        window.addEventListener('orientationchange', handleOrientationChange);
+        return () => {
+            window.removeEventListener('orientationchange', handleOrientationChange);
+        };
+    }, [saveUppyState, stateKey]);
+    // 组件卸载时强制保存
+    useEffect(() => {
+        return () => {
+            if (uppyInstanceRef.current && stateKey) {
+                console.log(`[OfflineUppy] Component unmounting, saving state for: ${stateKey}`)
+                // 立即保存，不使用防抖
+                saveUppyState(uppyInstanceRef.current).catch(error => {
+                    console.error("[OfflineUppy] Final save on unmount failed:", error)
+                })
+            }
+        }
+    }, [stateKey, saveUppyState])
     // 通过文件句柄方式添加文件到 Uppy
     const addFilesWithHandles = useCallback(async () => {
         if (!uppyInstanceRef.current) {
