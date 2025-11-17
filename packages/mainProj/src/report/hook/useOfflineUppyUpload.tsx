@@ -8,6 +8,7 @@ import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
 import { Upload, FolderOpen, Trash2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
+import {stripOrigin} from "@/lib/utils";
 
 // 检查浏览器是否支持 File System Access API
 const isFileSystemAccessSupported = () => {
@@ -182,7 +183,7 @@ const addFilesWithHandlesToUppy = async (
 
             // 创建符合 Uppy 要求的文件对象 - 修复：添加 isHandleMode 字段
             const fileToAdd = {
-                id: `file-handle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                id: `file-handle-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
                 name: fileHandle.fileName,
                 type: fileHandle.fileType,
                 data: file,
@@ -286,7 +287,7 @@ const restoreFileFromSnapshot = async (
                 // 修复：使用文件自身的 meta，不展开 snapshotMeta（避免包含 pendingDeleteOperations）
                 const fileMeta = fileData.meta || {}
                 const fileToAdd = {
-                    id: fileData.id || `file-handle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    id: fileData.id || `file-handle-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
                     name: fileData.name,
                     type: fileData.type,
                     data: fileToRestore,
@@ -688,6 +689,46 @@ export function useOfflineUppyUpload(params: {
             checkSavedState,
         ],
     )
+    //跳转到下一条待处理离线操作
+    const navigateToNextPendingOperation = useCallback(async () => {
+        try {
+            const allGroups = await fileOperationsQueue.getGroupedUppyStates();
+            if (allGroups.length <= 1) {
+                toast.info("没有其他待处理的离线操作");
+                return;
+            }
+
+            // 找到当前分组的索引
+            const currentGroupIndex = allGroups.findIndex(group =>
+                group.repId === repId &&
+                (group.subrid === subrid || (!group.subrid && !subrid))
+            );
+
+            if (currentGroupIndex === -1) {
+                toast.info("当前页面不在待处理列表中");
+                return;
+            }
+
+            // 获取下一个分组（不循环）
+            const nextIndex = currentGroupIndex + 1;
+            if (nextIndex >= allGroups.length) {
+                toast.info("已是最后一条待处理操作");
+                return;
+            }
+
+            const nextGroup = allGroups[nextIndex];
+            if (nextGroup.originalPageUrl) {
+                // 使用 stripOrigin 保持一致性（和 FileOperationsManager 一样）
+                const cleanUrl = stripOrigin(nextGroup.originalPageUrl);
+                window.location.href = cleanUrl;
+            } else {
+                toast.warning("下一条操作无有效跳转链接");
+            }
+        } catch (error) {
+            console.error("[OfflineUppy] Failed to navigate to next pending operation:", error);
+            toast.error("跳转失败", { description: "无法加载下一条操作" });
+        }
+    }, [repId, subrid]);
     // 取消保存的状态
     const cancelSavedState = useCallback(async () => {
         try {
@@ -1079,7 +1120,18 @@ export function useOfflineUppyUpload(params: {
                             </Button>
                         )}
                     </div>
-
+                    {hasSavedState && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={navigateToNextPendingOperation}
+                            className="flex items-center justify-center"
+                        >
+                            <RotateCcw className="w-4 h-4 mr-2" />
+                            下一条待处理离线文件操作
+                        </Button>
+                    )}
                     {/* 新增：执行待删除操作按钮 */}
                     {displayPendingDeletes.length > 0 && (
                         <div className="flex gap-2">

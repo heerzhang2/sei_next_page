@@ -287,7 +287,12 @@ export const ProjectR = ({ children, show, defaultProj: defPrj, label, rep, nApx
         values
         return true
     }
-    const [render] = useFrameEditorBar({ rep, values: { Projects: projects }, onReset, onVerify })
+    const [render] = useFrameEditorBar({
+        rep,
+        transformValues: () => ({ Projects: projects }),
+        onReset,
+        onVerify,
+    });
     const clearProjectCatalog = React.useCallback(() => {
         setProjects(defaultProj)
     }, [])

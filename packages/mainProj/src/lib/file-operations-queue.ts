@@ -184,6 +184,57 @@ class FileOperationsQueue {
             request.onerror = () => reject(request.error)
         })
     }
+    // 按 (repId, subrid) 分组聚合 Uppy 状态
+    async getGroupedUppyStates(): Promise<
+        Array<{
+            repId: string
+            subrid?: string
+            count: number // files + pending deletes 总操作数
+            originalPageUrl?: string // 取第一个快照的 URL
+            snapshots: UppyStateSnapshot[] // 所有属于该组的快照（用于调试或详情）
+        }>
+    > {
+        await this.init()
+        if (!this.db) throw new Error("Database not initialized")
+
+        const allSnapshots = await this.getAllUppyStates()
+
+        const groups = new Map<string, { repId: string; subrid?: string; snapshots: UppyStateSnapshot[] }>()
+
+        for (const snapshot of allSnapshots) {
+            const groupKey = `${snapshot.repId}::${snapshot.subrid ?? ''}`
+            if (!groups.has(groupKey)) {
+                groups.set(groupKey, {
+                    repId: snapshot.repId,
+                    subrid: snapshot.subrid,
+                    snapshots: [],
+                })
+            }
+            groups.get(groupKey)!.snapshots.push(snapshot)
+        }
+
+        return Array.from(groups.values()).map(({ repId, subrid, snapshots }) => {
+            // 合并计算总操作数（所有快照的文件数 + 删除数之和）
+            let totalCount = 0
+            let firstOriginalPageUrl: string | undefined
+
+            for (const snap of snapshots) {
+                totalCount += snap.files.length
+                totalCount += snap.meta?.pendingDeleteOperations?.length || 0
+                if (!firstOriginalPageUrl && snap.meta?.originalPageUrl) {
+                    firstOriginalPageUrl = snap.meta.originalPageUrl
+                }
+            }
+
+            return {
+                repId,
+                subrid,
+                count: totalCount,
+                originalPageUrl: firstOriginalPageUrl,
+                snapshots, // 可选，用于未来扩展
+            }
+        })
+    }
 }
 
 // 生成状态存储的key

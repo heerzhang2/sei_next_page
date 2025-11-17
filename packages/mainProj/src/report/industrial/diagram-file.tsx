@@ -8,6 +8,7 @@ import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import { useCallback, useState, useEffect, useMemo } from "react"
 import { toast } from "sonner"
 import { type FileStore, useUppyUpload } from "@/report/hook/useUppyUpload"
+import {useOfflineUppyUpload} from "@/report/hook/useOfflineUppyUpload";
 
 // 单线图对象类型
 interface LineDiagramItem {
@@ -198,25 +199,21 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         },
         [selectedIndex],
     )
-
-    // 使用 useUppyUpload - 添加关键依赖项
-    const [uploadDom] = useUppyUpload({
+    const [uploadDom] = useOfflineUppyUpload({
         repId: rep?.id!,
-        maxFile: 1,
-        onFinish,
         storeObj,
+        maxFile: 1,
         liveDays: 10,
-        hash: `LineDiagram_${selectedIndex}_${forceUpdate}`, // 添加 forceUpdate 确保唯一性
-        id: `LineDiagram_${selectedIndex}_${forceUpdate}`,
+        hash: `LineDiagram_${selectedIndex}_${forceUpdate}`,
+        business: "rep",
+        onFinish,
     })
-
     const [render] = useFrameEditorBar({
         rep,
-        values: { ...saveForm },
+        transformValues: () => ({ ...saveForm }),
         onVerify,
         onReset,
     })
-
     // 如果没有选择单线图，显示提示
     if (selectedIndex < 0) {
         return (

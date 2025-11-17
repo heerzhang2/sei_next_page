@@ -103,6 +103,7 @@ type UploadMode = "tus" | "xhr"
 
 /**不支持切换页面后回来 যুক্তি续刚才的未完成的上传！tus断点续传也是要求当前网页需要保留在目前状态管理的，不能跳转其他网页去，否则不能正常完成上传。
  * 可以支持一个页面 多个上传的面板同时存在的。
+ * @param id 同一个页面不能多个一样id的uppy实例
  * @param repId 分布式对象存储系统靠这个 eid ID来关联业务系统关系数据库的。
  * @param field  inp?.[field]? 存储上传后的文件对象信息对应inp字段。 _FILE_为前缀的； 数据=可能是{}单个的，也可能多为文件形式[{ }, ]？
  * @param maxFile 设计上的最多文件个数【maxFile决定了file保存是数组还是对象】最多传几个文件； 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
@@ -496,7 +497,7 @@ export function useUppyUpload({
                     const fileData = file.data
                     if (fileData) {
                         const newFile = {
-                            id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 新的ID避免冲突
+                            id: `file-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`, // 新的ID避免冲突
                             name: file.name,
                             type: file.type,
                             data: fileData,
