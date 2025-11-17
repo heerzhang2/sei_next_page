@@ -13,7 +13,7 @@ import { Button } from "@/components/ui"
 import { FilePreview } from "@/components/file-preview"
 import { useCallback } from "react"
 import { toast } from "sonner"
-import { fileOperationsQueue } from "@/lib/file-operations-queue"
+import {fileOperationsQueue, generateUppyStateKey} from "@/lib/file-operations-queue"
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -130,6 +130,9 @@ export function useUppyUpload({
                                   business = "rep",
                                   open,
                                   externalPendingDeletes = [],
+                                  redId,
+                                  subrid,
+                                  stateKey,
                               }: {
     repId: string
     storeObj: FileStore | FileStore[]
@@ -142,97 +145,16 @@ export function useUppyUpload({
     business?: string
     open?: boolean
     externalPendingDeletes?: PendingDeleteOperation[]
+    redId?: number
+    subrid?: string
+    stateKey?: string
 }) {
-    // 添加待删除操作状态
-    // 优先级：sessionStorage（本次会话） > externalPendingDeletes（从 indexDB 恢复）
-    // 页面刷新时 sessionStorage 自动清空，从而只保留 indexDB 中的持久化状态
-    const PENDING_DELETES_STORE = 'pendingDeletesStore'
-
-    // const savePendingDeletes = async (repId: string, deletesMap: Record<string, string>) => {
-    //     try {
-    //         const db = await new Promise<IDBDatabase>((resolve, reject) => {
-    //             const request = indexedDB.open('FileOperationsDB', 1)
-    //             request.onsuccess = () => resolve(request.result)
-    //             request.onerror = () => reject(request.error)
-    //         })
-
-    //         const transaction = db.transaction(['uppyState'], 'readwrite')
-    //         const store = transaction.objectStore('uppyState')
-
-    //         // 使用特殊的 key 前缀保存待删除队列
-    //         const deleteQueueKey = `__deleteQueue:${repId}`
-    //         const request = store.put({
-    //             key: deleteQueueKey,
-    //             repId,
-    //             data: deletesMap,
-    //             timestamp: Date.now()
-    //         })
-
-    //         return new Promise<void>((resolve, reject) => {
-    //             request.onsuccess = () => {
-    //                 console.log("[v0] Saved pending deletes to indexDB:", deleteQueueKey)
-    //                 resolve()
-    //             }
-    //             request.onerror = () => reject(request.error)
-    //         })
-    //     } catch (error) {
-    //         console.error("[v0] Failed to save pending deletes:", error)
-    //     }
-    // }
-
-    // const loadPendingDeletes = async (repId: string): Promise<Record<string, string>> => {
-    //     try {
-    //         const db = await new Promise<IDBDatabase>((resolve, reject) => {
-    //             const request = indexedDB.open('FileOperationsDB', 1)
-    //             request.onsuccess = () => resolve(request.result)
-    //             request.onerror = () => reject(request.error)
-    //         })
-
-    //         const transaction = db.transaction(['uppyState'], 'readonly')
-    //         const store = transaction.objectStore('uppyState')
-
-    //         // 使用特殊的 key 前缀读取待删除队列
-    //         const deleteQueueKey = `__deleteQueue:${repId}`
-    //         const request = store.get(deleteQueueKey)
-
-    //         return new Promise<Record<string, string>>((resolve, reject) => {
-    //             request.onsuccess = () => {
-    //                 const result = request.result as any
-    //                 if (result && result.data) {
-    //                     console.log("[v0] Loaded pending deletes from indexDB:", deleteQueueKey)
-    //                     resolve(result.data)
-    //                 } else {
-    //                     resolve({})
-    //                 }
-    //             }
-    //             request.onerror = () => reject(request.error)
-    //         })
-    //     } catch (error) {
-    //         console.error("[v0] Failed to load pending deletes:", error)
-    //         return {}
-    //     }
-    // }
-
-    const [pendingDeleteOperations, setPendingDeleteOperations] =
-        React.useState<Record<string, string>>({})
-
-    // React.useEffect(() => {
-    //     // 组件卸载时，将待删除操作同步到 indexDB
-    //     return () => {
-    //         if (Object.keys(pendingDeleteOperations).length > 0) {
-    //             savePendingDeletes(repId, pendingDeleteOperations).catch((error) => {
-    //                 console.error("[v0] Failed to persist pending deletes on unmount:", error)
-    //             })
-    //         }
-    //     }
-    // }, [pendingDeleteOperations, repId])
-
+    const [pendingDeleteOperations, setPendingDeleteOperations] =React.useState<PendingDeleteOperation[]>(externalPendingDeletes)
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
     const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
     const dashLocale = DASH_LOCALE_CONFIG
-
     // 配置 Tus 插件的函数
     const configureTusPlugin = (uppy: Uppy) => {
         uppy.use(Tus, {
@@ -424,8 +346,22 @@ export function useUppyUpload({
             })
 
             if (isError) {
-                setPendingDeleteOperations((prev) => ({ ...prev, [fileUrl]: fileUrl }))
-
+                setPendingDeleteOperations((prev) => {
+                    // 避免重复添加同一个 deleteUrl
+                    if (prev.some(op => op.deleteUrl === fileUrl)) {
+                        return prev;
+                    }
+                    return [
+                        ...prev,
+                        {
+                            deleteUrl: fileUrl,
+                            repId,
+                            hash: hash || "default",
+                            business,
+                            timestamp: Date.now(),
+                        }
+                    ];
+                });
                 toast.info("已加入待删除列表", {
                     description: "删除操作将在保存状态后加入离线队列",
                 })
@@ -684,20 +620,20 @@ export function useUppyUpload({
     }
     React.useEffect(() => {
         if (externalPendingDeletes.length > 0) {
-            const deletesMap = externalPendingDeletes.reduce((acc, op) => {
-                acc[op.deleteUrl] = op.deleteUrl
-                return acc
-            }, {} as Record<string, string>)
-            setPendingDeleteOperations((prev) => ({ ...prev, ...deletesMap }))
+            setPendingDeleteOperations((prev) => {
+                const existingUrls = new Set(prev.map(op => op.deleteUrl));
+                const newOps = externalPendingDeletes.filter(op => !existingUrls.has(op.deleteUrl));
+                return [...prev, ...newOps];
+            });
         }
-    }, [externalPendingDeletes])
+    }, [externalPendingDeletes]);
     // 检查特定文件是否在待删除队列中
     const isFilePendingDelete = useCallback(
         (fileUrl: string) => {
-            return pendingDeleteOperations[fileUrl] !== undefined
+            return pendingDeleteOperations.some(op => op.deleteUrl === fileUrl);
         },
-        [pendingDeleteOperations],
-    )
+        [pendingDeleteOperations]
+    );
 
     const popoverStyles = `
     [popover] {
@@ -920,33 +856,26 @@ export function useUppyUpload({
 
     //取消删除的函数
     const cancelPendingDelete = useCallback((fileUrl: string) => {
-        setPendingDeleteOperations((prev) => {
-            const { [fileUrl]: _, ...rest } = prev
-            return rest
-        })
+        setPendingDeleteOperations((prev) =>
+            prev.filter(op => op.deleteUrl !== fileUrl)
+        );
         toast.success("已取消删除操作", {
             description: "文件已从待删除队列中移除",
             duration: 2000,
-        })
-    }, [])
+        });
+    }, []);
     //批量取消删除的函数
     const cancelPendingOperations = useCallback(() => {
-        if (Object.keys(pendingDeleteOperations).length === 0) {
+        if (pendingDeleteOperations.length === 0) {
             toast.info("没有待取消的删除操作")
             return
         }
-
-        setPendingDeleteOperations({})
+        setPendingDeleteOperations([])
         toast.success("已取消所有删除操作", {
             description: `已移除 ${Object.keys(pendingDeleteOperations).length} 个待删除文件`,
             duration: 3000,
         })
     }, [pendingDeleteOperations])
-
-    // const getInitialPendingDeletes = React.useCallback(async () => {
-    //     const savedDeletes = await loadPendingDeletes(repId)
-    //     return { ...externalPendingDeletes, ...savedDeletes }
-    // }, [repId, externalPendingDeletes])
 
     // 排除已完成上传的文件
     const removeCompletedFiles = React.useCallback(() => {
@@ -1167,28 +1096,21 @@ export function useUppyUpload({
 
     React.useEffect(() => {
         return () => {
-            if (uppyInstance && Object.keys(pendingDeleteOperations).length > 0) {
+            if (uppyInstance && stateKey) {
                 const currentMeta = uppyInstance.getState().meta
                 uppyInstance.setMeta({
                     ...currentMeta,
-                    pendingDeleteOperations: Object.keys(pendingDeleteOperations).map(url => ({
-                        deleteUrl: url,
-                        repId,
-                        hash: hash || "default",
-                        business,
-                        timestamp: Date.now(),
-                    })),
+                    pendingDeleteOperations: pendingDeleteOperations,
                 })
 
                 // 立即保存 uppy 状态到 indexDB
-                const stateKey = `${repId}-${hash || "default"}`
                 const uppyState = uppyInstance.getState()
                 fileOperationsQueue.saveUppyState({
                     key: stateKey,
                     repId,
                     hash: hash || "default",
                     timestamp: Date.now(),
-                    files: uppyState.files,
+                    files: (uppyState.files || []),
                     meta: uppyInstance.getState().meta,
                     oldfiles: maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2,
                 }).catch((error) => {
@@ -1196,7 +1118,7 @@ export function useUppyUpload({
                 })
             }
         }
-    }, [pendingDeleteOperations, repId, hash, uppyInstance, business, storeObj1, storeObj2, maxFile])
+    }, [pendingDeleteOperations,stateKey,repId, hash, uppyInstance, business, storeObj1, storeObj2, maxFile])
 
     const uploadDom = (
         <>

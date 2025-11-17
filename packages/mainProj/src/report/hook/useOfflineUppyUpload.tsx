@@ -3,7 +3,7 @@
 
 import { useEffect, useCallback, useRef, useState } from "react"
 import { useUppyUpload, type FileStore, type PendingDeleteOperation } from "./useUppyUpload"
-import { fileOperationsQueue } from "@/lib/file-operations-queue"
+import {fileOperationsQueue, generateUppyStateKey} from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
 import { Upload, FolderOpen, Trash2, RotateCcw } from "lucide-react"
@@ -218,34 +218,6 @@ const addFilesWithHandlesToUppy = async (
 
     return addedCount
 }
-// 生成状态存储的key - 修复版本
-const generateStateKey = (params: {
-    repId: string
-    subrid?: string
-    redId?: number
-    fieldPath?: string
-    hash?: string
-}) => {
-    const { repId, subrid, redId, fieldPath, hash } = params
-    let key = repId
-    if (subrid) key += `:${subrid}`
-    if (redId) key += `:${redId}`
-    if (fieldPath) key += `:${fieldPath}`
-    if (hash) key += `:${hash}`
-    return key
-}
-
-// 获取完整的 stateKey（用于保存和加载）
-const getFullStateKey = (params: {
-    repId: string
-    subrid?: string
-    redId?: number
-    fieldPath?: string
-    hash?: string
-}) => {
-    return generateStateKey(params)
-}
-
 // 获取当前页面URL用于恢复
 const getCurrentPageUrl = () => {
     if (typeof window !== "undefined") {
@@ -442,18 +414,10 @@ export function useOfflineUppyUpload(params: {
     business?: string
     modType?: string
     redId?: number
-    fieldPath?: string
     subrid?: string
 }) {
-    const { repId, hash, onFinish, subrid, fieldPath, redId } = params
-    // 生成完整的状态key
-    const stateKey = getFullStateKey({
-        repId,
-        subrid,
-        redId,
-        fieldPath,
-        hash,
-    })
+    const { repId, subrid, redId, hash, onFinish} = params
+    const stateKey = generateUppyStateKey(repId,subrid,redId,hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
 
     // 添加状态来存储恢复的待删除操作
@@ -499,6 +463,7 @@ export function useOfflineUppyUpload(params: {
     } = useUppyUpload({
         ...params,
         open: true,
+        stateKey,
         externalPendingDeletes: restoredPendingDeletes,
     })
 
@@ -628,7 +593,6 @@ export function useOfflineUppyUpload(params: {
                     meta: {
                         ...uppy.getState().meta,
                         originalPageUrl: getCurrentPageUrl(),
-                        fieldPath: fieldPath,
                         modType: params.modType,
                         redId: params.redId,
                         business: params.business,
@@ -681,7 +645,6 @@ export function useOfflineUppyUpload(params: {
         [
             repId,
             subrid,
-            fieldPath,
             hash,
             params.modType,
             params.redId,

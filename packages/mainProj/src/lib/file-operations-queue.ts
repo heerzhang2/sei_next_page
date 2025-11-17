@@ -84,29 +84,7 @@ class FileOperationsQueue {
         })
     }
 
-    async loadUppyState(repId: string, subrid?: string, hash?: string): Promise<UppyStateSnapshot | null> {
-        await this.init()
-        if (!this.db) throw new Error("Database not initialized")
-
-        const key = `${repId}${subrid ? `:${subrid}` : ""}${hash ? `:${hash}` : ""}`
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STATE_STORE], "readonly")
-            const store = transaction.objectStore(STATE_STORE)
-            const request = store.get(key)
-
-            request.onsuccess = () => {
-                const snapshot = request.result as UppyStateSnapshot | undefined
-                if (snapshot) {
-                    console.log("[FileQueue] Loaded Uppy state:", key, snapshot.files.length, "files")
-                }
-                resolve(snapshot || null)
-            }
-            request.onerror = () => reject(request.error)
-        })
-    }
-
-    async loadUppyStateByKey(key: string): Promise<UppyStateSnapshot | null> {
+    async loadUppyState(key: string): Promise<UppyStateSnapshot | null> {
         await this.init()
         if (!this.db) throw new Error("Database not initialized")
 
@@ -123,26 +101,7 @@ class FileOperationsQueue {
         })
     }
 
-    async removeUppyState(repId: string, subrid?: string, hash?: string): Promise<void> {
-        await this.init()
-        if (!this.db) throw new Error("Database not initialized")
-
-        const key = `${repId}${subrid ? `:${subrid}` : ""}${hash ? `:${hash}` : ""}`
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STATE_STORE], "readwrite")
-            const store = transaction.objectStore(STATE_STORE)
-            const request = store.delete(key)
-
-            request.onsuccess = () => {
-                console.log("[FileQueue] Removed Uppy state:", key)
-                resolve()
-            }
-            request.onerror = () => reject(request.error)
-        })
-    }
-
-    async removeUppyStateByKey(key: string): Promise<void> {
+    async removeUppyState(key: string): Promise<void> {
         await this.init()
         if (!this.db) throw new Error("Database not initialized")
 
@@ -167,21 +126,6 @@ class FileOperationsQueue {
             const transaction = this.db!.transaction([STATE_STORE], "readonly")
             const store = transaction.objectStore(STATE_STORE)
             const request = store.getAll()
-
-            request.onsuccess = () => resolve(request.result as UppyStateSnapshot[])
-            request.onerror = () => reject(request.error)
-        })
-    }
-
-    async getUppyStatesByRepId(repId: string): Promise<UppyStateSnapshot[]> {
-        await this.init()
-        if (!this.db) throw new Error("Database not initialized")
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STATE_STORE], "readonly")
-            const store = transaction.objectStore(STATE_STORE)
-            const index = store.index("repId")
-            const request = index.getAll(repId)
 
             request.onsuccess = () => resolve(request.result as UppyStateSnapshot[])
             request.onerror = () => reject(request.error)
@@ -240,6 +184,16 @@ class FileOperationsQueue {
             request.onerror = () => reject(request.error)
         })
     }
+}
+
+// 生成状态存储的key
+export function generateUppyStateKey(
+    repId: string,
+    subrid?: string,
+    redId?: number,
+    hash?: string
+): string {
+    return `${repId}${subrid ? `:${subrid}` : ""}${redId ? `:${redId}` : ""}${hash ? `:${hash}` : ""}`
 }
 
 export const fileOperationsQueue = new FileOperationsQueue()

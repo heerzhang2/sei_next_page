@@ -89,7 +89,6 @@ export const FxDiagram = ({
         maxSize: 1500,
         modType,
         redId,
-        fieldPath: pic,
         subrid,
         business: "rep",
     })
