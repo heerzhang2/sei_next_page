@@ -12,13 +12,17 @@ import { type ReportPanelType, useEditControlContext } from "@/component/rep/edi
 import { cn } from "@/lib/utils";
 
 // 🔑 关键：封装一个稳定的编辑器容器，避免因布局变化导致 children 重建
-const EditorContainer = forwardRef<HTMLDivElement, { children: React.ReactNode, className?: string }>(
-    ({ children, className = "" }, ref) => {
+const EditorContainer = forwardRef<HTMLDivElement, { children: React.ReactNode, className?: string, visible: boolean }>(
+    ({ children, className = "", visible }, ref) => {
         return (
             <div
                 ref={ref}
                 id="tabEditor-boundary"
-                className={cn("px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom", className)}
+                className={cn(
+                    "px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom",
+                    !visible && "hidden",
+                    className
+                )}
             >
                 {children}
             </div>
@@ -43,9 +47,8 @@ export default function Skeleton({
     const { activeTab, setActiveTab } = useEditControlContext();
     const [isLandscape, setIsLandscape] = useState(false);
 
-    // Refs for scroll containers
-    const mobileEditorRef = useRef<HTMLDivElement>(null);
-    const desktopEditorRef = useRef<HTMLDivElement>(null);
+    // 🔑 关键：使用 ref 来保持编辑器容器的引用
+    const editorContainerRef = useRef<HTMLDivElement>(null);
 
     // 🚫 移除 orientationchange，只监听 resize
     useEffect(() => {
@@ -68,15 +71,15 @@ export default function Skeleton({
     };
 
     const scrollToTop = () => {
-        const ref = isSmallScreen ? mobileEditorRef : desktopEditorRef;
-        ref.current?.scrollTo({ top: 0, behavior: "smooth" });
+        const editorElement = document.getElementById('tabEditor-boundary');
+        editorElement?.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const scrollToBottom = () => {
-        const ref = isSmallScreen ? mobileEditorRef : desktopEditorRef;
-        if (ref.current) {
-            ref.current.scrollTo({
-                top: ref.current.scrollHeight,
+        const editorElement = document.getElementById('tabEditor-boundary');
+        if (editorElement) {
+            editorElement.scrollTo({
+                top: editorElement.scrollHeight,
                 behavior: "smooth",
             });
         }
@@ -92,6 +95,21 @@ export default function Skeleton({
     // 确定当前应显示的布局
     const isMobileLandscape = isSmallScreen && isLandscape;
     const isMobilePortrait = isSmallScreen && !isLandscape;
+    const isDesktop = !isSmallScreen;
+
+    // 确定编辑器是否应该显示
+    const showEditor = activeTab === "editor";
+
+    // 🔑 关键：创建单一的编辑器容器实例
+    const editorContainer = (
+        <EditorContainer
+            ref={editorContainerRef}
+            visible={showEditor}
+            className="h-full"
+        >
+            {memoizedChildren}
+        </EditorContainer>
+    );
 
     return (
         <div className="flex flex-col">
@@ -116,44 +134,40 @@ export default function Skeleton({
                 </div>
             )}
 
-            {/* 桌面模式 */}
-            {(!isSmallScreen) && (
-                <SplitViewSticky
-                    key="desktop-layout"
-                    className="overflow-hidden"
-                    defaultSplit={50}
-                    minLeftWidth={0}
-                    minRightWidth={0}
-                    independentScrolling={true}
-                    leftPanel={
-                        <div className="flex flex-col h-screen">
-                            <div className="overflow-auto flex-1 @container">{memoizedRepPanel}</div>
-                        </div>
-                    }
-                    rightPanel={
-                        <div className="h-full flex flex-col editor-panel">
-                            <div ref={desktopEditorRef} className="editor-content overflow-auto px-0 md:py-1 border rounded-md bg-muted/50">
-                                {memoizedChildren}
+            {/* 统一容器 - 始终渲染所有布局，用 CSS 控制显示 */}
+            <div className="relative w-full h-screen">
+                {/* 桌面模式 - 始终渲染，用 CSS 控制显示/隐藏 */}
+                <div className={cn("absolute inset-0", isDesktop ? "block" : "hidden")}>
+                    <SplitViewSticky
+                        className="overflow-hidden"
+                        defaultSplit={50}
+                        minLeftWidth={0}
+                        minRightWidth={0}
+                        independentScrolling={true}
+                        leftPanel={
+                            <div className="flex flex-col h-screen">
+                                <div className="overflow-auto flex-1 @container">{memoizedRepPanel}</div>
                             </div>
-                        </div>
-                    }
-                    sticky={true}
-                />
-            )}
+                        }
+                        rightPanel={
+                            <div className="h-full flex flex-col editor-panel">
+                                <div className="editor-content">
+                                    {/* 🔑 关键：在桌面模式下使用相同的编辑器容器 */}
+                                    {editorContainer}
+                                </div>
+                            </div>
+                        }
+                        sticky={true}
+                    />
+                </div>
 
-            {/* 移动端统一布局容器 - 通过 CSS 类控制横竖屏样式 */}
-            {(isSmallScreen) && (
-                <div
-                    className={cn(
-                        "h-screen bg-background",
-                        isMobileLandscape ? "flex" : "flex flex-col"
-                    )}
-                >
+                {/* 移动端布局容器 - 始终渲染，用 CSS 控制显示/隐藏 */}
+                <div className={cn("absolute inset-0 bg-background", isSmallScreen ? "block" : "hidden")}>
                     {isMobileLandscape ? (
                         // 横屏模式 - 水平布局：左侧工具条，右侧内容
                         <Tabs value={activeTab} className="w-full h-full flex flex-row">
                             {/* 左侧垂直 Tabs - 固定宽度 */}
-                            <div className="flex-shrink-0 h-full bg-muted/30 border-r">
+                            <div className="flex-shrink-0 h-full bg-muted/30 border-r w-20">
                                 <TabsList className="flex flex-col h-full py-4 space-y-4 vertical-tabs-list w-full">
                                     <TabsTrigger
                                         value="preview"
@@ -203,9 +217,8 @@ export default function Skeleton({
                                             {memoizedRepPanel}
                                         </div>
                                     ) : (
-                                        <EditorContainer ref={mobileEditorRef}>
-                                            {memoizedChildren}
-                                        </EditorContainer>
+                                        // 🔑 关键：在移动端横屏模式下使用相同的编辑器容器
+                                        editorContainer
                                     )}
                                 </div>
                             </div>
@@ -266,16 +279,15 @@ export default function Skeleton({
                                             {memoizedRepPanel}
                                         </div>
                                     ) : (
-                                        <EditorContainer ref={mobileEditorRef}>
-                                            {memoizedChildren}
-                                        </EditorContainer>
+                                        // 🔑 关键：在移动端竖屏模式下使用相同的编辑器容器
+                                        editorContainer
                                     )}
                                 </div>
                             </div>
                         </Tabs>
                     )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }

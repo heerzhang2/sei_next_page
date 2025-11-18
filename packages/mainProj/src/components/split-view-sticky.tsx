@@ -1,3 +1,4 @@
+//src\components\split-view-sticky.tsx
 "use client"
 
 import type React from "react"
