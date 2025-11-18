@@ -21,7 +21,7 @@ interface FilePreviewProps {
 // MIME 类型分类
 const MIME_TYPES = {
     // 图片类型
-    images: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp'],
+    images: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp', 'image/avif'],
     // 视频类型
     videos: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'],
     // PDF
@@ -37,8 +37,7 @@ export const getMimeTypeFromFile = (file: FileStore): string | null => {
     if (file.mimeType) {
         return file.mimeType
     }
-
-    // 从文件名扩展名推断
+    //在OSS没提供的情况下：从文件名扩展名推断
     const extension = file.name.split('.').pop()?.toLowerCase()
     const mimeTypeMap: Record<string, string> = {
         jpg: 'image/jpeg',
