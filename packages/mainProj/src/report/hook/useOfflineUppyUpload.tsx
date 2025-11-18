@@ -1010,23 +1010,6 @@ export function useOfflineUppyUpload(params: {
             toast.error("执行删除操作时发生错误")
         }
     }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState, onFinish, params.maxFile, params.storeObj])
-    // 仅在屏幕方向改变时保存一次状态（防意外丢失）
-    useEffect(() => {
-        if (!uppyInstanceRef.current || !stateKey) return;
-        const handleOrientationChange = () => {
-            console.log('[OfflineUppy] Screen orientation changed, saving state...');
-            // 静默保存，不要 toast！
-            saveUppyState(uppyInstanceRef.current!)
-                .catch(error => {
-                    console.error('[OfflineUppy] Save on orientation change failed:', error);
-                });
-        };
-        // 注意：有些浏览器更推荐使用 'resize' + 检测 innerWidth/Height， 但 'orientationchange' 在移动端更直接
-        window.addEventListener('orientationchange', handleOrientationChange);
-        return () => {
-            window.removeEventListener('orientationchange', handleOrientationChange);
-        };
-    }, [saveUppyState, stateKey]);
     // 组件卸载时强制保存
     useEffect(() => {
         return () => {
