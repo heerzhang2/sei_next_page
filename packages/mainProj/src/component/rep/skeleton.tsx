@@ -11,25 +11,28 @@ import { useMemo, useState, useEffect, useRef, forwardRef } from "react";
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider";
 import { cn } from "@/lib/utils";
 
-// 🔑 关键：封装一个稳定的编辑器容器，避免因布局变化导致 children 重建
-const EditorContainer = forwardRef<HTMLDivElement, { children: React.ReactNode, className?: string, visible: boolean }>(
-    ({ children, className = "", visible }, ref) => {
-        return (
-            <div
-                ref={ref}
-                id="tabEditor-boundary"
-                className={cn(
-                    "px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom",
-                    !visible && "hidden",
-                    className
-                )}
-            >
-                {children}
-            </div>
-        );
-    }
-);
-EditorContainer.displayName = "EditorContainer";
+// 🔑 关键：创建一个全局编辑器容器，确保它在所有布局切换中都保持稳定
+const GlobalEditorContainer = forwardRef<HTMLDivElement, {
+    children: React.ReactNode,
+    className?: string,
+    visible: boolean,
+    showEditor: boolean
+}>(({ children, className = "", visible, showEditor }, ref) => {
+    return (
+        <div
+            ref={ref}
+            id="global-editor-container"
+            className={cn(
+                "px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom",
+                !visible && "hidden",
+                className
+            )}
+        >
+            {showEditor ? children : <div className="h-full w-full"></div>}
+        </div>
+    );
+});
+GlobalEditorContainer.displayName = "GlobalEditorContainer";
 
 /**
  * 报告记录结合显示的框架
@@ -47,8 +50,8 @@ export default function Skeleton({
     const { activeTab, setActiveTab } = useEditControlContext();
     const [isLandscape, setIsLandscape] = useState(false);
 
-    // 🔑 关键：使用 ref 来保持编辑器容器的引用
-    const editorContainerRef = useRef<HTMLDivElement>(null);
+    // 统一的编辑器容器 ref
+    const globalEditorRef = useRef<HTMLDivElement>(null);
 
     // 🚫 移除 orientationchange，只监听 resize
     useEffect(() => {
@@ -71,15 +74,13 @@ export default function Skeleton({
     };
 
     const scrollToTop = () => {
-        const editorElement = document.getElementById('tabEditor-boundary');
-        editorElement?.scrollTo({ top: 0, behavior: "smooth" });
+        globalEditorRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const scrollToBottom = () => {
-        const editorElement = document.getElementById('tabEditor-boundary');
-        if (editorElement) {
-            editorElement.scrollTo({
-                top: editorElement.scrollHeight,
+        if (globalEditorRef.current) {
+            globalEditorRef.current.scrollTo({
+                top: globalEditorRef.current.scrollHeight,
                 behavior: "smooth",
             });
         }
@@ -99,17 +100,6 @@ export default function Skeleton({
 
     // 确定编辑器是否应该显示
     const showEditor = activeTab === "editor";
-
-    // 🔑 关键：创建单一的编辑器容器实例
-    const editorContainer = (
-        <EditorContainer
-            ref={editorContainerRef}
-            visible={showEditor}
-            className="h-full"
-        >
-            {memoizedChildren}
-        </EditorContainer>
-    );
 
     return (
         <div className="flex flex-col">
@@ -152,8 +142,15 @@ export default function Skeleton({
                         rightPanel={
                             <div className="h-full flex flex-col editor-panel">
                                 <div className="editor-content">
-                                    {/* 🔑 关键：在桌面模式下使用相同的编辑器容器 */}
-                                    {editorContainer}
+                                    {/* 使用全局编辑器容器 */}
+                                    <GlobalEditorContainer
+                                        ref={globalEditorRef}
+                                        visible={true}
+                                        showEditor={showEditor}
+                                        className="h-full"
+                                    >
+                                        {memoizedChildren}
+                                    </GlobalEditorContainer>
                                 </div>
                             </div>
                         }
@@ -217,8 +214,15 @@ export default function Skeleton({
                                             {memoizedRepPanel}
                                         </div>
                                     ) : (
-                                        // 🔑 关键：在移动端横屏模式下使用相同的编辑器容器
-                                        editorContainer
+                                        // 使用全局编辑器容器
+                                        <GlobalEditorContainer
+                                            ref={globalEditorRef}
+                                            visible={true}
+                                            showEditor={showEditor}
+                                            className="h-full"
+                                        >
+                                            {memoizedChildren}
+                                        </GlobalEditorContainer>
                                     )}
                                 </div>
                             </div>
@@ -279,8 +283,15 @@ export default function Skeleton({
                                             {memoizedRepPanel}
                                         </div>
                                     ) : (
-                                        // 🔑 关键：在移动端竖屏模式下使用相同的编辑器容器
-                                        editorContainer
+                                        // 使用全局编辑器容器
+                                        <GlobalEditorContainer
+                                            ref={globalEditorRef}
+                                            visible={true}
+                                            showEditor={showEditor}
+                                            className="h-full"
+                                        >
+                                            {memoizedChildren}
+                                        </GlobalEditorContainer>
                                     )}
                                 </div>
                             </div>
