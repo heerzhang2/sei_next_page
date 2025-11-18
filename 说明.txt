@@ -516,3 +516,7 @@ https://v0.app/chat/-gX7nr6ZdLiR
 https://uppy.io/docs/uppy/
 
 https://www.tongyi.com/qianwen?sessionId=275c85e8c60547bb901d783f59bfb7a3
+    useEffect(() => {
+        console.log("✅ Page mounted");
+        return () => console.log("❌ Page unmounted");
+    }, []);

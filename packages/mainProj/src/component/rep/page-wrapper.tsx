@@ -1,4 +1,4 @@
-// page-wrapper.tsx
+//src\component\rep\page-wrapper.tsx
 "use client"
 import { useParams } from "next/navigation"
 import { useState, useEffect } from "react"

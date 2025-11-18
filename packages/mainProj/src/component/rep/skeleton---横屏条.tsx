@@ -17,8 +17,7 @@ const EditorContainer = forwardRef<HTMLDivElement, { children: React.ReactNode, 
         return (
             <div
                 ref={ref}
-                id="tabEditor-boundary"
-                className={cn("px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom", className)}
+                className={cn("h-full overflow-auto touch-pan-y touch-pinch-zoom", className)}
             >
                 {children}
             </div>
@@ -132,43 +131,38 @@ export default function Skeleton({
                     }
                     rightPanel={
                         <div className="h-full flex flex-col editor-panel">
-                            <div ref={desktopEditorRef} className="editor-content overflow-auto px-0 md:py-1 border rounded-md bg-muted/50">
+                            <EditorContainer
+                                ref={desktopEditorRef}
+                                className="border rounded-md bg-muted/50 px-0 md:py-1"
+                            >
                                 {memoizedChildren}
-                            </div>
+                            </EditorContainer>
                         </div>
                     }
                     sticky={true}
                 />
             )}
 
-            {/* 移动端统一布局容器 - 通过 CSS 类控制横竖屏样式 */}
+            {/* 移动端布局 */}
             {(isSmallScreen) && (
-                <div
-                    className={cn(
-                        "h-screen bg-background",
-                        isMobileLandscape ? "flex" : "flex flex-col"
-                    )}
-                >
+                <div className="h-screen bg-background">
                     {isMobileLandscape ? (
-                        // 横屏模式 - 水平布局：左侧工具条，右侧内容
-                        <Tabs value={activeTab} className="w-full h-full flex flex-row">
-                            {/* 左侧垂直 Tabs - 固定宽度 */}
-                            <div className="flex-shrink-0 h-full bg-muted/30 border-r">
-                                <TabsList className="flex flex-col h-full py-4 space-y-4 vertical-tabs-list w-full">
+                        // 📱 横屏模式
+                        <Tabs value={activeTab} className="w-full h-full flex">
+                            {/* 左侧垂直 Tabs */}
+                            <div className="sticky top-0 h-full flex items-center pt-10 z-10">
+                                <TabsList className="flex flex-col h-auto py-4 space-y-4 bg-muted/30 vertical-tabs-list border-r">
                                     <TabsTrigger
                                         value="preview"
-                                        className={`
-                                            vertical-tab-trigger px-3 py-6 relative transition-all duration-200 w-full
-                                            ${
+                                        className={cn(
+                                            "vertical-tab-trigger px-3 py-6 relative transition-all duration-200",
                                             activeTab === "preview"
                                                 ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
                                                 : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                        }
-                                              `}
+                                        )}
                                         onClick={() => handleTabChange("preview")}
                                     >
                                         <span className="vertical-text font-medium">报告</span>
-                                        {/* 激活指示器 */}
                                         {activeTab === "preview" && (
                                             <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
                                         )}
@@ -176,18 +170,15 @@ export default function Skeleton({
 
                                     <TabsTrigger
                                         value="editor"
-                                        className={`
-                                            vertical-tab-trigger px-3 py-6 relative transition-all duration-200 w-full
-                                            ${
+                                        className={cn(
+                                            "vertical-tab-trigger px-3 py-6 relative transition-all duration-200",
                                             activeTab === "editor"
                                                 ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
                                                 : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                        }
-                                              `}
+                                        )}
                                         onClick={() => handleTabChange("editor")}
                                     >
                                         <span className="vertical-text font-medium">编制</span>
-                                        {/* 激活指示器 */}
                                         {activeTab === "editor" && (
                                             <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
                                         )}
@@ -195,15 +186,18 @@ export default function Skeleton({
                                 </TabsList>
                             </div>
 
-                            {/* 右侧内容区 - 占据剩余空间 */}
-                            <div className="flex-1 flex flex-col min-w-0">
+                            {/* 右侧内容区 */}
+                            <div className="flex-1 flex flex-col">
                                 <div className="h-full">
                                     {activeTab === "preview" ? (
-                                        <div className="h-full overflow-auto @container">
+                                        <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto @container">
                                             {memoizedRepPanel}
                                         </div>
                                     ) : (
-                                        <EditorContainer ref={mobileEditorRef}>
+                                        <EditorContainer
+                                            ref={mobileEditorRef}
+                                            className="border rounded-md bg-muted/50 px-0 md:py-1"
+                                        >
                                             {memoizedChildren}
                                         </EditorContainer>
                                     )}
@@ -211,7 +205,7 @@ export default function Skeleton({
                             </div>
                         </Tabs>
                     ) : (
-                        // 竖屏模式 - 保持原有结构
+                        // 📱 竖屏模式
                         <Tabs value={activeTab} className="flex flex-col h-full">
                             {/* 顶部水平 Tabs */}
                             <div className="sticky top-0 bg-white border-b shadow-sm z-10">
@@ -219,39 +213,33 @@ export default function Skeleton({
                                     <TabsList className="grid w-full grid-cols-2 h-6 pt-0 bg-transparent p-0 gap-1">
                                         <TabsTrigger
                                             value="preview"
-                                            className={`
-                        h-6 relative transition-all duration-300 font-medium overflow-visible
-                        ${
+                                            className={cn(
+                                                "h-6 relative transition-all duration-300 font-medium overflow-visible",
                                                 activeTab === "preview"
                                                     ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20"
                                                     : "bg-muted/30 hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                            }
-                      `}
+                                            )}
                                             onClick={() => handleTabChange("preview")}
                                         >
                                             报告
-                                            {/* 底部激活指示器 */}
                                             {activeTab === "preview" && (
-                                                <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-primary-foreground rounded-full z-20 bg-red-600" />
+                                                <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-red-600 rounded-full z-20" />
                                             )}
                                         </TabsTrigger>
 
                                         <TabsTrigger
                                             value="editor"
-                                            className={`
-                        h-6 relative transition-all duration-300 font-medium overflow-visible
-                        ${
+                                            className={cn(
+                                                "h-6 relative transition-all duration-300 font-medium overflow-visible",
                                                 activeTab === "editor"
                                                     ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20"
                                                     : "bg-muted/30 hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                            }
-                      `}
+                                            )}
                                             onClick={() => handleTabChange("editor")}
                                         >
                                             编制
-                                            {/* 底部激活指示器 */}
                                             {activeTab === "editor" && (
-                                                <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-primary-foreground rounded-full z-20 bg-red-600" />
+                                                <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-red-600 rounded-full z-20" />
                                             )}
                                         </TabsTrigger>
                                     </TabsList>
@@ -259,14 +247,17 @@ export default function Skeleton({
                             </div>
 
                             {/* 内容区 */}
-                            <div className="flex-1">
-                                <div className="h-[calc(100vh-33px)]">
+                            <div className="flex-1 flex flex-col">
+                                <div className="h-full">
                                     {activeTab === "preview" ? (
                                         <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto @container">
                                             {memoizedRepPanel}
                                         </div>
                                     ) : (
-                                        <EditorContainer ref={mobileEditorRef}>
+                                        <EditorContainer
+                                            ref={mobileEditorRef}
+                                            className="border rounded-md bg-muted/50 px-0 md:py-1"
+                                        >
                                             {memoizedChildren}
                                         </EditorContainer>
                                     )}

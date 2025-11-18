@@ -1,3 +1,4 @@
+//src\component\rep\reportLayout.tsx
 "use client"
 
 import {TableOfContents} from "@/component/table-of-contents";
@@ -8,6 +9,7 @@ import {useParams} from "next/navigation";
 import Skeleton from "@/component/rep/skeleton";
 import Sidebar from "@/component/rep/sidebar";
 import {Loader2} from "lucide-react";
+import {ReportView, useCatalog} from "@/report/industrial/Periodical/indPipelineR1";
 
 //变身 公用组件：
 export default function ReportLayout({

@@ -1,127 +1,127 @@
 /* Custom CSS for split view scrolling */
 .split-view-container {
-  height: calc(100vh - 56px); /* Adjust based on your header height */
-  overflow: hidden;
+    height: calc(100vh - 56px); /* Adjust based on your header height */
+    overflow: hidden;
 }
 
 .split-view-panel {
-  height: 100%;
-  overflow: auto;
+    height: 100%;
+    overflow: auto;
 }
 
 .editor-panel {
-  position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .editor-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: white;
 }
 
 .editor-content {
-  flex: 1;
-  /*overflow: auto;*/
+    flex: 1;
+    /*overflow: auto;*/
 }
 
 
 /* Custom styles for vertical tabs in landscape mode */
 @media (orientation: landscape) {
-  /* Make the TabsList vertical and compact */
-  .vertical-tabs-list {
-    width: auto !important;
-    min-width: 40px !important;
-    background-color: transparent !important;
-    border-right: 1px solid hsl(var(--border));
-    padding: 0 !important;
-    position: sticky;
-    top: 0;
-    align-self: stretch;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
+    /* Make the TabsList vertical and compact */
+    .vertical-tabs-list {
+        width: auto !important;
+        min-width: 60px !important;
+        background-color: transparent !important;
+        border-right: 1px solid hsl(var(--border));
+        padding: 0 !important;
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100%;
+    }
 
-  /* Style the vertical tab triggers */
-  .vertical-tab-trigger {
-    width: 40px !important;
-    height: auto !important;
-    padding: 16px 4px !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-  }
+    /* Style the vertical tab triggers */
+    .vertical-tab-trigger {
+        width: 100% !important;
+        height: auto !important;
+        padding: 16px 4px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 8px 0;
+    }
 
-  /* Vertical text orientation */
-  .vertical-text {
-    writing-mode: vertical-lr;
-    text-orientation: mixed;
-    /*transform: rotate(180deg);*/
-    white-space: nowrap;
-    font-size: 14px;
-    letter-spacing: 0.5px;
-  }
+    /* Vertical text orientation */
+    .vertical-text {
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        /*transform: rotate(180deg);*/
+        white-space: nowrap;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
 
-  /* Active state styling */
-  .vertical-tab-trigger[data-state="active"] {
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--primary-foreground)) !important;
-  }
+    /* Active state styling */
+    .vertical-tab-trigger[data-state="active"] {
+        background-color: hsl(var(--primary)) !important;
+        color: hsl(var(--primary-foreground)) !important;
+    }
 
-  /* Content area adjustments */
-  [role="tabpanel"] {
-    padding-left: 8px !important;
-  }
+    /* Content area adjustments */
+    [role="tabpanel"] {
+        padding-left: 8px !important;
+    }
 }
 
 /* Ensure the tabs container takes full height */
 @media (orientation: landscape) {
-  [role="tablist"] {
-    height: 100% !important;
-  }
+    [role="tablist"] {
+        height: 100% !important;
+    }
 }
 
 /* Sticky tabs for portrait mode */
 @media (orientation: portrait) {
-  /* Make the tabs container sticky at the top */
-  .sticky-tabs-container {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: white;
-    border-bottom: 1px solid hsl(var(--border));
-  }
+    /* Make the tabs container sticky at the top */
+    .sticky-tabs-container {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: white;
+        border-bottom: 1px solid hsl(var(--border));
+    }
 }
 
 /* Ensure content scrolls properly in both orientations */
 .tabs-content-container {
-  overflow-y: auto;
-  flex: 1;
+    overflow-y: auto;
+    flex: 1;
 }
 
 /* Improve scrolling behavior for landscape mode */
 @media (orientation: landscape) {
-  /* Ensure the content container takes full height */
-  .content-scroll-container {
-    height: 100%;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-  }
+    /* Ensure the content container takes full height */
+    .content-scroll-container {
+        height: 100%;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+    }
 
-  /* Add some padding to ensure content is visible when scrolled */
-  .tab-content-wrapper {
-    scroll-margin-top: 16px;
-  }
+    /* Add some padding to ensure content is visible when scrolled */
+    .tab-content-wrapper {
+        scroll-margin-top: 16px;
+    }
 }
 
 /* 手机端优化 */
 @media (max-width: 768px) {
-  .vertical-tab-trigger {
-    min-height: 70px;
-  }
+    .vertical-tab-trigger {
+        min-height: 70px;
+    }
 }

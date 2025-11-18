@@ -1,3 +1,4 @@
+//src\component\rep\layout-wrapper.tsx
 "use client"
 import type React from "react"
 import { Suspense } from "react"
@@ -19,42 +20,42 @@ interface ReportLayoutWrapperProps {
 }
 
 export function ReportLayoutWrapper({ children, ReportView, useCatalog }: ReportLayoutWrapperProps) {
-    const params = useParams() as unknown as ReportParams
-    const repId = useActualRepId()
-    const { action } = params
-    const searchParams = useSearchParams()
-    const print = "1" === searchParams!.get("print")
+    const params = useParams() as unknown as ReportParams;
+    const repId = useActualRepId();
+    const { action } = params;
+    const searchParams = useSearchParams();
+    const print = "1" === searchParams!.get("print");
 
-    const [result] = useQuery({ query: ReportQuery, variables: { id: repId } })
-    const { getReport: report } = result?.data || {}
-    const catItems = useCatalog()
-    // console.log("模板ReportLayoutWrapper路由=", { repId, action, print })
-    if (repId === "*") return null
+    const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
+    const { getReport: report } = result?.data || {};
+    const catItems = useCatalog();
+
+    if (repId === "*") return null;
 
     return (
         <EditControlProvider>
             <PageSectionOrientation>
                 <Suspense fallback={<div>Loading...</div>}>
                     {action ? (
-                        <ReportLayout repPanel={<ReportView rep={report} />} items={catItems}>
+                        <ReportLayout key="report-layout-stable" repPanel={<ReportView rep={report} />} items={catItems}>
                             <ReportMakeable />
                             {children}
                         </ReportLayout>
-                    ) : print ? (
+                        ) : print ? (
                         <>
-                            {children}
-                            <ReportView rep={report} printMode />
-                        </>
-                    ) : (
-                        <div className="flex h-screen print:h-auto">
-                            {children}
-                            <BrowsingPattern items={catItems}>
-                                <ReportView rep={report} />
-                            </BrowsingPattern>
-                        </div>
-                    )}
-                </Suspense>
-            </PageSectionOrientation>
-        </EditControlProvider>
-    )
+                    {children}
+                    <ReportView rep={report} printMode />
+                </>
+                ) : (
+                <div className="flex h-screen print:h-auto">
+                    {children}
+                    <BrowsingPattern items={catItems}>
+                        <ReportView rep={report} />
+                    </BrowsingPattern>
+                </div>
+                )}
+            </Suspense>
+        </PageSectionOrientation>
+    </EditControlProvider>
+    );
 }
