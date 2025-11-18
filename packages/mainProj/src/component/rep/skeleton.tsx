@@ -2,12 +2,12 @@
 import "./skeleton.css"
 import { Button } from "@/components/ui/button"
 import { SplitViewSticky } from "@/components/split-view-sticky"
-import { ChevronUp, ChevronDown } from "lucide-react"
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import {useMemo, useState, useEffect, useRef } from "react"
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider"
-import {cn} from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 /**报告记录结合显示的框架
  * */
@@ -80,8 +80,13 @@ export default function Skeleton({
             }
         }
     }
+
     const needScrollBtn = !isSmallScreen || (isSmallScreen && activeTab === "editor")
-    const scrollBtnCls=isSmallScreen && isLandscape ? "flex-row" : "flex-col";
+    const scrollBtnCls = isSmallScreen && isLandscape ? "flex-row" : "flex-col"
+
+    const memoizedChildren = useMemo(() => children, [children])
+    const memoizedRepPanel = useMemo(() => repPanel, [repPanel])
+
     return (
         <div className="flex flex-col">
             {needScrollBtn && (
@@ -117,14 +122,11 @@ export default function Skeleton({
                                             <TabsList className="flex flex-col h-auto py-4 space-y-4 bg-muted/30 vertical-tabs-list border-r">
                                                 <TabsTrigger
                                                     value="preview"
-                                                    className={`
-                                                        vertical-tab-trigger px-3 py-6 relative transition-all duration-200
-                                                        ${
+                                                    className={`vertical-tab-trigger px-3 py-6 relative transition-all duration-200 ${
                                                         activeTab === "preview"
                                                             ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
                                                             : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                                    }
-                                                      `}
+                                                    }`}
                                                     onClick={() => handleTabChange("preview")}
                                                 >
                                                     <span className="vertical-text font-medium">报告</span>
@@ -136,14 +138,11 @@ export default function Skeleton({
 
                                                 <TabsTrigger
                                                     value="editor"
-                                                    className={`
-                                                        vertical-tab-trigger px-3 py-6 relative transition-all duration-200
-                                                        ${
+                                                    className={`vertical-tab-trigger px-3 py-6 relative transition-all duration-200 ${
                                                         activeTab === "editor"
                                                             ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
                                                             : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                                    }
-                                                      `}
+                                                    }`}
                                                     onClick={() => handleTabChange("editor")}
                                                 >
                                                     <span className="vertical-text font-medium">编制</span>
@@ -159,15 +158,16 @@ export default function Skeleton({
                                             <div className="h-screen">
                                                 <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
                                                     <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto @container">
-                                                        {repPanel}
+                                                        {memoizedRepPanel}
                                                     </div>
                                                 </div>
                                                 <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
-                                                    <div ref={mobileEditorRef}
+                                                    <div
+                                                        ref={mobileEditorRef}
                                                         id="tabEditor-boundary"
                                                         className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom"
                                                     >
-                                                        {children}
+                                                        {memoizedChildren}
                                                     </div>
                                                 </div>
                                             </div>
@@ -185,14 +185,11 @@ export default function Skeleton({
                                         <TabsList className="grid w-full grid-cols-2 h-6 pt-0 bg-transparent p-0 gap-1">
                                             <TabsTrigger
                                                 value="preview"
-                                                className={`
-                            h-6 relative transition-all duration-300 font-medium overflow-visible
-                            ${
+                                                className={`h-6 relative transition-all duration-300 font-medium overflow-visible ${
                                                     activeTab === "preview"
                                                         ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20"
                                                         : "bg-muted/30 hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                                }
-                          `}
+                                                }`}
                                                 onClick={() => handleTabChange("preview")}
                                             >
                                                 报告
@@ -204,14 +201,11 @@ export default function Skeleton({
 
                                             <TabsTrigger
                                                 value="editor"
-                                                className={`
-                            h-6 relative transition-all duration-300 font-medium overflow-visible
-                            ${
+                                                className={`h-6 relative transition-all duration-300 font-medium overflow-visible ${
                                                     activeTab === "editor"
                                                         ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20"
                                                         : "bg-muted/30 hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                                                }
-                          `}
+                                                }`}
                                                 onClick={() => handleTabChange("editor")}
                                             >
                                                 编制
@@ -228,7 +222,7 @@ export default function Skeleton({
                                     <div className="h-[calc(100vh-33px)]">
                                         <div className={`${activeTab === "preview" ? "block" : "hidden"} h-full p-0`}>
                                             <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto @container">
-                                                {repPanel}
+                                                {memoizedRepPanel}
                                             </div>
                                         </div>
                                         <div className={`${activeTab === "editor" ? "block" : "hidden"} h-full p-0`}>
@@ -237,7 +231,7 @@ export default function Skeleton({
                                                 id="tabEditor-boundary"
                                                 className="px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom"
                                             >
-                                                {children}
+                                                {memoizedChildren}
                                             </div>
                                         </div>
                                     </div>
@@ -247,7 +241,7 @@ export default function Skeleton({
                     )}
                 </>
             ) : (
-                <SplitViewSticky //正常电脑屏幕的,overflow-hidden避免右半边页面俩个滚动条。
+                <SplitViewSticky
                     className="overflow-hidden"
                     defaultSplit={50}
                     minLeftWidth={0}
@@ -255,13 +249,13 @@ export default function Skeleton({
                     independentScrolling={true}
                     leftPanel={
                         <div className="flex flex-col h-screen">
-                            <div className="overflow-auto flex-1 @container">{repPanel}</div>
+                            <div className="overflow-auto flex-1 @container">{memoizedRepPanel}</div>
                         </div>
                     }
                     rightPanel={
                         <div className="h-full flex flex-col editor-panel">
                             <div ref={desktopEditorRef} className="editor-content overflow-auto">
-                                {children}
+                                {memoizedChildren}
                             </div>
                         </div>
                     }
