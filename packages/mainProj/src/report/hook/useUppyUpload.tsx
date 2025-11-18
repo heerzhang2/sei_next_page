@@ -13,7 +13,7 @@ import { Button } from "@/components/ui"
 import { FilePreview } from "@/components/file-preview"
 import { useCallback } from "react"
 import { toast } from "sonner"
-import {fileOperationsQueue, generateUppyStateKey} from "@/lib/file-operations-queue"
+import {fileOperationsQueue} from "@/lib/file-operations-queue"
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -115,6 +115,7 @@ type UploadMode = "tus" | "xhr"
  * @param storeObj 对象或数组， 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
  * @param open 加载后就打开上传面板
  * @param externalPendingDeletes 未完成删除文件的状态注入列表
+ * @param stateKey 保存到indexDB的key
  * @return {} 节点DOM
  * 【局限性】一个编辑器页面内不能放置多个useUppyUpload来做上传，因为uppy全局变量？，必须独立？ 走类似的useUppyUploadM。
  * TUS目前在切换路由页面再回来组件重新加载场景下，从indexDB恢复旧的上传的情况下：不管那个记住方式都会从零开始重新上传，而不是接着上次暂停位置续传的，可能被中断很长的时间，集群#后端状态也没保存。
@@ -308,13 +309,91 @@ export function useUppyUpload({
         return newUppy
     }
 
+    const restoreUppyStateFromDB = React.useCallback(async () => {
+        if (!stateKey) return null;
+        try {
+            const savedState = await fileOperationsQueue.loadUppyState(stateKey!);
+            if (savedState) {
+                console.log(`[v0] Restored Uppy state for key: ${stateKey}`);
+                if (savedState.files && Array.isArray(savedState.files)) {
+                    const reconstructedFiles = savedState.files.map((file: any) => ({
+                        id: file.id,
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: file.data,
+                        meta: {
+                            name: file.name,
+                            type: file.type,
+                            lastModified: file.lastModified || Date.now(),
+                            ...file.meta // 保留其他 meta 信息
+                        },
+                        progress: {
+                            uploadComplete: false,
+                            percentage: file.progress?.percentage || 0
+                        }
+                    }));
+
+                    return {
+                        ...savedState,
+                        files: reconstructedFiles
+                    };
+                }
+                return savedState;
+            }
+        } catch (error) {
+            console.warn(`[v0] Failed to restore Uppy state:`, error);
+        }
+        return null;
+    }, [stateKey]);
+
     // 初始化 Uppy 实例
     React.useEffect(() => {
         if (!uppyInstance) {
-            const newUppy = createUppyInstance()
-            setUppyInstance(newUppy)
+            const initializeUppy = async () => {
+                const newUppy = createUppyInstance()
+
+                // 尝试从 indexDB 恢复之前的状态
+                const savedState = await restoreUppyStateFromDB()
+                if (savedState && savedState.files && savedState.files.length > 0) {
+                    try {
+                        if (savedState.meta) {
+                            newUppy.setMeta(savedState.meta)
+                        }
+
+                        // 单独恢复文件
+                        for (const file of savedState.files) {
+                            try {
+                                if (file.data) {
+                                    newUppy.addFile({
+                                        id: file.id,
+                                        name: file.name,
+                                        type: file.type,
+                                        data: file.data,
+                                        meta: {
+                                            name: file.name,
+                                            type: file.type,
+                                            lastModified: file.lastModified || Date.now()
+                                        }
+                                    })
+                                }
+                            } catch (error) {
+                                console.warn(`[v0] Failed to restore file ${file.name}:`, error)
+                            }
+                        }
+
+                        console.log(`[v0] Applied restored state to Uppy instance with ${savedState.files.length} files`)
+                    } catch (error) {
+                        console.warn(`[v0] Failed to apply saved state:`, error)
+                    }
+                }
+
+                setUppyInstance(newUppy)
+            }
+
+            initializeUppy()
         }
-    }, [repId, hash, maxFile]) // 移除 uploadMode 依赖
+    }, [id, repId, restoreUppyStateFromDB])
 
     // 当关键参数变化时重新初始化 Uppy 状态
     React.useEffect(() => {
@@ -451,11 +530,57 @@ export function useUppyUpload({
         // 组件挂载时清理一次
         cleanupTusLocalStorage()
         return () => {
-            if (uppyInstance) {
+            if (uppyInstance && stateKey) {
+                try {
+                    const currentState = uppyInstance.getState();
+                    const files = uppyInstance.getFiles().map(file => ({
+                        id: file.id,
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: file.data,
+                        lastModified: file.meta?.lastModified || Date.now(),
+                        progress: {
+                            uploadComplete: file.progress?.uploadComplete || false,
+                            percentage: file.progress?.percentage || 0
+                        }
+                    }));
+
+                    const snapshot = {
+                        key: stateKey,
+                        repId,
+                        subrid,
+                        hash: hash || "default",
+                        timestamp: Date.now(),
+                        files,
+                        meta: {
+                            ...currentState.meta,
+                            pendingDeleteOperations, // 保存待删除队列
+                        },
+                    };
+                    fileOperationsQueue.saveUppyState(snapshot);
+                    console.log(`[v0] Saved Uppy state on unmount for key: ${stateKey}`);
+                } catch (error) {
+                    console.warn(`[v0] Failed to save Uppy state on unmount:`, error);
+                }
+                try {
+                    const tusPlugin = uppyInstance.getPlugin('tus-upload')
+                    const xhrPlugin = uppyInstance.getPlugin('xhr-upload')
+
+                    if (tusPlugin) {
+                        uppyInstance.removePlugin(tusPlugin)
+                    }
+                    if (xhrPlugin) {
+                        uppyInstance.removePlugin(xhrPlugin)
+                    }
+                } catch (error) {
+                    console.warn(`[v0] Failed to remove plugins:`, error);
+                }
+
                 uppyInstance.destroy()
             }
         }
-    }, [uppyInstance, repId])
+    }, [uppyInstance, stateKey, pendingDeleteOperations])
     // 上传模式切换处理 - 动态切换插件版本
     const handleModeChange = async (mode: UploadMode) => {
         if (!uppyInstance) return
