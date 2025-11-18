@@ -6,7 +6,7 @@ import { useUppyUpload, type FileStore, type PendingDeleteOperation } from "./us
 import {fileOperationsQueue, generateUppyStateKey} from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
-import { Upload, FolderOpen, Trash2, RotateCcw } from "lucide-react"
+import { Upload, FolderOpen, Trash2, RotateCcw } from 'lucide-react'
 import { toast } from "sonner"
 import {stripOrigin} from "@/lib/utils";
 
@@ -503,20 +503,20 @@ export function useOfflineUppyUpload(params: {
                 return
             }
 
-            // 修复：正确获取文件数组，确保是数组类型
+            // 获取所有文件
             const allFiles = uppy.getFiles()
-            // 确保 files 是数组，不是对象
-            const filesArray =allFiles   //Array.isArray(allFiles) ? allFiles : Object.values(allFiles)
-            const files = filesArray.filter(file => {
-                // 排除已成功上传的文件
+
+            // 待删除的文件应该被保留，因为它们不属于已完成上传的范畴
+            const files = allFiles.filter(file => {
                 const isCompleted = file.progress?.uploadComplete &&
                     file.progress?.percentage === 100 &&
                     file.response?.uploadURL
                 if (isCompleted) {
                     console.log(`[OfflineUppy] 排除已成功上传文件: ${file.name}`)
                 }
-                return !isCompleted
+                return !isCompleted  // 只排除已完成的，待删除的文件会被保留
             })
+
             const currentPendingDeletes = pendingDeleteOperationsRef.current
 
             // 如果没有待上传文件且没有待删除操作，无需保存
@@ -528,7 +528,7 @@ export function useOfflineUppyUpload(params: {
             }
 
             // 修改：在提示信息中显示排除的文件数量
-            const excludedCount = filesArray.length - files.length
+            const excludedCount = allFiles.length - files.length
             if (excludedCount > 0) {
                 toast.info(`排除了 ${excludedCount} 个已成功上传的文件`)
             }

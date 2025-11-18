@@ -315,6 +315,12 @@ export function useUppyUpload({
             const savedState = await fileOperationsQueue.loadUppyState(stateKey!);
             if (savedState) {
                 console.log(`[v0] Restored Uppy state for key: ${stateKey}`);
+                // 恢复待删除操作
+                if (savedState.meta?.pendingDeleteOperations && Array.isArray(savedState.meta.pendingDeleteOperations)) {
+                    setPendingDeleteOperations(savedState.meta.pendingDeleteOperations);
+                    console.log(`[v0] Restored ${savedState.meta.pendingDeleteOperations.length} pending delete operations`);
+                }
+
                 if (savedState.files && Array.isArray(savedState.files)) {
                     const reconstructedFiles = savedState.files.map((file: any) => ({
                         id: file.id,
@@ -329,7 +335,7 @@ export function useUppyUpload({
                             ...file.meta // 保留其他 meta 信息
                         },
                         progress: {
-                            uploadComplete: false,
+                            uploadComplete: file.progress?.uploadComplete || false,
                             percentage: file.progress?.percentage || 0
                         }
                     }));
@@ -533,6 +539,12 @@ export function useUppyUpload({
             if (uppyInstance && stateKey) {
                 try {
                     const currentState = uppyInstance.getState();
+                    uppyInstance.setMeta({
+                        ...currentState.meta,
+                        pendingDeleteOperations,
+                    });
+
+                    // 获取所有待上传的文件（不排除待删除的）
                     const files = uppyInstance.getFiles().map(file => ({
                         id: file.id,
                         name: file.name,
@@ -555,7 +567,7 @@ export function useUppyUpload({
                         files,
                         meta: {
                             ...currentState.meta,
-                            pendingDeleteOperations, // 保存待删除队列
+                            pendingDeleteOperations,
                         },
                     };
                     fileOperationsQueue.saveUppyState(snapshot);
@@ -746,6 +758,7 @@ export function useUppyUpload({
     }
     React.useEffect(() => {
         if (externalPendingDeletes.length > 0) {
+            console.log(`[v0] Restoring ${externalPendingDeletes.length} external pending deletes`);
             setPendingDeleteOperations((prev) => {
                 const existingUrls = new Set(prev.map(op => op.deleteUrl));
                 const newOps = externalPendingDeletes.filter(op => !existingUrls.has(op.deleteUrl));
