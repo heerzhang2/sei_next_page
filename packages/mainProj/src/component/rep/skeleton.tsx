@@ -18,7 +18,7 @@ const GlobalEditorContainer = React.forwardRef<HTMLDivElement, {
         <div
             ref={ref}
             className={cn(
-                "px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom",
+                "global-editor-container px-0 md:py-1 border rounded-md bg-muted/50 overflow-auto touch-pan-y touch-pinch-zoom",
                 className
             )}
         >
@@ -26,6 +26,7 @@ const GlobalEditorContainer = React.forwardRef<HTMLDivElement, {
         </div>
     );
 });
+
 GlobalEditorContainer.displayName = "GlobalEditorContainer";
 
 /**
@@ -184,7 +185,7 @@ export default function Skeleton({
                             {memoizedRepPanel}
                         </div>
                     ) : (
-                        <div className="h-full" ref={mobileLandscapeSlotRef}>
+                        <div className="mobile-editor-slot h-full" ref={mobileLandscapeSlotRef}>
                             {/* 编辑器内容将动态插入这里 */}
                         </div>
                     )}
@@ -244,7 +245,7 @@ export default function Skeleton({
                             {memoizedRepPanel}
                         </div>
                     ) : (
-                        <div className="h-full" ref={mobilePortraitSlotRef}>
+                        <div className="mobile-editor-slot h-full" ref={mobilePortraitSlotRef}>
                             {/* 编辑器内容将动态插入这里 */}
                         </div>
                     )}
@@ -256,7 +257,7 @@ export default function Skeleton({
     return (
         <div className="flex flex-col">
             {/* 隐藏的编辑器容器 - 始终保持挂载状态 */}
-            <div style={{ display: 'none' }}>
+            <div className="hidden-editor-container">
                 <GlobalEditorContainer ref={globalEditorRef}>
                     <div ref={editorContentRef}>
                         {memoizedChildren}
@@ -299,7 +300,7 @@ export default function Skeleton({
                         leftPanel={desktopLeftPanel}
                         rightPanel={
                             <div className={cn("h-full flex flex-col editor-panel w-full")}>
-                                <div className="h-full" ref={desktopSlotRef}>
+                                <div className="editor-slot h-full" ref={desktopSlotRef}>
                                     {/* 编辑器内容将动态插入这里 */}
                                 </div>
                             </div>

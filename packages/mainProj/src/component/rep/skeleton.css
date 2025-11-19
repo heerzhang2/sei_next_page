@@ -28,6 +28,25 @@
     /*overflow: auto;*/
 }
 
+/* 新增：确保编辑器插槽有正确的高度和滚动 */
+.editor-slot {
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+/* 新增：确保全局编辑器容器在所有布局中都能正确滚动 */
+.global-editor-container {
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+    position: relative;
+}
+
+/* 隐藏的编辑器容器 */
+.hidden-editor-container {
+    display: none;
+}
 
 /* Custom styles for vertical tabs in landscape mode */
 @media (orientation: landscape) {
@@ -124,4 +143,29 @@
     .vertical-tab-trigger {
         min-height: 70px;
     }
+}
+
+/* 新增：确保 SplitViewSticky 中的内容能够正确滚动 */
+.split-view-sticky-container {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.split-view-sticky-container .split-view-panel {
+    height: 100%;
+    overflow: auto;
+}
+
+/* 新增：移动端编辑器内容滚动 */
+.mobile-editor-slot {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.mobile-editor-slot .global-editor-container {
+    height: 100%;
+    width: 100%;
+    overflow: auto;
 }
