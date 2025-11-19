@@ -1,3 +1,4 @@
+//src\report\industrial\Periodical\indPipelineR1.tsx
 "use client"
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
