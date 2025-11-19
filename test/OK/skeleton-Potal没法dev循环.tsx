@@ -114,20 +114,16 @@ export default function Skeleton({
     ), [memoizedRepPanel]);
 
     const desktopRightPanel = useMemo(() => (
-        <div className={cn("h-full flex flex-col editor-panel w-full", isSmallScreen && "hidden")}>
-            <GlobalEditorContainer>
-                {memoizedChildren}
-            </GlobalEditorContainer>
+        <div ref={setDesktopMount} className="h-full flex flex-col editor-panel w-full">
+            {/* Content is injected via Portal */}
         </div>
-    ), [isSmallScreen, memoizedChildren]);
+    ), []);
 
     const mobileEditorPanel = useMemo(() => (
-        <div className={cn("h-full w-full", !isSmallScreen && "hidden")}>
-            <GlobalEditorContainer>
-                {memoizedChildren}
-            </GlobalEditorContainer>
+        <div ref={setMobileMount} className="h-full w-full">
+            {/* Content is injected via Portal */}
         </div>
-    ), [isSmallScreen, memoizedChildren]);
+    ), []);
 
     const mobilePortraitTabs = useMemo(() => (
         <Tabs value={activeTab} className="flex flex-col h-full">
@@ -147,6 +143,7 @@ export default function Skeleton({
                             onClick={() => handleTabChange("preview")}
                         >
                             报告
+                            {/* 底部激活指示器 */}
                             {activeTab === "preview" && (
                                 <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-primary-foreground rounded-full z-20 bg-red-600" />
                             )}
@@ -165,6 +162,7 @@ export default function Skeleton({
                             onClick={() => handleTabChange("editor")}
                         >
                             编制
+                            {/* 底部激活指示器 */}
                             {activeTab === "editor" && (
                                 <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-primary-foreground rounded-full z-20 bg-red-600" />
                             )}
@@ -179,12 +177,12 @@ export default function Skeleton({
                             {memoizedRepPanel}
                         </div>
                     ) : (
-                        mobileEditorPanel
+                        desktopRightPanel
                     )}
                 </div>
             </div>
         </Tabs>
-    ), [activeTab, memoizedRepPanel, mobileEditorPanel]);
+    ), [activeTab, memoizedRepPanel, desktopRightPanel]);
 
     const mobileLandscapeTabs = useMemo(() => (
         <Tabs value={activeTab} className="w-full h-full flex flex-row">
@@ -236,15 +234,15 @@ export default function Skeleton({
                             {memoizedRepPanel}
                         </div>
                     ) : (
-                        mobileEditorPanel
+                        desktopRightPanel
                     )}
                 </div>
             </div>
         </Tabs>
-    ), [activeTab, memoizedRepPanel, mobileEditorPanel]);
+    ), [activeTab, memoizedRepPanel, desktopRightPanel]);
 
     // If the specific layout mount point is available, use it. Otherwise, use the fallback to keep it mounted.
-    const mountTarget = (isSmallScreen ? mobileMount : desktopMount) || fallbackMount;
+    const mountTarget = (isSmallScreen ? desktopMount : desktopMount) || fallbackMount;
 
     const isMobileLandscape = isSmallScreen && isLandscape;
     const isMobilePortrait = isSmallScreen && !isLandscape;
