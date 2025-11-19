@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SplitViewSticky } from "@/components/split-view-sticky";
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ const GlobalEditorContainer = React.forwardRef<HTMLDivElement, {
 GlobalEditorContainer.displayName = "GlobalEditorContainer";
 
 /**
- * 报告记录结合显示的框架 - 使用隐藏容器保持状态
+ * 报告记录结合显示的框架 - 简化版本
  */
 export default function Skeleton({
                                      children,
@@ -45,12 +45,6 @@ export default function Skeleton({
     const [isLandscape, setIsLandscape] = useState(false);
 
     const globalEditorRef = useRef<HTMLDivElement>(null);
-    const editorContentRef = useRef<HTMLDivElement>(null);
-
-    // 编辑器插槽引用
-    const desktopSlotRef = useRef<HTMLDivElement>(null);
-    const mobileLandscapeSlotRef = useRef<HTMLDivElement>(null);
-    const mobilePortraitSlotRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleResize = () => {
@@ -66,39 +60,6 @@ export default function Skeleton({
             window.removeEventListener("resize", handleResize);
         };
     }, []);
-
-    // 移动编辑器内容到当前激活的插槽
-    useEffect(() => {
-        if (!editorContentRef.current) return;
-
-        let targetSlot: HTMLElement | null = null;
-
-        if (!isSmallScreen) {
-            // 桌面模式
-            targetSlot = desktopSlotRef.current;
-        } else if (activeTab === 'editor') {
-            // 移动模式且编辑器标签激活
-            if (isLandscape) {
-                targetSlot = mobileLandscapeSlotRef.current;
-            } else {
-                targetSlot = mobilePortraitSlotRef.current;
-            }
-        }
-
-        // 如果找到目标插槽且编辑器内容不在该插槽中，则移动
-        if (targetSlot && editorContentRef.current.parentElement !== targetSlot) {
-            // 保存滚动位置
-            const scrollTop = globalEditorRef.current?.scrollTop || 0;
-
-            // 移动编辑器内容
-            targetSlot.appendChild(editorContentRef.current);
-
-            // 恢复滚动位置
-            if (globalEditorRef.current) {
-                globalEditorRef.current.scrollTop = scrollTop;
-            }
-        }
-    }, [isSmallScreen, isLandscape, activeTab]);
 
     const handleTabChange = (value: ReportPanelType) => {
         setActiveTab(value);
@@ -134,6 +95,24 @@ export default function Skeleton({
             <div className="overflow-auto flex-1 @container">{memoizedRepPanel}</div>
         </div>
     ), [memoizedRepPanel]);
+
+    // 桌面端右侧面板 - 直接包含编辑器
+    const desktopRightPanel = useMemo(() => (
+        <div className={cn("h-full flex flex-col editor-panel w-full")}>
+            <GlobalEditorContainer ref={globalEditorRef}>
+                {memoizedChildren}
+            </GlobalEditorContainer>
+        </div>
+    ), [memoizedChildren]);
+
+    // 移动端编辑器面板
+    const mobileEditorPanel = useMemo(() => (
+        <div className="h-full w-full">
+            <GlobalEditorContainer ref={globalEditorRef}>
+                {memoizedChildren}
+            </GlobalEditorContainer>
+        </div>
+    ), [memoizedChildren]);
 
     // 移动端横屏布局
     const mobileLandscapeTabs = useMemo(() => (
@@ -184,14 +163,12 @@ export default function Skeleton({
                             {memoizedRepPanel}
                         </div>
                     ) : (
-                        <div className="h-full" ref={mobileLandscapeSlotRef}>
-                            {/* 编辑器内容将动态插入这里 */}
-                        </div>
+                        mobileEditorPanel
                     )}
                 </div>
             </div>
         </Tabs>
-    ), [activeTab, memoizedRepPanel]);
+    ), [activeTab, memoizedRepPanel, mobileEditorPanel]);
 
     // 移动端竖屏布局
     const mobilePortraitTabs = useMemo(() => (
@@ -244,26 +221,15 @@ export default function Skeleton({
                             {memoizedRepPanel}
                         </div>
                     ) : (
-                        <div className="h-full" ref={mobilePortraitSlotRef}>
-                            {/* 编辑器内容将动态插入这里 */}
-                        </div>
+                        mobileEditorPanel
                     )}
                 </div>
             </div>
         </Tabs>
-    ), [activeTab, memoizedRepPanel]);
+    ), [activeTab, memoizedRepPanel, mobileEditorPanel]);
 
     return (
         <div className="flex flex-col">
-            {/* 隐藏的编辑器容器 - 始终保持挂载状态 */}
-            <div style={{ display: 'none' }}>
-                <GlobalEditorContainer ref={globalEditorRef}>
-                    <div ref={editorContentRef}>
-                        {memoizedChildren}
-                    </div>
-                </GlobalEditorContainer>
-            </div>
-
             {/* 滚动按钮 */}
             {needScrollBtn && (
                 <div className={cn("fixed top-6 right-8 gap-7 flex z-40", scrollBtnCls)}>
@@ -286,7 +252,7 @@ export default function Skeleton({
                 </div>
             )}
 
-            {/* 统一容器 - 同时渲染所有布局，通过CSS控制显示 */}
+            {/* 统一容器 - 始终渲染所有布局，用 CSS 控制显示 */}
             <div className="relative w-full h-screen">
                 {/* 桌面模式 */}
                 <div className={cn("absolute inset-0", isDesktop ? "block" : "hidden")}>
@@ -297,13 +263,7 @@ export default function Skeleton({
                         minRightWidth={0}
                         independentScrolling={true}
                         leftPanel={desktopLeftPanel}
-                        rightPanel={
-                            <div className={cn("h-full flex flex-col editor-panel w-full")}>
-                                <div className="h-full" ref={desktopSlotRef}>
-                                    {/* 编辑器内容将动态插入这里 */}
-                                </div>
-                            </div>
-                        }
+                        rightPanel={desktopRightPanel}
                         sticky={true}
                     />
                 </div>
