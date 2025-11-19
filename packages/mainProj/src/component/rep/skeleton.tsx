@@ -6,20 +6,17 @@ import { Button } from "@/components/ui/button";
 import { SplitViewSticky } from "@/components/split-view-sticky";
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type React from "react";
-import { useMemo, useState, useEffect, useRef, forwardRef } from "react";
-import { createPortal } from "react-dom"; // Added createPortal import
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider";
 import { cn } from "@/lib/utils";
 
-const GlobalEditorContainer = forwardRef<HTMLDivElement, {
-    children: React.ReactNode,
-    className?: string,
+const GlobalEditorContainer = React.forwardRef<HTMLDivElement, {
+    children: React.ReactNode;
+    className?: string;
 }>(({ children, className = "" }, ref) => {
     return (
         <div
             ref={ref}
-            id="global-editor-container"
             className={cn(
                 "px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom",
                 className
@@ -31,22 +28,8 @@ const GlobalEditorContainer = forwardRef<HTMLDivElement, {
 });
 GlobalEditorContainer.displayName = "GlobalEditorContainer";
 
-const EditorPortal = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
-    return (
-        <div
-            id="global-editor-portal"
-            className={cn(
-                "px-0 md:py-1 border rounded-md bg-muted/50 h-full overflow-auto touch-pan-y touch-pinch-zoom",
-                className
-            )}
-        >
-            {children}
-        </div>
-    );
-};
-
 /**
- * 报告记录结合显示的框架
+ * 报告记录结合显示的框架 - 简化版本
  */
 export default function Skeleton({
                                      children,
@@ -61,11 +44,6 @@ export default function Skeleton({
     const { activeTab, setActiveTab } = useEditControlContext();
     const [isLandscape, setIsLandscape] = useState(false);
 
-    const [desktopMount, setDesktopMount] = useState<HTMLElement | null>(null);
-    const [mobileMount, setMobileMount] = useState<HTMLElement | null>(null);
-    const [fallbackMount, setFallbackMount] = useState<HTMLElement | null>(null);
-
-    // 统一的编辑器容器 ref
     const globalEditorRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -107,28 +85,92 @@ export default function Skeleton({
     const memoizedChildren = useMemo(() => children, [children]);
     const memoizedRepPanel = useMemo(() => repPanel, [repPanel]);
 
+    const isDesktop = !isSmallScreen;
+    const isMobileLandscape = isSmallScreen && isLandscape;
+    const isMobilePortrait = isSmallScreen && !isLandscape;
+
+    // 桌面端左侧面板
     const desktopLeftPanel = useMemo(() => (
         <div className="flex flex-col h-screen">
             <div className="overflow-auto flex-1 @container">{memoizedRepPanel}</div>
         </div>
     ), [memoizedRepPanel]);
 
+    // 桌面端右侧面板 - 直接包含编辑器
     const desktopRightPanel = useMemo(() => (
-        <div className={cn("h-full flex flex-col editor-panel w-full", isSmallScreen && "hidden")}>
-            <GlobalEditorContainer>
+        <div className={cn("h-full flex flex-col editor-panel w-full")}>
+            <GlobalEditorContainer ref={globalEditorRef}>
                 {memoizedChildren}
             </GlobalEditorContainer>
         </div>
-    ), [isSmallScreen, memoizedChildren]);
+    ), [memoizedChildren]);
 
+    // 移动端编辑器面板
     const mobileEditorPanel = useMemo(() => (
-        <div className={cn("h-full w-full", !isSmallScreen && "hidden")}>
-            <GlobalEditorContainer>
+        <div className="h-full w-full">
+            <GlobalEditorContainer ref={globalEditorRef}>
                 {memoizedChildren}
             </GlobalEditorContainer>
         </div>
-    ), [isSmallScreen, memoizedChildren]);
+    ), [memoizedChildren]);
 
+    // 移动端横屏布局
+    const mobileLandscapeTabs = useMemo(() => (
+        <Tabs value={activeTab} className="w-full h-full flex flex-row">
+            <div className="flex-shrink-0 h-full bg-muted/30 border-r w-20">
+                <TabsList className="flex flex-col h-full py-4 space-y-4 vertical-tabs-list w-full">
+                    <TabsTrigger
+                        value="preview"
+                        className={`
+              vertical-tab-trigger px-3 py-6 relative transition-all duration-200 w-full
+              ${
+                            activeTab === "preview"
+                                ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
+                                : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
+                        }
+            `}
+                        onClick={() => handleTabChange("preview")}
+                    >
+                        <span className="vertical-text font-medium">报告</span>
+                        {activeTab === "preview" && (
+                            <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
+                        )}
+                    </TabsTrigger>
+
+                    <TabsTrigger
+                        value="editor"
+                        className={`
+              vertical-tab-trigger px-3 py-6 relative transition-all duration-200 w-full
+              ${
+                            activeTab === "editor"
+                                ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
+                                : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
+                        }
+            `}
+                        onClick={() => handleTabChange("editor")}
+                    >
+                        <span className="vertical-text font-medium">编制</span>
+                        {activeTab === "editor" && (
+                            <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
+                        )}
+                    </TabsTrigger>
+                </TabsList>
+            </div>
+            <div className="flex-1 flex flex-col min-w-0">
+                <div className="h-full">
+                    {activeTab === "preview" ? (
+                        <div className="h-full overflow-auto @container">
+                            {memoizedRepPanel}
+                        </div>
+                    ) : (
+                        mobileEditorPanel
+                    )}
+                </div>
+            </div>
+        </Tabs>
+    ), [activeTab, memoizedRepPanel, mobileEditorPanel]);
+
+    // 移动端竖屏布局
     const mobilePortraitTabs = useMemo(() => (
         <Tabs value={activeTab} className="flex flex-col h-full">
             <div className="sticky top-0 bg-white border-b shadow-sm z-10">
@@ -137,13 +179,13 @@ export default function Skeleton({
                         <TabsTrigger
                             value="preview"
                             className={`
-                        h-6 relative transition-all duration-300 font-medium overflow-visible
-                        ${
+                h-6 relative transition-all duration-300 font-medium overflow-visible
+                ${
                                 activeTab === "preview"
                                     ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20"
                                     : "bg-muted/30 hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
                             }
-                      `}
+              `}
                             onClick={() => handleTabChange("preview")}
                         >
                             报告
@@ -155,13 +197,13 @@ export default function Skeleton({
                         <TabsTrigger
                             value="editor"
                             className={`
-                        h-6 relative transition-all duration-300 font-medium overflow-visible
-                        ${
+                h-6 relative transition-all duration-300 font-medium overflow-visible
+                ${
                                 activeTab === "editor"
                                     ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20"
                                     : "bg-muted/30 hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
                             }
-                      `}
+              `}
                             onClick={() => handleTabChange("editor")}
                         >
                             编制
@@ -186,82 +228,9 @@ export default function Skeleton({
         </Tabs>
     ), [activeTab, memoizedRepPanel, mobileEditorPanel]);
 
-    const mobileLandscapeTabs = useMemo(() => (
-        <Tabs value={activeTab} className="w-full h-full flex flex-row">
-            <div className="flex-shrink-0 h-full bg-muted/30 border-r w-20">
-                <TabsList className="flex flex-col h-full py-4 space-y-4 vertical-tabs-list w-full">
-                    <TabsTrigger
-                        value="preview"
-                        className={`
-                                            vertical-tab-trigger px-3 py-6 relative transition-all duration-200 w-full
-                                            ${
-                            activeTab === "preview"
-                                ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
-                                : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                        }
-                                              `}
-                        onClick={() => handleTabChange("preview")}
-                    >
-                        <span className="vertical-text font-medium">报告</span>
-                        {/* 激活指示器 */}
-                        {activeTab === "preview" && (
-                            <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
-                        )}
-                    </TabsTrigger>
-
-                    <TabsTrigger
-                        value="editor"
-                        className={`
-                                            vertical-tab-trigger px-3 py-6 relative transition-all duration-200 w-full
-                                            ${
-                            activeTab === "editor"
-                                ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
-                                : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
-                        }
-                                              `}
-                        onClick={() => handleTabChange("editor")}
-                    >
-                        <span className="vertical-text font-medium">编制</span>
-                        {/* 激活指示器 */}
-                        {activeTab === "editor" && (
-                            <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
-                        )}
-                    </TabsTrigger>
-                </TabsList>
-            </div>
-            <div className="flex-1 flex flex-col min-w-0">
-                <div className="h-full">
-                    {activeTab === "preview" ? (
-                        <div className="h-full overflow-auto @container">
-                            {memoizedRepPanel}
-                        </div>
-                    ) : (
-                        mobileEditorPanel
-                    )}
-                </div>
-            </div>
-        </Tabs>
-    ), [activeTab, memoizedRepPanel, mobileEditorPanel]);
-
-    // If the specific layout mount point is available, use it. Otherwise, use the fallback to keep it mounted.
-    const mountTarget = (isSmallScreen ? mobileMount : desktopMount) || fallbackMount;
-
-    const isMobileLandscape = isSmallScreen && isLandscape;
-    const isMobilePortrait = isSmallScreen && !isLandscape;
-    const isDesktop = !isSmallScreen;
-
     return (
         <div className="flex flex-col">
-            {/* This ensures the component instance is never unmounted, preserving state */}
-            {mountTarget && createPortal(
-                <GlobalEditorContainer ref={globalEditorRef}>
-                    {memoizedChildren}
-                </GlobalEditorContainer>,
-                mountTarget
-            )}
-
-            <div ref={setFallbackMount} className="hidden" />
-
+            {/* 滚动按钮 */}
             {needScrollBtn && (
                 <div className={cn("fixed top-6 right-8 gap-7 flex z-40", scrollBtnCls)}>
                     <Button
