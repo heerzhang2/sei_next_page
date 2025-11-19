@@ -1,4 +1,4 @@
-//src\component\rep\skeleton.tsx
+// src\component\rep\skeleton.tsx
 "use client";
 
 import "./skeleton.css";
@@ -6,17 +6,26 @@ import { Button } from "@/components/ui/button";
 import { SplitViewSticky } from "@/components/split-view-sticky";
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider";
 import { cn } from "@/lib/utils";
 
-const GlobalEditorContainer = React.forwardRef<HTMLDivElement, {
+/**
+ * GlobalEditorContainer - React 19 版本
+ * 利用 React 19 函数组件可以直接接收 ref 的特性
+ */
+const GlobalEditorContainer = ({
+                                   children,
+                                   className = "",
+                                   ref, // 直接接收 ref 作为 props
+                               }: {
     children: React.ReactNode;
     className?: string;
-}>(({ children, className = "" }, ref) => {
+    ref?: React.Ref<HTMLDivElement>; // 明确声明 ref prop 的类型
+}) => {
     return (
         <div
-            ref={ref}
+            ref={ref} // 将接收到的 ref 应用到 DOM 元素上
             className={cn(
                 "global-editor-container px-0 md:py-1 border rounded-md bg-muted/50 overflow-auto touch-pan-y touch-pinch-zoom",
                 className
@@ -25,9 +34,7 @@ const GlobalEditorContainer = React.forwardRef<HTMLDivElement, {
             {children}
         </div>
     );
-});
-
-GlobalEditorContainer.displayName = "GlobalEditorContainer";
+};
 
 export default function Skeleton({
                                      children,
