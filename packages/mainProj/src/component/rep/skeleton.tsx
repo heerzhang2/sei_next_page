@@ -239,13 +239,13 @@ export default function Skeleton({
                 </div>
             </div>
             <div className="flex-1">
-                <div className="h-[calc(100vh-33px)]">
+                <div className="h-full min-h-0">
                     {activeTab === "preview" ? (
                         <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto @container">
                             {memoizedRepPanel}
                         </div>
                     ) : (
-                        <div className="mobile-editor-slot h-full" ref={mobilePortraitSlotRef}>
+                        <div className="mobile-editor-slot h-full debug" ref={mobilePortraitSlotRef}>
                             {/* 编辑器内容将动态插入这里 */}
                         </div>
                     )}

@@ -218,19 +218,19 @@ export function SplitViewSticky({
         <div className={cn("bg-border", isVertical ? "w-[1px] h-8" : "h-[1px] w-8")} />
       </div>
 
-      { rightPanel &&
-          <div
-              //底下的overflow-auto h-full导致异常滚动条情况，改成overflow-hidden h-full
-              className={cn(independentScrolling ? "overflow-hidden h-full" : "overflow-auto",
-                  sticky? "sticky top-0":""
-              )}
-              style={{
+    { rightPanel &&
+        <div
+            className={cn(
+                independentScrolling ? "overflow-auto h-full" : "overflow-auto", // 确保是 overflow-auto
+                sticky ? "sticky top-0" : ""
+            )}
+            style={{
                 [isVertical ? "width" : "height"]: `${100 - splitPosition}%`,
-              }}
-          >
+            }}
+        >
             {rightPanel}
-          </div>
-      }
+        </div>
+    }
     </div>
   )
 }
