@@ -10,32 +10,6 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider";
 import { cn } from "@/lib/utils";
 
-/**
- * GlobalEditorContainer - React 19 版本
- * 利用 React 19 函数组件可以直接接收 ref 的特性
- */
-// const GlobalEditorContainer = ({
-//                                    children,
-//                                    className = "",
-//                                    ref, // 直接接收 ref 作为 props
-//                                }: {
-//     children: React.ReactNode;
-//     className?: string;
-//     ref?: React.Ref<HTMLDivElement>; // 明确声明 ref prop 的类型
-// }) => {
-//     return (
-//         <div
-//             ref={ref} // 将接收到的 ref 应用到 DOM 元素上
-//             className={cn(
-//                 "global-editor-container px-0 md:py-1 border rounded-md bg-muted/50 overflow-auto touch-pan-y touch-pinch-zoom",
-//                 className
-//             )}
-//         >
-//             {children}
-//         </div>
-//     );
-// };
-
 export default function Skeleton({
                                      children,
                                      repPanel,
@@ -272,7 +246,7 @@ export default function Skeleton({
     ), [activeTab, memoizedRepPanel]);
 
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col h-screen">
             {/* 隐藏的编辑器容器 */}
             <div className="hidden-editor-container" ref={hiddenContainerRef}>
                 {/* 不再需要 GlobalEditorContainer 包裹，或者保留但不传 ref */}
@@ -297,33 +271,25 @@ export default function Skeleton({
                 </div>
             )}
 
-            {/* 统一容器 - 同时渲染所有布局，通过CSS控制显示 */}
-            <div className="relative w-full h-screen">
-                {/* 桌面模式 */}
-                <div className={cn("absolute inset-0", isDesktop ? "block" : "hidden")}>
-                    <SplitViewSticky
-                        className="overflow-hidden"
-                        defaultSplit={50}
-                        minLeftWidth={0}
-                        minRightWidth={0}
-                        independentScrolling={true}
-                        leftPanel={desktopLeftPanel}
-                        rightPanel={
-                            <div className={cn("h-full flex flex-col editor-panel w-full")}>
-                                <div className="editor-slot h-full" ref={desktopSlotRef}>
-                                    {/* 编辑器内容将动态插入这里 */}
-                                </div>
+            {/* 直接根据条件渲染，不再用 absolute 容器包裹 */}
+            {isDesktop ? (
+                <SplitViewSticky
+                    className="flex-1 overflow-hidden" // 使用 flex-1 填充剩余空间
+                    independentScrolling={true}
+                    leftPanel={desktopLeftPanel}
+                    rightPanel={
+                        <div className={cn("h-full flex flex-col editor-panel w-full")}>
+                            <div className="editor-slot h-full" ref={desktopSlotRef}>
+                                {/* 编辑器内容将动态插入这里 */}
                             </div>
-                        }
-                        sticky={true}
-                    />
-                </div>
-
-                {/* 移动端布局容器 */}
-                <div className={cn("absolute inset-0 bg-background", isSmallScreen ? "block" : "hidden")}>
-                    {isMobileLandscape ? mobileLandscapeTabs : mobilePortraitTabs}
-                </div>
-            </div>
+                        </div>
+                    }
+                    sticky={true}
+                />
+            ) : (
+                // 移动端布局直接渲染，不包裹在 absolute div 内
+                isMobileLandscape ? mobileLandscapeTabs : mobilePortraitTabs
+            )}
         </div>
     );
 }
