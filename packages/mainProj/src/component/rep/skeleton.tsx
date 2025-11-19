@@ -128,21 +128,22 @@ export default function Skeleton({
     // 移动端横屏布局 - 修复：确保报告标签下不显示编辑器内容
     const mobileLandscapeTabs = useMemo(() => (
         <Tabs value={activeTab} className="w-full h-full flex flex-row">
-            <div className="flex-shrink-0 h-full bg-muted/30 border-r w-6">
-                <TabsList className="flex flex-col h-full py-4 space-y-4 vertical-tabs-list w-full">
+            <div className="sticky top-0 h-full flex items-center pt-10">
+                <TabsList className="flex flex-col h-auto py-4 space-y-4 bg-muted/30 vertical-tabs-list border-r">
                     <TabsTrigger
                         value="preview"
                         className={`
-              vertical-tab-trigger px-3 py-6 relative transition-all duration-200 w-full
-              ${
+                                                        vertical-tab-trigger px-3 py-6 relative transition-all duration-200
+                                                        ${
                             activeTab === "preview"
                                 ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
                                 : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
                         }
-            `}
+                                                      `}
                         onClick={() => handleTabChange("preview")}
                     >
                         <span className="vertical-text font-medium">报告</span>
+                        {/* 激活指示器 */}
                         {activeTab === "preview" && (
                             <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
                         )}
@@ -151,16 +152,17 @@ export default function Skeleton({
                     <TabsTrigger
                         value="editor"
                         className={`
-              vertical-tab-trigger px-3 py-6 relative transition-all duration-200 w-full
-              ${
+                                                        vertical-tab-trigger px-3 py-6 relative transition-all duration-200
+                                                        ${
                             activeTab === "editor"
                                 ? "bg-primary text-primary-foreground shadow-md border-2 border-primary/20 scale-105"
                                 : "bg-background hover:bg-muted border-2 border-transparent hover:border-muted-foreground/20"
                         }
-            `}
+                                                      `}
                         onClick={() => handleTabChange("editor")}
                     >
                         <span className="vertical-text font-medium">编制</span>
+                        {/* 激活指示器 */}
                         {activeTab === "editor" && (
                             <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
                         )}
@@ -256,21 +258,26 @@ export default function Skeleton({
                     </div>
                 </div>
             </div>
-
-            {/* 滚动按钮 (保持不变) */}
             {needScrollBtn && (
                 <div className={cn("fixed top-6 right-8 gap-7 flex z-40", scrollBtnCls)}>
-                    <Button variant="outline" className="..." onClick={scrollToTop}>
+                    <Button
+                        variant="outline"
+                        className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
+                        onClick={scrollToTop}
+                    >
                         <ChevronUp className="h-3 w-3" />
                         <span className="sr-only">滚动到头</span>
                     </Button>
-                    <Button variant="outline" className="..." onClick={scrollToBottom}>
+                    <Button
+                        variant="outline"
+                        className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0" // 关键修改
+                        onClick={scrollToBottom}
+                    >
                         <ChevronDown className="h-3 w-3" />
                         <span className="sr-only">滚动到底</span>
                     </Button>
                 </div>
             )}
-
             {/* 直接根据条件渲染，不再用 absolute 容器包裹 */}
             {isDesktop ? (
                 <SplitViewSticky

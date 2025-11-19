@@ -504,7 +504,7 @@ export function RepFootLink({
                 className={cn(
                     "flex justify-center",
                     "fixed bottom-4 -translate-x-1/2 z-50",
-                    screenHeight! < 500 ? "left-20" : screenWidth! < 500 ? "left-8 bottom-8" : "left-1/2",
+                    screenHeight! < 500 ? "left-40" : screenWidth! < 500 ? "left-32 bottom-8" : "left-72",
                 )}
             >
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -522,9 +522,9 @@ export function RepFootLink({
                                 "transition-all duration-200", // 新增：过渡动画
                                 "opacity-90", // 新增：基础透明度
                                 screenHeight! < 500
-                                    ? "h-4 w-10 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
+                                    ? "h-6 w-10 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
                                     : screenWidth! < 500
-                                        ? "h-6 w-6 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
+                                        ? "h-8 w-8 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
                                         : "",
                             )}
                             data-scroll-ignore="true"

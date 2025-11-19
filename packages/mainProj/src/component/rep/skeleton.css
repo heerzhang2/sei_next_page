@@ -58,39 +58,47 @@
     /* Make the TabsList vertical and compact */
     .vertical-tabs-list {
         width: auto !important;
-        min-width: 28px !important; /* 减小最小宽度，从之前的 60px 调整 */
         background-color: transparent !important;
-        border-right: 1px solid hsl(var(--border));
+        border-right: 3px solid hsl(var(--primary)); /* 改为 3px 更粗的边框 */
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* 添加阴影效果使边线更明显 */
         padding: 0 !important;
+        position: sticky;
+        top: 0;
         align-self: stretch;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        height: 100%;
+        justify-content: center;
     }
-
+    /* 新增：为移动端横屏的 TabsList 添加更明显的边线 */
+    @media (max-width: 1024px) {
+        .vertical-tabs-list {
+            border-right: 4px solid hsl(var(--primary)); /* 移动端横屏使用更粗的边框 */
+            box-shadow: 3px 0 12px rgba(0, 0, 0, 0.15); /* 更强的阴影 */
+        }
+    }
     /* Style the vertical tab triggers */
     .vertical-tab-trigger {
         height: auto !important;
-        padding: 2px 1px !important;
+        padding: 16px 1px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        margin: 4px 0; /* 可选：减小垂直间距 */
     }
 
     /* Vertical text orientation */
     .vertical-text {
         writing-mode: vertical-lr;
         text-orientation: mixed;
+        /*transform: rotate(180deg);*/
         white-space: nowrap;
-        font-size: 12px; /* 可选：略微减小字体 */
-        letter-spacing: 0.3px; /* 可选：微调字间距 */
+        font-size: 14px;
+        letter-spacing: 0.5px;
     }
 
     /* Active state styling */
     .vertical-tab-trigger[data-state="active"] {
+        background-color: hsl(var(--primary)) !important;
         color: hsl(var(--primary-foreground)) !important;
     }
 
