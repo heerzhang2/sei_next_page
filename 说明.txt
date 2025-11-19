@@ -520,3 +520,28 @@ https://www.tongyi.com/qianwen?sessionId=275c85e8c60547bb901d783f59bfb7a3
         console.log("✅ Page mounted");
         return () => console.log("❌ Page unmounted");
     }, []);
+
+
+开发模式运行依旧报错Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+
+src\components\error-boundary-wrapper.tsx (12:10) @ ErrorBoundaryWrapper
+
+ 10 |
+
+ 11 | export function ErrorBoundaryWrapper({ children }: ErrorBoundaryWrapperProps) {
+
+> 12 |   return <ErrorBoundary FallbackComponent={ErrorFallback}>{children}</ErrorBoundary>
+
+    |          ^
+
+ 13 | }
+
+ 14 |
+
+Call Stack53
+
+Show 51 ignore-listed frame(s)
+
+ErrorBoundaryWrapper
+
+src\components\error-boundary-wrapper.tsx (12:10) 具体日志看console/log2.txt 。问题2：生产环境运行没有这个报错，可惜桌面模式和手机移动端模式切换时刻依然存在老问题：重新加载，丢失状态的问题！
