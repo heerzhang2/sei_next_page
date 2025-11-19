@@ -58,7 +58,7 @@
     /* Make the TabsList vertical and compact */
     .vertical-tabs-list {
         width: auto !important;
-        min-width: 60px !important;
+        min-width: 28px !important; /* 减小最小宽度，从之前的 60px 调整 */
         background-color: transparent !important;
         border-right: 1px solid hsl(var(--border));
         padding: 0 !important;
@@ -72,28 +72,25 @@
 
     /* Style the vertical tab triggers */
     .vertical-tab-trigger {
-        width: 100% !important;
         height: auto !important;
-        padding: 16px 4px !important;
+        padding: 2px 1px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        margin: 8px 0;
+        margin: 4px 0; /* 可选：减小垂直间距 */
     }
 
     /* Vertical text orientation */
     .vertical-text {
         writing-mode: vertical-lr;
         text-orientation: mixed;
-        /*transform: rotate(180deg);*/
         white-space: nowrap;
-        font-size: 14px;
-        letter-spacing: 0.5px;
+        font-size: 12px; /* 可选：略微减小字体 */
+        letter-spacing: 0.3px; /* 可选：微调字间距 */
     }
 
     /* Active state styling */
     .vertical-tab-trigger[data-state="active"] {
-        background-color: hsl(var(--primary)) !important;
         color: hsl(var(--primary-foreground)) !important;
     }
 
@@ -102,6 +99,7 @@
         padding-left: 8px !important;
     }
 }
+
 
 /* Ensure the tabs container takes full height */
 @media (orientation: landscape) {

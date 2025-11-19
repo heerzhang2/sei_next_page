@@ -128,7 +128,7 @@ export default function Skeleton({
     // 移动端横屏布局 - 修复：确保报告标签下不显示编辑器内容
     const mobileLandscapeTabs = useMemo(() => (
         <Tabs value={activeTab} className="w-full h-full flex flex-row">
-            <div className="flex-shrink-0 h-full bg-muted/30 border-r w-20">
+            <div className="flex-shrink-0 h-full bg-muted/30 border-r w-6">
                 <TabsList className="flex flex-col h-full py-4 space-y-4 vertical-tabs-list w-full">
                     <TabsTrigger
                         value="preview"
