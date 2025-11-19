@@ -14,27 +14,27 @@ import { cn } from "@/lib/utils";
  * GlobalEditorContainer - React 19 版本
  * 利用 React 19 函数组件可以直接接收 ref 的特性
  */
-const GlobalEditorContainer = ({
-                                   children,
-                                   className = "",
-                                   ref, // 直接接收 ref 作为 props
-                               }: {
-    children: React.ReactNode;
-    className?: string;
-    ref?: React.Ref<HTMLDivElement>; // 明确声明 ref prop 的类型
-}) => {
-    return (
-        <div
-            ref={ref} // 将接收到的 ref 应用到 DOM 元素上
-            className={cn(
-                "global-editor-container px-0 md:py-1 border rounded-md bg-muted/50 overflow-auto touch-pan-y touch-pinch-zoom",
-                className
-            )}
-        >
-            {children}
-        </div>
-    );
-};
+// const GlobalEditorContainer = ({
+//                                    children,
+//                                    className = "",
+//                                    ref, // 直接接收 ref 作为 props
+//                                }: {
+//     children: React.ReactNode;
+//     className?: string;
+//     ref?: React.Ref<HTMLDivElement>; // 明确声明 ref prop 的类型
+// }) => {
+//     return (
+//         <div
+//             ref={ref} // 将接收到的 ref 应用到 DOM 元素上
+//             className={cn(
+//                 "global-editor-container px-0 md:py-1 border rounded-md bg-muted/50 overflow-auto touch-pan-y touch-pinch-zoom",
+//                 className
+//             )}
+//         >
+//             {children}
+//         </div>
+//     );
+// };
 
 export default function Skeleton({
                                      children,
@@ -49,7 +49,7 @@ export default function Skeleton({
     const { activeTab, setActiveTab } = useEditControlContext();
     const [isLandscape, setIsLandscape] = useState(false);
 
-    const globalEditorRef = useRef<HTMLDivElement>(null);
+    // const globalEditorRef = useRef<HTMLDivElement>(null);
     const editorContentRef = useRef<HTMLDivElement>(null);
     const hiddenContainerRef = useRef<HTMLDivElement>(null);
 
@@ -98,15 +98,16 @@ export default function Skeleton({
 
         // 如果找到目标插槽且编辑器内容不在该插槽中，则移动
         if (targetSlot && editorContentRef.current.parentElement !== targetSlot) {
-            // 保存滚动位置
-            const scrollTop = globalEditorRef.current?.scrollTop || 0;
+            // 保存滚动位置：获取当前父容器的 scrollTop
+            const currentParent = editorContentRef.current.parentElement;
+            const scrollTop = currentParent ? currentParent.scrollTop : 0;
 
             // 移动编辑器内容
             targetSlot.appendChild(editorContentRef.current);
 
-            // 恢复滚动位置
-            if (globalEditorRef.current) {
-                globalEditorRef.current.scrollTop = scrollTop;
+            // 恢复滚动位置：设置新父容器的 scrollTop
+            if (targetSlot !== hiddenContainerRef.current) { // 如果不是移到隐藏容器
+                targetSlot.scrollTop = scrollTop;
             }
         }
     }, [isSmallScreen, isLandscape, activeTab]);
@@ -116,15 +117,19 @@ export default function Skeleton({
     };
 
     const scrollToTop = () => {
-        globalEditorRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+        const parent = editorContentRef.current?.parentElement;
+        if (parent) {
+            parent.scrollTop = 0; // 或者使用 parent.scrollTo({ top: 0, behavior: 'smooth' })
+        }
     };
 
     const scrollToBottom = () => {
-        if (globalEditorRef.current) {
-            globalEditorRef.current.scrollTo({
-                top: globalEditorRef.current.scrollHeight,
-                behavior: "smooth",
-            });
+        const element = editorContentRef.current;
+        if (element) {
+            const parent = element.parentElement;
+            if (parent) {
+                parent.scrollTop = parent.scrollHeight; // 或者使用 parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' })
+            }
         }
     };
 
@@ -268,31 +273,24 @@ export default function Skeleton({
 
     return (
         <div className="flex flex-col">
-            {/* 隐藏的编辑器容器 - 始终保持挂载状态 */}
+            {/* 隐藏的编辑器容器 */}
             <div className="hidden-editor-container" ref={hiddenContainerRef}>
-                <GlobalEditorContainer ref={globalEditorRef}>
+                {/* 不再需要 GlobalEditorContainer 包裹，或者保留但不传 ref */}
+                <div className="global-editor-container">
                     <div ref={editorContentRef}>
                         {memoizedChildren}
                     </div>
-                </GlobalEditorContainer>
+                </div>
             </div>
 
-            {/* 滚动按钮 */}
+            {/* 滚动按钮 (保持不变) */}
             {needScrollBtn && (
                 <div className={cn("fixed top-6 right-8 gap-7 flex z-40", scrollBtnCls)}>
-                    <Button
-                        variant="outline"
-                        className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0"
-                        onClick={scrollToTop}
-                    >
+                    <Button variant="outline" className="..." onClick={scrollToTop}>
                         <ChevronUp className="h-3 w-3" />
                         <span className="sr-only">滚动到头</span>
                     </Button>
-                    <Button
-                        variant="outline"
-                        className="h-6 w-6 bg-white/50 backdrop-blur-[1px] border-transparent shadow-sm hover:bg-white/70 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 rounded-full transition-all px-1 py-0"
-                        onClick={scrollToBottom}
-                    >
+                    <Button variant="outline" className="..." onClick={scrollToBottom}>
                         <ChevronDown className="h-3 w-3" />
                         <span className="sr-only">滚动到底</span>
                     </Button>
