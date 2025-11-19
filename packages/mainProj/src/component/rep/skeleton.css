@@ -36,6 +36,7 @@
     width: 100%;
     position: relative;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* 新增：确保全局编辑器容器在所有布局中都能正确滚动 */
@@ -44,6 +45,7 @@
     width: 100%;
     overflow: auto;
     position: relative;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* 隐藏的编辑器容器 */
@@ -110,12 +112,28 @@
 
 /* Sticky tabs for portrait mode */
 @media (orientation: portrait) {
+    .mobile-editor-slot {
+        height: 100%;
+        width: 100%;
+        position: relative;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch; /* 改善移动端滚动体验 */
+    }
+
     .mobile-editor-slot .global-editor-container {
         height: 100%;
         width: 100%;
         overflow: auto;
         -webkit-overflow-scrolling: touch;
     }
+
+    /* 确保报告内容容器也能滚动 */
+    .tabs-content-container {
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     /* Make the tabs container sticky at the top */
     .sticky-tabs-container {
         position: sticky;
@@ -171,6 +189,7 @@
     width: 100%;
     position: relative;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .mobile-editor-slot .global-editor-container {
@@ -179,15 +198,20 @@
     overflow: auto;
 }
 
-/* 临时调试样式 */
-.debug-border {
-    border: 1px solid red;
+/* 确保在移动端竖屏模式下，Tabs 内容区域能正确滚动 */
+@media (orientation: portrait) {
+    [role="tabpanel"] {
+        height: 100%;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
-.mobile-editor-slot .debug {
-    border: 2px solid blue;
+/* 修复 flex 容器中的滚动问题 */
+.flex-col {
+    min-height: 0; /* 关键：允许 flex 子元素收缩 */
 }
 
-.global-editor-container .debug {
-    border: 2px solid green;
+.min-h-0 {
+    min-height: 0; /* 关键：允许内容区域滚动 */
 }

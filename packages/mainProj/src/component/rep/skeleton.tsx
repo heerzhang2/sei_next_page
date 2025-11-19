@@ -29,9 +29,6 @@ const GlobalEditorContainer = React.forwardRef<HTMLDivElement, {
 
 GlobalEditorContainer.displayName = "GlobalEditorContainer";
 
-/**
- * 报告记录结合显示的框架 - 使用隐藏容器保持状态
- */
 export default function Skeleton({
                                      children,
                                      repPanel,
@@ -47,6 +44,7 @@ export default function Skeleton({
 
     const globalEditorRef = useRef<HTMLDivElement>(null);
     const editorContentRef = useRef<HTMLDivElement>(null);
+    const hiddenContainerRef = useRef<HTMLDivElement>(null);
 
     // 编辑器插槽引用
     const desktopSlotRef = useRef<HTMLDivElement>(null);
@@ -68,21 +66,26 @@ export default function Skeleton({
         };
     }, []);
 
-    // 移动编辑器内容到当前激活的插槽
+    // 修复：确保编辑器内容只在编辑器标签激活时显示
     useEffect(() => {
         if (!editorContentRef.current) return;
 
         let targetSlot: HTMLElement | null = null;
 
         if (!isSmallScreen) {
-            // 桌面模式
+            // 桌面模式 - 总是显示在右侧
             targetSlot = desktopSlotRef.current;
-        } else if (activeTab === 'editor') {
-            // 移动模式且编辑器标签激活
-            if (isLandscape) {
-                targetSlot = mobileLandscapeSlotRef.current;
+        } else {
+            // 移动模式 - 只在编辑器标签激活时显示
+            if (activeTab === 'editor') {
+                if (isLandscape) {
+                    targetSlot = mobileLandscapeSlotRef.current;
+                } else {
+                    targetSlot = mobilePortraitSlotRef.current;
+                }
             } else {
-                targetSlot = mobilePortraitSlotRef.current;
+                // 报告标签激活时，移回隐藏容器
+                targetSlot = hiddenContainerRef.current;
             }
         }
 
@@ -136,7 +139,7 @@ export default function Skeleton({
         </div>
     ), [memoizedRepPanel]);
 
-    // 移动端横屏布局
+    // 移动端横屏布局 - 修复：确保报告标签下不显示编辑器内容
     const mobileLandscapeTabs = useMemo(() => (
         <Tabs value={activeTab} className="w-full h-full flex flex-row">
             <div className="flex-shrink-0 h-full bg-muted/30 border-r w-20">
@@ -179,12 +182,14 @@ export default function Skeleton({
                 </TabsList>
             </div>
             <div className="flex-1 flex flex-col min-w-0">
-                <div className="h-full">
+                <div className="h-full min-h-0"> {/* 关键：添加 min-h-0 */}
                     {activeTab === "preview" ? (
+                        // 报告标签 - 只显示报告内容
                         <div className="h-full overflow-auto @container">
                             {memoizedRepPanel}
                         </div>
                     ) : (
+                        // 编辑器标签 - 只显示编辑器插槽
                         <div className="mobile-editor-slot h-full" ref={mobileLandscapeSlotRef}>
                             {/* 编辑器内容将动态插入这里 */}
                         </div>
@@ -194,10 +199,10 @@ export default function Skeleton({
         </Tabs>
     ), [activeTab, memoizedRepPanel]);
 
-    // 移动端竖屏布局
+    // 移动端竖屏布局 - 修复滚动问题
     const mobilePortraitTabs = useMemo(() => (
-        <Tabs value={activeTab} className="flex flex-col h-full">
-            <div className="sticky top-0 bg-white border-b shadow-sm z-10">
+        <Tabs value={activeTab} className="flex flex-col h-full min-h-0"> {/* 关键：添加 min-h-0 */}
+            <div className="sticky top-0 bg-white border-b shadow-sm z-10 flex-shrink-0"> {/* 关键：添加 flex-shrink-0 */}
                 <div className="flex items-center justify-between p-0 pl-10">
                     <TabsList className="grid w-full grid-cols-2 h-6 pt-0 bg-transparent p-0 gap-1">
                         <TabsTrigger
@@ -238,18 +243,18 @@ export default function Skeleton({
                     </TabsList>
                 </div>
             </div>
-            <div className="flex-1">
-                <div className="h-full min-h-0">
-                    {activeTab === "preview" ? (
-                        <div className="px-0 md:py-1 border rounded-md bg-background h-full overflow-auto @container">
-                            {memoizedRepPanel}
-                        </div>
-                    ) : (
-                        <div className="mobile-editor-slot h-full debug" ref={mobilePortraitSlotRef}>
-                            {/* 编辑器内容将动态插入这里 */}
-                        </div>
-                    )}
-                </div>
+            <div className="flex-1 min-h-0"> {/* 关键：使用 min-h-0 而不是固定高度 */}
+                {activeTab === "preview" ? (
+                    // 报告标签 - 只显示报告内容
+                    <div className="h-full overflow-auto @container bg-background">
+                        {memoizedRepPanel}
+                    </div>
+                ) : (
+                    // 编辑器标签 - 只显示编辑器插槽
+                    <div className="mobile-editor-slot h-full" ref={mobilePortraitSlotRef}>
+                        {/* 编辑器内容将动态插入这里 */}
+                    </div>
+                )}
             </div>
         </Tabs>
     ), [activeTab, memoizedRepPanel]);
@@ -257,7 +262,7 @@ export default function Skeleton({
     return (
         <div className="flex flex-col">
             {/* 隐藏的编辑器容器 - 始终保持挂载状态 */}
-            <div className="hidden-editor-container">
+            <div className="hidden-editor-container" ref={hiddenContainerRef}>
                 <GlobalEditorContainer ref={globalEditorRef}>
                     <div ref={editorContentRef}>
                         {memoizedChildren}
