@@ -536,45 +536,7 @@ export function useUppyUpload({
         // 组件挂载时清理一次
         cleanupTusLocalStorage()
         return () => {
-            if (uppyInstance && stateKey) {
-                try {
-                    const currentState = uppyInstance.getState();
-                    uppyInstance.setMeta({
-                        ...currentState.meta,
-                        pendingDeleteOperations,
-                    });
-
-                    // 获取所有待上传的文件（不排除待删除的）
-                    const files = uppyInstance.getFiles().map(file => ({
-                        id: file.id,
-                        name: file.name,
-                        type: file.type,
-                        size: file.size,
-                        data: file.data,
-                        lastModified: file.meta?.lastModified || Date.now(),
-                        progress: {
-                            uploadComplete: file.progress?.uploadComplete || false,
-                            percentage: file.progress?.percentage || 0
-                        }
-                    }));
-
-                    const snapshot = {
-                        key: stateKey,
-                        repId,
-                        subrid,
-                        hash: hash || "default",
-                        timestamp: Date.now(),
-                        files,
-                        meta: {
-                            ...currentState.meta,
-                            pendingDeleteOperations,
-                        },
-                    };
-                    fileOperationsQueue.saveUppyState(snapshot);
-                    console.log(`[v0] Saved Uppy state on unmount for key: ${stateKey}`);
-                } catch (error) {
-                    console.warn(`[v0] Failed to save Uppy state on unmount:`, error);
-                }
+            if (uppyInstance) {
                 try {
                     const tusPlugin = uppyInstance.getPlugin('tus-upload')
                     const xhrPlugin = uppyInstance.getPlugin('xhr-upload')
@@ -592,7 +554,7 @@ export function useUppyUpload({
                 uppyInstance.destroy()
             }
         }
-    }, [uppyInstance, stateKey, pendingDeleteOperations])
+    }, [uppyInstance])
     // 上传模式切换处理 - 动态切换插件版本
     const handleModeChange = async (mode: UploadMode) => {
         if (!uppyInstance) return

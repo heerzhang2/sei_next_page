@@ -1010,18 +1010,7 @@ export function useOfflineUppyUpload(params: {
             toast.error("执行删除操作时发生错误")
         }
     }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState, onFinish, params.maxFile, params.storeObj])
-    // 组件卸载时强制保存
-    useEffect(() => {
-        return () => {
-            if (uppyInstanceRef.current && stateKey) {
-                console.log(`[OfflineUppy] Component unmounting, saving state for: ${stateKey}`)
-                // 立即保存，不使用防抖
-                saveUppyState(uppyInstanceRef.current).catch(error => {
-                    console.error("[OfflineUppy] Final save on unmount failed:", error)
-                })
-            }
-        }
-    }, [stateKey, saveUppyState])
+
     // 通过文件句柄方式添加文件到 Uppy
     const addFilesWithHandles = useCallback(async () => {
         if (!uppyInstanceRef.current) {
