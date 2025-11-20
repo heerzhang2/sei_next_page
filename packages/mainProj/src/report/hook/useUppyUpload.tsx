@@ -493,6 +493,22 @@ export function useUppyUpload({
             const newarr = [...more]
             const cntfile = newarr.length
             if (cntfile > 0) {
+                // 为成功上传的文件添加特殊标记
+                result.successful.forEach((up) => {
+                    const file = uppyInstance.getFile(up.id)
+                    if (file) {
+                        // 在文件 meta 中添加特殊标记，表示该文件已成功上传
+                        uppyInstance.setFileState(up.id, {
+                            meta: {
+                                ...file.meta,
+                                uploadCompletedMark: true, // 特殊标记：上传完成
+                                uploadCompletedTime: Date.now() // 记录完成时间
+                            }
+                        })
+                        console.log(`[v0] Marked file as upload completed: ${file.name}`)
+                    }
+                })
+
                 setOpenUppy(false)
                 const newfile = newarr?.map(({ name, url, mimeType }) => ({ name, url, mimeType }))
                 // 上传成功后立即清理相关的 Tus 记录
@@ -1010,16 +1026,24 @@ export function useUppyUpload({
         let completedCount = 0;
 
         files.forEach((file) => {
-            // 检查文件是否已经成功上传
-            const isCompleted = file.progress?.uploadComplete &&
+            // 检查文件是否已经成功上传（多种方式检查）
+            const isCompletedByProgress = file.progress?.uploadComplete &&
                 file.progress?.percentage === 100 &&
                 file.response?.uploadURL;
+            
+            // 检查特殊标记
+            const isCompletedByMark = file.meta?.uploadCompletedMark === true;
+            
+            // 只要任一条件满足就认为已完成
+            const isCompleted = isCompletedByProgress || isCompletedByMark;
 
             if (isCompleted) {
                 try {
                     uppyInstance.removeFile(file.id);
                     removedCount++;
                     completedCount++;
+                    const reason = isCompletedByMark ? "特殊标记" : "进度检查";
+                    console.log(`[v0] 移除已完成文件: ${file.name} (${reason})`);
                 } catch (error) {
                     console.warn(`移除已完成文件失败: ${file.name}`, error);
                 }
@@ -1052,13 +1076,8 @@ export function useUppyUpload({
                 existingFile.name === newFile.name &&
                 existingFile.size === newFile.size && existingFile.progress.uploadComplete===true
             );
-
-            // 检查是否已在存储的文件中
-            const inStore = storeFiles.some(storeFile =>
-                storeFile.name === newFile.name
-            );
-
-            return inUppy || inStore;
+            // 检查是否已在存储的文件中 根据storeFile.name判定太武断了，不做限制了。
+            return inUppy;
         });
 
         if (duplicates.length > 0) {

@@ -440,6 +440,9 @@ export function useOfflineUppyUpload(params: {
 
     // 检查是否有保存的状态
     const [hasSavedState, setHasSavedState] = useState(false)
+    
+    // 检查是否应该开启 uppy 面板
+    const [shouldOpenUppy, setShouldOpenUppy] = useState(false)
 
     // 检查保存状态的函数
     const checkSavedState = useCallback(async () => {
@@ -461,8 +464,21 @@ export function useOfflineUppyUpload(params: {
             } else {
                 setRestoredPendingDeletes([])
             }
+
+            // 检查是否应该开启 uppy 面板
+            if (snapshot?.files && snapshot.files.length > 0) {
+                const hasIncompleteUploads = snapshot.files.some(file => 
+                    !(file.progress?.uploadComplete || file.progress?.percentage === 100)
+                )
+                console.log(`[OfflineUppy] Uppy panel should open: ${hasIncompleteUploads} (${snapshot.files.length} files, ${hasIncompleteUploads ? 'some incomplete' : 'all complete'})`)
+                setShouldOpenUppy(hasIncompleteUploads)
+            } else {
+                console.log(`[OfflineUppy] Uppy panel should open: false (no files in snapshot)`)
+                setShouldOpenUppy(false)
+            }
         } catch (error) {
             console.error("[OfflineUppy] Failed to check saved state:", error)
+            setShouldOpenUppy(false)
         }
     }, [stateKey])
 
@@ -481,7 +497,7 @@ export function useOfflineUppyUpload(params: {
         removePendingDeleteOperations,
     } = useUppyUpload({
         ...params,
-        open: true,
+        open: shouldOpenUppy,
         stateKey,
         externalPendingDeletes: restoredPendingDeletes,
     })
@@ -512,22 +528,44 @@ export function useOfflineUppyUpload(params: {
 
             // 待删除的文件应该被保留，因为它们不属于已完成上传的范畴
             const files = allFiles.filter(file => {
-                const isCompleted = file.progress?.uploadComplete &&
+                // 检查多种完成标记，确保正确识别已完成的文件
+                const isCompletedByProgress = file.progress?.uploadComplete &&
                     file.progress?.percentage === 100 &&
                     file.response?.uploadURL
+                
+                // 检查特殊标记（优先级更高，因为这是上传成功后立即标记的）
+                const isCompletedByMark = file.meta?.uploadCompletedMark === true
+                
+                // 只要任一条件满足就认为已完成
+                const isCompleted = isCompletedByProgress || isCompletedByMark
+                
                 if (isCompleted) {
-                    console.log(`[OfflineUppy] 排除已成功上传文件: ${file.name}`)
+                    const reason = isCompletedByMark ? "特殊标记" : "进度检查"
+                    console.log(`[OfflineUppy] 排除已成功上传文件: ${file.name} (${reason})`)
                 }
                 return !isCompleted  // 只排除已完成的，待删除的文件会被保留
             })
 
             const currentPendingDeletes = pendingDeleteOperationsRef.current
 
-            // 如果没有待上传文件且没有待删除操作，无需保存
+            // 如果没有待上传文件且没有待删除操作，清理 IndexedDB 状态
             if (files.length === 0 && currentPendingDeletes.length === 0) {
-                toast.info("无需保存", {
-                    description: "当前没有需要保存的文件状态",
-                })
+                try {
+                    // 清理 IndexedDB 中的状态数据
+                    await fileOperationsQueue.removeUppyState(stateKey)
+                    console.log(`[OfflineUppy] Cleared IndexedDB state for key: ${stateKey}`)
+                    setHasSavedState(false)
+                    setRestoredPendingDeletes([])
+                    
+                    toast.info("状态已清理", {
+                        description: "当前没有需要保存的文件状态，已清理本地存储",
+                    })
+                } catch (error) {
+                    console.error('[OfflineUppy] Failed to clear IndexedDB state:', error)
+                    toast.error("清理失败", {
+                        description: "无法清理本地存储状态",
+                    })
+                }
                 return
             }
 
@@ -1020,6 +1058,27 @@ export function useOfflineUppyUpload(params: {
                 }
 
                 console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations, synced UI state`)
+            }
+
+            // 检查是否需要清理 IndexedDB 状态
+            try {
+                const currentState = await fileOperationsQueue.loadUppyState(stateKey)
+                const hasFiles = currentState?.files && currentState.files.length > 0
+                const hasPendingDeletes = currentState?.meta?.pendingDeleteOperations && currentState.meta.pendingDeleteOperations.length > 0
+                
+                // 如果没有文件且没有待删除操作，清理 IndexedDB
+                if (!hasFiles && !hasPendingDeletes) {
+                    await fileOperationsQueue.removeUppyState(stateKey)
+                    console.log(`[OfflineUppy] Cleared IndexedDB state after delete operations: ${stateKey}`)
+                    setHasSavedState(false)
+                    setRestoredPendingDeletes([])
+                    
+                    toast.info("状态已清理", {
+                        description: "所有文件和删除操作已完成，已清理本地存储状态",
+                    })
+                }
+            } catch (error) {
+                console.error('[OfflineUppy] Failed to check/clear IndexedDB state after deletes:', error)
             }
 
             if (failedOperations.length === 0) {
