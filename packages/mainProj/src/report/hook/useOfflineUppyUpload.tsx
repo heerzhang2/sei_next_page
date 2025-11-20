@@ -475,6 +475,7 @@ export function useOfflineUppyUpload(params: {
         pendingDeleteOperations,
         delOssFileFunc,
         cancelPendingOperations,
+        removePendingDeleteOperations,
     } = useUppyUpload({
         ...params,
         open: true,
@@ -976,40 +977,36 @@ export function useOfflineUppyUpload(params: {
 
             // 清理成功的操作
             if (successfulOperations.length > 0) {
-                // 从状态中移除成功的操作
+                const successfulDeleteUrls = successfulOperations.map(op => op.deleteUrl)
+                
+                // 从 restoredPendingDeletes 状态中移除成功的操作
                 setRestoredPendingDeletes(prev =>
-                    prev.filter(op => !successfulOperations.some(successOp => successOp.deleteUrl === op.deleteUrl))
+                    prev.filter(op => !successfulDeleteUrls.includes(op.deleteUrl))
                 )
 
-                // 不再从 IndexedDB 的 DELETE_QUEUE 表中移除，因为现在使用 Uppy State 存储
-                console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations`)
+                // 同步清理 useUppyUpload 中的 pendingDeleteOperations
+                removePendingDeleteOperations(successfulDeleteUrls)
+
+                console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations, synced UI state`)
             }
 
             if (failedOperations.length === 0) {
-                // 如果全部成功，只更新待删除操作
-                const updatedDeletes = pendingDeleteOperationsRef.current.filter(op =>
-                    !successfulOperations.some(successOp => successOp.deleteUrl === op.deleteUrl)
-                )
-                await updatePendingDeletesState(updatedDeletes)
+                // 全部成功，只更新内存状态，不自动保存到 IndexedDB
                 toast.success("删除操作执行完成", {
-                    description: `成功执行 ${successfulOperations.length} 个删除操作`,
+                    description: `成功执行 ${successfulOperations.length} 个删除操作，请手动保存状态以持久化更改`,
                 })
             } else {
-                // 部分成功，只更新状态
+                // 部分成功，只更新内存状态，不自动保存到 IndexedDB
                 toast.warning("删除操作部分完成", {
-                    description: `成功: ${successfulOperations.length} 个, 失败: ${failedOperations.length} 个`,
+                    description: `成功: ${successfulOperations.length} 个, 失败: ${failedOperations.length} 个，请手动保存状态以持久化更改`,
                 })
-                // 重新保存状态以同步
-                if (uppyInstanceRef.current) {
-                    await saveUppyState(uppyInstanceRef.current)
-                }
             }
             await checkSavedState()
         } catch (error) {
             console.error("[OfflineUppy] Error executing pending deletes:", error)
             toast.error("执行删除操作时发生错误")
         }
-    }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState, onFinish, params.maxFile, params.storeObj])
+    }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState, onFinish, params.maxFile, params.storeObj, removePendingDeleteOperations])
 
     // 通过文件句柄方式添加文件到 Uppy
     const addFilesWithHandles = useCallback(async () => {

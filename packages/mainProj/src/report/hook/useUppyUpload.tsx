@@ -978,6 +978,15 @@ export function useUppyUpload({
         })
     }, [pendingDeleteOperations])
 
+    //移除指定删除操作的函数
+    const removePendingDeleteOperations = useCallback((deleteUrls: string[]) => {
+        if (deleteUrls.length === 0) return
+        
+        setPendingDeleteOperations(prev =>
+            prev.filter(op => !deleteUrls.includes(op.deleteUrl))
+        )
+    }, [])
+
     // 排除已完成上传的文件
     const removeCompletedFiles = React.useCallback(() => {
         if (!uppyInstance) {
@@ -1207,5 +1216,6 @@ export function useUppyUpload({
         pendingDeleteOperations,
         delOssFileFunc,
         cancelPendingOperations,
+        removePendingDeleteOperations,
     }
 }
