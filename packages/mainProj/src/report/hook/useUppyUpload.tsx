@@ -76,6 +76,51 @@ export type FileStore = {
     url: string
     mimeType?: string
 }
+// 修正视频文件 MIME 类型的函数
+const correctVideoMimeType = (file: any): string => {
+    const { name, type } = file;
+    
+    // 常见的视频文件扩展名映射
+    const videoMimeMap: { [key: string]: string } = {
+        'mp4': 'video/mp4',
+        'mov': 'video/quicktime',
+        'avi': 'video/x-msvideo',
+        'mkv': 'video/x-matroska',
+        'webm': 'video/webm',
+        '3gp': 'video/3gpp',
+        'flv': 'video/x-flv',
+        'wmv': 'video/x-ms-wmv',
+        'm4v': 'video/mp4',
+    };
+    
+    // 从文件名获取扩展名
+    const extension = name.split('.').pop()?.toLowerCase();
+    
+    // 如果扩展名匹配且当前 MIME 类型不正确，则修正
+    if (extension && videoMimeMap[extension]) {
+        const correctType = videoMimeMap[extension];
+        
+        // 检查当前 MIME 类型是否需要修正
+        if (!type.startsWith('video/') || type !== correctType) {
+            // 特别处理 MOV 文件，提醒用户可能需要转换
+            if (extension === 'mov' && correctType === 'video/quicktime') {
+                console.warn(`[v0] 检测到 MOV 格式视频: ${file.name}，Windows 系统可能需要转换器才能播放`);
+            }
+            return correctType;
+        }
+    }
+    
+    // 如果没有找到匹配的扩展名，但有 video 前缀，确保是标准格式
+    if (type && type.startsWith('video/')) {
+        // 将一些非标准 MIME 类型转换为标准类型
+        if (type.includes('quicktime')) return 'video/quicktime';
+        if (type.includes('x-msvideo')) return 'video/x-msvideo';
+        if (type.includes('x-matroska')) return 'video/x-matroska';
+    }
+    
+    return type || 'video/mp4'; // 默认返回 mp4
+};
+
 export const useScrollHandler = (targetSelector: string) => {
     return useCallback(
         (stateSetter: (arg0: boolean) => void, currentState: any) => (e: { preventDefault: () => void }) => {
@@ -309,7 +354,9 @@ export function useUppyUpload({
         console.log(`Creating new Uppy instance: ${uniqueId}`)
         const newUppy = new Uppy({
             id: uniqueId,
-            restrictions: { maxNumberOfFiles: maxFile },
+            restrictions: { 
+                maxNumberOfFiles: maxFile,
+            },
             locale: MERGED_LOCALE_CONFIG, // 使用合并配置
         })
         // 添加 Webcam 插件
@@ -317,6 +364,20 @@ export function useUppyUpload({
             countdown: false,
             modes: ['picture', 'video-audio'],
             mirror: true,
+            // 视频录制配置
+            videoConstraints: {
+                width: { min: 320, ideal: 1280, max: 1920 },
+                height: { min: 240, ideal: 720, max: 1080 },
+            },
+            // 音频配置
+            audioConstraints: {
+                sampleRate: 44100,
+                channelCount: 1,
+            },
+            // 尝试多种视频格式，优先 MP4
+            preferredVideoMimeType: 'video/mp4;codecs="h264,aac"',
+            // 移动端摄像头优化
+            mobileNativeCamera: false, // 强制使用 WebRTC 而非原生相机，以便更好地控制格式
         })
         // 根据当前模式配置插件
         if (uploadMode === "tus") {
@@ -587,6 +648,71 @@ export function useUppyUpload({
             }
         }
     }, [uppyInstance])
+    // 视频文件预处理函数
+    const preprocessVideoFile = async (file: any): Promise<any> => {
+        if (!file.type.startsWith('video/')) {
+            return file;
+        }
+
+        try {
+            // 检查视频文件大小和时长
+            const video = document.createElement('video');
+            const fileURL = URL.createObjectURL(file.data);
+            
+            return new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    URL.revokeObjectURL(fileURL);
+                    
+                    const duration = video.duration;
+                    const fileSizeMB = file.size / (1024 * 1024);
+                    
+                    console.log(`[v0] 视频文件信息: ${file.name}`);
+                    console.log(`  - 时长: ${duration.toFixed(2)} 秒`);
+                    console.log(`  - 大小: ${fileSizeMB.toFixed(2)} MB`);
+                    console.log(`  - 分辨率: ${video.videoWidth}x${video.videoHeight}`);
+                    console.log(`  - MIME 类型: ${file.type}`);
+                    
+                    // 检查是否是 MOV 格式，给出 Windows 兼容性提示
+                    if (file.type === 'video/quicktime' || file.name.toLowerCase().endsWith('.mov')) {
+                        toast.info('MOV 格式视频', {
+                            description: '苹果手机录制的 MOV 格式在 Windows 上可能需要转换器播放，建议使用支持 MOV 的播放器',
+                            duration: 6000,
+                        });
+                    }
+                    
+                    // 如果视频时长过长，给出警告
+                    if (duration > 300) { // 5分钟
+                        toast.warning('视频时长较长', {
+                            description: `视频时长 ${Math.floor(duration / 60)}分${Math.floor(duration % 60)}秒，上传可能需要较长时间`,
+                            duration: 5000,
+                        });
+                    }
+                    
+                    // 如果文件过大，给出警告
+                    if (fileSizeMB > maxSize * 0.8) {
+                        toast.warning('视频文件较大', {
+                            description: `文件大小 ${fileSizeMB.toFixed(1)}MB，接近限制 ${maxSize}MB`,
+                            duration: 5000,
+                        });
+                    }
+                    
+                    resolve(file);
+                };
+                
+                video.onerror = () => {
+                    URL.revokeObjectURL(fileURL);
+                    console.warn(`[v0] 无法读取视频元数据: ${file.name}`);
+                    resolve(file);
+                };
+                
+                video.src = fileURL;
+            });
+        } catch (error) {
+            console.warn(`[v0] 视频预处理失败: ${file.name}`, error);
+            return file;
+        }
+    };
+
     // 上传模式切换处理 - 动态切换插件版本
     const handleModeChange = async (mode: UploadMode) => {
         if (!uppyInstance) return
@@ -1116,9 +1242,41 @@ export function useUppyUpload({
     // 在 Uppy 初始化后添加文件重复检查
     React.useEffect(() => {
         if (!uppyInstance) return;
-        // 监听文件添加事件，进行重复检查
-        const handleFileAdded = (file: any) => {
+        // 监听文件添加事件，进行重复检查和 MIME 类型修正
+        const handleFileAdded = async (file: any) => {
             const files = [file];
+            
+            // 修正视频文件的 MIME 类型
+            if (file.type && file.type.startsWith('video/')) {
+                const correctedType = correctVideoMimeType(file);
+                if (correctedType !== file.type) {
+                    console.log(`[v0] 修正视频 MIME 类型: ${file.name} ${file.type} -> ${correctedType}`);
+                    uppyInstance.setFileState(file.id, {
+                        type: correctedType,
+                        meta: {
+                            ...file.meta,
+                            type: correctedType,
+                        }
+                    });
+                }
+                
+                // 预处理视频文件
+                const processedFile = await preprocessVideoFile({
+                    ...file,
+                    type: correctedType
+                });
+                
+                // 更新文件信息
+                uppyInstance.setFileState(file.id, {
+                    meta: {
+                        ...processedFile.meta,
+                        duration: processedFile.duration,
+                        videoWidth: processedFile.videoWidth,
+                        videoHeight: processedFile.videoHeight,
+                    }
+                });
+            }
+            
             const filteredFiles = checkForDuplicateFiles(files);
 
             if (filteredFiles.length < files.length) {
@@ -1198,7 +1356,7 @@ export function useUppyUpload({
                 <div className="text-center mt-4">
                     <div key="dashboard" style={{ display: openUppy ? 'block' : 'none' }}>
                         <UploadModeSelector />
-                        <Dashboard uppy={uppyInstance!} locale={MERGED_LOCALE_CONFIG}  plugins={["Webcam"]} />
+                        <Dashboard uppy={uppyInstance!} locale={MERGED_LOCALE_CONFIG} />
                     </div>
                     {/* 操作按钮 */}
                     <div className="space-y-2">
