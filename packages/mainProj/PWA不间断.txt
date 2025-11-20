@@ -2,7 +2,11 @@
 不用生产版"start:https": "cross-env NODE_ENV=production "真的无法发挥PWA的全部功能。
 cacheName: "next-chunks", 静态资源,DEV模式才用? 但是dev没法用serwist没页面只显示rsc代码;
 重新build导致的 /_next/static/开头资源，要求任何模板任意版本都需要重新做缓存的，否则无法确保能够访问。
-
+PS D:\home\sei_next_page\packages\mainProj\ssl> python -m http.server 8000
+苹果safari手机访问   http://192.168.0.100:8000/ca.cer  Safari 会自动识别 .cer 文件并弹出“安装描述文件”提示 → 点击 “允许” → “安装” → 输入锁屏密码。
+打开 设置（Settings）进入：通用（General） > 关于本机（About）
+滚动到底部 → 点击 “证书信任设置”（如果看不到这一项，说明你安装的不是根证书，或格式不对）
+在 “针对根证书启用完全信任” 列表中，找到你的 CA 名称（如 localhost 或 MyDevCA）打开右侧开关，启用信任。
 【urql offlinecahce问题】版本：
 1003 17：36； optimistic可能遭遇退回。第一次保存丢失，刷新后显示不一致，同步机会拖延，第一次的编辑区丢失更新。
 0928  10：21； 刷新较小的可能导致丢失，cache估计也没了，最后复原了。
