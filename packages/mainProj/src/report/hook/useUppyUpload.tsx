@@ -3,10 +3,12 @@ import * as React from "react"
 import Uppy from "@uppy/core"
 import Tus from "@uppy/tus"
 import XHRUpload from "@uppy/xhr-upload"
+import Webcam from "@uppy/webcam"
 import useOssDeleteFileMutation from "../../hooks/useOssDeleteFileMutation"
 import Dashboard from "@uppy/react/dashboard"
 import "@uppy/core/css/style.min.css"
 import "@uppy/dashboard/css/style.min.css"
+import "@uppy/webcam/css/style.min.css"
 import "./uppy-fixes.css"
 import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
@@ -14,6 +16,7 @@ import { FilePreview } from "@/components/file-preview"
 import { useCallback } from "react"
 import { toast } from "sonner"
 import {fileOperationsQueue} from "@/lib/file-operations-queue"
+import zh_CN from '@uppy/locales/lib/zh_CN.js'
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -297,8 +300,14 @@ export function useUppyUpload({
         const newUppy = new Uppy({
             id: uniqueId,
             restrictions: { maxNumberOfFiles: maxFile },
+            locale: zh_CN,
         })
-
+        // 添加 Webcam 插件
+        newUppy.use(Webcam, {
+            countdown: false,
+            modes: ['picture', 'video-audio'],
+            mirror: true,
+        })
         // 根据当前模式配置插件
         if (uploadMode === "tus") {
             configureTusPlugin(newUppy)
@@ -1180,12 +1189,10 @@ export function useUppyUpload({
 
                 {/* 上传面板 */}
                 <div className="text-center mt-4">
-                    {openUppy && uppyInstance && (
-                        <div key="dashboard">
-                            <UploadModeSelector />
-                            <Dashboard uppy={uppyInstance} plugins={["Webcam"]} locale={dashLocale} />
-                        </div>
-                    )}
+                    <div key="dashboard" style={{ display: openUppy ? 'block' : 'none' }}>
+                        <UploadModeSelector />
+                        <Dashboard uppy={uppyInstance!} locale={dashLocale} plugins={["Webcam"]} />
+                    </div>
 
                     {/* 操作按钮 */}
                     <div className="space-y-2">
@@ -1236,7 +1243,7 @@ export function useUppyUpload({
         </>
     )
     return {
-        uploadDom,
+        uploadDom : uppyInstance? uploadDom : null,
         uppyInstance,
         pendingDeleteOperations,
         delOssFileFunc,

@@ -517,11 +517,4 @@ https://uppy.io/docs/uppy/
 https://v0.app/chat/-gX7nr6ZdLiR?utm_source=heerzhang1-8976&utm_medium=referral&utm_campaign=share_chat&ref=J7RLSG
 
 
-    useEffect(() => {
-        console.log("✅ Page mounted");
-        return () => console.log("❌ Page unmounted");
-    }, []);
-
-
-最早是条件渲染，Portal，最后用 CSS 来控制布局，确保编辑器实例始终存在
 
