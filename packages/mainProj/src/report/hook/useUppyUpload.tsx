@@ -101,6 +101,16 @@ export type PendingDeleteOperation = {
     business: string
     timestamp: number
 }
+const createMergedLocale = () => ({
+    ...zh_CN,
+    strings: {
+        ...zh_CN.strings,
+        ...UPPY_LOCALE_CONFIG.strings,
+        ...DASH_LOCALE_CONFIG.strings,
+    }
+})
+export const MERGED_LOCALE_CONFIG = createMergedLocale()
+
 // 上传模式类型
 type UploadMode = "tus" | "xhr"
 
@@ -300,7 +310,7 @@ export function useUppyUpload({
         const newUppy = new Uppy({
             id: uniqueId,
             restrictions: { maxNumberOfFiles: maxFile },
-            locale: zh_CN,
+            locale: MERGED_LOCALE_CONFIG, // 使用合并配置
         })
         // 添加 Webcam 插件
         newUppy.use(Webcam, {
@@ -314,7 +324,6 @@ export function useUppyUpload({
         } else {
             configureXHRPlugin(newUppy)
         }
-
         return newUppy
     }
 
@@ -402,10 +411,8 @@ export function useUppyUpload({
                         console.warn(`[v0] Failed to apply saved state:`, error)
                     }
                 }
-
                 setUppyInstance(newUppy)
             }
-
             initializeUppy()
         }
     }, [id, repId, restoreUppyStateFromDB])
@@ -1191,9 +1198,8 @@ export function useUppyUpload({
                 <div className="text-center mt-4">
                     <div key="dashboard" style={{ display: openUppy ? 'block' : 'none' }}>
                         <UploadModeSelector />
-                        <Dashboard uppy={uppyInstance!} locale={dashLocale} plugins={["Webcam"]} />
+                        <Dashboard uppy={uppyInstance!} locale={MERGED_LOCALE_CONFIG}  plugins={["Webcam"]} />
                     </div>
-
                     {/* 操作按钮 */}
                     <div className="space-y-2">
                         <div className="flex justify-center items-center gap-2">
