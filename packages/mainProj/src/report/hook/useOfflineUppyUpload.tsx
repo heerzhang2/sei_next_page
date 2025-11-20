@@ -449,11 +449,14 @@ export function useOfflineUppyUpload(params: {
             console.log(`[OfflineUppy] Found snapshot:`, snapshot ? `yes, ${snapshot.files?.length || 0} files` : "no")
             setHasSavedState(!!snapshot)
 
-            // 如果有快照，也恢复其中的待删除操作
+            // 如果有快照，检查并恢复其中的待删除操作（排除已成功处理的）
             if (snapshot?.meta?.pendingDeleteOperations) {
                 console.log(
                     `[OfflineUppy] Found ${snapshot.meta.pendingDeleteOperations.length} pending delete operations in snapshot`,
                 )
+                // 过滤掉可能已经成功处理的删除操作
+                // 这里我们保守地恢复所有操作，让用户手动处理重复的情况
+                // 因为无法从 IndexedDB 中得知哪些操作已经成功执行
                 setRestoredPendingDeletes(snapshot.meta.pendingDeleteOperations)
             } else {
                 setRestoredPendingDeletes([])
@@ -986,6 +989,35 @@ export function useOfflineUppyUpload(params: {
 
                 // 同步清理 useUppyUpload 中的 pendingDeleteOperations
                 removePendingDeleteOperations(successfulDeleteUrls)
+
+                // 更新 IndexedDB 快照，移除已成功处理的删除操作
+                try {
+                    const currentState = await fileOperationsQueue.loadUppyState(stateKey)
+                    if (currentState?.meta?.pendingDeleteOperations) {
+                        const updatedPendingDeletes = currentState.meta.pendingDeleteOperations.filter(
+                            op => !successfulDeleteUrls.includes(op.deleteUrl)
+                        )
+                        
+                        // 创建更新后的快照，确保包含所有必需字段
+                        const updatedSnapshot = {
+                            key: currentState.key,
+                            repId: currentState.repId,
+                            subrid: currentState.subrid,
+                            hash: currentState.hash,
+                            timestamp: currentState.timestamp,
+                            files: currentState.files,
+                            meta: {
+                                ...currentState.meta,
+                                pendingDeleteOperations: updatedPendingDeletes
+                            }
+                        }
+                        
+                        await fileOperationsQueue.saveUppyState(updatedSnapshot)
+                        console.log(`[OfflineUppy] Updated IndexedDB snapshot: removed ${successfulDeleteUrls.length} completed delete operations`)
+                    }
+                } catch (error) {
+                    console.error('[OfflineUppy] Failed to update IndexedDB snapshot after successful deletes:', error)
+                }
 
                 console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations, synced UI state`)
             }

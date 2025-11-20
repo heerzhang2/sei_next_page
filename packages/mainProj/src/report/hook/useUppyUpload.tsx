@@ -724,7 +724,13 @@ export function useUppyUpload({
             setPendingDeleteOperations((prev) => {
                 const existingUrls = new Set(prev.map(op => op.deleteUrl));
                 const newOps = externalPendingDeletes.filter(op => !existingUrls.has(op.deleteUrl));
-                return [...prev, ...newOps];
+                if (newOps.length > 0) {
+                    console.log(`[v0] Adding ${newOps.length} new pending deletes to current state`);
+                    return [...prev, ...newOps];
+                } else {
+                    console.log(`[v0] No new pending deletes to add (all already exist in current state)`);
+                    return prev;
+                }
             });
         }
     }, [externalPendingDeletes]);
