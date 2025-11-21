@@ -3,12 +3,12 @@
 
 import { useEffect, useCallback, useRef, useState } from "react"
 import { useUppyUpload, type FileStore, type PendingDeleteOperation } from "./useUppyUpload"
-import {fileOperationsQueue, generateUppyStateKey} from "@/lib/file-operations-queue"
+import { fileOperationsQueue, generateUppyStateKey } from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
-import { Upload, FolderOpen, Trash2, RotateCcw } from 'lucide-react'
+import { Upload, FolderOpen, Trash2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
-import {stripOrigin} from "@/lib/utils";
+import { stripOrigin } from "@/lib/utils"
 
 // 检查浏览器是否支持 File System Access API
 const isFileSystemAccessSupported = () => {
@@ -241,24 +241,24 @@ const restoreFileFromSnapshot = async (
             isHandleMode: fileData.isHandleMode,
             hasData: !!fileData.data,
             hasFileMeta: !!fileData.meta,
-        });
+        })
 
         // 加强重复检查
-        const existingFiles = uppyInstance.getFiles();
+        const existingFiles = uppyInstance.getFiles()
         const isDuplicate = existingFiles.some(
             (file) =>
                 file.name === fileData.name &&
                 file.size === fileData.size &&
                 // 额外检查：如果文件已经成功上传，则视为重复
-                (file.progress?.uploadComplete || file.progress?.percentage === 100)
-        );
+                (file.progress?.uploadComplete || file.progress?.percentage === 100),
+        )
 
         if (isDuplicate) {
-            console.log(`[OfflineUppy] 跳过重复文件（已成功上传）: ${fileData.name}`);
+            console.log(`[OfflineUppy] 跳过重复文件（已成功上传）: ${fileData.name}`)
             toast.warning("跳过重复文件", {
                 description: `文件 "${fileData.name}" 已成功上传，跳过恢复`,
-            });
-            return { restored: false, fromHandle: false };
+            })
+            return { restored: false, fromHandle: false }
         }
 
         let fileToRestore: File | null = null
@@ -309,9 +309,7 @@ const restoreFileFromSnapshot = async (
                 try {
                     // 先检查是否已存在相同文件
                     const existingFiles = uppyInstance.getFiles()
-                    const isDuplicate = existingFiles.some(
-                        (file) => file.name === fileData.name && file.size === fileData.size
-                    )
+                    const isDuplicate = existingFiles.some((file) => file.name === fileData.name && file.size === fileData.size)
                     if (isDuplicate) {
                         console.log(`文件已存在列表中: ${fileData.name}`)
                         return { restored: false, fromHandle: true }
@@ -374,9 +372,7 @@ const restoreFileFromSnapshot = async (
                 }
                 try {
                     const existingFiles = uppyInstance.getFiles()
-                    const isDuplicate = existingFiles.some(
-                        (file) => file.name === fileData.name && file.size === fileData.size
-                    )
+                    const isDuplicate = existingFiles.some((file) => file.name === fileData.name && file.size === fileData.size)
                     if (isDuplicate) {
                         console.log(`文件已存在列表中: ${fileData.name}`)
                         return { restored: false, fromHandle: false }
@@ -431,8 +427,8 @@ export function useOfflineUppyUpload(params: {
     redId?: number
     subrid?: string
 }) {
-    const { repId, subrid, redId, hash, onFinish} = params
-    const stateKey = generateUppyStateKey(repId,subrid,redId,hash)
+    const { repId, subrid, redId, hash, onFinish } = params
+    const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
 
     // 添加状态来存储恢复的待删除操作
@@ -440,13 +436,13 @@ export function useOfflineUppyUpload(params: {
 
     // 检查是否有保存的状态
     const [hasSavedState, setHasSavedState] = useState(false)
-    
+
     // 检查是否应该开启 uppy 面板
     const [shouldOpenUppy, setShouldOpenUppy] = useState(false)
 
     // 使用 ref 来存储最新的 storeObj 值，避免闭包问题
     const latestStoreObjRef = useRef<FileStore | FileStore[]>(params.storeObj)
-    
+
     // 更新 ref 当 storeObj 变化时
     useEffect(() => {
         latestStoreObjRef.current = params.storeObj
@@ -475,10 +471,12 @@ export function useOfflineUppyUpload(params: {
 
             // 检查是否应该开启 uppy 面板
             if (snapshot?.files && snapshot.files.length > 0) {
-                const hasIncompleteUploads = snapshot.files.some(file => 
-                    !(file.progress?.uploadComplete || file.progress?.percentage === 100)
+                const hasIncompleteUploads = snapshot.files.some(
+                    (file) => !(file.progress?.uploadComplete || file.progress?.percentage === 100),
                 )
-                console.log(`[OfflineUppy] Uppy panel should open: ${hasIncompleteUploads} (${snapshot.files.length} files, ${hasIncompleteUploads ? 'some incomplete' : 'all complete'})`)
+                console.log(
+                    `[OfflineUppy] Uppy panel should open: ${hasIncompleteUploads} (${snapshot.files.length} files, ${hasIncompleteUploads ? "some incomplete" : "all complete"})`,
+                )
                 setShouldOpenUppy(hasIncompleteUploads)
             } else {
                 console.log(`[OfflineUppy] Uppy panel should open: false (no files in snapshot)`)
@@ -535,23 +533,22 @@ export function useOfflineUppyUpload(params: {
             const allFiles = uppy.getFiles()
 
             // 待删除的文件应该被保留，因为它们不属于已完成上传的范畴
-            const files = allFiles.filter(file => {
+            const files = allFiles.filter((file) => {
                 // 检查多种完成标记，确保正确识别已完成的文件
-                const isCompletedByProgress = file.progress?.uploadComplete &&
-                    file.progress?.percentage === 100 &&
-                    file.response?.uploadURL
-                
+                const isCompletedByProgress =
+                    file.progress?.uploadComplete && file.progress?.percentage === 100 && file.response?.uploadURL
+
                 // 检查特殊标记（优先级更高，因为这是上传成功后立即标记的）
                 const isCompletedByMark = file.meta?.uploadCompletedMark === true
-                
+
                 // 只要任一条件满足就认为已完成
                 const isCompleted = isCompletedByProgress || isCompletedByMark
-                
+
                 if (isCompleted) {
                     const reason = isCompletedByMark ? "特殊标记" : "进度检查"
                     console.log(`[OfflineUppy] 排除已成功上传文件: ${file.name} (${reason})`)
                 }
-                return !isCompleted  // 只排除已完成的，待删除的文件会被保留
+                return !isCompleted // 只排除已完成的，待删除的文件会被保留
             })
 
             const currentPendingDeletes = pendingDeleteOperationsRef.current
@@ -564,12 +561,12 @@ export function useOfflineUppyUpload(params: {
                     console.log(`[OfflineUppy] Cleared IndexedDB state for key: ${stateKey}`)
                     setHasSavedState(false)
                     setRestoredPendingDeletes([])
-                    
+
                     toast.info("状态已清理", {
                         description: "当前没有需要保存的文件状态，已清理本地存储",
                     })
                 } catch (error) {
-                    console.error('[OfflineUppy] Failed to clear IndexedDB state:', error)
+                    console.error("[OfflineUppy] Failed to clear IndexedDB state:", error)
                     toast.error("清理失败", {
                         description: "无法清理本地存储状态",
                     })
@@ -608,7 +605,7 @@ export function useOfflineUppyUpload(params: {
                                     liveDays: file.meta.liveDays,
                                     isHandleMode: true,
                                     // 不包含 pendingDeleteOperations
-                                }
+                                },
                             }
                         } else {
                             // 传统模式：根据文件大小优化存储策略
@@ -648,7 +645,7 @@ export function useOfflineUppyUpload(params: {
                                     liveDays: file.meta?.liveDays,
                                     isHandleMode: false,
                                     // 不包含 pendingDeleteOperations
-                                }
+                                },
                             }
                         }
                     } catch (error) {
@@ -693,7 +690,7 @@ export function useOfflineUppyUpload(params: {
 
                 console.log(`[OfflineUppy] Saving Uppy state with key: ${stateKey}`, {
                     files: filesArrayForSave.length,
-                    filesType: Array.isArray(filesArrayForSave) ? 'array' : typeof filesArrayForSave,
+                    filesType: Array.isArray(filesArrayForSave) ? "array" : typeof filesArrayForSave,
                     pendingDeletes: currentPendingDeletes.length,
                     excludedCompleted: excludedCount,
                 })
@@ -742,43 +739,42 @@ export function useOfflineUppyUpload(params: {
     //跳转到下一条待处理离线操作
     const navigateToNextPendingOperation = useCallback(async () => {
         try {
-            const allGroups = await fileOperationsQueue.getGroupedUppyStates();
+            const allGroups = await fileOperationsQueue.getGroupedUppyStates()
             if (allGroups.length <= 1) {
-                toast.info("没有其他待处理的离线操作");
-                return;
+                toast.info("没有其他待处理的离线操作")
+                return
             }
 
             // 找到当前分组的索引
-            const currentGroupIndex = allGroups.findIndex(group =>
-                group.repId === repId &&
-                (group.subrid === subrid || (!group.subrid && !subrid))
-            );
+            const currentGroupIndex = allGroups.findIndex(
+                (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
+            )
 
             if (currentGroupIndex === -1) {
-                toast.info("当前页面不在待处理列表中");
-                return;
+                toast.info("当前页面不在待处理列表中")
+                return
             }
 
             // 获取下一个分组（不循环）
-            const nextIndex = currentGroupIndex + 1;
+            const nextIndex = currentGroupIndex + 1
             if (nextIndex >= allGroups.length) {
-                toast.info("已是最后一条待处理操作");
-                return;
+                toast.info("已是最后一条待处理操作")
+                return
             }
 
-            const nextGroup = allGroups[nextIndex];
+            const nextGroup = allGroups[nextIndex]
             if (nextGroup.originalPageUrl) {
                 // 使用 stripOrigin 保持一致性（和 FileOperationsManager 一样）
-                const cleanUrl = stripOrigin(nextGroup.originalPageUrl);
-                window.location.href = cleanUrl;
+                const cleanUrl = stripOrigin(nextGroup.originalPageUrl)
+                window.location.href = cleanUrl
             } else {
-                toast.warning("下一条操作无有效跳转链接");
+                toast.warning("下一条操作无有效跳转链接")
             }
         } catch (error) {
-            console.error("[OfflineUppy] Failed to navigate to next pending operation:", error);
-            toast.error("跳转失败", { description: "无法加载下一条操作" });
+            console.error("[OfflineUppy] Failed to navigate to next pending operation:", error)
+            toast.error("跳转失败", { description: "无法加载下一条操作" })
         }
-    }, [repId, subrid]);
+    }, [repId, subrid])
     // 取消保存的状态
     const cancelSavedState = useCallback(async () => {
         try {
@@ -913,9 +909,7 @@ export function useOfflineUppyUpload(params: {
                     }
                     // 检查是否是重复文件导致的失败
                     const existingFiles = uppyInstanceRef.current.getFiles()
-                    const isDuplicate = existingFiles.some(
-                        (file) => file.name === fileData.name && file.size === fileData.size
-                    )
+                    const isDuplicate = existingFiles.some((file) => file.name === fileData.name && file.size === fileData.size)
                     if (isDuplicate) {
                         duplicateFiles++
                     }
@@ -926,12 +920,13 @@ export function useOfflineUppyUpload(params: {
             )
             if (restoredCount > 0) {
                 toast.success(`恢复完成`, {
-                    description: `已恢复 ${restoredCount} 个上传文件${duplicateFiles > 0 ? `，跳过 ${duplicateFiles} 个重复文件` : ''}`,
+                    description: `已恢复 ${restoredCount} 个上传文件${duplicateFiles > 0 ? `，跳过 ${duplicateFiles} 个重复文件` : ""}`,
                 })
             } else if (snapshot.files.length > 0) {
                 if (duplicateFiles > 0) {
                     toast.info("恢复完成", {
-                        description: `所有文件已在上传列表中，无需重复恢复`, duration:9000
+                        description: `所有文件已在上传列表中，无需重复恢复`,
+                        duration: 9000,
                     })
                 } else {
                     toast.error("恢复失败", {
@@ -947,25 +942,28 @@ export function useOfflineUppyUpload(params: {
         }, 500)
     }, [repId, hash, params.liveDays, params.business, stateKey])
     // 新增：只更新待删除操作的状态
-    const updatePendingDeletesState = useCallback(async (updatedDeletes: PendingDeleteOperation[]) => {
-        try {
-            const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
-            if (snapshot) {
-                const updatedState = {
-                    ...snapshot,
-                    meta: {
-                        ...snapshot.meta,
-                        pendingDeleteOperations: updatedDeletes,
-                    },
-                    timestamp: Date.now(),
+    const updatePendingDeletesState = useCallback(
+        async (updatedDeletes: PendingDeleteOperation[]) => {
+            try {
+                const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
+                if (snapshot) {
+                    const updatedState = {
+                        ...snapshot,
+                        meta: {
+                            ...snapshot.meta,
+                            pendingDeleteOperations: updatedDeletes,
+                        },
+                        timestamp: Date.now(),
+                    }
+                    await fileOperationsQueue.saveUppyState(updatedState)
+                    console.log(`[OfflineUppy] Updated pending deletes state: ${updatedDeletes.length} operations`)
                 }
-                await fileOperationsQueue.saveUppyState(updatedState)
-                console.log(`[OfflineUppy] Updated pending deletes state: ${updatedDeletes.length} operations`)
+            } catch (error) {
+                console.error("[OfflineUppy] Failed to update pending deletes state:", error)
             }
-        } catch (error) {
-            console.error("[OfflineUppy] Failed to update pending deletes state:", error)
-        }
-    }, [stateKey])
+        },
+        [stateKey],
+    )
     // 执行待删除操作 - 使用动态回调版本
     const executePendingDeletes = useCallback(async () => {
         const operationsToExecute = restoredPendingDeletes.length > 0 ? restoredPendingDeletes : pendingDeleteOperations
@@ -982,27 +980,7 @@ export function useOfflineUppyUpload(params: {
                     console.log(`[OfflineUppy] Delete operation result for ${fileUrl}:`, result)
 
                     if (result === "成功" || result === "文件不存在") {
-                        console.log(`[OfflineUppy] Delete successful for ${fileUrl}, calling onFinish callback`)
-                        // 成功删除后，需要调用 onFinish 更新存储状态
-                        if (onFinish) {
-                            if (params.maxFile === 1) {
-                                // 单文件模式：传递 undefined 表示文件已被删除
-                                console.log(`[OfflineUppy] Single file mode: calling onFinish(undefined, false)`)
-                                onFinish(undefined, false)
-                            } else {
-                                // 多文件模式：需要从 storeObj 中过滤掉被删除的文件
-                                // 使用 ref 来获取最新的 storeObj 值，避免闭包问题
-                                const currentStoreObj = Array.isArray(latestStoreObjRef.current) ? [...latestStoreObjRef.current] : []
-                                console.log(`[OfflineUppy] Before filtering: ${currentStoreObj.length} files in storeObj`)
-                                console.log(`[OfflineUppy] Current storeObj files:`, currentStoreObj.map(f => f.url))
-                                const newStoreObj = currentStoreObj.filter((file: FileStore) => file.url !== fileUrl)
-                                console.log(`[OfflineUppy] After filtering: ${newStoreObj.length} files in storeObj, removed: ${fileUrl}`)
-                                console.log(`[OfflineUppy] New storeObj files:`, newStoreObj.map(f => f.url))
-                                onFinish(newStoreObj, false)
-                            }
-                        } else {
-                            console.log(`[OfflineUppy] onFinish callback is not available!`)
-                        }
+                        console.log(`[OfflineUppy] Delete successful for ${fileUrl}`)
                         resolve({ success: true, operation: deleteOp, result })
                     } else {
                         console.log(`[OfflineUppy] Delete failed for ${fileUrl}:`, result)
@@ -1034,49 +1012,74 @@ export function useOfflineUppyUpload(params: {
                 }
             })
 
+            if (successfulOperations.length > 0 && onFinish) {
+                const successfulDeleteUrls = successfulOperations.map((op) => op.deleteUrl)
+                console.log(`[OfflineUppy] Batch updating storeObj, removing ${successfulDeleteUrls.length} files`)
+
+                if (params.maxFile === 1) {
+                    // 单文件模式
+                    const currentStoreObj = latestStoreObjRef.current as FileStore
+                    if (currentStoreObj && successfulDeleteUrls.includes(currentStoreObj.url)) {
+                        onFinish(undefined, false)
+                    }
+                } else {
+                    // 多文件模式
+                    const currentStoreObj = Array.isArray(latestStoreObjRef.current) ? [...latestStoreObjRef.current] : []
+                    const newStoreObj = currentStoreObj.filter((file: FileStore) => !successfulDeleteUrls.includes(file.url))
+
+                    // 只有当文件数量发生变化时才调用 onFinish
+                    if (newStoreObj.length !== currentStoreObj.length) {
+                        console.log(`[OfflineUppy] Updating storeObj: ${currentStoreObj.length} -> ${newStoreObj.length}`)
+                        onFinish(newStoreObj, false)
+                    }
+                }
+            }
+
             // 清理成功的操作（只更新内存状态，不保存到 IndexedDB）
             if (successfulOperations.length > 0) {
-                const successfulDeleteUrls = successfulOperations.map(op => op.deleteUrl)
-                
+                const successfulDeleteUrls = successfulOperations.map((op) => op.deleteUrl)
+
                 // 从 restoredPendingDeletes 状态中移除成功的操作
-                setRestoredPendingDeletes(prev =>
-                    prev.filter(op => !successfulDeleteUrls.includes(op.deleteUrl))
-                )
+                setRestoredPendingDeletes((prev) => prev.filter((op) => !successfulDeleteUrls.includes(op.deleteUrl)))
 
                 // 同步清理 useUppyUpload 中的 pendingDeleteOperations
                 removePendingDeleteOperations(successfulDeleteUrls)
 
-                console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations, synced UI state (no IndexedDB save)`)
+                console.log(
+                    `[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations, synced UI state (no IndexedDB save)`,
+                )
             }
 
             // 检查是否需要清理 IndexedDB 状态（从内存状态读取最新文件列表）
             try {
                 // 从父辈hook的内存状态读取最新的文件列表，而不是从 IndexedDB
                 const currentFiles = uppyInstanceRef.current?.getFiles() || []
-                const hasIncompleteFiles = currentFiles.some(file => 
-                    !(file.progress?.uploadComplete || file.progress?.percentage === 100)
+                const hasIncompleteFiles = currentFiles.some(
+                    (file) => !(file.progress?.uploadComplete || file.progress?.percentage === 100),
                 )
                 const hasFiles = currentFiles.length > 0
-                
+
                 // 计算实际的待删除操作数量（当前状态减去成功删除的操作）
                 const actualPendingDeletes = restoredPendingDeletes.length - successfulOperations.length
                 const hasPendingDeletes = actualPendingDeletes > 0
-                
+
                 // 如果没有文件且没有待删除操作，清理 IndexedDB
                 if (!hasFiles && !hasPendingDeletes) {
                     await fileOperationsQueue.removeUppyState(stateKey)
                     console.log(`[OfflineUppy] Cleared IndexedDB state after delete operations: ${stateKey}`)
                     setHasSavedState(false)
                     setRestoredPendingDeletes([])
-                    
+
                     toast.info("状态已清理", {
                         description: "所有文件和删除操作已完成，已清理本地存储状态",
                     })
                 } else {
-                    console.log(`[OfflineUppy] State check: ${currentFiles.length} files (${hasIncompleteFiles ? 'some incomplete' : 'all complete'}), ${actualPendingDeletes} pending deletes remaining`)
+                    console.log(
+                        `[OfflineUppy] State check: ${currentFiles.length} files (${hasIncompleteFiles ? "some incomplete" : "all complete"}), ${actualPendingDeletes} pending deletes remaining`,
+                    )
                 }
             } catch (error) {
-                console.error('[OfflineUppy] Failed to check/clear IndexedDB state after deletes:', error)
+                console.error("[OfflineUppy] Failed to check/clear IndexedDB state after deletes:", error)
             }
 
             if (failedOperations.length === 0) {
@@ -1095,7 +1098,16 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Error executing pending deletes:", error)
             toast.error("执行删除操作时发生错误")
         }
-    }, [restoredPendingDeletes, pendingDeleteOperations, delOssFileFunc, checkSavedState, onFinish, params.maxFile, params.storeObj, removePendingDeleteOperations])
+    }, [
+        restoredPendingDeletes,
+        pendingDeleteOperations,
+        delOssFileFunc,
+        checkSavedState,
+        onFinish,
+        params.maxFile,
+        params.storeObj,
+        removePendingDeleteOperations,
+    ])
 
     // 通过文件句柄方式添加文件到 Uppy
     const addFilesWithHandles = useCallback(async () => {
@@ -1184,7 +1196,7 @@ export function useOfflineUppyUpload(params: {
                             variant="outline"
                             size="sm"
                             onClick={navigateToNextPendingOperation}
-                            className="flex items-center justify-center"
+                            className="flex items-center justify-center bg-transparent"
                         >
                             <RotateCcw className="w-4 h-4 mr-2" />
                             下一条待处理离线文件操作
@@ -1198,7 +1210,7 @@ export function useOfflineUppyUpload(params: {
                                 variant="default"
                                 size="sm"
                                 onClick={executePendingDeletes}
-                                disabled={!(displayPendingDeletes.length>0)}
+                                disabled={!(displayPendingDeletes.length > 0)}
                                 className="flex items-center flex-1 bg-orange-500 hover:bg-orange-600 text-white"
                             >
                                 <RotateCcw className="w-4 h-4 mr-2" />
@@ -1208,8 +1220,6 @@ export function useOfflineUppyUpload(params: {
                     )}
                     {hasSavedState && <p className="text-xs text-blue-600">✓ 保存状态，后端OSS恢复后可以继续做</p>}
                 </div>
-
-
             </div>
         )
     }
