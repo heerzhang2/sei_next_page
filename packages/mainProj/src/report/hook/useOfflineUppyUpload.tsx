@@ -1016,7 +1016,7 @@ export function useOfflineUppyUpload(params: {
                 }
             })
 
-            // 清理成功的操作
+            // 清理成功的操作（只更新内存状态，不保存到 IndexedDB）
             if (successfulOperations.length > 0) {
                 const successfulDeleteUrls = successfulOperations.map(op => op.deleteUrl)
                 
@@ -1028,43 +1028,21 @@ export function useOfflineUppyUpload(params: {
                 // 同步清理 useUppyUpload 中的 pendingDeleteOperations
                 removePendingDeleteOperations(successfulDeleteUrls)
 
-                // 更新 IndexedDB 快照，移除已成功处理的删除操作
-                try {
-                    const currentState = await fileOperationsQueue.loadUppyState(stateKey)
-                    if (currentState?.meta?.pendingDeleteOperations) {
-                        const updatedPendingDeletes = currentState.meta.pendingDeleteOperations.filter(
-                            op => !successfulDeleteUrls.includes(op.deleteUrl)
-                        )
-                        
-                        // 创建更新后的快照，确保包含所有必需字段
-                        const updatedSnapshot = {
-                            key: currentState.key,
-                            repId: currentState.repId,
-                            subrid: currentState.subrid,
-                            hash: currentState.hash,
-                            timestamp: currentState.timestamp,
-                            files: currentState.files,
-                            meta: {
-                                ...currentState.meta,
-                                pendingDeleteOperations: updatedPendingDeletes
-                            }
-                        }
-                        
-                        await fileOperationsQueue.saveUppyState(updatedSnapshot)
-                        console.log(`[OfflineUppy] Updated IndexedDB snapshot: removed ${successfulDeleteUrls.length} completed delete operations`)
-                    }
-                } catch (error) {
-                    console.error('[OfflineUppy] Failed to update IndexedDB snapshot after successful deletes:', error)
-                }
-
-                console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations, synced UI state`)
+                console.log(`[OfflineUppy] Successfully executed ${successfulOperations.length} delete operations, synced UI state (no IndexedDB save)`)
             }
 
-            // 检查是否需要清理 IndexedDB 状态
+            // 检查是否需要清理 IndexedDB 状态（从内存状态读取最新文件列表）
             try {
-                const currentState = await fileOperationsQueue.loadUppyState(stateKey)
-                const hasFiles = currentState?.files && currentState.files.length > 0
-                const hasPendingDeletes = currentState?.meta?.pendingDeleteOperations && currentState.meta.pendingDeleteOperations.length > 0
+                // 从父辈hook的内存状态读取最新的文件列表，而不是从 IndexedDB
+                const currentFiles = uppyInstanceRef.current?.getFiles() || []
+                const hasIncompleteFiles = currentFiles.some(file => 
+                    !(file.progress?.uploadComplete || file.progress?.percentage === 100)
+                )
+                const hasFiles = currentFiles.length > 0
+                
+                // 计算实际的待删除操作数量（当前状态减去成功删除的操作）
+                const actualPendingDeletes = restoredPendingDeletes.length - successfulOperations.length
+                const hasPendingDeletes = actualPendingDeletes > 0
                 
                 // 如果没有文件且没有待删除操作，清理 IndexedDB
                 if (!hasFiles && !hasPendingDeletes) {
@@ -1076,6 +1054,8 @@ export function useOfflineUppyUpload(params: {
                     toast.info("状态已清理", {
                         description: "所有文件和删除操作已完成，已清理本地存储状态",
                     })
+                } else {
+                    console.log(`[OfflineUppy] State check: ${currentFiles.length} files (${hasIncompleteFiles ? 'some incomplete' : 'all complete'}), ${actualPendingDeletes} pending deletes remaining`)
                 }
             } catch (error) {
                 console.error('[OfflineUppy] Failed to check/clear IndexedDB state after deletes:', error)
