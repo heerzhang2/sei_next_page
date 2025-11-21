@@ -351,7 +351,6 @@ export function useUppyUpload({
     // 初始化 Uppy 实例 - 简化版本
     const createUppyInstance = () => {
         const uniqueId = id ? id : `Report-${repId}-${hash || "default"}`
-        console.log(`Creating new Uppy instance: ${uniqueId}`)
         const newUppy = new Uppy({
             id: uniqueId,
             restrictions: { 
@@ -368,11 +367,6 @@ export function useUppyUpload({
             videoConstraints: {
                 width: { min: 320, ideal: 1280, max: 1920 },
                 height: { min: 240, ideal: 720, max: 1080 },
-            },
-            // 音频配置
-            audioConstraints: {
-                sampleRate: 44100,
-                channelCount: 1,
             },
             // 尝试多种视频格式，优先 MP4
             preferredVideoMimeType: 'video/mp4;codecs="h264,aac"',
@@ -1356,7 +1350,7 @@ export function useUppyUpload({
                 <div className="text-center mt-4">
                     <div key="dashboard" style={{ display: openUppy ? 'block' : 'none' }}>
                         <UploadModeSelector />
-                        <Dashboard uppy={uppyInstance!} locale={MERGED_LOCALE_CONFIG} />
+                        <Dashboard uppy={uppyInstance!} locale={MERGED_LOCALE_CONFIG}  plugins={["Webcam"]} />
                     </div>
                     {/* 操作按钮 */}
                     <div className="space-y-2">
