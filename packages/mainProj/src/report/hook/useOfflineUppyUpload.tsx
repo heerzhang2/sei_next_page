@@ -444,6 +444,14 @@ export function useOfflineUppyUpload(params: {
     // 检查是否应该开启 uppy 面板
     const [shouldOpenUppy, setShouldOpenUppy] = useState(false)
 
+    // 使用 ref 来存储最新的 storeObj 值，避免闭包问题
+    const latestStoreObjRef = useRef<FileStore | FileStore[]>(params.storeObj)
+    
+    // 更新 ref 当 storeObj 变化时
+    useEffect(() => {
+        latestStoreObjRef.current = params.storeObj
+    }, [params.storeObj])
+
     // 检查保存状态的函数
     const checkSavedState = useCallback(async () => {
         try {
@@ -974,20 +982,30 @@ export function useOfflineUppyUpload(params: {
                     console.log(`[OfflineUppy] Delete operation result for ${fileUrl}:`, result)
 
                     if (result === "成功" || result === "文件不存在") {
+                        console.log(`[OfflineUppy] Delete successful for ${fileUrl}, calling onFinish callback`)
                         // 成功删除后，需要调用 onFinish 更新存储状态
                         if (onFinish) {
                             if (params.maxFile === 1) {
                                 // 单文件模式：传递 undefined 表示文件已被删除
+                                console.log(`[OfflineUppy] Single file mode: calling onFinish(undefined, false)`)
                                 onFinish(undefined, false)
                             } else {
                                 // 多文件模式：需要从 storeObj 中过滤掉被删除的文件
-                                const currentStoreObj = Array.isArray(params.storeObj) ? params.storeObj : []
+                                // 使用 ref 来获取最新的 storeObj 值，避免闭包问题
+                                const currentStoreObj = Array.isArray(latestStoreObjRef.current) ? [...latestStoreObjRef.current] : []
+                                console.log(`[OfflineUppy] Before filtering: ${currentStoreObj.length} files in storeObj`)
+                                console.log(`[OfflineUppy] Current storeObj files:`, currentStoreObj.map(f => f.url))
                                 const newStoreObj = currentStoreObj.filter((file: FileStore) => file.url !== fileUrl)
+                                console.log(`[OfflineUppy] After filtering: ${newStoreObj.length} files in storeObj, removed: ${fileUrl}`)
+                                console.log(`[OfflineUppy] New storeObj files:`, newStoreObj.map(f => f.url))
                                 onFinish(newStoreObj, false)
                             }
+                        } else {
+                            console.log(`[OfflineUppy] onFinish callback is not available!`)
                         }
                         resolve({ success: true, operation: deleteOp, result })
                     } else {
+                        console.log(`[OfflineUppy] Delete failed for ${fileUrl}:`, result)
                         resolve({ success: false, operation: deleteOp, result })
                     }
                 }
