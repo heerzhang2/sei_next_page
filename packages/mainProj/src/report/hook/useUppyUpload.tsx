@@ -152,10 +152,10 @@ const createMergedLocale = () => ({
         ...zh_CN.strings,
         ...UPPY_LOCALE_CONFIG.strings,
         ...DASH_LOCALE_CONFIG.strings,
+        pluginNameCamera: '摄像头',
     }
 })
 export const MERGED_LOCALE_CONFIG = createMergedLocale()
-
 // 上传模式类型
 type UploadMode = "tus" | "xhr"
 
@@ -360,19 +360,19 @@ export function useUppyUpload({
         })
         // 添加 Webcam 插件
         newUppy.use(Webcam, {
-            countdown: false,
-            modes: ['picture', 'video-audio'],
-            mirror: true,
-            // 视频录制配置
+            countdown: false, // 是否倒计时拍照
+            modes: ['picture', 'video-audio'], // 支持拍照和录像（带声音）
+            mirror: true, // 是否镜像（对于前置摄像头比较常见）
+            mobileNativeCamera: false, //禁用原生相机App，使用浏览器API录制，更易获得MP4
+            // 指定首选的视频 MIME 类型为 MP4 (H.264 + AAC)
+            preferredVideoMimeType: 'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
+            // preferredVideoMimeType: 'video/mp4',     清晰度
             videoConstraints: {
                 width: { min: 320, ideal: 1280, max: 1920 },
                 height: { min: 240, ideal: 720, max: 1080 },
-            },
-            // 尝试多种视频格式，优先 MP4
-            preferredVideoMimeType: 'video/mp4;codecs="h264,aac"',
-            // 移动端摄像头优化
-            mobileNativeCamera: false, // 强制使用 WebRTC 而非原生相机，以便更好地控制格式
-        })
+                facingMode: 'environment'   //默认用后置摄像头
+            }
+        });
         // 根据当前模式配置插件
         if (uploadMode === "tus") {
             configureTusPlugin(newUppy)
@@ -606,9 +606,7 @@ export function useUppyUpload({
                 maxNumberOfFiles: thisMaxFiles,
                 maxFileSize: maxSize * 1024 * 1024,
             },
-            locale: UPPY_LOCALE_CONFIG,
         })
-
         // @ts-ignore
         uppyInstance.off("complete", handleUpSuccess)
         // @ts-ignore
@@ -647,7 +645,6 @@ export function useUppyUpload({
         if (!file.type.startsWith('video/')) {
             return file;
         }
-
         try {
             // 检查视频文件大小和时长
             const video = document.createElement('video');
@@ -1239,27 +1236,28 @@ export function useUppyUpload({
         // 监听文件添加事件，进行重复检查和 MIME 类型修正
         const handleFileAdded = async (file: any) => {
             const files = [file];
-            
             // 修正视频文件的 MIME 类型
             if (file.type && file.type.startsWith('video/')) {
-                const correctedType = correctVideoMimeType(file);
-                if (correctedType !== file.type) {
-                    console.log(`[v0] 修正视频 MIME 类型: ${file.name} ${file.type} -> ${correctedType}`);
-                    uppyInstance.setFileState(file.id, {
-                        type: correctedType,
-                        meta: {
-                            ...file.meta,
-                            type: correctedType,
-                        }
-                    });
+                const correctedMimeType = correctVideoMimeType(file); // 使用你已有的函数
+                // 如果 MIME 类型发生了改变，则更新文件的 meta 信息
+                if (correctedMimeType !== file.type) {
+                    uppyInstance.setFileMeta(file.id, { ...file.meta, type: correctedMimeType });
+                    console.log(`[v0] Corrected MIME type for ${file.name}: ${file.type} -> ${correctedMimeType}`);
+                    // （可选）也可以尝试修改文件名扩展名以匹配 MIME 类型
+                    // 注意：这不会改变实际的文件内容，只是改变 Uppy 内部记录的名字
+                    // 如果上传端点依赖扩展名判断，这可能会有用
+                    // const extension = correctedMimeType.split('/')[1]; // 简单提取，实际可能需要映射表
+                    // if (extension && !file.name.toLowerCase().endsWith(`.${extension}`)) {
+                    //     const newName = `${file.name.substring(0, file.name.lastIndexOf('.') + 1)}${extension}`;
+                    //     newUppy.setFileMeta(file.id, { ...file.meta, name: newName });
+                    //     console.log(`[v0] Corrected file name for ${file.name}: -> ${newName}`);
+                    // }
                 }
-                
                 // 预处理视频文件
                 const processedFile = await preprocessVideoFile({
                     ...file,
-                    type: correctedType
+                    type: correctedMimeType
                 });
-                
                 // 更新文件信息
                 uppyInstance.setFileState(file.id, {
                     meta: {
@@ -1270,9 +1268,7 @@ export function useUppyUpload({
                     }
                 });
             }
-            
             const filteredFiles = checkForDuplicateFiles(files);
-
             if (filteredFiles.length < files.length) {
                 // 有重复文件，从 Uppy 中移除
                 setTimeout(() => {
@@ -1360,8 +1356,8 @@ export function useUppyUpload({
                                 disabled={!openUppy && thisMaxFiles <= 0}
                                 onClick={scrollHandler}
                             >
-                                {openUppy ? "关闭上传" : `开启上传 (还可上传${thisMaxFiles}个)`}
-                                {selectedFilesCount > 0 && ` | 已选 ${selectedFilesCount} 个`}
+                                {openUppy ? "关闭上传" : `开启上传`}
+                                {selectedFilesCount > 0 && ` | 在选${selectedFilesCount}个`}
                             </Button>
 
                             {/* 新增：排除已完成按钮 */}
