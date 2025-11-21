@@ -33,8 +33,8 @@ export const UPPY_LOCALE_CONFIG = {
 }
 export const DASH_LOCALE_CONFIG = {
     strings: {
-        browseFiles: "浏览文件夹",
-        dropPasteFiles: "文件拖拉进来或 %{browseFiles}",
+        browseFiles: "选文件",
+        dropPasteFiles: "文件拖进来或 %{browseFiles}",
         addMore: "增加更多",
         xFilesSelected: {
             0: "已选择 %{smart_count} 个",
