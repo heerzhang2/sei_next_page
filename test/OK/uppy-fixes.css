@@ -1,0 +1,330 @@
+/* Fix for Uppy Dashboard styles that get overridden by Tailwind */
+.uppy-Dashboard-AddFiles-title {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 1 !important;
+    white-space: nowrap !important;
+}
+
+/* Ensure other critical Uppy styles aren't overridden */
+.uppy-Dashboard-inner {
+    position: relative !important;
+    margin: auto;
+    max-height: 100vh;
+}
+
+.uppy-Dashboard-AddFiles {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 100% !important;
+}
+
+/* Preserve Uppy's z-index layering */
+.uppy-Dashboard-files {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* Ensure Uppy modal appears above other content */
+.uppy-Dashboard--modal {
+    z-index: 1001 !important;
+}
+
+/* Force Uppy styles to take precedence over Tailwind */
+.uppy-Dashboard * {
+    box-sizing: border-box !important;
+}
+
+/* Fix icon sizes in specific Uppy components */
+.uppy-StatusBar-actionCircleBtn .uppy-c-icon {
+    height: 1.8rem !important;
+    width: 2.2rem !important;
+}
+
+/* ================================ */
+/* 修复重试按钮图标和文字重叠问题 */
+/* ================================ */
+
+/* 重试按钮容器样式 */
+.uppy-StatusBar-actionBtn--retry {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    padding: 0.25rem 0.75rem !important;
+    white-space: nowrap !important;
+    position: relative !important;
+    line-height: 1.4 !important;
+    min-height: 2rem !important;
+    height: auto !important;
+    font-size: 0.875rem !important;
+    border-radius: 0.375rem !important;
+    transition: all 0.2s ease !important;
+}
+
+/* 重试按钮图标样式 */
+.uppy-StatusBar-actionBtn--retry .uppy-c-icon {
+    height: 1.2rem !important;
+    width: 1rem !important;
+    margin-right: 0 !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+}
+
+/* 确保重试按钮文字正常显示 */
+.uppy-StatusBar-actionBtn--retry::before {
+    content: "  " !important;
+    display: inline !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+/* 隐藏原始的文本节点（如果有的话） */
+.uppy-StatusBar-actionBtn--retry > :not(.uppy-c-icon) {
+    display: none !important;
+}
+
+/* Retry button hover effects */
+.uppy-StatusBar-actionBtn--retry:hover {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    border-color: #3b82f6 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+.uppy-StatusBar-actionBtn--retry:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* 修复整个状态栏操作区域的布局 */
+.uppy-StatusBar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+}
+
+/* 修复取消按钮的图标大小 */
+.uppy-StatusBar-actionCircleBtn .uppy-c-icon {
+    height: 1.8rem !important;
+    width: 2.2rem !important;
+    flex-shrink: 0 !important;
+}
+/* 确保所有状态栏按钮都有正确的间距 */
+.uppy-StatusBar-actionBtn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+/* 防止 Tailwind 或其他 CSS 框架覆盖 Uppy 按钮样式 */
+.uppy-StatusBar-actionBtn--retry * {
+    box-sizing: border-box !important;
+}
+
+/* 确保按钮内的 flex 布局正常工作 */
+.uppy-StatusBar-actionBtn--retry {
+    line-height: 1.5 !important;
+}
+
+/* 修复重试按钮的 hover 状态 */
+.uppy-StatusBar-actionBtn--retry:hover {
+    background-color: rgba(0, 255, 215, 0.8) !important;
+    transform: translateY(-1px) !important;
+    transition: all 0.2s ease !important;
+}
+
+/* 修复重试按钮的 focus 状态 */
+.uppy-StatusBar-actionBtn--retry:focus {
+    outline: 2px solid rgba(34, 117, 215, 0.5) !important;
+    outline-offset: 2px !important;
+}
+
+/* ================================ */
+/* 窄屏幕设备的自适应调整 */
+/* ================================ */
+
+@media (max-width: 480px) {
+    .uppy-StatusBar-actionCircleBtn .uppy-c-icon {
+        height: 1.5rem !important;
+        width: 2rem !important;
+    }
+
+    .uppy-StatusBar-actionBtn--retry .uppy-c-icon {
+        height: 1rem !important;
+        width: 0.8rem !important;
+        margin-right: 0.3rem !important;
+    }
+
+    /* 移动端重试按钮调整 */
+    .uppy-StatusBar-actionBtn--retry {
+        padding: 0.4rem 0.8rem !important;
+        gap: 0.3rem !important;
+        font-size: 0.875rem !important;
+        min-height: 2.2rem !important;
+    }
+
+    .uppy-StatusBar-actionBtn--retry::after {
+        font-size: 0.8rem !important;
+    }
+
+    /* 移动端状态栏操作区域调整 */
+    .uppy-StatusBar-actions {
+        gap: 0.3rem !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+}
+
+/* ================================ */
+/* 额外修复：确保上传进度条可见 */
+/* ================================ */
+
+.uppy-StatusBar-progress {
+    background-color: rgba(34, 117, 215, 0.1) !important;
+    height: 3px !important;
+}
+
+.uppy-StatusBar-progress-inner {
+    background-color: #2275d7 !important;
+    transition: width 0.3s ease !important;
+}
+
+/* ================================ */
+/* 修复文件列表样式 */
+/* ================================ */
+
+.uppy-Dashboard-files .uppy-DashboardItem-name {
+    font-weight: 500 !important;
+    color: #333 !important;
+}
+
+.uppy-Dashboard-files .uppy-DashboardItem-status {
+    color: #666 !important;
+    font-size: 0.875rem !important;
+}
+
+/* ================================ */
+/* 确保 Webcam 插件样式正常 */
+/* ================================ */
+
+.uppy-Webcam-container {
+    background: #f9f9f9 !important;
+    border-radius: 8px !important;
+}
+
+.uppy-Webcam-videoContainer {
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+.uppy-Webcam-button {
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+}
+
+.uppy-Webcam-button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ================================ */
+/* 修复拖拽区域样式 */
+/* ================================ */
+
+.uppy-Dashboard-dropFilesHereHint {
+    border: 2px dashed #2275d7 !important;
+    background-color: rgba(34, 117, 215, 0.05) !important;
+    border-radius: 8px !important;
+}
+
+.uppy-Dashboard-dropFilesHereHint::before {
+    color: #2275d7 !important;
+    font-size: 2rem !important;
+}
+
+/* ================================ */
+/* 确保按钮在所有状态下都可见 */
+/* ================================ */
+
+.uppy-c-btn {
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.uppy-c-btn:focus {
+    outline: 2px solid rgba(34, 117, 215, 0.5) !important;
+    outline-offset: 2px !important;
+}
+
+.uppy-c-btn:hover {
+    transform: translateY(-1px) !important;
+}
+
+/* ================================ */
+/* 修复图标颜色和可见性 */
+/* ================================ */
+
+.uppy-c-icon {
+    fill: currentColor !important;
+    vertical-align: middle !important;
+}
+
+.uppy-StatusBar-actionCircleBtn .uppy-c-icon {
+    fill: #888 !important;
+}
+
+.uppy-StatusBar-actionCircleBtn:hover .uppy-c-icon {
+    fill: #666 !important;
+}
+
+/* ================================ */
+/* 确保响应式设计 */
+/* ================================ */
+
+@media (max-width: 768px) {
+    .uppy-Dashboard-inner {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .uppy-Dashboard--modal .uppy-Dashboard-inner {
+        border-radius: 0 !important;
+    }
+}
+
+/* ================================ */
+/* 修复文件预览样式 */
+/* ================================ */
+
+.uppy-DashboardItem-preview {
+    border-radius: 4px !important;
+    overflow: hidden !important;
+}
+
+.uppy-DashboardItem-preview img {
+    object-fit: cover !important;
+}
+
+/* ================================ */
+/* 最终确保所有重要样式不被覆盖 */
+/* ================================ */
+
+.uppy-Dashboard,
+.uppy-Dashboard *,
+.uppy-StatusBar,
+.uppy-StatusBar *,
+.uppy-StatusBar-actions,
+.uppy-StatusBar-actions * {
+    box-sizing: border-box !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
