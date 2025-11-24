@@ -819,32 +819,41 @@ export function useOfflineUppyUpload(params: {
     const navigateToNextPendingOperation = useCallback(async () => {
         try {
             const allGroups = await fileOperationsQueue.getGroupedUppyStates()
-            if (allGroups.length <= 1) {
-                toast.info("没有其他待处理的离线操作")
-                return
-            }
-
-            // 找到当前分组的索引
-            const currentGroupIndex = allGroups.findIndex(
+            
+            // 找到当前分组
+            const currentGroup = allGroups.find(
                 (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
             )
 
-            if (currentGroupIndex === -1) {
-                toast.info("当前页面不在待处理列表中")
+            if (!currentGroup || currentGroup.snapshots.length <= 1) {
+                toast.info("当前分组内没有其他待处理的离线操作")
                 return
             }
 
-            // 获取下一个分组（不循环）
-            const nextIndex = currentGroupIndex + 1
-            if (nextIndex >= allGroups.length) {
-                toast.info("已是最后一条待处理操作")
+            // 按时间戳排序，找到当前快照的下一个
+            const sortedSnapshots = currentGroup.snapshots.sort((a, b) => a.timestamp - b.timestamp)
+            
+            // 找到当前快照的索引（基于时间戳匹配）
+            const currentSnapshotIndex = sortedSnapshots.findIndex(
+                (snapshot) => snapshot.key === stateKey
+            )
+
+            if (currentSnapshotIndex === -1) {
+                toast.info("当前状态不在分组中")
                 return
             }
 
-            const nextGroup = allGroups[nextIndex]
-            if (nextGroup.originalPageUrl) {
-                // 使用 stripOrigin 保持一致性（和 FileOperationsManager 一样）
-                const cleanUrl = stripOrigin(nextGroup.originalPageUrl)
+            // 获取下一个快照（不循环）
+            const nextIndex = currentSnapshotIndex + 1
+            if (nextIndex >= sortedSnapshots.length) {
+                toast.info("已是当前分组的最后一条待处理操作")
+                return
+            }
+
+            const nextSnapshot = sortedSnapshots[nextIndex]
+            if (nextSnapshot.meta?.originalPageUrl) {
+                // 使用 stripOrigin 保持一致性
+                const cleanUrl = stripOrigin(nextSnapshot.meta.originalPageUrl)
                 window.location.href = cleanUrl
             } else {
                 toast.warning("下一条操作无有效跳转链接")
@@ -853,7 +862,7 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Failed to navigate to next pending operation:", error)
             toast.error("跳转失败", { description: "无法加载下一条操作" })
         }
-    }, [repId, subrid])
+    }, [repId, subrid, stateKey])
     // 取消保存的状态
     const cancelSavedState = useCallback(async () => {
         try {
