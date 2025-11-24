@@ -200,12 +200,13 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
             try {
                 const allGroups = await fileOperationsQueue.getGroupedUppyStates()
                 
-                // 找到当前分组（主报告没有subrid）
-                const currentGroup = allGroups.find(
-                    (group) => group.repId === repId && !group.subrid
+                // 只要repId一样，不管是主报告还是子报告有uppyState都认为需要警告
+                const relatedGroups = allGroups.filter(
+                    (group) => group.repId === repId
                 )
 
-                setHasUppyUnsavedStates(currentGroup && currentGroup.count > 0)
+                const hasAnyUppyStates = relatedGroups.some(group => group.count > 0)
+                setHasUppyUnsavedStates(hasAnyUppyStates)
             } catch (error) {
                 console.error("[ReportData] Failed to check uppy states:", error)
                 setHasUppyUnsavedStates(false)
