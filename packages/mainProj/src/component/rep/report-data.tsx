@@ -9,6 +9,7 @@ import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { toast } from "sonner"
 import { AlertTriangle } from "lucide-react"
 import { indexedDBStorage } from "@/lib/indexed-db-storage"
+import { fileOperationsQueue } from "@/lib/file-operations-queue"
 
 export interface ReportParams {
     repId: string
@@ -184,6 +185,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const [isClient, setIsClient] = useState(false)
     const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const [hasUppyUnsavedStates, setHasUppyUnsavedStates] = useState(false)
     const searchParams = useSearchParams()
     const isPrintMode = searchParams?.get("print") === "1"
 
@@ -191,6 +193,27 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         setIsClient(true)
         setMounted(true)
     }, [])
+
+    // 检查IndexedDB中是否有未清除的uppyState数据
+    useEffect(() => {
+        const checkUppyStates = async () => {
+            try {
+                const allGroups = await fileOperationsQueue.getGroupedUppyStates()
+                
+                // 找到当前分组（主报告没有subrid）
+                const currentGroup = allGroups.find(
+                    (group) => group.repId === repId && !group.subrid
+                )
+
+                setHasUppyUnsavedStates(currentGroup && currentGroup.count > 0)
+            } catch (error) {
+                console.error("[ReportData] Failed to check uppy states:", error)
+                setHasUppyUnsavedStates(false)
+            }
+        }
+
+        checkUppyStates()
+    }, [repId])
 
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
     const requestPolicy = useMemo(() => {
@@ -296,13 +319,20 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const prevDataRef = useRef<any>(null)
     useEffect(() => {
         if (!report) return
-        const snap = report.snapshot && JSON.parse(report.snapshot)
-        const dat = report.data && JSON.parse(report.data || "{}")
-        const newData = dat ? { ...dat, ...snap, _version: report.version } : { ...(snap || {}), _version: report.version }
+        
+        // 只在版本变化时才重新解析数据
+        if (prevDataRef.current?._version === report.version) {
+            return
+        }
+        
+        try {
+            const snap = report.snapshot ? JSON.parse(report.snapshot) : undefined
+            const dat = report.data ? JSON.parse(report.data) : {}
+            const newData = dat ? { ...dat, ...snap, _version: report.version } : { ...(snap || {}), _version: report.version }
 
-        const currentStorageVersion = storage?._version
-        const isNewerVersion = !currentStorageVersion || report.version > currentStorageVersion
-        if (JSON.stringify(newData) !== JSON.stringify(prevDataRef.current)) {
+            const currentStorageVersion = storage?._version
+            const isNewerVersion = !currentStorageVersion || report.version > currentStorageVersion
+            
             if (modified) {
                 console.log("[v0] Skipping storage update - user has unsaved modifications")
                 return
@@ -325,6 +355,8 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
             setStorage(newData)
             setSubrType(undefined)
             prevDataRef.current = newData
+        } catch (error) {
+            console.error("[ReportData] Error parsing report data:", error)
         }
     }, [report, storage, setStorage, setSubrType, modified])
 
@@ -358,7 +390,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     return (
         <>
-            {hasUnsavedChanges && (
+            {(hasUnsavedChanges || hasUppyUnsavedStates) && (
                 <div
                     className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:border-8 print:border-black print:bg-white print:shadow-none"
                     style={{
@@ -390,10 +422,32 @@ function CommonReportDataSub({
 
     const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const [hasUppyUnsavedStates, setHasUppyUnsavedStates] = useState(false)
     const searchParams = useSearchParams()
     const isPrintMode = searchParams?.get("print") === "1"
 
     useEffect(() => setMounted(true), [])
+
+    // 检查IndexedDB中是否有未清除的uppyState数据
+    useEffect(() => {
+        const checkUppyStates = async () => {
+            try {
+                const allGroups = await fileOperationsQueue.getGroupedUppyStates()
+                
+                // 找到当前分组（子报告有subrid）
+                const currentGroup = allGroups.find(
+                    (group) => group.repId === repId && group.subrid === subrid
+                )
+
+                setHasUppyUnsavedStates(currentGroup && currentGroup.count > 0)
+            } catch (error) {
+                console.error("[ReportData] Failed to check uppy states:", error)
+                setHasUppyUnsavedStates(false)
+            }
+        }
+
+        checkUppyStates()
+    }, [repId, subrid])
 
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
@@ -495,16 +549,22 @@ function CommonReportDataSub({
     useEffect(() => {
         if (!report || !reportSub) return
 
-        const snap = report.snapshot && JSON.parse(report.snapshot)
-        const subdat = reportSub.data && JSON.parse(reportSub.data || "{}")
-        const dat = report.data && JSON.parse(report.data || "{}")
+        // 只在版本变化时才重新解析数据
+        if (prevDataRef.current?._version === reportSub.version && 
+            prevParrepfsRef.current?._version === report.version) {
+            return
+        }
 
-        const newSubData = subdat ? { ...subdat, _version: reportSub.version } : { _version: reportSub.version }
+        try {
+            const snap = report.snapshot ? JSON.parse(report.snapshot) : undefined
+            const subdat = reportSub.data ? JSON.parse(reportSub.data) : {}
+            const dat = report.data ? JSON.parse(report.data) : {}
 
-        const currentStorageVersion = storage?._version
-        const isNewerVersion = !currentStorageVersion || reportSub.version > currentStorageVersion
+            const newSubData = subdat ? { ...subdat, _version: reportSub.version } : { _version: reportSub.version }
 
-        if (JSON.stringify(newSubData) !== JSON.stringify(prevDataRef.current)) {
+            const currentStorageVersion = storage?._version
+            const isNewerVersion = !currentStorageVersion || reportSub.version > currentStorageVersion
+
             if (modified) {
                 console.log("[v0] Skipping sub-report storage update - user has unsaved modifications")
                 return
@@ -525,14 +585,14 @@ function CommonReportDataSub({
             setStorage(newSubData)
             prevDataRef.current = newSubData
             setSubrType(reportSub.modeltype)
-        }
 
-        const newParData = dat
-            ? { ...dat, ...(snap || {}), _version: report.version }
-            : { ...(snap || {}), _version: report.version }
-        if (JSON.stringify(newParData) !== JSON.stringify(prevParrepfsRef.current)) {
+            const newParData = dat
+                ? { ...dat, ...(snap || {}), _version: report.version }
+                : { ...(snap || {}), _version: report.version }
             setParrepfs(newParData)
             prevParrepfsRef.current = newParData
+        } catch (error) {
+            console.error("[ReportData] Error parsing sub-report data:", error)
         }
     }, [report, reportSub, storage, setStorage, setSubrType, setParrepfs, modified])
 
@@ -571,7 +631,7 @@ function CommonReportDataSub({
 
     return (
         <>
-            {hasUnsavedChanges && (
+            {(hasUnsavedChanges || hasUppyUnsavedStates) && (
                 <div
                     className="fixed top-3 z-50 px-2 py-1 rounded-md shadow-lg print:border-8 print:border-black print:bg-white print:shadow-none"
                     style={{
