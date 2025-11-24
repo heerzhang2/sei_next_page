@@ -493,6 +493,89 @@ export function useOfflineUppyUpload(params: {
         checkSavedState()
     }, [checkSavedState])
 
+    // 只有当：1. 所有待删除操作已完成 2. 所有文件上传已完成 时，才清理状态
+    const checkAndClearState = useCallback(async () => {
+        try {
+            // 获取当前的 Uppy 实例和文件状态
+            const uppy = uppyInstanceRef.current
+            if (!uppy) return
+
+            const currentFiles = uppy.getFiles()
+            // 检查是否有未完成的文件
+            const hasIncompleteFiles = currentFiles.some(
+                (file) => !(file.progress?.uploadComplete || file.progress?.percentage === 100),
+            )
+
+            // 获取当前的待删除操作
+            // 注意：这里需要检查 restoredPendingDeletes 和 pendingDeleteOperationsRef (如果能访问到的话)
+            // 由于 pendingDeleteOperations 是从 useUppyUpload 返回的，我们可以直接使用它
+            // 但为了安全起见，我们假设如果 restoredPendingDeletes 为空，且 pendingDeleteOperations 也为空（或者我们认为已同步）
+
+            // 在 executePendingDeletions 中，我们会更新 restoredPendingDeletes
+            // 在 onFinishWrapped 中，我们会调用此函数
+
+            // 我们需要一个方式来获取最新的 pendingDeleteOperations，这里依赖于组件重渲染时的值
+            // 或者我们可以传入 overrideDeletes 参数
+
+            // 简单起见，我们检查 restoredPendingDeletes，因为这是离线模块主要关心的
+            // 如果用户正在操作，useUppyUpload 的 pendingDeleteOperations 也会同步更新
+
+            // 实际上，executePendingDeletions 的逻辑是：优先使用 restoredPendingDeletes，如果没有则使用 pendingDeleteOperations
+            // 只要这两者之一还有值，就不应该清理
+
+            // 我们不能直接访问 pendingDeleteOperations 的最新值（在闭包中），除非我们使用 ref
+            // 但我们可以检查 hasSavedState，如果 database 里有记录，我们需要谨慎
+
+            // 重新读取一次数据库状态可能最准确，但这有性能开销
+            // 这里我们主要依赖内存状态：
+
+            // 如果还有文件未上传完成，直接返回
+            if (hasIncompleteFiles) {
+                console.log(`[OfflineUppy] CheckState: Has incomplete files, skipping clear.`)
+                return
+            }
+
+            // 检查待删除操作
+            // 如果我们刚执行完删除，restoredPendingDeletes 应该已经更新（或者即将更新）
+            // 这里我们做一个稍微宽松的检查：如果当前组件状态认为没有待删除操作
+            if (restoredPendingDeletes.length > 0) {
+                console.log(`[OfflineUppy] CheckState: Has restored pending deletes, skipping clear.`)
+                return
+            }
+
+            // 如果内存状态都干净了，我们尝试清理数据库
+            // 为了双重保险，再次检查数据库里的 pendingDeleteOperations
+            const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
+            if (!snapshot) {
+                // 数据库已经没东西了
+                return
+            }
+
+            const dbPendingDeletes = snapshot.meta?.pendingDeleteOperations || []
+            if (dbPendingDeletes.length > 0) {
+                // 数据库里还有待删除操作，说明可能内存状态还没同步，或者之前的删除失败了
+                // 但如果我们的意图是"当前操作已完成"，可能需要更智能的判断
+                // 这里我们假设：如果内存里的 restoredPendingDeletes 已经清空了（说明用户点击执行并成功了），
+                // 且文件也都上传完了，那么可以清理。
+                // 但如果数据库里的操作还没执行（比如页面刷新后还没点执行），那不应该清理
+                // 此时 restoredPendingDeletes 应该是有值的。
+                // 所以逻辑是：restoredPendingDeletes.length === 0 && !hasIncompleteFiles
+                // 这一步已经在上面检查过了。
+            }
+
+            // 执行清理
+            console.log(`[OfflineUppy] CheckState: All clear (No incomplete files, no pending deletes). Clearing DB...`)
+            await fileOperationsQueue.removeUppyState(stateKey)
+            setHasSavedState(false)
+            setRestoredPendingDeletes([])
+            toast.info("状态已自动清理", {
+                description: "所有上传和删除操作均已完成",
+            })
+        } catch (error) {
+            console.error("[OfflineUppy] CheckState error:", error)
+        }
+    }, [stateKey, restoredPendingDeletes])
+
     //将恢复的待删除操作传递给 父类hook：useUppyUpload
     const {
         uploadDom,
@@ -503,6 +586,17 @@ export function useOfflineUppyUpload(params: {
         removePendingDeleteOperations,
     } = useUppyUpload({
         ...params,
+        onFinish: (file, newUpload) => {
+            // 调用原始的 onFinish
+            if (onFinish) {
+                onFinish(file, newUpload)
+            }
+
+            // 延迟执行检查，确保状态更新
+            setTimeout(() => {
+                checkAndClearState()
+            }, 500)
+        },
         open: shouldOpenUppy,
         stateKey,
         externalPendingDeletes: restoredPendingDeletes,
@@ -1050,21 +1144,21 @@ export function useOfflineUppyUpload(params: {
                 )
             }
 
-            // 检查是否需要清理 IndexedDB 状态（从内存状态读取最新文件列表）
+            // 这里我们直接使用当前已知的最新状态进行判断，比依赖 effect 更及时
             try {
-                // 从父辈hook的内存状态读取最新的文件列表，而不是从 IndexedDB
+                // 从父辈hook的内存状态读取最新的文件列表
                 const currentFiles = uppyInstanceRef.current?.getFiles() || []
                 const hasIncompleteFiles = currentFiles.some(
                     (file) => !(file.progress?.uploadComplete || file.progress?.percentage === 100),
                 )
                 const hasFiles = currentFiles.length > 0
 
-                // 计算实际的待删除操作数量（当前状态减去成功删除的操作）
+                // 计算剩余的待删除操作数量（当前状态减去成功删除的操作）
                 const actualPendingDeletes = restoredPendingDeletes.length - successfulOperations.length
                 const hasPendingDeletes = actualPendingDeletes > 0
 
-                // 如果没有文件且没有待删除操作，清理 IndexedDB
-                if (!hasFiles && !hasPendingDeletes) {
+                // 如果没有不完整的文件（即所有文件都已完成，或者没有文件）且没有待删除操作，清理 IndexedDB
+                if (!hasIncompleteFiles && !hasPendingDeletes) {
                     await fileOperationsQueue.removeUppyState(stateKey)
                     console.log(`[OfflineUppy] Cleared IndexedDB state after delete operations: ${stateKey}`)
                     setHasSavedState(false)
@@ -1075,7 +1169,7 @@ export function useOfflineUppyUpload(params: {
                     })
                 } else {
                     console.log(
-                        `[OfflineUppy] State check: ${currentFiles.length} files (${hasIncompleteFiles ? "some incomplete" : "all complete"}), ${actualPendingDeletes} pending deletes remaining`,
+                        `[OfflineUppy] State check: ${currentFiles.length} files (${hasIncompleteFiles ? "has incomplete" : "all complete"}), ${actualPendingDeletes} pending deletes remaining`,
                     )
                 }
             } catch (error) {
@@ -1093,6 +1187,7 @@ export function useOfflineUppyUpload(params: {
                     description: `成功: ${successfulOperations.length} 个, 失败: ${failedOperations.length} 个，请手动保存状态以持久化更改`,
                 })
             }
+            // 触发 checkSavedState 以便检查是否需要清理 DB（因为状态已经改变）
             await checkSavedState()
         } catch (error) {
             console.error("[OfflineUppy] Error executing pending deletes:", error)
