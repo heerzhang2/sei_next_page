@@ -445,6 +445,9 @@ export function useOfflineUppyUpload(params: {
     // 检查是否应该开启 uppy 面板
     const [shouldOpenUppy, setShouldOpenUppy] = useState(false)
 
+    // 检查是否有下一条待处理操作
+    const [hasNextPendingOperation, setHasNextPendingOperation] = useState(false)
+
     // 使用 ref 来存储最新的 storeObj 值，避免闭包问题
     const latestStoreObjRef = useRef<FileStore | FileStore[]>(params.storeObj)
 
@@ -487,11 +490,15 @@ export function useOfflineUppyUpload(params: {
                 console.log(`[OfflineUppy] Uppy panel should open: false (no files in snapshot)`)
                 setShouldOpenUppy(false)
             }
+
+            // 检查是否有下一条待处理操作
+            await checkNextPendingOperation()
         } catch (error) {
             console.error("[OfflineUppy] Failed to check saved state:", error)
             setShouldOpenUppy(false)
+            setHasNextPendingOperation(false)
         }
-    }, [stateKey])
+    }, [stateKey, checkNextPendingOperation])
 
     // 初始化时检查保存状态
     useEffect(() => {
@@ -815,8 +822,9 @@ export function useOfflineUppyUpload(params: {
             checkSavedState,
         ],
     )
-    //跳转到下一条待处理离线操作
-    const navigateToNextPendingOperation = useCallback(async () => {
+
+    // 检查是否有下一条待处理操作
+    const checkNextPendingOperation = useCallback(async () => {
         try {
             const allGroups = await fileOperationsQueue.getGroupedUppyStates()
             
@@ -826,7 +834,7 @@ export function useOfflineUppyUpload(params: {
             )
 
             if (!currentGroup || currentGroup.snapshots.length <= 1) {
-                toast.info("当前分组内没有其他待处理的离线操作")
+                setHasNextPendingOperation(false)
                 return
             }
 
@@ -839,18 +847,51 @@ export function useOfflineUppyUpload(params: {
             )
 
             if (currentSnapshotIndex === -1) {
-                toast.info("当前状态不在分组中")
+                setHasNextPendingOperation(false)
                 return
             }
 
-            // 获取下一个快照（不循环）
+            // 检查是否有下一个快照
             const nextIndex = currentSnapshotIndex + 1
-            if (nextIndex >= sortedSnapshots.length) {
-                toast.info("已是当前分组的最后一条待处理操作")
+            setHasNextPendingOperation(nextIndex < sortedSnapshots.length)
+        } catch (error) {
+            console.error("[OfflineUppy] Failed to check next pending operation:", error)
+            setHasNextPendingOperation(false)
+        }
+    }, [repId, subrid, stateKey])
+
+    //跳转到下一条待处理离线操作
+    const navigateToNextPendingOperation = useCallback(async () => {
+        try {
+            const allGroups = await fileOperationsQueue.getGroupedUppyStates()
+            
+            // 找到当前分组
+            const currentGroup = allGroups.find(
+                (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
+            )
+
+            if (!currentGroup) {
+                toast.error("找不到当前分组")
                 return
             }
 
+            // 按时间戳排序，找到当前快照的下一个
+            const sortedSnapshots = currentGroup.snapshots.sort((a, b) => a.timestamp - b.timestamp)
+            
+            // 找到当前快照的索引（基于时间戳匹配）
+            const currentSnapshotIndex = sortedSnapshots.findIndex(
+                (snapshot) => snapshot.key === stateKey
+            )
+
+            if (currentSnapshotIndex === -1) {
+                toast.error("当前状态不在分组中")
+                return
+            }
+
+            // 获取下一个快照
+            const nextIndex = currentSnapshotIndex + 1
             const nextSnapshot = sortedSnapshots[nextIndex]
+            
             if (nextSnapshot.meta?.originalPageUrl) {
                 // 使用 stripOrigin 保持一致性
                 const cleanUrl = stripOrigin(nextSnapshot.meta.originalPageUrl)
@@ -1284,7 +1325,7 @@ export function useOfflineUppyUpload(params: {
                             </Button>
                         )}
                     </div>
-                    {hasSavedState && (
+                    {hasSavedState && hasNextPendingOperation && (
                         <Button
                             type="button"
                             variant="outline"
