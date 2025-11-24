@@ -456,6 +456,32 @@ export function useOfflineUppyUpload(params: {
         latestStoreObjRef.current = params.storeObj
     }, [params.storeObj])
 
+
+
+    // 检查是否有下一条待处理操作（循环逻辑）
+    const checkNextPendingOperation = useCallback(async () => {
+        try {
+            const allGroups = await fileOperationsQueue.getGroupedUppyStates()
+            
+            // 找到当前分组
+            const currentGroup = allGroups.find(
+                (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
+            )
+
+            // 只有唯一一条时才没有下一条，否则总是有下一条（循环）
+            if (!currentGroup || currentGroup.snapshots.length <= 1) {
+                setHasNextPendingOperation(false)
+                return
+            }
+
+            // 只要有超过1条，就肯定有下一条（循环逻辑）
+            setHasNextPendingOperation(true)
+        } catch (error) {
+            console.error("[OfflineUppy] Failed to check next pending operation:", error)
+            setHasNextPendingOperation(false)
+        }
+    }, [repId, subrid, stateKey])
+
     // 检查保存状态的函数
     const checkSavedState = useCallback(async () => {
         try {
@@ -823,42 +849,7 @@ export function useOfflineUppyUpload(params: {
         ],
     )
 
-    // 检查是否有下一条待处理操作
-    const checkNextPendingOperation = useCallback(async () => {
-        try {
-            const allGroups = await fileOperationsQueue.getGroupedUppyStates()
-            
-            // 找到当前分组
-            const currentGroup = allGroups.find(
-                (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
-            )
 
-            if (!currentGroup || currentGroup.snapshots.length <= 1) {
-                setHasNextPendingOperation(false)
-                return
-            }
-
-            // 按时间戳排序，找到当前快照的下一个
-            const sortedSnapshots = currentGroup.snapshots.sort((a, b) => a.timestamp - b.timestamp)
-            
-            // 找到当前快照的索引（基于时间戳匹配）
-            const currentSnapshotIndex = sortedSnapshots.findIndex(
-                (snapshot) => snapshot.key === stateKey
-            )
-
-            if (currentSnapshotIndex === -1) {
-                setHasNextPendingOperation(false)
-                return
-            }
-
-            // 检查是否有下一个快照
-            const nextIndex = currentSnapshotIndex + 1
-            setHasNextPendingOperation(nextIndex < sortedSnapshots.length)
-        } catch (error) {
-            console.error("[OfflineUppy] Failed to check next pending operation:", error)
-            setHasNextPendingOperation(false)
-        }
-    }, [repId, subrid, stateKey])
 
     //跳转到下一条待处理离线操作
     const navigateToNextPendingOperation = useCallback(async () => {
@@ -888,8 +879,8 @@ export function useOfflineUppyUpload(params: {
                 return
             }
 
-            // 获取下一个快照
-            const nextIndex = currentSnapshotIndex + 1
+            // 获取下一个快照（循环逻辑）
+            const nextIndex = (currentSnapshotIndex + 1) % sortedSnapshots.length
             const nextSnapshot = sortedSnapshots[nextIndex]
             
             if (nextSnapshot.meta?.originalPageUrl) {
