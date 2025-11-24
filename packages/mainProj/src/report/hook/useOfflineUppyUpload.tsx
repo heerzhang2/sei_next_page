@@ -346,7 +346,12 @@ const restoreFileFromSnapshot = async (
             if (fileData.data instanceof File) {
                 fileToRestore = fileData.data
             } else if (fileData.data instanceof ArrayBuffer) {
-                fileToRestore = arrayBufferToFile(fileData.data, fileData.name, fileData.type, fileData.lastModified)
+                try {
+                    fileToRestore = arrayBufferToFile(fileData.data, fileData.name, fileData.type, fileData.lastModified)
+                } catch (error) {
+                    console.warn("[OfflineUppy] Failed to convert file to ArrayBuffer, falling back to File:", error)
+                    fileToRestore = fileData.data
+                }
             }
 
             if (fileToRestore) {
@@ -541,26 +546,6 @@ export function useOfflineUppyUpload(params: {
             if (restoredPendingDeletes.length > 0) {
                 console.log(`[OfflineUppy] CheckState: Has restored pending deletes, skipping clear.`)
                 return
-            }
-
-            // 如果内存状态都干净了，我们尝试清理数据库
-            // 为了双重保险，再次检查数据库里的 pendingDeleteOperations
-            const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
-            if (!snapshot) {
-                // 数据库已经没东西了
-                return
-            }
-
-            const dbPendingDeletes = snapshot.meta?.pendingDeleteOperations || []
-            if (dbPendingDeletes.length > 0) {
-                // 数据库里还有待删除操作，说明可能内存状态还没同步，或者之前的删除失败了
-                // 但如果我们的意图是"当前操作已完成"，可能需要更智能的判断
-                // 这里我们假设：如果内存里的 restoredPendingDeletes 已经清空了（说明用户点击执行并成功了），
-                // 且文件也都上传完了，那么可以清理。
-                // 但如果数据库里的操作还没执行（比如页面刷新后还没点执行），那不应该清理
-                // 此时 restoredPendingDeletes 应该是有值的。
-                // 所以逻辑是：restoredPendingDeletes.length === 0 && !hasIncompleteFiles
-                // 这一步已经在上面检查过了。
             }
 
             // 执行清理
@@ -1188,7 +1173,12 @@ export function useOfflineUppyUpload(params: {
                 })
             }
             // 触发 checkSavedState 以便检查是否需要清理 DB（因为状态已经改变）
-            await checkSavedState()
+            const finalFiles = uppyInstanceRef.current?.getFiles() || []
+            const isAllUploaded = finalFiles.every((f) => f.progress?.uploadComplete)
+
+            if (isAllUploaded) {
+                await checkSavedState()
+            }
         } catch (error) {
             console.error("[OfflineUppy] Error executing pending deletes:", error)
             toast.error("执行删除操作时发生错误")
