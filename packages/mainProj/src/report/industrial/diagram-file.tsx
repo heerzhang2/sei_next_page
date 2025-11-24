@@ -100,7 +100,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                     }
                 })
                 // 标记为已修改
-                if (!modified) setModified(true)
+                if (!modified)  setModified!(true)
             }
         }
     }, [selectedIndex, setStorage, modified, setModified, storage.单图表])
@@ -112,7 +112,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
 
     // 文件上传完成回调 - 优化状态更新逻辑
     const onFinish = useCallback(
-        async (upfile: any, del: boolean) => {
+        async (upfile: any, newUpload: boolean) => {
             if (selectedIndex < 0) {
                 toast.error("请先选择要编辑的单线图")
                 return
@@ -128,7 +128,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                 const existingItem = newDiagrams[selectedIndex] || {}
                 newDiagrams[selectedIndex] = {
                     ...existingItem,
-                    _FILE_: del ? undefined : upfile,
+                    _FILE_: upfile,
                     // 如果是新增模式，同时保存当前的说明文字和文本高度
                     m: isNewMode ? editForm.m || existingItem.m : existingItem.m,
                 }
@@ -140,8 +140,8 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
             })
             // 强制触发重新渲染
             setForceUpdate((prev) => prev + 1)
-            if (!modified) setModified(true)
-            if (!del) {
+            if (!modified)  setModified!(true)
+            if (newUpload) {
                 toast.success(`文件上传成功到单线图 ${selectedIndex + 1}`)
             }
         },

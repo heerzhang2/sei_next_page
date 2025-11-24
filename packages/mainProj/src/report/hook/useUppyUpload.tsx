@@ -169,7 +169,7 @@ type UploadMode = "tus" | "xhr"
  * 删除旧文件：关联的 rep+ repId必须的！
  * @param liveDays  该文件要求存储保留天数。 报告应该保留天数估计> 20年吧。
  * @param onFinish [可选参数] #立刻生效给context 避免 事务性的缺失。 【上传任务完成】保存回调。 可能有多个的已经上传的文件！若删除多文件其中一个文件的onFinish参数file是剩下的文件数组。
- *  参数 onFinish?的回调类型:(file:any,newUpload:boolean)=>void；
+ *  参数 onFinish?的回调类型:(file:any,newUpload:boolean)=>void； 回调参数newUpload表示是否有新上传的文件。
  * @param storeObj 对象或数组， 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
  * @param open 加载后就打开上传面板
  * @param externalPendingDeletes 未完成删除文件的状态注入列表
@@ -491,7 +491,7 @@ export function useUppyUpload({
 
     const storeObj1 = storeObj as FileStore
     const storeObj2 = storeObj as FileStore[]
-    const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : 1
+    const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : (storeObj1?.url ? 0 : 1)
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
     const whenDeleted = React.useCallback(
         async (result: any, fileUrl: string) => {
