@@ -511,10 +511,16 @@ offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9y
 【1】账户/14=Bearer%203AsUvyRLABKw4jahh1rPyVea
 【2】/21 Bearer%20jsWhusUEuz4xLvHBA790Cj0s
 【3】/26 Bearer%20bMtCVMY2iC28dzdwXBv4uwTh
-当前=heerzhang2
+当前=heerzhang3
 https://v0.app/chat/-gX7nr6ZdLiR
 https://uppy.io/docs/uppy/
+https://v0.app/chat/-LDeBd0Xq9HO?ref=EA5EWX
 
-yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1_0
-yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_0_0
+
+只有当使用 <a href={props.href} 链接导航进入新的URL情况，才会保留和显示出 “清除状态”按钮，不会立刻消失了！； 但是在刷新页面的情况下显示出 “清除状态”按钮，会立刻消失不见了，没法持续显示这个按钮。我的测试页面是https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/LineDiagramFile?original=1&lineIndex=3#LineDiagram3
+遗憾！ 还是不行啊！ 我使用 <a href={props.href} 链接导航进入新的URL情况日志在 \console\log.txt 刷新页面的情况下进入新的URL情况日志在 \console\log2.txt ；刷新页面之后，点击<a href 导航切换这个网页URL不同参数lineIndex的情况下，浏览器前进后退的，都可以正常显示“清除状态”按钮。就是刷新页面情况不行
+
+问题是：**有一个旧的 `checkSavedState` 的异步操作仍在进行中，它的 `loadUppyState` 调用会重新初始化 Uppy 实例！** 这会覆盖已设置的 `hasSavedState: true`。
+
+根本原因在 `loadUppyState` 函数 - 它被调用后会重新初始化 Uppy，进而在 `useUppyUpload` 中触发其他副作用。
 

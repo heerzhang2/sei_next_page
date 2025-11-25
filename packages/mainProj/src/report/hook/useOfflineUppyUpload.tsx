@@ -461,11 +461,7 @@ export function useOfflineUppyUpload(params: {
     useEffect(() => {
         if (prevStateKeyRef.current !== stateKey) {
             console.log(`[OfflineUppy] stateKey changed from ${prevStateKeyRef.current} to ${stateKey}, resetting states`)
-            // 立即重置所有状态
-            setRestoredPendingDeletes([])
-            setHasSavedState(false)
-            setShouldOpenUppy(false)
-            setHasNextPendingOperation(false)
+            // 不要立即重置，让 checkSavedState 来设置正确的状态
             prevStateKeyRef.current = stateKey
         }
     }, [stateKey])
@@ -504,11 +500,18 @@ export function useOfflineUppyUpload(params: {
         const capturedStateKey = stateKey
         try {
             console.log(`[OfflineUppy] checkSavedState START for key: ${capturedStateKey}`)
+            if (capturedStateKey !== currentStateKeyRef.current) {
+                console.log(
+                    `[OfflineUppy] checkSavedState ABORTED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+                )
+                return
+            }
+
             const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
 
             if (capturedStateKey !== currentStateKeyRef.current) {
                 console.log(
-                    `[OfflineUppy] checkSavedState ABORTED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+                    `[OfflineUppy] checkSavedState CANCELLED after loadUppyState - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
                 )
                 return
             }
