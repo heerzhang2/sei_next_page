@@ -52,7 +52,7 @@ export const BoilerDiagram =
         setStorage({...storage, '_FILE_S简图': upfile});
         !modified && setModified(true);
     }, [storage, modified,setStorage,setModified]);
-    const [uploadDom]=useUppyUpload({ repId:rep?.id!,
+    const [uploadDom]=useUppyUpload({ eid:rep?.id!,
         maxFile:5, onFinish, storeObj: storage?._FILE_S简图 ,liveDays:10, hash:"BoilerDiagram_pf"
     });
     //不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent {某一个表行的记录对象再倒腾一次}。

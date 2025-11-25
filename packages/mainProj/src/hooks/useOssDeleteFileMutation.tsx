@@ -14,6 +14,7 @@ export default function useOssDeleteFileMutation() {
     const [updateResult, ossDeleteFile] = useMutation(mutation)
 
     const onSubmit = (file: string, key?: string, value?: string, callback?: (resp: any, fileUrl: string) => void) => {
+        //设定一个TAG/key,上传时刻也一样的关键key; key=“eid” value=关联实体的ID
         ossDeleteFile({
             file,
             key,

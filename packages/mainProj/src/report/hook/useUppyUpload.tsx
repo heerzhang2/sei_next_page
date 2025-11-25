@@ -141,7 +141,7 @@ export const useScrollHandler = (targetSelector: string) => {
 
 export type PendingDeleteOperation = {
     deleteUrl: string
-    repId: string
+    repId: string   //存储系统eid
     hash: string
     business: string
     timestamp: number
@@ -162,7 +162,7 @@ type UploadMode = "tus" | "xhr"
 /**不支持切换页面后回来 যুক্তি续刚才的未完成的上传！tus断点续传也是要求当前网页需要保留在目前状态管理的，不能跳转其他网页去，否则不能正常完成上传。
  * 可以支持一个页面 多个上传的面板同时存在的。
  * @param id 同一个页面不能多个一样id的uppy实例
- * @param repId 分布式对象存储系统靠这个 eid ID来关联业务系统关系数据库的。
+ * @param eid 分布式对象存储系统靠这个 eid ID来关联业务系统关系数据库的。
  * @param field  inp?.[field]? 存储上传后的文件对象信息对应inp字段。 _FILE_为前缀的； 数据=可能是{}单个的，也可能多为文件形式[{ }, ]？
  * @param maxFile 设计上的最多文件个数【maxFile决定了file保存是数组还是对象】最多传几个文件； 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
  * @param maxSize  每一个文件大小最大 多少 MB 兆B单位。
@@ -179,35 +179,31 @@ type UploadMode = "tus" | "xhr"
  * TUS目前在切换路由页面再回来组件重新加载场景下，从indexDB恢复旧的上传的情况下：不管那个记住方式都会从零开始重新上传，而不是接着上次暂停位置续传的，可能被中断很长的时间，集群#后端状态也没保存。
  * */
 export function useUppyUpload({
-                                  repId,
-                                  storeObj,
-                                  maxFile = 1,
-                                  liveDays = 2,
-                                  maxSize = 5,
-                                  onFinish,
-                                  hash,
-                                  id,
-                                  business = "rep",
-                                  open,
-                                  externalPendingDeletes = [],
-                                  redId,
-                                  subrid,
-                                  stateKey,
-                              }: {
-    repId: string
+          id,
+          eid,
+          storeObj,
+          maxFile = 1,
+          liveDays = 2,
+          maxSize = 5,
+          onFinish,
+          hash,
+          business = "rep",
+          open,
+          externalPendingDeletes = [],
+          stateKey,
+      }: {
     storeObj: FileStore | FileStore[]
+    eid: string
+    hash: string
+    id?: string
     maxFile?: number
     liveDays?: number
     maxSize?: number
     onFinish?: (file: any, newUpload: boolean) => void
-    hash?: string
-    id?: string
     business?: string
     open?: boolean
-    externalPendingDeletes?: PendingDeleteOperation[]
-    redId?: number
-    subrid?: string
     stateKey?: string
+    externalPendingDeletes?: PendingDeleteOperation[]
 }) {
     const [pendingDeleteOperations, setPendingDeleteOperations] =React.useState<PendingDeleteOperation[]>(externalPendingDeletes)
     const [openUppy, setOpenUppy] = React.useState(open)
@@ -350,7 +346,7 @@ export function useUppyUpload({
 
     // 初始化 Uppy 实例 - 简化版本
     const createUppyInstance = () => {
-        const uniqueId = id ? id : `Report-${repId}-${hash || "default"}`
+        const uniqueId = id ? id : `Report-${eid}-${hash || "default"}`
         const newUppy = new Uppy({
             id: uniqueId,
             restrictions: { 
@@ -470,15 +466,15 @@ export function useUppyUpload({
             }
             initializeUppy()
         }
-    }, [id, repId, restoreUppyStateFromDB])
+    }, [id, eid, restoreUppyStateFromDB])
 
     // 当关键参数变化时重新初始化 Uppy 状态
     React.useEffect(() => {
         if (uppyInstance) {
             uppyInstance.cancelAll()
-            uppyInstance.setMeta({ eid: repId, liveDays, business })
+            uppyInstance.setMeta({ eid: eid, liveDays, business })
         }
-    }, [repId, liveDays, uppyInstance])
+    }, [eid, liveDays, uppyInstance])
 
     // 验证存储对象类型
     if (storeObj) {
@@ -512,7 +508,7 @@ export function useUppyUpload({
                         ...prev,
                         {
                             deleteUrl: fileUrl,
-                            repId,
+                            repId: eid,
                             hash: hash || "default",
                             business,
                             timestamp: Date.now(),
@@ -532,7 +528,7 @@ export function useUppyUpload({
                 }
             }
         },
-        [maxFile, onFinish, storeObj2, repId, hash, business],
+        [maxFile, onFinish, storeObj2, eid, hash, business],
     )
     const { call: delOssFileFunc } = useOssDeleteFileMutation()
     // 创建包装函数，在调用时传递回调
@@ -596,7 +592,7 @@ export function useUppyUpload({
                 }
             }
         },
-        [maxFile, onFinish, uppyInstance, repId, hash, storeObj2],
+        [maxFile, onFinish, uppyInstance, eid, hash, storeObj2],
     )
     // 设置 Uppy 选项和事件监听
     React.useEffect(() => {
@@ -996,7 +992,7 @@ export function useUppyUpload({
                         variant={maxFile === 1 ? "destructive" : "outline"}
                         size="sm"
                         onClick={(e) => {
-                            deleteFileWithCallback(file.url, "eid", repId)
+                            deleteFileWithCallback(file.url, "eid", eid)
                             e.preventDefault()
                         }}
                         className="relative"

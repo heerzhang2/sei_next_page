@@ -30,11 +30,12 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     const [isNewMode, setIsNewMode] = useState<boolean>(false)
 
     // 强制更新计数器 - 用于解决上传后显示问题
-    const [forceUpdate, setForceUpdate] = useState<number>(0)
+    // const [forceUpdate, setForceUpdate] = useState<number>(0)
     // 获取当前单线图列表 - 使用 useMemo 确保引用稳定
     const currentDiagrams: LineDiagramItem[] = useMemo(() => {
         return storage.单图表 || []
-    }, [storage.单图表, forceUpdate]) // 添加 forceUpdate 作为依赖
+    }, [storage.单图表]) // 添加 forceUpdate 作为依赖
+    // }, [storage.单图表, forceUpdate]) // 添加 forceUpdate 作为依赖
 
     // 编辑表单状态
     const [editForm, setEditForm] = useState<{ m: string; }>({ m: "", })
@@ -139,7 +140,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                 }
             })
             // 强制触发重新渲染
-            setForceUpdate((prev) => prev + 1)
+            // setForceUpdate((prev) => prev + 1)
             if (!modified)  setModified!(true)
             if (newUpload) {
                 toast.success(`文件上传成功到单线图 ${selectedIndex + 1}`)
@@ -177,14 +178,16 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     const curDiagram = useMemo(() => {
         const diagrams = storage.单图表 || []
         return selectedIndex >= 0 ? diagrams[selectedIndex] : undefined
-    }, [selectedIndex, storage.单图表, forceUpdate])
+    }, [selectedIndex, storage.单图表])
+    // }, [selectedIndex, storage.单图表, forceUpdate])
 
     // 为 useUppyUpload 准备文件对象 - 使用 useMemo 确保引用稳定
     const storeObj = useMemo(() => {
         const file = curDiagram?._FILE_
         // 确保返回一个稳定的对象引用
         return file ? { name: file.name, url: file.url,mimeType: file.mimeType} : ({} as FileStore)
-    }, [curDiagram?._FILE_, forceUpdate])
+    }, [curDiagram?._FILE_])
+    // }, [curDiagram?._FILE_, forceUpdate])
 
     // 验证函数
     const onVerify = useCallback(
@@ -201,10 +204,12 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     )
     const [uploadDom] = useOfflineUppyUpload({
         repId: rep?.id!,
+        hash: `LineDiagram_${selectedIndex}`,
+        id: `LineDiagram_${selectedIndex}-${rep?.id}`,
         storeObj,
         maxFile: 1,
         liveDays: 10,
-        hash: `LineDiagram_${selectedIndex}_${forceUpdate}`,
+        // hash: `LineDiagram_${selectedIndex}_${forceUpdate}`,
         business: "rep",
         onFinish,
     })
