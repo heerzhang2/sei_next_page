@@ -418,7 +418,7 @@ const restoreFileFromSnapshot = async (
     return { restored: false, fromHandle: false }
 }
 /*支持报告的文件离线操作能力：
-* */
+ * */
 export function useOfflineUppyUpload(params: {
     repId: string
     hash: string
@@ -452,6 +452,20 @@ export function useOfflineUppyUpload(params: {
     // 使用 ref 来存储最新的 storeObj 值，避免闭包问题
     const latestStoreObjRef = useRef<FileStore | FileStore[]>(params.storeObj)
 
+    const prevStateKeyRef = useRef<string>(stateKey)
+
+    useEffect(() => {
+        if (prevStateKeyRef.current !== stateKey) {
+            console.log(`[OfflineUppy] stateKey changed from ${prevStateKeyRef.current} to ${stateKey}, resetting states`)
+            // 立即重置所有状态
+            setRestoredPendingDeletes([])
+            setHasSavedState(false)
+            setShouldOpenUppy(false)
+            setHasNextPendingOperation(false)
+            prevStateKeyRef.current = stateKey
+        }
+    }, [stateKey])
+
     // 更新 ref 当 storeObj 变化时
     useEffect(() => {
         latestStoreObjRef.current = params.storeObj
@@ -461,7 +475,7 @@ export function useOfflineUppyUpload(params: {
     const checkNextPendingOperation = useCallback(async () => {
         try {
             const allGroups = await fileOperationsQueue.getGroupedUppyStates()
-            
+
             // 找到当前分组
             const currentGroup = allGroups.find(
                 (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
@@ -820,13 +834,11 @@ export function useOfflineUppyUpload(params: {
         ],
     )
 
-
-
     //跳转到下一条待处理离线操作
     const navigateToNextPendingOperation = useCallback(async () => {
         try {
             const allGroups = await fileOperationsQueue.getGroupedUppyStates()
-            
+
             // 找到当前分组
             const currentGroup = allGroups.find(
                 (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
@@ -839,11 +851,9 @@ export function useOfflineUppyUpload(params: {
 
             // 按时间戳排序，找到当前快照的下一个
             const sortedSnapshots = currentGroup.snapshots.sort((a, b) => a.timestamp - b.timestamp)
-            
+
             // 找到当前快照的索引（基于时间戳匹配）
-            const currentSnapshotIndex = sortedSnapshots.findIndex(
-                (snapshot) => snapshot.key === stateKey
-            )
+            const currentSnapshotIndex = sortedSnapshots.findIndex((snapshot) => snapshot.key === stateKey)
 
             if (currentSnapshotIndex === -1) {
                 toast.error("当前状态不在分组中")
@@ -853,7 +863,7 @@ export function useOfflineUppyUpload(params: {
             // 获取下一个快照（循环逻辑）
             const nextIndex = (currentSnapshotIndex + 1) % sortedSnapshots.length
             const nextSnapshot = sortedSnapshots[nextIndex]
-            
+
             if (nextSnapshot.meta?.originalPageUrl) {
                 // 使用 stripOrigin 保持一致性
                 const cleanUrl = stripOrigin(nextSnapshot.meta.originalPageUrl)

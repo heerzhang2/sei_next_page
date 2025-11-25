@@ -15,8 +15,8 @@ import { Button } from "@/components/ui"
 import { FilePreview } from "@/components/file-preview"
 import { useCallback } from "react"
 import { toast } from "sonner"
-import {fileOperationsQueue} from "@/lib/file-operations-queue"
-import zh_CN from '@uppy/locales/lib/zh_CN.js'
+import { fileOperationsQueue } from "@/lib/file-operations-queue"
+import zh_CN from "@uppy/locales/lib/zh_CN.js"
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -78,48 +78,48 @@ export type FileStore = {
 }
 // 修正视频文件 MIME 类型的函数
 const correctVideoMimeType = (file: any): string => {
-    const { name, type } = file;
-    
+    const { name, type } = file
+
     // 常见的视频文件扩展名映射
     const videoMimeMap: { [key: string]: string } = {
-        'mp4': 'video/mp4',
-        'mov': 'video/quicktime',
-        'avi': 'video/x-msvideo',
-        'mkv': 'video/x-matroska',
-        'webm': 'video/webm',
-        '3gp': 'video/3gpp',
-        'flv': 'video/x-flv',
-        'wmv': 'video/x-ms-wmv',
-        'm4v': 'video/mp4',
-    };
-    
+        mp4: "video/mp4",
+        mov: "video/quicktime",
+        avi: "video/x-msvideo",
+        mkv: "video/x-matroska",
+        webm: "video/webm",
+        "3gp": "video/3gpp",
+        flv: "video/x-flv",
+        wmv: "video/x-ms-wmv",
+        m4v: "video/mp4",
+    }
+
     // 从文件名获取扩展名
-    const extension = name.split('.').pop()?.toLowerCase();
-    
+    const extension = name.split(".").pop()?.toLowerCase()
+
     // 如果扩展名匹配且当前 MIME 类型不正确，则修正
     if (extension && videoMimeMap[extension]) {
-        const correctType = videoMimeMap[extension];
-        
+        const correctType = videoMimeMap[extension]
+
         // 检查当前 MIME 类型是否需要修正
-        if (!type.startsWith('video/') || type !== correctType) {
+        if (!type.startsWith("video/") || type !== correctType) {
             // 特别处理 MOV 文件，提醒用户可能需要转换
-            if (extension === 'mov' && correctType === 'video/quicktime') {
-                console.warn(`[v0] 检测到 MOV 格式视频: ${file.name}，Windows 系统可能需要转换器才能播放`);
+            if (extension === "mov" && correctType === "video/quicktime") {
+                console.warn(`[v0] 检测到 MOV 格式视频: ${file.name}，Windows 系统可能需要转换器才能播放`)
             }
-            return correctType;
+            return correctType
         }
     }
-    
+
     // 如果没有找到匹配的扩展名，但有 video 前缀，确保是标准格式
-    if (type && type.startsWith('video/')) {
+    if (type && type.startsWith("video/")) {
         // 将一些非标准 MIME 类型转换为标准类型
-        if (type.includes('quicktime')) return 'video/quicktime';
-        if (type.includes('x-msvideo')) return 'video/x-msvideo';
-        if (type.includes('x-matroska')) return 'video/x-matroska';
+        if (type.includes("quicktime")) return "video/quicktime"
+        if (type.includes("x-msvideo")) return "video/x-msvideo"
+        if (type.includes("x-matroska")) return "video/x-matroska"
     }
-    
-    return type || 'video/mp4'; // 默认返回 mp4
-};
+
+    return type || "video/mp4" // 默认返回 mp4
+}
 
 export const useScrollHandler = (targetSelector: string) => {
     return useCallback(
@@ -141,7 +141,7 @@ export const useScrollHandler = (targetSelector: string) => {
 
 export type PendingDeleteOperation = {
     deleteUrl: string
-    repId: string   //存储系统eid
+    repId: string //存储系统eid
     hash: string
     business: string
     timestamp: number
@@ -152,8 +152,8 @@ const createMergedLocale = () => ({
         ...zh_CN.strings,
         ...UPPY_LOCALE_CONFIG.strings,
         ...DASH_LOCALE_CONFIG.strings,
-        pluginNameCamera: '摄像头',
-    }
+        pluginNameCamera: "摄像头",
+    },
 })
 export const MERGED_LOCALE_CONFIG = createMergedLocale()
 // 上传模式类型
@@ -179,19 +179,19 @@ type UploadMode = "tus" | "xhr"
  * TUS目前在切换路由页面再回来组件重新加载场景下，从indexDB恢复旧的上传的情况下：不管那个记住方式都会从零开始重新上传，而不是接着上次暂停位置续传的，可能被中断很长的时间，集群#后端状态也没保存。
  * */
 export function useUppyUpload({
-          id,
-          eid,
-          storeObj,
-          maxFile = 1,
-          liveDays = 2,
-          maxSize = 5,
-          onFinish,
-          hash,
-          business = "rep",
-          open,
-          externalPendingDeletes = [],
-          stateKey,
-      }: {
+                                  id,
+                                  eid,
+                                  storeObj,
+                                  maxFile = 1,
+                                  liveDays = 2,
+                                  maxSize = 5,
+                                  onFinish,
+                                  hash,
+                                  business = "rep",
+                                  open,
+                                  externalPendingDeletes = [],
+                                  stateKey,
+                              }: {
     storeObj: FileStore | FileStore[]
     eid: string
     hash: string
@@ -205,7 +205,8 @@ export function useUppyUpload({
     stateKey?: string
     externalPendingDeletes?: PendingDeleteOperation[]
 }) {
-    const [pendingDeleteOperations, setPendingDeleteOperations] =React.useState<PendingDeleteOperation[]>(externalPendingDeletes)
+    const [pendingDeleteOperations, setPendingDeleteOperations] =
+        React.useState<PendingDeleteOperation[]>(externalPendingDeletes)
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
@@ -349,7 +350,7 @@ export function useUppyUpload({
         const uniqueId = id ? id : `Report-${eid}-${hash || "default"}`
         const newUppy = new Uppy({
             id: uniqueId,
-            restrictions: { 
+            restrictions: {
                 maxNumberOfFiles: maxFile,
             },
             locale: MERGED_LOCALE_CONFIG, // 使用合并配置
@@ -357,7 +358,7 @@ export function useUppyUpload({
         // 添加 Webcam 插件
         newUppy.use(Webcam, {
             countdown: false, // 是否倒计时拍照
-            modes: ['picture', 'video-audio'], // 支持拍照和录像（带声音）
+            modes: ["picture", "video-audio"], // 支持拍照和录像（带声音）
             mirror: true, // 是否镜像（对于前置摄像头比较常见）
             mobileNativeCamera: false, //禁用原生相机App，使用浏览器API录制，更易获得MP4
             // 指定首选的视频 MIME 类型为 MP4 (H.264 + AAC)
@@ -366,9 +367,9 @@ export function useUppyUpload({
             videoConstraints: {
                 width: { min: 320, ideal: 1280, max: 1920 },
                 height: { min: 240, ideal: 720, max: 1080 },
-                facingMode: 'environment'   //默认用后置摄像头
-            }
-        });
+                facingMode: "environment", //默认用后置摄像头
+            },
+        })
         // 根据当前模式配置插件
         if (uploadMode === "tus") {
             configureTusPlugin(newUppy)
@@ -379,15 +380,15 @@ export function useUppyUpload({
     }
 
     const restoreUppyStateFromDB = React.useCallback(async () => {
-        if (!stateKey) return null;
+        if (!stateKey) return null
         try {
-            const savedState = await fileOperationsQueue.loadUppyState(stateKey!);
+            const savedState = await fileOperationsQueue.loadUppyState(stateKey!)
             if (savedState) {
-                console.log(`[v0] Restored Uppy state for key: ${stateKey}`);
+                console.log(`[v0] Restored Uppy state for key: ${stateKey}`)
                 // 恢复待删除操作
                 if (savedState.meta?.pendingDeleteOperations && Array.isArray(savedState.meta.pendingDeleteOperations)) {
-                    setPendingDeleteOperations(savedState.meta.pendingDeleteOperations);
-                    console.log(`[v0] Restored ${savedState.meta.pendingDeleteOperations.length} pending delete operations`);
+                    setPendingDeleteOperations(savedState.meta.pendingDeleteOperations)
+                    console.log(`[v0] Restored ${savedState.meta.pendingDeleteOperations.length} pending delete operations`)
                 }
 
                 if (savedState.files && Array.isArray(savedState.files)) {
@@ -401,72 +402,78 @@ export function useUppyUpload({
                             name: file.name,
                             type: file.type,
                             lastModified: file.lastModified || Date.now(),
-                            ...file.meta // 保留其他 meta 信息
+                            ...file.meta, // 保留其他 meta 信息
                         },
                         progress: {
                             uploadComplete: file.progress?.uploadComplete || false,
-                            percentage: file.progress?.percentage || 0
-                        }
-                    }));
+                            percentage: file.progress?.percentage || 0,
+                        },
+                    }))
 
                     return {
                         ...savedState,
-                        files: reconstructedFiles
-                    };
+                        files: reconstructedFiles,
+                    }
                 }
-                return savedState;
+                return savedState
             }
         } catch (error) {
-            console.warn(`[v0] Failed to restore Uppy state:`, error);
+            console.warn(`[v0] Failed to restore Uppy state:`, error)
         }
-        return null;
-    }, [stateKey]);
+        return null
+    }, [stateKey])
 
     // 初始化 Uppy 实例
     React.useEffect(() => {
-        if (!uppyInstance) {
-            const initializeUppy = async () => {
-                const newUppy = createUppyInstance()
+        if (uppyInstance) {
+            uppyInstance.clearSelectableFiles?.()
+            uppyInstance.cancelAll()
+            uppyInstance.close?.()
+        }
 
-                // 尝试从 indexDB 恢复之前的状态
-                const savedState = await restoreUppyStateFromDB()
-                if (savedState && savedState.files && savedState.files.length > 0) {
-                    try {
-                        if (savedState.meta) {
-                            newUppy.setMeta(savedState.meta)
-                        }
+        const initializeUppy = async () => {
+            const newUppy = createUppyInstance()
 
-                        // 单独恢复文件
-                        for (const file of savedState.files) {
-                            try {
-                                if (file.data) {
-                                    newUppy.addFile({
-                                        id: file.id,
+            // 尝试从 indexDB 恢复之前的状态
+            const savedState = await restoreUppyStateFromDB()
+            if (savedState && savedState.files && savedState.files.length > 0) {
+                try {
+                    if (savedState.meta) {
+                        newUppy.setMeta(savedState.meta)
+                    }
+
+                    // 单独恢复文件
+                    for (const file of savedState.files) {
+                        try {
+                            if (file.data) {
+                                newUppy.addFile({
+                                    id: file.id,
+                                    name: file.name,
+                                    type: file.type,
+                                    data: file.data,
+                                    meta: {
                                         name: file.name,
                                         type: file.type,
-                                        data: file.data,
-                                        meta: {
-                                            name: file.name,
-                                            type: file.type,
-                                            lastModified: file.lastModified || Date.now()
-                                        }
-                                    })
-                                }
-                            } catch (error) {
-                                console.warn(`[v0] Failed to restore file ${file.name}:`, error)
+                                        lastModified: file.lastModified || Date.now(),
+                                    },
+                                })
                             }
+                        } catch (error) {
+                            console.warn(`[v0] Failed to restore file ${file.name}:`, error)
                         }
-
-                        console.log(`[v0] Applied restored state to Uppy instance with ${savedState.files.length} files`)
-                    } catch (error) {
-                        console.warn(`[v0] Failed to apply saved state:`, error)
                     }
+
+                    console.log(`[v0] Applied restored state to Uppy instance with ${savedState.files.length} files`)
+                } catch (error) {
+                    console.warn(`[v0] Failed to apply saved state:`, error)
                 }
-                setUppyInstance(newUppy)
             }
-            initializeUppy()
+
+            setPendingDeleteOperations(externalPendingDeletes)
+            setUppyInstance(newUppy)
         }
-    }, [id, eid, restoreUppyStateFromDB])
+        initializeUppy()
+    }, [id, eid, stateKey, restoreUppyStateFromDB, externalPendingDeletes])
 
     // 当关键参数变化时重新初始化 Uppy 状态
     React.useEffect(() => {
@@ -487,7 +494,7 @@ export function useUppyUpload({
 
     const storeObj1 = storeObj as FileStore
     const storeObj2 = storeObj as FileStore[]
-    const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : (storeObj1?.url ? 0 : 1)
+    const thisMaxFiles = maxFile > 1 ? maxFile - (storeObj2?.length || 0) : storeObj1?.url ? 0 : 1
     //参数arIndex：回调时刻制定了 从哪一个文件index来触发删除后调用的。
     const whenDeleted = React.useCallback(
         async (result: any, fileUrl: string) => {
@@ -501,8 +508,8 @@ export function useUppyUpload({
             if (isError) {
                 setPendingDeleteOperations((prev) => {
                     // 避免重复添加同一个 deleteUrl
-                    if (prev.some(op => op.deleteUrl === fileUrl)) {
-                        return prev;
+                    if (prev.some((op) => op.deleteUrl === fileUrl)) {
+                        return prev
                     }
                     return [
                         ...prev,
@@ -512,9 +519,9 @@ export function useUppyUpload({
                             hash: hash || "default",
                             business,
                             timestamp: Date.now(),
-                        }
-                    ];
-                });
+                        },
+                    ]
+                })
                 toast.info("已加入待删除列表", {
                     description: "删除操作将在保存状态后加入离线队列",
                 })
@@ -523,7 +530,7 @@ export function useUppyUpload({
                     onFinish && onFinish(undefined, false)
                 } else {
                     // 使用文件URL来查找并删除文件，而不是索引
-                    const newStoreObj = [...storeObj2].filter(file => file.url !== fileUrl)
+                    const newStoreObj = [...storeObj2].filter((file) => file.url !== fileUrl)
                     onFinish && onFinish(newStoreObj, false)
                 }
             }
@@ -532,9 +539,12 @@ export function useUppyUpload({
     )
     const { call: delOssFileFunc } = useOssDeleteFileMutation()
     // 创建包装函数，在调用时传递回调
-    const deleteFileWithCallback = React.useCallback((fileUrl: string, key?: string, value?: string) => {
-        delOssFileFunc(fileUrl, key, value, whenDeleted)
-    }, [delOssFileFunc, whenDeleted])
+    const deleteFileWithCallback = React.useCallback(
+        (fileUrl: string, key?: string, value?: string) => {
+            delOssFileFunc(fileUrl, key, value, whenDeleted)
+        },
+        [delOssFileFunc, whenDeleted],
+    )
     //【上传应答】结束时刻回调
     const handleUpSuccess = React.useCallback(
         (result: { successful: any[] }) => {
@@ -569,8 +579,8 @@ export function useUppyUpload({
                             meta: {
                                 ...file.meta,
                                 uploadCompletedMark: true, // 特殊标记：上传完成
-                                uploadCompletedTime: Date.now() // 记录完成时间
-                            }
+                                uploadCompletedTime: Date.now(), // 记录完成时间
+                            },
                         })
                         console.log(`[v0] Marked file as upload completed: ${file.name}`)
                     }
@@ -619,8 +629,8 @@ export function useUppyUpload({
         return () => {
             if (uppyInstance) {
                 try {
-                    const tusPlugin = uppyInstance.getPlugin('tus-upload')
-                    const xhrPlugin = uppyInstance.getPlugin('xhr-upload')
+                    const tusPlugin = uppyInstance.getPlugin("tus-upload")
+                    const xhrPlugin = uppyInstance.getPlugin("xhr-upload")
 
                     if (tusPlugin) {
                         uppyInstance.removePlugin(tusPlugin)
@@ -629,7 +639,7 @@ export function useUppyUpload({
                         uppyInstance.removePlugin(xhrPlugin)
                     }
                 } catch (error) {
-                    console.warn(`[v0] Failed to remove plugins:`, error);
+                    console.warn(`[v0] Failed to remove plugins:`, error)
                 }
 
                 uppyInstance.destroy()
@@ -638,67 +648,68 @@ export function useUppyUpload({
     }, [uppyInstance])
     // 视频文件预处理函数
     const preprocessVideoFile = async (file: any): Promise<any> => {
-        if (!file.type.startsWith('video/')) {
-            return file;
+        if (!file.type.startsWith("video/")) {
+            return file
         }
         try {
             // 检查视频文件大小和时长
-            const video = document.createElement('video');
-            const fileURL = URL.createObjectURL(file.data);
-            
+            const video = document.createElement("video")
+            const fileURL = URL.createObjectURL(file.data)
+
             return new Promise((resolve) => {
                 video.onloadedmetadata = () => {
-                    URL.revokeObjectURL(fileURL);
-                    
-                    const duration = video.duration;
-                    const fileSizeMB = file.size / (1024 * 1024);
-                    
-                    console.log(`[v0] 视频文件信息: ${file.name}`);
-                    console.log(`  - 时长: ${duration.toFixed(2)} 秒`);
-                    console.log(`  - 大小: ${fileSizeMB.toFixed(2)} MB`);
-                    console.log(`  - 分辨率: ${video.videoWidth}x${video.videoHeight}`);
-                    console.log(`  - MIME 类型: ${file.type}`);
-                    
+                    URL.revokeObjectURL(fileURL)
+
+                    const duration = video.duration
+                    const fileSizeMB = file.size / (1024 * 1024)
+
+                    console.log(`[v0] 视频文件信息: ${file.name}`)
+                    console.log(`  - 时长: ${duration.toFixed(2)} 秒`)
+                    console.log(`  - 大小: ${fileSizeMB.toFixed(2)} MB`)
+                    console.log(`  - 分辨率: ${video.videoWidth}x${video.videoHeight}`)
+                    console.log(`  - MIME 类型: ${file.type}`)
+
                     // 检查是否是 MOV 格式，给出 Windows 兼容性提示
-                    if (file.type === 'video/quicktime' || file.name.toLowerCase().endsWith('.mov')) {
-                        toast.info('MOV 格式视频', {
-                            description: '苹果手机录制的 MOV 格式在 Windows 上可能需要转换器播放，建议使用支持 MOV 的播放器',
+                    if (file.type === "video/quicktime" || file.name.toLowerCase().endsWith(".mov")) {
+                        toast.info("MOV 格式视频", {
+                            description: "苹果手机录制的 MOV 格式在 Windows 上可能需要转换器播放，建议使用支持 MOV 的播放器",
                             duration: 6000,
-                        });
+                        })
                     }
-                    
+
                     // 如果视频时长过长，给出警告
-                    if (duration > 300) { // 5分钟
-                        toast.warning('视频时长较长', {
+                    if (duration > 300) {
+                        // 5分钟
+                        toast.warning("视频时长较长", {
                             description: `视频时长 ${Math.floor(duration / 60)}分${Math.floor(duration % 60)}秒，上传可能需要较长时间`,
                             duration: 5000,
-                        });
+                        })
                     }
-                    
+
                     // 如果文件过大，给出警告
                     if (fileSizeMB > maxSize * 0.8) {
-                        toast.warning('视频文件较大', {
+                        toast.warning("视频文件较大", {
                             description: `文件大小 ${fileSizeMB.toFixed(1)}MB，接近限制 ${maxSize}MB`,
                             duration: 5000,
-                        });
+                        })
                     }
-                    
-                    resolve(file);
-                };
-                
+
+                    resolve(file)
+                }
+
                 video.onerror = () => {
-                    URL.revokeObjectURL(fileURL);
-                    console.warn(`[v0] 无法读取视频元数据: ${file.name}`);
-                    resolve(file);
-                };
-                
-                video.src = fileURL;
-            });
+                    URL.revokeObjectURL(fileURL)
+                    console.warn(`[v0] 无法读取视频元数据: ${file.name}`)
+                    resolve(file)
+                }
+
+                video.src = fileURL
+            })
         } catch (error) {
-            console.warn(`[v0] 视频预处理失败: ${file.name}`, error);
-            return file;
+            console.warn(`[v0] 视频预处理失败: ${file.name}`, error)
+            return file
         }
-    };
+    }
 
     // 上传模式切换处理 - 动态切换插件版本
     const handleModeChange = async (mode: UploadMode) => {
@@ -714,8 +725,8 @@ export function useUppyUpload({
 
         try {
             // 移除所有上传插件
-            const tusPlugin = uppyInstance.getPlugin('tus-upload')
-            const xhrPlugin = uppyInstance.getPlugin('xhr-upload')
+            const tusPlugin = uppyInstance.getPlugin("tus-upload")
+            const xhrPlugin = uppyInstance.getPlugin("xhr-upload")
 
             if (tusPlugin) {
                 uppyInstance.removePlugin(tusPlugin)
@@ -732,7 +743,7 @@ export function useUppyUpload({
             }
 
             // 关键修复：彻底重置文件状态
-            currentFiles.forEach(file => {
+            currentFiles.forEach((file) => {
                 try {
                     // 先移除文件
                     uppyInstance.removeFile(file.id)
@@ -779,7 +790,6 @@ export function useUppyUpload({
                 description: `已保留 ${currentFiles.length} 个文件，可以重新上传`,
                 duration: 3000,
             })
-
         } catch (error) {
             console.error("Failed to switch upload mode:", error)
             toast.error("模式切换失败", {
@@ -822,9 +832,7 @@ export function useUppyUpload({
                 {uploadMode === "xhr" && "用标准 HTTP 上传，事务性更好，最大支持500兆的"}
             </div>
             {uppyInstance && (
-                <div className="mt-1 text-xs text-blue-600">
-                    当前已选择 {uppyInstance.getFiles().length} 个文件
-                </div>
+                <div className="mt-1 text-xs text-blue-600">当前已选择 {uppyInstance.getFiles().length} 个文件</div>
             )}
         </div>
     )
@@ -865,27 +873,27 @@ export function useUppyUpload({
     }
     React.useEffect(() => {
         if (externalPendingDeletes.length > 0) {
-            console.log(`[v0] Restoring ${externalPendingDeletes.length} external pending deletes`);
+            console.log(`[v0] Restoring ${externalPendingDeletes.length} external pending deletes`)
             setPendingDeleteOperations((prev) => {
-                const existingUrls = new Set(prev.map(op => op.deleteUrl));
-                const newOps = externalPendingDeletes.filter(op => !existingUrls.has(op.deleteUrl));
+                const existingUrls = new Set(prev.map((op) => op.deleteUrl))
+                const newOps = externalPendingDeletes.filter((op) => !existingUrls.has(op.deleteUrl))
                 if (newOps.length > 0) {
-                    console.log(`[v0] Adding ${newOps.length} new pending deletes to current state`);
-                    return [...prev, ...newOps];
+                    console.log(`[v0] Adding ${newOps.length} new pending deletes to current state`)
+                    return [...prev, ...newOps]
                 } else {
-                    console.log(`[v0] No new pending deletes to add (all already exist in current state)`);
-                    return prev;
+                    console.log(`[v0] No new pending deletes to add (all already exist in current state)`)
+                    return prev
                 }
-            });
+            })
         }
-    }, [externalPendingDeletes]);
+    }, [externalPendingDeletes])
     // 检查特定文件是否在待删除队列中
     const isFilePendingDelete = useCallback(
         (fileUrl: string) => {
-            return pendingDeleteOperations.some(op => op.deleteUrl === fileUrl);
+            return pendingDeleteOperations.some((op) => op.deleteUrl === fileUrl)
         },
-        [pendingDeleteOperations]
-    );
+        [pendingDeleteOperations],
+    )
 
     const popoverStyles = `
     [popover] {
@@ -977,12 +985,7 @@ export function useUppyUpload({
             <div key={index} className="mb-4 border rounded-lg p-3 bg-gray-50">
                 {index > 0 && <hr className="my-3" />}
                 <div id={(hash ?? "_pf") + `${index}`} className="flex justify-around items-center">
-                    {file.url && (
-                        <FilePreview
-                            file={file}
-                            ossEndpoint={process.env.NEXT_PUBLIC_OSS_ENDP || ""}
-                        />
-                    )}
+                    {file.url && <FilePreview file={file} ossEndpoint={process.env.NEXT_PUBLIC_OSS_ENDP || ""} />}
                 </div>
 
                 {/* 删除按钮放在图片下面 */}
@@ -1001,8 +1004,8 @@ export function useUppyUpload({
                         {maxFile === 1 ? "删除" : `删除文件`}
                         {isPendingDelete && (
                             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-                                !
-                            </span>
+                !
+              </span>
                         )}
                     </Button>
 
@@ -1108,14 +1111,12 @@ export function useUppyUpload({
 
     //取消删除的函数
     const cancelPendingDelete = useCallback((fileUrl: string) => {
-        setPendingDeleteOperations((prev) =>
-            prev.filter(op => op.deleteUrl !== fileUrl)
-        );
+        setPendingDeleteOperations((prev) => prev.filter((op) => op.deleteUrl !== fileUrl))
         toast.success("已取消删除操作", {
             description: "文件已从待删除队列中移除",
             duration: 2000,
-        });
-    }, []);
+        })
+    }, [])
     //批量取消删除的函数
     const cancelPendingOperations = useCallback(() => {
         if (pendingDeleteOperations.length === 0) {
@@ -1132,113 +1133,111 @@ export function useUppyUpload({
     //移除指定删除操作的函数
     const removePendingDeleteOperations = useCallback((deleteUrls: string[]) => {
         if (deleteUrls.length === 0) return
-        
-        setPendingDeleteOperations(prev =>
-            prev.filter(op => !deleteUrls.includes(op.deleteUrl))
-        )
+
+        setPendingDeleteOperations((prev) => prev.filter((op) => !deleteUrls.includes(op.deleteUrl)))
     }, [])
 
-    // 排除已完成上传的文件
+    // 排除已完成的文件
     const removeCompletedFiles = React.useCallback(() => {
         if (!uppyInstance) {
-            toast.error("Uppy 实例未初始化");
-            return;
+            toast.error("Uppy 实例未初始化")
+            return
         }
 
-        const files = uppyInstance.getFiles();
+        const files = uppyInstance.getFiles()
         if (files.length === 0) {
-            toast.info("没有需要处理的文件");
-            return;
+            toast.info("没有需要处理的文件")
+            return
         }
 
-        let removedCount = 0;
-        let completedCount = 0;
+        let removedCount = 0
+        let completedCount = 0
 
         files.forEach((file) => {
             // 检查文件是否已经成功上传（多种方式检查）
-            const isCompletedByProgress = file.progress?.uploadComplete &&
-                file.progress?.percentage === 100 &&
-                file.response?.uploadURL;
-            
+            const isCompletedByProgress =
+                file.progress?.uploadComplete && file.progress?.percentage === 100 && file.response?.uploadURL
+
             // 检查特殊标记
-            const isCompletedByMark = file.meta?.uploadCompletedMark === true;
-            
+            const isCompletedByMark = file.meta?.uploadCompletedMark === true
+
             // 只要任一条件满足就认为已完成
-            const isCompleted = isCompletedByProgress || isCompletedByMark;
+            const isCompleted = isCompletedByProgress || isCompletedByMark
 
             if (isCompleted) {
                 try {
-                    uppyInstance.removeFile(file.id);
-                    removedCount++;
-                    completedCount++;
-                    const reason = isCompletedByMark ? "特殊标记" : "进度检查";
-                    console.log(`[v0] 移除已完成文件: ${file.name} (${reason})`);
+                    uppyInstance.removeFile(file.id)
+                    removedCount++
+                    completedCount++
+                    const reason = isCompletedByMark ? "特殊标记" : "进度检查"
+                    console.log(`[v0] 移除已完成文件: ${file.name} (${reason})`)
                 } catch (error) {
-                    console.warn(`移除已完成文件失败: ${file.name}`, error);
+                    console.warn(`移除已完成文件失败: ${file.name}`, error)
                 }
             }
-        });
+        })
 
         if (removedCount > 0) {
             toast.success(`已排除 ${removedCount} 个已完成文件`, {
                 description: `清理了 ${completedCount} 个成功上传的文件`,
                 duration: 3000,
-            });
+            })
         } else {
-            toast.info("没有发现已完成的上传文件");
+            toast.info("没有发现已完成的上传文件")
         }
-    }, [uppyInstance]);
+    }, [uppyInstance])
 
     // 添加重复文件检查
-    const checkForDuplicateFiles = React.useCallback((newFiles: any[]) => {
-        if (!uppyInstance || newFiles.length === 0) return newFiles;
+    const checkForDuplicateFiles = React.useCallback(
+        (newFiles: any[]) => {
+            if (!uppyInstance || newFiles.length === 0) return newFiles
 
-        const existingFiles = uppyInstance.getFiles();
-        const storeFiles = maxFile === 1 ?
-            (storeObj1?.url ? [storeObj1] : []) :
-            storeObj2 || [];
+            const existingFiles = uppyInstance.getFiles()
+            const storeFiles = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
 
-        // 检查重复的文件
-        const duplicates = newFiles.filter(newFile => {
-            // 检查是否已在 Uppy 文件列表中
-            const inUppy = existingFiles.some(existingFile =>
-                existingFile.name === newFile.name &&
-                existingFile.size === newFile.size && existingFile.progress.uploadComplete===true
-            );
-            // 检查是否已在存储的文件中 根据storeFile.name判定太武断了，不做限制了。
-            return inUppy;
-        });
-
-        if (duplicates.length > 0) {
-            const duplicateNames = duplicates.map(f => f.name).join(', ');
-            toast.warning(`发现 ${duplicates.length} 个重复文件`, {
-                description: `以下文件已存在: ${duplicateNames}`,
-                duration: 5000,
-            });
-
-            // 过滤掉重复文件
-            return newFiles.filter(newFile =>
-                !duplicates.some(dup =>
-                    dup.name === newFile.name && dup.size === newFile.size
+            // 检查重复的文件
+            const duplicates = newFiles.filter((newFile) => {
+                // 检查是否已在 Uppy 文件列表中
+                const inUppy = existingFiles.some(
+                    (existingFile) =>
+                        existingFile.name === newFile.name &&
+                        existingFile.size === newFile.size &&
+                        existingFile.progress.uploadComplete === true,
                 )
-            );
-        }
+                // 检查是否已在存储的文件中 根据storeFile.name判定太武断了，不做限制了。
+                return inUppy
+            })
 
-        return newFiles;
-    }, [uppyInstance, storeObj1, storeObj2, maxFile]);
+            if (duplicates.length > 0) {
+                const duplicateNames = duplicates.map((f) => f.name).join(", ")
+                toast.warning(`发现 ${duplicates.length} 个重复文件`, {
+                    description: `以下文件已存在: ${duplicateNames}`,
+                    duration: 5000,
+                })
+
+                // 过滤掉重复文件
+                return newFiles.filter(
+                    (newFile) => !duplicates.some((dup) => dup.name === newFile.name && dup.size === newFile.size),
+                )
+            }
+
+            return newFiles
+        },
+        [uppyInstance, storeObj1, storeObj2, maxFile],
+    )
     // 在 Uppy 初始化后添加文件重复检查
     React.useEffect(() => {
-        if (!uppyInstance) return;
+        if (!uppyInstance) return
         // 监听文件添加事件，进行重复检查和 MIME 类型修正
         const handleFileAdded = async (file: any) => {
-            const files = [file];
+            const files = [file]
             // 修正视频文件的 MIME 类型
-            if (file.type && file.type.startsWith('video/')) {
-                const correctedMimeType = correctVideoMimeType(file); // 使用你已有的函数
+            if (file.type && file.type.startsWith("video/")) {
+                const correctedMimeType = correctVideoMimeType(file) // 使用你已有的函数
                 // 如果 MIME 类型发生了改变，则更新文件的 meta 信息
                 if (correctedMimeType !== file.type) {
-                    uppyInstance.setFileMeta(file.id, { ...file.meta, type: correctedMimeType });
-                    console.log(`[v0] Corrected MIME type for ${file.name}: ${file.type} -> ${correctedMimeType}`);
+                    uppyInstance.setFileMeta(file.id, { ...file.meta, type: correctedMimeType })
+                    console.log(`[v0] Corrected MIME type for ${file.name}: ${file.type} -> ${correctedMimeType}`)
                     // （可选）也可以尝试修改文件名扩展名以匹配 MIME 类型
                     // 注意：这不会改变实际的文件内容，只是改变 Uppy 内部记录的名字
                     // 如果上传端点依赖扩展名判断，这可能会有用
@@ -1252,8 +1251,8 @@ export function useUppyUpload({
                 // 预处理视频文件
                 const processedFile = await preprocessVideoFile({
                     ...file,
-                    type: correctedMimeType
-                });
+                    type: correctedMimeType,
+                })
                 // 更新文件信息
                 uppyInstance.setFileState(file.id, {
                     meta: {
@@ -1261,64 +1260,63 @@ export function useUppyUpload({
                         duration: processedFile.duration,
                         videoWidth: processedFile.videoWidth,
                         videoHeight: processedFile.videoHeight,
-                    }
-                });
+                    },
+                })
             }
-            const filteredFiles = checkForDuplicateFiles(files);
+            const filteredFiles = checkForDuplicateFiles(files)
             if (filteredFiles.length < files.length) {
                 // 有重复文件，从 Uppy 中移除
                 setTimeout(() => {
                     try {
-                        uppyInstance.removeFile(file.id);
+                        uppyInstance.removeFile(file.id)
                     } catch (error) {
-                        console.warn(`移除重复文件失败: ${file.name}`, error);
+                        console.warn(`移除重复文件失败: ${file.name}`, error)
                     }
-                }, 100);
+                }, 100)
             }
-        };
+        }
         const handleRetryAll = (fileIDs: any) => {
-            console.warn(`再试试:  fileIDs=`, fileIDs);
-        };
-        uppyInstance.on('file-added', handleFileAdded);
-        uppyInstance.on('retry-all', handleRetryAll);
+            console.warn(`再试试:  fileIDs=`, fileIDs)
+        }
+        uppyInstance.on("file-added", handleFileAdded)
+        uppyInstance.on("retry-all", handleRetryAll)
         return () => {
-            uppyInstance.off('file-added', handleFileAdded);
-            uppyInstance.off('retry-all', handleRetryAll);
-        };
-    }, [uppyInstance, checkForDuplicateFiles]);
+            uppyInstance.off("file-added", handleFileAdded)
+            uppyInstance.off("retry-all", handleRetryAll)
+        }
+    }, [uppyInstance, checkForDuplicateFiles])
 
     // 添加强制重新上传功能
     const retryFailedUploads = React.useCallback(() => {
         if (!uppyInstance) {
-            toast.error("Uppy 实例未初始化");
-            return;
+            toast.error("Uppy 实例未初始化")
+            return
         }
 
-        const files = uppyInstance.getFiles();
-        const failedFiles = files.filter(file =>
-            file.error ||
-            (file.progress?.uploadComplete === false && file.progress?.percentage < 100)
-        );
+        const files = uppyInstance.getFiles()
+        const failedFiles = files.filter(
+            (file) => file.error || (file.progress?.uploadComplete === false && file.progress?.percentage < 100),
+        )
 
         if (failedFiles.length === 0) {
-            toast.info("没有发现失败的上传任务");
-            return;
+            toast.info("没有发现失败的上传任务")
+            return
         }
 
         // 重置失败的文件状态
-        failedFiles.forEach(file => {
+        failedFiles.forEach((file) => {
             try {
-                uppyInstance.resetProgress(file.id);
-                uppyInstance.retryUpload(file.id);
+                uppyInstance.resetProgress(file.id)
+                uppyInstance.retryUpload(file.id)
             } catch (error) {
-                console.warn(`重置文件失败: ${file.name}`, error);
+                console.warn(`重置文件失败: ${file.name}`, error)
             }
-        });
+        })
 
         toast.info(`正在重试 ${failedFiles.length} 个失败的上传`, {
             duration: 3000,
-        });
-    }, [uppyInstance]);
+        })
+    }, [uppyInstance])
     // 添加统一的渲染函数
     const renderFiles = () => {
         const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
@@ -1340,18 +1338,14 @@ export function useUppyUpload({
 
                 {/* 上传面板 */}
                 <div className="text-center mt-4">
-                    <div key="dashboard" style={{ display: openUppy ? 'block' : 'none' }}>
+                    <div key="dashboard" style={{ display: openUppy ? "block" : "none" }}>
                         <UploadModeSelector />
-                        <Dashboard uppy={uppyInstance!} locale={MERGED_LOCALE_CONFIG}  plugins={["Webcam"]} />
+                        <Dashboard uppy={uppyInstance!} locale={MERGED_LOCALE_CONFIG} plugins={["Webcam"]} />
                     </div>
                     {/* 操作按钮 */}
                     <div className="space-y-2">
                         <div className="flex justify-center items-center gap-2">
-                            <Button
-                                size="sm"
-                                disabled={!openUppy && thisMaxFiles <= 0}
-                                onClick={scrollHandler}
-                            >
+                            <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
                                 {openUppy ? "关闭上传" : `开启上传`}
                                 {selectedFilesCount > 0 && ` | 在选${selectedFilesCount}个`}
                             </Button>
@@ -1363,18 +1357,18 @@ export function useUppyUpload({
                                     variant="outline"
                                     size="sm"
                                     onClick={removeCompletedFiles}
-                                    className="ml-2"
+                                    className="ml-2 bg-transparent"
                                 >
                                     排除已完成
                                 </Button>
                             )}
-                            {uppyInstance && uppyInstance.getFiles().some(file => file.error) && (
+                            {uppyInstance && uppyInstance.getFiles().some((file) => file.error) && (
                                 <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
                                     onClick={retryFailedUploads}
-                                    className="ml-2"
+                                    className="ml-2 bg-transparent"
                                 >
                                     重试失败上传
                                 </Button>
@@ -1393,7 +1387,7 @@ export function useUppyUpload({
         </>
     )
     return {
-        uploadDom : uppyInstance? uploadDom : null,
+        uploadDom: uppyInstance ? uploadDom : null,
         uppyInstance,
         pendingDeleteOperations,
         delOssFileFunc,

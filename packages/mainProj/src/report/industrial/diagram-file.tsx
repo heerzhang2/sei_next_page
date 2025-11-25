@@ -1,3 +1,4 @@
+//src/report/industrial/diagram-file.tsx
 "use client"
 import { useSearchParams } from "next/navigation"
 import type { InternalItemProps } from "../common/base"
@@ -5,7 +6,7 @@ import { useStorage } from "@/report/StorageContext"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, Label } from "@/components/ui"
 import { BlobInputList, CollapsibleFormSection } from "@/components/chub"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
-import { useCallback, useState, useEffect, useMemo } from "react"
+import { useCallback, useState, useEffect, useMemo, useRef } from "react"
 import { toast } from "sonner"
 import { type FileStore, useUppyUpload } from "@/report/hook/useUppyUpload"
 import {useOfflineUppyUpload} from "@/report/hook/useOfflineUppyUpload";
@@ -28,14 +29,16 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     const [selectedIndex, setSelectedIndex] = useState<number>(-1)
     // 是否为新增模式
     const [isNewMode, setIsNewMode] = useState<boolean>(false)
+    // 添加一个 ref 来跟踪上次的 lineIndex，用于检测变化
+    const prevLineIndexRef = useRef<string | null>(null)
 
     // 强制更新计数器 - 用于解决上传后显示问题
-    // const [forceUpdate, setForceUpdate] = useState<number>(0)
+    const [forceRerender, setForceRerender] = useState<number>(0)
     // 获取当前单线图列表 - 使用 useMemo 确保引用稳定
     const currentDiagrams: LineDiagramItem[] = useMemo(() => {
         return storage.单图表 || []
-    }, [storage.单图表]) // 添加 forceUpdate 作为依赖
-    // }, [storage.单图表, forceUpdate]) // 添加 forceUpdate 作为依赖
+    }, [storage.单图表]) // 添加 forceRerender 作为依赖以在需要时强制更新
+    // }, [storage.单图表, forceRerender]) // 添加 forceRerender 作为依赖
 
     // 编辑表单状态
     const [editForm, setEditForm] = useState<{ m: string; }>({ m: "", })
@@ -46,6 +49,13 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     useEffect(() => {
         if (lineIndexParam !== null) {
             const index = Number.parseInt(lineIndexParam, 10)
+            // 检查 lineIndex 是否发生变化，如果是，则需要重置状态
+            if (prevLineIndexRef.current !== lineIndexParam) {
+                // lineIndex 发生变化，需要重置组件状态
+                setForceRerender(prev => prev + 1) // 触发重新渲染
+                prevLineIndexRef.current = lineIndexParam
+            }
+
             if (index >= 0 && index < currentDiagrams.length) {
                 // 编辑现有单线图
                 setSelectedIndex(index)
@@ -75,7 +85,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
             setEditForm({ m: "",  })
             setInitialMemo("")
         }
-    }, [lineIndexParam])    // 移除 currentDiagrams.length 作为依赖
+    }, [lineIndexParam, currentDiagrams.length])    // 添加 currentDiagrams.length 作为依赖
 
     // 在现有的 useEffect 后添加一个新的 useEffect 来处理对象初始化
     useEffect(() => {
@@ -140,7 +150,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                 }
             })
             // 强制触发重新渲染
-            // setForceUpdate((prev) => prev + 1)
+            // setForceRerender((prev) => prev + 1)
             if (!modified)  setModified!(true)
             if (newUpload) {
                 toast.success(`文件上传成功到单线图 ${selectedIndex + 1}`)
@@ -178,16 +188,16 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     const curDiagram = useMemo(() => {
         const diagrams = storage.单图表 || []
         return selectedIndex >= 0 ? diagrams[selectedIndex] : undefined
-    }, [selectedIndex, storage.单图表])
-    // }, [selectedIndex, storage.单图表, forceUpdate])
+    }, [selectedIndex, storage.单图表, forceRerender])
+    // }, [selectedIndex, storage.单图表, forceRerender])
 
     // 为 useUppyUpload 准备文件对象 - 使用 useMemo 确保引用稳定
     const storeObj = useMemo(() => {
         const file = curDiagram?._FILE_
         // 确保返回一个稳定的对象引用
         return file ? { name: file.name, url: file.url,mimeType: file.mimeType} : ({} as FileStore)
-    }, [curDiagram?._FILE_])
-    // }, [curDiagram?._FILE_, forceUpdate])
+    }, [curDiagram?._FILE_, forceRerender])
+    // }, [curDiagram?._FILE_, forceRerender])
 
     // 验证函数
     const onVerify = useCallback(
@@ -202,6 +212,8 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         },
         [selectedIndex],
     )
+
+    // 修复：当 lineIndex 变化时，使用 forceRerender 来重新创建 hook 实例
     const [uploadDom] = useOfflineUppyUpload({
         repId: rep?.id!,
         hash: `LineDiagram_${selectedIndex}`,
@@ -209,10 +221,11 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         storeObj,
         maxFile: 1,
         liveDays: 10,
-        // hash: `LineDiagram_${selectedIndex}_${forceUpdate}`,
+        // hash: `LineDiagram_${selectedIndex}_${forceRerender}`,
         business: "rep",
         onFinish,
     })
+
     const [render] = useFrameEditorBar({
         rep,
         transformValues: () => ({ ...saveForm }),
@@ -234,7 +247,11 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     }
 
     return (
-        <CollapsibleFormSection title={label!} defaultOpen={show}>
+        <CollapsibleFormSection
+            title={label!}
+            defaultOpen={show}
+            key={`linediagram-${lineIndexParam}`} // 添加 key 以在 lineIndex 变化时重新创建整个组件
+        >
             <div className="w-full m-auto">
                 <Card className="py-1 gap-2">
                     <CardHeader>
@@ -264,7 +281,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                             </CardContent>
                         </Card>
                         {/* 文件上传区域 */}
-                        <div className="space-y-2">
+                        <div key={`LineDiagram_${lineIndexParam}-${rep?.id}`} className="space-y-2">
                             <span>单线图文件：</span>
                             {uploadDom}
                         </div>
