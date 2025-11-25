@@ -183,7 +183,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     const storeObj = useMemo(() => {
         const file = curDiagram?._FILE_
         // 确保返回一个稳定的对象引用
-        return file ? { name: file.name, url: file.url } : ({} as FileStore)
+        return file ? { name: file.name, url: file.url,mimeType: file.mimeType} : ({} as FileStore)
     }, [curDiagram?._FILE_, forceUpdate])
 
     // 验证函数
