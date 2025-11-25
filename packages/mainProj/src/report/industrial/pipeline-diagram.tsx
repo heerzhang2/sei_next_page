@@ -69,7 +69,11 @@ const DiagramItem: React.FC<{
             //tailwindcss 不能用多个拼凑的！没有空格的；
     //【打印让最后人员一行吸附纸张的底部】关键是依靠设置print:h-screen以及配套的flex-shrink-0和没有flex-shrink-0的弹性元素来组合的；前提条件全部能在一张纸能打印得下，不得超出，那一个弹性的DOM可收缩。
     return (
-        <div key={pid} className="print:h-screen mx-auto bg-white shadow-lg print:shadow-none flex flex-col">
+        <div key={pid} className="print:h-screen mx-auto bg-white shadow-lg print:shadow-none flex flex-col"
+             style={{
+                 minHeight: "6rem"
+             }}
+        >
             {/* 标题和内容区域 */}
             <div className="flex-shrink-0">
                 {(arak === 0 && pid === 0) ?

@@ -469,11 +469,14 @@ export function useUppyUpload({
                 }
             }
 
-            setPendingDeleteOperations(externalPendingDeletes)
             setUppyInstance(newUppy)
         }
         initializeUppy()
-    }, [id, eid, stateKey, restoreUppyStateFromDB, externalPendingDeletes])
+    }, [id, eid, stateKey, restoreUppyStateFromDB])
+
+    React.useEffect(() => {
+        setPendingDeleteOperations(externalPendingDeletes)
+    }, [externalPendingDeletes])
 
     // 当关键参数变化时重新初始化 Uppy 状态
     React.useEffect(() => {
