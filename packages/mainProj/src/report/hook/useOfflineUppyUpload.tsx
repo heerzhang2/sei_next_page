@@ -434,8 +434,12 @@ export function useOfflineUppyUpload(params: {
     subrid?: string
 }) {
     const { repId, subrid, redId, hash, onFinish } = params
+    
     const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
+    
+    // 检查是否为无效的 hash
+    const isInvalidHash = hash && hash.includes('_-1')
 
     // 添加状态来存储恢复的待删除操作
     const [restoredPendingDeletes, setRestoredPendingDeletes] = useState<PendingDeleteOperation[]>([])
@@ -457,10 +461,18 @@ export function useOfflineUppyUpload(params: {
     currentStateKeyRef.current = stateKey
 
     const prevStateKeyRef = useRef<string>(stateKey)
+    
+    // 添加一个 ref 来跟踪当前是否正在检查状态，防止异步的竞态条件
+    const isCheckingRef = useRef<boolean>(false)
+    const checkingStateKeyRef = useRef<string>("")
 
     useEffect(() => {
         if (prevStateKeyRef.current !== stateKey) {
             console.log(`[OfflineUppy] stateKey changed from ${prevStateKeyRef.current} to ${stateKey}, resetting states`)
+            // 取消正在进行的检查操作
+            if (isCheckingRef.current && checkingStateKeyRef.current !== stateKey) {
+                console.log(`[OfflineUppy] Cancelling previous check for ${checkingStateKeyRef.current}`)
+            }
             // 不要立即重置，让 checkSavedState 来设置正确的状态
             prevStateKeyRef.current = stateKey
         }
@@ -498,6 +510,41 @@ export function useOfflineUppyUpload(params: {
     // 检查保存状态的函数
     const checkSavedState = useCallback(async () => {
         const capturedStateKey = stateKey
+        
+        // 如果已经在检查不同的 stateKey，等待当前检查完成
+        if (isCheckingRef.current && checkingStateKeyRef.current !== capturedStateKey) {
+            console.log(`[OfflineUppy] checkSavedState WAITING - currently checking ${checkingStateKeyRef.current}, waiting for ${capturedStateKey}`)
+            
+            // 等待当前检查完成
+            let attempts = 0
+            while (isCheckingRef.current && attempts < 50) { // 最多等待5秒
+                await new Promise(resolve => setTimeout(resolve, 100))
+                attempts++
+            }
+            
+            // 如果等待后仍然有其他检查在进行，跳过
+            if (isCheckingRef.current) {
+                console.log(`[OfflineUppy] checkSavedState SKIPPED - timeout waiting for ${checkingStateKeyRef.current}`)
+                return
+            }
+        }
+        
+        // 再次检查 stateKey 是否仍然有效
+        if (capturedStateKey !== stateKey) {
+            console.log(`[OfflineUppy] checkSavedState CANCELLED - stateKey changed from ${capturedStateKey} to ${stateKey}`)
+            return
+        }
+        
+        // 如果是无效的 hash，跳过检查
+        if (isInvalidHash) {
+            console.log(`[OfflineUppy] checkSavedState SKIPPED - invalid hash: ${capturedStateKey}`)
+            return
+        }
+        
+        // 设置检查状态
+        isCheckingRef.current = true
+        checkingStateKeyRef.current = capturedStateKey
+        
         try {
             console.log(`[OfflineUppy] checkSavedState START for key: ${capturedStateKey}`)
             if (capturedStateKey !== currentStateKeyRef.current) {
@@ -509,7 +556,8 @@ export function useOfflineUppyUpload(params: {
 
             const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
 
-            if (capturedStateKey !== currentStateKeyRef.current) {
+            // 再次检查 stateKey 是否仍然有效
+            if (capturedStateKey !== currentStateKeyRef.current || capturedStateKey !== checkingStateKeyRef.current) {
                 console.log(
                     `[OfflineUppy] checkSavedState CANCELLED after loadUppyState - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
                 )
@@ -550,11 +598,18 @@ export function useOfflineUppyUpload(params: {
 
             // 检查是否有下一条待处理操作
             await checkNextPendingOperation()
-            console.log(`[OfflineUppy] checkSavedState END`)
+            console.log(`[OfflineUppy] checkSavedState END for key: ${capturedStateKey}`)
         } catch (error) {
             console.error("[OfflineUppy] Failed to check saved state:", error)
             setShouldOpenUppy(false)
             setHasNextPendingOperation(false)
+        } finally {
+            // 清理检查状态
+            if (checkingStateKeyRef.current === capturedStateKey) {
+                isCheckingRef.current = false
+                checkingStateKeyRef.current = ""
+                console.log(`[OfflineUppy] checkSavedState CLEANUP for key: ${capturedStateKey}`)
+            }
         }
     }, [stateKey, checkNextPendingOperation])
 
@@ -562,7 +617,7 @@ export function useOfflineUppyUpload(params: {
     useEffect(() => {
         console.log(`[OfflineUppy] useEffect triggered, calling checkSavedState`)
         checkSavedState()
-    }, [checkSavedState])
+    }, [stateKey])
 
     // 只有当：1. 所有待删除操作已完成 2. 所有文件上传已完成 时，才清理状态
     const checkAndClearState = useCallback(async () => {
@@ -959,7 +1014,10 @@ export function useOfflineUppyUpload(params: {
 
             if (!snapshot || !uppyInstanceRef.current) {
                 console.log("[OfflineUppy] No snapshot or Uppy instance available")
-                setHasSavedState(false)
+                // 只有在没有 snapshot 时才设置 false，如果只是 Uppy 实例还没准备好，不要重置状态
+                if (!snapshot) {
+                    setHasSavedState(false)
+                }
                 return
             }
 
@@ -1054,7 +1112,7 @@ export function useOfflineUppyUpload(params: {
         setTimeout(() => {
             restoreState()
         }, 500)
-    }, [repId, hash, params.liveDays, params.business, stateKey])
+    }, [stateKey]) // 只依赖 stateKey，其他参数变化不需要重新恢复状态
     // 执行待删除操作 - 使用动态回调版本
     const executePendingDeletes = useCallback(async () => {
         const operationsToExecute = restoredPendingDeletes.length > 0 ? restoredPendingDeletes : pendingDeleteOperations
@@ -1317,6 +1375,15 @@ export function useOfflineUppyUpload(params: {
                 </div>
             </div>
         )
+    }
+
+    // 如果是无效的 hash，返回占位符组件
+    if (isInvalidHash) {
+        return [
+            <div key="empty-upload">
+                <div>请选择有效的单线图序号</div>
+            </div>,
+        ] as const
     }
 
     return [

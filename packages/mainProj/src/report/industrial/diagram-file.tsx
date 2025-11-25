@@ -213,7 +213,11 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         [selectedIndex],
     )
 
+    // 添加调试日志
+    console.log(`[DiagramFile] selectedIndex: ${selectedIndex}, lineIndexParam: ${lineIndexParam}, currentDiagrams.length: ${currentDiagrams.length}`)
+    
     // 修复：当 lineIndex 变化时，使用 forceRerender 来重新创建 hook 实例
+    // 只有当 selectedIndex 有效时才使用 hook
     const [uploadDom] = useOfflineUppyUpload({
         repId: rep?.id!,
         hash: `LineDiagram_${selectedIndex}`,

@@ -13,7 +13,7 @@ import "./uppy-fixes.css"
 import { getAuthToken } from "@/lib/auth-token"
 import { Button } from "@/components/ui"
 import { FilePreview } from "@/components/file-preview"
-import { useCallback } from "react"
+import { useCallback, useRef } from "react"
 import { toast } from "sonner"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
 import zh_CN from "@uppy/locales/lib/zh_CN.js"
@@ -423,6 +423,10 @@ export function useUppyUpload({
         return null
     }, [stateKey])
 
+    // 添加 ref 来跟踪初始化状态，防止竞态条件
+    const isInitializingRef = useRef<boolean>(false)
+    const initializingStateKeyRef = useRef<string>("")
+
     // 初始化 Uppy 实例
     React.useEffect(() => {
         if (uppyInstance) {
@@ -432,44 +436,98 @@ export function useUppyUpload({
         }
 
         const initializeUppy = async () => {
-            const newUppy = createUppyInstance()
-
-            // 尝试从 indexDB 恢复之前的状态
-            const savedState = await restoreUppyStateFromDB()
-            if (savedState && savedState.files && savedState.files.length > 0) {
-                try {
-                    if (savedState.meta) {
-                        newUppy.setMeta(savedState.meta)
-                    }
-
-                    // 单独恢复文件
-                    for (const file of savedState.files) {
-                        try {
-                            if (file.data) {
-                                newUppy.addFile({
-                                    id: file.id,
-                                    name: file.name,
-                                    type: file.type,
-                                    data: file.data,
-                                    meta: {
-                                        name: file.name,
-                                        type: file.type,
-                                        lastModified: file.lastModified || Date.now(),
-                                    },
-                                })
-                            }
-                        } catch (error) {
-                            console.warn(`[v0] Failed to restore file ${file.name}:`, error)
-                        }
-                    }
-
-                    console.log(`[v0] Applied restored state to Uppy instance with ${savedState.files.length} files`)
-                } catch (error) {
-                    console.warn(`[v0] Failed to apply saved state:`, error)
+            const capturedStateKey = stateKey
+            
+            // 如果已经在初始化不同的 stateKey，等待当前初始化完成
+            if (isInitializingRef.current && initializingStateKeyRef.current !== capturedStateKey) {
+                console.log(`[v0] Initialization WAITING - currently initializing ${initializingStateKeyRef.current}, waiting for ${capturedStateKey}`)
+                
+                // 等待当前初始化完成
+                let attempts = 0
+                while (isInitializingRef.current && attempts < 50) { // 最多等待5秒
+                    await new Promise(resolve => setTimeout(resolve, 100))
+                    attempts++
+                }
+                
+                // 如果等待后仍然有其他初始化在进行，跳过
+                if (isInitializingRef.current) {
+                    console.log(`[v0] Initialization SKIPPED - timeout waiting for ${initializingStateKeyRef.current}`)
+                    return
                 }
             }
+            
+            // 再次检查 stateKey 是否仍然有效
+            if (capturedStateKey !== stateKey) {
+                console.log(`[v0] Initialization CANCELLED - stateKey changed from ${capturedStateKey} to ${stateKey}`)
+                return
+            }
+            
+            // 设置初始化状态
+            isInitializingRef.current = true
+            initializingStateKeyRef.current = capturedStateKey
+            
+            try {
+                console.log(`[v0] Initialization START for key: ${capturedStateKey}`)
+                
+                const newUppy = createUppyInstance()
 
-            setUppyInstance(newUppy)
+                // 尝试从 indexDB 恢复之前的状态
+                const savedState = await restoreUppyStateFromDB()
+                
+                // 检查 stateKey 是否仍然有效
+                if (capturedStateKey !== stateKey) {
+                    console.log(`[v0] Initialization CANCELLED - stateKey changed from ${capturedStateKey} to ${stateKey}`)
+                    return
+                }
+                
+                if (savedState && savedState.files && savedState.files.length > 0) {
+                    try {
+                        if (savedState.meta) {
+                            newUppy.setMeta(savedState.meta)
+                        }
+
+                        // 单独恢复文件
+                        for (const file of savedState.files) {
+                            try {
+                                if (file.data) {
+                                    newUppy.addFile({
+                                        id: file.id,
+                                        name: file.name,
+                                        type: file.type,
+                                        data: file.data,
+                                        meta: {
+                                            name: file.name,
+                                            type: file.type,
+                                            lastModified: file.lastModified || Date.now(),
+                                        },
+                                    })
+                                }
+                            } catch (error) {
+                                console.warn(`[v0] Failed to restore file ${file.name}:`, error)
+                            }
+                        }
+
+                        console.log(`[v0] Applied restored state to Uppy instance with ${savedState.files.length} files`)
+                    } catch (error) {
+                        console.warn(`[v0] Failed to apply saved state:`, error)
+                    }
+                }
+
+                // 最后检查一次 stateKey 是否仍然有效
+                if (capturedStateKey === stateKey) {
+                    setUppyInstance(newUppy)
+                    console.log(`[v0] Initialization END for key: ${capturedStateKey}`)
+                }
+            } catch (error) {
+                console.error(`[v0] Failed to initialize Uppy:`, error)
+            } finally {
+                // 清理初始化状态
+                if (initializingStateKeyRef.current === capturedStateKey) {
+                    isInitializingRef.current = false
+                    initializingStateKeyRef.current = ""
+                    console.log(`[v0] Initialization CLEANUP for key: ${capturedStateKey}`)
+                }
+            }
         }
         initializeUppy()
     }, [id, eid, stateKey, restoreUppyStateFromDB])
