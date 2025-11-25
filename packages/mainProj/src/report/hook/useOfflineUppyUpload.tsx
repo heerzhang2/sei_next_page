@@ -452,6 +452,10 @@ export function useOfflineUppyUpload(params: {
     // 使用 ref 来存储最新的 storeObj 值，避免闭包问题
     const latestStoreObjRef = useRef<FileStore | FileStore[]>(params.storeObj)
 
+    const currentStateKeyRef = useRef<string>(stateKey)
+    // 每次 stateKey 变化时更新 ref
+    currentStateKeyRef.current = stateKey
+
     const prevStateKeyRef = useRef<string>(stateKey)
 
     useEffect(() => {
@@ -497,22 +501,33 @@ export function useOfflineUppyUpload(params: {
 
     // 检查保存状态的函数
     const checkSavedState = useCallback(async () => {
+        const capturedStateKey = stateKey
         try {
-            console.log(`[OfflineUppy] Checking saved state for key: ${stateKey}`)
+            console.log(`[OfflineUppy] checkSavedState START for key: ${capturedStateKey}`)
             const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
+
+            if (capturedStateKey !== currentStateKeyRef.current) {
+                console.log(
+                    `[OfflineUppy] checkSavedState ABORTED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+                )
+                return
+            }
+
             console.log(`[OfflineUppy] Found snapshot:`, snapshot ? `yes, ${snapshot.files?.length || 0} files` : "no")
-            setHasSavedState(!!snapshot)
+
+            const willSetHasSavedState = !!snapshot
+            console.log(`[OfflineUppy] Setting hasSavedState to: ${willSetHasSavedState}`)
+            setHasSavedState(willSetHasSavedState)
 
             // 如果有快照，检查并恢复其中的待删除操作（排除已成功处理的）
             if (snapshot?.meta?.pendingDeleteOperations) {
                 console.log(
                     `[OfflineUppy] Found ${snapshot.meta.pendingDeleteOperations.length} pending delete operations in snapshot`,
                 )
-                // 过滤掉可能已经成功处理的删除操作
-                // 这里我们保守地恢复所有操作，让用户手动处理重复的情况
-                // 因为无法从 IndexedDB 中得知哪些操作已经成功执行
+                console.log(`[OfflineUppy] Setting restoredPendingDeletes to:`, snapshot.meta.pendingDeleteOperations)
                 setRestoredPendingDeletes(snapshot.meta.pendingDeleteOperations)
             } else {
+                console.log(`[OfflineUppy] No pending delete operations in snapshot, clearing restoredPendingDeletes`)
                 setRestoredPendingDeletes([])
             }
 
@@ -532,6 +547,7 @@ export function useOfflineUppyUpload(params: {
 
             // 检查是否有下一条待处理操作
             await checkNextPendingOperation()
+            console.log(`[OfflineUppy] checkSavedState END`)
         } catch (error) {
             console.error("[OfflineUppy] Failed to check saved state:", error)
             setShouldOpenUppy(false)
@@ -541,6 +557,7 @@ export function useOfflineUppyUpload(params: {
 
     // 初始化时检查保存状态
     useEffect(() => {
+        console.log(`[OfflineUppy] useEffect triggered, calling checkSavedState`)
         checkSavedState()
     }, [checkSavedState])
 
@@ -951,20 +968,13 @@ export function useOfflineUppyUpload(params: {
 
             // 从 snapshot 的 meta 中恢复待删除操作
             if (snapshot.meta?.pendingDeleteOperations) {
-                const restoredDeletes: PendingDeleteOperation[] = snapshot.meta.pendingDeleteOperations
-                console.log(`[OfflineUppy] Restoring ${restoredDeletes.length} pending delete operations from snapshot meta`)
-
-                // 更新状态，这样会在 useUppyUpload 初始化时传递过去
-                setRestoredPendingDeletes(restoredDeletes)
-
-                if (restoredDeletes.length > 0) {
-                    toast.info("恢复待删除文件", {
-                        description: `发现 ${restoredDeletes.length} 个文件在待删除队列中`,
-                        duration: 3000,
-                    })
-                }
+                console.log(
+                    `[OfflineUppy] Found ${snapshot.meta.pendingDeleteOperations.length} pending delete operations in snapshot`,
+                )
+                console.log(`[OfflineUppy] Setting restoredPendingDeletes to:`, snapshot.meta.pendingDeleteOperations)
+                setRestoredPendingDeletes(snapshot.meta.pendingDeleteOperations)
             } else {
-                // 如果没有待删除操作，确保清空状态
+                console.log(`[OfflineUppy] No pending delete operations in snapshot, clearing restoredPendingDeletes`)
                 setRestoredPendingDeletes([])
             }
 
