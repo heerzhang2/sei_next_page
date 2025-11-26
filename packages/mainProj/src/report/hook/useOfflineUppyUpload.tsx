@@ -628,31 +628,17 @@ export function useOfflineUppyUpload(params: {
         const runCheck = async () => {
             // 短暂延迟确保 ref 已更新，但不使用长时间防抖
             await new Promise((resolve) => setTimeout(resolve, 10))
-
             if (isCancelled) {
                 console.log(`[OfflineUppy] Check cancelled for ${currentKey} (cleanup called)`)
                 return
             }
-
-            if (!isMountedRef.current) {
-                console.log(`[OfflineUppy] Component unmounted, skipping check for ${currentKey}`)
-                return
-            }
-
             try {
                 console.log(`[OfflineUppy] Starting performStateCheck for ${currentKey}`)
                 const result = await performStateCheck(currentKey)
-
                 if (isCancelled) {
                     console.log(`[OfflineUppy] Check cancelled after performStateCheck for ${currentKey}`)
                     return
                 }
-
-                if (!isMountedRef.current) {
-                    console.log(`[OfflineUppy] Component unmounted after check, discarding results for ${currentKey}`)
-                    return
-                }
-
                 // 使用传入的 currentKey 而不是 ref，因为这个 useEffect 是专门为这个 key 运行的
                 console.log(
                     `[OfflineUppy] useEffect check completed for ${currentKey}: hasSaved=${result.hasSaved}, shouldOpen=${result.shouldOpen}, hasNext=${result.hasNext}`,
