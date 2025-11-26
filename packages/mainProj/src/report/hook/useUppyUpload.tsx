@@ -512,7 +512,10 @@ export function useUppyUpload({
                         console.warn(`[v0] Failed to apply saved state:`, error)
                     }
                 }
-
+                //清空待删除操作列表 以及 uppy 的文件列表
+                if(!savedState){
+                    setPendingDeleteOperations([])
+                }
                 // 最后检查一次 stateKey 是否仍然有效
                 if (capturedStateKey === stateKey) {
                     setUppyInstance(newUppy)
