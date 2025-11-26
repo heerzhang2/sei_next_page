@@ -20,6 +20,33 @@ interface LineDiagramItem {
     m?: string // 说明文字
 }
 
+// 子组件：专门处理文件上传逻辑
+const DiagramFileUpload = ({ 
+    selectedIndex, 
+    rep, 
+    storeObj, 
+    onFinish 
+}: {
+    selectedIndex: number
+    rep: any
+    storeObj: any
+    onFinish: (file: any) => void
+}) => {
+    // 只有当 selectedIndex 有效时才初始化 useOfflineUppyUpload
+    const [uploadDom] = useOfflineUppyUpload({
+        repId: rep?.id!,
+        hash: `LineDiagram_${selectedIndex}`,
+        id: `LineDiagram_${selectedIndex}-${rep?.id}`,
+        storeObj,
+        maxFile: 1,
+        liveDays: 10,
+        business: "rep",
+        onFinish,
+    })
+
+    return uploadDom
+}
+
 // 编辑区域功能独立出来：避免混乱。只做图片上传的。
 export const LineDiagramFile = ({ rep, children, show = false, label = "单线图-文件上传" }: InternalItemProps) => {
     const searchParams = useSearchParams()
@@ -216,26 +243,15 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     // 添加调试日志
     console.log(`[DiagramFile] selectedIndex: ${selectedIndex}, lineIndexParam: ${lineIndexParam}, currentDiagrams.length: ${currentDiagrams.length}`)
     
-    // 修复：当 lineIndex 变化时，使用 forceRerender 来重新创建 hook 实例
-    // 只有当 selectedIndex 有效时才使用 hook
-    const [uploadDom] = useOfflineUppyUpload({
-        repId: rep?.id!,
-        hash: `LineDiagram_${selectedIndex}`,
-        id: `LineDiagram_${selectedIndex}-${rep?.id}`,
-        storeObj,
-        maxFile: 1,
-        liveDays: 10,
-        // hash: `LineDiagram_${selectedIndex}_${forceRerender}`,
-        business: "rep",
-        onFinish,
-    })
-
     const [render] = useFrameEditorBar({
         rep,
         transformValues: () => ({ ...saveForm }),
         onVerify,
         onReset,
     })
+
+
+
     // 如果没有选择单线图，显示提示
     if (selectedIndex < 0) {
         return (
@@ -249,7 +265,6 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
             </CollapsibleFormSection>
         )
     }
-
     return (
         <CollapsibleFormSection
             title={label!}
@@ -287,7 +302,14 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                         {/* 文件上传区域 */}
                         <div key={`LineDiagram_${lineIndexParam}-${rep?.id}`} className="space-y-2">
                             <span>单线图文件：</span>
-                            {uploadDom}
+                            {selectedIndex >= 0 && (
+                                <DiagramFileUpload
+                                    selectedIndex={selectedIndex}
+                                    rep={rep}
+                                    storeObj={storeObj}
+                                    onFinish={onFinish}
+                                />
+                            )}
                         </div>
 
                         {/* 当前状态显示 */}
