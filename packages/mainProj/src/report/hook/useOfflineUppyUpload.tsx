@@ -1080,6 +1080,25 @@ export function useOfflineUppyUpload(params: {
                 setPendingDeleteOperations([])
             }
 
+            // 清理现有状态：清空文件和meta中的pendingDeleteOperations
+            const currentFiles = uppyInstanceRef.current.getFiles()
+            if (currentFiles.length > 0) {
+                console.log(`[OfflineUppy] Clearing ${currentFiles.length} existing files from Uppy instance before restore`)
+                currentFiles.forEach(file => {
+                    uppyInstanceRef.current?.removeFile(file.id)
+                })
+            }
+            
+            // 清理meta中的pendingDeleteOperations
+            const currentMeta = uppyInstanceRef.current.getState().meta
+            if (currentMeta?.pendingDeleteOperations) {
+                console.log(`[OfflineUppy] Clearing existing pendingDeleteOperations from meta before restore`)
+                uppyInstanceRef.current.setMeta({
+                    ...currentMeta,
+                    pendingDeleteOperations: []
+                })
+            }
+
             uppyInstanceRef.current.pauseAll()
 
             // 先设置 meta 数据
@@ -1154,6 +1173,7 @@ export function useOfflineUppyUpload(params: {
             try {
                 await restoreState()
             } finally {
+                const currentFiles = uppyInstanceRef.current!.getFiles()
                 // 无论成功还是失败，都结束加载状态
                 setIsRestoringState(false)
             }
