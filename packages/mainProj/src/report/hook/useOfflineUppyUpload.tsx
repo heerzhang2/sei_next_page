@@ -433,10 +433,10 @@ export function useOfflineUppyUpload(params: {
     redId?: number
     subrid?: string
 }) {
-    const isMountedRef = useRef(true);
+    const isMountedRef = useRef(true)
     const { repId, subrid, redId, hash, onFinish } = params
     // 检查是否为无效的 hash
-    const isInvalidHash = hash && (hash.includes('_-1') )
+    const isInvalidHash = hash && hash.includes("_-1")
     const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
     // 添加状态来存储恢复的待删除操作
@@ -459,15 +459,15 @@ export function useOfflineUppyUpload(params: {
     currentStateKeyRef.current = stateKey
 
     const prevStateKeyRef = useRef<string>(stateKey)
-    
+
     // 添加一个 ref 来跟踪当前是否正在检查状态，防止异步的竞态条件
     const isCheckingRef = useRef<boolean>(false)
     const checkingStateKeyRef = useRef<string>("")
     useEffect(() => {
         return () => {
-            isMountedRef.current = false;
-        };
-    }, []);
+            isMountedRef.current = false
+        }
+    }, [])
 
     useEffect(() => {
         if (prevStateKeyRef.current !== stateKey) {
@@ -508,25 +508,28 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Failed to check next pending operation:", error)
             setHasNextPendingOperation(false)
         }
-    }, [repId, subrid, stateKey])
-    // 修改 checkSavedState 函数，添加 mounted 检查
+    }, [repId, subrid]) // 移除 stateKey 依赖，使用 ref 代替
+
+    // 修改 checkSavedState 函数，使用 ref 获取最新的 stateKey
     const checkSavedState = useCallback(async () => {
-        const capturedStateKey = stateKey;
+        const capturedStateKey = currentStateKeyRef.current
 
         // 如果是无效的 hash，跳过检查
-        if (isInvalidHash) {
+        if (capturedStateKey && capturedStateKey.includes("_-1")) {
             console.log(`[OfflineUppy] checkSavedState SKIPPED - invalid hash: ${capturedStateKey}`)
             return
         }
 
         // 如果已经在检查不同的 stateKey，等待当前检查完成
         if (isCheckingRef.current && checkingStateKeyRef.current !== capturedStateKey) {
-            console.log(`[OfflineUppy] checkSavedState WAITING - currently checking ${checkingStateKeyRef.current}, waiting for ${capturedStateKey}`)
+            console.log(
+                `[OfflineUppy] checkSavedState WAITING - currently checking ${checkingStateKeyRef.current}, waiting for ${capturedStateKey}`,
+            )
 
             // 等待当前检查完成
             let attempts = 0
             while (isCheckingRef.current && attempts < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100))
+                await new Promise((resolve) => setTimeout(resolve, 100))
                 attempts++
             }
 
@@ -537,9 +540,11 @@ export function useOfflineUppyUpload(params: {
             }
         }
 
-        // 再次检查 stateKey 是否仍然有效
-        if (capturedStateKey !== stateKey) {
-            console.log(`[OfflineUppy] checkSavedState CANCELLED - stateKey changed from ${capturedStateKey} to ${stateKey}`)
+        // 再次检查 stateKey 是否仍然有效（使用 ref 获取最新值）
+        if (capturedStateKey !== currentStateKeyRef.current) {
+            console.log(
+                `[OfflineUppy] checkSavedState CANCELLED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+            )
             return
         }
 
@@ -557,11 +562,13 @@ export function useOfflineUppyUpload(params: {
             }
 
             if (capturedStateKey !== currentStateKeyRef.current) {
-                console.log(`[OfflineUppy] checkSavedState ABORTED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`)
+                console.log(
+                    `[OfflineUppy] checkSavedState ABORTED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+                )
                 return
             }
 
-            const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
+            const snapshot = await fileOperationsQueue.loadUppyState(capturedStateKey)
 
             // 再次检查 stateKey 是否仍然有效和组件是否挂载
             if (capturedStateKey !== currentStateKeyRef.current || !isMountedRef.current) {
@@ -569,10 +576,13 @@ export function useOfflineUppyUpload(params: {
                 return
             }
 
-            console.log(`[OfflineUppy] Found snapshot:`, snapshot ? `yes, ${snapshot.files?.length || 0} files` : "no")
+            console.log(
+                `[OfflineUppy] Found snapshot for ${capturedStateKey}:`,
+                snapshot ? `yes, ${snapshot.files?.length || 0} files` : "no",
+            )
 
             const willSetHasSavedState = !!snapshot
-            console.log(`[OfflineUppy] Setting hasSavedState to: ${willSetHasSavedState}`)
+            console.log(`[OfflineUppy] Setting hasSavedState to: ${willSetHasSavedState} for key: ${capturedStateKey}`)
 
             // 只在组件仍然挂载时更新状态
             if (isMountedRef.current) {
@@ -620,21 +630,27 @@ export function useOfflineUppyUpload(params: {
                 console.log(`[OfflineUppy] checkSavedState CLEANUP for key: ${capturedStateKey}`)
             }
         }
-    }, [stateKey, checkNextPendingOperation])
+    }, [checkNextPendingOperation]) // 移除 stateKey 依赖，因为现在使用 ref 获取最新值
+
     // 修改初始化 useEffect，添加防抖
     useEffect(() => {
-        console.log(`[OfflineUppy] useEffect triggered, calling checkSavedState`)
+        console.log(`[OfflineUppy] useEffect triggered for stateKey: ${stateKey}, calling checkSavedState`)
+
+        setHasSavedState(false)
+        setHasNextPendingOperation(false)
+        setShouldOpenUppy(false)
+        setRestoredPendingDeletes([])
 
         const timer = setTimeout(() => {
             if (isMountedRef.current) {
                 checkSavedState()
             }
-        }, 100); // 添加100ms延迟，确保stateKey稳定
+        }, 100) // 添加100ms延迟，确保stateKey稳定
 
         return () => {
             clearTimeout(timer)
         }
-    }, [stateKey])
+    }, [stateKey, checkSavedState]) // 添加 checkSavedState 到依赖数组
 
     // 只有当：1. 所有待删除操作已完成 2. 所有文件上传已完成 时，才清理状态
     const checkAndClearState = useCallback(async () => {
@@ -1395,17 +1411,17 @@ export function useOfflineUppyUpload(params: {
     }
 
     // 如果是无效的 hash，返回占位符组件
-    if(isInvalidHash) {
+    if (isInvalidHash) {
         return [
             <div key="empty-upload">
                 <div>请选择有效的单线图序号</div>
             </div>,
-        ] as const;
+        ] as const
     }
     return [
         <div key="offline-uppy-wrapper">
             {uploadDom}
             <ActionButtons />
         </div>,
-    ] as const;
+    ] as const
 }
