@@ -510,42 +510,60 @@ export function useOfflineUppyUpload(params: {
         }
     }, [repId, subrid]) // 移除 stateKey 依赖，使用 ref 代替
 
-    // 修改 checkSavedState 函数，使用 ref 获取最新的 stateKey
+    // 稳定的检查函数，不依赖其他状态，只依赖必要的函数
+    const performStateCheck = useCallback(async (keyToCheck: string) => {
+        console.log(`[OfflineUppy] checkSavedState START for key: ${keyToCheck}`)
+
+        try {
+            const savedState = await fileOperationsQueue.loadUppyState(keyToCheck)
+            console.log(
+                `[OfflineUppy] Loaded saved state for ${keyToCheck}:`,
+                savedState ? `${savedState.files?.length || 0} files` : "null",
+            )
+
+            // 检查是否有保存的文件，如果有，则认为有保存的状态
+            if (savedState && savedState.files && savedState.files.length > 0) {
+                console.log(`[OfflineUppy] Found saved state for ${keyToCheck}`)
+                // 如果有保存的文件，并且这些文件未完成上传，则需要打开Uppy面板
+                const shouldOpen = savedState.files.some(
+                    (file: any) => !(file.progress?.uploadComplete || file.progress?.percentage === 100),
+                )
+                return { hasSaved: true, shouldOpen, hasNext: false } // hasNext 不在此函数内判断
+            }
+
+            // 如果没有保存的文件状态，检查队列中是否有下一条待处理操作
+            const hasNext = await fileOperationsQueue.checkNextPendingOperation(keyToCheck)
+            console.log(`[OfflineUppy] Next pending operation for ${keyToCheck}:`, hasNext ? "yes" : "no")
+
+            return { hasSaved: false, shouldOpen: false, hasNext: hasNext }
+        } catch (error) {
+            console.error("[OfflineUppy] Failed to check saved state:", error)
+            return { hasSaved: false, shouldOpen: false, hasNext: false }
+        }
+    }, []) // 空依赖数组，确保函数引用稳定
+
+    // 原有的 checkSavedState 保持不变，供其他地方调用
     const checkSavedState = useCallback(async () => {
         const capturedStateKey = currentStateKeyRef.current
+        console.log(`[OfflineUppy] checkSavedState START for key: ${capturedStateKey}`)
 
-        // 如果是无效的 hash，跳过检查
-        if (capturedStateKey && capturedStateKey.includes("_-1")) {
-            console.log(`[OfflineUppy] checkSavedState SKIPPED - invalid hash: ${capturedStateKey}`)
+        // 防止重复检查
+        if (isCheckingRef.current && checkingStateKeyRef.current === capturedStateKey) {
+            console.log(`[OfflineUppy] Already checking state for key: ${capturedStateKey}, skipping`)
             return
         }
 
-        // 如果已经在检查不同的 stateKey，等待当前检查完成
+        // 如果正在检查其他 key，等待一段时间
         if (isCheckingRef.current && checkingStateKeyRef.current !== capturedStateKey) {
             console.log(
-                `[OfflineUppy] checkSavedState WAITING - currently checking ${checkingStateKeyRef.current}, waiting for ${capturedStateKey}`,
+                `[OfflineUppy] Waiting for previous check to complete (checking: ${checkingStateKeyRef.current}, requested: ${capturedStateKey})`,
             )
-
-            // 等待当前检查完成
-            let attempts = 0
-            while (isCheckingRef.current && attempts < 50) {
-                await new Promise((resolve) => setTimeout(resolve, 100))
-                attempts++
-            }
-
-            // 如果等待后仍然有其他检查在进行，跳过
-            if (isCheckingRef.current) {
-                console.log(`[OfflineUppy] checkSavedState SKIPPED - timeout waiting for ${checkingStateKeyRef.current}`)
+            await new Promise((resolve) => setTimeout(resolve, 200))
+            // 再次检查状态
+            if (!isMountedRef.current || currentStateKeyRef.current !== capturedStateKey) {
+                console.log(`[OfflineUppy] Component unmounted or stateKey changed during wait, aborting`)
                 return
             }
-        }
-
-        // 再次检查 stateKey 是否仍然有效（使用 ref 获取最新值）
-        if (capturedStateKey !== currentStateKeyRef.current) {
-            console.log(
-                `[OfflineUppy] checkSavedState CANCELLED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
-            )
-            return
         }
 
         // 设置检查状态
@@ -553,69 +571,30 @@ export function useOfflineUppyUpload(params: {
         checkingStateKeyRef.current = capturedStateKey
 
         try {
-            console.log(`[OfflineUppy] checkSavedState START for key: ${capturedStateKey}`)
-
-            // 添加 mounted 检查
-            if (!isMountedRef.current) {
-                console.log(`[OfflineUppy] checkSavedState ABORTED - component unmounted`)
-                return
-            }
-
-            if (capturedStateKey !== currentStateKeyRef.current) {
+            // 再次检查 stateKey 是否仍然一致
+            if (currentStateKeyRef.current !== capturedStateKey) {
                 console.log(
-                    `[OfflineUppy] checkSavedState ABORTED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+                    `[OfflineUppy] stateKey changed during check (${capturedStateKey} -> ${currentStateKeyRef.current}), aborting`,
                 )
                 return
             }
 
-            const snapshot = await fileOperationsQueue.loadUppyState(capturedStateKey)
+            const result = await performStateCheck(capturedStateKey)
 
-            // 再次检查 stateKey 是否仍然有效和组件是否挂载
-            if (capturedStateKey !== currentStateKeyRef.current || !isMountedRef.current) {
-                console.log(`[OfflineUppy] checkSavedState CANCELLED after loadUppyState`)
+            // 检查是否仍然挂载且 stateKey 未变化
+            if (!isMountedRef.current || currentStateKeyRef.current !== capturedStateKey) {
+                console.log(`[OfflineUppy] Component unmounted or stateKey changed, discarding results`)
                 return
             }
+
+            // 更新状态
+            setHasSavedState(result.hasSaved)
+            setHasNextPendingOperation(result.hasNext)
+            setShouldOpenUppy(result.shouldOpen)
 
             console.log(
-                `[OfflineUppy] Found snapshot for ${capturedStateKey}:`,
-                snapshot ? `yes, ${snapshot.files?.length || 0} files` : "no",
+                `[OfflineUppy] State check completed for ${capturedStateKey}: hasSaved=${result.hasSaved}, shouldOpen=${result.shouldOpen}, hasNext=${result.hasNext}`,
             )
-
-            const willSetHasSavedState = !!snapshot
-            console.log(`[OfflineUppy] Setting hasSavedState to: ${willSetHasSavedState} for key: ${capturedStateKey}`)
-
-            // 只在组件仍然挂载时更新状态
-            if (isMountedRef.current) {
-                setHasSavedState(willSetHasSavedState)
-            }
-
-            // 如果有快照，检查并恢复其中的待删除操作
-            if (snapshot?.meta?.pendingDeleteOperations && isMountedRef.current) {
-                console.log(`[OfflineUppy] Setting restoredPendingDeletes to:`, snapshot.meta.pendingDeleteOperations)
-                setRestoredPendingDeletes(snapshot.meta.pendingDeleteOperations)
-            } else if (isMountedRef.current) {
-                console.log(`[OfflineUppy] No pending delete operations in snapshot, clearing restoredPendingDeletes`)
-                setRestoredPendingDeletes([])
-            }
-
-            // 检查是否应该开启 uppy 面板
-            if (snapshot?.files && snapshot.files.length > 0 && isMountedRef.current) {
-                const hasIncompleteUploads = snapshot.files.some(
-                    (file) => !(file.progress?.uploadComplete || file.progress?.percentage === 100),
-                )
-                console.log(`[OfflineUppy] Uppy panel should open: ${hasIncompleteUploads}`)
-                setShouldOpenUppy(hasIncompleteUploads)
-            } else if (isMountedRef.current) {
-                console.log(`[OfflineUppy] Uppy panel should open: false`)
-                setShouldOpenUppy(false)
-            }
-
-            // 检查是否有下一条待处理操作
-            if (isMountedRef.current) {
-                await checkNextPendingOperation()
-            }
-
-            console.log(`[OfflineUppy] checkSavedState END for key: ${capturedStateKey}`)
         } catch (error) {
             console.error("[OfflineUppy] Failed to check saved state:", error)
             if (isMountedRef.current) {
@@ -630,27 +609,56 @@ export function useOfflineUppyUpload(params: {
                 console.log(`[OfflineUppy] checkSavedState CLEANUP for key: ${capturedStateKey}`)
             }
         }
-    }, [checkNextPendingOperation]) // 移除 stateKey 依赖，因为现在使用 ref 获取最新值
+    }, [performStateCheck]) // 只依赖稳定的 performStateCheck
 
-    // 修改初始化 useEffect，添加防抖
     useEffect(() => {
-        console.log(`[OfflineUppy] useEffect triggered for stateKey: ${stateKey}, calling checkSavedState`)
+        const currentKey = stateKey
+        console.log(`[OfflineUppy] useEffect triggered for stateKey: ${currentKey}, calling checkSavedState`)
 
+        // 立即重置状态
         setHasSavedState(false)
         setHasNextPendingOperation(false)
         setShouldOpenUppy(false)
         setRestoredPendingDeletes([])
 
-        const timer = setTimeout(() => {
-            if (isMountedRef.current) {
-                checkSavedState()
+        // 添加防抖和异步检查
+        const timer = setTimeout(async () => {
+            if (!isMountedRef.current) return
+
+            // 再次确认 stateKey 未变化
+            if (currentStateKeyRef.current !== currentKey) {
+                console.log(
+                    `[OfflineUppy] stateKey changed before check (${currentKey} -> ${currentStateKeyRef.current}), skipping`,
+                )
+                return
             }
-        }, 100) // 添加100ms延迟，确保stateKey稳定
+
+            try {
+                const result = await performStateCheck(currentKey)
+
+                // 检查是否仍然挂载且 stateKey 未变化
+                if (!isMountedRef.current || currentStateKeyRef.current !== currentKey) {
+                    console.log(`[OfflineUppy] Component unmounted or stateKey changed after check, discarding results`)
+                    return
+                }
+
+                // 更新状态
+                setHasSavedState(result.hasSaved)
+                setHasNextPendingOperation(result.hasNext)
+                setShouldOpenUppy(result.shouldOpen)
+
+                console.log(
+                    `[OfflineUppy] useEffect check completed for ${currentKey}: hasSaved=${result.hasSaved}, shouldOpen=${result.shouldOpen}, hasNext=${result.hasNext}`,
+                )
+            } catch (error) {
+                console.error("[OfflineUppy] useEffect check failed:", error)
+            }
+        }, 100) // 100ms 防抖
 
         return () => {
             clearTimeout(timer)
         }
-    }, [stateKey, checkSavedState]) // 添加 checkSavedState 到依赖数组
+    }, [stateKey, performStateCheck]) // 只依赖 stateKey 和稳定的 performStateCheck
 
     // 只有当：1. 所有待删除操作已完成 2. 所有文件上传已完成 时，才清理状态
     const checkAndClearState = useCallback(async () => {
