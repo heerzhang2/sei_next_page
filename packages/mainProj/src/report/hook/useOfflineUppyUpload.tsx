@@ -455,8 +455,10 @@ export function useOfflineUppyUpload(params: {
     const latestStoreObjRef = useRef<FileStore | FileStore[]>(params.storeObj)
 
     const currentStateKeyRef = useRef<string>(stateKey)
-    // 每次 stateKey 变化时更新 ref
-    currentStateKeyRef.current = stateKey
+    // currentStateKeyRef.current = stateKey  // 删除这行
+    useEffect(() => {
+        currentStateKeyRef.current = stateKey
+    }, [stateKey])
 
     const prevStateKeyRef = useRef<string>(stateKey)
 
@@ -621,42 +623,55 @@ export function useOfflineUppyUpload(params: {
         setShouldOpenUppy(false)
         setRestoredPendingDeletes([])
 
-        // 添加防抖和异步检查
-        const timer = setTimeout(async () => {
-            if (!isMountedRef.current) return
+        let isCancelled = false
 
-            // 再次确认 stateKey 未变化
-            if (currentStateKeyRef.current !== currentKey) {
-                console.log(
-                    `[OfflineUppy] stateKey changed before check (${currentKey} -> ${currentStateKeyRef.current}), skipping`,
-                )
+        const runCheck = async () => {
+            // 短暂延迟确保 ref 已更新，但不使用长时间防抖
+            await new Promise((resolve) => setTimeout(resolve, 10))
+
+            if (isCancelled) {
+                console.log(`[OfflineUppy] Check cancelled for ${currentKey} (cleanup called)`)
+                return
+            }
+
+            if (!isMountedRef.current) {
+                console.log(`[OfflineUppy] Component unmounted, skipping check for ${currentKey}`)
                 return
             }
 
             try {
+                console.log(`[OfflineUppy] Starting performStateCheck for ${currentKey}`)
                 const result = await performStateCheck(currentKey)
 
-                // 检查是否仍然挂载且 stateKey 未变化
-                if (!isMountedRef.current || currentStateKeyRef.current !== currentKey) {
-                    console.log(`[OfflineUppy] Component unmounted or stateKey changed after check, discarding results`)
+                if (isCancelled) {
+                    console.log(`[OfflineUppy] Check cancelled after performStateCheck for ${currentKey}`)
                     return
                 }
+
+                if (!isMountedRef.current) {
+                    console.log(`[OfflineUppy] Component unmounted after check, discarding results for ${currentKey}`)
+                    return
+                }
+
+                // 使用传入的 currentKey 而不是 ref，因为这个 useEffect 是专门为这个 key 运行的
+                console.log(
+                    `[OfflineUppy] useEffect check completed for ${currentKey}: hasSaved=${result.hasSaved}, shouldOpen=${result.shouldOpen}, hasNext=${result.hasNext}`,
+                )
 
                 // 更新状态
                 setHasSavedState(result.hasSaved)
                 setHasNextPendingOperation(result.hasNext)
                 setShouldOpenUppy(result.shouldOpen)
-
-                console.log(
-                    `[OfflineUppy] useEffect check completed for ${currentKey}: hasSaved=${result.hasSaved}, shouldOpen=${result.shouldOpen}, hasNext=${result.hasNext}`,
-                )
             } catch (error) {
                 console.error("[OfflineUppy] useEffect check failed:", error)
             }
-        }, 100) // 100ms 防抖
+        }
+
+        runCheck()
 
         return () => {
-            clearTimeout(timer)
+            isCancelled = true
+            console.log(`[OfflineUppy] useEffect cleanup for stateKey: ${currentKey}`)
         }
     }, [stateKey, performStateCheck]) // 只依赖 stateKey 和稳定的 performStateCheck
 
