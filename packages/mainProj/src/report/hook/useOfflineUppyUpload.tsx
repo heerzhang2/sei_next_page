@@ -435,8 +435,6 @@ export function useOfflineUppyUpload(params: {
 }) {
     const isMountedRef = useRef(true)
     const { repId, subrid, redId, hash, onFinish } = params
-    // 检查是否为无效的 hash
-    const isInvalidHash = hash && hash.includes("_-1")
     const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
     // 添加状态来存储恢复的待删除操作
@@ -515,14 +513,15 @@ export function useOfflineUppyUpload(params: {
     // 稳定的检查函数，不依赖其他状态，只依赖必要的函数
     const performStateCheck = useCallback(async (keyToCheck: string) => {
         console.log(`[OfflineUppy] checkSavedState START for key: ${keyToCheck}`)
-
         try {
             const savedState = await fileOperationsQueue.loadUppyState(keyToCheck)
             console.log(
                 `[OfflineUppy] Loaded saved state for ${keyToCheck}:`,
                 savedState ? `${savedState.files?.length || 0} files` : "null",
             )
-
+            // 如果没有保存的文件状态，检查队列中是否有下一条待处理操作
+            checkNextPendingOperation();
+            console.log(`[OfflineUppy] Next pending operation for ${keyToCheck}:`)
             // 检查是否有保存的文件，如果有，则认为有保存的状态
             if (savedState && savedState.files && savedState.files.length > 0) {
                 console.log(`[OfflineUppy] Found saved state for ${keyToCheck}`)
@@ -530,17 +529,12 @@ export function useOfflineUppyUpload(params: {
                 const shouldOpen = savedState.files.some(
                     (file: any) => !(file.progress?.uploadComplete || file.progress?.percentage === 100),
                 )
-                return { hasSaved: true, shouldOpen, hasNext: false } // hasNext 不在此函数内判断
+                return { hasSaved: true, shouldOpen }
             }
-
-            // 如果没有保存的文件状态，检查队列中是否有下一条待处理操作
-            const hasNext = await fileOperationsQueue.checkNextPendingOperation(keyToCheck)
-            console.log(`[OfflineUppy] Next pending operation for ${keyToCheck}:`, hasNext ? "yes" : "no")
-
-            return { hasSaved: false, shouldOpen: false, hasNext: hasNext }
+            return { hasSaved: false, shouldOpen: false }
         } catch (error) {
             console.error("[OfflineUppy] Failed to check saved state:", error)
-            return { hasSaved: false, shouldOpen: false, hasNext: false }
+            return { hasSaved: false, shouldOpen: false }
         }
     }, []) // 空依赖数组，确保函数引用稳定
 
@@ -580,20 +574,15 @@ export function useOfflineUppyUpload(params: {
                 )
                 return
             }
-
             const result = await performStateCheck(capturedStateKey)
-
             // 检查是否仍然挂载且 stateKey 未变化
             if (!isMountedRef.current || currentStateKeyRef.current !== capturedStateKey) {
                 console.log(`[OfflineUppy] Component unmounted or stateKey changed, discarding results`)
                 return
             }
-
             // 更新状态
             setHasSavedState(result.hasSaved)
-            setHasNextPendingOperation(result.hasNext)
             setShouldOpenUppy(result.shouldOpen)
-
             console.log(
                 `[OfflineUppy] State check completed for ${capturedStateKey}: hasSaved=${result.hasSaved}, shouldOpen=${result.shouldOpen}, hasNext=${result.hasNext}`,
             )
@@ -643,10 +632,8 @@ export function useOfflineUppyUpload(params: {
                 console.log(
                     `[OfflineUppy] useEffect check completed for ${currentKey}: hasSaved=${result.hasSaved}, shouldOpen=${result.shouldOpen}, hasNext=${result.hasNext}`,
                 )
-
                 // 更新状态
                 setHasSavedState(result.hasSaved)
-                setHasNextPendingOperation(result.hasNext)
                 setShouldOpenUppy(result.shouldOpen)
             } catch (error) {
                 console.error("[OfflineUppy] useEffect check failed:", error)
@@ -1417,15 +1404,6 @@ export function useOfflineUppyUpload(params: {
                 </div>
             </div>
         )
-    }
-
-    // 如果是无效的 hash，返回占位符组件
-    if (isInvalidHash) {
-        return [
-            <div key="empty-upload">
-                <div>请选择有效的单线图序号</div>
-            </div>,
-        ] as const
     }
     return [
         <div key="offline-uppy-wrapper">
