@@ -197,3 +197,68 @@ curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"
         # Add X-Forwarded-* headers
         proxy_set_header X-Forwarded-Host $host:$server_port;   头部标识扩展
         proxy_set_header X-Forwarded-Proto $scheme;
+
+
+                // 恢复待删除操作
+                if (savedState.meta?.pendingDeleteOperations && Array.isArray(savedState.meta.pendingDeleteOperations)) {
+                    setPendingDeleteOperations(savedState.meta.pendingDeleteOperations)
+                    console.log(`[v0] Restored ${savedState.meta.pendingDeleteOperations.length} pending delete operations`)
+                }
+
+                    //批量取消删除的函数
+                    const cancelPendingOperations = useCallback(() => {
+                        if (pendingDeleteOperations.length === 0) {
+                            toast.info("没有待取消的删除操作")
+                            return
+                        }
+                        setPendingDeleteOperations([])
+                        toast.success("已取消所有删除操作", {
+                            description: `已移除 ${Object.keys(pendingDeleteOperations).length} 个待删除文件`,
+                            duration: 3000,
+                        })
+                    }, [pendingDeleteOperations])
+
+                        //移除指定删除操作的函数
+                        const removePendingDeleteOperations = useCallback((deleteUrls: string[]) => {
+                            if (deleteUrls.length === 0) return
+
+                            setPendingDeleteOperations((prev) => prev.filter((op) => !deleteUrls.includes(op.deleteUrl)))
+                        }, [])
+
+    React.useEffect(() => {
+        if (externalPendingDeletes.length > 0) {
+            console.log(`[v0] Restoring ${externalPendingDeletes.length} external pending deletes`)
+            setPendingDeleteOperations((prev) => {
+                const existingUrls = new Set(prev.map((op) => op.deleteUrl))
+                const newOps = externalPendingDeletes.filter((op) => !existingUrls.has(op.deleteUrl))
+                if (newOps.length > 0) {
+                    console.log(`[v0] Adding ${newOps.length} new pending deletes to current state`)
+                    return [...prev, ...newOps]
+                } else {
+                    console.log(`[v0] No new pending deletes to add (all already exist in current state)`)
+                    return prev
+                }
+            })
+        }
+    }, [externalPendingDeletes])
+
+
+
+//
+            if (isError) {
+                setPendingDeleteOperations((prev) => {
+                    // 避免重复添加同一个 deleteUrl
+                    if (prev.some((op) => op.deleteUrl === fileUrl)) {
+                        return prev
+                    }
+                    return [
+                        ...prev,
+                        {
+                            deleteUrl: fileUrl,
+                            repId: eid,
+                            hash: hash || "default",
+                            business,
+                            timestamp: Date.now(),
+                        },
+                    ]
+                })

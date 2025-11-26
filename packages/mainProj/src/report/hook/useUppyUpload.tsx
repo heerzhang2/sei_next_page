@@ -172,7 +172,6 @@ type UploadMode = "tus" | "xhr"
  *  参数 onFinish?的回调类型:(file:any,newUpload:boolean)=>void； 回调参数newUpload表示是否有新上传的文件。
  * @param storeObj 对象或数组， 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
  * @param open 加载后就打开上传面板
- * @param externalPendingDeletes 未完成删除文件的状态注入列表
  * @param stateKey 保存到indexDB的key
  * @return {} 节点DOM
  * 【局限性】一个编辑器页面内不能放置多个useUppyUpload来做上传，因为uppy全局变量？，必须独立？ 走类似的useUppyUploadM。
@@ -182,6 +181,7 @@ export function useUppyUpload({
                                   id,
                                   eid,
                                   storeObj,
+                                  stateKey,
                                   maxFile = 1,
                                   liveDays = 2,
                                   maxSize = 5,
@@ -189,29 +189,29 @@ export function useUppyUpload({
                                   hash,
                                   business = "rep",
                                   open,
-                                  externalPendingDeletes = [],
-                                  stateKey,
+                                  isFilePendingDelete,
+                                  cancelPendingDelete,
+                                  addPendingDelete,
                               }: {
     storeObj: FileStore | FileStore[]
     eid: string
     hash: string
     id?: string
+    stateKey?: string
     maxFile?: number
     liveDays?: number
     maxSize?: number
     onFinish?: (file: any, newUpload: boolean) => void
     business?: string
     open?: boolean
-    stateKey?: string
-    externalPendingDeletes?: PendingDeleteOperation[]
+    isFilePendingDelete?: (fileUrl: string) => boolean
+    cancelPendingDelete?: (fileUrl: string) => void
+    addPendingDelete?: (operation: PendingDeleteOperation) => void
 }) {
-    const [pendingDeleteOperations, setPendingDeleteOperations] =
-        React.useState<PendingDeleteOperation[]>(externalPendingDeletes)
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
     const [uploadMode, setUploadMode] = React.useState<UploadMode>("xhr")
     const scrollHandler = useScrollHandler(".uppy-Dashboard-browse")(setOpenUppy, openUppy)
-    const dashLocale = DASH_LOCALE_CONFIG
     // 配置 Tus 插件的函数
     const configureTusPlugin = (uppy: Uppy) => {
         uppy.use(Tus, {
@@ -385,12 +385,6 @@ export function useUppyUpload({
             const savedState = await fileOperationsQueue.loadUppyState(stateKey!)
             if (savedState) {
                 console.log(`[v0] Restored Uppy state for key: ${stateKey}`)
-                // 恢复待删除操作
-                if (savedState.meta?.pendingDeleteOperations && Array.isArray(savedState.meta.pendingDeleteOperations)) {
-                    setPendingDeleteOperations(savedState.meta.pendingDeleteOperations)
-                    console.log(`[v0] Restored ${savedState.meta.pendingDeleteOperations.length} pending delete operations`)
-                }
-
                 if (savedState.files && Array.isArray(savedState.files)) {
                     const reconstructedFiles = savedState.files.map((file: any) => ({
                         id: file.id,
@@ -425,16 +419,15 @@ export function useUppyUpload({
 
     // 添加 ref 来跟踪初始化状态，防止竞态条件
     const isInitializingRef = useRef<boolean>(false)
-    const initializingStateKeyRef = useRef<string>("")
+    const initializingStateKeyRef = useRef<string|undefined>("")
 
     // 初始化 Uppy 实例
     React.useEffect(() => {
         if (uppyInstance) {
-            uppyInstance.clearSelectableFiles?.()
+            // uppyInstance.clearSelectableFiles?.()
             uppyInstance.cancelAll()
-            uppyInstance.close?.()
+            // uppyInstance.close?.()
         }
-
         const initializeUppy = async () => {
             const capturedStateKey = stateKey
             
@@ -512,10 +505,6 @@ export function useUppyUpload({
                         console.warn(`[v0] Failed to apply saved state:`, error)
                     }
                 }
-                //清空待删除操作列表 以及 uppy 的文件列表
-                if(!savedState){
-                    setPendingDeleteOperations([])
-                }
                 // 最后检查一次 stateKey 是否仍然有效
                 if (capturedStateKey === stateKey) {
                     setUppyInstance(newUppy)
@@ -534,10 +523,6 @@ export function useUppyUpload({
         }
         initializeUppy()
     }, [id, eid, stateKey, restoreUppyStateFromDB])
-
-    React.useEffect(() => {
-        setPendingDeleteOperations(externalPendingDeletes)
-    }, [externalPendingDeletes])
 
     // 当关键参数变化时重新初始化 Uppy 状态
     React.useEffect(() => {
@@ -568,23 +553,13 @@ export function useUppyUpload({
                 description: "结果: " + (result === "未登录" ? "失败，请重新登录" : result),
                 duration: isError ? 9000 : 2000,
             })
-
-            if (isError) {
-                setPendingDeleteOperations((prev) => {
-                    // 避免重复添加同一个 deleteUrl
-                    if (prev.some((op) => op.deleteUrl === fileUrl)) {
-                        return prev
-                    }
-                    return [
-                        ...prev,
-                        {
-                            deleteUrl: fileUrl,
-                            repId: eid,
-                            hash: hash || "default",
-                            business,
-                            timestamp: Date.now(),
-                        },
-                    ]
+            if (isError && addPendingDelete) {
+                addPendingDelete({
+                    deleteUrl: fileUrl,
+                    repId: eid,
+                    hash: hash || "default",
+                    business,
+                    timestamp: Date.now(),
                 })
                 toast.info("已加入待删除列表", {
                     description: "删除操作将在保存状态后加入离线队列",
@@ -779,11 +754,9 @@ export function useUppyUpload({
     const handleModeChange = async (mode: UploadMode) => {
         if (!uppyInstance) return
         console.log(`Switching upload mode from ${uploadMode} to ${mode}`)
-
         // 保存当前文件状态
         const currentFiles = uppyInstance.getFiles()
         console.log(`Preserving ${currentFiles.length} files during mode switch`)
-
         // 暂停所有上传
         uppyInstance.pauseAll()
 
@@ -847,9 +820,7 @@ export function useUppyUpload({
 
             // 更新模式状态
             setUploadMode(mode)
-
             console.log(`Successfully switched to ${mode} mode, preserved ${currentFiles.length} files`)
-
             toast.success(`已切换到${mode === "tus" ? "断点续传" : "常规"}模式`, {
                 description: `已保留 ${currentFiles.length} 个文件，可以重新上传`,
                 duration: 3000,
@@ -935,29 +906,6 @@ export function useUppyUpload({
             console.warn("清理 Tus localStorage 失败:", error)
         }
     }
-    React.useEffect(() => {
-        if (externalPendingDeletes.length > 0) {
-            console.log(`[v0] Restoring ${externalPendingDeletes.length} external pending deletes`)
-            setPendingDeleteOperations((prev) => {
-                const existingUrls = new Set(prev.map((op) => op.deleteUrl))
-                const newOps = externalPendingDeletes.filter((op) => !existingUrls.has(op.deleteUrl))
-                if (newOps.length > 0) {
-                    console.log(`[v0] Adding ${newOps.length} new pending deletes to current state`)
-                    return [...prev, ...newOps]
-                } else {
-                    console.log(`[v0] No new pending deletes to add (all already exist in current state)`)
-                    return prev
-                }
-            })
-        }
-    }, [externalPendingDeletes])
-    // 检查特定文件是否在待删除队列中
-    const isFilePendingDelete = useCallback(
-        (fileUrl: string) => {
-            return pendingDeleteOperations.some((op) => op.deleteUrl === fileUrl)
-        },
-        [pendingDeleteOperations],
-    )
 
     const popoverStyles = `
     [popover] {
@@ -1003,7 +951,7 @@ export function useUppyUpload({
   `
     // 在渲染文件时使用这些函数
     const renderFileWithDeleteStatus = (file: FileStore, index: number, isSingle = false) => {
-        const isPendingDelete = isFilePendingDelete(file.url)
+        const isPendingDelete =isFilePendingDelete && isFilePendingDelete(file.url)
         const popoverId = `move-popover-${index}-${hash || "_pf"}`
 
         // Handle file move functionality
@@ -1091,7 +1039,7 @@ export function useUppyUpload({
                     )}
 
                     {/* 取消删除按钮 */}
-                    {isPendingDelete && (
+                    {isPendingDelete && cancelPendingDelete && (
                         <Button
                             type="button"
                             variant="outline"
@@ -1173,34 +1121,6 @@ export function useUppyUpload({
         )
     }
 
-    //取消删除的函数
-    const cancelPendingDelete = useCallback((fileUrl: string) => {
-        setPendingDeleteOperations((prev) => prev.filter((op) => op.deleteUrl !== fileUrl))
-        toast.success("已取消删除操作", {
-            description: "文件已从待删除队列中移除",
-            duration: 2000,
-        })
-    }, [])
-    //批量取消删除的函数
-    const cancelPendingOperations = useCallback(() => {
-        if (pendingDeleteOperations.length === 0) {
-            toast.info("没有待取消的删除操作")
-            return
-        }
-        setPendingDeleteOperations([])
-        toast.success("已取消所有删除操作", {
-            description: `已移除 ${Object.keys(pendingDeleteOperations).length} 个待删除文件`,
-            duration: 3000,
-        })
-    }, [pendingDeleteOperations])
-
-    //移除指定删除操作的函数
-    const removePendingDeleteOperations = useCallback((deleteUrls: string[]) => {
-        if (deleteUrls.length === 0) return
-
-        setPendingDeleteOperations((prev) => prev.filter((op) => !deleteUrls.includes(op.deleteUrl)))
-    }, [])
-
     // 排除已完成的文件
     const removeCompletedFiles = React.useCallback(() => {
         if (!uppyInstance) {
@@ -1213,21 +1133,16 @@ export function useUppyUpload({
             toast.info("没有需要处理的文件")
             return
         }
-
         let removedCount = 0
         let completedCount = 0
-
         files.forEach((file) => {
             // 检查文件是否已经成功上传（多种方式检查）
             const isCompletedByProgress =
                 file.progress?.uploadComplete && file.progress?.percentage === 100 && file.response?.uploadURL
-
             // 检查特殊标记
             const isCompletedByMark = file.meta?.uploadCompletedMark === true
-
             // 只要任一条件满足就认为已完成
             const isCompleted = isCompletedByProgress || isCompletedByMark
-
             if (isCompleted) {
                 try {
                     uppyInstance.removeFile(file.id)
@@ -1453,9 +1368,6 @@ export function useUppyUpload({
     return {
         uploadDom: uppyInstance ? uploadDom : null,
         uppyInstance,
-        pendingDeleteOperations,
         delOssFileFunc,
-        cancelPendingOperations,
-        removePendingDeleteOperations,
     }
 }
