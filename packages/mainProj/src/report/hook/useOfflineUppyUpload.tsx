@@ -876,10 +876,10 @@ export function useOfflineUppyUpload(params: {
             // 找到当前快照的索引（基于时间戳匹配）
             const currentSnapshotIndex = sortedSnapshots.findIndex((snapshot) => snapshot.key === stateKey)
 
-            if (currentSnapshotIndex === -1) {
-                toast.error("当前状态不在分组中")
-                return
-            }
+            // if (currentSnapshotIndex === -1) {
+            //     toast.error("当前状态不在分组中")
+            //     return
+            // }
 
             // 获取下一个快照（循环逻辑）
             const nextIndex = (currentSnapshotIndex + 1) % sortedSnapshots.length
@@ -1042,16 +1042,14 @@ export function useOfflineUppyUpload(params: {
                 // 为每个操作创建专门的回调
                 const operationCallback = (result: any, fileUrl: string) => {
                     console.log(`[OfflineUppy] Delete operation result for ${fileUrl}:`, result)
-
                     if (result === "成功" || result === "文件不存在") {
                         console.log(`[OfflineUppy] Delete successful for ${fileUrl}`)
                         resolve({ success: true, operation: deleteOp, result })
                     } else {
-                        console.log(`[OfflineUppy] Delete failed for ${fileUrl}:`, result)
+                        toast.warning("删除操作", {description: `服务器应答: ${result}`,})
                         resolve({ success: false, operation: deleteOp, result })
                     }
                 }
-
                 // 调用删除函数，传递专门的回调
                 try {
                     delOssFileFunc(deleteOp.deleteUrl, "eid", deleteOp.repId, operationCallback)
@@ -1061,7 +1059,6 @@ export function useOfflineUppyUpload(params: {
                 }
             })
         })
-
         try {
             const results = await Promise.all(deletePromises)
 
@@ -1260,7 +1257,7 @@ export function useOfflineUppyUpload(params: {
                             </Button>
                         )}
                     </div>
-                    {hasSavedState && hasNextPendingOperation && (
+                    { hasNextPendingOperation && (
                         <Button
                             type="button"
                             variant="outline"

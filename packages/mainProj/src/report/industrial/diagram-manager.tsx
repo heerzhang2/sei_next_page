@@ -137,7 +137,11 @@ export const SingleLineDiagram = (
         toast.success("已重置到初始状态")
     }
 
-    const [render] = useFrameEditorBar({rep, values: { ...editForm }, onReset,})
+    const [render] = useFrameEditorBar({
+        rep,
+        transformValues: () => ({ ...editForm }),
+        onReset,
+    })
 
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
