@@ -1,6 +1,7 @@
 //src\report\hook\useOfflineUppyUpload.tsx
 "use client"
 import { useEffect, useCallback, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useUppyUpload, type FileStore, type PendingDeleteOperation } from "./useUppyUpload"
 import {fileOperationsQueue, generateUppyStateKey, UppyStateSnapshot} from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
@@ -428,6 +429,7 @@ export function useOfflineUppyUpload(params: {
     subrid?: string
 }) {
     const isMountedRef = useRef(true)
+    const router = useRouter()
     const { repId, subrid, redId, hash, onFinish } = params
     const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
@@ -990,7 +992,7 @@ export function useOfflineUppyUpload(params: {
             if (nextSnapshot.meta?.originalPageUrl) {
                 // 使用 stripOrigin 保持一致性
                 const cleanUrl = stripOrigin(nextSnapshot.meta.originalPageUrl)
-                window.location.href = cleanUrl
+                router.push(cleanUrl)
             } else {
                 toast.warning("下一条操作无有效跳转链接")
             }
@@ -1060,7 +1062,6 @@ export function useOfflineUppyUpload(params: {
                 console.log("[OfflineUppy] No snapshot or Uppy instance available")
                 // 只有在没有 snapshot 时才设置 false，如果只是 Uppy 实例还没准备好，不要重置状态
                 if (!snapshot) {
-                    setHasSavedState(false)
                     setIsRestoringState(false) // 没有快照，结束加载状态
                     setPendingDeleteOperations([])
                     const currentFiles = uppyInstanceRef.current!.getFiles()
@@ -1070,6 +1071,7 @@ export function useOfflineUppyUpload(params: {
                             uppyInstanceRef.current?.removeFile(file.id)
                         })
                     }
+                    setHasSavedState(false)
                 }
                 return
             }
