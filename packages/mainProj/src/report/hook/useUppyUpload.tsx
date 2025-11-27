@@ -15,8 +15,9 @@ import { Button } from "@/components/ui"
 import { FilePreview } from "@/components/file-preview"
 import { useCallback, useRef } from "react"
 import { toast } from "sonner"
-import { fileOperationsQueue } from "@/lib/file-operations-queue"
+import type { UppyStateSnapshot } from "@/lib/file-operations-queue"
 import zh_CN from "@uppy/locales/lib/zh_CN.js"
+import fileOperationsQueue from "@/lib/file-operations-queue" // 导入 fileOperationsQueue
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -159,20 +160,22 @@ export const MERGED_LOCALE_CONFIG = createMergedLocale()
 // 上传模式类型
 type UploadMode = "tus" | "xhr"
 
-/**不支持切换页面后回来 যুক্তি续刚才的未完成的上传！tus断点续传也是要求当前网页需要保留在目前状态管理的，不能跳转其他网页去，否则不能正常完成上传。
+/**不支持切换页面后 অবিলম্বে回来 续刚才的未完成的上传！tus断点续传也是要求当前网页需要保留在目前状态管理的，不能跳转其他网页去，否则不能正常完成上传。
  * 可以支持一个页面 多个上传的面板同时存在的。
  * @param id 同一个页面不能多个一样id的uppy实例
  * @param eid 分布式对象存储系统靠这个 eid ID来关联业务系统关系数据库的。
  * @param field  inp?.[field]? 存储上传后的文件对象信息对应inp字段。 _FILE_为前缀的； 数据=可能是{}单个的，也可能多为文件形式[{ }, ]？
  * @param maxFile 设计上的最多文件个数【maxFile决定了file保存是数组还是对象】最多传几个文件； 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
- * @param maxSize  每一个文件大小最大 多少 MB 兆B单位。
+ * @param maxSize 每一个文件大小最大 多少 MB 兆B单位。
  * 删除旧文件：关联的 rep+ repId必须的！
- * @param liveDays  该文件要求存储保留天数。 报告应该保留天数估计> 20年吧。
+ * @param liveDays 该文件要求存储保留天数。 报告应该保留天数估计> 20年吧。
  * @param onFinish [可选参数] #立刻生效给context 避免 事务性的缺失。 【上传任务完成】保存回调。 可能有多个的已经上传的文件！若删除多文件其中一个文件的onFinish参数file是剩下的文件数组。
  *  参数 onFinish?的回调类型:(file:any,newUpload:boolean)=>void； 回调参数newUpload表示是否有新上传的文件。
  * @param storeObj 对象或数组， 依照maxFile=1来判定的json inp{}关联存储 _FILE_S 还是 _FILE_ 单个多个的分别。
  * @param open 加载后就打开上传面板
  * @param stateKey 保存到indexDB的key
+ * @param preloadedSnapshot 从父级 hook 预加载的状态快照
+ * @param isPreloaded 标记预加载是否完成
  * @return {} 节点DOM
  * 【局限性】一个编辑器页面内不能放置多个useUppyUpload来做上传，因为uppy全局变量？，必须独立？ 走类似的useUppyUploadM。
  * TUS目前在切换路由页面再回来组件重新加载场景下，从indexDB恢复旧的上传的情况下：不管那个记住方式都会从零开始重新上传，而不是接着上次暂停位置续传的，可能被中断很长的时间，集群#后端状态也没保存。
@@ -192,6 +195,8 @@ export function useUppyUpload({
                                   isFilePendingDelete,
                                   cancelPendingDelete,
                                   addPendingDelete,
+                                  preloadedSnapshot,
+                                  isPreloaded,
                               }: {
     storeObj: FileStore | FileStore[]
     eid: string
@@ -207,6 +212,8 @@ export function useUppyUpload({
     isFilePendingDelete?: (fileUrl: string) => boolean
     cancelPendingDelete?: (fileUrl: string) => void
     addPendingDelete?: (operation: PendingDeleteOperation) => void
+    preloadedSnapshot?: UppyStateSnapshot | null
+    isPreloaded?: boolean
 }) {
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
@@ -379,6 +386,7 @@ export function useUppyUpload({
         return newUppy
     }
 
+    // 移除 restoreUppyStateFromDB，由外部 hook 处理
     const restoreUppyStateFromDB = React.useCallback(async () => {
         if (!stateKey) return null
         try {
@@ -419,67 +427,83 @@ export function useUppyUpload({
 
     // 添加 ref 来跟踪初始化状态，防止竞态条件
     const isInitializingRef = useRef<boolean>(false)
-    const initializingStateKeyRef = useRef<string|undefined>("")
+    const initializingStateKeyRef = useRef<string | undefined>("")
+    const currentStateKeyRef = useRef<string | undefined>(stateKey)
 
-    // 初始化 Uppy 实例
     React.useEffect(() => {
-        if (uppyInstance) {
-            // uppyInstance.clearSelectableFiles?.()
-            uppyInstance.cancelAll()
-            // uppyInstance.close?.()
+        currentStateKeyRef.current = stateKey
+    }, [stateKey])
+
+    React.useEffect(() => {
+        // 等待预加载完成
+        if (!isPreloaded) {
+            console.log(`[v0] Waiting for preload to complete before initializing Uppy for key: ${stateKey}`)
+            return
         }
+
+        if (uppyInstance) {
+            uppyInstance.cancelAll()
+        }
+
         const initializeUppy = async () => {
             const capturedStateKey = stateKey
-            
+
             // 如果已经在初始化不同的 stateKey，等待当前初始化完成
             if (isInitializingRef.current && initializingStateKeyRef.current !== capturedStateKey) {
-                console.log(`[v0] Initialization WAITING - currently initializing ${initializingStateKeyRef.current}, waiting for ${capturedStateKey}`)
-                
+                console.log(
+                    `[v0] Initialization WAITING - currently initializing ${initializingStateKeyRef.current}, waiting for ${capturedStateKey}`,
+                )
+
                 // 等待当前初始化完成
                 let attempts = 0
-                while (isInitializingRef.current && attempts < 50) { // 最多等待5秒
-                    await new Promise(resolve => setTimeout(resolve, 100))
+                while (isInitializingRef.current && attempts < 50) {
+                    await new Promise((resolve) => setTimeout(resolve, 100))
                     attempts++
                 }
-                
-                // 如果等待后仍然有其他初始化在进行，跳过
+
                 if (isInitializingRef.current) {
                     console.log(`[v0] Initialization SKIPPED - timeout waiting for ${initializingStateKeyRef.current}`)
                     return
                 }
             }
-            
+
             // 再次检查 stateKey 是否仍然有效
-            if (capturedStateKey !== stateKey) {
-                console.log(`[v0] Initialization CANCELLED - stateKey changed from ${capturedStateKey} to ${stateKey}`)
+            if (capturedStateKey !== currentStateKeyRef.current) {
+                console.log(
+                    `[v0] Initialization CANCELLED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+                )
                 return
             }
-            
+
             // 设置初始化状态
             isInitializingRef.current = true
             initializingStateKeyRef.current = capturedStateKey
-            
+
             try {
                 console.log(`[v0] Initialization START for key: ${capturedStateKey}`)
-                
+
                 const newUppy = createUppyInstance()
 
-                // 尝试从 indexDB 恢复之前的状态
-                const savedState = await restoreUppyStateFromDB()
-                
+                const savedState = preloadedSnapshot
+
                 // 检查 stateKey 是否仍然有效
-                if (capturedStateKey !== stateKey) {
-                    console.log(`[v0] Initialization CANCELLED - stateKey changed from ${capturedStateKey} to ${stateKey}`)
+                if (capturedStateKey !== currentStateKeyRef.current) {
+                    console.log(
+                        `[v0] Initialization CANCELLED after preload - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+                    )
                     return
                 }
-                
+
                 if (savedState && savedState.files && savedState.files.length > 0) {
+                    console.log(
+                        `[v0] Applying preloaded state for key: ${capturedStateKey} with ${savedState.files.length} files`,
+                    )
                     try {
                         if (savedState.meta) {
                             newUppy.setMeta(savedState.meta)
                         }
 
-                        // 单独恢复文件
+                        // 恢复文件
                         for (const file of savedState.files) {
                             try {
                                 if (file.data) {
@@ -492,6 +516,7 @@ export function useUppyUpload({
                                             name: file.name,
                                             type: file.type,
                                             lastModified: file.lastModified || Date.now(),
+                                            ...file.meta,
                                         },
                                     })
                                 }
@@ -500,13 +525,16 @@ export function useUppyUpload({
                             }
                         }
 
-                        console.log(`[v0] Applied restored state to Uppy instance with ${savedState.files.length} files`)
+                        console.log(`[v0] Applied preloaded state to Uppy instance with ${savedState.files.length} files`)
                     } catch (error) {
-                        console.warn(`[v0] Failed to apply saved state:`, error)
+                        console.warn(`[v0] Failed to apply preloaded state:`, error)
                     }
+                } else {
+                    console.log(`[v0] No preloaded state for key: ${capturedStateKey}`)
                 }
+
                 // 最后检查一次 stateKey 是否仍然有效
-                if (capturedStateKey === stateKey) {
+                if (capturedStateKey === currentStateKeyRef.current) {
                     setUppyInstance(newUppy)
                     console.log(`[v0] Initialization END for key: ${capturedStateKey}`)
                 }
@@ -522,7 +550,7 @@ export function useUppyUpload({
             }
         }
         initializeUppy()
-    }, [id, eid, stateKey, restoreUppyStateFromDB])
+    }, [id, eid, stateKey, isPreloaded, preloadedSnapshot]) // 添加 isPreloaded 和 preloadedSnapshot 依赖
 
     // 当关键参数变化时重新初始化 Uppy 状态
     React.useEffect(() => {
@@ -951,7 +979,7 @@ export function useUppyUpload({
   `
     // 在渲染文件时使用这些函数
     const renderFileWithDeleteStatus = (file: FileStore, index: number, isSingle = false) => {
-        const isPendingDelete =isFilePendingDelete && isFilePendingDelete(file.url)
+        const isPendingDelete = isFilePendingDelete && isFilePendingDelete(file.url)
         const popoverId = `move-popover-${index}-${hash || "_pf"}`
 
         // Handle file move functionality

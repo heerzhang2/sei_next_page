@@ -3,13 +3,12 @@
 import { useEffect, useCallback, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useUppyUpload, type FileStore, type PendingDeleteOperation } from "./useUppyUpload"
-import {fileOperationsQueue, generateUppyStateKey, UppyStateSnapshot} from "@/lib/file-operations-queue"
+import { fileOperationsQueue, generateUppyStateKey, type UppyStateSnapshot } from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
 import { Upload, FolderOpen, Trash2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 import { stripOrigin } from "@/lib/utils"
-import * as React from "react";
 
 // 检查浏览器是否支持 File System Access API
 const isFileSystemAccessSupported = () => {
@@ -433,7 +432,7 @@ export function useOfflineUppyUpload(params: {
     const { repId, subrid, redId, hash, onFinish } = params
     const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
-    const [pendingDeleteOperations, setPendingDeleteOperations] =useState<PendingDeleteOperation[]>([])
+    const [pendingDeleteOperations, setPendingDeleteOperations] = useState<PendingDeleteOperation[]>([])
 
     // 检查是否有保存的状态
     const [hasSavedState, setHasSavedState] = useState(false)
@@ -443,33 +442,103 @@ export function useOfflineUppyUpload(params: {
     const [hasNextPendingOperation, setHasNextPendingOperation] = useState(false)
     // 状态恢复加载状态
     const [isRestoringState, setIsRestoringState] = useState(true)
+
+    const [preloadedSnapshot, setPreloadedSnapshot] = useState<UppyStateSnapshot | null>(null)
+    const [isPreloaded, setIsPreloaded] = useState(false)
+
     // 使用 ref 来存储最新的 storeObj 值，避免闭包问题
     const latestStoreObjRef = useRef<FileStore | FileStore[]>(params.storeObj)
     const currentStateKeyRef = useRef<string>(stateKey)
-    // currentStateKeyRef.current = stateKey  // 删除这行
     const prevStateKeyRef = useRef<string>(stateKey)
     // 添加一个 ref 来跟踪当前是否正在检查状态，防止异步的竞态条件
     const isCheckingRef = useRef<boolean>(false)
     const checkingStateKeyRef = useRef<string>("")
     const uppyInstanceRef = useRef<Uppy | null>(null)
     const pendingDeleteOperationsRef = useRef<any[]>([])
+
     useEffect(() => {
         return () => {
             isMountedRef.current = false
         }
     }, [])
+
     useEffect(() => {
+        const prevKey = currentStateKeyRef.current
         currentStateKeyRef.current = stateKey
-        if (prevStateKeyRef.current !== stateKey) {
-            console.log(`[OfflineUppy] stateKey changed from ${prevStateKeyRef.current} to ${stateKey}, resetting states`)
-            // 取消正在进行的检查操作
-            if (isCheckingRef.current && checkingStateKeyRef.current !== stateKey) {
-                console.log(`[OfflineUppy] Cancelling previous check for ${checkingStateKeyRef.current}`)
-            }
-            // 立即重置
+
+        if (prevKey !== stateKey) {
+            console.log(`[OfflineUppy] stateKey changed from ${prevKey} to ${stateKey}, starting preload`)
             prevStateKeyRef.current = stateKey
+
+            // 重置状态
+            setIsPreloaded(false)
+            setPreloadedSnapshot(null)
+            setHasSavedState(false)
+            setHasNextPendingOperation(false)
+            setShouldOpenUppy(false)
+            setPendingDeleteOperations([])
+            setIsRestoringState(true)
         }
     }, [stateKey])
+
+    useEffect(() => {
+        let isCancelled = false
+        const capturedStateKey = stateKey
+
+        const preloadState = async () => {
+            console.log(`[OfflineUppy] Preloading state START for key: ${capturedStateKey}`)
+
+            try {
+                // 最早的前提动作：从 IndexedDB 加载状态
+                const snapshot = await fileOperationsQueue.loadUppyState(capturedStateKey)
+
+                // 检查是否已取消或 stateKey 已变化
+                if (isCancelled || currentStateKeyRef.current !== capturedStateKey) {
+                    console.log(
+                        `[OfflineUppy] Preload CANCELLED for key: ${capturedStateKey}, current key: ${currentStateKeyRef.current}`,
+                    )
+                    return
+                }
+
+                if (snapshot) {
+                    console.log(`[OfflineUppy] Preloaded snapshot for key: ${capturedStateKey}`, {
+                        files: snapshot.files?.length || 0,
+                        pendingDeletes: snapshot.meta?.pendingDeleteOperations?.length || 0,
+                    })
+                    setPreloadedSnapshot(snapshot)
+                    setHasSavedState(true)
+
+                    // 从 snapshot 中恢复待删除操作
+                    if (snapshot.meta?.pendingDeleteOperations) {
+                        setPendingDeleteOperations(snapshot.meta.pendingDeleteOperations)
+                    }
+                } else {
+                    console.log(`[OfflineUppy] No saved state for key: ${capturedStateKey}`)
+                    setPreloadedSnapshot(null)
+                    setHasSavedState(false)
+                }
+
+                // 标记预加载完成
+                setIsPreloaded(true)
+
+                // 检查是否有下一条待处理操作
+                checkNextPendingOperation()
+            } catch (error) {
+                console.error(`[OfflineUppy] Preload FAILED for key: ${capturedStateKey}`, error)
+                if (!isCancelled && currentStateKeyRef.current === capturedStateKey) {
+                    setIsPreloaded(true)
+                    setPreloadedSnapshot(null)
+                }
+            }
+        }
+
+        preloadState()
+
+        return () => {
+            isCancelled = true
+        }
+    }, [stateKey])
+
     // 更新 ref 当 storeObj 变化时
     useEffect(() => {
         latestStoreObjRef.current = params.storeObj
@@ -556,16 +625,13 @@ export function useOfflineUppyUpload(params: {
                 if (prev.some((op) => op.deleteUrl === operation.deleteUrl)) {
                     return prev
                 }
-                return [
-                    ...prev,
-                    operation
-                ]
+                return [...prev, operation]
             })
         },
         [pendingDeleteOperations],
     )
     const onFinishNew = useCallback(
-        (file:any, newUpload:boolean) => {
+        (file: any, newUpload: boolean) => {
             // 调用原始的 onFinish
             if (onFinish) {
                 onFinish(file, newUpload)
@@ -578,11 +644,7 @@ export function useOfflineUppyUpload(params: {
         [onFinish, checkAndClearState],
     )
     //将恢复的待删除操作传递给 父类hook：useUppyUpload
-    const {
-        uploadDom,
-        uppyInstance,
-        delOssFileFunc,
-    } = useUppyUpload({
+    const { uploadDom, uppyInstance, delOssFileFunc } = useUppyUpload({
         ...params,
         eid: repId,
         stateKey,
@@ -591,6 +653,8 @@ export function useOfflineUppyUpload(params: {
         isFilePendingDelete,
         cancelPendingDelete,
         addPendingDelete,
+        preloadedSnapshot: isPreloaded ? preloadedSnapshot : undefined,
+        isPreloaded,
     })
 
     // 更新 ref 以获取最新的 pendingDeleteOperations
@@ -602,6 +666,7 @@ export function useOfflineUppyUpload(params: {
             uppyInstanceRef.current = uppyInstance
         }
     }, [uppyInstance])
+
     // 保存 Uppy 当前状态（统一的手动保存），确保包含当前的待删除操作
     const saveUppyState = useCallback(
         async (uppy: Uppy) => {
@@ -633,7 +698,7 @@ export function useOfflineUppyUpload(params: {
 
             const currentPendingDeletes = pendingDeleteOperationsRef.current
 
-            // 如果没有待上传文件且没有待删除操作，清理 IndexedDB 状态
+            // 如果没有待上传文件且没有待删除操作，清理 IndexedDB
             if (files.length === 0 && currentPendingDeletes.length === 0) {
                 try {
                     // 清理 IndexedDB 中的状态数据
@@ -908,25 +973,48 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Failed to remove saved state:", error)
             toast.error("清除状态失败")
         }
-    }, [stateKey,  repId, params.liveDays, params.business])
+    }, [stateKey, repId, params.liveDays, params.business])
     // 恢复状态时，从Uppy state恢复
     useEffect(() => {
+        // 只有在预加载完成后才执行恢复
+        if (!isPreloaded) {
+            console.log(`[OfflineUppy] Waiting for preload to complete for key: ${stateKey}`)
+            return
+        }
+
+        const capturedStateKey = stateKey
+
         const restoreState = async () => {
-            console.log(`[OfflineUppy] Restoring state for key: ${stateKey}`)
-            const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
+            console.log(`[OfflineUppy] Restoring state for key: ${capturedStateKey}`)
+
+            // 检查 stateKey 是否已变化
+            if (currentStateKeyRef.current !== capturedStateKey) {
+                console.log(
+                    `[OfflineUppy] Restore CANCELLED - stateKey changed from ${capturedStateKey} to ${currentStateKeyRef.current}`,
+                )
+                return
+            }
+
+            // 使用预加载的快照，而不是重新加载
+            const snapshot = preloadedSnapshot
 
             if (!snapshot || !uppyInstanceRef.current) {
-                console.log("[OfflineUppy] No snapshot or Uppy instance available")
-                // 只有在没有 snapshot 时才设置 false，如果只是 Uppy 实例还没准备好，不要重置状态
+                console.log("[OfflineUppy] No snapshot or Uppy instance available", {
+                    hasSnapshot: !!snapshot,
+                    hasUppy: !!uppyInstanceRef.current,
+                })
                 if (!snapshot) {
-                    setIsRestoringState(false) // 没有快照，结束加载状态
+                    setIsRestoringState(false)
                     setPendingDeleteOperations([])
-                    const currentFiles = uppyInstanceRef.current!.getFiles()
-                    if (currentFiles.length > 0) {
-                        console.log(`[OfflineUppy] Clearing ${currentFiles.length} existing files from Uppy instance before restore`)
-                        currentFiles.forEach(file => {
-                            uppyInstanceRef.current?.removeFile(file.id)
-                        })
+                    // 清理现有文件
+                    if (uppyInstanceRef.current) {
+                        const currentFiles = uppyInstanceRef.current.getFiles()
+                        if (currentFiles.length > 0) {
+                            console.log(`[OfflineUppy] Clearing ${currentFiles.length} existing files from Uppy instance`)
+                            currentFiles.forEach((file) => {
+                                uppyInstanceRef.current?.removeFile(file.id)
+                            })
+                        }
                     }
                     setHasSavedState(false)
                 }
@@ -944,117 +1032,31 @@ export function useOfflineUppyUpload(params: {
                 console.log(
                     `[OfflineUppy] Found ${snapshot.meta.pendingDeleteOperations.length} pending delete operations in snapshot`,
                 )
-                console.log(`[OfflineUppy] Setting pendingDeleteOperations length=`, snapshot.meta.pendingDeleteOperations?.length,"stateKey=",stateKey)
                 setPendingDeleteOperations(snapshot.meta.pendingDeleteOperations)
             } else {
                 console.log(`[OfflineUppy] No pending delete operations in snapshot, clearing pendingDeleteOperations`)
                 setPendingDeleteOperations([])
             }
 
-            // 清理现有状态：清空文件和meta中的pendingDeleteOperations
-            const currentFiles = uppyInstanceRef.current.getFiles()
-            if (currentFiles.length > 0) {
-                console.log(`[OfflineUppy] Clearing ${currentFiles.length} existing files from Uppy instance before restore`)
-                currentFiles.forEach(file => {
-                    uppyInstanceRef.current?.removeFile(file.id)
-                })
-            }
-            
-            // 清理meta中的pendingDeleteOperations
-            const currentMeta = uppyInstanceRef.current.getState().meta
-            if (currentMeta?.pendingDeleteOperations) {
-                console.log(`[OfflineUppy] Clearing existing pendingDeleteOperations from meta before restore`)
-                uppyInstanceRef.current.setMeta({
-                    ...currentMeta,
-                    pendingDeleteOperations: []
-                })
-            }
+            // 注意：文件恢复逻辑已经移到 useUppyUpload 中通过 preloadedSnapshot 处理
+            // 这里只需要处理待删除操作的恢复
 
-            uppyInstanceRef.current.pauseAll()
+            setIsRestoringState(false)
+            setHasSavedState(true)
+        }
 
-            // 先设置 meta 数据
-            if (snapshot.meta) {
-                uppyInstanceRef.current.setMeta(snapshot.meta)
+        // 等待 Uppy 实例就绪后执行恢复
+        const waitForUppy = () => {
+            if (uppyInstanceRef.current) {
+                restoreState()
             } else {
-                // 设置默认 meta
-                uppyInstanceRef.current.setMeta({
-                    eid: repId,
-                    liveDays: params.liveDays || 2,
-                    business: params.business || "rep",
-                })
+                // 如果 Uppy 还没准备好，等待一下
+                setTimeout(waitForUppy, 100)
             }
-            // 在 restoreState 函数中更新恢复计数逻辑
-            let restoredCount = 0
-            let fromHandleCount = 0
-            let handleFailures = 0
-            let addFailures = 0
-            let duplicateFiles = 0
-            for (const fileData of snapshot.files) {
-                const result = await restoreFileFromSnapshot(
-                    fileData,
-                    uppyInstanceRef.current,
-                    repId,
-                    params.business || "rep",
-                    params.liveDays || 2,
-                    snapshot.meta,
-                )
+        }
 
-                if (result.restored) {
-                    restoredCount++
-                    if (result.fromHandle) {
-                        fromHandleCount++
-                    }
-                } else {
-                    if (fileData.fileHandle && fileData.isHandleMode) {
-                        handleFailures++
-                    } else {
-                        addFailures++
-                    }
-                    // 检查是否是重复文件导致的失败
-                    const existingFiles = uppyInstanceRef.current.getFiles()
-                    const isDuplicate = existingFiles.some((file) => file.name === fileData.name && file.size === fileData.size)
-                    if (isDuplicate) {
-                        duplicateFiles++
-                    }
-                }
-            }
-            console.log(
-                `[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles), ${duplicateFiles} duplicates skipped`,
-            )
-            if (restoredCount > 0) {
-                toast.success(`恢复完成`, {
-                    description: `已恢复 ${restoredCount} 个上传文件${duplicateFiles > 0 ? `，跳过 ${duplicateFiles} 个重复文件` : ""}`,
-                })
-            } else if (snapshot.files.length > 0) {
-                if (duplicateFiles > 0) {
-                    toast.info("恢复完成", {
-                        description: `所有文件已在上传列表中，无需重复恢复`,
-                        duration: 9000,
-                    })
-                } else {
-                    toast.error("恢复失败", {
-                        description: `无法恢复 ${snapshot.files.length} 个文件，请重新选择文件`,
-                    })
-                }
-            }
-        }
-        
-        // 包装恢复函数，在完成后设置加载状态
-        const restoreStateWithLoading = async () => {
-            try {
-                await restoreState()
-            } finally {
-                const currentFiles = uppyInstanceRef.current!.getFiles()
-                // 无论成功还是失败，都结束加载状态
-                setIsRestoringState(false)
-            }
-        }
-        
-        // 延迟执行以确保 Uppy 完全初始化
-        setTimeout(() => {
-            restoreStateWithLoading()
-        }, 500)
-    }, [stateKey])  //单线图依赖url参数来切换的会导致stateKey现有旧数值render然后切换新的
+        waitForUppy()
+    }, [isPreloaded, preloadedSnapshot, stateKey])
 
     // 执行待删除操作 - 使用动态回调版本
     const executePendingDeletes = useCallback(async () => {
@@ -1197,13 +1199,7 @@ export function useOfflineUppyUpload(params: {
             console.error("[OfflineUppy] Error executing pending deletes:", error)
             toast.error("执行删除操作时发生错误")
         }
-    }, [
-        pendingDeleteOperations,
-        delOssFileFunc,
-        onFinish,
-        params.maxFile,
-        params.storeObj,
-    ])
+    }, [pendingDeleteOperations, delOssFileFunc, onFinish, params.maxFile, params.storeObj])
     //[离线场景增强]通过文件句柄方式添加文件到 Uppy，避免占用缓存空间
     const addFilesWithHandles = useCallback(async () => {
         if (!uppyInstanceRef.current) {
