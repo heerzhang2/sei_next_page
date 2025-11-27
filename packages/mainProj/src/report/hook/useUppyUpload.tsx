@@ -1293,7 +1293,7 @@ export function useUppyUpload({
         const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
         const hasFiles = files.length > 0
         const selectedFilesCount = uppyInstance ? uppyInstance.getFiles().length : 0
-
+        const recovering=preloadedSnapshot && preloadedSnapshot.files && preloadedSnapshot.files.some((file: any) => !(file.progress?.uploadComplete || file.progress?.percentage === 100))
         return (
             <>
                 {/* 显示已上传的文件 */}
@@ -1316,9 +1316,17 @@ export function useUppyUpload({
                     {/* 操作按钮 */}
                     <div className="space-y-2">
                         <div className="flex justify-center items-center gap-2">
-                            <Button size="sm" disabled={!openUppy && thisMaxFiles <= 0} onClick={scrollHandler}>
+                            <Button 
+                                size="sm" 
+                                disabled={!openUppy && thisMaxFiles <= 0} 
+                                onClick={scrollHandler}
+                                className={ recovering? "bg-orange-700 border-orange-300 hover:bg-orange-500" : ""}
+                            >
                                 {openUppy ? "关闭上传" : `开启上传`}
                                 {selectedFilesCount > 0 && ` | 在选${selectedFilesCount}个`}
+                                {recovering && (
+                                    <span className="text-blue-600 font-bold">●</span>
+                                )}
                             </Button>
                             {uppyInstance && uppyInstance.getFiles().some((file) => file.error) && (
                                 <Button

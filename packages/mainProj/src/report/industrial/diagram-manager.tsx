@@ -130,6 +130,42 @@ export const SingleLineDiagram = (
         [editForm.单图表, startIndex, endIndex, targetIndex],
     )
 
+    // 删除所有单线图和备注为空的对象
+    const handleDeleteAllEmptyUnits = useCallback(() => {
+        const currentUnits = editForm.单图表 || []
+        const emptyUnits = currentUnits.filter((unit, index) => {
+            // 检查单线图文件是否为空
+            const hasNoFile = !unit._FILE_?.url
+            // 检查备注是否为空
+            const hasNoName = !unit.m || unit.m.trim() === ""
+            return hasNoFile && hasNoName
+        })
+
+        if (emptyUnits.length === 0) {
+            toast.info("没有找到空的单线图对象")
+            return
+        }
+
+        // 删除空对象
+        const newUnits = currentUnits.filter((unit, index) => {
+            const hasNoFile = !unit._FILE_?.url
+            const hasNoName = !unit.m || unit.m.trim() === ""
+            return !(hasNoFile && hasNoName)
+        })
+
+        setEditForm((prev) => ({
+            ...prev,
+            单图表: newUnits,
+        }))
+
+        // 如果当前选中的对象被删除了，重置选择状态
+        if (selectedIndex !== -1 && emptyUnits.some(unit => unit === currentUnits[selectedIndex])) {
+            setSelectedIndex(-1)
+        }
+
+        toast.success(`已删除 ${emptyUnits.length} 个空的单线图对象`)
+    }, [editForm.单图表, selectedIndex])
+
     const onReset = () => {
         setEditForm({ ...oldValue })
         // 重置选择状态
@@ -173,7 +209,7 @@ export const SingleLineDiagram = (
                                 >
                                     <div className="flex justify-between items-center">
                                         <div>
-                                            <span className="font-medium">{unit._FILE_?.name}</span>
+                                            <span className="text-sm">{unit._FILE_?.name}</span>
                                             <span className="text-sm text-muted-foreground ml-2">{unit.name}</span>
                                         </div>
                                         <div className="text-xs text-muted-foreground">序号: {index + 1}</div>
@@ -204,6 +240,15 @@ export const SingleLineDiagram = (
                                 >
                                     <Trash2 className="h-4 w-4 mr-1" />
                                     删除单线图对象
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleDeleteAllEmptyUnits}
+                                >
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    删除所有空对象
                                 </Button>
                             </div>
                         </div>
