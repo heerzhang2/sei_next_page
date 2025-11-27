@@ -1058,6 +1058,14 @@ export function useOfflineUppyUpload(params: {
                 if (!snapshot) {
                     setHasSavedState(false)
                     setIsRestoringState(false) // 没有快照，结束加载状态
+                    setPendingDeleteOperations([])
+                    const currentFiles = uppyInstanceRef.current!.getFiles()
+                    if (currentFiles.length > 0) {
+                        console.log(`[OfflineUppy] Clearing ${currentFiles.length} existing files from Uppy instance before restore`)
+                        currentFiles.forEach(file => {
+                            uppyInstanceRef.current?.removeFile(file.id)
+                        })
+                    }
                 }
                 return
             }
@@ -1073,7 +1081,7 @@ export function useOfflineUppyUpload(params: {
                 console.log(
                     `[OfflineUppy] Found ${snapshot.meta.pendingDeleteOperations.length} pending delete operations in snapshot`,
                 )
-                console.log(`[OfflineUppy] Setting pendingDeleteOperations to:`, snapshot.meta.pendingDeleteOperations)
+                console.log(`[OfflineUppy] Setting pendingDeleteOperations length=`, snapshot.meta.pendingDeleteOperations?.length,"stateKey=",stateKey)
                 setPendingDeleteOperations(snapshot.meta.pendingDeleteOperations)
             } else {
                 console.log(`[OfflineUppy] No pending delete operations in snapshot, clearing pendingDeleteOperations`)
@@ -1183,7 +1191,7 @@ export function useOfflineUppyUpload(params: {
         setTimeout(() => {
             restoreStateWithLoading()
         }, 500)
-    }, [stateKey]) // 只依赖 stateKey，其他参数变化不需要重新恢复状态
+    }, [stateKey])  //单线图依赖url参数来切换的会导致stateKey现有旧数值render然后切换新的
 
     // 执行待删除操作 - 使用动态回调版本
     const executePendingDeletes = useCallback(async () => {

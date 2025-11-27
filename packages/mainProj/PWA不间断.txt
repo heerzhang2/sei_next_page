@@ -262,3 +262,39 @@ curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"
                         },
                     ]
                 })
+
+
+
+            // 2. 清空 Uppy 实例中的文件状态
+            if (uppyInstanceRef.current) {
+                // 暂停所有上传
+                uppyInstanceRef.current.pauseAll()
+
+                // 获取当前所有文件并逐个移除
+                const currentFiles = uppyInstanceRef.current.getFiles()
+                currentFiles.forEach((file) => {
+                    try {
+                        uppyInstanceRef.current?.removeFile(file.id)
+                    } catch (error) {
+                        console.warn(`[OfflineUppy] Failed to remove file ${file.id}:`, error)
+                    }
+                })
+
+                // 重置 meta 数据
+                uppyInstanceRef.current.setMeta({
+                    eid: repId,
+                    liveDays: params.liveDays || 2,
+                    business: params.business || "rep",
+                })
+
+                console.log(`[OfflineUppy] Cleared ${currentFiles.length} files from Uppy instance`)
+            }
+
+            // 清理现有状态：清空文件和meta中的pendingDeleteOperations
+            const currentFiles = uppyInstanceRef.current.getFiles()
+            if (currentFiles.length > 0) {
+                console.log(`[OfflineUppy] Clearing ${currentFiles.length} existing files from Uppy instance before restore`)
+                currentFiles.forEach(file => {
+                    uppyInstanceRef.current?.removeFile(file.id)
+                })
+            }
