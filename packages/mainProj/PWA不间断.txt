@@ -271,3 +271,43 @@ curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"
             return { hasSaved: false, shouldOpen: false }
         }
     }, [])
+
+
+    // 移除 restoreUppyStateFromDB，由外部 hook 处理
+    const restoreUppyStateFromDB = React.useCallback(async () => {
+        if (!stateKey) return null
+        try {
+            const savedState = await fileOperationsQueue.loadUppyState(stateKey!)
+            if (savedState) {
+                console.log(`[v0] Restored Uppy state for key: ${stateKey}`)
+                if (savedState.files && Array.isArray(savedState.files)) {
+                    const reconstructedFiles = savedState.files.map((file: any) => ({
+                        id: file.id,
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: file.data,
+                        meta: {
+                            name: file.name,
+                            type: file.type,
+                            lastModified: file.lastModified || Date.now(),
+                            ...file.meta, // 保留其他 meta 信息
+                        },
+                        progress: {
+                            uploadComplete: file.progress?.uploadComplete || false,
+                            percentage: file.progress?.percentage || 0,
+                        },
+                    }))
+
+                    return {
+                        ...savedState,
+                        files: reconstructedFiles,
+                    }
+                }
+                return savedState
+            }
+        } catch (error) {
+            console.warn(`[v0] Failed to restore Uppy state:`, error)
+        }
+        return null
+    }, [stateKey])

@@ -427,13 +427,11 @@ export function useOfflineUppyUpload(params: {
     redId?: number
     subrid?: string
 }) {
-    const isMountedRef = useRef(true)
     const router = useRouter()
     const { repId, subrid, redId, hash, onFinish } = params
     const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
     const [pendingDeleteOperations, setPendingDeleteOperations] = useState<PendingDeleteOperation[]>([])
-
     // 检查是否有保存的状态
     const [hasSavedState, setHasSavedState] = useState(false)
     // 检查是否应该开启 uppy 面板
@@ -442,34 +440,24 @@ export function useOfflineUppyUpload(params: {
     const [hasNextPendingOperation, setHasNextPendingOperation] = useState(false)
     // 状态恢复加载状态
     const [isRestoringState, setIsRestoringState] = useState(true)
-
     const [preloadedSnapshot, setPreloadedSnapshot] = useState<UppyStateSnapshot | null>(null)
     const [isPreloaded, setIsPreloaded] = useState(false)
-
     // 使用 ref 来存储最新的 storeObj 值，避免闭包问题
     const latestStoreObjRef = useRef<FileStore | FileStore[]>(params.storeObj)
     const currentStateKeyRef = useRef<string>(stateKey)
     const prevStateKeyRef = useRef<string>(stateKey)
     // 添加一个 ref 来跟踪当前是否正在检查状态，防止异步的竞态条件
-    const isCheckingRef = useRef<boolean>(false)
-    const checkingStateKeyRef = useRef<string>("")
+    // const isCheckingRef = useRef<boolean>(false)
+    // const checkingStateKeyRef = useRef<string>("")
     const uppyInstanceRef = useRef<Uppy | null>(null)
     const pendingDeleteOperationsRef = useRef<any[]>([])
 
     useEffect(() => {
-        return () => {
-            isMountedRef.current = false
-        }
-    }, [])
-
-    useEffect(() => {
         const prevKey = currentStateKeyRef.current
         currentStateKeyRef.current = stateKey
-
         if (prevKey !== stateKey) {
             console.log(`[OfflineUppy] stateKey changed from ${prevKey} to ${stateKey}, starting preload`)
             prevStateKeyRef.current = stateKey
-
             // 重置状态
             setIsPreloaded(false)
             setPreloadedSnapshot(null)
@@ -484,22 +472,16 @@ export function useOfflineUppyUpload(params: {
     useEffect(() => {
         let isCancelled = false
         const capturedStateKey = stateKey
-
         const preloadState = async () => {
             console.log(`[OfflineUppy] Preloading state START for key: ${capturedStateKey}`)
-
             try {
                 // 最早的前提动作：从 IndexedDB 加载状态
                 const snapshot = await fileOperationsQueue.loadUppyState(capturedStateKey)
-
                 // 检查是否已取消或 stateKey 已变化
                 if (isCancelled || currentStateKeyRef.current !== capturedStateKey) {
-                    console.log(
-                        `[OfflineUppy] Preload CANCELLED for key: ${capturedStateKey}, current key: ${currentStateKeyRef.current}`,
-                    )
+                    console.log(`[capturedStateKey] Preload CANCELLED for key: ${capturedStateKey}, current key: ${currentStateKeyRef.current}`)
                     return
                 }
-
                 if (snapshot) {
                     console.log(`[OfflineUppy] Preloaded snapshot for key: ${capturedStateKey}`, {
                         files: snapshot.files?.length || 0,
@@ -507,7 +489,6 @@ export function useOfflineUppyUpload(params: {
                     })
                     setPreloadedSnapshot(snapshot)
                     setHasSavedState(true)
-
                     // 从 snapshot 中恢复待删除操作
                     if (snapshot.meta?.pendingDeleteOperations) {
                         setPendingDeleteOperations(snapshot.meta.pendingDeleteOperations)
@@ -517,10 +498,8 @@ export function useOfflineUppyUpload(params: {
                     setPreloadedSnapshot(null)
                     setHasSavedState(false)
                 }
-
                 // 标记预加载完成
                 setIsPreloaded(true)
-
                 // 检查是否有下一条待处理操作
                 checkNextPendingOperation()
             } catch (error) {
@@ -531,11 +510,9 @@ export function useOfflineUppyUpload(params: {
                 }
             }
         }
-
         preloadState()
-
         return () => {
-            isCancelled = true
+            isCancelled = true      //管道单线图居然都会执行到此！
         }
     }, [stateKey])
 
@@ -548,18 +525,15 @@ export function useOfflineUppyUpload(params: {
     const checkNextPendingOperation = useCallback(async () => {
         try {
             const allGroups = await fileOperationsQueue.getGroupedUppyStates()
-
             // 找到当前分组
             const currentGroup = allGroups.find(
                 (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
             )
-
             // 只有唯一一条时才没有下一条，否则总是有下一条（循环）
             if (!currentGroup || currentGroup.snapshots.length <= 1) {
                 setHasNextPendingOperation(false)
                 return
             }
-
             // 只要有超过1条，就肯定有下一条（循环逻辑）
             setHasNextPendingOperation(true)
         } catch (error) {
@@ -981,9 +955,7 @@ export function useOfflineUppyUpload(params: {
             console.log(`[OfflineUppy] Waiting for preload to complete for key: ${stateKey}`)
             return
         }
-
         const capturedStateKey = stateKey
-
         const restoreState = async () => {
             console.log(`[OfflineUppy] Restoring state for key: ${capturedStateKey}`)
 
@@ -1044,7 +1016,6 @@ export function useOfflineUppyUpload(params: {
             setIsRestoringState(false)
             setHasSavedState(true)
         }
-
         // 等待 Uppy 实例就绪后执行恢复
         const waitForUppy = () => {
             if (uppyInstanceRef.current) {
@@ -1054,7 +1025,6 @@ export function useOfflineUppyUpload(params: {
                 setTimeout(waitForUppy, 100)
             }
         }
-
         waitForUppy()
     }, [isPreloaded, preloadedSnapshot, stateKey])
 

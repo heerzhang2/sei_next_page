@@ -17,7 +17,6 @@ import { useCallback, useRef } from "react"
 import { toast } from "sonner"
 import type { UppyStateSnapshot } from "@/lib/file-operations-queue"
 import zh_CN from "@uppy/locales/lib/zh_CN.js"
-import fileOperationsQueue from "@/lib/file-operations-queue" // 导入 fileOperationsQueue
 
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
@@ -175,7 +174,7 @@ type UploadMode = "tus" | "xhr"
  * @param open 加载后就打开上传面板
  * @param stateKey 保存到indexDB的key
  * @param preloadedSnapshot 从父级 hook 预加载的状态快照
- * @param isPreloaded 标记预加载是否完成
+ * @param isPreloaded 标记预加载是否完成(离线功能)
  * @return {} 节点DOM
  * 【局限性】一个编辑器页面内不能放置多个useUppyUpload来做上传，因为uppy全局变量？，必须独立？ 走类似的useUppyUploadM。
  * TUS目前在切换路由页面再回来组件重新加载场景下，从indexDB恢复旧的上传的情况下：不管那个记住方式都会从零开始重新上传，而不是接着上次暂停位置续传的，可能被中断很长的时间，集群#后端状态也没保存。
@@ -196,7 +195,7 @@ export function useUppyUpload({
                                   cancelPendingDelete,
                                   addPendingDelete,
                                   preloadedSnapshot,
-                                  isPreloaded,
+                                  isPreloaded=true,
                               }: {
     storeObj: FileStore | FileStore[]
     eid: string
@@ -209,11 +208,11 @@ export function useUppyUpload({
     onFinish?: (file: any, newUpload: boolean) => void
     business?: string
     open?: boolean
+    isPreloaded?: boolean
+    preloadedSnapshot?: UppyStateSnapshot | null
     isFilePendingDelete?: (fileUrl: string) => boolean
     cancelPendingDelete?: (fileUrl: string) => void
     addPendingDelete?: (operation: PendingDeleteOperation) => void
-    preloadedSnapshot?: UppyStateSnapshot | null
-    isPreloaded?: boolean
 }) {
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
@@ -386,45 +385,6 @@ export function useUppyUpload({
         return newUppy
     }
 
-    // 移除 restoreUppyStateFromDB，由外部 hook 处理
-    const restoreUppyStateFromDB = React.useCallback(async () => {
-        if (!stateKey) return null
-        try {
-            const savedState = await fileOperationsQueue.loadUppyState(stateKey!)
-            if (savedState) {
-                console.log(`[v0] Restored Uppy state for key: ${stateKey}`)
-                if (savedState.files && Array.isArray(savedState.files)) {
-                    const reconstructedFiles = savedState.files.map((file: any) => ({
-                        id: file.id,
-                        name: file.name,
-                        type: file.type,
-                        size: file.size,
-                        data: file.data,
-                        meta: {
-                            name: file.name,
-                            type: file.type,
-                            lastModified: file.lastModified || Date.now(),
-                            ...file.meta, // 保留其他 meta 信息
-                        },
-                        progress: {
-                            uploadComplete: file.progress?.uploadComplete || false,
-                            percentage: file.progress?.percentage || 0,
-                        },
-                    }))
-
-                    return {
-                        ...savedState,
-                        files: reconstructedFiles,
-                    }
-                }
-                return savedState
-            }
-        } catch (error) {
-            console.warn(`[v0] Failed to restore Uppy state:`, error)
-        }
-        return null
-    }, [stateKey])
-
     // 添加 ref 来跟踪初始化状态，防止竞态条件
     const isInitializingRef = useRef<boolean>(false)
     const initializingStateKeyRef = useRef<string | undefined>("")
@@ -552,13 +512,19 @@ export function useUppyUpload({
         initializeUppy()
     }, [id, eid, stateKey, isPreloaded, preloadedSnapshot]) // 添加 isPreloaded 和 preloadedSnapshot 依赖
 
-    // 当关键参数变化时重新初始化 Uppy 状态
+    // 当关键参数变化时更新 Uppy meta 信息
     React.useEffect(() => {
         if (uppyInstance) {
             uppyInstance.cancelAll()
             uppyInstance.setMeta({ eid: eid, liveDays, business })
         }
-    }, [eid, liveDays, uppyInstance])
+    }, [eid, liveDays, business])
+    React.useEffect(() => {
+        if (uppyInstance) {
+            //因为恢复保存的状态，然后更新uppyInstance,不取消已添加的文件和上传
+            uppyInstance.setMeta({ eid: eid, liveDays, business })
+        }
+    }, [uppyInstance])
 
     // 验证存储对象类型
     if (storeObj) {
@@ -1155,7 +1121,6 @@ export function useUppyUpload({
             toast.error("Uppy 实例未初始化")
             return
         }
-
         const files = uppyInstance.getFiles()
         if (files.length === 0) {
             toast.info("没有需要处理的文件")
@@ -1183,7 +1148,6 @@ export function useUppyUpload({
                 }
             }
         })
-
         if (removedCount > 0) {
             toast.success(`已排除 ${removedCount} 个已完成文件`, {
                 description: `清理了 ${completedCount} 个成功上传的文件`,
@@ -1356,19 +1320,6 @@ export function useUppyUpload({
                                 {openUppy ? "关闭上传" : `开启上传`}
                                 {selectedFilesCount > 0 && ` | 在选${selectedFilesCount}个`}
                             </Button>
-
-                            {/* 新增：排除已完成按钮 */}
-                            {uppyInstance && uppyInstance.getFiles().length > 0 && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={removeCompletedFiles}
-                                    className="ml-2 bg-transparent"
-                                >
-                                    排除已完成
-                                </Button>
-                            )}
                             {uppyInstance && uppyInstance.getFiles().some((file) => file.error) && (
                                 <Button
                                     type="button"
@@ -1378,6 +1329,17 @@ export function useUppyUpload({
                                     className="ml-2 bg-transparent"
                                 >
                                     重试失败上传
+                                </Button>
+                            )}
+                            {uppyInstance && uppyInstance.getFiles().length > 0 && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={removeCompletedFiles}
+                                    className="ml-2 bg-transparent"
+                                >
+                                    排除已完成
                                 </Button>
                             )}
                         </div>
