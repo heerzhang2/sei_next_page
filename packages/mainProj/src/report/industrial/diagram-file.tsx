@@ -30,7 +30,7 @@ const DiagramFileUpload = ({
     selectedIndex: number
     rep: any
     storeObj: any
-    onFinish: (file: any) => void
+    onFinish: (file: any, newUpload: boolean) => void
 }) => {
     // 只有当 selectedIndex 有效时才初始化 useOfflineUppyUpload
     const [uploadDom] = useOfflineUppyUpload({
