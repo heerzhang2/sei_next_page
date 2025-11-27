@@ -510,10 +510,14 @@ export function useOfflineUppyUpload(params: {
             checkNextPendingOperation();
             console.log(`[OfflineUppy] Next pending operation for ${keyToCheck}:`)
             // 检查是否有保存的文件，如果有，则认为有保存的状态
-            if (savedState && savedState.files && savedState.files.length > 0) {
-                console.log(`[OfflineUppy] Found saved state for ${keyToCheck}`)
+            const hasSavedFiles = savedState && savedState.files && savedState.files.length > 0
+            // 检查是否有等待删除的操作
+            const hasPendingDeletes = savedState && savedState.meta && savedState.meta.pendingDeleteOperations && savedState.meta.pendingDeleteOperations.length > 0
+            
+            if (hasSavedFiles || hasPendingDeletes) {
+                console.log(`[OfflineUppy] Found saved state for ${keyToCheck}: files=${hasSavedFiles}, pendingDeletes=${hasPendingDeletes}`)
                 // 如果有保存的文件，并且这些文件未完成上传，则需要打开Uppy面板
-                const shouldOpen = savedState.files.some(
+                const shouldOpen = hasSavedFiles && savedState.files.some(
                     (file: any) => !(file.progress?.uploadComplete || file.progress?.percentage === 100),
                 )
                 return { hasSaved: true, shouldOpen }

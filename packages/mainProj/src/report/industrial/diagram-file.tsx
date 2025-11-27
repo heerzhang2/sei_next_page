@@ -20,7 +20,7 @@ interface LineDiagramItem {
     m?: string // 说明文字
 }
 
-// 子组件：专门处理文件上传逻辑
+//子组件：专门处理文件上传逻辑；也可不必拆分单独的组件了
 const DiagramFileUpload = ({ 
     selectedIndex, 
     rep, 
@@ -43,7 +43,6 @@ const DiagramFileUpload = ({
         business: "rep",
         onFinish,
     })
-
     return uploadDom
 }
 
