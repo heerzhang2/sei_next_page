@@ -27,6 +27,7 @@ import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
 import Link from "next/link"
 import { PendingReportsManager } from "@/components/pending-reports-manager"
 import { FileOperationsManager } from "@/components/file-operations-manager"
+import { useGroupedUppyStates } from "@/hooks/useGroupedUppyStates"
 
 export default function OfflinePage() {
     const { data: session } = useSession()
@@ -34,6 +35,8 @@ export default function OfflinePage() {
     const searchParams = useSearchParams()
     const activeTab = searchParams.get("tab") || "pending"
     const { totalConflicts } = useVersionConflictManager()
+    const { groups: fileOperationGroups, loading: fileOperationsLoading } = useGroupedUppyStates()
+    const hasFileOperations = !fileOperationsLoading && fileOperationGroups.length > 0
 
     const [result] = useQuery({
         query: AuthCompQuery,
@@ -65,7 +68,12 @@ export default function OfflinePage() {
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="status">系统状态</TabsTrigger>
                         <TabsTrigger value="pending">待发送报告</TabsTrigger>
-                        <TabsTrigger value="files">文件队列</TabsTrigger>
+                        <TabsTrigger value="files" className="relative">
+                            文件队列
+                            {hasFileOperations && (
+                                <span className="absolute -top-1 -right-1 h-3 w-3 bg-orange-500 rounded-full border-2 border-background"></span>
+                            )}
+                        </TabsTrigger>
                         <TabsTrigger value="conflict" className="relative">
                             版本冲突
                             {totalConflicts > 0 && (
