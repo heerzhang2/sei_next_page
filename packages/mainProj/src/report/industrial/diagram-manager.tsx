@@ -23,6 +23,7 @@ import { ArrowRight, Trash2, AlertTriangle, ExternalLink } from "lucide-react"
 import { useCallback, useState, useEffect } from "react"
 import { toast } from "sonner"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
+import { useRouter } from "next/navigation"
 
 interface EditorItem {
     单元表: IPipingUnitEntity[]
@@ -39,7 +40,7 @@ export const SingleLineDiagram = ({ children, show, label = "管道单线图-管
     const searchParams = useSearchParams()
     const unitIndexParam = searchParams?.get("unitIndex")
     const { storage, setStorage, modified, setModified } = useStorage()
-
+    const router = useRouter()
     const [pendingOfflineState, setPendingOfflineState] = useState<PendingOfflineState>({
         isChecking: true,
         hasPending: false,
@@ -251,14 +252,14 @@ export const SingleLineDiagram = ({ children, show, label = "管道单线图-管
                                     </p>
                                     <div className="flex flex-wrap gap-2 mt-2">
                                         {pendingOfflineState.pendingIndexes.map((index) => (
-                                            <a
+                                            <button
                                                 key={index}
-                                                href={getOfflineFilePageUrl(index)}
+                                                type="button"
+                                                onClick={() => router.push(getOfflineFilePageUrl(index))}
                                                 className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded text-sm font-medium transition-colors"
                                             >
-                                                单线图 {index + 1}
-                                                <ExternalLink className="h-3 w-3" />
-                                            </a>
+                                                单线图 {index + 1} <ExternalLink className="h-3 w-3" />
+                                            </button>
                                         ))}
                                     </div>
                                     <p className="text-xs text-amber-600 mt-2">

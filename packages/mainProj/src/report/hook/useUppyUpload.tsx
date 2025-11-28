@@ -1262,7 +1262,7 @@ export function useUppyUpload({
         const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
         const hasFiles = files.length > 0
         const selectedFilesCount = uppyInstance ? uppyInstance.getFiles().length : 0
-        const recovering=preloadedSnapshot && preloadedSnapshot.files && preloadedSnapshot.files.some((file: any) => !(file.progress?.uploadComplete || file.progress?.percentage === 100))
+        const recovering=preloadedSnapshot && preloadedSnapshot.files && preloadedSnapshot.files.some((file: any) => !(file.uploadURL))
         return (
             <>
                 {/* 显示已上传的文件 */}
