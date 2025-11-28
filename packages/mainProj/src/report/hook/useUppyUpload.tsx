@@ -1315,20 +1315,22 @@ export function useUppyUpload({
                     </div>
                     {/* 操作按钮 */}
                     <div className="space-y-2">
-                        <div className="flex justify-center items-center gap-2">
+                        <div className="flex justify-center items-center gap-0">
                             <Button 
                                 size="sm" 
                                 disabled={!openUppy && thisMaxFiles <= 0} 
                                 onClick={scrollHandler}
-                                className={ recovering? "bg-orange-700 border-orange-300 hover:bg-orange-500" : ""}
+                                className={ recovering? "relative bg-orange-700 border-orange-300 hover:bg-orange-500" : ""}
                             >
                                 {openUppy ? "关闭上传" : `开启上传`}
                                 {selectedFilesCount > 0 && ` | 在选${selectedFilesCount}个`}
                                 {recovering && (
-                                    <span className="text-blue-600 font-bold">●</span>
+                                    <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
+                !
+              </span>
                                 )}
                             </Button>
-                            {uppyInstance && uppyInstance.getFiles().some((file) => file.error) && (
+                            {uppyInstance && uppyInstance.getFiles().length>0 && (
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -1336,7 +1338,7 @@ export function useUppyUpload({
                                     onClick={retryFailedUploads}
                                     className="ml-2 bg-transparent"
                                 >
-                                    重试失败上传
+                                  上传重试
                                 </Button>
                             )}
                             {uppyInstance && uppyInstance.getFiles().length > 0 && (

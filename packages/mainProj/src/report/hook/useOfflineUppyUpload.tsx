@@ -6,7 +6,7 @@ import { useUppyUpload, type FileStore, type PendingDeleteOperation } from "./us
 import { fileOperationsQueue, generateUppyStateKey, type UppyStateSnapshot } from "@/lib/file-operations-queue"
 import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
-import { Upload, FolderOpen, Trash2, RotateCcw } from "lucide-react"
+import { Upload, FolderOpen, Trash2, RotateCcw, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { stripOrigin } from "@/lib/utils"
 
@@ -1232,13 +1232,24 @@ export function useOfflineUppyUpload(params: {
                             disabled={isRestoringState}
                             className="flex items-center flex-1"
                         >
-                            <Upload className="w-4 h-4 mr-2" />
-                            保存上传和删除状态
+                            <Upload className="w-4 h-4" />
+                            记住文件操作状态
                             {pendingDeleteOperations.length > 0 && (
                                 <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
                   {pendingDeleteOperations.length} 待删
                 </span>
                             )}
+                        </Button>
+                        
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.refresh()}
+                            className="flex items-center"
+                            title="刷新当前页面"
+                        >
+                          刷 新
                         </Button>
 
                         {hasSavedState && (
@@ -1252,7 +1263,7 @@ export function useOfflineUppyUpload(params: {
                                 disabled={isRestoringState}
                                 className="flex items-center"
                             >
-                                <Trash2 className="w-4 h-4 mr-2" />
+                                <Trash2 className="w-4 h-4" />
                                 清除状态
                             </Button>
                         )}

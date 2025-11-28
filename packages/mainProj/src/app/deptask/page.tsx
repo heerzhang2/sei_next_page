@@ -51,7 +51,7 @@ export default function DepTask() {
                                 <Link href="https://hljcg.hlj.gov.cn/maincms-web/fullSearchingHlj?searchKey=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">黑龙江政府采购</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="http://ggzy.hebei.gov.cn/hbggfwpt/search/fullsearch.html?wd=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C">河北省公共资源交易平台</Link>
+                                <Link href="http://ssl.hebpr.cn/hbggfwpt/search/fullsearch.html?wd=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C">河北省公共资源交易平台</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="http://www.lnggzy.gov.cn/trading">公共资源交易平台（辽宁省）</Link>

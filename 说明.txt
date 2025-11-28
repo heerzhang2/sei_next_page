@@ -10,6 +10,7 @@ yarn切换 yarn config set registry https://r.cnpmjs.org/
 CSS不能直接添加/删除类名，
 grid布局对于配置要求很高，一点毛病导致不达到预期。默认1X1行列；@5xl:row-span-3元素其位置前已布局的水平对齐空白区还是会保留的，其后面空间才会紧凑地利用。
 ort { fetchQuery, commitMutation, graphql } from 'relay-runtime';
+后端的Databend数据库=实时OLAP专业的，批量导入数据; 交叉配合CRDB用于OLTP。
 fjseireport seiadmin
 【表格打印调整】 JSON.parse(orc?._tblFixed??'[]') 编辑器3段式窗口总宽度 1595 px；["%","8%"] JSON.parse(parOrc?._tblFixed??'[]') 可重复分项
 http://192.168.171.3:8673/teacher/globalId/ajHsj9GMRL6wzZ-QJAz7zElzcA
@@ -513,4 +514,3 @@ offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9y
 【3】/26 Bearer%20bMtCVMY2iC28dzdwXBv4uwTh
 当前=heerzhang3
 https://v0.app/chat/ai-y5AJZspnYBV
-
