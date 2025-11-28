@@ -1257,37 +1257,6 @@ export function useUppyUpload({
         }
     }, [uppyInstance, checkForDuplicateFiles])
 
-    // 添加强制重新上传功能
-    const retryFailedUploads = React.useCallback(() => {
-        if (!uppyInstance) {
-            toast.error("Uppy 实例未初始化")
-            return
-        }
-
-        const files = uppyInstance.getFiles()
-        const failedFiles = files.filter(
-            (file) => file.error || (file.progress?.uploadComplete === false && file.progress?.percentage < 100),
-        )
-
-        if (failedFiles.length === 0) {
-            toast.info("没有发现失败的上传任务")
-            return
-        }
-
-        // 重置失败的文件状态
-        failedFiles.forEach((file) => {
-            try {
-                uppyInstance.resetProgress(file.id)
-                uppyInstance.retryUpload(file.id)
-            } catch (error) {
-                console.warn(`重置文件失败: ${file.name}`, error)
-            }
-        })
-
-        toast.info(`正在重试 ${failedFiles.length} 个失败的上传`, {
-            duration: 3000,
-        })
-    }, [uppyInstance])
     // 添加统一的渲染函数
     const renderFiles = () => {
         const files = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
@@ -1330,17 +1299,6 @@ export function useUppyUpload({
               </span>
                                 )}
                             </Button>
-                            {uppyInstance && uppyInstance.getFiles().length>0 && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={retryFailedUploads}
-                                    className="ml-2 bg-transparent"
-                                >
-                                  上传重试
-                                </Button>
-                            )}
                             {uppyInstance && uppyInstance.getFiles().length > 0 && (
                                 <Button
                                     type="button"

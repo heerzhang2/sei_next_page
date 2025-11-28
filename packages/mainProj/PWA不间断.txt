@@ -311,3 +311,27 @@ curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"
         }
         return null
     }, [stateKey])
+
+
+    // 添加强制重新上传功能
+    const retryFailedUploads = React.useCallback(() => {
+        if (!uppyInstance) {
+            return
+        }
+        const files = uppyInstance.getFiles()
+        const failedFiles = files.filter(
+            (file) => file.error || (file.progress?.uploadComplete === false && file.progress?.percentage < 100),
+        )
+        if (failedFiles.length === 0) {
+            return
+        }
+        // 重置失败的文件状态
+        failedFiles.forEach((file) => {
+            try {
+                uppyInstance.resetProgress()
+                uppyInstance.retryUpload(file.id)
+            } catch (error) {
+                console.warn(`重置文件失败: ${file.name}`, error)
+            }
+        })
+    }, [uppyInstance])

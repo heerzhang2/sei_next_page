@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { VersionConflictManager } from "@/components/version-conflict-manager"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
+import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { useQuery } from "@urql/next"
 import { AuthCompQuery } from "@/component/header-wrapper"
 import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
@@ -31,7 +32,8 @@ export default function OfflinePage() {
     const { data: session } = useSession()
     const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
     const searchParams = useSearchParams()
-    const activeTab = searchParams.get("tab") || "status"
+    const activeTab = searchParams.get("tab") || "pending"
+    const { totalConflicts } = useVersionConflictManager()
 
     const [result] = useQuery({
         query: AuthCompQuery,
@@ -56,15 +58,20 @@ export default function OfflinePage() {
             </Button>
             <div className="space-y-6">
                 <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold">离线问题排查</h1>
+                    <h1 className="text-3xl font-bold">离线编制情况</h1>
                     <p className="text-gray-600 dark:text-gray-400">管理离线状态、报告的离线变更队列、变更保存冲突</p>
                 </div>
                 <Tabs defaultValue={activeTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="status">系统状态</TabsTrigger>
                         <TabsTrigger value="pending">待发送报告</TabsTrigger>
-                        <TabsTrigger value="files">文件操作队列</TabsTrigger>
-                        <TabsTrigger value="conflict">版本冲突</TabsTrigger>
+                        <TabsTrigger value="files">文件队列</TabsTrigger>
+                        <TabsTrigger value="conflict" className="relative">
+                            版本冲突
+                            {totalConflicts > 0 && (
+                                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-background"></span>
+                            )}
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="status" className="space-y-6">

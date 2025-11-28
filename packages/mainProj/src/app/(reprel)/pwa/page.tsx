@@ -654,7 +654,7 @@ export default function Page() {
             </Button>
             <div className="max-w-7xl mx-auto mb-24">
                 <header className="text-center py-1">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">待检验报告离线编制保障</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">离线报告编制保障</h1>
                 </header>
                 <div className="bg-white rounded-lg shadow-md p-1 mb-1">
                     <div className="flex justify-between items-center mb-4">

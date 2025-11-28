@@ -1245,7 +1245,7 @@ export function useOfflineUppyUpload(params: {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => router.refresh()}
+                            onClick={() => window.location.reload()}
                             className="flex items-center"
                             title="刷新当前页面"
                         >
