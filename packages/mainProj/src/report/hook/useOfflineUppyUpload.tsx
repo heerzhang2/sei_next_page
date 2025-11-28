@@ -958,7 +958,6 @@ export function useOfflineUppyUpload(params: {
         const capturedStateKey = stateKey
         const restoreState = async () => {
             console.log(`[OfflineUppy] Restoring state for key: ${capturedStateKey}`)
-
             // 检查 stateKey 是否已变化
             if (currentStateKeyRef.current !== capturedStateKey) {
                 console.log(
@@ -966,10 +965,8 @@ export function useOfflineUppyUpload(params: {
                 )
                 return
             }
-
             // 使用预加载的快照，而不是重新加载
             const snapshot = preloadedSnapshot
-
             if (!snapshot || !uppyInstanceRef.current) {
                 console.log("[OfflineUppy] No snapshot or Uppy instance available", {
                     hasSnapshot: !!snapshot,
@@ -992,7 +989,6 @@ export function useOfflineUppyUpload(params: {
                 }
                 return
             }
-
             console.log("[OfflineUppy] Restoring state:", {
                 key: snapshot.key,
                 files: snapshot.files.length,
@@ -1009,10 +1005,8 @@ export function useOfflineUppyUpload(params: {
                 console.log(`[OfflineUppy] No pending delete operations in snapshot, clearing pendingDeleteOperations`)
                 setPendingDeleteOperations([])
             }
-
             // 注意：文件恢复逻辑已经移到 useUppyUpload 中通过 preloadedSnapshot 处理
             // 这里只需要处理待删除操作的恢复
-
             setIsRestoringState(false)
             setHasSavedState(true)
         }

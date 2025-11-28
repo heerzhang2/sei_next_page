@@ -335,3 +335,148 @@ curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"
             }
         })
     }, [uppyInstance])
+=======
+
+    // 恢复状态时，从Uppy state恢复
+    useEffect(() => {
+        const restoreState = async () => {
+            console.log(`[OfflineUppy] Restoring state for key: ${stateKey}`)
+            const snapshot = await fileOperationsQueue.loadUppyState(stateKey)
+            if (!snapshot || !uppyInstanceRef.current) {
+                console.log("[OfflineUppy] No snapshot or Uppy instance available")
+                // 只有在没有 snapshot 时才设置 false，如果只是 Uppy 实例还没准备好，不要重置状态
+                if (!snapshot) {
+                    setIsRestoringState(false) // 没有快照，结束加载状态
+                    setPendingDeleteOperations([])
+                    const currentFiles = uppyInstanceRef.current!.getFiles()
+                    if (currentFiles.length > 0) {
+                        console.log(`[OfflineUppy] Clearing ${currentFiles.length} existing files from Uppy instance before restore`)
+                        currentFiles.forEach(file => {
+                            uppyInstanceRef.current?.removeFile(file.id)
+                        })
+                    }
+                    setHasSavedState(false)
+                }
+                return
+            }
+            console.log("[OfflineUppy] Restoring state:", {
+                key: snapshot.key,
+                files: snapshot.files.length,
+                pendingDeletes: snapshot.meta?.pendingDeleteOperations?.length,
+            })
+            // 从 snapshot 的 meta 中恢复待删除操作
+            if (snapshot.meta?.pendingDeleteOperations) {
+                console.log(
+                    `[OfflineUppy] Found ${snapshot.meta.pendingDeleteOperations.length} pending delete operations in snapshot`,
+                )
+                console.log(`[OfflineUppy] Setting pendingDeleteOperations length=`, snapshot.meta.pendingDeleteOperations?.length,"stateKey=",stateKey)
+                setPendingDeleteOperations(snapshot.meta.pendingDeleteOperations)
+            } else {
+                console.log(`[OfflineUppy] No pending delete operations in snapshot, clearing pendingDeleteOperations`)
+                setPendingDeleteOperations([])
+            }
+
+            // 清理现有状态：清空文件和meta中的pendingDeleteOperations
+            const currentFiles = uppyInstanceRef.current.getFiles()
+            if (currentFiles.length > 0) {
+                console.log(`[OfflineUppy] Clearing ${currentFiles.length} existing files from Uppy instance before restore`)
+                currentFiles.forEach(file => {
+                    uppyInstanceRef.current?.removeFile(file.id)
+                })
+            }
+            // 清理meta中的pendingDeleteOperations
+            const currentMeta = uppyInstanceRef.current.getState().meta
+            if (currentMeta?.pendingDeleteOperations) {
+                console.log(`[OfflineUppy] Clearing existing pendingDeleteOperations from meta before restore`)
+                uppyInstanceRef.current.setMeta({
+                    ...currentMeta,
+                    pendingDeleteOperations: []
+                })
+            }
+
+            uppyInstanceRef.current.pauseAll()
+            // 先设置 meta 数据
+            if (snapshot.meta) {
+                uppyInstanceRef.current.setMeta(snapshot.meta)
+            } else {
+                // 设置默认 meta
+                uppyInstanceRef.current.setMeta({
+                    eid: repId,
+                    liveDays: params.liveDays || 2,
+                    business: params.business || "rep",
+                })
+            }
+            // 在 restoreState 函数中更新恢复计数逻辑
+            let restoredCount = 0
+            let fromHandleCount = 0
+            let handleFailures = 0
+            let addFailures = 0
+            let duplicateFiles = 0
+            for (const fileData of snapshot.files) {
+                const result = await restoreFileFromSnapshot(
+                    fileData,
+                    uppyInstanceRef.current,
+                    repId,
+                    params.business || "rep",
+                    params.liveDays || 2,
+                    snapshot.meta,
+                )
+
+                if (result.restored) {
+                    restoredCount++
+                    if (result.fromHandle) {
+                        fromHandleCount++
+                    }
+                } else {
+                    if (fileData.fileHandle && fileData.isHandleMode) {
+                        handleFailures++
+                    } else {
+                        addFailures++
+                    }
+                    // 检查是否是重复文件导致的失败
+                    const existingFiles = uppyInstanceRef.current.getFiles()
+                    const isDuplicate = existingFiles.some((file) => file.name === fileData.name && file.size === fileData.size)
+                    if (isDuplicate) {
+                        duplicateFiles++
+                    }
+                }
+            }
+
+            console.log(
+                `[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles), ${duplicateFiles} duplicates skipped`,
+            )
+            if (restoredCount > 0) {
+                toast.success(`恢复完成`, {
+                    description: `已恢复 ${restoredCount} 个上传文件${duplicateFiles > 0 ? `，跳过 ${duplicateFiles} 个重复文件` : ""}`,
+                })
+            } else if (snapshot.files.length > 0) {
+                if (duplicateFiles > 0) {
+                    toast.info("恢复完成", {
+                        description: `所有文件已在上传列表中，无需重复恢复`,
+                        duration: 9000,
+                    })
+                } else {
+                    toast.error("恢复失败", {
+                        description: `无法恢复 ${snapshot.files.length} 个文件，请重新选择文件`,
+                    })
+                }
+            }
+        }
+
+        // 包装恢复函数，在完成后设置加载状态
+        const restoreStateWithLoading = async () => {
+            try {
+                await restoreState()
+            } finally {
+                const currentFiles = uppyInstanceRef.current!.getFiles()
+                // 无论成功还是失败，都结束加载状态
+                setIsRestoringState(false)
+            }
+        }
+
+        // 延迟执行以确保 Uppy 完全初始化
+        setTimeout(() => {
+            restoreStateWithLoading()
+        }, 500)
+    }, [stateKey])  //单线图依赖url参数来切换的会导致stateKey现有旧数值render然后切换新的
+

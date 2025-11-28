@@ -400,33 +400,27 @@ export function useUppyUpload({
             console.log(`[v0] Waiting for preload to complete before initializing Uppy for key: ${stateKey}`)
             return
         }
-
         if (uppyInstance) {
             uppyInstance.cancelAll()
         }
-
         const initializeUppy = async () => {
             const capturedStateKey = stateKey
-
             // 如果已经在初始化不同的 stateKey，等待当前初始化完成
             if (isInitializingRef.current && initializingStateKeyRef.current !== capturedStateKey) {
                 console.log(
                     `[v0] Initialization WAITING - currently initializing ${initializingStateKeyRef.current}, waiting for ${capturedStateKey}`,
                 )
-
                 // 等待当前初始化完成
                 let attempts = 0
                 while (isInitializingRef.current && attempts < 50) {
                     await new Promise((resolve) => setTimeout(resolve, 100))
                     attempts++
                 }
-
                 if (isInitializingRef.current) {
                     console.log(`[v0] Initialization SKIPPED - timeout waiting for ${initializingStateKeyRef.current}`)
                     return
                 }
             }
-
             // 再次检查 stateKey 是否仍然有效
             if (capturedStateKey !== currentStateKeyRef.current) {
                 console.log(
@@ -434,18 +428,13 @@ export function useUppyUpload({
                 )
                 return
             }
-
             // 设置初始化状态
             isInitializingRef.current = true
             initializingStateKeyRef.current = capturedStateKey
-
             try {
                 console.log(`[v0] Initialization START for key: ${capturedStateKey}`)
-
                 const newUppy = createUppyInstance()
-
                 const savedState = preloadedSnapshot
-
                 // 检查 stateKey 是否仍然有效
                 if (capturedStateKey !== currentStateKeyRef.current) {
                     console.log(
@@ -453,7 +442,6 @@ export function useUppyUpload({
                     )
                     return
                 }
-
                 if (savedState && savedState.files && savedState.files.length > 0) {
                     console.log(
                         `[v0] Applying preloaded state for key: ${capturedStateKey} with ${savedState.files.length} files`,
@@ -462,7 +450,6 @@ export function useUppyUpload({
                         if (savedState.meta) {
                             newUppy.setMeta(savedState.meta)
                         }
-
                         // 恢复文件
                         for (const file of savedState.files) {
                             try {
@@ -484,7 +471,6 @@ export function useUppyUpload({
                                 console.warn(`[v0] Failed to restore file ${file.name}:`, error)
                             }
                         }
-
                         console.log(`[v0] Applied preloaded state to Uppy instance with ${savedState.files.length} files`)
                     } catch (error) {
                         console.warn(`[v0] Failed to apply preloaded state:`, error)
@@ -492,7 +478,6 @@ export function useUppyUpload({
                 } else {
                     console.log(`[v0] No preloaded state for key: ${capturedStateKey}`)
                 }
-
                 // 最后检查一次 stateKey 是否仍然有效
                 if (capturedStateKey === currentStateKeyRef.current) {
                     setUppyInstance(newUppy)
@@ -753,32 +738,27 @@ export function useUppyUpload({
         console.log(`Preserving ${currentFiles.length} files during mode switch`)
         // 暂停所有上传
         uppyInstance.pauseAll()
-
         try {
             // 移除所有上传插件
             const tusPlugin = uppyInstance.getPlugin("tus-upload")
             const xhrPlugin = uppyInstance.getPlugin("xhr-upload")
-
             if (tusPlugin) {
                 uppyInstance.removePlugin(tusPlugin)
             }
             if (xhrPlugin) {
                 uppyInstance.removePlugin(xhrPlugin)
             }
-
             // 添加新的上传插件
             if (mode === "tus") {
                 configureTusPlugin(uppyInstance)
             } else {
                 configureXHRPlugin(uppyInstance)
             }
-
             // 关键修复：彻底重置文件状态
             currentFiles.forEach((file) => {
                 try {
                     // 先移除文件
                     uppyInstance.removeFile(file.id)
-
                     // 重新添加文件，使用原始文件数据
                     const fileData = file.data
                     if (fileData) {
@@ -797,7 +777,6 @@ export function useUppyUpload({
                                 previousResponse: undefined,
                             },
                         }
-
                         // 重新添加文件
                         const result = uppyInstance.addFile(newFile)
                         if (!result) {
@@ -811,7 +790,6 @@ export function useUppyUpload({
                     console.error(`Error processing file ${file.name} during mode switch:`, error)
                 }
             })
-
             // 更新模式状态
             setUploadMode(mode)
             console.log(`Successfully switched to ${mode} mode, preserved ${currentFiles.length} files`)
