@@ -184,6 +184,7 @@ class FileOperationsQueue {
             request.onerror = () => reject(request.error)
         })
     }
+
     // 按 (repId, subrid) 分组聚合 Uppy 状态
     async getGroupedUppyStates(): Promise<
         Array<{
@@ -202,7 +203,7 @@ class FileOperationsQueue {
         const groups = new Map<string, { repId: string; subrid?: string; snapshots: UppyStateSnapshot[] }>()
 
         for (const snapshot of allSnapshots) {
-            const groupKey = `${snapshot.repId}::${snapshot.subrid ?? ''}`
+            const groupKey = `${snapshot.repId}::${snapshot.subrid ?? ""}`
             if (!groups.has(groupKey)) {
                 groups.set(groupKey, {
                     repId: snapshot.repId,
@@ -235,15 +236,51 @@ class FileOperationsQueue {
             }
         })
     }
+
+    async findStatesByKeyPrefix(keyPrefix: string): Promise<UppyStateSnapshot[]> {
+        await this.init()
+        if (!this.db) throw new Error("Database not initialized")
+        const allSnapshots = await this.getAllUppyStates()
+        return allSnapshots.filter((snapshot) => snapshot.key.startsWith(keyPrefix))
+    }
+    async hasStatesByKeyPrefix(keyPrefix: string): Promise<boolean> {
+        const states = await this.findStatesByKeyPrefix(keyPrefix)
+        return states.length > 0
+    }
+    async hasLineDiagramPendingStates(repId: string): Promise<{
+        hasPending: boolean
+        pendingStates: UppyStateSnapshot[]
+        pendingIndexes: number[]
+    }> {
+        await this.init()
+        if (!this.db) throw new Error("Database not initialized")
+
+        // 生成前缀: "repId:LineDiagram_"
+        const keyPrefix = `${repId}:LineDiagram_`
+        const allSnapshots = await this.getAllUppyStates()
+
+        const pendingStates = allSnapshots.filter((snapshot) => snapshot.key.startsWith(keyPrefix))
+
+        // 提取序号，例如从 "repId:LineDiagram_3" 中提取 3
+        const pendingIndexes = pendingStates
+            .map((snapshot) => {
+                const match = snapshot.key.match(/:LineDiagram_(\d+)$/)
+                return match ? Number.parseInt(match[1], 10) : -1
+            })
+            .filter((index) => index >= 0)
+
+        console.log(`[FileQueue] Check LineDiagram pending states for repId: ${repId}, found: ${pendingStates.length}`)
+
+        return {
+            hasPending: pendingStates.length > 0,
+            pendingStates,
+            pendingIndexes,
+        }
+    }
 }
 
 // 生成状态存储的key
-export function generateUppyStateKey(
-    repId: string,
-    subrid?: string,
-    redId?: number,
-    hash?: string
-): string {
+export function generateUppyStateKey(repId: string, subrid?: string, redId?: number, hash?: string): string {
     return `${repId}${subrid ? `:${subrid}` : ""}${redId ? `:${redId}` : ""}${hash ? `:${hash}` : ""}`
 }
 
