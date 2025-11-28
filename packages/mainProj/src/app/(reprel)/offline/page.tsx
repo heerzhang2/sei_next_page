@@ -68,16 +68,22 @@ export default function OfflinePage() {
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="status">系统状态</TabsTrigger>
                         <TabsTrigger value="pending">待发送报告</TabsTrigger>
-                        <TabsTrigger value="files" className="relative">
-                            文件队列
+                        <TabsTrigger
+                            value="files"
+                            className="flex items-center justify-center gap-0 px-1 sm:px-2 whitespace-nowrap"
+                        >
+                            <span className="truncate">文件队列</span>
                             {hasFileOperations && (
-                                <span className="absolute -top-1 -right-1 h-3 w-3 bg-orange-500 rounded-full border-2 border-background"></span>
+                                <span className="h-3 w-3 flex-shrink-0 bg-red-500 rounded-full border border-background"></span>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="conflict" className="relative">
-                            版本冲突
+                        <TabsTrigger
+                            value="conflict"
+                            className="flex items-center justify-center gap-0 px-1 sm:px-2 whitespace-nowrap"
+                        >
+                            <span className="truncate">版本冲突</span>
                             {totalConflicts > 0 && (
-                                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-background"></span>
+                                <span className="h-3 w-3 flex-shrink-0 bg-red-500 rounded-full border border-background"></span>
                             )}
                         </TabsTrigger>
                     </TabsList>
