@@ -17,7 +17,250 @@ import { useCallback, useRef } from "react"
 import { toast } from "sonner"
 import type { UppyStateSnapshot } from "@/lib/file-operations-queue"
 import zh_CN from "@uppy/locales/lib/zh_CN.js"
+import {verifyPermission} from "@/report/hook/useOfflineUppyUpload";
 
+// 辅助函数：将 ArrayBuffer 转换回 File 对象
+const arrayBufferToFile = (
+    arrayBuffer: ArrayBuffer,
+    fileName: string,
+    fileType: string,
+    lastModified?: number,
+): File => {
+    const blob = new Blob([arrayBuffer], { type: fileType })
+    return new File([blob], fileName, {
+        type: fileType,
+        lastModified: lastModified || Date.now(),
+    })
+}
+// 从文件句柄恢复 File 对象
+const restoreFileFromHandle = async (fileHandleData: any): Promise<File | null> => {
+    //ds自动生成的.handle 有缺陷啊，需改成.fileHandle
+    if (!fileHandleData?.fileHandle) {
+        console.warn("[OfflineUppy] No file handle provided")
+        return null
+    }
+    try {
+        console.log("[OfflineUppy] Verifying file handle permissions...")
+        // 验证权限 ds重复犯同一个错误:自动生成的.handle 需改成.fileHandle
+        const hasPermission = await verifyPermission(fileHandleData.fileHandle)
+        if (!hasPermission) {
+            console.warn("[OfflineUppy] No permission to access saved file handle")
+            // 尝试重新请求权限
+            try {
+                //ds生成的.handle 需改成.fileHandle
+                const permission = await fileHandleData.fileHandle.requestPermission({ mode: "read" })
+                if (permission !== "granted") {
+                    console.warn("[OfflineUppy] User denied permission after re-request")
+                    return null
+                }
+            } catch (permissionError) {
+                console.error("[OfflineUppy] Error requesting permission:", permissionError)
+                return null
+            }
+        }
+        console.log("[OfflineUppy] Getting file from handle...")
+        const file = await fileHandleData.fileHandle.getFile()
+        if (!file) {
+            console.warn("[OfflineUppy]句柄恢复无效的？")
+            return null
+        }
+        console.log("[OfflineUppy] Successfully restored file from handle:", file.name, file.size, file.type)
+        return file
+    } catch (error) {
+        console.error("[OfflineUppy] Failed to restore file from handle:", error)
+        return null
+    }
+}
+// 提取的文件恢复逻辑函数
+const restoreFileFromSnapshot = async (
+    fileData: any,
+    uppyInstance: Uppy,
+    eid: string,
+    business: string,
+    liveDays: number
+): Promise<{ restored: boolean; fromHandle: boolean }> => {
+    try {
+        console.log(`[OfflineUppy] Processing file: ${fileData.name}`, {
+            hasHandle: !!fileData.fileHandle,
+            isHandleMode: fileData.isHandleMode,
+            hasData: !!fileData.data,
+            hasFileMeta: !!fileData.meta,
+        })
+
+        // 加强重复检查
+        const existingFiles = uppyInstance.getFiles()
+        const isDuplicate = existingFiles.some(
+            (file) =>
+                file.name === fileData.name &&
+                file.size === fileData.size &&
+                // 额外检查：如果文件已经成功上传，则视为重复
+                (file.progress?.uploadComplete || file.progress?.percentage === 100),
+        )
+
+        if (isDuplicate) {
+            console.log(`[OfflineUppy] 跳过重复文件（已成功上传）: ${fileData.name}`)
+            toast.warning("跳过重复文件", {
+                description: `文件 "${fileData.name}" 已成功上传，跳过恢复`,
+            })
+            return { restored: false, fromHandle: false }
+        }
+
+        let fileToRestore: File | null = null
+        let fromHandle = false
+
+        // 优先从文件句柄恢复（文件句柄模式）
+        if (fileData.fileHandle && fileData.isHandleMode) {
+            console.log(`[OfflineUppy] Attempting to restore from handle: ${fileData.name}`)
+
+            try {
+                fileToRestore = await restoreFileFromHandle(fileData)
+                console.log(`[OfflineUppy] Handle restoration result for ${fileData.name}:`, {
+                    success: !!fileToRestore,
+                    fileType: fileToRestore?.type,
+                    fileSize: fileToRestore?.size,
+                })
+            } catch (handleError) {
+                console.error(`[OfflineUppy] Handle restoration error for ${fileData.name}:`, handleError)
+                return { restored: false, fromHandle: false }
+            }
+
+            if (fileToRestore) {
+                fromHandle = true
+                console.log("[OfflineUppy] Successfully restored file from handle:", fileData.name)
+
+                // 修复：使用文件自身的 meta，不展开 snapshotMeta（避免包含 pendingDeleteOperations）
+                const fileMeta = fileData.meta || {}
+                const fileToAdd = {
+                    id: fileData.id || `file-handle-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+                    name: fileData.name,
+                    type: fileData.type,
+                    data: fileToRestore,
+                    size: fileData.size,
+                    meta: {
+                        // 只使用文件自身的 meta，不包含快照的顶层 meta
+                        ...fileMeta,
+                        fileHandle: fileData.fileHandle, // 保持文件句柄
+                        relativePath: fileMeta.relativePath || "",
+                        lastModified: fileMeta.lastModified || fileData.lastModified || Date.now(),
+                        eid: fileMeta.eid || eid,
+                        business: fileMeta.business || business,
+                        liveDays: fileMeta.liveDays || liveDays,
+                        isHandleMode: true, // 明确标记为句柄模式
+                        // 不包含 pendingDeleteOperations
+                    },
+                }
+
+                try {
+                    // 先检查是否已存在相同文件
+                    const existingFiles = uppyInstance.getFiles()
+                    const isDuplicate = existingFiles.some((file) => file.name === fileData.name && file.size === fileData.size)
+                    if (isDuplicate) {
+                        console.log(`文件已存在列表中: ${fileData.name}`)
+                        return { restored: false, fromHandle: true }
+                    }
+                    const result = uppyInstance.addFile(fileToAdd)
+                    if (result) {
+                        console.log(`[OfflineUppy] Successfully added file handle to Uppy: ${fileData.name}`)
+                        return { restored: true, fromHandle: true }
+                    } else {
+                        console.error(`[OfflineUppy] Uppy addFile returned false for: ${fileData.name}`)
+                        return { restored: false, fromHandle: false }
+                    }
+                } catch (addError: any) {
+                    // 捕获 Uppy 的重复文件错误
+                    if (addError.message && addError.message.includes("不允许添加")) {
+                        console.warn(`[OfflineUppy] Duplicate file detected: ${fileData.name}`)
+                        toast.warning("重复文件", {
+                            description: `文件 "${fileData.name}" 已存在，跳过恢复`,
+                        })
+                        return { restored: false, fromHandle: true }
+                    }
+                    console.error(`[OfflineUppy] Failed to add file to Uppy: ${fileData.name}`, addError)
+                    return { restored: false, fromHandle: false }
+                }
+            } else {
+                console.warn(`[OfflineUppy] File handle restoration returned null for: ${fileData.name}`)
+                return { restored: false, fromHandle: false }
+            }
+        }
+        // 传统模式恢复
+        else if (!fileData.isHandleMode && fileData.data) {
+            console.log(`[OfflineUppy] Attempting traditional restore: ${fileData.name}`)
+
+            if (fileData.data instanceof File) {
+                fileToRestore = fileData.data
+            } else if (fileData.data instanceof ArrayBuffer) {
+                try {
+                    fileToRestore = arrayBufferToFile(fileData.data, fileData.name, fileData.type, fileData.lastModified)
+                } catch (error) {
+                    console.warn("[OfflineUppy] Failed to convert file to ArrayBuffer, falling back to File:", error)
+                    fileToRestore = fileData.data
+                }
+            }
+
+            if (fileToRestore) {
+                // 修复：使用文件自身的 meta
+                const fileMeta = fileData.meta || {}
+                const fileToAdd = {
+                    id: fileData.id,
+                    name: fileData.name,
+                    type: fileData.type,
+                    data: fileToRestore,
+                    size: fileData.size,
+                    meta: {
+                        // 只使用文件自身的 meta
+                        ...fileMeta,
+                        relativePath: fileMeta.relativePath || "",
+                        lastModified: fileMeta.lastModified || fileData.lastModified || Date.now(),
+                        eid: fileMeta.eid || eid,
+                        business: fileMeta.business || business,
+                        liveDays: fileMeta.liveDays || liveDays,
+                        isHandleMode: false,
+                        // 不包含 pendingDeleteOperations
+                    },
+                }
+                try {
+                    const existingFiles = uppyInstance.getFiles()
+                    const isDuplicate = existingFiles.some((file) => file.name === fileData.name && file.size === fileData.size)
+                    if (isDuplicate) {
+                        console.log(`文件已存在列表中: ${fileData.name}`)
+                        return { restored: false, fromHandle: false }
+                    }
+                    const result = uppyInstance.addFile(fileToAdd)
+                    if (result) {
+                        console.log(`[OfflineUppy] Successfully added traditional file to Uppy: ${fileData.name}`)
+                        return { restored: true, fromHandle: false }
+                    } else {
+                        console.error(`[OfflineUppy] Uppy addFile returned false for traditional file: ${fileData.name}`)
+                        return { restored: false, fromHandle: false }
+                    }
+                } catch (addError: any) {
+                    // 捕获 Uppy 的重复文件错误
+                    if (addError.message && addError.message.includes("不允许添加")) {
+                        console.warn(`[OfflineUppy] Duplicate file detected: ${fileData.name}`)
+                        toast.warning("重复文件", {
+                            description: `文件 "${fileData.name}" 已存在，跳过恢复`,
+                        })
+                        return { restored: false, fromHandle: false }
+                    }
+                    console.error(`[OfflineUppy] Failed to add traditional file to Uppy: ${fileData.name}`, addError)
+                    return { restored: false, fromHandle: false }
+                }
+            }
+        } else {
+            console.warn(`[OfflineUppy] File cannot be restored - no valid data: ${fileData.name}`, {
+                hasHandle: !!fileData.fileHandle,
+                isHandleMode: fileData.isHandleMode,
+                hasData: !!fileData.data,
+                hasMeta: !!fileData.meta,
+            })
+        }
+    } catch (error) {
+        console.error("[OfflineUppy] Failed to restore file:", fileData.name, error)
+    }
+
+    return { restored: false, fromHandle: false }
+}
 // 在组件外部定义语言配置常量
 export const UPPY_LOCALE_CONFIG = {
     strings: {
@@ -451,27 +694,58 @@ export function useUppyUpload({
                             newUppy.setMeta(savedState.meta)
                         }
                         // 恢复文件
-                        for (const file of savedState.files) {
-                            try {
-                                if (file.data) {
-                                    newUppy.addFile({
-                                        id: file.id,
-                                        name: file.name,
-                                        type: file.type,
-                                        data: file.data,
-                                        meta: {
-                                            name: file.name,
-                                            type: file.type,
-                                            lastModified: file.lastModified || Date.now(),
-                                            ...file.meta,
-                                        },
-                                    })
+                        // for (const file of savedState.files) {
+                        //     try {
+                        //         if (file.data) {
+                        //             newUppy.addFile({
+                        //                 id: file.id,
+                        //                 name: file.name,
+                        //                 type: file.type,
+                        //                 data: file.data,
+                        //                 meta: {
+                        //                     name: file.name,
+                        //                     type: file.type,
+                        //                     lastModified: file.lastModified || Date.now(),
+                        //                     ...file.meta,
+                        //                 },
+                        //             })
+                        //         }
+                        //     } catch (error) {
+                        //         console.warn(`[v0] Failed to restore file ${file.name}:`, error)
+                        //     }
+                        // }
+                        // console.log(`[v0] Applied preloaded state to Uppy instance with ${savedState.files.length} files`)
+
+                        // 在 restoreState 函数中更新恢复计数逻辑
+                        let restoredCount = 0
+                        let fromHandleCount = 0
+                        for (const fileData of savedState.files) {
+                            const result = await restoreFileFromSnapshot(
+                                fileData,
+                                newUppy,
+                                eid,
+                                business || "rep",
+                                liveDays || 2,
+                            )
+                            if (result.restored) {
+                                restoredCount++
+                                if (result.fromHandle) {
+                                    fromHandleCount++
                                 }
-                            } catch (error) {
-                                console.warn(`[v0] Failed to restore file ${file.name}:`, error)
                             }
                         }
-                        console.log(`[v0] Applied preloaded state to Uppy instance with ${savedState.files.length} files`)
+                        console.log(
+                            `[OfflineUppy] State restoration completed: ${restoredCount} files restored (${fromHandleCount} from handles)`,
+                        )
+                        if (restoredCount > 0) {
+                            toast.success(`恢复完成`, {
+                                description: `已恢复 ${restoredCount} 个上传文件`,
+                            })
+                        } else if (savedState.files.length > 0) {
+                            toast.error("恢复失败", {
+                                description: `无法恢复 ${savedState.files.length} 个文件，请重新选择文件`,
+                            })
+                        }
                     } catch (error) {
                         console.warn(`[v0] Failed to apply preloaded state:`, error)
                     }
