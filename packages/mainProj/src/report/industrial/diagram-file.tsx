@@ -42,6 +42,7 @@ const DiagramFileUpload = ({
         liveDays: 10,
         business: "rep",
         onFinish,
+        keepEmptyObj: true,
     })
     return uploadDom
 }
@@ -147,7 +148,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         setEditForm((prev) => ({ ...prev, m: value }))
     }, [])
 
-    // 文件上传完成回调 - 优化状态更新逻辑
+    // 文件上传完成回调 - 优化状态更新逻辑: 记住状态时的避免空对象回传的upfile="__keepEmptyObj"
     const onFinish = useCallback(
         async (upfile: any, newUpload: boolean) => {
             if (selectedIndex < 0) {
@@ -231,9 +232,9 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
             if (selectedIndex < 0) return false
             const currentDiagrams = values.单图表 || []
             const obj = currentDiagrams[selectedIndex] || {}
-            if (!obj.m && !obj._FILE_) {
-                toast.warning(`该序号单线图对象即将删除${selectedIndex + 1}，但请注意：编辑器自动切换新排序的序号的内容`)
-            }
+            // if (!obj.m && !obj._FILE_) {
+            //     toast.warning(`该序号单线图对象即将删除${selectedIndex + 1}，但请注意：编辑器自动切换新排序的序号的内容`)
+            // }
             return true
         },
         [selectedIndex],

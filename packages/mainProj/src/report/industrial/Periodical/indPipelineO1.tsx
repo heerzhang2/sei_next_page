@@ -114,7 +114,7 @@ const createRecordList =()=>[
     ]),
     aggregateProj('磁粉检测', 'MAGNT_TS', [
         createItem('MangInstrument', <DeviceSurveyFx config={config磁粉仪概} label='磁粉检测-概要仪器'/>),
-        createItem('MangDiagram', <FxDiagram label="磁粉检测部位缺陷位置图" pic='_FILE_S部位' memo='点图说明' maxFile={25} dlist={mang示说选}/>),
+        createItem('MangDiagram', <FxDiagram label="磁粉检测部位缺陷位置图" pic='_FILE_S部位' memo='点图说明' maxFile={2} dlist={mang示说选}/>),
         createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
         createItem('MangConclusion', <FxSimpConclus label={'磁粉检测-检测结果'} clc="结果" clist={["1级"]}/>),
     ]),

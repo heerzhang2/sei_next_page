@@ -168,6 +168,7 @@ const getCurrentPageUrl = () => {
 
 
 /*支持报告的文件离线操作能力：
+@param keepEmptyObj: 单线图情况特别的，需确保storeObj不是空的对象！避免上级数组序号丢失状态不一致
  * */
 export function useOfflineUppyUpload(params: {
     repId: string
@@ -182,9 +183,10 @@ export function useOfflineUppyUpload(params: {
     modType?: string
     redId?: number
     subrid?: string
+    keepEmptyObj?: boolean
 }) {
     const router = useRouter()
-    const { repId, subrid, redId, hash, onFinish } = params
+    const { repId, subrid, redId, hash, onFinish, keepEmptyObj } = params
     const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
     const [pendingDeleteOperations, setPendingDeleteOperations] = useState<PendingDeleteOperation[]>([])
@@ -406,28 +408,22 @@ export function useOfflineUppyUpload(params: {
             }
             // 获取所有文件
             const allFiles = uppy.getFiles()
-
             // 待删除的文件应该被保留，因为它们不属于已完成上传的范畴
             const files = allFiles.filter((file) => {
                 // 检查多种完成标记，确保正确识别已完成的文件
                 const isCompletedByProgress =
                     file.progress?.uploadComplete && file.progress?.percentage === 100 && file.response?.uploadURL
-
                 // 检查特殊标记（优先级更高，因为这是上传成功后立即标记的）
                 const isCompletedByMark = file.meta?.uploadCompletedMark === true
-
                 // 只要任一条件满足就认为已完成
                 const isCompleted = isCompletedByProgress || isCompletedByMark
-
                 if (isCompleted) {
                     const reason = isCompletedByMark ? "特殊标记" : "进度检查"
                     console.log(`[OfflineUppy] 排除已成功上传文件: ${file.name} (${reason})`)
                 }
                 return !isCompleted // 只排除已完成的，待删除的文件会被保留
             })
-
             const currentPendingDeletes = pendingDeleteOperationsRef.current
-
             // 如果没有待上传文件且没有待删除操作，清理 IndexedDB
             if (files.length === 0 && currentPendingDeletes.length === 0) {
                 try {
@@ -448,7 +444,10 @@ export function useOfflineUppyUpload(params: {
                 }
                 return
             }
-
+            //记住状态时的避免空对象，利用回调，保存数据库的 upfile="__keepEmptyObj"
+            if(keepEmptyObj && latestStoreObjRef.current){
+                onFinish!("__keepEmptyObj",false)
+            }
             // 修改：在提示信息中显示排除的文件数量
             const excludedCount = allFiles.length - files.length
             if (excludedCount > 0) {

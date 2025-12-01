@@ -86,7 +86,7 @@ export const FxDiagram = ({
         storeObj: subStore?.[pic] || [],
         liveDays: 10,
         hash: "FxDiagram_pf",
-        maxSize: 1500,
+        maxSize: 5,
         modType,
         redId,
         subrid,
