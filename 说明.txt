@@ -515,5 +515,3 @@ offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9y
 当前=heerzhang3
 https://v0.app/chat/ai-y5AJZspnYBV
 
-        const recovering=preloadedSnapshot && preloadedSnapshot.files && preloadedSnapshot.files.some((file: any) => !(file.progress?.uploadComplete || file.progress?.percentage === 100))
-        return (

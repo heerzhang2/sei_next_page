@@ -381,7 +381,8 @@ export const useScrollHandler = (targetSelector: string) => {
         [targetSelector],
     )
 }
-
+//不需要发给后端的字段 "filename","filetype",
+const allowedMetaFields = ["name","type","eid","business","liveDays"];
 export type PendingDeleteOperation = {
     deleteUrl: string
     repId: string //存储系统eid
@@ -469,6 +470,7 @@ export function useUppyUpload({
             withCredentials: true,
             chunkSize: 5 * 1024 * 1024,
             retryDelays: [0, 2000, 7000, 15000],
+            allowedMetaFields,
             async onBeforeRequest(req) {
                 const token = await getAuthToken()
                 if (token) {
@@ -536,7 +538,7 @@ export function useUppyUpload({
             fieldName: "files[]",
             timeout: 600000,
             limit: 1,
-            allowedMetaFields: true,
+            allowedMetaFields: allowedMetaFields,
             shouldRetry: (xhr: XMLHttpRequest) => {
                 return false
             },

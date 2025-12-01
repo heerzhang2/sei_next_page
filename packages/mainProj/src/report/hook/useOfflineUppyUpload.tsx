@@ -153,7 +153,7 @@ const addFilesWithHandlesToUppy = async (
             }
         } catch (error) {
             console.error("Failed to add file with handle:", fileHandle.fileName, error)
-            toast.error(`添加文件失败: ${fileHandle.fileName}`)
+            toast.error(`添加失败: ${fileHandle.fileName}；`+error)
         }
     }
     return addedCount
