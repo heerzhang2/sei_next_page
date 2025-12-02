@@ -131,46 +131,59 @@ export const SingleLineDiagram = ({ children, show, label = "管道单线图-管
         toast.success(`已删除序号：${selectedIndex + 1} 的单线图对象`)
         setSelectedIndex(-1)
     }, [selectedIndex, editForm.单图表])
-
+    //目标位置:实际上是相对于移动之前的旧数组序号来讲的。
     const handleMoveUnits = useCallback(
         (e: React.MouseEvent) => {
-            e.preventDefault()
-            const currentUnits = editForm.单图表 || []
+            e.preventDefault();
+            const currentUnits = editForm.单图表 || [];
             if (currentUnits.length === 0) {
-                toast.error("单线图表为空，无法移动")
-                return
+                toast.error("单线图表为空，无法移动");
+                return;
             }
-            const start = startIndex - 1
-            const end = endIndex - 1
-            const target = targetIndex - 1
+            // 转换为0-based索引
+            const start = startIndex - 1;
+            const end = endIndex - 1;
+            const target = targetIndex - 1;
+            // 验证输入
             if (start < 0 || end < 0 || target < 0) {
-                toast.error("序号必须大于0")
-                return
+                toast.error("序号必须大于0");
+                return;
             }
-            if (start >= currentUnits.length || end >= currentUnits.length || target > currentUnits.length) {
-                toast.error(`序号超出范围，当前共有 ${currentUnits.length} 个单线图`)
-                return
+            if (start >= currentUnits.length || end >= currentUnits.length) {
+                toast.error(`序号超出范围，当前共有 ${currentUnits.length} 个单线图`);
+                return;
+            }
+            if (target > currentUnits.length) { // target可以是length，表示移动到末尾
+                toast.error(`目标位置超出范围，当前共有 ${currentUnits.length} 个单线图`);
+                return;
             }
             if (start > end) {
-                toast.error("起始序号不能大于结束序号")
-                return
+                toast.error("起始序号不能大于结束序号");
+                return;
             }
-            const newUnits = [...currentUnits]
-            const unitsToMove = newUnits.splice(start, end - start + 1)
-            let actualTarget = target
-            if (target > start) {
-                actualTarget = target - (end - start + 1)
+            // 检查目标位置是否在移动范围内
+            if (target >= start && target <= end + 1) {
+                toast.error("目标位置不能在移动范围内");
+                return;
             }
-            newUnits.splice(actualTarget, 0, ...unitsToMove)
+            const newUnits = [...currentUnits];
+            const unitsToMove = newUnits.splice(start, end - start + 1);
+
+            // 计算实际插入位置
+            let actualTarget = target;
+            // 如果目标位置在移动范围之后，需要减去移动的元素数量
+            if (target > end) {
+                actualTarget = target - (end - start + 1);
+            }
+            newUnits.splice(actualTarget, 0, ...unitsToMove);
             setEditForm((prev) => ({
                 ...prev,
                 单图表: newUnits,
-            }))
-            toast.success(`成功移动单线图 ${startIndex}-${endIndex} 到位置 ${targetIndex}`)
+            }));
+            toast.success(`成功移动单线图 ${startIndex}-${endIndex} 到位置 ${targetIndex}`);
         },
-        [editForm.单图表, startIndex, endIndex, targetIndex],
-    )
-
+        [editForm.单图表, startIndex, endIndex, targetIndex]
+    );
     const handleDeleteAllEmptyUnits = useCallback(() => {
         const currentUnits = editForm.单图表 || []
         const emptyUnits = currentUnits.filter((unit, index) => {
@@ -392,7 +405,7 @@ export const SingleLineDiagram = ({ children, show, label = "管道单线图-管
                                         id="targetIdxDiam"
                                         type="number"
                                         min={1}
-                                        max={currentUnits.length + 1}
+                                        max={currentUnits.length + 1}  // 允许移动到末尾
                                         value={targetIndex}
                                         onChange={(e) => setTargetIndex(Number(e.target.value))}
                                         placeholder="目标位置"

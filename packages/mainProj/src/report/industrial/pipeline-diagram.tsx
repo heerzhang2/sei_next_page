@@ -75,7 +75,7 @@ const DiagramItem: React.FC<{
              }}
         >
             {/* 标题和内容区域 */}
-            <div className="flex-shrink-0">
+            <div id={"LineDiagram"+index} className="flex-shrink-0">
                 {(arak === 0 && pid === 0) ?
                     <RepLink ori rep={rep} tag={"LineDiagram"}>
                         <CompH className={cn("text-center text-xl mb-2", "pt-2 print:pt-0")}>
