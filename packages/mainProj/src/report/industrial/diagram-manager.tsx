@@ -30,7 +30,7 @@ interface EditorItem {
     单图表: IPipingUnitEntity[]
 }
 
-interface PendingOfflineState {
+export interface PendingOfflineState {
     isChecking: boolean
     hasPending: boolean
     pendingIndexes: number[]

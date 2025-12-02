@@ -10,6 +10,10 @@ import { useCallback, useState, useEffect, useMemo, useRef } from "react"
 import { toast } from "sonner"
 import { type FileStore, useUppyUpload } from "@/report/hook/useUppyUpload"
 import {useOfflineUppyUpload} from "@/report/hook/useOfflineUppyUpload";
+import {fileOperationsQueue} from "@/lib/file-operations-queue";
+import {PendingOfflineState} from "@/report/industrial/diagram-manager";
+import {AlertTriangle, ExternalLink} from "lucide-react";
+import * as React from "react";
 
 // 单线图对象类型
 interface LineDiagramItem {
@@ -25,12 +29,14 @@ const DiagramFileUpload = ({
     selectedIndex, 
     rep, 
     storeObj, 
-    onFinish 
+    onFinish,
+    onSaveState
 }: {
     selectedIndex: number
     rep: any
     storeObj: any
     onFinish: (file: any, newUpload: boolean) => void
+    onSaveState: (key: string, fileCount: number, delCount: number) => void
 }) => {
     // 只有当 selectedIndex 有效时才初始化 useOfflineUppyUpload
     const [uploadDom] = useOfflineUppyUpload({
@@ -42,7 +48,7 @@ const DiagramFileUpload = ({
         liveDays: 10,
         business: "rep",
         onFinish,
-        keepEmptyObj: true,
+        onSaveState,
     })
     return uploadDom
 }
@@ -71,7 +77,39 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
     const [editForm, setEditForm] = useState<{ m: string; }>({ m: "", })
     // 保存初始值用于重置
     const [initialMemo, setInitialMemo] = useState<string>("")
-
+    const [pendingOfflineState, setPendingOfflineState] = useState<PendingOfflineState>({
+        isChecking: true,
+        hasPending: false,
+        pendingIndexes: [],
+    })
+    //为配套文件上传离线支持，单线图数组序号定位的对象，需防止不一致，不能简单地保存修改单线图存储！
+    useEffect(() => {
+        const checkPendingOfflineStates = async () => {
+            if (!rep?.id) {
+                setPendingOfflineState({
+                    isChecking: false,
+                    hasPending: false,
+                    pendingIndexes: [],
+                })
+                return
+            }
+            try {
+                const result = await fileOperationsQueue.hasLineDiagramPendingStates(rep.id)
+                setPendingOfflineState({
+                    isChecking: false,
+                    hasPending: result.hasPending,
+                    pendingIndexes: result.pendingIndexes,
+                })
+            } catch (error) {
+                setPendingOfflineState({
+                    isChecking: false,
+                    hasPending: false,
+                    pendingIndexes: [],
+                })
+            }
+        }
+        checkPendingOfflineStates()
+    }, [rep?.id])
     // 根据lineIndex参数确定编辑模式
     useEffect(() => {
         if (lineIndexParam !== null) {
@@ -170,7 +208,6 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                     // 如果是新增模式，同时保存当前的说明文字和文本高度
                     m: isNewMode ? editForm.m || existingItem.m : existingItem.m,
                 }
-
                 return {
                     ...prevStorage,
                     单图表: newDiagrams,
@@ -184,6 +221,36 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
             }
         },
         [selectedIndex, isNewMode, editForm.m, modified, setStorage, setModified],
+    )
+    //避免空的单线图对象,导致数组中单一个单线图存储索引和indexDB的uppyState保存的顺序索引不一致
+    const onSaveState = useCallback(
+        async (key: string, fileCount: number, delCount: number) => {
+            if (selectedIndex < 0) {
+                toast.error("请先选择要编辑的单线图")
+                return
+            }
+            setStorage((prevStorage: any) => {
+                const currentDiagrams = prevStorage.单图表 || []
+                const newDiagrams = [...currentDiagrams]
+                // 确保数组有足够的长度（新增模式）
+                while (newDiagrams.length <= selectedIndex) {
+                    newDiagrams.push({ m: "", })
+                }
+                const existingItem = newDiagrams[selectedIndex] || {}
+                if(existingItem.m==="" && !existingItem._FILE_?.url){
+                    newDiagrams[selectedIndex] = {
+                        ...existingItem,
+                        _FILE_: { name: "等待上传的"},
+                    }
+                }
+                return {
+                    ...prevStorage,
+                    单图表: newDiagrams,
+                }
+            })
+            if (!modified)  setModified!(true)
+        },
+        [selectedIndex, modified, setStorage, setModified],
     )
     //【汇集编辑后的状态】 计算保存到 storage 的表单数据
     const saveForm = useMemo(() => {
@@ -216,7 +283,6 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         const diagrams = storage.单图表 || []
         return selectedIndex >= 0 ? diagrams[selectedIndex] : undefined
     }, [selectedIndex, storage.单图表, forceRerender])
-    // }, [selectedIndex, storage.单图表, forceRerender])
 
     // 为 useUppyUpload 准备文件对象 - 使用 useMemo 确保引用稳定
     const storeObj = useMemo(() => {
@@ -224,33 +290,30 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
         // 确保返回一个稳定的对象引用
         return file ? { name: file.name, url: file.url,mimeType: file.mimeType} : ({} as FileStore)
     }, [curDiagram?._FILE_, forceRerender])
-    // }, [curDiagram?._FILE_, forceRerender])
-
     // 验证函数
     const onVerify = useCallback(
         (values: any) => {
-            if (selectedIndex < 0) return false
-            const currentDiagrams = values.单图表 || []
-            const obj = currentDiagrams[selectedIndex] || {}
-            // if (!obj.m && !obj._FILE_) {
-            //     toast.warning(`该序号单线图对象即将删除${selectedIndex + 1}，但请注意：编辑器自动切换新排序的序号的内容`)
-            // }
-            return true
+            const currentDiagrams = values.单图表 || [];
+            const hasInvalidItem = currentDiagrams.some((obj: LineDiagramItem) => {
+                // 条件：说明文字为空 且 文件URL不存在或为空
+                return !obj.m && !obj._FILE_?.url;
+            });
+            if(hasInvalidItem && (pendingOfflineState.isChecking || pendingOfflineState.hasPending)) {
+                toast.warning(`存在内容为空的单线图，需单线图管理页面去删除`);
+                return false;
+            }
+            return true;
         },
-        [selectedIndex],
-    )
-
+        [pendingOfflineState],
+    );
     // 添加调试日志
     console.log(`[DiagramFile] selectedIndex: ${selectedIndex}, lineIndexParam: ${lineIndexParam}, currentDiagrams.length: ${currentDiagrams.length}`)
-    
     const [render] = useFrameEditorBar({
         rep,
         transformValues: () => ({ ...saveForm }),
         onVerify,
         onReset,
     })
-
-
 
     // 如果没有选择单线图，显示提示
     if (selectedIndex < 0) {
@@ -285,6 +348,12 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                         {/* 说明字段编辑 */}
                         <Card className="mt-1 border-l-4 border-l-blue-500 gap-1 py-1">
                             <CardContent className="space-y-2 px-2">
+                                {pendingOfflineState.isChecking && (
+                                    <div className="flex items-center gap-2 p-4 bg-gray-50 rounded border">
+                                        <div className="animate-spin h-9 w-9 border-2 border-blue-500 border-t-transparent rounded-full" />
+                                        <span className="text-sm text-muted-foreground">正在检查离线文件状态...</span>
+                                    </div>
+                                )}
                                 <div className="space-y-2">
                                     <Label htmlFor="memojt" className="select-text">
                                         说明文字：
@@ -308,6 +377,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                                     rep={rep}
                                     storeObj={storeObj}
                                     onFinish={onFinish}
+                                    onSaveState={onSaveState}
                                 />
                             )}
                         </div>
@@ -322,6 +392,19 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                             <p>• 重置按钮会重置说明文字，不会影响已上传的文件</p>
                             <p>• 保存按钮会同时保存说明文字、和确认文件上传</p>
                         </div>
+                        {!pendingOfflineState.isChecking && pendingOfflineState.hasPending && (
+                            <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg space-y-1">
+                                <div className="flex items-start gap-1">
+                                    <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                    <div className="space-y-2">
+                                        <h4 className="font-medium text-amber-800">检测到未完成的离线文件操作</h4>
+                                        <p className="text-xs text-amber-600 mt-2">
+                                            提示：这个情况不要空对象无法直接点保存自动删除的。
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {children}
                     </CardContent>
                     <CardFooter className="flex flex-col justify-end border-t px-2 !pt-1 gap-2">{render()}</CardFooter>

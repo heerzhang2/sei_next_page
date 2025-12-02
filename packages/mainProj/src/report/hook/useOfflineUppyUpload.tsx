@@ -168,7 +168,7 @@ const getCurrentPageUrl = () => {
 
 
 /*支持报告的文件离线操作能力：
-@param keepEmptyObj: 单线图情况特别的，需确保storeObj不是空的对象！避免上级数组序号丢失状态不一致
+@param onSaveState: 单线图情况特别的，需确保storeObj不是空的对象！避免上级数组序号丢失状态不一致
  * */
 export function useOfflineUppyUpload(params: {
     repId: string
@@ -183,10 +183,10 @@ export function useOfflineUppyUpload(params: {
     modType?: string
     redId?: number
     subrid?: string
-    keepEmptyObj?: boolean
+    onSaveState?: (key: string, fileCount: number, delCount: number) => void
 }) {
     const router = useRouter()
-    const { repId, subrid, redId, hash, onFinish, keepEmptyObj } = params
+    const { repId, subrid, redId, hash, onFinish, onSaveState } = params
     const stateKey = generateUppyStateKey(repId, subrid, redId, hash)
     console.log(`[OfflineUppy] Generated stateKey: ${stateKey}`)
     const [pendingDeleteOperations, setPendingDeleteOperations] = useState<PendingDeleteOperation[]>([])
@@ -377,7 +377,13 @@ export function useOfflineUppyUpload(params: {
     )
     //将恢复的待删除操作传递给 父类hook：useUppyUpload
     const { uploadDom, uppyInstance, delOssFileFunc } = useUppyUpload({
-        ...params,
+        id: params.id,
+        storeObj: params.storeObj,
+        hash: params.hash,
+        maxFile: params.maxFile,
+        liveDays: params.liveDays,
+        maxSize: params.maxSize,
+        business: params.business,
         eid: repId,
         stateKey,
         onFinish: onFinishNew,
@@ -443,10 +449,6 @@ export function useOfflineUppyUpload(params: {
                     })
                 }
                 return
-            }
-            //记住状态时的避免空对象，利用回调，保存数据库的 upfile="__keepEmptyObj"
-            if(keepEmptyObj && latestStoreObjRef.current){
-                onFinish!("__keepEmptyObj",false)
             }
             // 修改：在提示信息中显示排除的文件数量
             const excludedCount = allFiles.length - files.length
@@ -574,21 +576,19 @@ export function useOfflineUppyUpload(params: {
                 const fileCount = filesArrayForSave.length
                 const handleModeCount = filesArrayForSave.filter((f) => f.isHandleMode).length
                 const deleteCount = currentPendingDeletes.length
-
                 console.log(
                     `[OfflineUppy] Saved state: ${stateKey}, ${fileCount} pending files (${handleModeCount} with handles), ${deleteCount} pending deletes, ${excludedCount} completed files excluded`,
                 )
-
                 toast.success("保存成功", {
                     description: `已保存 ${fileCount} 个待上传文件（${handleModeCount} 个使用文件句柄）、${deleteCount} 个待删除操作的状态，排除了 ${excludedCount} 个已成功上传的文件`,
                     duration: 3000,
                 })
-
-                // 重要：保存后立即重新检查状态，确保 pendingDeleteOperations 更新
+                // 保存后立即重新检查状态，确保 pendingDeleteOperations 更新
                 // await checkSavedState()
-
                 // 更新保存状态
                 setHasSavedState(true)
+                //记住状态时的避免空对象，利用回调，保存数据库的 upfile="__keepEmptyObj"
+                if(onSaveState)  onSaveState(stateKey,fileCount,deleteCount)
             } catch (error) {
                 console.error("[OfflineUppy] Failed to save Uppy state:", error)
                 toast.error("保存失败", {
@@ -684,17 +684,10 @@ export function useOfflineUppyUpload(params: {
 
                 console.log(`[OfflineUppy] Cleared ${currentFiles.length} files from Uppy instance`)
             }
-
             // 3. 清空恢复的待删除操作
             setPendingDeleteOperations([])
-            // 4. 清空 useUppyUpload 中的待删除操作
-
-            // 5. 重新检查状态
-            // await checkSavedState()
-
             // 6. 更新保存状态
             setHasSavedState(false)
-
             toast.success("状态已清除", {
                 description: "已移除所有保存的文件状态和待删除操作",
             })
