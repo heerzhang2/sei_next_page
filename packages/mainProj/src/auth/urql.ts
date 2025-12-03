@@ -2,15 +2,49 @@ import { createClient, fetchExchange } from "@urql/core"
 import { cacheExchange } from "@urql/exchange-graphcache"
 import schema from "./urql-schema.json"
 import { registerUrql } from "@urql/next/rsc"
-import https from "https"
-import http from "http"
+
+// 检测是否在 Edge Runtime 环境中
+const isEdgeRuntime = typeof window !== "undefined" || 
+                     (typeof process !== "undefined" && 
+                      typeof process.versions === "undefined" && 
+                      typeof process.env === "undefined")
+
+// 使用 Function 构造器动态导入，避免静态分析检测到 Node.js 模块
+const loadNodeModules = async () => {
+    if (isEdgeRuntime) {
+        return { https: null, http: null }
+    }
+    
+    try {
+        // 使用 Function 构造器避免静态分析
+        const importHttps = new Function('return import("https")')
+        const importHttp = new Function('return import("http")')
+        const https = await importHttps()
+        const http = await importHttp()
+        return { https, http }
+    } catch (error) {
+        console.warn("Failed to import Node.js modules:", error)
+        return { https: null, http: null }
+    }
+}
 
 const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
 const url = `${endpoint}/graphql`
 
-const createHttpAgent = () => {
-    const isHttps = url.startsWith("https")
-    const AgentClass = isHttps ? https.Agent : http.Agent
+const createHttpAgent = async () => {
+    // 在 Edge Runtime 中返回 null，不使用 HTTP Agent
+    if (isEdgeRuntime) {
+        return null
+    }
+
+    const { https, http } = await loadNodeModules()
+    
+    if (!https || !http) {
+        return null
+    }
+
+    const isHttpsUrl = url.startsWith("https")
+    const AgentClass = isHttpsUrl ? https.Agent : http.Agent
 
     return new AgentClass({
         keepAlive: true,
@@ -19,23 +53,23 @@ const createHttpAgent = () => {
         timeout: 20000, // 从30秒减少到20秒
         freeSocketTimeout: 10000, // 从15秒减少到10秒
         // HTTPS特定配置
-        ...(isHttps &&
+        ...(isHttpsUrl &&
             process.env.NODE_ENV === "development" && {
                 rejectUnauthorized: false, // 开发环境忽略自签名证书
             }),
     })
 }
 
-let httpAgent: http.Agent | https.Agent | null = null
-const getHttpAgent = () => {
+let httpAgent: any = null
+const getHttpAgent = async () => {
     if (!httpAgent) {
-        httpAgent = createHttpAgent()
+        httpAgent = await createHttpAgent()
     }
     return httpAgent
 }
 
 // 修改 createFetchOptions 支持设备ID头部
-const createFetchOptions = (accessToken?: string | null, deviceId?: string) => {
+const createFetchOptions = async (accessToken?: string | null, deviceId?: string) => {
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
     }
@@ -50,13 +84,17 @@ const createFetchOptions = (accessToken?: string | null, deviceId?: string) => {
     if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`
     }
-
-    return {
-        agent: getHttpAgent(),
+    const httpAgent = await getHttpAgent()
+    const fetchOptions: any = {
         method: "POST",
         headers,
         timeout: 30000,
     }
+    // 只在非 Edge Runtime 环境中添加 agent； 边缘计算的情况不支持httpAgent但会自动管理网络链接的
+    if (httpAgent) {
+        fetchOptions.agent = httpAgent
+    }
+    return fetchOptions
 }
 
 // 修改服务端 URQL 客户端工厂函数，支持传递设备ID
@@ -72,7 +110,7 @@ export const createServerUrqlClient = (deviceId?: string) => {
             }),
             fetchExchange,
         ],
-        fetchOptions: createFetchOptions(undefined, deviceId), // 服务端请求不传token，但传设备ID
+        fetchOptions: async () => await createFetchOptions(undefined, deviceId), // 服务端请求不传token，但传设备ID
         // 服务端不需要 suspense
         suspense: false,
     })
@@ -85,7 +123,7 @@ export const { get } = registerUrql(() => {
 
 //没用！ 已不需要手动清理
 export const cleanupServerConnections = () => {
-    if (httpAgent) {
+    if (httpAgent && typeof httpAgent.destroy === "function") {
         httpAgent.destroy()
         httpAgent = null
     }
@@ -108,7 +146,7 @@ export const urqlClient = (accessToken?: string | null) => {
             }),
             fetchExchange,
         ],
-        fetchOptions: createFetchOptions(accessToken),
+        fetchOptions: async () => await createFetchOptions(accessToken),
         // 服务端不需要 suspense
         suspense: false,
         requestPolicy: "network-only", // 可选：确保总是发起网络请求
