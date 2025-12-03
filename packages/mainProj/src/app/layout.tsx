@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { SessionProvider } from "next-auth/react"
 import { auth } from "@/app/auth"
-import { Provider } from "jotai"
+
 import { GraphQLProvider } from "@/auth/graphql-component"
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
@@ -63,8 +63,7 @@ export default async function RootLayout({
             <PrintSettingsProvider>
                 <SessionProvider session={session}>
                     <NetworkStatusProvider>
-                        <Provider>
-                            <GraphQLProvider>
+                        <GraphQLProvider>
                                 <SerwistMessageHandler />
                                 <SessionSync />
                                 <TokenRefreshOverlay />
@@ -73,7 +72,6 @@ export default async function RootLayout({
                                 <PWAInstaller />
                                 <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
                             </GraphQLProvider>
-                        </Provider>
                     </NetworkStatusProvider>
                 </SessionProvider>
             </PrintSettingsProvider>

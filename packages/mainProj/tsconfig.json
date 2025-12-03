@@ -1,7 +1,12 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "webworker"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -12,25 +17,47 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "types": ["@serwist/next/typings"],
+    "types": [
+      "@serwist/next/typings"
+    ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/app/*": ["./src/app/*"],
-      "@/auth/*": ["./src/auth/*"],
-      "@/report/*": ["./src/report/*"],
-      "@/pipeline/*": ["./pipeline/*"],
-      "@/comp/*": ["./comp/*"],
-      "@/component/*": ["./src/component/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@/app/*": [
+        "./src/app/*"
+      ],
+      "@/auth/*": [
+        "./src/auth/*"
+      ],
+      "@/report/*": [
+        "./src/report/*"
+      ],
+      "@/pipeline/*": [
+        "./pipeline/*"
+      ],
+      "@/comp/*": [
+        "./comp/*"
+      ],
+      "@/component/*": [
+        "./src/component/*"
+      ]
     }
   },
   "include": [
@@ -48,7 +75,11 @@
     "comp/**/*.ts",
     "comp/**/*.tsx",
     "report/**/*.ts",
-    "report/**/*.tsx"
+    "report/**/*.tsx",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "public/sw.js"]
+  "exclude": [
+    "node_modules",
+    "public/sw.js"
+  ]
 }
