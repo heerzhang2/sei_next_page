@@ -517,3 +517,5 @@ https://v0.app/chat/ai-y5AJZspnYBV
 
 https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/HydrostaticTest?original=1#HydrostaticTest
 浏览器跳转 地址栏输入的<a>不行；  nextjs网页Link路由跳转的可以？
+PWA mei1
+https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/LineDiagramFile?original=1&lineIndex=2#LineDiagram2
