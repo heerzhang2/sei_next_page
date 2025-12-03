@@ -49,7 +49,7 @@ export default function SignInForm() {
 
         try {
             const hashedPassword = await sha256Hash(password)
-
+            //这个让服务器跳转auth.config.ts：里面的CredentialsProvider({
             const result = await signIn("credentials", {
                 username: username,
                 password: hashedPassword,

@@ -9,67 +9,59 @@ const isEdgeRuntime = typeof window !== "undefined" ||
                       typeof process.versions === "undefined" && 
                       typeof process.env === "undefined")
 
-// 使用 Function 构造器动态导入，避免静态分析检测到 Node.js 模块
-const loadNodeModules = async () => {
-    if (isEdgeRuntime) {
-        return { https: null, http: null }
-    }
-    
-    try {
-        // 使用 Function 构造器避免静态分析
-        const importHttps = new Function('return import("https")')
-        const importHttp = new Function('return import("http")')
-        const https = await importHttps()
-        const http = await importHttp()
-        return { https, http }
-    } catch (error) {
-        console.warn("Failed to import Node.js modules:", error)
-        return { https: null, http: null }
+// 简单的标志，用于区分运行时环境
+const useHttpAgent = !isEdgeRuntime
+
+// 创建一个空的 Agent 类，用于 Edge Runtime
+class EdgeAgent {
+    destroy() {
+        // 空实现
     }
 }
 
 const endpoint = process.env.NEXT_PUBLIC_BACK_END || ""
 const url = `${endpoint}/graphql`
 
-const createHttpAgent = async () => {
-    // 在 Edge Runtime 中返回 null，不使用 HTTP Agent
-    if (isEdgeRuntime) {
-        return null
+const createHttpAgent = () => {
+    // 在 Edge Runtime 中返回一个空的 Agent 对象
+    if (!useHttpAgent) {
+        return new EdgeAgent()
     }
 
-    const { https, http } = await loadNodeModules()
-    
-    if (!https || !http) {
-        return null
+    // 在 Node.js 环境中，直接使用 require
+    try {
+        const isHttpsUrl = url.startsWith("https")
+        const module = isHttpsUrl ? require("https") : require("http")
+        const AgentClass = module.Agent
+
+        return new AgentClass({
+            keepAlive: true,
+            maxSockets: 2, // 从5减少到2，严格限制并发连接
+            maxFreeSockets: 1, // 从2减少到1
+            timeout: 20000, // 从30秒减少到20秒
+            freeSocketTimeout: 10000, // 从15秒减少到10秒
+            // HTTPS特定配置
+            ...(isHttpsUrl &&
+                process.env.NODE_ENV === "development" && {
+                    rejectUnauthorized: false, // 开发环境忽略自签名证书
+                }),
+        })
+    } catch (error) {
+        console.warn("Failed to create HTTP Agent:", error)
+        return new EdgeAgent()
     }
-
-    const isHttpsUrl = url.startsWith("https")
-    const AgentClass = isHttpsUrl ? https.Agent : http.Agent
-
-    return new AgentClass({
-        keepAlive: true,
-        maxSockets: 2, // 从5减少到2，严格限制并发连接
-        maxFreeSockets: 1, // 从2减少到1
-        timeout: 20000, // 从30秒减少到20秒
-        freeSocketTimeout: 10000, // 从15秒减少到10秒
-        // HTTPS特定配置
-        ...(isHttpsUrl &&
-            process.env.NODE_ENV === "development" && {
-                rejectUnauthorized: false, // 开发环境忽略自签名证书
-            }),
-    })
 }
 
 let httpAgent: any = null
-const getHttpAgent = async () => {
+const getHttpAgent = () => {
     if (!httpAgent) {
-        httpAgent = await createHttpAgent()
+        httpAgent = createHttpAgent()
     }
     return httpAgent
 }
 
 // 修改 createFetchOptions 支持设备ID头部
-const createFetchOptions = async (accessToken?: string | null, deviceId?: string) => {
+const createFetchOptions = (accessToken?: string | null, deviceId?: string) => {
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
     }
@@ -84,7 +76,7 @@ const createFetchOptions = async (accessToken?: string | null, deviceId?: string
     if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`
     }
-    const httpAgent = await getHttpAgent()
+    const httpAgent = getHttpAgent()
     const fetchOptions: any = {
         method: "POST",
         headers,
@@ -97,7 +89,9 @@ const createFetchOptions = async (accessToken?: string | null, deviceId?: string
     return fetchOptions
 }
 
-// 修改服务端 URQL 客户端工厂函数，支持传递设备ID
+/**普通登录login服务端认证，或刷新token用到的：
+ * 修改服务端 URQL 客户端工厂函数，支持传递设备ID
+ * */
 export const createServerUrqlClient = (deviceId?: string) => {
     return createClient({
         url,
@@ -110,7 +104,7 @@ export const createServerUrqlClient = (deviceId?: string) => {
             }),
             fetchExchange,
         ],
-        fetchOptions: async () => await createFetchOptions(undefined, deviceId), // 服务端请求不传token，但传设备ID
+        fetchOptions: createFetchOptions(undefined, deviceId), // 服务端请求不传token，但传设备ID
         // 服务端不需要 suspense
         suspense: false,
     })
@@ -134,6 +128,8 @@ export const cleanupServerConnections = () => {
 // 如果需要手动清理，可以调用 cleanupServerConnections()
 
 //若依据参数传递session?.user?.accessToken，确实可区分不同的登录用户的情况。
+/**获取用户的角色会用到的：
+* */
 export const urqlClient = (accessToken?: string | null) => {
     return createClient({
         url,
@@ -146,7 +142,7 @@ export const urqlClient = (accessToken?: string | null) => {
             }),
             fetchExchange,
         ],
-        fetchOptions: async () => await createFetchOptions(accessToken),
+        fetchOptions: createFetchOptions(accessToken),
         // 服务端不需要 suspense
         suspense: false,
         requestPolicy: "network-only", // 可选：确保总是发起网络请求
