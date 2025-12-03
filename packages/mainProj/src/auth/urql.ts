@@ -83,6 +83,7 @@ export const { get } = registerUrql(() => {
     return createServerUrqlClient()
 })
 
+//没用！ 已不需要手动清理
 export const cleanupServerConnections = () => {
     if (httpAgent) {
         httpAgent.destroy()
@@ -90,11 +91,9 @@ export const cleanupServerConnections = () => {
     }
 }
 
-if (typeof process !== "undefined" && typeof process.on === "function") {
-    process.on("exit", cleanupServerConnections)
-    process.on("SIGINT", cleanupServerConnections)
-    process.on("SIGTERM", cleanupServerConnections)
-}
+// 在 Edge Runtime 环境中不注册进程事件监听器
+// 这些清理函数在 Next.js 的现代架构中通常不是必需的
+// 如果需要手动清理，可以调用 cleanupServerConnections()
 
 //若依据参数传递session?.user?.accessToken，确实可区分不同的登录用户的情况。
 export const urqlClient = (accessToken?: string | null) => {
