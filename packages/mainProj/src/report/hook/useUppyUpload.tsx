@@ -1498,25 +1498,23 @@ export function useUppyUpload({
             const files = [file]
             // 修正所有文件的 MIME 类型
             const correctedMimeType = correctMimeType(file)
-            // 如果 MIME 类型发生了改变，则更新文件的 meta 信息
             if (correctedMimeType !== file.type) {
-                uppyInstance.setFileMeta(file.id, { ...file.meta, type: correctedMimeType })
                 console.log(`[v0] Corrected MIME type for ${file.name}: ${file.type} -> ${correctedMimeType}`)
-                // （可选）也可以尝试修改文件名扩展名以匹配 MIME 类型
-                //     newUppy.setFileMeta(file.id, { ...file.meta, name: newName });
             }
             // 预处理视频文件
             const processedFile = await preprocessVideoFile({
                 ...file,
                 type: correctedMimeType,
             })
-            // 更新文件信息
+            // 更新文件信息（视频元数据）
             uppyInstance.setFileState(file.id, {
+                type: correctedMimeType,
                 meta: {
                     ...processedFile.meta,
                     duration: processedFile.duration,
                     videoWidth: processedFile.videoWidth,
                     videoHeight: processedFile.videoHeight,
+                    type: correctedMimeType,
                 },
             })
             const filteredFiles = checkForDuplicateFiles(files)
