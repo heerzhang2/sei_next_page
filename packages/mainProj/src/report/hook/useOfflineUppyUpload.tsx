@@ -166,8 +166,7 @@ const getCurrentPageUrl = () => {
     return ""
 }
 
-
-/*支持报告的文件离线操作能力：
+/*支持报告的文件离线操作能力：句柄方式添加对离线状态存储的才有意义。
 @param onSaveState: 单线图情况特别的，需确保storeObj不是空的对象！避免上级数组序号丢失状态不一致
  * */
 export function useOfflineUppyUpload(params: {
@@ -614,7 +613,6 @@ export function useOfflineUppyUpload(params: {
     const navigateToNextPendingOperation = useCallback(async () => {
         try {
             const allGroups = await fileOperationsQueue.getGroupedUppyStates()
-
             // 找到当前分组
             const currentGroup = allGroups.find(
                 (group) => group.repId === repId && (group.subrid === subrid || (!group.subrid && !subrid)),
@@ -630,12 +628,6 @@ export function useOfflineUppyUpload(params: {
 
             // 找到当前快照的索引（基于时间戳匹配）
             const currentSnapshotIndex = sortedSnapshots.findIndex((snapshot) => snapshot.key === stateKey)
-
-            // if (currentSnapshotIndex === -1) {
-            //     toast.error("当前状态不在分组中")
-            //     return
-            // }
-
             // 获取下一个快照（循环逻辑）
             const nextIndex = (currentSnapshotIndex + 1) % sortedSnapshots.length
             const nextSnapshot = sortedSnapshots[nextIndex]
@@ -956,7 +948,7 @@ export function useOfflineUppyUpload(params: {
                                 </Button>
                             )}
                         </div>
-                        <p className="text-xs text-green-600 mt-1">文件句柄方式：节省存储空间，支持大文件，离线后可恢复</p>
+                        <p className="text-xs text-green-600 mt-1">文件句柄方式添加：节省存储空间，文件未上传的可被替换</p>
                     </div>
                 )}
                 {/* 状态管理操作 */}

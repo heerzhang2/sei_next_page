@@ -319,10 +319,101 @@ export type FileStore = {
     url: string
     mimeType?: string
 }
-// 修正视频文件 MIME 类型的函数
+// 修正 MIME 类型的函数（全面版本）
+const correctMimeType = (file: any): string => {
+    const { name, type } = file
+    
+    // 如果没有 MIME 类型，返回默认值
+    if (!type || type.trim() === '') {
+        return "application/octet-stream"
+    }
+    
+    // 移除分号后面的参数（如codecs、charset等）
+    let cleanType = type
+    const semicolonIndex = type.indexOf(';')
+    if (semicolonIndex > 0) {
+        cleanType = type.substring(0, semicolonIndex).trim()
+    }
+    
+    // 转换为小写进行比较
+    const lowerMimeType = cleanType.toLowerCase()
+    
+    // 常见文档类型映射
+    const documentMimeMap: { [key: string]: string } = {
+        pdf: "application/pdf",
+        doc: "application/msword",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        xls: "application/vnd.ms-excel",
+        xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ppt: "application/vnd.ms-powerpoint",
+        pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        rtf: "application/rtf",
+        txt: "text/plain",
+        csv: "text/csv",
+        html: "text/html",
+        htm: "text/html",
+        xml: "application/xml",
+        json: "application/json"
+    }
+    
+    // 视频类型映射
+    const videoMimeMap: { [key: string]: string } = {
+        mp4: "video/mp4",
+        mov: "video/quicktime",
+        avi: "video/x-msvideo",
+        mkv: "video/x-matroska",
+        webm: "video/webm",
+        "3gp": "video/3gpp",
+        flv: "video/x-flv",
+        wmv: "video/x-ms-wmv",
+        m4v: "video/mp4"
+    }
+    
+    // 音频类型映射
+    const audioMimeMap: { [key: string]: string } = {
+        mp3: "audio/mpeg",
+        wav: "audio/wav",
+        ogg: "audio/ogg",
+        m4a: "audio/mp4",
+        flac: "audio/flac"
+    }
+    
+    // 压缩文件类型映射
+    const archiveMimeMap: { [key: string]: string } = {
+        zip: "application/zip",
+        rar: "application/x-rar-compressed",
+        "7z": "application/x-7z-compressed",
+        gz: "application/gzip",
+        tar: "application/x-tar"
+    }
+    
+    // 从文件名获取扩展名
+    const extension = name.split('.').pop()?.toLowerCase()
+    
+    // 合并所有映射表
+    const allMimeMaps = { ...documentMimeMap, ...videoMimeMap, ...audioMimeMap, ...archiveMimeMap }
+    
+    // 如果扩展名匹配，使用正确的 MIME 类型
+    if (extension && allMimeMaps[extension]) {
+        const correctType = allMimeMaps[extension]
+        // 检查当前 MIME 类型是否需要修正
+        if (lowerMimeType !== correctType) {
+            return correctType
+        }
+    }
+    
+    // 对于其他类型，验证是否为标准 MIME 格式
+    if (lowerMimeType.match(/^[a-z0-9][a-z0-9!#$&\-^]*\/[a-z0-9][a-z0-9!#$&\-^_.]*$/)) {
+        return lowerMimeType
+    }
+    
+    // 如果不是标准 MIME 格式，返回默认类型
+    return "application/octet-stream"
+}
+
+// 修正视频文件 MIME 类型的函数（保留向后兼容）
 const correctVideoMimeType = (file: any): string => {
     const { name, type } = file
-
     // 常见的视频文件扩展名映射
     const videoMimeMap: { [key: string]: string } = {
         mp4: "video/mp4",
@@ -335,24 +426,16 @@ const correctVideoMimeType = (file: any): string => {
         wmv: "video/x-ms-wmv",
         m4v: "video/mp4",
     }
-
     // 从文件名获取扩展名
     const extension = name.split(".").pop()?.toLowerCase()
-
     // 如果扩展名匹配且当前 MIME 类型不正确，则修正
     if (extension && videoMimeMap[extension]) {
         const correctType = videoMimeMap[extension]
-
         // 检查当前 MIME 类型是否需要修正
         if (!type.startsWith("video/") || type !== correctType) {
-            // 特别处理 MOV 文件，提醒用户可能需要转换
-            if (extension === "mov" && correctType === "video/quicktime") {
-                console.warn(`[v0] 检测到 MOV 格式视频: ${file.name}，Windows 系统可能需要转换器才能播放`)
-            }
             return correctType
         }
     }
-
     // 如果没有找到匹配的扩展名，但有 video 前缀，确保是标准格式
     if (type && type.startsWith("video/")) {
         // 将一些非标准 MIME 类型转换为标准类型
@@ -360,7 +443,6 @@ const correctVideoMimeType = (file: any): string => {
         if (type.includes("x-msvideo")) return "video/x-msvideo"
         if (type.includes("x-matroska")) return "video/x-matroska"
     }
-
     return type || "video/mp4" // 默认返回 mp4
 }
 
@@ -403,8 +485,7 @@ export const MERGED_LOCALE_CONFIG = createMergedLocale()
 // 上传模式类型
 type UploadMode = "tus" | "xhr"
 
-/**不支持切换页面后 অবিলম্বে回来 续刚才的未完成的上传！tus断点续传也是要求当前网页需要保留在目前状态管理的，不能跳转其他网页去，否则不能正常完成上传。
- * 可以支持一个页面 多个上传的面板同时存在的。
+/**泛化能力更好的： 不支持切换页面后 回来 续刚才的未完成的上传！tus断点续传也是要求当前网页需要保留在目前状态管理的，不能跳转其他网页去，否则不能正常完成上传。
  * @param id 同一个页面不能多个一样id的uppy实例
  * @param eid 分布式对象存储系统靠这个 eid ID来关联业务系统关系数据库的。
  * @param field  inp?.[field]? 存储上传后的文件对象信息对应inp字段。 _FILE_为前缀的； 数据=可能是{}单个的，也可能多为文件形式[{ }, ]？
@@ -420,7 +501,6 @@ type UploadMode = "tus" | "xhr"
  * @param preloadedSnapshot 从父级 hook 预加载的状态快照
  * @param isPreloaded 标记预加载是否完成(离线功能)
  * @return {} 节点DOM
- * 【局限性】一个编辑器页面内不能放置多个useUppyUpload来做上传，因为uppy全局变量？，必须独立？ 走类似的useUppyUploadM。
  * TUS目前在切换路由页面再回来组件重新加载场景下，从indexDB恢复旧的上传的情况下：不管那个记住方式都会从零开始重新上传，而不是接着上次暂停位置续传的，可能被中断很长的时间，集群#后端状态也没保存。
  * */
 export function useUppyUpload({
@@ -441,22 +521,22 @@ export function useUppyUpload({
                                   preloadedSnapshot,
                                   isPreloaded=true,
                               }: {
-    storeObj: FileStore | FileStore[]
     eid: string
+    storeObj: FileStore | FileStore[]
     hash: string
     id?: string
-    stateKey?: string
+    onFinish: (file: any, newUpload: boolean) => void
     maxFile?: number
     liveDays?: number
     maxSize?: number
-    onFinish?: (file: any, newUpload: boolean) => void
     business?: string
-    open?: boolean
+    stateKey?: string
     isPreloaded?: boolean
     preloadedSnapshot?: UppyStateSnapshot | null
     isFilePendingDelete?: (fileUrl: string) => boolean
     cancelPendingDelete?: (fileUrl: string) => void
     addPendingDelete?: (operation: PendingDeleteOperation) => void
+    open?: boolean
 }) {
     const [openUppy, setOpenUppy] = React.useState(open)
     const [uppyInstance, setUppyInstance] = React.useState<Uppy | null>(null)
@@ -695,29 +775,6 @@ export function useUppyUpload({
                         if (savedState.meta) {
                             newUppy.setMeta(savedState.meta)
                         }
-                        // 恢复文件
-                        // for (const file of savedState.files) {
-                        //     try {
-                        //         if (file.data) {
-                        //             newUppy.addFile({
-                        //                 id: file.id,
-                        //                 name: file.name,
-                        //                 type: file.type,
-                        //                 data: file.data,
-                        //                 meta: {
-                        //                     name: file.name,
-                        //                     type: file.type,
-                        //                     lastModified: file.lastModified || Date.now(),
-                        //                     ...file.meta,
-                        //                 },
-                        //             })
-                        //         }
-                        //     } catch (error) {
-                        //         console.warn(`[v0] Failed to restore file ${file.name}:`, error)
-                        //     }
-                        // }
-                        // console.log(`[v0] Applied preloaded state to Uppy instance with ${savedState.files.length} files`)
-
                         // 在 restoreState 函数中更新恢复计数逻辑
                         let restoredCount = 0
                         let fromHandleCount = 0
@@ -855,6 +912,7 @@ export function useUppyUpload({
                         failUploads += up.name + "; "
                         return null
                     }
+                    //XHR方式下这里up.type不会被改成java后端返回的type字段，不变的！MinIO在上传时设置了正确的 Content-Type 元数据：实际还是uppy添加文件时就敲定的
                     return { name: up.name, url: fileUrl, type: up.type, mimeType: up.type }
                 })
                 .filter((item) => item !== null) // 立即过滤
@@ -949,20 +1007,12 @@ export function useUppyUpload({
             // 检查视频文件大小和时长
             const video = document.createElement("video")
             const fileURL = URL.createObjectURL(file.data)
-
             return new Promise((resolve) => {
                 video.onloadedmetadata = () => {
                     URL.revokeObjectURL(fileURL)
-
                     const duration = video.duration
                     const fileSizeMB = file.size / (1024 * 1024)
-
-                    console.log(`[v0] 视频文件信息: ${file.name}`)
-                    console.log(`  - 时长: ${duration.toFixed(2)} 秒`)
-                    console.log(`  - 大小: ${fileSizeMB.toFixed(2)} MB`)
-                    console.log(`  - 分辨率: ${video.videoWidth}x${video.videoHeight}`)
-                    console.log(`  - MIME 类型: ${file.type}`)
-
+                    console.log(`视频文件- MIME 类型: ${file.type}`)
                     // 检查是否是 MOV 格式，给出 Windows 兼容性提示
                     if (file.type === "video/quicktime" || file.name.toLowerCase().endsWith(".mov")) {
                         toast.info("MOV 格式视频", {
@@ -970,7 +1020,6 @@ export function useUppyUpload({
                             duration: 6000,
                         })
                     }
-
                     // 如果视频时长过长，给出警告
                     if (duration > 300) {
                         // 5分钟
@@ -979,7 +1028,6 @@ export function useUppyUpload({
                             duration: 5000,
                         })
                     }
-
                     // 如果文件过大，给出警告
                     if (fileSizeMB > maxSize * 0.8) {
                         toast.warning("视频文件较大", {
@@ -987,7 +1035,6 @@ export function useUppyUpload({
                             duration: 5000,
                         })
                     }
-
                     resolve(file)
                 }
 
@@ -1416,11 +1463,7 @@ export function useUppyUpload({
     const checkForDuplicateFiles = React.useCallback(
         (newFiles: any[]) => {
             if (!uppyInstance || newFiles.length === 0) return newFiles
-
             const existingFiles = uppyInstance.getFiles()
-            const storeFiles = maxFile === 1 ? (storeObj1?.url ? [storeObj1] : []) : storeObj2 || []
-
-            // 检查重复的文件
             const duplicates = newFiles.filter((newFile) => {
                 // 检查是否已在 Uppy 文件列表中
                 const inUppy = existingFiles.some(
@@ -1432,20 +1475,17 @@ export function useUppyUpload({
                 // 检查是否已在存储的文件中 根据storeFile.name判定太武断了，不做限制了。
                 return inUppy
             })
-
             if (duplicates.length > 0) {
                 const duplicateNames = duplicates.map((f) => f.name).join(", ")
                 toast.warning(`发现 ${duplicates.length} 个重复文件`, {
                     description: `以下文件已存在: ${duplicateNames}`,
                     duration: 5000,
                 })
-
                 // 过滤掉重复文件
                 return newFiles.filter(
                     (newFile) => !duplicates.some((dup) => dup.name === newFile.name && dup.size === newFile.size),
                 )
             }
-
             return newFiles
         },
         [uppyInstance, storeObj1, storeObj2, maxFile],
@@ -1456,38 +1496,29 @@ export function useUppyUpload({
         // 监听文件添加事件，进行重复检查和 MIME 类型修正
         const handleFileAdded = async (file: any) => {
             const files = [file]
-            // 修正视频文件的 MIME 类型
-            if (file.type && file.type.startsWith("video/")) {
-                const correctedMimeType = correctVideoMimeType(file) // 使用你已有的函数
-                // 如果 MIME 类型发生了改变，则更新文件的 meta 信息
-                if (correctedMimeType !== file.type) {
-                    uppyInstance.setFileMeta(file.id, { ...file.meta, type: correctedMimeType })
-                    console.log(`[v0] Corrected MIME type for ${file.name}: ${file.type} -> ${correctedMimeType}`)
-                    // （可选）也可以尝试修改文件名扩展名以匹配 MIME 类型
-                    // 注意：这不会改变实际的文件内容，只是改变 Uppy 内部记录的名字
-                    // 如果上传端点依赖扩展名判断，这可能会有用
-                    // const extension = correctedMimeType.split('/')[1]; // 简单提取，实际可能需要映射表
-                    // if (extension && !file.name.toLowerCase().endsWith(`.${extension}`)) {
-                    //     const newName = `${file.name.substring(0, file.name.lastIndexOf('.') + 1)}${extension}`;
-                    //     newUppy.setFileMeta(file.id, { ...file.meta, name: newName });
-                    //     console.log(`[v0] Corrected file name for ${file.name}: -> ${newName}`);
-                    // }
-                }
-                // 预处理视频文件
-                const processedFile = await preprocessVideoFile({
-                    ...file,
-                    type: correctedMimeType,
-                })
-                // 更新文件信息
-                uppyInstance.setFileState(file.id, {
-                    meta: {
-                        ...processedFile.meta,
-                        duration: processedFile.duration,
-                        videoWidth: processedFile.videoWidth,
-                        videoHeight: processedFile.videoHeight,
-                    },
-                })
+            // 修正所有文件的 MIME 类型
+            const correctedMimeType = correctMimeType(file)
+            // 如果 MIME 类型发生了改变，则更新文件的 meta 信息
+            if (correctedMimeType !== file.type) {
+                uppyInstance.setFileMeta(file.id, { ...file.meta, type: correctedMimeType })
+                console.log(`[v0] Corrected MIME type for ${file.name}: ${file.type} -> ${correctedMimeType}`)
+                // （可选）也可以尝试修改文件名扩展名以匹配 MIME 类型
+                //     newUppy.setFileMeta(file.id, { ...file.meta, name: newName });
             }
+            // 预处理视频文件
+            const processedFile = await preprocessVideoFile({
+                ...file,
+                type: correctedMimeType,
+            })
+            // 更新文件信息
+            uppyInstance.setFileState(file.id, {
+                meta: {
+                    ...processedFile.meta,
+                    duration: processedFile.duration,
+                    videoWidth: processedFile.videoWidth,
+                    videoHeight: processedFile.videoHeight,
+                },
+            })
             const filteredFiles = checkForDuplicateFiles(files)
             if (filteredFiles.length < files.length) {
                 // 有重复文件，从 Uppy 中移除
@@ -1500,14 +1531,14 @@ export function useUppyUpload({
                 }, 100)
             }
         }
-        const handleRetryAll = (fileIDs: any) => {
-            console.warn(`再试试:  fileIDs=`, fileIDs)
-        }
+        // const handleRetryAll = (fileIDs: any) => {
+        //     console.warn(`再试试:  fileIDs=`, fileIDs)
+        // }
         uppyInstance.on("file-added", handleFileAdded)
-        uppyInstance.on("retry-all", handleRetryAll)
+        // uppyInstance.on("retry-all", handleRetryAll)
         return () => {
             uppyInstance.off("file-added", handleFileAdded)
-            uppyInstance.off("retry-all", handleRetryAll)
+            // uppyInstance.off("retry-all", handleRetryAll)
         }
     }, [uppyInstance, checkForDuplicateFiles])
 

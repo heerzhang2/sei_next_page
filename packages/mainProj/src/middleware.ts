@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import { authConfig } from "@/app/auth.config"
 import { type NextRequest, NextResponse } from "next/server"
 
+//https://nextjs.org/docs/messages/middleware-to-proxy
 // 应用 NextAuth 中间件
 const authMiddleware = NextAuth(authConfig).auth
 
