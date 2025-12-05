@@ -319,6 +319,284 @@ export type FileStore = {
     url: string
     mimeType?: string
 }
+// 真正转换 iPhone MOV 文件为 MP4 格式
+const convertMovToMp4Real = async (file: any): Promise<any> => {
+    // 如果不是 MOV 文件或浏览器不支持必要的 API，直接返回原文件
+    if (!file.name.toLowerCase().endsWith('.mov') || 
+        !window.MediaRecorder || 
+        !window.OffscreenCanvas) {
+        console.warn(`[v0] 浏览器不支持视频转换，返回原文件: ${file.name}`);
+        return file;
+    }
+
+    // 对于大文件，弹出确认对话框
+    if (file.size > 100 * 1024 * 1024) { // 100MB
+        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+        const shouldConvert = await new Promise<boolean>((resolve) => {
+            // 创建确认对话框
+            const confirmed = window.confirm(
+                `检测到大文件 ${file.name} (${fileSize}MB)
+
+` +
+                `转换为 MP4 格式可能需要很长时间（几分钟），且会消耗较多系统资源。
+
+` +
+                `是否继续转换？
+
+` +
+                `• 点击"确定"：开始转换（确保兼容性）
+` +
+                `• 点击"取消"：使用原文件上传（可能在某些浏览器中无法播放）`
+            );
+            resolve(confirmed);
+        });
+        
+        if (!shouldConvert) {
+            console.log(`[v0] 用户取消转换大文件: ${file.name}`);
+            toast.info("使用原文件", {
+                description: "将使用原始 MOV 文件上传，可能影响播放兼容性"
+            });
+            return file;
+        }
+    }
+
+    // 对于中等大小文件，也提供选择选项（但更简洁）
+    if (file.size > 50 * 1024 * 1024 && file.size <= 100 * 1024 * 1024) { // 50-100MB
+        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+        const shouldConvert = await new Promise<boolean>((resolve) => {
+            const confirmed = window.confirm(
+                `检测到中等大小文件 ${file.name} (${fileSize}MB)
+
+` +
+                `转换为 MP4 格式可以确保在所有设备上正常播放，但需要一些时间。
+
+` +
+                `是否转换为兼容格式？`
+            );
+            resolve(confirmed);
+        });
+        
+        if (!shouldConvert) {
+            console.log(`[v0] 用户取消转换中等大小文件: ${file.name}`);
+            return file;
+        }
+    }
+
+    return new Promise((resolve) => {
+        console.log(`[v0] 开始转换 MOV 文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+        
+        const video = document.createElement('video');
+        const objectUrl = URL.createObjectURL(file);
+        video.src = objectUrl;
+        
+        // 设置总超时为 5 分钟
+        const totalTimeout = setTimeout(() => {
+            console.error(`[v0] MOV 转换总超时: ${file.name}`);
+            cleanup();
+            resolve(file);
+        }, 300000); // 5分钟
+        
+        const cleanup = () => {
+            clearTimeout(totalTimeout);
+            URL.revokeObjectURL(objectUrl);
+        };
+        
+        video.onloadedmetadata = () => {
+            console.log(`[v0] 视频元数据加载完成: ${video.videoWidth}x${video.videoHeight}, ${video.duration}s`);
+            
+            // 检查视频是否过短或过长
+            if (video.duration <= 0) {
+                console.error(`[v0] 无效的视频时长: ${file.name}`);
+                cleanup();
+                resolve(file);
+                return;
+            }
+            
+            if (video.duration > 600) { // 10分钟
+                console.warn(`[v0] 视频时长超过10分钟，转换将需要很长时间: ${file.name}`);
+            }
+            
+            // 创建 Canvas 进行帧捕获和重新编码
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // 尝试创建 MP4 格式的 MediaRecorder
+            let mediaRecorder;
+            try {
+                const mimeType = 'video/mp4;codecs="avc1.42E01E,mp4a.40.2"';
+                if (MediaRecorder.isTypeSupported(mimeType)) {
+                    mediaRecorder = new MediaRecorder(canvas.captureStream(30), { mimeType });
+                } else if (MediaRecorder.isTypeSupported('video/webm;codecs="vp8,opus"')) {
+                    mediaRecorder = new MediaRecorder(canvas.captureStream(30), { mimeType: 'video/webm;codecs="vp8,opus"' });
+                    console.warn(`[v0] 使用 WebM 格式替代 MP4: ${file.name}`);
+                } else {
+                    console.error(`[v0] 浏览器不支持视频编码，无法转换: ${file.name}`);
+                    cleanup();
+                    resolve(file);
+                    return;
+                }
+            } catch (error) {
+                console.error(`[v0] 创建 MediaRecorder 失败:`, error);
+                cleanup();
+                resolve(file);
+                return;
+            }
+            
+            const chunks: Blob[] = [];
+            
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
+            
+            mediaRecorder.onstop = () => {
+                try {
+                    const outputMimeType = mediaRecorder.mimeType.includes('webm') ? 'video/webm' : 'video/mp4';
+                    const blob = new Blob(chunks, { type: outputMimeType });
+                    
+                    // 创建新的文件对象
+                    const extension = outputMimeType.includes('webm') ? '.webm' : '.mp4';
+                    const convertedFile = new File([blob], file.name.replace('.mov', extension), {
+                        type: outputMimeType,
+                        lastModified: Date.now()
+                    });
+                    
+                    console.log(`[v0] 转换完成: ${file.name} -> ${convertedFile.name} (${(convertedFile.size / 1024 / 1024).toFixed(2)}MB)`);
+                    cleanup();
+                    
+                    resolve({
+                        ...file,
+                        name: convertedFile.name,
+                        type: outputMimeType,
+                        data: convertedFile,
+                        size: convertedFile.size
+                    });
+                } catch (error) {
+                    console.error(`[v0] 创建转换后的文件失败:`, error);
+                    cleanup();
+                    resolve(file);
+                }
+            };
+            
+            // 开始转换
+            mediaRecorder.start();
+            
+            // 设置转换超时
+            const convertTimeout = setTimeout(() => {
+                if (mediaRecorder.state !== 'inactive') {
+                    console.warn(`[v0] 转换超时，强制停止: ${file.name}`);
+                    mediaRecorder.stop();
+                }
+            }, Math.min(video.duration * 1000 + 10000, 120000)); // 最多2分钟转换时间
+            
+            // 播放视频并捕获每一帧到 Canvas
+            video.currentTime = 0;
+            
+            const captureFrame = () => {
+                if (video.paused || video.ended) {
+                    return;
+                }
+                
+                ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+                requestAnimationFrame(captureFrame);
+            };
+            
+            video.onplay = () => {
+                captureFrame();
+            };
+            
+            video.onended = () => {
+                clearTimeout(convertTimeout);
+                setTimeout(() => {
+                    if (mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                    }
+                }, 1000); // 等待最后一帧被捕获
+            };
+            
+            video.onerror = () => {
+                clearTimeout(convertTimeout);
+                console.error(`[v0] 视频播放错误: ${file.name}`);
+                if (mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+                cleanup();
+                resolve(file);
+            };
+            
+            // 开始播放视频
+            video.play().catch(error => {
+                clearTimeout(convertTimeout);
+                console.error(`[v0] 视频播放失败:`, error);
+                if (mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+                cleanup();
+                resolve(file);
+            });
+        };
+        
+        video.onerror = () => {
+            console.error(`[v0] 无法加载视频: ${file.name}`);
+            cleanup();
+            resolve(file);
+        };
+    });
+};
+
+// 快速检查 MOV 文件兼容性（不转换内容）
+const checkMovCompatibility = async (file: any): Promise<any> => {
+    if (!file.name.toLowerCase().endsWith('.mov')) {
+        return file;
+    }
+
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(file);
+        
+        const timeout = setTimeout(() => {
+            console.warn(`[v0] MOV 兼容性检查超时: ${file.name}`);
+            URL.revokeObjectURL(video.src);
+            resolve(file);
+        }, 5000);
+        
+        video.onloadedmetadata = () => {
+            clearTimeout(timeout);
+            URL.revokeObjectURL(video.src);
+            
+            // 检查浏览器对 QuickTime 的支持
+            const testVideo = document.createElement('video');
+            const canPlayQuickTime = testVideo.canPlayType('video/quicktime') !== '';
+            const canPlayMP4 = testVideo.canPlayType('video/mp4') !== '';
+            
+            // 如果浏览器不支持 QuickTime 但支持 MP4，提示需要转换
+            if (!canPlayQuickTime && canPlayMP4) {
+                console.log(`[v0] MOV 文件需要在目标浏览器中转换: ${file.name}`);
+                resolve({
+                    ...file,
+                    meta: {
+                        ...file.meta,
+                        needsConversion: true,
+                        isMovFile: true,
+                        originalType: file.type
+                    }
+                });
+            } else {
+                resolve(file);
+            }
+        };
+        
+        video.onerror = () => {
+            clearTimeout(timeout);
+            URL.revokeObjectURL(video.src);
+            resolve(file);
+        };
+    });
+};
+
 // 修正 MIME 类型的函数（全面版本）
 const correctMimeType = (file: any): string => {
     const { name, type } = file
@@ -683,6 +961,7 @@ export function useUppyUpload({
             id: uniqueId,
             restrictions: {
                 maxNumberOfFiles: maxFile,
+                // 移除文件类型限制，允许上传任意类型的文件
             },
             locale: MERGED_LOCALE_CONFIG, // 使用合并配置
         })
@@ -998,59 +1277,7 @@ export function useUppyUpload({
             }
         }
     }, [uppyInstance])
-    // 视频文件预处理函数
-    const preprocessVideoFile = async (file: any): Promise<any> => {
-        if (!file.type.startsWith("video/")) {
-            return file
-        }
-        try {
-            // 检查视频文件大小和时长
-            const video = document.createElement("video")
-            const fileURL = URL.createObjectURL(file.data)
-            return new Promise((resolve) => {
-                video.onloadedmetadata = () => {
-                    URL.revokeObjectURL(fileURL)
-                    const duration = video.duration
-                    const fileSizeMB = file.size / (1024 * 1024)
-                    console.log(`视频文件- MIME 类型: ${file.type}`)
-                    // 检查是否是 MOV 格式，给出 Windows 兼容性提示
-                    if (file.type === "video/quicktime" || file.name.toLowerCase().endsWith(".mov")) {
-                        toast.info("MOV 格式视频", {
-                            description: "苹果手机录制的 MOV 格式在 Windows 上可能需要转换器播放，建议使用支持 MOV 的播放器",
-                            duration: 6000,
-                        })
-                    }
-                    // 如果视频时长过长，给出警告
-                    if (duration > 300) {
-                        // 5分钟
-                        toast.warning("视频时长较长", {
-                            description: `视频时长 ${Math.floor(duration / 60)}分${Math.floor(duration % 60)}秒，上传可能需要较长时间`,
-                            duration: 5000,
-                        })
-                    }
-                    // 如果文件过大，给出警告
-                    if (fileSizeMB > maxSize * 0.8) {
-                        toast.warning("视频文件较大", {
-                            description: `文件大小 ${fileSizeMB.toFixed(1)}MB，接近限制 ${maxSize}MB`,
-                            duration: 5000,
-                        })
-                    }
-                    resolve(file)
-                }
-
-                video.onerror = () => {
-                    URL.revokeObjectURL(fileURL)
-                    console.warn(`[v0] 无法读取视频元数据: ${file.name}`)
-                    resolve(file)
-                }
-
-                video.src = fileURL
-            })
-        } catch (error) {
-            console.warn(`[v0] 视频预处理失败: ${file.name}`, error)
-            return file
-        }
-    }
+    
 
     // 上传模式切换处理 - 动态切换插件版本
     const handleModeChange = async (mode: UploadMode) => {
@@ -1496,27 +1723,64 @@ export function useUppyUpload({
         // 监听文件添加事件，进行重复检查和 MIME 类型修正
         const handleFileAdded = async (file: any) => {
             const files = [file]
-            // 修正所有文件的 MIME 类型
-            const correctedMimeType = correctMimeType(file)
-            if (correctedMimeType !== file.type) {
-                console.log(`[v0] Corrected MIME type for ${file.name}: ${file.type} -> ${correctedMimeType}`)
+            
+            // 检查是否需要处理 iPhone MOV 文件
+            let processedFile = file;
+            if (file.name.toLowerCase().endsWith('.mov')) {
+                console.log(`[v0] 检测到 MOV 文件: ${file.name}，开始处理...`)
+                try {
+                    // 先检查兼容性
+                    const compatibilityCheck = await checkMovCompatibility(file);
+                    
+                    if (compatibilityCheck.meta?.needsConversion) {
+                        console.log(`[v0] MOV 文件需要转换: ${file.name}`)
+                        // 显示转换提示
+                        toast.info("MOV 文件转换中", {
+                            description: `正在转换 ${file.name} 为兼容格式，请稍候...`,
+                            duration: 5000
+                        });
+                        
+                        // 执行实际转换
+                        const convertedFile = await convertMovToMp4Real(file);
+                        
+                        if (convertedFile.name !== file.name) {
+                            console.log(`[v0] MOV 转换成功: ${file.name} -> ${convertedFile.name}`)
+                            toast.success("转换完成", {
+                                description: `${file.name} 已转换为 ${convertedFile.name}`
+                            });
+                            
+                            // 更新 Uppy 中的文件信息
+                            uppyInstance.setFileState(file.id, {
+                                name: convertedFile.name,
+                                type: convertedFile.type,
+                                data: convertedFile.data,
+                                size: convertedFile.size
+                            });
+                            processedFile = convertedFile;
+                        } else {
+                            console.warn(`[v0] MOV 转换失败或被跳过，使用原文件: ${file.name}`)
+                            toast.error("转换失败", {
+                                description: "无法转换 MOV 文件，将使用原文件上传"
+                            });
+                        }
+                    } else {
+                        console.log(`[v0] MOV 文件无需转换: ${file.name}`)
+                        processedFile = compatibilityCheck;
+                    }
+                } catch (error) {
+                    console.warn(`[v0] MOV 文件处理失败，使用原文件:`, error)
+                    toast.error("处理失败", {
+                        description: "MOV 文件处理失败，将使用原文件上传"
+                    });
+                }
             }
-            // 预处理视频文件
-            const processedFile = await preprocessVideoFile({
-                ...file,
-                type: correctedMimeType,
-            })
-            // 更新文件信息（视频元数据）
-            uppyInstance.setFileState(file.id, {
-                type: correctedMimeType,
-                meta: {
-                    ...processedFile.meta,
-                    duration: processedFile.duration,
-                    videoWidth: processedFile.videoWidth,
-                    videoHeight: processedFile.videoHeight,
-                    type: correctedMimeType,
-                },
-            })
+            
+            // 修正所有文件的 MIME 类型
+            const correctedMimeType = correctMimeType(processedFile)
+            if (correctedMimeType !== processedFile.type) {
+                console.log(`[v0] Corrected MIME type for ${processedFile.name}: ${processedFile.type} -> ${correctedMimeType}`)
+                uppyInstance.setFileMeta(file.id, { ...processedFile.meta, type: correctedMimeType })
+            }
             const filteredFiles = checkForDuplicateFiles(files)
             if (filteredFiles.length < files.length) {
                 // 有重复文件，从 Uppy 中移除

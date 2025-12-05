@@ -514,9 +514,3 @@ offline-reports  ["fbDjUTVZSha7EIr24Y0wjFJlcG9ydA","yAEq8hveSa-ZXgUyKHEEHVJlcG9y
 【3】/26 Bearer%20bMtCVMY2iC28dzdwXBv4uwTh
 当前=heerzhang3
 https://v0.app/chat/ai-y5AJZspnYBV
-
-https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/HydrostaticTest?original=1#HydrostaticTest
-chrome浏览器的地址栏输入的跳转不能立刻让#hash路由的标签跳转到位显示出标签位置内容，但chrome 地址栏URL之后再次点击后回车就可以跳转到位显示出标签位置内容了       <a>不行；  nextjs网页Link路由跳转的可以？
-重新加载此页不能立刻跳转到位 ，但chrome 地址栏URL之后再次点击后回车   ？nextjs- Link
-https://192.168.171.3:3765/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/LineDiagramFile?original=1&lineIndex=2#LineDiagram2
-hash 路由跳转的时序问题。第一次访问时，页面组件和数据还没有完全加载完成，所以 hash 跳转失效
