@@ -1834,6 +1834,10 @@ export function useUppyUpload({
                 console.log(`[v0] Corrected MIME type for ${processedFile.name}: ${processedFile.type} -> ${correctedMimeType}`)
                 uppyInstance.setFileMeta(file.id, { ...processedFile.meta, type: correctedMimeType })
             }
+            toast.info("handleFileAdded", {
+                description: `修正所有文件的 MIME 类型 p=${processedFile.type}   C=${correctedMimeType}`,
+                duration: 15000
+            });
             const filteredFiles = checkForDuplicateFiles(files)
             if (filteredFiles.length < files.length) {
                 // 有重复文件，从 Uppy 中移除
