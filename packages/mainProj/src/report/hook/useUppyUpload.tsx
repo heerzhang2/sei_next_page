@@ -450,12 +450,22 @@ class MP4BoxVideoConverter {
 
 // 全局转换器实例
 const mp4boxConverter = new MP4BoxVideoConverter();
-
+const shouldConvertToMp4 = (file: any): boolean => {
+    //[修正视频转换前提] 必须MOV
+    if (!file.name.toLowerCase().endsWith('.mov')) {
+        return false;
+    }
+    return true
+}
 // 优化后的视频转换函数
 const convertMovToMp4Real = async (file: any): Promise<any> => {
     // 如果不是 MOV 文件，直接返回原文件
     if (!file.name.toLowerCase().endsWith('.mov')) {
         console.log(`[v0] 非 MOV 文件，跳过转换: ${file.name}`);
+        toast.info("不是 MOV 文件，直接返回", {
+            description: `正在 ${file.name} 转换`,
+            duration: 10000
+        });
         return file;
     }
 
@@ -467,13 +477,11 @@ const convertMovToMp4Real = async (file: any): Promise<any> => {
         if (!window.WebAssembly) {
             throw new Error('浏览器不支持WebAssembly');
         }
-
         // 显示转换进度
-        toast.info("视频格式转换", {
+        toast.info("视频转换", {
             description: `正在将 ${file.name} 转换为通用MP4格式...`,
-            duration: 10000
+            duration: 20000
         });
-
         // 对于小文件（<50MB），直接尝试客户端转换
         if (fileSizeMB <= 50) {
             try {
@@ -557,74 +565,6 @@ const convertMovToMp4Real = async (file: any): Promise<any> => {
 
         // 转换失败时返回原文件
         return file;
-    }
-};
-
-// 快速检查 MOV 文件兼容性（不转换内容）
-const checkMovCompatibility = async (file: any): Promise<any> => {
-    try {
-        if (!file.name.toLowerCase().endsWith('.mov')) {
-            return file;
-        }
-        return new Promise((resolve) => {
-            const video = document.createElement('video');
-            //AI制造的陷阱 URL.createObjectURL(file) 需要的是 File 或 Blob 对象，但传入的 file 是 Uppy 的文件对象
-            video.src = URL.createObjectURL(file.data);
-            const timeout = setTimeout(() => {
-                console.warn(`[v0] MOV 兼容性检查超时: ${file.name}`);
-                URL.revokeObjectURL(video.src);
-                resolve(file);
-            }, 5000);
-
-            video.onloadedmetadata = () => {
-                clearTimeout(timeout);
-                URL.revokeObjectURL(video.src);
-                // 检查浏览器对 QuickTime 的支持
-                const testVideo = document.createElement('video');
-                toast.info("checkMovCompatibility", {
-                    description: `正在testVideo 稍候...`,
-                    duration: 5000
-                });
-                const canPlayQuickTime = testVideo.canPlayType('video/quicktime') !== '';
-                const canPlayMP4 = testVideo.canPlayType('video/mp4') !== '';
-                toast.info("checkMovCompatibility", {
-                    description: `正在canPlayMP4 .. q=${canPlayQuickTime}   m=${canPlayMP4}`,
-                    duration: 5000
-                });
-                // 强制转换所有非 MP4 格式的视频为 MP4，确保跨设备兼容性
-                if (file.type !== 'video/mp4' || file.name.toLowerCase().endsWith('.mov')) {
-                    console.log(`[v0] 视频文件需要转换为 MP4 格式以确保兼容性: ${file.name}`);
-                    toast.info("视频格式转换", {
-                        description: `正在将 ${file.name} 转换为通用的 MP4 格式，确保在所有设备上都能正常播放`,
-                        duration: 5000
-                    });
-                    resolve({
-                        ...file,
-                        meta: {
-                            ...file.meta,
-                            needsConversion: true,
-                            isMovFile: file.name.toLowerCase().endsWith('.mov'),
-                            originalType: file.type,
-                            targetFormat: 'mp4'
-                        }
-                    });
-                } else {
-                    console.log(`[v0] 视频文件已是 MP4 格式，无需转换: ${file.name}`);
-                    resolve(file);
-                }
-            };
-
-            video.onerror = () => {
-                clearTimeout(timeout);
-                URL.revokeObjectURL(video.src);
-                resolve(file);
-            };
-        });
-    } catch (error) {
-        console.warn(`检查 MOV 文件，使用原文件:`, error)
-        toast.error("检查失败", {
-            description: `检查 MOV 文件: ${error} `+JSON.stringify(error)
-        });
     }
 };
 
@@ -1222,8 +1162,14 @@ export function useUppyUpload({
                         failUploads += up.name + "; "
                         return null
                     }
+                    //up.type（前端状态）， up.meta.type（后端用）和 up.data.type 三个的类型可能不一样
+                    toast.success(`shange三个的模式`, {
+                        description: `t= ${up.type} ，me-t= ${up.meta.type} ,dadat= ${up.data.type}`,
+                        duration: 9000,
+                    })
+                    const mimeType=up.meta.type || up.type
                     //XHR方式下这里up.type不会被改成java后端返回的type字段，不变的！MinIO在上传时设置了正确的 Content-Type 元数据：实际还是uppy添加文件时就敲定的
-                    return { name: up.name, url: fileUrl, type: up.type, mimeType: up.type }
+                    return { name: up.name, url: fileUrl, type: up.type, mimeType: mimeType }
                 })
                 .filter((item) => item !== null) // 立即过滤
             if (failUploads) {
@@ -1309,7 +1255,6 @@ export function useUppyUpload({
         }
     }, [uppyInstance])
     
-
     // 上传模式切换处理 - 动态切换插件版本
     const handleModeChange = async (mode: UploadMode) => {
         if (!uppyInstance) return
@@ -1758,7 +1703,7 @@ export function useUppyUpload({
             // 检查是否需要转换视频格式为通用 MP4，确保跨设备兼容
             let processedFile = file;
             const isVideoFile = file.type && file.type.startsWith('video/');
-            const needsConversion = isVideoFile && (
+            const needConvert = isVideoFile && shouldConvertToMp4(file) && (
                 file.name.toLowerCase().endsWith('.mov') || // MOV 文件
                 file.type !== 'video/mp4' || // 非 MP4 格式
                 file.name.toLowerCase().includes('.avi') ||
@@ -1766,14 +1711,12 @@ export function useUppyUpload({
                 file.name.toLowerCase().includes('.3gp') ||
                 file.name.toLowerCase().includes('.flv')
             );
-
-            if (needsConversion) {
+            if (needConvert) {
                 console.log(`[v0] 检测到需要转换的视频文件: ${file.name} (${file.type})，开始处理...`)
                 toast.info("视频格式转换", {
                     description: `正在将 ${file.name} 转换为通用 MP4 格式，确保跨设备兼容`,
                     duration: 5000
                 });
-                
                 try {
                     // 执行实际转换
                     const convertedFile = await convertMovToMp4Real(file);
@@ -1831,12 +1774,21 @@ export function useUppyUpload({
             // 修正所有文件的 MIME 类型
             const correctedMimeType = correctMimeType(processedFile)
             if (correctedMimeType !== processedFile.type) {
+                toast.info("handleFileAdded", {
+                    description: `已经修改不同的类型 p=${processedFile.type}   C=${correctedMimeType}`,
+                    duration: 15000
+                });
                 console.log(`[v0] Corrected MIME type for ${processedFile.name}: ${processedFile.type} -> ${correctedMimeType}`)
-                uppyInstance.setFileMeta(file.id, { ...processedFile.meta, type: correctedMimeType })
+                //不用uppyInstance.setFileMeta(file.id, { ...processedFile.meta, type: correctedMimeType })
+                uppyInstance.setFileState(file.id, {
+                    meta: { ...processedFile.meta, type: correctedMimeType },
+                    type: correctedMimeType
+                })
             }
-            toast.info("handleFileAdded", {
-                description: `修正所有文件的 MIME 类型 p=${processedFile.type}   C=${correctedMimeType}`,
-                duration: 15000
+            const uppyfile=uppyInstance.getFile(file.id);
+            toast.info("uppyfile", {
+                description: `类型 up=${uppyfile.type}   mtC=${uppyfile.meta.type}`,
+                duration: 25000
             });
             const filteredFiles = checkForDuplicateFiles(files)
             if (filteredFiles.length < files.length) {
