@@ -457,6 +457,25 @@ const shouldConvertToMp4 = (file: any): boolean => {
     }
     return true
 }
+// 截断文件名，保留后缀，总长度不超过15个字符
+const truncateFileName = (fileName: string, maxLength: number = 15): string => {
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const hasExtension = lastDotIndex > 0 && lastDotIndex < fileName.length - 1;
+    if (fileName.length <= maxLength) {
+        return fileName;
+    }
+
+    if (hasExtension) {
+        const name = fileName.substring(0, lastDotIndex);
+        const extension = fileName.substring(lastDotIndex);
+        const maxNameLength = maxLength - extension.length;
+
+        if (maxNameLength > 0) {
+            return name.substring(0, maxNameLength) + extension;
+        }
+    }
+    return fileName.substring(0, maxLength);
+};
 // 优化后的视频转换函数
 const convertMovToMp4Real = async (file: any): Promise<any> => {
     // 如果不是 MOV 文件，直接返回原文件
@@ -464,7 +483,7 @@ const convertMovToMp4Real = async (file: any): Promise<any> => {
         console.log(`[v0] 非 MOV 文件，跳过转换: ${file.name}`);
         toast.info("不是 MOV 文件，直接返回", {
             description: `正在 ${file.name} 转换`,
-            duration: 10000
+            duration: 20000
         });
         return file;
     }
@@ -477,22 +496,26 @@ const convertMovToMp4Real = async (file: any): Promise<any> => {
         if (!window.WebAssembly) {
             throw new Error('浏览器不支持WebAssembly');
         }
+        toast.info("leixing转的", {
+            description: `正在将 ${file.type} 转换格式.  ${file.meta.type}`,
+            duration: 30000
+        });
+        if(file.meta.type==="video/quicktime"){
+            file.meta.type="video/mp4"
+            // const originalName = file.name;
+            file.name = truncateFileName(file.name, 15);
+        }
         // 显示转换进度
-        toast.info("视频转换", {
-            description: `正在将 ${file.name} 转换为通用MP4格式...`,
-            duration: 20000
+        toast.info("视频--转换", {
+            description: `正 ${file.type} 转换格式.  ${file.meta.type}`,
+            duration: 30000
         });
         // 对于小文件（<50MB），直接尝试客户端转换
-        if (fileSizeMB <= 50) {
+        if (fileSizeMB <= 1) {
             try {
                 console.log(`[MP4Box] 尝试客户端转换: ${file.name}`);
                 const convertedFile = await mp4boxConverter.convertMovToMp4(file.data);
-                
-                toast.success("转换完成", {
-                    description: `${file.name} 已成功转换为MP4格式`,
-                    duration: 3000
-                });
-
+                toast.success("转换完成", {description: `${file.name} 已成功转换为MP4格式`, duration: 15000});
                 return {
                     ...file,
                     name: convertedFile.name,
@@ -507,31 +530,28 @@ const convertMovToMp4Real = async (file: any): Promise<any> => {
                         targetFormat: 'mp4'
                     }
                 };
-
             } catch (error: any) {
                 console.warn(`[MP4Box] 客户端转换失败: ${file.name}`, error);
-                
                 // 如果是编码问题，回退到服务器转换
                 if (error.message === 'VIDEO_NEEDS_REENCODING') {
                     toast.info("需要服务器转换", {
                         description: `检测到 ${file.name} 需要重新编码，将在服务端完成转换`,
-                        duration: 5000
+                        duration: 10000
                     });
                 } else {
                     toast.warning("转换失败", {
-                        description: `客户端转换失败，将使用服务端转换: ${error.message}`,
-                        duration: 5000
+                        description: `客户端转换失败，将使用后端去转换: ${error.message}`,
+                        duration: 33000
                     });
                 }
             }
         } else {
             // 大文件直接使用服务器转换
             toast.info("大文件处理", {
-                description: `${file.name} 较大，将使用服务端转换以确保稳定性`,
-                duration: 5000
+                description: `${file.name} 较大，将使用服务端转换以确保稳定性 meta.type= ${file.meta.type}`,
+                duration: 25000
             });
         }
-
         // 回退到服务器转换方案
         const mp4FileName = file.name.replace(/\.mov$/i, '.mp4');
         const mp4File = new File([file.data], mp4FileName, {
@@ -560,7 +580,7 @@ const convertMovToMp4Real = async (file: any): Promise<any> => {
         
         toast.error("转换失败", {
             description: `处理 ${file.name} 时出错: ${error.message}`,
-            duration: 5000
+            duration: 45000
         });
 
         // 转换失败时返回原文件
@@ -1715,20 +1735,19 @@ export function useUppyUpload({
                 console.log(`[v0] 检测到需要转换的视频文件: ${file.name} (${file.type})，开始处理...`)
                 toast.info("视频格式转换", {
                     description: `正在将 ${file.name} 转换为通用 MP4 格式，确保跨设备兼容`,
-                    duration: 5000
+                    duration: 25000
                 });
                 try {
                     // 执行实际转换
                     const convertedFile = await convertMovToMp4Real(file);
                     toast.info("视频转换", {
-                        description: `转换处理完成=${convertedFile.name !== file.name}`,
-                        duration: 3000
+                        description: `转换处理完成，改名=${convertedFile.name !== file.name}`,
+                        duration: 23000
                     });
-                    
                     if (convertedFile.name !== file.name) {
-                        console.log(`[v0] 视频转换成功: ${file.name} -> ${convertedFile.name}`)
+                        console.log(`[v0] 视频转换成功: ${file.name} 改 ${convertedFile.name}`)
                         toast.success("转换完成", {
-                            description: `${file.name} 已转换为 ${convertedFile.name}，现在可以在所有设备上正常播放`
+                            description: `${file.name} 已改为 ${convertedFile.name}，现在可以在所有设备上正常播放`,duration: 16000
                         });
                         
                         // 更新 Uppy 中的文件信息
@@ -1743,7 +1762,7 @@ export function useUppyUpload({
                         console.warn(`[v0] 视频转换失败或被跳过，使用原文件: ${file.name}`)
                         toast.warning("前端转换失败", {
                             description: `无法转换 ${file.name}，将使用原文件上传。已标记服务端转换`,
-                            duration: 6000
+                            duration: 16000
                         });
                         
                         // 即使转换失败，也标记为需要在服务端转换
@@ -1775,8 +1794,8 @@ export function useUppyUpload({
             const correctedMimeType = correctMimeType(processedFile)
             if (correctedMimeType !== processedFile.type) {
                 toast.info("handleFileAdded", {
-                    description: `已经修改不同的类型 p=${processedFile.type}   C=${correctedMimeType}`,
-                    duration: 15000
+                    description: `已经修改不同的类型 p=${processedFile.type}   correctedMimeType=${correctedMimeType}`,
+                    duration: 25000
                 });
                 console.log(`[v0] Corrected MIME type for ${processedFile.name}: ${processedFile.type} -> ${correctedMimeType}`)
                 //不用uppyInstance.setFileMeta(file.id, { ...processedFile.meta, type: correctedMimeType })
