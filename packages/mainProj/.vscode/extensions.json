@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "ms-vscode.vscode-npm-scripts",
+    "ms-vscode.vscode-tasks",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.npm-intellisense"
+  ]
+}
