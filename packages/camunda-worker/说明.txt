@@ -1,3 +1,5 @@
+后端/nextjs/worker 这3个都需要对接camuda8。
+
 const c8 = new Camunda8(camundaConfig)
 公司电脑：配置  CAMUNDA_AUTH_STRATEGY: 'NONE',   //公司的 c8run8.8apha4版本的运行方式的。docker独立ES
  CAMUNDA_AUTH_STRATEGY: 'BASIC',
