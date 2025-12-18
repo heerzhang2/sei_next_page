@@ -8,10 +8,6 @@ module.exports = async (phase) => {
 
     const nextConfig: NextConfig = {
         /* config options here */
-        eslint: {
-            // 警告：这允许生产构建在项目有 ESLint 错误的情况下成功完成
-            ignoreDuringBuilds: true,
-        },
         typescript: {
             // 警告：这允许生产构建在项目有类型错误的情况下成功完成
             ignoreBuildErrors: true,
@@ -21,7 +17,7 @@ module.exports = async (phase) => {
         },
         reactStrictMode: true,
 
-        webpack: (config, { isServer }) => {
+        webpack: (config, { isServer, dev }) => {
             // 排除所有 .node 二进制文件 如果你需要使用这些模块，可以使用 node-loader 代替 ignore-loader 但这通常只在 Node.js 环境中有效，不适用于浏览器
             config.module.rules.push({
                 test: /\.node$/,
@@ -31,6 +27,12 @@ module.exports = async (phase) => {
             config.infrastructureLogging = {
                 level: "warn",
             }
+            
+            // 调试模式下启用source maps
+            if (dev) {
+                config.devtool = 'source-map'
+            }
+            
             return config
         },
 
@@ -60,8 +62,9 @@ module.exports = async (phase) => {
     }
 
     const revision = crypto.randomUUID()
+    const disableSerwist = process.env.NEXT_DEV_TURBOPACK === "0" || false
     const withSerwist = (await import("@serwist/next")).default({
-        disable: false,
+        disable: process.env.NODE_ENV !== "production" && disableSerwist,
         swSrc: "src/sw.ts",
         swDest: "public/sw.js",
         reloadOnOnline: false,

@@ -1,101 +1,20 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "yarn: dev",
-      "type": "shell",
-      "command": "yarn",
-      "args": ["dev"],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": false
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "yarn: dev:debug",
-      "type": "shell",
-      "command": "yarn",
-      "args": ["dev:debug"],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": false
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "yarn: dev:debug:break",
-      "type": "shell",
-      "command": "yarn",
-      "args": ["dev:debug:break"],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": false
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "yarn: start",
-      "type": "shell",
-      "command": "yarn",
-      "args": ["start"],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": false
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "yarn: start:debug",
-      "type": "shell",
-      "command": "yarn",
-      "args": ["start:debug"],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": false
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "yarn: start:debug:break",
-      "type": "shell",
-      "command": "yarn",
-      "args": ["start:debug:break"],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": false
-      },
-      "problemMatcher": []
-    }
-  ]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "clean-and-restart",
+            "type": "shell",
+            "command": "${workspaceFolder}/debug-clean.bat",
+            "windows": {
+                "command": "${workspaceFolder}/debug-clean.bat"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        }
+    ]
 }
