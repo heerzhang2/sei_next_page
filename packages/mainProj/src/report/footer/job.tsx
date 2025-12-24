@@ -5,15 +5,18 @@ export const createPdfJob = (
     rep: any,
     original: boolean = false,
     frNo: number = 3,
-    cRange: string = "1-2"
+    cRange: string = "1-2",
 ): ConfigRoot<FileTransform> => {
     const urlPrn = `/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/?print=1` + (original ? "&original=1" : "")
     //组装正式报告：可能有多个子报告和目录及封面的，拼装一份pdf;       【全部展开显示的报告】?print=1
     const url = `${process.env.NEXT_PUBLIC_APP_WEB}` + urlPrn
     //报告，原始记录，其它的证书形式；【文件路径带来特殊要求】rep?.isp?.no中不要含有回车符号！
+    const name=`${original ? "记录" : "报告"}${rep?.isp?.no || ''}`;
+    const author = rep?.isp?.ispMen?.map((user: { person: { name: any; }; }) => user?.person?.name).join(', ');
+    const title=`${rep?.id}/${rep?.modeltype}/${rep?.modelversion}`;
     return(
     {
-    name: `${original ? "记录" : "报告"}${rep?.isp?.no || ''}`,
+    name: name,
     lay: {
         head:  `<div class="parent">
   <div class="child">报告No: ${rep?.isp?.no || ''}</div>
@@ -41,6 +44,11 @@ export const createPdfJob = (
             out: `tmp-${rep?.isp?.no || ''}${original ? "-o" : ""}`,
             frNo,
             cRange,
+            title,
+            subject: rep?.isp?.servu?.name,  
+            author,
+            keywords: name,
+            creator: rep?.isp?.ispu?.name,
         },
     ]
   } as ConfigRoot<FileTransform>)
