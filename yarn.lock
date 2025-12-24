@@ -6582,10 +6582,10 @@ package-json-from-dist@^1.0.0:
   resolved "https://registry.npmmirror.com/package-json-from-dist/-/package-json-from-dist-1.0.1.tgz"
   integrity sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==
 
-page2pdf_server@^2.0.0:
-  version "2.1.0"
-  resolved "https://registry.npmmirror.com/page2pdf_server/-/page2pdf_server-2.1.0.tgz"
-  integrity sha512-o5MHq/nxGf5nJHcah9ibkI9d747ovzTsroQLEhx3L8PKB6JD1ZqKYj+Juqv20wvPjFKX85/MJLAhRthaS0dDNw==
+page2pdf_server@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.npmmirror.com/page2pdf_server/-/page2pdf_server-2.1.1.tgz#9e796dfad46bf09a7100e0a7dfa8ecdf665429d4"
+  integrity sha512-uemkB0M1Gb2d7+49YcAKsCOeaEkuRbXr+NHX7K9ZIL8f7qoSEcODKw62GHY1+OY7/LvEhNuTyNxrv2fdo67mRw==
 
 pako@^0.2.5:
   version "0.2.9"
