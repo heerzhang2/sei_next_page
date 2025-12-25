@@ -11,7 +11,7 @@
     "v0dev/Vercel自带组件添加": "npx shadcn@latest add --overwrite alert-dialog",
     "AI胡诌的": "yarn upgrade @radix-ui/react-dialog @radix-ui/react-slot @radix-ui/react-tooltip",
     "dev": "next dev -p 3765",
-    "dev:debug": "cross-env NODE_OPTIONS='--inspect' next dev -p 3765",
+    "dev:http": "cross-env NODE_OPTIONS='--inspect' next dev -p 3765",
     "dev:debug:break": "cross-env NODE_OPTIONS='--inspect-brk' next dev -p 3765",
     "dev:ts-node": "ts-node --project tsconfig.json -r tsconfig-paths/register node_modules/.bin/next dev",
     "dev:ts-node:debug": "ts-node --inspect -r tsconfig-paths/register node_modules/.bin/next dev",

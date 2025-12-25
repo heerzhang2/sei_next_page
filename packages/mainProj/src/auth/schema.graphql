@@ -22,6 +22,20 @@ directive @specifiedBy(
 """Indicates an Input Object is a OneOf Input Object."""
 directive @oneOf on INPUT_OBJECT
 
+"""This directive allows results to be deferred during execution"""
+directive @defer(
+  """Deferred behaviour is controlled by this argument"""
+  if: Boolean! = true
+
+  """A unique label that represents the fragment being deferred"""
+  label: String
+) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"""
+This directive disables error propagation when a non nullable field returns null for the given operation.
+"""
+directive @experimental_disableErrorPropagation on QUERY | MUTATION | SUBSCRIPTION
+
 input AddressInput {
   town: ID
   county: ID
@@ -1337,6 +1351,7 @@ type Mutation {
   authenticate(username: String!, password: String!, setCookie: Boolean): LoginResp
   refreshToken(refreshToken: String): LoginResp
   logout: Boolean!
+  logoutAllDevices: Boolean!
 }
 
 type NewsEs implements Node {
