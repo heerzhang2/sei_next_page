@@ -1228,3 +1228,11 @@ bash -c "curl -X POST http://127.0.0.1:9180/apisix/admin/ssls -H 'X-API-KEY: IXn
 java后端： http://192.168.171.3:8673/graphql   http://192.168.171.3:8673/actuator/health  http://192.168.171.3:8673/uploadTUS
 在 APISIX 终止 TLS，后端用 HTTP；内网可信 APISIX 和 Spring Boot 应部署在同一内网；但跨 VPC / 跨区域通信	内网流量经过骨干网，仍需HTTPS；
 
+# 在WSL中执行配置
+bash -c "cd /mnt/c/home/wsl-use && ./setup-routes-unified.sh"
+Next.js需要配置 basePath 来适配子路径部署。
+APISIX的路径重写有问题。静态资源 _next/ 路径不需要重写，应该直接保留。让我修改APISIX路由配置：
+让我用更简单的方法修复这个问题，创建两个路由：
+curl -k -v https://192.168.171.3:9443/report/
+curl -k -v https://192.168.171.3:9443/report/_next/static/chunks/32263abb17b6c2ce.js
+APISIX 的路由规则 uri: "/report/*" 不匹配 /report/_next/...
