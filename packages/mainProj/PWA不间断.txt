@@ -28,3 +28,4 @@ curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"
         proxy_set_header X-Forwarded-Proto $scheme;
 [现象]：token刷新太慢了，保存无结果超时,  【解决】数据库重启，redis重启。
 
+架构顶部加apisix网关，浏览器面对网关https://192.168.171.3:9443/ 前端服务器就退居幕后不需要https协议，apisix做https转http，/ssl/目录给网关了。

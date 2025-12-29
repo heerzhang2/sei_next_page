@@ -1,0 +1,1230 @@
+家里的wsl2虚拟机用户名herzhang 密码=rd89ju ;
+1； Visual Studio Code（VS Code）的官方下载地址如下：
+👉 https://code.visualstudio.com/
+
+2， 从扩展市场安装 Go 官方插件
+ 	链接：https://marketplace.visualstudio.com/items?itemName=golang.go
+
+3， 扩展市场》》
+	Tencent Cloud CodeBuddy 安装
+
+4, 安装 Go ; 1.25.5;
+	https://golang.google.cn/dl/
+
+5,  AI>>
+	我的git仓库地址 https://gitee.com/heerzhang/sei-go-main  我刚刚安装的VS Code请为我初始化，导入我的工程： 目前我的本机工程目录是 C:\home\sei-rearend\special-equipment-go-backend
+6,  @recommended  vs code扩展的安装。
+7，继续AI： 📋 初始化状态
+✅ Git仓库状态: 已连接到 https://gitee.com/heerzhang/sei-go-main ✅ 依赖管理: Go模块依赖已下载并整理 ( go mod tidy ) ✅ VS Code扩展: Go扩展和YAML扩展已安装 ✅ 代码生成: GraphQL代码生成完成 ✅ 项目提交: 新增的 setup-dev.ps1 已提交到git
+启动后可访问：
+API服务: http://localhost:8080
+健康检查: http://localhost:8080/health
+GraphQL Playground: http://localhost:8080/playground
+8， AI： 手动启动我的工程，试试；   
+  安装mod？ ；  看起来依赖下载有问题。让我尝试重新整理依赖：
+9，自动提示，要安装gopls；
+10，：🎉 你的Go工程已经成功启动！
+
+总结一下我们完成的工作：
+
+修改了端口号：从8080改为8081，避免端口冲突
+创建了简化版本：用于测试基本HTTP服务功能
+配置文件更新：将 configs/config.yaml 中的端口改为8081
+启动脚本优化：更新了启动脚本使用简化版本
+你的Go后端服务现在运行在8081端口，包含：
+
+健康检查端点： http://localhost:8081/health
+测试API端点： http://localhost:8081/api/v1/test
+如果你想启动完整版本（包含数据库连接、GraphQL等功能），需要确保：
+
+PostgreSQL数据库运行在5432端口
+Redis运行在6379端口
+Elasticsearch运行在9200端口（可选）
+然后使用命令： go run cmd/api/main.go
+
+现在你可以：
+
+访问健康检查端点确认服务状态
+测试API端点验证功能
+开发其他业务功能模块
+
+11， 安装PS？    winget search --id Microsoft.PowerShell
+12，vs扩展 Container Tools ，容器选择podman;
+13, 调试运行： 添加Delve到PATH或重新安装
+在VS Code中：
+按 F5 启动调试； 代码行号左侧点击设置断点
+选择配置 "Launch with Debug"
+调试器会在断点处暂停
+14， 调试输出这样的 C:\Program Files\Go\bin\go.exe install -v github.com/go-delve/delve/cmd/dlv@latest
+go: github.com/go-delve/delve/cmd/dlv@latest: module github.com/go-delve/delve/cmd/dlv: Get "https://proxy.golang.org/github.com/go-delve/delve/cmd/dlv/@v/list": dial tcp 142.250.73.113:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+ 
+2025-12-08 14:33:28.858 [info] Tools environment: GOPATH=C:\Users\Administrator\go, GOTOOLCHAIN=auto
+2025-12-08 14:33:28.858 [info] Installing 1 tool at C:\Users\Administrator\go\bin
+2025-12-08 14:33:28.858 [info]   dlv
+2025-12-08 14:33:28.858 [info] 
+   这样子正常吗？
+15， 使用国内代理； 无法访问 proxy.golang.org （Google的代理）
+重新安装Delve；
+ 成功！ 现在Delve调试器安装完成了。
+16， AI：VS Code调试（最简单）
+按 F5 启动调试； 修复依赖问题：
+cd c:/home/sei-rearend/special-equipment-go-backend && dlv debug cmd/api/simple_main.go
+	Delve调试命令（非图形）
+break main.go:54 - 设置断点
+continue - 继续执行
+next - 单步执行
+print variable - 查看变量值
+quit - 退出调试
+17， AI："github.com/gin-gonic/gin"  这里为什么提醒："gonic": Unknown word.cSpell
+18，很多AI修正代码 gqlgen
+19，【F5】__.exe 运行Starting Go Backend Server (Simplified Version)...
+Health check: http://localhost:8081/health
+Test API: http://localhost:8081/api/v1/test
+2025/12/08 15:20:00 Server started successfully
+[GIN-debug] Listening and serving HTTP on :8081
+20， 代码库：https://gitee.com/heerzhang/sei-go-main
+21，Failed to initialize database: failed to migrate database: ERROR: ALTER COLUMN TYPE from varchar to varchar is only supported experimentally (SQLSTATE XCEXF)
+ 禁用自动迁移或者调整模型定义。我建议先检查数据库是否已经有表，然后只在没有表时创建：
+
+
+第二天： 决定不搞Go语言了。迁移到VSC;
+1， 扩展 Spring Boot Extension Pack；
+2， 扩展 Gradle for Java ；
+3，Extension Pack for Java扩展 
+4， 加扩展  Java Oracle Corporation Java Platform Extension for Visual Studio Code
+4，关闭当前工作区
+【关键的】重新打开父目录： C:\home\sei-rearend   不能更上1级或者下一级子目录打开
+VS Code会自动识别多模块结构
+5， 使用 Launch 配置：按 Ctrl+Shift+D 打开 Run and Debug 面板
+点击绿色播放按钮或
+选择 "Launch with GuoduttZb Profile",
+需要再次 按 F5 ！！
+6，AI 启动  d "c:/home/sei-rearend" && ./gradlew :special-equipment-backend:bootRun --args='--spring.profiles.active=guoduttZb -Xmx3200m'
+直接运行：双击 start-app.bat 文件，
+7， Terminal 面板： 输出
+8， 现在强制清理并重新编译：
+cd "c:/home/sei-rearend" && .\gradlew.bat clean compileJava --refresh-keys
+9，DevTools 重启功能已禁用以避免缓存问题
+10, 安装 VS Code Lombok 插件 code --install-extension "redhat.java"
+11, 已在 .vscode/settings.json 中添加了 Java 和 Lombok 相关配置
+配置了 Java 相关设置以支持 Lombok
+过时的 Camunda/Zeebe 注解：
+修复了所有文件中的导入，将 BpmnError 改为 ZeebeBpmnError
+统一使用了正确的包路径
+GraphQL 依赖问题：
+删除了错误的 BatchLoaderRegistry 配置类
+
+【】家里的；
+Extension Pack for Java
+Spring Boot Extension Pack
+Gradle for Java
+Project Manager for Java
+命令面板（Ctrl+Shift+P）运行 Java: Configure Classpath 或 Java: Show Runtime Status 查看当前 JDK。
+##安装 Lombok Annotations Support for VS Code $$
+
+D:\del\jdk-22.0.2
+. Gradle Wrapper
+确保项目包含 gradlew（Linux/macOS）和 gradlew.bat（Windows），这样 VS Code 可以使用项目自带的 Gradle 版本。
+首次打开项目时，VS Code 会自动识别并导入 Gradle 项目（可能需要点击“Import Gradle project”提示）。
+. 编译输出目录
+IDEA 默认输出到 out/，而 Gradle 默认输出到 build/。
+VS Code 的 Java 插件默认遵循 Gradle 的 build/ 结构，不要手动修改输出路径，否则可能导致类找不到。
+四、调试常见问题与解决
+. 无法启动调试（找不到主类）
+原因：VS Code 没有正确识别 Spring Boot 主类（带 @SpringBootApplication 的类）。
+解决：
+确保主类在 src/main/java 下，且包结构正确。
+打开主类文件，VS Code 通常会在方法上方显示 “Run | Debug” 按钮（来自 Language Support for Java）。
+或者通过左侧 Run and Debug 面板，点击 “create a launch.json file”，选择 “Java” → “Spring Boot” 模板。
+示例 .vscode/launch.json：
+
+Json
+编辑
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Launch SpringBoot App",
+      "request": "launch",
+      "mainClass": "com.example.demo.DemoApplication",
+      "projectName": "demo"
+    }
+  ]
+}
+注意：projectName 应与 build.gradle 中的 rootProject.name 一致。
+
+. 热重载（Hot Reload）不生效
+VS Code 对 Spring Boot DevTools 的支持不如 IDEA 完善。
+解决方案：
+确保 build.gradle 中包含：
+Groovy
+编辑
+developmentOnly 'org.springframework.boot:spring-boot-devtools'
+启用 VS Code 的 Auto Build（默认开启）。
+修改代码后，需手动触发构建（如运行 ./gradlew build -x test）或使用 Gradle Tasks 插件重新编译。
+更佳方案：使用 spring-boot:run 任务启动应用（见下文）。
+. 使用 Gradle 任务启动调试（推荐方式）
+在 VS Code 中按 Ctrl+Shift+P → 输入 “Gradle: Run Task” → 选择 bootRun。
+如果需要调试，可在 build.gradle 中配置 bootRun 支持调试参数：
+Groovy
+编辑
+bootRun {
+    jvmArgs = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]
+}
+然后在 VS Code 中创建一个 Remote Attach 调试配置连接到 5005 端口。
+五、其他常见问题
+问题	原因	解决方案
+依赖未解析 / 红色波浪线	Gradle 未正确导入	点击右下角 “Load Gradle Project” 或运行 ./gradlew --refresh-dependencies
+application.properties 未识别	资源未包含在 classpath	确保 src/main/resources 被正确识别（VS Code 通常自动处理）
+多模块项目无法跳转	模块未正确加载	确保 settings.gradle 正确 include 子模块，重启 VS Code 或重新导入
+Lombok 报错	Lombok 注解处理器未启用	安装 Lombok Plugin for VS Code 并确保 annotationProcessor 已配置：
+compileOnly 'org.projectlombok:lombok'
+annotationProcessor 'org.projectlombok:lombok'
+六、推荐工作流
+使用 Gradle Tasks 面板运行 bootRun、build、test 等任务。
+调试优先使用 Run/Debug 按钮（在主类上方）或 launch.json。
+开启 自动构建（File → Auto Save + Java 插件默认行为）。
+使用 Spring Boot Dashboard（左侧活动栏）统一管理 Spring Boot 应用生命周期。
+
+【第三天】
+PS C:\home\sei-rearend> ./gradlew --version
+
+------------------------------------------------------------
+Gradle 8.12.1
+------------------------------------------------------------
+
+Build time:    2025-01-24 12:55:12 UTC
+Revision:      0b1ee1ff81d1f4a26574ff4a362ac9180852b140
+
+Kotlin:        2.0.21
+Groovy:        3.0.22
+Ant:           Apache Ant(TM) version 1.10.15 compiled on August 25 2024
+Launcher JVM:  22.0.2 (Amazon.com Inc. 22.0.2+9-FR)
+Daemon JVM:    D:\del\jdk22 (no JDK specified, using current Java home)
+OS:            Windows 11 10.0 amd64
+
+cd c:/home/sei-rearend && set JAVA_HOME=D:\del\jdk22 && ./gradlew :special-equipment-backend:build --no-daemon
+包升级
+implementation("io.camunda:spring-boot-starter-camunda-sdk:8.8.0-alpha3-rc2")  artifact was moved to:  implementation("io.camunda:camunda-spring-boot-starter:8.8.6")
+立即手动同步	✅ Ctrl+Shift+P → Gradle: Refresh Projects
+输出中文乱码；
+VS Code为什么不能像IDEA那样的 根据输出文字中的文件代码行数 点击自动定位到这个文件的某个行
+添加一些配置，使 VS Code 能够在编译错误时支持文件导航：     tasks.json
+cd c:/home/sei-rearend && ./gradlew :special-equipment-backend:compileVSCode
+我自己已经建立一个bat文件，在 VS Code里面 terminal面板中运行这个bat，编译结果中的文件报错行数可以点击链接直接定位加载文件显示具体内容出来了。
+需要回车后，报错行数才能显示链接。
+Could no find th task 'gradle:clean compileJava'     Debug Anyway
+如果不想每次调试前都编译，也可以从launch.json中移除 preLaunchTask 行 现在您可以重新按F5启动调试，
+Elasticsearch使用的是HTTPS协议，但是SSL证书验证失败。在开发环境中，我们可以配置忽略SSL证书验证。让我修复这个配置：
+
+现在我已经将Elasticsearch配置从HTTPS改为HTTP，这应该可以解决SSL证书问题。修改总结：
+
+✅ 将Hibernate Search的Elasticsearch配置从HTTPS改为HTTP
+✅ 将Spring的Elasticsearch配置从HTTPS改为HTTP
+✅ 保留了用户名和密码配置
+这是一个开发环境的解决方案。如果您的Elasticsearch服务器只支持HTTPS，那么我们需要：
+
+获取正确的SSL证书并导入Java信任库
+或者配置正确的SSL信任设置
+现在可以重新按F5启动应用程序，应该不会再有SSL证书验证错误了。
+PS C:\home\sei-rearend> cd C:/seiconfig; keytool -importcert -trustcacerts -alias elasticsearch -file ca.crt -keystore elasticsearch-truststore.jks -storepass changeit -noprompt
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+证书已添加到密钥库中
+问题在于 JVM 没有正确识别我们创建的信任存储。让我检查并修复这个问题
+keytool -importcert -trustcacerts -alias elasticsearch-dev -file C:/seiconfig/ca.crt -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit -noprompt
+PS C:\home\sei-rearend> keytool -importcert -trustcacerts -alias elasticsearch-dev -file C:/seiconfig/ca.crt -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit -noprompt
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+警告: 使用 -cacerts 选项访问 cacerts 密钥库
+证书已添加到密钥库中
+PS C:\home\sei-rearend> 
+验证证书确实已经添加到 cacerts 中： keytool -list -alias elasticsearch-dev -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit
+keytool -importcert -trustcacerts -alias elasticsearch-dev -file C:/seiconfig/ca.crt -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit -noprompt
+echo "" | keytool -printcert -sslserver 192.168.109.65:9200
+打脸了： Elasticsearch 使用的是它自己的 CA 证书（"CN=Elasticsearch security auto-configuration HTTP CA"），而我们导入的是 Cockroach 的 CA 证书。我需要导为什么直接创建 新创建 Elasticsearch CA 证书文件， 这个东西不是服务器给的吗
+CodeBuddy
+你说得对！CA 证书必须来自服务器，不能自己创建。让我用正确的方法从服务器获取真实的证书。
+从之前的 keytool 输出中，我看到 Elasticsearch 使用的是一个自签名的证书链。让我直接从服务器获取证书并导入到 Java 信任存储中：
+keytool -printcert -rfc -sslserver 192.168.109.65:9200 > C:/seiconfig/elasticsearch_server.crt
+现在我可以看到完整的证书链。我需要将这两个证书都导入到 Java 信任存储中： C:\seiconfig\elasticsearch_ca
+keytool -importcert -trustcacerts -alias elasticsearch_http_ca -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit -file C:/seiconfig/elasticsearch_ca.crt -noprompt
+keytool -importcert -trustcacerts -alias elasticsearch_server_cert -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit -file C:/seiconfig/elasticsearch_server.crt -noprompt
+keytool -list -alias elasticsearch_http_ca -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit  # Elasticsearch 的 CA 证书已正确导入到 Java 信任存储中。
+【折腾】IDEA旧的证书找出来了：
+keytool -import -trustcacerts -alias myCA -file "D:\ES8_65CA.crt" -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit -noprompt
+keytool -delete -alias myCA -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit
+keytool -import -trustcacerts -alias myCA -file "D:\ES8_65CA.crt" -keystore "D:/del/jdk22/lib/security/cacerts" -storepass changeit -noprompt
+【我去】
+cmd /c "curl -k -u elastic:sjhe6479 https://192.168.109.65:9200/"
+cmd /c "D:/del/jdk22/bin/keytool.exe -list -v -keystore D:/del/jdk22/lib/security/cacerts -alias myCA -storepass changeit"
+使用VS Code的F5调试重新启动应用，看是否能解决SSL证书验证问题。如果连接成功，我们再启用完整的证书验证。
+【最后一招】
+cd "c:\home\sei-rearend"; $env:JAVA_HOME="D:/del/jdk22"; $env:PATH="D:/del/jdk22/bin;" + $env:PATH; .\gradlew.bat :special-equipment-backend:bootRun --args="--spring.profiles.active=guoduttZb"
+》》还是java路径问题？？问题根源确实是VS Code调试器使用了自己的JRE，而不是我们配置的JDK
+如果这个配置能工作，说明问题确实在于VS Code调试器使用的JDK。
+同时，让我建议你在VS Code中：
+重启VS Code - 确保Java扩展重新加载并使用新的javaHome配置
+清理Java扩展缓存 - 在VS Code命令面板(Ctrl+Shift+P)中运行"Java: Clean Language Server Workspace"
+重新尝试F5调试 - 现在应该使用D:/del/jdk22中的JDK
+如果VS Code仍然使用自带的JRE，另一个选择是暂时使用Gradle运行应用，或者我可以帮你创建一个批处理脚本来启动应用。
+Gradle启动当前正在进行中，请观察控制台输出，看看SSL问题是否解决。如果Gradle启动成功，我们就知道配置是正确的，问题只在VS Code调试器。
+VS Code调试器仍然在使用自己的JRE路径，而不是我们配置的D:/del/jdk22。》 强制重启Java扩展：
+建议的解决方案：
+立即使用的方法：
+使用"Gradle Boot Run (Backend) - WORKING"配置 - 这确保使用正确的JDK
+在VS Code中按Ctrl+Shift+D 切换到调试面板
+选择"Gradle Boot Run (Backend) - WORKING" 而不是Java配置
+长期解决方案：
+完全重启VS Code - 文件 → 退出，然后重新打开
+在VS Code中运行命令： Ctrl+Shift+P → 输入 Java: Clean Language Server Workspace  #太慢！，重新下载依赖包！
+重新尝试Java调试配置
+备选方案： 如果VS Code Java扩展继续有问题，你可以：
+使用Gradle调试配置（已经配置好）
+使用命令行： cd c:\home\sei-rearend && .\gradlew.bat :special-equipment-backend:bootRun --args="--spring.profiles.active=guoduttZb"
+现在试试**"Gradle Boot Run (Backend) - WORKING"**配置，它应该能正常工作，因为我们已经验证
+
+[家里的路径]
+The java.home variable defined in Visual Studio Code settings points to a missing or inaccessible folder (D:\del\jdk22)
+D:\del\jdk-22.0.2  bootRun --args='--spring.profiles.active=jcduijeZB' -Dfile.encoding=UTF-8
+长时间卡住， Gradle 没有配置国内镜像源导致的，强制重启 VS Code：
+Ctrl+Shift+P → Developer: Reload Window
+或者完全关闭 VS Code 后重新打开
+cd "d:\home\sei-rearend" && .\gradlew dependencies --configuration compileClasspath
+cd "d:\home\sei-rearend\special-equipment-backend" && ..\gradlew dependencies --configuration compileClasspath | findstr camunda
+camunda-tasklist-client-8.7.0 的 POM 文件有问题。让我尝试使用正确的版本：
+
+// https://mvnrepository.com/artifact/io.camunda/camunda-tasklist-client-java
+implementation("io.camunda:camunda-tasklist-client-java:8.8.1")
+    // https://mvnrepository.com/artifact/io.camunda/spring-boot-starter-camunda-tasklist
+    implementation("io.camunda:spring-boot-starter-camunda-tasklist:8.8.1")
+暂时启用境外仓库来下载这些缺失的依赖！  - -很慢下载。
+【安装】 GitLens，接近 IDEA 的 Git 体验
+Camunda 8.8.1 配置
+第十天 ，缓存？
+cd c:/home/sei-rearend && ./gradlew clean --no-configuration-cache
+cd c:/home/sei-rearend && ./gradlew build --no-configuration-cache
+cd c:/home/sei-rearend && ./gradlew :special-equipment-backend:bootRun --args="--spring.profiles.active=guoduttZb" --no-configuration-cache
+彻底清理  cd c:/home/sei-rearend && ./gradlew --stop
+顽固【参数名】graphQL毛病 修复 @Argument("name") 的写法，应该解决了 GraphQL 参数名解析的问题
+cd c:/home/sei-rearend && ./gradlew clean compileJava --no-configuration-cache
+显示乱码；在 VS Code 终端中先执行 chcp 65001 
+cd c:/home/sei-rearend && ./gradlew :special-equipment-backend:bootRun --args="--spring.profiles.active=guoduttZb" --no-configuration-cache
+还用 ./gradlew :special-equipment-backend:bootRun --args='--spring.profiles.active=guoduttZb -Xmx3200m -Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8'
+【Terminal】 PS C:\home\sei-rearend> ./gradlew :special-equipment-backend:bootRun --args='--spring.profiles.active=guoduttZb -Xmx3200m -Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8'
+Configured debug type 'gradle' is not supported
+修改配置，使用 VS Code 原生支持的 Java 调试类型，但使用 Gradle 的启动方式：
+在 VS Code 中按 F5
+选择 "Debug Backend (Terminal Mode - Works)" 无法链接调试
+推荐的使用顺序：
+先试试方案1：按 F5 → 选择 "Debug BootRun (Simple)"
+如果还有问题，使用方案2=手动两步调试
+./gradlew :special-equipment-backend:bootRun --args='--spring.profiles.active=guoduttZb -Xmx3200m -Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8'
+方案2再连接调试器：按 F5 选择 "Debug Backend (Terminal Mode - Works)" 无法连接调试。
+【终于】 对于 Gradle 面板：现在 bootRun 任务会默认使用 guoduttZb profile，你可以右键选择 "Debug"，应该能正确识别 profile 了
+ 在Terminal 看到Task :special-equipment-backend:bootRun步骤后的 1分钟不动，还<==-->80% Excuting 。。上面头顶工具条点击 Restart 图标的。
+<==========---> 80% EXECUTING [4m 14s]
+> :special-equipment-backend:bootRun
+> IDLE
+Gradle Projects视图：
+打开命令面板 Ctrl+Shift+P
+输入 `Gradle: Open Gradle Projects
+升级 Gradle 到 8.14 或更高版本才能使用 Spring Boot 4.0。让我检查当前的 Gradle 版本并升级
+【home4.0】	 https://docs.spring.io/spring-boot/upgrading.html
+org.springframework.lang   Spring Framework 7 in favor of JSpecify annotations,  org.jspecify.annotations.Nullable
+implementation("org.springframework.boot:spring-boot-jackson2")
+co.elastic.clients:elasticsearch-java module, including built-in sniffer support. The org.elasticsearch.client:elasticsearch-rest-client and org.elasticsearch.client:elasticsearch-rest-client-sniffer modules are no longer required
+使用 Graal 编译器作为 JIT（仅限支持的 JDK 版本）
+cd "d:/home/sei-rearend" && gradlew :special-equipment-backend:dependencies --configuration compileClasspath | findstr "spring-boot"
+cd "d:\home\sei-rearend" && .\gradlew.bat :special-equipment-backend:dependencies --configuration compileClasspath | findstr "actuator"
+> Compilation failed; see the compiler output below.
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\jyjc\model\AbstractAmrPageQry.java:48: 警告: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+      private Integer queryType = 0;
+                      ^
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\jyjc\model\AbstractDtApiReq.java:27: 警告: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+      private String dtCode = FUJIAN_AMR_DT_CODE;
+                     ^
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\config\ElasticsearchClientCheckConfig.java:53: 错误: 找不到符号
+      private final ElasticsearchProperties properties;
+                    ^
+    符号:   类 ElasticsearchProperties
+    位置: 类 ElasticsearchClientCheckConfig
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\config\ElasticsearchClientCheckConfig.java:55: 错误: 找不到符号
+      public ElasticsearchClientCheckConfig(ElasticsearchProperties properties) {
+                                            ^
+    符号:   类 ElasticsearchProperties
+    位置: 类 ElasticsearchClientCheckConfig
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\config\ElasticsearchClientCheckConfig.java:67: 错误: 找不到符号
+      Sniffer elasticsearchSniffer(RestClient client, ElasticsearchProperties properties) {
+                                                      ^
+    符号:   类 ElasticsearchProperties
+    位置: 类 ElasticsearchClientCheckConfig
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\config\LocalDateTimeSerializerConfig.java:50: 错误: 找不到符号
+      public Jackson2ObjectMapperBuilderCustomizer jackson2ObjectMapperBuilderCustomizer() {
+             ^
+    符号:   类 Jackson2ObjectMapperBuilderCustomizer
+    位置: 类 LocalDateTimeSerializerConfig
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\config\datasource\SeiConfig.java:136: 错误: 找不到符号
+      @QuartzDataSource
+       ^
+    符号:   类 QuartzDataSource
+    位置: 类 SeiConfig
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\config\datasource\SeiConfig.java:19: 错误: 程序包org.springframework.boot.autoconfigure.quartz不存在
+  import org.springframework.boot.autoconfigure.quartz.QuartzDataSource;
+                                                      ^
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\config\ElasticsearchClientCheckConfig.java:10: 错误: 程序包org.springframework.boot.autoconfigure.elasticsearch不存在
+  import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchProperties;
+                                                             ^
+  D:\home\sei-rearend\special-equipment-backend\src\main\java\org\fjsei\yewu\config\LocalDateTimeSerializerConfig.java:6: 错误: 程序包org.springframework.boot.autoconfigure.jackson不存在
+  import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+                                                       ^
+  8 个错误
+  2 个警告
+
+【端口占用】
+cd "d:/home/sei-rearend" && ./gradlew :special-equipment-backend:bootRun --no-daemon
+
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor(
+            "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta",
+            "jakarta.persistence:jakarta.persistence-api:3.2.0",
+            "org.projectlombok:lombok:1.18.30"
+    )
+
+v0胡说的毛病：hibernate-search-bom-8.2.0.Final.pom还没有这个包的新版本。
+在maven根本没找到 io.camunda:camunda-client-spring这个包
+// https://mvnrepository.com/artifact/io.camunda/camunda-spring-boot-starter
+implementation("io.camunda:camunda-spring-boot-starter:8.8.8")
+// https://mvnrepository.com/artifact/io.camunda/camunda-spring-boot-starter
+implementation("io.camunda:camunda-spring-boot-starter:8.9.0-alpha2")
+
+// https://mvnrepository.com/artifact/io.camunda/spring-boot-starter-camunda-tasklist
+implementation("io.camunda:spring-boot-starter-camunda-tasklist:8.8.1")
+// https://mvnrepository.com/artifact/io.camunda/tasklist-common
+implementation("io.camunda:tasklist-common:8.8.8")
+
+// https://mvnrepository.com/artifact/io.camunda.spring/spring-boot-starter-camunda-operate
+implementation("io.camunda.spring:spring-boot-starter-camunda-operate:8.8.0")
+// https://mvnrepository.com/artifact/io.camunda.spring/java-client-operate
+implementation("io.camunda.spring:java-client-operate:8.8.0")
+    // Camunda Client Java (使用与starter匹配的版本)
+    implementation("io.camunda:camunda-client-java:8.8.8")
+
+// https://mvnrepository.com/artifact/io.camunda/camunda-zeebe
+implementation("io.camunda:camunda-zeebe:8.8.8")
+
+    implementation("io.camunda:camunda-client-spring:8.8.8") {
+        exclude group: 'io.micrometer', module: 'micrometer-core'
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-actuator'
+    }
+    // Camunda Operate 客户端
+    implementation("io.camunda.spring:spring-boot-starter-camunda-operate:8.8.0") {
+        exclude group: 'io.camunda.spring', module: 'java-common-spring'
+    }
+    
+    // Camunda TaskList 客户端
+    implementation("io.camunda:spring-boot-starter-camunda-tasklist:8.8.1") {
+        exclude group: 'io.camunda.spring', module: 'java-common-spring'
+    }
+Gradle 命令仍在运行。让我们尝试更彻底的清理，先停止所有 Gradle 守护进程：
+cd "c:/home/sei-rearend" && ./gradlew --stop
+
+如果您觉得维护自定义代码太麻烦，Spring Data JPA 原生支持 `Slice` 来避免 `count()` 查询：
+// 方式1：直接返回 Slice（不执行 count()）
+public interface UnitRepository extends JpaRepository<Unit, Long> {
+    Slice<Unit> findByStatus(String status, Pageable pageable);
+}
+
+// 方式2：QueryDSL 使用 Slice
+Slice<Unit> findAll(Predicate predicate, Pageable pageable);
+Spring Data JPA 原生的 `Slice` 不能完全替代您 `QuerydslNcExecutorImpl` 中的投影优化功能
+
+
+1. 针对 QueryDSL 的 `findAll` 做了深度优化修复 `queryEnhancerSelector` 的类型问题即可 Spring Data JPA 原生的 `Slice` 不能完全替代您 `QuerydslNcExecutorImpl` 中的投影优化功能
+【老用编译的缓存】
+cmd /c "cd c:\home\sei-rearend && set JAVA_TOOL_OPTIONS= && gradlew.bat :special-equipment-backend:compileJava --no-daemon"
+
+问题出在 `@EnableJpaRepositories` 注解
+的 `queryEnhancerSelector` 属性上，
+它期望 `ObjectProvider<QueryEnhancerSelector>` 类型，而不是 `Class` 类型。
+这是 Spring Data JPA 4.0 的 API 变化，与您的 `CustomRepositoryFactoryBean` 无关。
+
+让我查看 `SeiConfig` 配置类：
+import org.springframework.data.jpa.repository.EntityGraph;
+方法二：使用 VS Code 的全局搜索
+按 Ctrl+Shift+F 打开全局搜索
+在搜索框中输入 EntityGraph.java
+在搜索范围中选择 "Dependencies" 或 "Included Files"
+确保已勾选 "Include Dependencies" 选项
+
+在弹出的菜单中，您应该看到类似以下选项：
+
+"Include Dependencies" 或 "Include Libraries"
+"Use Exclude Settings and Ignore Files"
+确保勾选 "Include Dependencies" 选项
+
+如果看不到这些选项
+这可能意味着：
+
+1. Java 扩展未正确配置
+确保您已安装并启用：
+
+Extension Pack for Java
+【VS Code加扩展】Java Extension Pack  报错？
+执行 Gradle 命令来清理缓存并重新编译。让我执行这些命令：
+cd "c:/home/sei-rearend" && ./gradlew clean cleanBuildCache --no-daemon
+cd "c:/home/sei-rearend" && ./gradlew :special-equipment-backend:compileJava --no-daemon
+
+方法1：使用新的调试脚本
+在VS Code中打开脚本浏览器（左侧NPM SCRIPTS）
+右键点击 dev:raw 或 dev:server
+选择"Debug"
+在代码中设置断点
+访问应用触发断点
+方法2：使用调试配置
+打开VS Code调试面板（ Ctrl+Shift+D ）
+选择"Next.js: Debug Server Side (Like camunda-worker)"
+点击绿色播放按钮
+设置断点并访问应用
+方法3：直接使用命令
+打开终端
+运行：
+bash
+yarn dev:raw
+在VS Code中选择"Attach to Process"
+选择Node.js进程（端口号9229）
+
+确保安装了 ms-vscode.vscode-npm-scripts 扩展 NPM Scripts
+安装扩展》》 NPM Scripts  /lukaserat
+	yarn   /Gamunu Balagalla fastcode.io
+方案2：安装pnpm ；  
+   全局安装  npm install -g pnpm; $env:PATH += ";$env:APPDATA\npm"
+   接着	$env:PATH += ";$env:APPDATA\npm"; pnpm --version
+【nextjs调试】  从 package.json文件， scripts位置的浮出按钮选择列表：：
+PS C:\home\sei_next_page\packages\mainProj> pnpm run start:https
+Debugger attached.
+
+> main_proj@0.5.1 start:https C:\home\sei_next_page\packages\mainProj
+> cross-env NODE_ENV=production NODE_TLS_REJECT_UNAUTHORIZED=0 node server.mjs
+
+Debugger attached.
+Debugger attached.
+[@serwist/next] WARNING: You are using '@serwist/next' with `next dev --turbopack`, but Serwist doesn't support Turbopack at the moment. It is recommended that you set `disable` to `process.env.NODE_ENV !== "production"`. Follow https://github.com/serwist/serwist/issues/54 for progress on Serwist + Turbopack. You can also suppress this warning by setting SERWIST_SUPPRESS_TURBOPACK_WARNING=1.
+ ⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+ ⚠ Invalid next.config.ts options detected:
+ ⚠     Unrecognized key(s) in object: 'eslint'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+> Ready on https://localhost:3765
+> HTTPS server started successfully
+> Local:    https://localhost:3765
+> Network:  https://192.168.171.3:3765
+> For mobile devices, use the Network URL
+
+安装扩展： 去掉 Gradle Extension Pack  /Richard Willis  再次激活Gradle for Java
+安装扩展：Extension Pack for Java Auto Config
+
+### 方案1：使用IDE重新生成QueryDSL类
+
+1. 在IDE中右键点击项目
+2. 选择"Rebuild Project"或"Reload Gradle Project"
+3. 等待重新编译完成
+
+### 方案2：手动编译QueryDSL
+
+在项目根目录下执行：
+```
+cd C:/home/sei-rearend/special-equipment-backend
+./gradlew clean build -x test
+VS Code 使用的 JAVA_HOME 不是您设置的系统环境变量：
+系统用户相关的： C:\home\sei-rearend>setx GRADLE_OPTS "-Dorg.gradle.java.home=D:/del/jdk22"
+
+gradlew clean build --info
+关闭 VS Code，运行 ./gradlew --stop，然后重新打开项目尝试。
+现在请：
+关闭 VS Code
+重新打开 VS Code
+打开终端并运行 ./gradlew clean build 或 gradlew.bat clean build 来测试构建
+这应该能解决 "Could not get unknown property 'compileQueryJava'" 和 "Unsupported class file major version 69" 错误。
+两个问题需要解决：
+VS Code 使用的是内部 JDK 而不是我们指定的 JDK 22
+Gradle 配置锁定问题
+C:\home\sei-rearend>taskkill /F /IM java.exe  锁定，因为？
+关闭 VS Code
+重新打开 VS Code
+在终端中运行 gradlew.bat clean build --no-daemon 来测试构建
+我们已经做了以下修改来解决当前问题：
+更新了 VS Code 设置，确保使用正确的 JDK 和禁用 Gradle 构建服务器
+禁用了并行构建和配置缓存以避免锁定问题
+修改了 compileJava 任务使用 tasks.named 而不是直接配置
+添加了新的 VS Code 任务来简化构建过程
+不能用本地的bat的 C:\home\sei-rearend>"D:\del\.gradle\wrapper\dists\gradle-9.2.1-bin\9fgc9dy84duywbml6zqd0l4mo\gradle-9.2.1\bin\gradle.bat" -p "C:\home\sei-rearend" :special-equipment-backend:createQueryDSLDirs
+
+C:\home\sei-rearend>cd C:\home\sei-rearend && gradlew_fixed.bat :special-equipment-backend:compileJava --no-daemon --info
+ 重新构建：
+cd C:\home\sei-rearend && gradlew.bat clean build --no-daemon
+现在请尝试以下步骤：
+在 VS Code 中，打开命令面板（Ctrl+Shift+P）
+输入 "Java: Reload Projects" 并执行
+或者完全关闭并重新打开 VS Code
+在 VS Code 中，运行 "Generate QueryDSL" 任务
+然后运行 "Compile Java" 或 "Clean and Rebuild" 任务
+ Directory of C:\home\sei-rearend\special-equipment-backend\build\generated\sources\annotationProcessor\java\main\md\specialEqp
+// https://mvnrepository.com/artifact/org.hibernate.search/hibernate-search-bom
+implementation("org.hibernate.search:hibernate-search-bom:8.2.0.Final")
+强制 VS Code 重新加载和识别生成的 QueryDSL 类的脚本：
+cd c:\home\sei-rearend && gradlew clean --no-daemon
+cd c:\home\sei-rearend && gradlew :special-equipment-backend:generateQueryDSL --no-daemon
+special-equipment-backend/build/generated/sources/annotationProcessor/java/main
+**/QUser.java
+cd c:\home\sei-rearend && gradlew :special-equipment-backend:bootRun --no-daemon
+使用建议
+为了确保在 VS Code 中能够正常使用 QueryDSL 类，建议按以下步骤操作：
+
+每次修改实体类后，先运行 gradlew :special-equipment-backend:generateQueryDSL 重新生成 QueryDSL 类
+如果 VS Code 仍然显示找不到 QueryDSL 类的红色错误，可以：
+重启 VS Code
+或在命令面板（Ctrl+Shift+P）中选择 "Developer: Reload Window" 重新加载窗口
+或在 VS Code 中运行 "Java: Clean Language Server Workspace" 并重新加载
+长期优化建议
+考虑在项目的 package.json 中添加一个脚本，自动生成 QueryDSL 类并重新加载 VS Code 窗口
+可以配置 VS Code 工作区任务，在每次启动项目前自动生成 QueryDSL 类
+现在项目应该可以在 VS Code 中正常运行了！
+IDEA 对 Java 项目的支持更加完善，特别是对注解处理器（annotation processor）的支持。IDEA 可以：
+
+自动检测注解处理器配置：IDEA 会自动识别 annotationProcessor 依赖并正确配置
+智能刷新生成的源码：IDEA 会在编译后自动刷新生成的 QueryDSL 类
+内置的增量编译：IDEA 的增量编译器更善于处理注解处理器生成的代码
+深度集成 Maven/Gradle：IDEA 与构建工具的集成更紧密
+相比之下，VS Code 依赖 Java Language Server（Eclipse JDT.LS），它的注解处理器支持有限，需要额外的配置。
+
+配置 Annotation Processing (如果使用): 对于像 QueryDSL 这样的处理器，你需要确保 Java 扩展知道在哪里生成源码（通常在 build/generated/sources/... 下），并且将其添加到源码根目录中。有时需要手动调整 VS Code 的 Java 项目设置。
+
+@MutationMapping
+@QueryMapping
+("")
+gradle build会修改这个的》》 gradle管理的目录：
+D:\home\sei-rearend\special-equipment-backend\build\classes\java\main\org\fjsei\yewu\resolver\sei\ BaseMutation.class
+41.0 KB (42,005 字节)
+》 》被复制目的地    ：且gradle clean不会清理掉这个目录！1222公司直接启动这个的不会再次去编译 Debugger for Java:Compiling...
+D:\home\sei-rearend\special-equipment-backend\bin\main\org\fjsei\yewu\resolver\sei\ BaseMutation.class
+40.5 KB (41,511 字节)--最新时间的
+cd C:\home\sei-rearend\special-equipment-backend && C:\home\sei-rearend\gradlew.bat clean compileJava
+
+C:\Users\Administrator\AppData\Local\Temp\cp_3lkf55j2s8isnrxa2hi63if0m.argfile 
+在VS Code中：按 Ctrl+Shift+P ，输入 "Developer: Reload Window" 并执行，或者直接重启VS Code
+VSCode本地做配置》
+必须在Explorer》里面 JAVA PROJECTS 这里>>右边菜单...选择 configure Java runtime >选定Project列表 Compiler> Class File Generation：勾选Store information about method parameters;  最后点 [Apply]按钮！
+JAVA PROJECTS>>菜单...选择Clean Workspace；
+
+
+重新选择调试配置：确保选择的是 "🔧 Spring Boot Debug Mode - 5005"
+设置断点：在 ReportController.java 或任何你想调试的源代码行左侧点击设置断点
+按F5启动调试
+选择 "🔧 Spring Boot Debug Mode - 5005"，设置断点，按F5启动调试
+
+
+在你的源代码中设置断点
+断点能够正常命中并暂停执行
+可以单步调试你的代码
+如果还是不行，可能需要检查一下VS Code的Java扩展是否正确安装和工作正常。
+> Task :special-equipment-backend:compileJava
+Compiler Args: [-parameters, -parameters, -g, -parameters, -Xlint:unchecked, -Xlint:deprecation, -g:vars]
+
+## 使用方法
+
+**方案 A：自动启动 (推荐)**
+
+1. 按 `F5` 选择 **"Attach Gradle Debug (推荐)"**
+2. 等待终端显示 `Listening for transport dt_socket at address: 5005`
+3. 调试器会自动附加，断点生效
+源代码无法在自动弹出显示，不会显示当前在那一断点中断运行的
+
+**方案 B：手动启动**
+
+1. 在终端运行：`./gradlew.bat :special-equipment-backend:bootRun --debug-jvm -x test`
+2. 等待显示 `Listening for transport dt_socket at address: 5005`
+3. 按 `F5` 选择 **"Attach Only (手动启动Gradle)"**
+
+
+这样使用 Gradle 的 `bootRun --debug-jvm` 启动，确保 class 文件由 Gradle 编译（带 `-parameters` 参数），Spring GraphQL 就能正确获取方法参数名了。
+**核心问题**：你的源代码在 `backend/src/main/java` 目录，但 Gradle 子项目 `special-equipment-backend` 使用默认的 `src/main/java` 路径。需要在 build.gradle 中配置 `sourceSets` 指向正确的源码目录，同时修复 launch.json 的 `sourcePaths`。
+
+12-22    、heerzhang2@163.com、、https://v0.app/chat/springboot4-0-2-e36eSzIgnFh?ref=EA5EWX
+**修复说明**：
+
+1. **build.gradle** - 添加了 `sourceSets` 配置，将源码路径指向 `../backend/src/main/java`
+2. **launch.json** - 修复 `sourcePaths` 指向正确的 `backend/src/main/java` 目录
+3. **.classpath** - 修复 Eclipse/JDT 的源码路径配置
+
+
+**使用步骤**：
+
+1. 执行 `Ctrl+Shift+P` -> `Java: Clean Java Language Server Workspace`
+2. 重启 VS Code
+3. 在终端执行 `./gradlew.bat :special-equipment-backend:clean :special-equipment-backend:compileJava` 确保使用新配置编译
+4. 使用 **"Attach Gradle Debug (推荐)"** 启动调试
+
+
+现在断点命中时，VS Code 应该能正确跳转到对应的源码文件了。 因为 multi-root workspace 的配置应该放在 `.code-workspace` 文件中。
+问题在于你 `.vscode/` 目录下的配置文件**不会被 multi-root workspace 读取**！VS Code 只会读取 `.code-workspace` 文件中的 `launch` 和 `tasks` 配置。
+multi-root workspace 的 把调试配置从 `.vscode/launch.json` 移到 `.code-workspace` 文件的 `launch` 部分，并正确设置 `sourcePaths` 指向 `special-equipment-backend/src/main/java`。
+**调试步骤**：
+- 按 `F5`，选择 **"Debug Backend (Gradle远程调试)"**
+- 等待终端显示 `Listening for transport dt_socket at address: 5005`
+- 调试器会自动附加，此时断点命中会**自动跳转到源码位置**
+
+1222乱码===
+现在，请按照以下步骤尝试：
+
+尝试使用内部控制台启动：
+
+在 Run and Debug 视图中选择 🚀 Spring Boot (F5 Debug - 最简单) 配置
+这个配置使用内部控制台，应该不会有编码问题
+注意：内部控制台不会显示交互式输入，但会显示所有日志输出
+如果内部控制台不可行，尝试使用 UTF-8 终端启动：
+
+在 Run and Debug 视图中选择 🚀 Spring Boot (F5 Debug - 终端 UTF-8) 配置
+这个配置会在启动应用前先设置终端编码为 UTF-8
+手动设置终端编码：
+
+在 VS Code 终端中运行 chcp 65001 设置 UTF-8 编码
+然后再启动应用
+如果这些方法仍然不能解决乱码问题，您可以尝试：
+
+在 VS Code 设置中添加以下配置：
+
+Json
+"terminal.integrated.env.windows": {
+    "LANG": "zh_CN.UTF-8"
+}
+使用外部终端：
+
+将 launch.json 中的 "console": "integratedTerminal" 改为 "console": "externalTerminal"
+
+cd C:\home\sei-rearend && gradlew.bat :special-equipment-backend:clean :special-equipment-backend:compileJava --no-daemon --no-configuration-cache
+
+
+现在，请按照以下步骤操作：
+
+停止当前运行的应用
+重新启动 VS Code（确保所有设置生效）
+在 VS Code 中打开终端，确保终端编码是 UTF-8：
+在终端中运行 chcp 65001
+使用 Gradle 面板的 bootRun 任务重新启动应用
+这些修改应该能解决第三方基础包中的中文乱码问题，因为我们已经：
+检查日志库的配置，看是否有额外的编码设置
+考虑在应用启动时添加 -Dfile.clientEncoding=UTF-8 参数
+
+Docker Desktop 重启后提示更新 WSL
+wsl --update
+需要配置镜像加速器。
+  "registry-mirrors": [
+    "https://docker.xuanyuan.me", 
+    "https://docker.1ms.run",    
+    "https://docker.m.daocloud.io",
+    "https://dockerproxy.cn"  
+  ]
+{
+  "registry-mirrors": [
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://registry.cn-hangzhou.aliyuncs.com",
+    "https://ccr.ccs.tencentyun.com",
+    "https://dockerhub.azk8s.cn"
+  ]
+}
+docker pull registry.cn-hangzhou.aliyuncs.com/library/nginx:latest
+docker pull nginx:latest
+替换？ https://github.com/rancher-sandbox/rancher-desktop/releases
+Rancher (Server / Rancher Manager): 是一个企业级的 Kubernetes 管理平台；Rancher (Server / Rancher Manager): 是一个企业级的 Kubernetes 管理平台；社区版 (Rancher Community Edition - CE): Rancher Desktop 包含了一个轻量级的 Kubernetes 发行版（k3s）。
+建议在与生产环境配置相似的预发布环境（Staging/Pre-prod）中进行充分测试。这个预发布环境最好就是标准 K8s 集群。
+WSL2； wsl --list --verbose
+在 PowerShell (管理员) 中运行：
+powershell
+wsl --install
+wsl --update
+wsl --shutdown
+https://learn.microsoft.com/zh-cn/windows/wsl/install  	https://github.com/microsoft/wsl/releases
+
+本地开发/测试: 使用 Rancher Desktop (内置 k3s) + kubectl + Kubernetes YAML 文件。
+生产部署准备:
+将应用打包成 Docker 镜像。
+编写用于生产环境的 Kubernetes YAML 文件 (或 Helm Charts)。
+生产部署:
+在两台 Linux 电脑上安装 k3s (或 RKE)。
+使用 kubectl 将之前准备好的 YAML 文件应用到生产集群。
+可选的集中管理:
+在其中一台 Linux 电脑或单独的服务器上安装 Rancher Server。
+将本地的 Rancher Desktop 集群和生产 k3s 集群都导入到 Rancher Server 中进行统一管理。
+开发环境 (Windows + Docker Desktop)； 生产环境 (Linux + Rancher) 部署到Rancher；
+建议技术栈：
+开发：Docker Desktop + VS Code
+镜像：Harbor私有仓库
+部署：Rancher + Kubernetes
+监控：Prometheus + Grafana
+WSL2; 单独windows explorer管理器入口Linux：、docker-destop//文件夹的/**/
+》》创建自己的Dockerfile
+配置docker-compose.yml
+集成到CI/CD流程
+部署到Rancher生产环境
+##Apache APISIX 是一个动态、实时、高性能的开源 API 网关。解决证书问题 ，网关处理与后端的证书验证。
+## Apache APISIX 官方不直接支持在 Windows 原生环境下安装和运行
+既然您已经配置好了Docker，这是最简单的方案：
+在WSL2中安装Apache APISIX：已经有了WSL2的docker-desktop在运行。现在让我们在WSL2中安装APISIX：
+先进入WSL2环境手动安装：
+
+wsl
+安装并切换到Ubuntu WSL2发行版来运行APISIX
+wsl --list --online
+ wsl --install -d Ubuntu-24.04
+# 3. 安装完成后，切换到Ubuntu
+wsl -d Ubuntu-22.04  
+家里的wsl2虚拟机用户名herzhang 密码=rd89ju ;
+在Ubuntu中运行APISIX安装脚本
+@ @ 更新包列表
+herzhang@DESKTOP-F4OIO3K:/mnt/c/home/wsl-use$ sudo apt update && sudo apt upgrade -y
+# 安装依赖
+sudo apt install -y curl wget gnupg2 build-essential python3 python3-pip unzip
+[] 、/mnt/c/WINDOWS/system32
+WSL2已经自动挂载了所有Windows驱动器，D盘挂载在 /mnt/d/ # 查看所有挂载的驱动器
+ls /mnt/
+没重新再走 # 访问D盘
+cd /mnt/d/
+# 在D盘创建工作目录
+mkdir -p /mnt/d/wsl-workspace
+cd /mnt/d/wsl-workspace
+# 下载并运行APISIX安装脚本
+curl -fsSL https://raw.githubusercontent.com/apache/apisix/master/scripts/install.sh -o install-apisix.sh
+chmod +x install-apisix.sh
+sudo ./install-apisix.sh
+推荐方案：DEB包安装（首选）
+wget https://github.com/apache/apisix/releases/download/2.15.3/apisix_2.15.3-0_amd64.deb
+sudo dpkg -i apisix_2.15.3-0_amd64.deb
+走》官方文档的https://apisix.incubator.apache.org/zh/docs/apisix/installation-guide/ 选择DEB方式的》》
+wget -O - http://repos.apiseven.com/pubkey.gpg | sudo apt-key add -
+echo "deb http://repos.apiseven.com/packages/debian bullseye main" | sudo tee /etc/apt/sources.list.d/apisix.list
+sudo apt update
+》》安装 etcd##
+curl http://127.0.0.1:2379/version
+验证运行 curl "http://127.0.0.1:9080" --head | grep Server
+配置？ 没有集成服务注册中心Nacos，直接在 APISIX 中配置 Upstream直接配置上游服务地址（Upstream）=手动管理服务地址。
+herzhang@DESKTOP-68D6IGU:~$ curl -i "http://127.0.0.1:9180/apisix/admin/routes" -X PUT -d '{"id": "getting-started-ip", "uri": "/ip", "upstream": {"type": "roundrobin", "nodes": {"httpbin.org:80": 1}}}'
+默认Admin API密钥通常是
+curl -i "http://127.0.0.1:9180/apisix/admin/routes" -X PUT -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -d '{"id": "getting-started-ip", "uri": "/ip", "upstream": {"type": "roundrobin", "nodes": {"httpbin.org:80": 1}}}'
+下一步￥ 多个上游目标的负载均衡https://apisix.incubator.apache.org/zh/docs/apisix/getting-started/configure-routes/
+curl -i "http://127.0.0.1:9180/apisix/admin/routes" -X PUT -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -d '{"id": "getting-started-headers", "uri": "/headers", "upstream": {"type": "roundrobin", "nodes": {"httpbin.org:443": 1, "mock.api7.ai:443": 1}, "pass_host": "node", "scheme": "https"}}'
+Keycloak Identity 完全不用 Keycloak 数据库是不可能的。
+Forward Authentication 实施指南forward-auth；
+function无服务器插件模拟服务外部认证》 
+curl -X PUT 'http://127.0.0.1:9180/apisix/admin/routes/auth' \
+    -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" \
+    -H 'Content-Type: application/json' \
+    -d '{
+    "uri": "/auth",
+    "plugins": {
+        "serverless-pre-function": {
+            "phase": "rewrite",
+            "functions": [
+                "return function (conf, ctx)
+                    local core = require(\"apisix.core\");
+                    local authorization = core.request.header(ctx, \"Authorization\");
+                    if authorization == \"123\" then
+                        core.response.exit(200);
+                    elseif authorization == \"321\" then
+                        core.response.set_header(\"X-User-ID\", \"i-am-user\");
+                        core.response.exit(200);
+                    else core.response.set_header(\"Location\", \"http://example.com/auth\");
+                        core.response.exit(403);
+                    end
+                end"
+            ]
+        }
+    }
+}'
+指定 Route 上启用 forward-auth 插件：
+curl -X PUT 'http://127.0.0.1:9180/apisix/admin/routes/1' \
+    -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" \
+    -d '{
+    "uri": "/headers",
+    "plugins": {
+        "forward-auth": {
+            "uri": "http://127.0.0.1:9080/auth",
+            "request_headers": ["Authorization"],
+            "upstream_headers": ["X-User-ID"],
+            "client_headers": ["Location"]
+        }
+    },
+    "upstream": {
+        "nodes": {
+            "httpbin.org:80": 1
+        },
+        "type": "roundrobin"
+    }
+}'
+缺少 tenant_id，则会返回 HTTP 400 和错误消息。
+curl -X PUT 'http://127.0.0.1:9180/apisix/admin/routes/auth' \
+    -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" \
+    -H 'Content-Type: application/json' \
+    -d '{
+    "uri": "/auth",
+    "plugins": {
+        "serverless-pre-function": {
+            "phase": "rewrite",
+            "functions": [
+                "return function(conf, ctx)
+                 local core = require(\"apisix.core\")
+                 local tenant_id = core.request.header(ctx, \"tenant_id\")
+                 if tenant_id == \"123\" then
+                     core.response.set_header(\"X-User-ID\", \"i-am-an-user\");
+                     core.response.exit(200);
+                else
+                    core.response.exit(400, \"tenant_id is \"..tenant_id .. \" but expected 123\");
+                end
+            end"
+            ]
+        }
+    }
+}'
+
+curl -X PUT 'http://127.0.0.1:9180/apisix/admin/routes/1' \
+    -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" \
+    -d '{
+    "uri": "/post",
+    "methods": ["POST"],
+    "plugins": {
+        "forward-auth": {
+            "uri": "http://127.0.0.1:9080/auth",
+            "request_method": "GET",
+            "extra_headers": {"tenant_id": "$post_arg.tenant_id"}
+        }
+    },
+    "upstream": {
+        "nodes": {
+            "httpbin.org:80": 1
+        },
+        "type": "roundrobin"
+    }
+}'
+在WSL2中安装Docker（不依赖Docker Desktop）：
+VS Code也要安装 扩展 的 WSL 和 PowerShell；
+PS D:\home\sei-rearend> wsl -d Ubuntu-24.04 -- bash -c "sudo apt-get update; sudo apt-get install -y curl wget"
+[sudo] password for herzhang: 
+PS D:\home\sei-rearend> wsl -d Ubuntu-24.04 -- bash -c "which apisix; apisix version"
+APISIX依赖etcd作为配置存储。
+PS D:\home\sei-rearend> wsl -d Ubuntu-24.04 -- bash -c "wget -q https://github.com/etcd-io/etcd/releases/download/v3.4.13/etcd-v3.4.13-linux-amd64.tar.gz; tar xzf etcd-v3.4.13-linux-amd64.tar.gz"
+PS D:\home\sei-rearend> wsl -d Ubuntu-24.04 -- bash -c "cd etcd-v3.4.13-linux-amd64; nohup ./etcd > /dev/null 2>&1 &"
+wsl -d Ubuntu-24.04 -- bash -c "ss -tlnp | grep 2379"
+wsl -d Ubuntu-24.04 -- bash -c "sudo apisix start"
+wsl -d Ubuntu-24.04 -- bash -c "ss -tlnp | grep ':9180'"
+访问地址：
+数据API：http://127.0.0.1:9080
+管理API：http://127.0.0.1:9180
+默认管理API密钥： edd1c9f034335f136f87ad84b625c8f1
+文件没有创建到正确的位置。让我直接在当前工作目录创建这些文件：
+deploy-apisix-config.sh  test-apisix-config.sh  APISIX配置部署说明.md
+cat /usr/local/apisix/conf/config.yaml		cat /usr/local/apisix/conf/nginx.conf
+tail -f /usr/local/apisix/logs/error.log
+tail -f /usr/local/apisix/logs/access.log
+废弃道路：推荐使用 deploy-unified-architecture.sh 获得最佳体验
+VS Code输出窗口列表：：PowerShell Extension 小字的set-rearend>>codebuddy 点击插入到终端的：：
+herzhang@DESKTOP-68D6IGU:/mnt/d/home/sei-rearend$ dir 列表实际来自宿主机的 D:\home\sei-rearend路径的   ./apisix-manager.sh 替代dashborad
+herzhang@DESKTOP-68D6IGU:/mnt/d/home/sei-rearend$ # 安装Dashboard
+l-apisixherzhang@DESKTOP-68D6IGU:/mnt/d/home/sei-rearend$ chmod +x install-apisix-dashboard.sh
+在其中用 docker-compose.yml 启动 etcd + APISIX； 【生产环境】有 K8s 集群 → 用 Helm 部署，APISIX 直接纯 VM → 不要用 Docker。
+外层Load Balancer：负载均衡 APISIX 自身，APISIX：负载均衡 你的业务服务；它们是上下游关系，不是重复！
+外层 Load Balancer 的不可替代性：厂商云外层 LB ，K8s 中，Service 天然提供 LB 能力， 外层Load Balancer（Nginx/SLB）是最简单选择。
+因为Docker容器内的Dashboard无法访问宿主机的etcd服务。让我创建一个直接二进制安装的版本：wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/d/home/sei-rearend && chmod +x install-dashboard-binary.sh && ./install-dashboard-binary.sh"
+
+Docker Desktop 的核心价值在于 统一管理和集成体验：使用 Docker Desktop + WSL2，【注意】 不建议绕过 Docker Desktop 直接在 WSL2 中安装完整 Docker。Docker Desktop 安装后会自动将 Docker CLI 注入到已安装的 WSL2 发行版中;
+wsl -d Ubuntu-24.04 -- bash -c "curl 'http://127.0.0.1:9080' --head | grep Server"            APISIX 3.14.1版
+🌐 直接访问：
+Dashboard: http://127.0.0.1:9180/ui/
+API网关: http://127.0.0.1:9080
+如需重启：
+bash
+curl -sL https://run.api7.ai/apisix/quickstart | sh
+## 🌐 当前配置的镜像源
+### ✅ Registry Mirrors (注册表镜像源)
+```
+https://registry.docker-cn.com/
+https://docker.m.daocloud.io/
+https://hub-mirror.c.163.com/
+```
+### 🔄 代理配置
+```
+HTTPS Proxy: http.docker.internal:3128
+No Proxy: hubproxy.docker.internal
+```
+### 🔓 Insecure Registries (不安全注册表)
+```
+hubproxy.docker.internal:5555
+::1/128
+127.0.0.0/8
+```
+## 🚀 验证有效的镜像源
+### 官方 docker镜像源  (推荐)
+- **Docker Hub**: docker.io (默认)
+- **Apache**: https://hub.docker.com/r/apache/
+
+### 国内镜像源 (已验证可用)
+1. **网易云镜像**: `https://hub-mirror.c.163.com/` ✅
+2. **DaoCloud镜像**: `https://docker.m.daocloud.io/` ✅  
+3. **Docker中国**: `https://registry.docker-cn.com/` ✅
+## 📝 使用说明
+### 拉取APISIX相关镜像
+```bash
+不再使用这个路径了！  	# APISIX主程序
+docker pull apache/apisix:3.14.1-ubuntu
+# etcd数据库
+docker pull bitnamilegacy/etcd:3.5.7
+# Dashboard (如果需要)
+docker pull apache/apisix-dashboard:latest
+```
+用APISIX作为统一网关，将前端NextJS、后端SpringBoot、MinIO三个服务通过同一个域名端口对外提供，解决苹果设备CA证书问题。
+方案2：APISIX替换前端服务
+📋 配置架构
+APISIX (https://192.168.0.100:3765/) 统一入口
+├── /            → 前端NextJS (192.168.0.100:3765)
+├── /graphql     → 后端GraphQL (192.168.0.100:8673)
+└── /minio       → MinIO (192.168.0.100:9000)
+您的自签名证书已经在苹果设备上运行正常，建议直接复用现有证书：
+wsl -d Ubuntu-24.04 -- bash -c "mkdir -p /tmp/ssl && cp /mnt/d/home/sei_next_page/packages/mainProj/ssl/localhost.crt /tmp/ssl/ && cp /mnt/d/home/sei_next_page/packages/mainProj/ssl/localhost.key /tmp/ssl/ && ls -la /tmp/ssl/"
+重新配置APISIX容器来使用SSL证书 
+APISIX是通过Docker Desktop在WSL2 Ubuntu中运行的；WSL2和Docker Desktop都是停止状态。让我启动它们：
+【craft》】 PS D:\home\sei-rearend> wsl
+herzhang@DESKTOP-68D6IGU:/mnt/d/home/sei-rearend$ 
+apisix的启动方式：  PS D:\home\sei-rearend> wsl bash -c "curl -sL https://run.api7.ai/apisix/quickstart | bash"
+@需要启动Docker Desktop 启动docker引擎！。
+PS D:\home\sei-rearend> wsl mkdir -p /tmp/apisix-ssl
+PS D:\home\sei-rearend> wsl cp /mnt/d/home/sei-rearend/localhost.key /tmp/apisix-ssl/
+PS D:\home\sei-rearend> wsl cp /mnt/d/home/sei-rearend/localhost.crt /tmp/apisix-ssl/
+PS D:\home\sei-rearend> wsl bash /mnt/d/home/sei-rearend/setup-apisix-routes.sh
+访问APISIX代理的前端：
+https://192.168.0.100:9080	；  CORS解决 - 前后端在同一个网关下，无跨域问题；SSL终止 - APISIX处理HTTPS，后端可以是HTTP/HTTPS
+前端(通过APISIX): https://192.168.0.100:9080
+   后端API(通过APISIX): https://192.168.0.100:9080/graphql
+   MinIO(通过APISIX): https://192.168.0.100:9080/minio
+重新启动APISIX容器，并挂载SSL证书和配置文件》
+docker run -d --name apisix-quickstart-new -p 9080:9080 -p 9443:9443 -p 9180:9180 -v d:/home/sei-rearend/apisix-config.yaml:/usr/local/apisix/conf/config.yaml -v d:/home/sei-rearend/localhost.crt:/etc/ssl/certs/localhost.crt -v d:/home/sei-rearend/localhost.key:/etc/ssl/certs/localhost.key apache/apisix:3.14.1-ubuntu
+我看到etcd在一个名为 apisix-quickstart-net 的网络中。让我将APISIX容器连接到这个网络：
+docker network connect apisix-quickstart-net apisix-quickstart
+重新启动etcd并映射端口：docker run -d --name etcd-quickstart -p 2379:2379 -p 2380:2380 bitnamilegacy/etcd:3.5.7
+APISIX 默认 HTTPS 端口是 9443， 步骤一：准备自签名证书（用于 APISIX 面向客户端）
+1. 创建 openssl.cnf（用于指定 SAN）
+ini
+编辑
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha256
+distinguished_name = dn
+req_extensions = v3_req
+
+[dn]
+CN = 192.168.0.200  # 替换为你的 APISIX 服务器 IP
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+IP.1 = 192.168.0.200  # 必须包含 APISIX 的 IP
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout apisix.key -out apisix.crt \
+  -config openssl.cnf -extensions v3_req
+步骤二：配置 APISIX 使用该证书
+【第一步前端映射】方法 A：通过 Admin API 动态配置 SSL（推荐）		X-API-KEY默认your-admin-key
+curl http://127.0.0.1:9180/apisix/admin/ssls/1 \
+  -H 'X-API-KEY: your-admin-key' \
+  -X PUT -d '
+{
+  "cert": "'"$(cat localhost.crt)"'",
+  "key": "'"$(cat localhost.key)"'",
+  "snis": ["192.168.171.3"]
+}'
+步骤三：创建 Upstream（指向你的前端服务）
+curl http://127.0.0.1:9180/apisix/admin/upstreams/frontend \
+  -H 'X-API-KEY: your-admin-key' \
+  -X PUT -d '
+{
+  "scheme": "https",
+  "nodes": {
+    "192.168.171.3:3765": 1
+  },
+  "type": "roundrobin",
+  "tls": {
+    "verify": false
+  }
+}'
+步骤四：创建 Route（匹配所有请求）
+curl http://127.0.0.1:9180/apisix/admin/routes/frontend-route \
+  -H 'X-API-KEY: your-admin-key' \
+  -X PUT -d '
+{
+  "uri": "/*",
+  "upstream_id": "frontend"
+}'
+
+浏览器访问：https://192.168.0.200:9443/  可以直接复用你 Next.js 前端服务器已有的自签名证书（apisix.crt / apisix.key）——但前提是：
+✔️ 该证书的 Subject Alternative Name (SAN) 中 包含 APISIX 的 IP 地址（比如 192.168.0.200）
+openssl x509 -in D:\home\sei_next_page\packages\mainProj\ssl\localhost.crt -text -noout
+【官方】最傻瓜的apisix安装做法！！ https://apisix.apache.org/zh/docs/apisix/getting-started/README/
+herzhang@DESKTOP-F4OIO3K:/mnt/c/home/wsl-use$ curl -sL https://run.api7.ai/apisix/quickstart | sh		@WSL虚拟机当中安装的，docker destop自动捕捉到了。
+✔ APISIX is ready!
+herzhang@DESKTOP-F4OIO3K:/mnt/c/home/wsl-use$ 
+废弃的！ PS D:\home\sei-rearend> Invoke-WebRequest -Uri https://run.api7.ai/apisix/quickstart -OutFile apisix-quickstart.sh
+ 官方的快速启动脚本 curl -sL https://run.api7.ai/apisix/quickstart | sh 应该是全自动的，不需要手动创建网络。
+PS D:\home\sei-rearend> wsl bash apisix-quickstart.sh
+【保留生成的】
+wsl bash setup-https-routes.sh
+网关是172.18.0.1，让我更新路由配置使用网关IP：
+PS D:\home\sei-rearend> wsl bash disable-ssl-verify.sh  您的HTTPS服务可能只监听在localhost/127.0.0.1上。
+PS D:\home\sei-rearend> docker run -d --name apisix-quickstart --network=host -e APISIX_DEPLOYMENT_ETCD_HOST="[\"http://127.0.0.1:2379\"]" apache/apisix:3.14.1-ubuntu
+192cc32db47887ae1134213600d9b6fd914621eeac3c62917b96bfc86df56682
+使用HTTP路由来测试，然后我们可以直接访问您的HTTPS服务
+[400 报错]
+curl http://127.0.0.1:9180/apisix/admin/ssls/default-ssl \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' \
+  -X PUT -d '
+{
+  "cert": "'"$(cat localhost.crt)"'",
+  "key": "'"$(cat localhost.key)"'",
+}'
+
+废弃 curl http://127.0.0.1:9180/apisix/admin/ssl/default-ssl \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1'
+herzhang@DESKTOP-68D6IGU:/mnt/d/home/sei-rearend$ curl http://127.0.0.1:9180/apisix/admin/ssls/default-ssl   -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1'   -X PUT -d '
+{
+  "cert": "'"$(cat localhost.crt)"'",
+  "key": "'"$(cat localhost.key)"'",
+  "snis": [""]
+}'
+
+APISIX 没有配置有效的默认 SSL 证书
+
+检查 config.yaml
+确保你的 conf/config.yaml 中启用了 SSL：
+
+yaml
+编辑
+apisix:
+  node_listen: 9080
+  ssl:
+    enable: true
+    listen:
+      - port: 9443
+curl --tls-max 1.3 --tlsv1.3  https://192.168.171.3:9443 -v -k -I
+
+# 生成正确的 JSON 配置文件
+python3 -c "
+import json, sys
+try:
+    cert = open('localhost.crt').read()
+    key = open('localhost.key').read()
+    if not cert.strip() or not key.strip():
+        sys.exit('ERROR: cert or key is empty!')
+    cfg = {
+        'cert': cert,
+        'key': key,
+        'snis': ['']
+    }
+    with open('ssl-config.json', 'w') as f:
+        json.dump(cfg, f, indent=2)
+    print('✅ ssl-config.json generated successfully.')
+except Exception as e:
+    print('❌ Error:', e)
+"
+
+# 上传到 APISIX（APISIX 2.x 使用 /ssls/）
+curl http://127.0.0.1:9180/apisix/admin/ssls/default-ssl \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' \
+  -X PUT -d @ssl-config.json
+方案 2：升级 APISIX 到 3.0+
+APISIX 3.0+ 支持默认 SSL 证书（fallback），配置方式：
+
+json
+编辑
+{
+  "id": "default-ssl",s
+  "cert": "...",
+  "key": "...",
+  "snis": [""]
+}
+@不走这条路了！  snis: [""] 表示“当没有 SNI 或 SNI 不匹配时，使用此证书”
+即可支持 https://192.168.0.100:9443 直接访问
+【重点需】APISIX需要配置 fallback_sni 才能支持HTTPS + IP访问
+herzhang@DESKTOP-68D6IGU:/mnt/d/home/sei-rearend$不用 docker exec apisix-quickstart cat /usr/local/apisix/conf/config.yaml
+现在让我将更新的配置复制到容器中并重启APISIX：
+PS D:\home\sei-rearend> docker cp config-update.yaml apisix-quickstart:/usr/local/apisix/conf/config.yaml
+herzhang@DESKTOP-F4OIO3K:/mnt/c/home/wsl-use$ docker cp config-update.yaml apisix-quickstart:/usr/local/apisix/conf/config.yaml
+docker restart apisix-quickstart
+@【终于可看到】https://192.168.0.100:9443/frontend @
+
+正确做法：每个前端应用分配唯一、明确的路径前缀
+方案：使用 精确前缀 + path rewrite
+外部访问 URL	内部上游	APISIX 路由配置
+https://192.168.0.100:9443/frontend/...	http://192.168.0.100:3765/...	uri: /frontend/* → rewrite to /
+https://192.168.0.100:9443/admin/...	http://192.168.0.100:3000/...	uri: /admin/* → rewrite to /
+🔑 关键：外部路径前缀 ≠ 内部路径，通过 proxy-rewrite 插件剥离前缀
+Next.js 示例（next.config.js）最好支持 basePath;    ; module.exports = {
+  // 如果部署在 /frontend 下
+  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
+}  会导致》路由跳转、它不会修改你代码中显式写的 API 请求路径；
+如果你无法修改前端，APISIX 的 proxy-rewrite 已足够（前提是前端用相对路径或根路径 /xxx）。加新应用，只需新增两条路由（前端 + 可选专属 API）
+APISIX 的路由规则是 基于完整请求路径匹配的，不是基于“后端内部路径”匹配》"proxy-rewrite": { "regex_uri": ["^/frontend/(.*)", "/$1"] }； 浏览器当前 URL 是：https://gateway:9443/frontend/ 所以 /about 被解析为：https://gateway:9443/frontend/about 同时 proxy-rewrite 把路径重写为：/about
+❌ 错误：用通配符覆盖了所有路径
+{ "uri": "/*", "upstream": "A" }  // 所有请求都被 A 吃掉
+@ @【必须】要配置 basePath，否则链接会跳错（跳到根路径）
+Route 1: 前端 A
+{
+  "uri": "/frontend/*",
+  "upstream": { "host": "192.168.0.100", "port": 3765 },
+  "plugins": {
+    "proxy-rewrite": { "regex_uri": ["^/frontend/(.*)", "/$1"] }
+  }
+}
+是典型的 “前端不知道自己被部署在子路径下” 的问题。# #APISIX 只负责“剥掉前缀”，前端负责“生成带前缀的链接”
+// next.config.js
+const basePath = '/frontend'; // ←←← 关键！必须和 APISIX 路由前缀一致
+module.exports = {
+  basePath,
+  assetPrefix: basePath, // 确保静态资源也加前缀
+  // 其他配置...
+};
+📌 assetPrefix 是为了确保 <script src="..."> 和 <link href="..."> 也带前缀。
+正确做法：# #所有前端都使用明确前缀，不要用 "uri": "/*",    https://192.168.0.100:9443/frontend/
+让多个域名指向同一台 APISIX？	- 内网：改 hosts； - 公网：配 DNS A 记录；
+浏览器输入https:// :9443/APISIX 监听该 IP:9443 ；推荐方式（TLS 在 APISIX 终止）：APISIX 到上游：内网明文（高效、安全足够）；
+上游仍需 HTTPS 情况： @ 跨网络区域：APISIX 和上游不在同一可信内网（如跨 VPC、跨数据中心）
+【新环境】
+看起来我们在Windows PowerShell环境中。让我尝试找到APISIX的配置文件：
+where apisix
+我的SSL私钥文件  C:\home\wsl-use\localhost.key  证书是  C:\home\wsl-use\localhost.crt    添加SSL证书到APISIX
+code buddy自己先执行的wsl命令，切换terminal环境：
+现在有完整的证书和私钥文件。让我帮您通过Admin API配置SSL证书。
+生成本地文件 挂载后 wsl -e "curl -X POST http://127.0.0.1:9180/apisix/admin/ssls -H 'X-API-KEY: IXnzxBqYXcJWbEWHacteABlyMKoSNIxy' -H 'Content-Type: application/json' -d @/mnt/c/home/wsl-use/ssl-config.json"
+私钥解析失败。让我修复JSON格式，移除换行符转义：
+curl -X POST http://127.0.0.1:9180/apisix/admin/ssls -H "X-API-KEY: IXnzxBqYXcJWbEWHacteABlyMKoSNIxy" -H "Content-Type: application/json" -d @"C:\home\wsl-use\ssl-config-fixed.json"
+# 首先将证书文件复制到APISIX容器：  先在容器中创建SSL目录：docker cp "C:\home\wsl-use\localhost.key" apisix-quickstart:/usr/local/apisix/ssl/localhost.key
+herzhang@DESKTOP-F4OIO3K:/mnt/c/home/wsl-use$ # 创建临时JSON文件
+cat > /tmp/ssl_config.json << 'ENDOFFILE'
+{
+  "cert": "$(cat /mnt/c/home/wsl-use/localhost.crt)",
+  "key": "$(cat /mnt/c/home/wsl-use/localhost.key)",
+  "snis": ["localhost", "192.168.171.3"]
+}
+ENDOFFILE     管理页面SSLs证书配置SNI 和 SNIs只能选一个？Labels不填类型server最下面Client勾选上。
+herzhang@DESKTOP-F4OIO3K:/mnt/c/home/wsl-use$ 
+我看到你现在已经进入了WSL子系统。sed命令的语法有问题，让我用正确的方法来处理证书内容：
+bash -c "cd /mnt/c/home/wsl-use && cat localhost.crt | tr -d '\n' > /tmp/cert_single_line.txt"
+Command executed successfully with no output.
+bash -c "cd /mnt/c/home/wsl-use && cat localhost.key | tr -d '\n' > /tmp/key_single_line.txt"
+Command executed successfully with no output.
+【关键一跳/证书上传的】让我直接创建文件：
+python3 -c "import json; cert=open('/tmp/cert_single_line.txt').read().strip(); key=open('/tmp/key_single_line.txt').read().strip(); json.dump({'cert': cert, 'key': key, 'snis': ['localhost', '192.168.171.3']}, open('/tmp/ssl_config_final.json', 'w')); print('SSL配置已创建')"
+现在发送SSL配置到APISIX：
+bash -c "curl -X POST http://127.0.0.1:9180/apisix/admin/ssls -H 'X-API-KEY: IXnzxBqYXcJWbEWHacteABlyMKoSNIxy' -H 'Content-Type: application/json' -d @/tmp/ssl_config_final.json"
+@@##现在有回应了 https://192.168.171.3:9443/ 
+目前同时看到https://192.168.171.3:9443/  上游nextjs前端服务器http://192.168.171.3:3765/可见的。
+
+java后端： http://192.168.171.3:8673/graphql   http://192.168.171.3:8673/actuator/health  http://192.168.171.3:8673/uploadTUS
+在 APISIX 终止 TLS，后端用 HTTP；内网可信 APISIX 和 Spring Boot 应部署在同一内网；但跨 VPC / 跨区域通信	内网流量经过骨干网，仍需HTTPS；
+
