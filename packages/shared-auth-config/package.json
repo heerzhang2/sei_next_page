@@ -1,0 +1,27 @@
+{
+  "name": "@fjsei/shared-auth-config",
+  "version": "1.0.0",
+  "description": "统一认证配置包 - 支持跨项目SSO",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "tsc --build --clean"
+  },
+  "peerDependencies": {
+    "next": ">=15.0.0",
+    "next-auth": "^5.0.0-beta.30"
+  },
+  "dependencies": {
+    "next-auth": "^5.0.0-beta.30"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.14",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1236,3 +1236,59 @@ APISIX的路径重写有问题。静态资源 _next/ 路径不需要重写，应
 curl -k -v https://192.168.171.3:9443/report/
 curl -k -v https://192.168.171.3:9443/report/_next/static/chunks/32263abb17b6c2ce.js
 APISIX 的路由规则 uri: "/report/*" 不匹配 /report/_next/...
+
+安装VS Code扩展  Remote Development；
+千问回答：改 JDBC URL，直接列出所有节点：url: jdbc:postgresql://node1:26257,node2:26257,node3:26257/seipf?.. CockroachDB 自带的 Gateway Node 模式；
+CB推荐：多节点UR，HAProxy；
+v0回答：HAProxy，最好选 K8s 部署环境；  【准确性】v0最好。
+#最佳 用 k3s 在 2 台 Linux VM 上搭建双节点 Kubernetes 集群
+从 WSL2 配置 kubectl 管理集群
+部署 CockroachDB（推荐 Operator 或 StatefulSet）
+利用 k3s 内置 local-path 存储类，无需额外配置
+
+192.168.65.254 是 Docker Desktop 虚拟机的默认网关 IP。
+访问路径不带斜杠 ； / (会被重定向)
+在 APISIX 中去掉结尾斜杠的重定向，或者将 /report/* 的 URI 改为不匹配结尾斜杠的路径。最简单的方法是让用户访问 https://192.168.0.100:9443/report （没有斜杠）。
+wsl bash /mnt/d/home/sei-rearend/update-route.sh
+完整的导出脚本  wsl bash /mnt/d/home/sei-rearend/export-apisix-config.sh
+APISIX 配置已成功导出到 D:/home/sei-rearend/apisix-backup-20251230_211116/ 目录：
+export-apisix-config.sh - 导出当前 APISIX 配置到备份目录
+import-apisix-config.sh - 从备份恢复 APISIX 配置
+init-apisix.sh - 从零初始化 APISIX（全新安装或重置）
+/sei-rearend/APISIX_CONFIG_GUIDE.md - 详细使用文档
+wsl bash /mnt/d/home/sei-rearend/fix-cors.sh  CORS 已配置，允许跨域访问
+方案 2：所有应用都使用子路径；API 统一使用 /api/* 路径，可以统一配置 CORS 策略"plugins": {"cors": {...}}。
+请确保前端使用以下地址访问 GraphQL:后端地址从 http://192.168.0.100:8673/graphql 改为
+  HTTPS: https://192.168.0.100:9443/api/graphql (推荐 HTTPS) 前端使用
+APISIX 内部 upstream 用： http://192.168.0.100:8673/graphql 
+API 调用使用相对路径  fetch('/api/graphql')； 不推荐fetch('https://192.168.0.100:9443/api/graphql')
+【开发】模式下，建议直接访问 Next.js，不要通过 APISIX：
+登录第一关
+{
+    "credentials": {
+        "id": "credentials",
+        "name": "credentials",
+        "type": "credentials",
+        "signinUrl": "http://192.168.0.100:3765/api/auth/signin/credentials",
+        "callbackUrl": "http://192.168.0.100:3765/api/auth/callback/credentials"
+    }
+}  后端才是nextjs服务端的：
+方案2：统一后端认证API（轻量级 SSO）
+阶段1：后端改造 - 支持跨子域 Cookie
+ 推荐方案：方案 A（透明代理）
+ SSO 方案与 APISIX 网关完美兼容，前提是：
+✅ APISIX 保持透明代理（不做额外认证）
+✅ APISIX 配置 CORS（支持跨域）
+✅ APISIX 透传 Header 和 Cookie
+✅ 后端统一处理认证（JWT + BCrypt + RefreshToken） 
+修改共享包后，清除 .next 缓存 rm -rf .next  # Windows: rmdir /s /q .next
+推荐方案：Workspace（Monorepo）
+### 生产部署
+# 一键部署 deploy-workspace-prod.bat
+# 手动部署
+yarn install --frozen-lockfile  # 安装依赖
+yarn build                      # 构建所有包
+cd packages\mainProj
+yarn build                      # 构建主项目
+yarn start:pm2                  # 启动服务
+Yarn Workspace 配置完成

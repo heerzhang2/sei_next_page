@@ -17,6 +17,7 @@ const AUTHENTICATE_MUTATION = `
 `
 
 export const authConfig: NextAuthConfig = {
+    // trustHost: true, // 信任 X-Forwarded-Host 头，允许子路径部署
     providers: [
         CredentialsProvider({
             name: "credentials",
@@ -44,10 +45,12 @@ export const authConfig: NextAuthConfig = {
 
                     if (result.error) {
                         console.error("Authentication GraphQL error:", result.error)
+                        // 返回一个特殊的错误对象，让 NextAuth 知道是认证失败
                         return null
                     }
 
                     if (!result.data?.authenticate) {
+                        console.error("Authentication failed: no data returned")
                         return null
                     }
 
@@ -138,6 +141,7 @@ export const authConfig: NextAuthConfig = {
     },
     pages: {
         signIn: "/login",
+        // error: "/login", // 登录错误时重定向回登录页
     },
     session: {
         strategy: "jwt",

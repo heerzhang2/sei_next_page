@@ -6270,7 +6270,7 @@ netmask@^2.0.2:
   resolved "https://registry.npmmirror.com/netmask/-/netmask-2.0.2.tgz"
   integrity sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==
 
-next-auth@5.0.0-beta.30:
+next-auth@5.0.0-beta.30, next-auth@^5.0.0-beta.30:
   version "5.0.0-beta.30"
   resolved "https://registry.npmmirror.com/next-auth/-/next-auth-5.0.0-beta.30.tgz"
   integrity sha512-+c51gquM3F6nMVmoAusRJ7RIoY0K4Ts9HCCwyy/BRoe4mp3msZpOzYMyb5LAYc1wSo74PMQkGDcaghIO7W6Xjg==

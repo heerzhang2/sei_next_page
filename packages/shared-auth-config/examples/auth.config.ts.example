@@ -1,0 +1,106 @@
+/**
+ * 报告项目（mainProj）使用共享认证配置的示例
+ *
+ * 将此文件复制到: src/app/auth.config.ts
+ * 替换现有的 auth.config.ts
+ */
+
+import { authConfig as sharedConfig, hasRole, hasAnyRole, hasAllRoles } from "@fjsei/shared-auth-config"
+import { createServerUrqlClient } from "@/auth/urql"
+import CredentialsProvider from "next-auth/providers/credentials"
+import type { NextAuthConfig } from "next-auth"
+
+/**
+ * 统一认证 GraphQL Mutation
+ */
+const AUTHENTICATE_MUTATION = `
+  mutation Authenticate($username: String!, $password: String!) {
+    authenticate(username: $username, password: $password, setCookie: false) {
+      accessToken
+      refreshToken
+      user {
+        id
+        username
+        name
+        email
+        authorities {
+          name
+        }
+      }
+    }
+  }
+`
+
+/**
+ * 报告项目的认证配置
+ * 复用共享配置，但提供自己的 URQL 客户端
+ */
+export const authConfig: NextAuthConfig = {
+  ...sharedConfig,
+
+  // 覆盖 providers 以使用项目的 URQL 客户端
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        username: { label: "用户名", type: "text" },
+        password: { label: "密码", type: "password" },
+        deviceId: { label: "设备ID", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.username || !credentials?.password) {
+          return null
+        }
+
+        try {
+          const password = credentials.password as string
+          const deviceId = credentials.deviceId as string
+
+          console.log("[Auth] 认证请求 - username:", credentials.username, "deviceId:", deviceId)
+
+          const client = createServerUrqlClient(deviceId)
+          const result = await client
+            .mutation(AUTHENTICATE_MUTATION, {
+              username: credentials.username,
+              password: password, // 发送明文密码，后端使用 BCrypt 验证
+            })
+            .toPromise()
+
+          if (result.error) {
+            console.error("[Auth] GraphQL 认证失败:", result.error)
+            return null
+          }
+
+          if (!result.data?.authenticate) {
+            console.error("[Auth] 认证响应为空")
+            return null
+          }
+
+          const authData = result.data.authenticate
+          console.log("[Auth] 认证成功 - userId:", authData.user.id)
+
+          return {
+            id: authData.user.id,
+            name: authData.user.name || authData.user.username,
+            email: authData.user.email,
+            accessToken: authData.accessToken,
+            refreshToken: authData.refreshToken,
+            authorities: authData.user.authorities,
+            deviceId: deviceId,
+          }
+        } catch (error) {
+          console.error("[Auth] 认证过程中出错:", error)
+          return null
+        }
+      },
+    }),
+  ],
+
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
+}
+
+// 导出角色检查工具（供组件使用）
+export { hasRole, hasAnyRole, hasAllRoles }

@@ -535,3 +535,14 @@ url
               "name": "78692115220__E5A8D3F6-9766-4AB9-908D-27B4D2652235.mp4",
               "url": "ywmast/202512/0905/e9f1b568-4640-437b-8e8e-ee641af00a23.MOV"
             }
+方案B：K3s（资源占用更少）
+bash
+# 在第一台机器上（控制平面）
+curl -sfL https://get.k3s.io | sh -
+# 获取token
+sudo cat /var/lib/rancher/k3s/server/node-token
+
+# 在其他节点上（包括WSL2）
+curl -sfL https://get.k3s.io | K3S_URL=https://第一节点IP:6443 \
+  K3S_TOKEN=刚才获取的token sh -
+  
