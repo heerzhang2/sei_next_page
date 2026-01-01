@@ -1,6 +1,6 @@
 import * as React from "react";
 import Image from 'next/image'
-
+import { withBasePath } from '@/lib/tool'
 /**没有MA  机电报告；  固定高度 8.5rem
  * */
 export const ReportFirstPageHeadJd = ({ rep, mbbm }: { rep: any; mbbm: string }) => {
@@ -10,7 +10,8 @@ export const ReportFirstPageHeadJd = ({ rep, mbbm }: { rep: any; mbbm: string })
                 <span className="relative -mt-[1.1rem] text-[0.9rem]" />
             </div>
             <div>
-                <Image src="/images/reportNoQR.png" width={1} height={1} alt="二维码"
+                <Image src={`${withBasePath('/images/reportNoQR.png')}`} 
+                    width={1} height={1} alt="二维码"
                     style={{height: "8rem",width: "auto"}}
                 />
             </div>
@@ -41,7 +42,7 @@ export const ReportFirstPageHeadNmaNmbm = ({ rep }: { rep: any }) => {
             </div>
             <div>
                 <Image
-                    src="/images/reportNoQR.png"
+                    src={`${withBasePath('/images/reportNoQR.png')}`}
                     width={1}
                     height={1}
                     alt="二维码"

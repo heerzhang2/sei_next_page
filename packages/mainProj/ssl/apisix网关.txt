@@ -1293,3 +1293,14 @@ yarn build                      # 构建主项目
 yarn start:pm2                  # 启动服务
 Yarn Workspace 配置完成
 扩展 PostgreSQL；
+- `basePath`: 影响所有路由（页面和 API），Next.js 会自动为 `Link`、`router.push` 等添加前缀
+- `assetPrefix`: 影响 Next.js 构建产物（JS/CSS chunks）的加载路径，但**不影响** `public` 文件夹中的静态资源
+import { withBasePath } from '@/lib/tool'
+// API 调用
+const response = await fetch(withBasePath('/api/nextLive'), { method: 'GET' })
+// 静态资源
+<div style={{ backgroundImage: `url(${withBasePath('/images/seal.png')})` }} />
+src={`${withBasePath('/images/reportNoQR.png')}`}
+env-url-basepath-mismatch: AUTH_URL (or NEXTAUTH_URL) and authConfig.basePath are both declared, but they don’t match.
+ This is a configuration mistake. @auth/core will use basePath to construct the full URL to 
+ the corresponding action (/signin, /signout, etc.) in this case.

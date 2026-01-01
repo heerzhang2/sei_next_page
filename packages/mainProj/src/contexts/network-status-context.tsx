@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
+import { withBasePath } from '@/lib/tool'
 
 export interface NetworkStatus {
     isClientOnline: boolean
@@ -76,7 +77,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         try {
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), 5000)
-            const response = await fetch("/api/nextLive", {
+            const response = await fetch(withBasePath('/api/nextLive'), {
                 method: "GET",
                 cache: "no-cache",
                 signal: controller.signal,

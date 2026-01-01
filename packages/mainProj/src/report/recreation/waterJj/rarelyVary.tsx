@@ -5,7 +5,7 @@ import {eqpTypeAllMap} from "../../../dict/eqpComm";
 import SurveyRow from "@/component/SurveyRow";
 import {businessCatspMap} from "@/common/sei";
 import {JumpTab} from "@/report/common/JumpTab";
-
+import { withBasePath} from '@/lib/tool'
 interface InspectionApprovalProps {
   orc: any
   rep: any
@@ -29,7 +29,7 @@ export const 检验核准WaterJj= ({ orc, rep, jyt = "检验" }:InspectionApprov
                   <CCell split={false} className="!p-0 relative h-full" rowSpan={3}>
                     <div className="h-full flex flex-col">
                       <div className="print:hidden absolute inset-0 opacity-30 bg-no-repeat bg-center"
-                           style={{ backgroundImage: `url(/images/seal.png)` }}></div>
+                           style={{ backgroundImage: `url(${withBasePath('/images/seal.png')})` }}></div>
                       <FlexibleTable className="text-sm w-full h-full flex-grow border-none" columnWidths={["50%", "%"]}>
                         <TableBody>
                           <TableRow className="border-none">
