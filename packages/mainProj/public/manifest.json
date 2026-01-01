@@ -5,13 +5,13 @@
   "description": "支持离线编辑的在线检验报告编制系统",
   "icons": [
     {
-      "src": "/icons/android-chrome-192x192.png",
+      "src": "/report/icons/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/report/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
@@ -20,13 +20,13 @@
   "background_color": "#FFFFFF",
   "screenshots": [
     {
-      "src": "/icons/samp320X320.png",
+      "src": "/report/icons/samp320X320.png",
       "sizes": "320x320",
       "type": "image/png",
       "form_factor": "narrow"
     },
     {
-      "src": "/icons/samp512x512.png",
+      "src": "/report/icons/samp512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide"

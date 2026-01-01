@@ -4,7 +4,7 @@ import { useCallback } from "react"
 import { signOut } from "next-auth/react"
 import { useMutation, gql } from "@urql/next"
 import { useOfflineAuth } from "./use-offline-auth"
-
+import { withBasePath } from '@/lib/tool'
 const LOGOUT_MUTATION = gql`
   mutation Logout {
     logout
@@ -44,11 +44,11 @@ export function useLogout() {
             console.log("[v0] 注销流程完成")
 
             // Redirect to login page
-            window.location.href = "/login"
+            window.location.href =withBasePath('/login')
         } catch (error) {
             console.error("[v0] 注销过程出错:", error)
             // Even if there's an error, try to redirect to login
-            window.location.href = "/login"
+            window.location.href =withBasePath('/login')
         }
     }, [executeLogout, clearOfflineAuth])
 

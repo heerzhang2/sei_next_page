@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import HeaderWrapper from "@/component/header-wrapper";
+import { withBasePath } from '@/lib/tool'
 
 export default function Home() {
     // 定义设置离线报告的函数
@@ -21,7 +22,7 @@ export default function Home() {
             <HeaderWrapper />
             <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
                 <Link className="flex items-center gap-2 hover:underline hover:underline-offset-4" href="/deptask">
-                    <Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
+                    <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
                     每日采集 →
                 </Link>
                 <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
@@ -50,7 +51,7 @@ export default function Home() {
                             </Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&redId=2#MangInstrument">
+                            <Link href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&redId=2#MangInstrument">
                                 磁粉检测报告2-2第2分项目流转
                             </Link>
                         </div>
@@ -78,7 +79,7 @@ export default function Home() {
                     >
                         <Image
                             className="dark:invert"
-                            src="/vercel.svg"
+                            src={withBasePath("/vercel.svg")}
                             alt="Vercel logomark"
                             width={20}
                             height={20}
@@ -88,9 +89,9 @@ export default function Home() {
                     </a>
                     <Link
                         className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                        href="/reptype"
+                        href="/report/reptype"
                     >
-                        <Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
+                        <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
                         模板
                     </Link>
                     <Link
@@ -107,7 +108,7 @@ export default function Home() {
                     >
                         <Image
                             className="dark:invert"
-                            src="/vercel.svg"
+                            src={withBasePath("/vercel.svg")}
                             alt="Vercel logomark"
                             width={20}
                             height={20}
@@ -129,7 +130,7 @@ export default function Home() {
             <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
                 <Image
                     className="dark:invert"
-                    src="/next.svg"
+                    src={withBasePath("/next.svg")}
                     alt="Next.js logo"
                     width={1}
                     height={1}

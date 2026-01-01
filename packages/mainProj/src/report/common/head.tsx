@@ -53,7 +53,7 @@ export const ReportFirstPageHeadNmaNmbm = ({ rep }: { rep: any }) => {
                 {/* FBPI图片 - 右上角 */}
                 <div className="mb-2">
                     <Image
-                        src="/images/FBPI.png"
+                        src={withBasePath("/images/FBPI.png")}
                         width={1}
                         height={1}
                         alt="FBPI标识"
@@ -118,7 +118,7 @@ export const ReportFirstPageHeadCyCert = ({ rep }: { rep: any }) => {
             <div className="relative h-full"> {/* 保持相对定位容器 */}
                 <div className="absolute  right-0"> {/* 改为right-0定位 -top-[10px] */}
                     <Image
-                        src="/images/FBPI.png"
+                        src={withBasePath("/images/FBPI.png")}
                         width={1}
                         height={1}
                         alt="FBPI"

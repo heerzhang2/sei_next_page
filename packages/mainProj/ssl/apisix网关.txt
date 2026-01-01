@@ -1301,6 +1301,4 @@ const response = await fetch(withBasePath('/api/nextLive'), { method: 'GET' })
 // 静态资源
 <div style={{ backgroundImage: `url(${withBasePath('/images/seal.png')})` }} />
 src={`${withBasePath('/images/reportNoQR.png')}`}
-env-url-basepath-mismatch: AUTH_URL (or NEXTAUTH_URL) and authConfig.basePath are both declared, but they don’t match.
- This is a configuration mistake. @auth/core will use basePath to construct the full URL to 
- the corresponding action (/signin, /signout, etc.) in this case.
+        redirect(withBasePath('/login'))

@@ -16,7 +16,7 @@ import { NetworkStatusProvider } from "@/contexts/network-status-context"
 import { SessionSync } from "@/components/session-sync"
 import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
 import { SerwistMessageHandler } from "@/components/serwist-message-handler"
-
+import { withBasePath } from '@/lib/tool'
 const APP_NAME = "报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
 
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: "%s - 报告编制系统",
   },
   description: APP_DESCRIPTION,
-  manifest: "/manifest.json",
+  manifest: withBasePath('/manifest.json'),
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    shortcut: "/favicon.ico",
+    shortcut: withBasePath('/favicon.ico'),
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
   },
 }

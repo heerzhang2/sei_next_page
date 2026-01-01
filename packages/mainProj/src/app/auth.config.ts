@@ -110,6 +110,7 @@ const getNextAuthBasePath = () => {
   return process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth` : "/api/auth"
 }
 
+const signInPath=process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}/login` : "/login";
 /**
  * 合并配置，添加 basePath 支持
  */
@@ -119,8 +120,8 @@ export const authConfig: NextAuthConfig = {
   basePath: "/api/auth",
   // pages 路径需要相对于根路径，NextAuth 会自动添加 basePath
   pages: {
-    signIn: "/login",
-    error: "/login",
+    signIn: signInPath,
+    error: signInPath,
   },
   // 确保信任所有主机（在反向代理后面时需要）
   trustHost: true,
