@@ -21,62 +21,65 @@ const APP_NAME = "报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
 
 export const metadata: Metadata = {
-    applicationName: APP_NAME,
-    title: {
-        default: APP_NAME,
-        template: "%s - 报告编制系统",
-    },
-    description: APP_DESCRIPTION,
-    manifest: "/manifest.json",
-    appleWebApp: {
-        capable: true,
-        statusBarStyle: "default",
-        title: APP_NAME,
-    },
-    formatDetection: {
-        telephone: false,
-    },
-    icons: {
-        shortcut: "/favicon.ico",
-        apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
-    },
+  applicationName: APP_NAME,
+  title: {
+    default: APP_NAME,
+    template: "%s - 报告编制系统",
+  },
+  description: APP_DESCRIPTION,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
 }
 
 export const viewport: Viewport = {
-    themeColor: "#000000",
+  themeColor: "#000000",
 }
 
 export default async function RootLayout({
-                                             children,
-                                         }: {
-    children: React.ReactNode
+  children,
+}: {
+  children: React.ReactNode
 }) {
-    const session = await auth()
-    return (
-        <html suppressHydrationWarning lang="zh-CN">
-        <body
-            className={`${notoSans.variable} ${notoSerif.variable} antialiased
+  const session = await auth()
+  // 因为客户端需要知道完整的 API URL
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth` : "/api/auth"
+
+  return (
+    <html suppressHydrationWarning lang="zh-CN">
+      <body
+        className={`${notoSans.variable} ${notoSerif.variable} antialiased
              bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 @container
             `}
-        >
+      >
         <ThemeProvider>
-            <PrintSettingsProvider>
-                <SessionProvider session={session}>
-                    <NetworkStatusProvider>
-                        <GraphQLProvider>
-                                <SerwistMessageHandler />
-                                <SessionSync />
-                                <TokenRefreshOverlay />
-                                <OfflineStatusIndicator />
-                                {children}
-                                <PWAInstaller />
-                                <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
-                            </GraphQLProvider>
-                    </NetworkStatusProvider>
-                </SessionProvider>
-            </PrintSettingsProvider>
+          <PrintSettingsProvider>
+            <SessionProvider session={session} basePath={basePath}>
+              <NetworkStatusProvider>
+                <GraphQLProvider>
+                  <SerwistMessageHandler />
+                  <SessionSync />
+                  <TokenRefreshOverlay />
+                  <OfflineStatusIndicator />
+                  {children}
+                  <PWAInstaller />
+                  <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
+                </GraphQLProvider>
+              </NetworkStatusProvider>
+            </SessionProvider>
+          </PrintSettingsProvider>
         </ThemeProvider>
-        </body>
-        </html>
-    )
+      </body>
+    </html>
+  )
 }

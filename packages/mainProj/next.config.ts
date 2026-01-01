@@ -18,7 +18,7 @@ module.exports = async (phase) => {
         reactStrictMode: true,
         
         // 基础路径配置，用于子路径部署
-        // basePath: process.env.NEXT_PUBLIC_BASE_PATH || '/report',
+        basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
         // assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '/report',
 
         webpack: (config, { isServer, dev }) => {
