@@ -1292,3 +1292,4 @@ cd packages\mainProj
 yarn build                      # 构建主项目
 yarn start:pm2                  # 启动服务
 Yarn Workspace 配置完成
+扩展 PostgreSQL；
