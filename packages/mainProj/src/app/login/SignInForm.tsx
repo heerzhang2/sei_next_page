@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { signIn, useSession } from "next-auth/react"
+import { signIn, useSession, getSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,6 +35,7 @@ export default function SignInForm() {
 
     const [isPending, setIsPending] = useState(false)
     const [error, setError] = React.useState("")
+    const [hasJustLoggedIn, setHasJustLoggedIn] = useState(false)
 
     // 检查 URL 中的错误参数
     React.useEffect(() => {
@@ -45,6 +46,45 @@ export default function SignInForm() {
             setError(errorMessage)
         }
     }, [errorParam])
+
+    // 监听 session 变化，登录成功后处理存储
+    React.useEffect(() => {
+        if (hasJustLoggedIn && session?.user?.accessToken) {
+            try {
+                const stored = localStorage.getItem("offline_auth") || "{}"
+                const authData: OfflineAuthData = JSON.parse(stored)
+                localStorage.setItem(
+                    "offline_auth",
+                    JSON.stringify({
+                        ...authData,
+                        accessToken: session.user.accessToken,
+                        user: { id: session.user.id as string },
+                        timestamp: Date.now(),
+                        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+                    }),
+                )
+                window.dispatchEvent(
+                    new CustomEvent("token:refreshed", {
+                        detail: {
+                            accessToken: session.user.accessToken,
+                            user: { id: session.user.id as string },
+                            fromNextjs: true,
+                        },
+                    }),
+                )
+                console.log("[SignInForm] 已触发token:refreshed事件通知新token")
+                router.push(callbackUrl)
+                setHasJustLoggedIn(false)
+                setIsPending(false)
+            } catch (error) {
+                console.error("保存认证失败:", error)
+                setError("保存认证信息失败")
+                setIsPending(false)
+                setHasJustLoggedIn(false)
+            }
+        }
+    }, [hasJustLoggedIn, session, callbackUrl, router])
+
     const { deviceFingerprint: deviceId } = useDeviceFingerprint()
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -72,42 +112,8 @@ export default function SignInForm() {
             // 触发 session 更新
             await updateSession()
 
-            // 等待 session 更新后处理存储
-            setTimeout(() => {
-                if (session?.user?.accessToken) {
-                    try {
-                        const stored = localStorage.getItem("offline_auth") || "{}"
-                        const authData: OfflineAuthData = JSON.parse(stored)
-                        localStorage.setItem(
-                            "offline_auth",
-                            JSON.stringify({
-                                ...authData,
-                                accessToken: session.user.accessToken,
-                                user: { id: session.user.id as string },
-                                timestamp: Date.now(),
-                                expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-                            }),
-                        )
-                        window.dispatchEvent(
-                            new CustomEvent("token:refreshed", {
-                                detail: {
-                                    accessToken: session.user.accessToken,
-                                    user: { id: session.user.id as string },
-                                    fromNextjs: true,
-                                },
-                            }),
-                        )
-                        console.log("[SignInForm] 已触发token:refreshed事件通知新token")
-                        router.push(callbackUrl)
-                    } catch (error) {
-                        console.error("保存认证失败:", error)
-                        setError("保存认证信息失败")
-                    }
-                } else {
-                    setError("登录后获取session失败，请重试")
-                }
-                setIsPending(false)
-            }, 500)
+            // 标记刚刚登录成功，等待 session 更新后的 useEffect 处理
+            setHasJustLoggedIn(true)
         } catch (error) {
             console.error("登录过程中出错:", error)
             setError("登录过程中出现错误")

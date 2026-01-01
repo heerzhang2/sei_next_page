@@ -62,7 +62,7 @@ module.exports = async (phase) => {
         },
 
         // 允许特定开发来源;    但是生产环境推荐Nginx反向代理方案
-        allowedDevOrigins: ["192.168.171.3", "192.168.0.100"],
+        allowedDevOrigins: process.env.NEXT_PUBLIC_ALLOWED_DEV_ORIGINS?.split(",") || ["192.168.171.3", "192.168.0.100"],
     }
 
     const revision = crypto.randomUUID()
