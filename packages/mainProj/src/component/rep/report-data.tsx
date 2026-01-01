@@ -98,7 +98,7 @@ export const ReportQuery = gql`
           name
         }
       }
-      servu { name }
+      servu {id name }
       ispu {
         id
         agency {
