@@ -213,7 +213,7 @@ const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshTok
 
 const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; javaBackendReachable: boolean }> => {
     const results = await Promise.allSettled([
-        fetch("/api/nextLive", { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
+        fetch(`${process.env.NEXT_PUBLIC_APP_WEB}/api/nextLive`, { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
         fetch(`${process.env.NEXT_PUBLIC_BACK_END}/graphql`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

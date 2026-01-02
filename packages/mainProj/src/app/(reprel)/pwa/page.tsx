@@ -214,7 +214,7 @@ export default function Page() {
     useEffect(() => {
         const fetchBuildVersion = async () => {
             try {
-                const response = await fetch("/api/nextLive", { cache: "no-store" })
+                const response = await fetch(`${process.env.NEXT_PUBLIC_APP_WEB}/api/nextLive`, { cache: "no-store" })
                 if (response.ok) {
                     const data = await response.json()
                     setCurrentBuildVersion(data.version)

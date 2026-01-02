@@ -1292,7 +1292,7 @@ cd packages\mainProj
 yarn build                      # 构建主项目
 yarn start:pm2                  # 启动服务
 Yarn Workspace 配置完成
-扩展 PostgreSQL；
+【扩展】 PostgreSQL；
 - `basePath`: 影响所有路由（页面和 API），Next.js 会自动为 `Link`、`router.push` 等添加前缀
 - `assetPrefix`: 影响 Next.js 构建产物（JS/CSS chunks）的加载路径，但**不影响** `public` 文件夹中的静态资源
 import { withBasePath } from '@/lib/tool'
@@ -1302,3 +1302,9 @@ const response = await fetch(withBasePath('/api/nextLive'), { method: 'GET' })
 <div style={{ backgroundImage: `url(${withBasePath('/images/seal.png')})` }} />
 src={`${withBasePath('/images/reportNoQR.png')}`}
         redirect(withBasePath('/login'))
+#@ 通过 https://192.168.0.100:9443/report 访问前端（经过 APISIX 反向代理）
+NEXTAUTH_SECRET被修改后 [auth][cause]: Error: no matching decryption secret
+APISIX GraphQL 路由的 CORS 插件配置中没有允许 X-Device-Id 头部！这导致设备 ID 头部被 APISIX 过滤掉，后端收不到设备 ID，所以认证失败。
+更新 APISIX 中已存在的路由配置，后端路由添加了 proxy-rewrite 插件来剥离 /api 前缀。
+添加 /api/actuator/health 路由。现在通过 https://192.168.0.100:9443/api/actuator/health 访问会被正确转发到后端的 /actuator/health
+https://192.168.0.100:9443/api/任何接口 → Java 后端的 /任何接口
