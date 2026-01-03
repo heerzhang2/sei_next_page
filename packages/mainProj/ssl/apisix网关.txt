@@ -1308,3 +1308,125 @@ APISIX GraphQL 路由的 CORS 插件配置中没有允许 X-Device-Id 头部！�
 更新 APISIX 中已存在的路由配置，后端路由添加了 proxy-rewrite 插件来剥离 /api 前缀。
 添加 /api/actuator/health 路由。现在通过 https://192.168.0.100:9443/api/actuator/health 访问会被正确转发到后端的 /actuator/health
 https://192.168.0.100:9443/api/任何接口 → Java 后端的 /任何接口
+外网/广域网	https://192.168.0.100:9443/minio/* 剥离 /minio 前缀; 浏览器 → APISIX (HTTPS 9443) → MinIO (HTTPS 9000)
+开发模式的 WebSocket 热更新（HMR）连接失败，因为 APISIX 的 report-nextjs 路由没有配置 WebSocket 支持。需要添加 WebSocket 相关配置
+有两个路由的 priority 都是 100，backend-api 和 report-nextjs 冲突了：
+    upload-URI: /api/uploadTUS/
+ PATCH https://192.168.0.100:9443/uploadTUS/19a191e5-58dd-400b-bbf2-9df8dee7ac2c 404 (Not Found)
+APISIX 路由配置后，可能需要重启前端服务器！
+api后端配置加  "cors": {
+      "expose_headers": "Location,Upload-Offset,Upload-Length,Tus2minIoUrl,Content-Type",
+    }
+后端需要同时支持两种路径：
+/uploadTUS/** - APISIX 转发过来的请求
+/api/uploadTUS/** - 前端根据Location头直接发起的请求
+【断点续传协议】
+tus::tus-LineDiagram_0-yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA-/////20241102000042/jpg-nte-jv1-lnu-si7-2v-1e-image/jpeg-153242-1730477301732-https://192.168.0.100:9443/api/uploadTUS/::713632857502
+{size: 153242,…}
+creationTime
+: 
+"Sat Jan 03 2026 13:26:14 GMT+0800 (中国标准时间)"
+metadata
+: 
+{name: "微信图片_20241102000042.jpg", type: "image/jpeg", eid: "yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA",…}
+business
+: 
+"rep"
+eid
+: 
+"yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"
+filename
+: 
+"微信图片_20241102000042.jpg"
+filetype
+: 
+"image/jpeg"
+liveDays
+: 
+"10"
+name
+: 
+"微信图片_20241102000042.jpg"
+type
+: 
+"image/jpeg"
+size
+: 
+153242
+uploadUrl
+: 
+"https://192.168.0.100:9443/uploadTUS/cfe4ba10-8f5e-41bc-9c15-03229bc349b1"
+830  _headers
+: 
+{Tus-Resumable: '1.0.0', Upload-Offset: '0', Content-Type: 'application/offset+octet-stream', Authorization: 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZy…kURLavSV0-Lo8eKkDA5X7yd3uZkWA_k8QqL5sD04nvxAhrdFA'}
+_method
+: 
+"PATCH"
+_url
+: 
+"https://192.168.0.100:9443/uploadTUS/465fb7f3-c28a-4569-ae73-dab773fc7c62"
+_xhr
+: 
+XMLHttpRequest {onreadystatechange: null, readyState: 4, timeout: 0, withCredentials: true, upload: XMLHttpRequestUpload, …}
+[[Prototype]]
+: 
+Object
+826
+_headers
+: 
+{Tus-Resumable: '1.0.0'}
+_method
+: 
+"HEAD"
+_url
+: 
+"https://192.168.0.100:9443/uploadTUS/465fb7f3-c28a-4569-ae73-dab773fc7c62"
+_xhr
+: 
+XMLHttpRequest {onreadystatechange: null, readyState: 1, timeout: 0, withCredentials: true, upload: XMLHttpRequestUpload, …}
+[[Prototype]]
+: 
+Object
+请求网址
+https://192.168.0.100:9443/api/uploadTUS/
+请求方法
+POST
+状态代码
+201 Created
+远程地址
+192.168.0.100:9443
+引荐来源网址政策
+strict-origin-when-cross-origin
+access-control-allow-credentials
+true
+access-control-allow-headers
+*
+access-control-allow-methods
+GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
+access-control-allow-origin
+*
+access-control-expose-headers
+Location,Upload-Offset,Upload-Length,Tus2minIoUrl,Content-Type
+access-control-max-age
+3600
+cache-control
+no-cache, no-store, max-age=0, must-revalidate
+content-length
+0
+date
+Sat, 03 Jan 2026 06:42:57 GMT
+expires
+0
+location
+/uploadTUS/0025c1fb-507a-426f-8d3d-489a16ef6b45
+pragma
+核心问题：
+后端 TusFileUploadService 期望请求路径是 /api/uploadTUS/
+但 APISIX proxy-rewrite 将 /api/uploadTUS/ 重写为 /uploadTUS/
+导致路径不匹配，返回405
+最终解决方案：
+后端 upload-URI: /uploadTUS/
+前端 endpoint: https://192.168.0.100:9443/uploadTUS/（不加 /api）
+APISIX 添加单独的 /uploadTUS/* 路由，不做 proxy-rewrite
+apisix【备份恢复】
+wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/d/home/sei-rearend && ./import-apisix-config.sh apisix-backup-20260103_153503"
