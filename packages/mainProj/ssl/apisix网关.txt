@@ -1427,6 +1427,16 @@ pragma
 最终解决方案：
 后端 upload-URI: /uploadTUS/
 前端 endpoint: https://192.168.0.100:9443/uploadTUS/（不加 /api）
+官方文档 https://apisix.apache.org/zh/docs/apisix/deployment-modes/
 APISIX 添加单独的 /uploadTUS/* 路由，不做 proxy-rewrite
 apisix【备份恢复】
 wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/d/home/sei-rearend && ./import-apisix-config.sh apisix-backup-20260103_153503"
+{
+    "credentials": {
+        "id": "credentials",
+        "name": "credentials",
+        "type": "credentials",
+        "signinUrl": "https://localhost:3765/api/auth/signin/credentials",
+        "callbackUrl": "https://localhost:3765/api/auth/callback/credentials"
+    }
+}
