@@ -1440,3 +1440,189 @@ wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/d/home/sei-rearend && ./import-apisix-co
         "callbackUrl": "https://localhost:3765/api/auth/callback/credentials"
     }
 }
+.env必须加 NODE_TLS_REJECT_UNAUTHORIZED 否则apisix模式的前端登录证书报错
+ Databend（ OLAP 数据库，但正在扩展事务能力）
+ https://www.yugabyte.com/download/   换掉，需不收费的库！
+https://docs.yugabyte.com/stable/releases/ybdb-releases/
+公司.66这台已经拉取到了
+[root@localhost ~]# docker pull yugabytedb/yugabyte:2025.2.0.0-b131
+https://downloads.yugabyte.com/releases/2025.2.0.0/yugabyte-2025.2.0.0-b131-linux-x86_64.tar.gz
+配置docker Deststop：
+{
+  "builder": {
+    "gc": {
+      "defaultKeepStorage": "20GB",
+      "enabled": true
+    }
+  },
+  "experimental": false,
+  "registry-mirrors": [
+  "https://registry.cn-hangzhou.aliyuncs.com/google_containers",  
+  "https://e68234208dde4b8aac66c7c2a217bc4b.mirror.swr.myhuaweicloud.com",  
+  "https://mirror.iscas.ac.cn",  
+  "https://docker.mirrors.ustc.edu.cn",  
+  "https://docker.nju.edu.cn",  
+  "https://mirror.baidubce.com",  
+  "https://docker.mirrors.sjtug.sjtu.edu.cn",  
+  "https://docker.m.daocloud.io",  
+  "https://dockerproxy.com"  
+  ]
+}
+C:\home\wsl-use>docker pull yugabytedb/yugabyte:2025.2.0.0-b131
+两台 Linux 上部署 YugabyteDB 集群
+# 在 192.168.109.66 上执行
+docker run -d --name yb-node-1 \
+  --network host \
+  yugabytedb/yugabyte:2025.2.0.0-b131 bin/yugabyted start \
+  --daemon=false \
+  --advertise_address 192.168.109.66
+
+  #第二台的 192.168.109.65 上   启动 Node 2
+docker run -d --name yb-node-2 \
+  --network host \
+  yugabytedb/yugabyte:2025.2.0.0-b131 bin/yugabyted start \
+  --daemon=false \
+  --advertise_address 192.168.109.65 \
+  --join 192.168.109.66
+
+# 在 192.168.109.65 上启动 Node 3
+端口冲突！9200 端口被占用了（可能是 Elasticsearch）。
+# 先删除失败的容器
+docker rm yb-node-3
+# 启动 Node 3（需要在不同的机器或使用端口映射）
+docker run -d --name yb-node-3 \
+  -p7200:7100 -p7001:7000 -p9201:9100 -p9001:9000 -p5435:5433 -p9044:9042 -p13002:13000 \
+  yugabytedb/yugabyte:2025.2.0.0-b131 bin/yugabyted start \
+  --daemon=false \
+  --advertise_address 192.168.109.65 \
+  --join 192.168.109.66
+
+公司数据库集群的更新后的端口映射：
+节点	Master RPC	Master UI	TServer RPC	TServer UI	YSQL	YCQL
+Node 1 (192.168.109.66)	7100	7000	9100	9000	5433	9042
+Node 2 (192.168.109.65)	7100	7000	9100	9000	5434	9043
+Node 3 (192.168.109.65)	7200	7001	9201	9001	5435	9044
+【.66那台的】
+使用官方的分离启动方式（推荐）
+# 清理
+docker rm -f yb-master-1
+
+# 重新启动 Master（参数名改为单数）
+docker run -d --name yb-master-1 \
+  --network host \
+  yugabytedb/yugabyte:2025.2.0.0-b131 bin/yb-master \
+  --master_addresses 192.168.109.66:7100 \
+  --rpc_bind_addresses 0.0.0.0:7100 \
+  --advertise_address 192.168.109.66:7100 \
+  --fs_data_dirs /mnt/yb-data
+
+# 查看日志
+docker logs -f yb-master-1
+
+# 检查端口
+netstat -tlnp | grep 7100
+
+# 等待 10 秒
+sleep 10
+休息很长时间后的  # 查看完整日志
+docker logs --tail 200 yb-node-1
+
+# 查看容器状态
+docker ps -a | grep yb-node-1
+
+# 查看容器退出码
+docker inspect yb-node-1 | grep -A 10 State
+UI 地址: http://192.168.109.66:15433（不是 7000！）
+JDBC: jdbc:postgresql://192.168.109.66:5433/yugabyte
+【.65那台的】
+docker run -d --name yb-node-2 \
+  -p7101:7100 -p7001:7000 -p9101:9100 -p9001:9000 -p5434:5433 -p9043:9042 -p13001:13000 \
+  yugabytedb/yugabyte:2025.2.0.0-b131 bin/yugabyted start \
+  --daemon=true \
+  --advertise_address 192.168.109.65 \
+  --join 192.168.109.66
+
+  太奇葩
+  第一步：在 192.168.109.66 上启动 Node 1 和 Node 2
+bash
+Apply
+# 创建数据目录
+mkdir -p /data/yb1 /data/yb2
+
+# 启动 Node 1
+docker run -d --name yb-node1 \
+  --net=host \
+  -v /data/yb1:/mnt/disk0 \
+  yugabytedb/yugabyte:2025.2.0.0-b131 \
+  bin/yugabyted start \
+    --daemon=false \
+    --listen=192.168.109.66 \
+    --master_addresses=192.168.109.66:7100,192.168.109.66:7101,192.168.109.65:7100 \
+    --base_dir=/mnt/disk0/yb1 \
+    --webserver_port=7000
+
+# 等待 10 秒
+sleep 10
+# 启动 Node 2（同一台，端口偏移）
+docker run -d --name yb-node2 \
+  --net=host \
+  -v /data/yb2:/mnt/disk0 \
+  yugabytedb/yugabyte:2025.2.0.0-b131 \
+  bin/yugabyted start \
+    --daemon=false \
+    --listen=192.168.109.66 \
+    --master_addresses=192.168.109.66:7100,192.168.109.66:7101,192.168.109.65:7100 \
+    --base_dir=/mnt/disk0/yb2 \
+    --rpc_bind_addresses=192.168.109.66:9101 \
+    --pgsql_proxy_bind_address=192.168.109.66:5434 \
+    --cql_proxy_bind_address=192.168.109.66:9043 \
+    --webserver_port=7001
+
+# 查看日志
+docker logs yb-node1
+docker logs yb-node2
+
+# 检查端口
+netstat -tlnp | grep -E '(7100|7101|9100|9101|5433|5434|7000|7001)'
+【ybdb官方入口】 https://docs.yugabyte.com/stable/quick-start/docker/
+公司linux主机 https://hub.docker.com/editions/community/docker-ce-server-centos
+第一台机器 (192.168.109.66) - Node 1 和 Node 2
+bash
+Apply
+# 创建数据目录
+mkdir -p /data/yb1 /data/yb2
+
+# 启动 Node 1
+docker run -d --name yb-node1 \
+  --net=host \
+  -v /data/yb1:/mnt/disk0 \
+  yugabytedb/yugabyte:2025.2.0.0-b131 \
+  bin/yugabyted start \
+    --background=false \
+    --listen=192.168.109.66 \
+    --master_addresses=192.168.109.66:7100,192.168.109.66:7101,192.168.109.65:7100 \
+    --base_dir=/mnt/disk0/yb1 \
+    --webserver_port=7000
+
+# 等待 10 秒
+sleep 10
+
+# 启动 Node 2（同一台，端口偏移）
+docker run -d --name yb-node2 \
+  --net=host \
+  -v /data/yb2:/mnt/disk0 \
+  yugabytedb/yugabyte:2025.2.0.0-b131 \
+  bin/yugabyted start \
+    --background=false \
+    --listen=192.168.109.66 \
+    --master_addresses=192.168.109.66:7100,192.168.109.66:7101,192.168.109.65:7100 \
+    --base_dir=/mnt/disk0/yb2 \
+    --rpc_bind_addresses=192.168.109.66:9101 \
+    --pgsql_proxy_bind_address=192.168.109.66:5434 \
+    --cql_proxy_bind_address=192.168.109.66:9043 \
+    --webserver_port=7001
+
+# 查看状态
+docker exec -it yb-node1 yugabyted status
+docker exec -it yb-node2 yugabyted status
+部署 K8s 集群（k3s + Helm，标准生产方式）
