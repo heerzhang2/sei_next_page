@@ -1,0 +1,341 @@
+<<在 Kubernetes 上快速上手 TiDB>>
+TiDB Operator on K8s	✅ 需要	✅ 持久（依赖 PV/PVC）	云原生生产环境
+tiup cluster 是传统物理机/虚拟机部署方式，只是用 TiUP 工具自动化了安装、启停、扩缩容等操作。不需要 K8s：本地部署方案。WSL2 默认内存可能只有 50% 主机内存，可在 %USERPROFILE%\.wslconfig 中调整：
+在公司目前的 2 台 Linux 部署 Kubernetes + TiDB。先完成 K8s 集群搭建， k3s集群可行！。
+192.168.109.66（Master）执行：
+# 1. 安装 k3s master
+curl -sfL https://get.k3s.io | sh -
+# 使用阿里云镜像安装 k3s
+curl -sfL https://get.k3s.io | INSTALL_K3S_MIRROR=cn sh -
+GitHub 无法连接。完全离线方式安装：
+herzhang@DESKTOP-F4OIO3K:/mnt/c/home/wsl-use$ # 使用阿里云镜像安装 k3s
+curl -sfL https://get.k3s.io | INSTALL_K3S_MIRROR=cn sh -
+在 WSL2 中打包 k3s 二进制文件和镜像，然后传输到 Linux 服务器：
+只传输 k3s 二进制文件，镜像让 Linux 服务器自动下载（用国内镜像）。
+tar -czf /mnt/c/home/k3s-binary.tar.gz /usr/local/bin/k3s
+ Linux 服务器（192.168.109.66）上执行：
+ k3s 已经在运行了！镜像导入错误不影响核心功能。先检查集群状态：
+ 在 Master (192.168.109.66) 上获取 Token：
+ [root@localhost tidb]# sudo cat /var/lib/rancher/k3s/server/node-token
+K1029dd5635bf0f3dc807b0c6b0e3e9bf97464e82b6d8d41fc77e1b365de55dbe63::server:eaf319b343961e43f96fe05964b5c520
+完美！k3s 集群已经正常运行。现在添加第二个节点（192.168.109.65）。
+在 Worker (192.168.109.65) 上加入集群：
+在 Worker (192.168.109.65) 上先传输 k3s 二进制文件（如果还没做）：C:\home\k3s-binary.tar.gz 
+tar -xzf k3s-binary.tar.gz -C /
+curl -sfL https://get.k3s.io | K3S_URL=https://192.168.109.66:6443 K3S_TOKEN=K1029dd5635bf0f3dc807b0c6b0e3e9bf97464e82b6d8d41fc77e1b365de55dbe63::server:eaf319b343961e43f96fe05964b5c520 sh -
+两台机器主机名相同导致冲突。需要修改 Worker 节点的主机名或使用 --with-node-id：
+方案1：在 192.168.109.65 上修改 Worker 主机名
+hostnamectl set-hostname k8s-worker-65
+echo "127.0.0.1   k8s-worker-65" >> /etc/hosts
+systemctl restart k3s-agent
+systemctl status k3s-agent
+journalctl -u k3s-agent -f
+109.65# Worker 节点已经加入，但无法从 docker.io 拉取镜像。需Worker (192.168.109.65) 上配置 containerd 使用国内镜像源。
+sed -i 's|config_path = ""|config_path = "/etc/containerd/certs.d"|' /etc/containerd/config.toml
+cat > /etc/containerd/certs.d/docker.io/hosts.toml << 'EOF'
+server = "https://docker.io"
+
+[host."https://docker.m.daocloud.io"]
+  capabilities = ["pull", "resolve"]
+[host."https://dockerproxy.com"]
+  capabilities = ["pull", "resolve"]
+[host."https://docker.mirrors.ustc.edu.cn"]
+  capabilities = ["pull", "resolve"]
+EOF
+# 重启 containerd 和 k3s-agent
+systemctl restart containerd
+109.66主机验证》  kubectl get nodes
+kubectl get pods -A
+完美！2 节点 K8s 集群已经成功搭建。Worker 节点正在拉取镜像（ContainerCreating 状态）。等待几分钟让 Pod 完成启动。然后可以开始部署 TiDB：
+109.65>
+cat > /etc/containerd/config.toml << 'EOF'
+version = 2
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri"]
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+          endpoint = ["https://docker.m.daocloud.io", "https://dockerproxy.com"]
+EOF
+尝试使用 ctr 手动拉取镜像并打标：
+在 Worker (192.168.109.65) 上：# 手动拉取 pause 镜像
+ctr image pull docker.m.daocloud.io/rancher/mirrored-pause:3.6
+# 打标签为 docker.io
+ctr image tag docker.m.daocloud.io/rancher/mirrored-pause:3.6 docker.io/rancher/mirrored-pause:3.6
+Worker.65 节点上的 Pod 还是 ContainerCreating，需要手动拉取 traefik 镜像：
+# .65 拉取 traefik 镜像
+ctr image pull docker.m.daocloud.io/rancher/mirrored-traefik:2.11.0
+# Master (192.168.109.66) 导出镜像
+ctr -n k8s.io image export traefik.tar docker.io/rancher/mirrored-traefik:2.11.0
+ctr -n k8s.io image export klipper-lb.tar docker.io/rancher/klipper-lb:v0.4.3
+# 用 crictl 查看（k3s 提供的工具）
+crictl images
+# 导出镜像
+crictl save docker.io/rancher/klipper-lb:v0.4.13 -o klipper-lb.tar
+scp klipper-lb.tar traefik.tar root@192.168.109.65:~/
+在 Worker (192.168.109.65) 上：
+# 导入镜像
+crictl load -i klipper-lb.tar
+crictl load -i traefik.tar
+crictl 版本太旧，不支持 save 和 load 命令。用 ctr 导出：
+ctr -n k8s.io image export klipper-lb.tar docker.io/rancher/klipper-lb:v0.4.13
+ctr -n k8s.io image export traefik.tar docker.io/rancher/mirrored-library-traefik:3.5.1
+#.66 传输到 .65 Worker
+scp klipper-lb.tar root@192.168.109.65:~/
+scp traefik.tar root@192.168.109.65:~/
+# .65 导入镜像
+export CONTAINERD_ADDRESS=/run/k3s/containerd/containerd.sock
+ctr -n k8s.io image import klipper-lb.tar
+ctr -n k8s.io image import traefik.tar
+#【检查.65的】 指定正确的 endpoint
+export CONTAINER_RUNTIME_ENDPOINT=unix:///run/k3s/containerd/containerd.sock
+crictl images | grep -E "traefik|klipper"
+在 Master (192.168.109.66) 上验证 Pod 状态：
+kubectl get pods -A -o wide
+kubectl get nodes
+但 Pod 还是 ContainerCreating。 原因》
+kubectl describe pod svclb-traefik-ed91a8f0-tkfdt -n kube-system
+Worker 节点缺少 pause 镜像。从 Master 导出并导入
+# 导入 pause 镜像
+ctr -n k8s.io image export pause.tar docker.io/rancher/mirrored-pause:3.6
+export CONTAINERD_ADDRESS=/run/k3s/containerd/containerd.sock
+ctr -n k8s.io image import pause.tar
+# 验证  crictl --runtime-endpoint=unix:///run/k3s/containerd/containerd.sock images | grep pause
+完美！2 节点 K8s 集群已经完全就绪，所有 Pod 都在 Running 状态。现在可以开始部署 TiDB 了。
+# 在 Master 上
+kubectl get nodes
+kubectl get pods -A
+【k3s完成】109.66=Master ；下面， 部署 TiDB 了>     部署 TiDB Operator：在 Master (192.168.109.66) 上运行所有 kubectl 和 helm 命令，因为这是控制节点。
+2 节点 K8s 集群：TiDB Pod 会调度到 localhost.localdomain 和 k8s-worker-65 上
+部署 TiDB Operator 和 TiDB 集群：
+1. 安装 TiDB Operator
+2. 部署 TiDB 集群
+3. 连接 TiDB
+在 Master 上安装 Helm。
+helm repo add pingcap https://charts.pingcap.org/
+helm repo update   # 更新仓库
+# 创建命名空间
+kubectl create namespace tidb-operator
+# 安装 TiDB Operator
+helm install tidb-operator pingcap/tidb-operator -n tidb-operator
+#{一组任务的} 等待 Operator 就绪 =所有 Pod 状态变为 Running
+kubectl get pods -n tidb-operator -w
+Worker 节点无法从 docker.io 拉取 TiDB Operator 镜像。需要配置 containerd 镜像加速或手动拉取。
+109.65依然无法拉取！？手动从 Master 拉取镜像并传输到 Worker：
+109.66正常完成：docker pull pingcap/tidb-operator:v1.6.4
+导出镜像 docker save pingcap/tidb-operator:v1.6.4 -o tidb-operator.tar
+# 传输到 Worker scp tidb-operator.tar root@192.168.109.65:~/
+在 Worker (192.168.109.65) 上：导入镜像
+    docker load -i tidb-operator.tar
+    docker images | grep tidb-operator
+# .65 重启 k3s-agent 让 Pod 重新创建
+kubectl delete pod tidb-controller-manager-6cf5b786b9-kznw8 -n tidb-operator
+镜像还是拉取失败。需要配置 K8s 使用 Docker 作为容器运行时（因为镜像在 Docker 里）。
+在 Worker (192.168.109.65) 上配置 k3s 使用 Docker：
+systemctl stop k3s-agent
+# 配置 k3s-agent 使用 Docker
+cat > /etc/systemd/system/k3s-agent.service << 'EOF'
+[Unit]
+Description=Lightweight Kubernetes
+Documentation=https://k3s.io
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+EnvironmentFile=/etc/systemd/system/k3s-agent.service.env
+ExecStart=/usr/local/bin/k3s agent --docker
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl start k3s-agent
+journalctl -u k3s-agent -f
+然后在 Master.66 上再次删除 Pod 让它重新创建：
+kubectl delete pod tidb-controller-manager-6cf5b786b9-kvrjz -n tidb-operator
+在 Master 上查看 Pod 状态：
+kubectl get pods -n tidb-operator
+kubectl get pods -n tidb-operator -o wide
+完美！TiDB Operator 已经成功部署并运行。现在部署 TiDB 集群：
+kubectl create namespace tidb-cluster
+# 部署 TiDB 集群（最小配置）
+helm install basic pingcap/tidb-cluster -n tidb-cluster \
+  --set clusterName=basic \
+  --set pd.replicas=2 \
+  --set tikv.replicas=2 \
+  --set tidb.replicas=1 \
+  --set enableDynamicConfiguration=true
+需要先安装 TiDB CRDs（自定义资源定义）：
+CRD 注释太长失败。下载后修改：
+# 删除 annotations 字段（太长）
+sed -i '/^  annotations:/,/^  [a-zA-Z]/ { /^  annotations:/d; /^    [a-zA-Z]/d; }' crd.yaml
+# 重新应用
+kubectl apply -f crd.yaml
+TiUP 默认采用 滚动升级（Rolling Upgrade），过程如下：
+逐个节点操作（PD → TiKV → TiDB → 其他组件）。
+对 TiKV 节点：
+自动执行 evict-leader，将 Region Leader 迁移到其他节点。
+等待 Leader 迁移完成（默认超时 5 分钟）。
+停止旧进程 → 替换二进制 → 启动新版本。
+TiDB 节点：直接重启（无状态，影响较小）。
+整个过程业务可继续读写，但可能有短暂连接抖动（秒级）。
+改变走这个 https://docs.pingcap.com/zh/tidb-in-kubernetes/stable/prerequisites/
+modprobe br_netfilter
+
+cat <<EOF >  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-arptables = 1
+net.core.somaxconn = 32768
+vm.swappiness = 0
+net.ipv4.tcp_syncookies = 0
+net.ipv4.ip_forward = 1
+fs.file-max = 1000000
+fs.inotify.max_user_watches = 1048576
+fs.inotify.max_user_instances = 1024
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.neigh.default.gc_thresh1 = 80000
+net.ipv4.neigh.default.gc_thresh2 = 90000
+net.ipv4.neigh.default.gc_thresh3 = 100000
+EOF
+
+sysctl --system
+[12:47]又回头从来：
+operator部署？
+https://docs.pingcap.com/zh/tidb-in-kubernetes/stable/get-started/#%E7%AC%AC-2-%E6%AD%A5%E9%83%A8%E7%BD%B2-tidb-operator
+为 TiDB Operator 创建一个命名空间。
+kubectl create namespace tidb-admin
+helm install --namespace tidb-admin tidb-operator pingcap/tidb-operator --version v1.6.4
+第 3 步：部署 TiDB 集群和监控
+kubectl create namespace tidb-cluster && \
+    kubectl -n tidb-cluster apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.4/examples/basic-cn/tidb-cluster.yaml
+完美！TiDB 集群已部署。查看 Pod 状态：
+找到问题了！PVC 使用不存在的 local-storage 存储类。修改 TiDB 配置使用 local-path：
+或者用 kubectl patch 命令批量修改：
+kubectl patch tidbcluster basic -n tidb-cluster --type='merge' -p '{
+  "spec": {
+    "pd": {"storageClassName": "local-path"},
+    "tikv": {"storageClassName": "local-path"},
+    "tidb": {"storageClassName": "local-path"}
+  }
+}'
+了解你当前的 TiDB 集群状态
+kubectl get pods -n tidb-cluster
+太好了！PVC 现在使用 local-path 存储类了。但是还是 Pending 状态，让我们继续检查。
+PVC 在等待 Pod 被调度，但 Pod 因为 PVC Pending 而无法调度，形成了循环依赖。local-path 存储类需要手动创建 PV。
+问题是 PVC 在等待 Pod 调度，但 Pod 无法调度。我们需要检查 Pod 为什么 Pending。
+TiDB Operator 一直在尝试连接 PD 服务，但 PD pods 都在 Pending 状态，所以没有 endpoints。没有 tidb-scheduler，使用默认的 Kubernetes scheduler。
+WaitForFirstConsumer 模式下，PVC 需要等待 Pod 调度才能绑定，但 Pod 又需要 PVC 才能调度，形成死锁。
+解决方案：改为 Immediate 模式
+kubectl patch storageclass local-path -p '{"volumeBindingMode":"Immediate"}'
+volumeBindingMode 是不可变字段，无法直接修改。我们需要手动创建 PV 来打破循环依赖。
+好的，local-path provisioner 的配置显示默认存储路径是 /var/lib/rancher/k3s/storage，不是 /opt/local-path-provisioner。
+创建 PV 配置
+PV 已经创建成功且状态为 Available，但 PVC 仍然是 Pending。这是因为 PVC 无法自动绑定到我们手动创建的 PV。
+解决方法：手动绑定 PVC 到 PV 2. 创建新的 PVC 并绑定到 PV
+TiDB Operator 自动创建的 PVC 大小是 1Gi，与我们创建的 10Gi PV 不匹配。需要完全删除 PVC 和 TiDB 集群，然后重新部署。
+# 删除所有 PVC
+kubectl delete pvc -n tidb-cluster --all
+# 卸载 TiDB 集群
+helm uninstall basic -n tidb-cluster
+# 重新安装，指定 PV 容量
+helm install basic pingcap/tidb-cluster -n tidb-cluster -f /tmp/tidb-values-correct.yaml
+PVC 请求的是 1Gi 存储，但我们创建的 PV 是 10Gi。需要删除现有的 10Gi PV，创建 1Gi 的 PV。
+@没法安装啊》==》过渡方案？  迁移策略建议（推荐方式）
+使用 RPM 方式部署 TiDB（即裸机或虚拟机上的传统部署），未来希望迁移到 基于 Kubernetes 的 TiDB Operator 部署方式。这是一个很常见的演进路径，尤其在企业逐步云原生化的过程中。
+方案一：使用 TiDB 的跨集群复制 + 切流（推荐）
+这是最安全、对业务影响最小的方式，适用于生产环境。
+步骤概览：
+在 K8s 中通过 TiDB Operator 部署一套新集群（目标集群）。
+配置源集群（RPM 部署）与目标集群（K8s）之间的 CDC 或 Drainer + Pump（旧版）：
+新版本推荐使用 TiCDC（TiDB 4.0+ 支持）将数据实时同步到目标集群。
+目标集群作为下游，接收变更日志并回放。
+等待数据追平（延迟接近 0）。
+业务切流：
+先切只读流量验证；
+再停写源集群，确保最终一致性；
+最后将写流量切换到 K8s 集群。
+验证数据一致性（可使用 sync-diff-inspector 工具）。
+下线旧集群。
+再尝试《《 PVC 持续 Pending，说明 TiKV 和 TiDB 的 PVC 没有创建。这是因为 PD pods 无法启动（由于 PVC Pending），导致 TiKV 和 TiDB 组件没有创建。
+我们需要直接修改 PV 的 claimRef 字段来手动绑定。让我们删除现有 PV 并创建新的 PV，直接指定 PVC 名称。
+解决方案：创建带有 claimRef 的 PV
+kubectl apply -f /tmp/pvs-with-claim.yaml
+太好了！PVC 现在已经 Bound 了！PD pods 应该会开始启动。
+1. 检查 Kubernetes 调度器是否运行
+问题很可能是 TiDB 集群配置了 tidb-scheduler 作为调度器，但这个调度器不存在。Pods 无法被调度是因为等待这个不存在的调度器。
+Events 仍然为空，这非常奇怪。可能是调度器根本没有尝试调度这个 Pod。
+让我们检查 StatefulSet 的配置和调度器的日志：
+1. 检查 StatefulSet
+kubectl get statefulset -n tidb-cluster
+kubectl describe statefulset basic-pd -n tidb-cluster
+让我检查一个重要的问题：我们创建的 PV 的 claimRef 可能导致绑定问题。让我们删除并重新创建 PV，不带 claimRef，让 Kubernetes 自动绑定：
+删除 PV 并重新创建（不带 claimRef）
+kubectl get pv
+kubectl get pvc -n tidb-cluster
+kubectl get pods -n tidb-cluster
+问题的根源是：Kubernetes 需要先调度 Pod，才能根据 Pod 所在节点绑定对应的 PV。但 Pod 又需要 PVC 才能调度。
+解决方案：修改 PV 的 volumeBindingMode 为 Immediate
+》走官方的步骤》完全正常！TiDB Operator 已经成功部署并运行了。
+第 3 步：部署 TiDB 集群和监控
+
+^C[root@localhost tidb]# kubectl create namespace tidb-cluster && \
+>     kubectl -n tidb-cluster apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.4/examples/basic-cn/tidb-cluster.yaml
+namespace/tidb-cluster created
+tidbcluster.pingcap.com/basic created
+[root@localhost tidb]#
+[root@localhost tidb]# kubectl -n tidb-cluster apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.4/examples/basic-cn/tidb-dashboard.yaml
+tidbdashboard.pingcap.com/basic created
+[root@localhost tidb]#
+[root@localhost tidb]# kubectl -n tidb-cluster apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.4/examples/basic-cn/tidb-monitor.yaml
+tidbmonitor.pingcap.com/basic created
+《超级慢，11分钟才能显示全部正常？ 》查看 Pod 状态
+watch kubectl get po -n tidb-cluster
+Every 2.0s: kubectl get po -n tidb-cluster                                      localhost.localdomain: Tue Jan  6 15:32:37 2026
+NAME                               READY   STATUS    RESTARTS   AGE
+basic-discovery-774d85b6f9-6cq9q   1/1     Running   0          12m
+basic-monitor-0                    4/4     Running   0          10m
+basic-pd-0                         1/1     Running   0          12m
+basic-tidb-0                       2/2     Running   0          3m24s
+basic-tidb-dashboard-0             1/1     Running   0          11m
+basic-tikv-0                       1/1     Running   0          9m24s
+太好了！TiDB 集群已经成功运行了！
+https://docs.pingcap.com/zh/tidb-in-kubernetes/stable/get-started/  
+第 4 步：连接 TiDB 集群/  方案1：使用 NodePort 暴露 TiDB 服务
+kubectl patch svc basic-tidb -n tidb-cluster -p '{"spec":{"type":"NodePort","ports":[{"port":4000,"targetPort":4000,"nodePort":30400}]}}'
+使用 --address 0.0.0.0 暴露到所有网络接口
+# TiDB Dashboard
+kubectl port-forward --address 0.0.0.0 -n tidb-cluster svc/basic-tidb-dashboard-exposed 12333 > /dev/null 2>&1 &
+http://192.168.109.66:12333/dashboard/#/signin     用户名root，默认密码为空
+# Grafana 监控面板
+kubectl port-forward --address 0.0.0.0 -n tidb-cluster svc/basic-grafana 3000 > /dev/null 2>&1 &
+http://192.168.109.66:3000/login  用户名和密码都是 "admin" 
+第 5 步：升级 TiDB 集群
+如果重启后 TiDB 没有自动启动：
+# 1. 检查 PV 是否存在
+kubectl get pv
+# 2. 如果 PV 不存在，重新创建（使用之前的 PV YAML）
+kubectl apply -f /tmp/pvs-no-claim.yaml
+# 3. 检查 TiDB Operator
+kubectl get pods -n tidb-admin
+# 4. 检查 TiDB 集群
+kubectl get pods -n tidb-cluster
+保存以下配置文件：
+# 1. PV 配置
+cp /tmp/pvs-no-claim.yaml /root/backup/tidb-pvs.yaml
+# 2. TiDB values 配置
+helm get values basic -n tidb-cluster > /root/backup/tidb-values.yaml
+# 3. 导出集群配置
+kubectl get tidbcluster basic -n tidb-cluster -o yaml > /root/backup/tidb-cluster.yaml
+TiDB 集群是通过 TiDB Operator 创建的（使用 CRD），不是直接 Helm 部署的。Helm 只部署了 tidb-operator。
+ls -lh /root/backup/   备份配置：
+《如果重启后 TiDB 集群丢失，只需要重新应用 CRD 配置：
+        # 恢复 TiDB 集群
+        kubectl apply -f /root/backup/tidb-cluster.yaml
+        # 如果 PV 也丢失，恢复 PV
+        kubectl apply -f /root/backup/pvs.yaml
+【家里电脑】需 https://pingkai.cn/docs/tidb/stable/quick-start-with-tidb/
+      在单机上模拟部署生产环境集群 ； 旧版本的https://pingkai.cn/docs/pingkaidb/stable/production-deployment-using-tiup/
