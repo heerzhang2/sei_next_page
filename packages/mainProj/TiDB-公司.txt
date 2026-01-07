@@ -1,4 +1,4 @@
-<<在 Kubernetes 上快速上手 TiDB>>
+<<在 Kubernetes 上快速上手 TiDB>>  参考: https://docs.pingcap.com/zh/tidb-in-kubernetes/stable/get-started/
 TiDB Operator on K8s	✅ 需要	✅ 持久（依赖 PV/PVC）	云原生生产环境
 tiup cluster 是传统物理机/虚拟机部署方式，只是用 TiUP 工具自动化了安装、启停、扩缩容等操作。不需要 K8s：本地部署方案。WSL2 默认内存可能只有 50% 主机内存，可在 %USERPROFILE%\.wslconfig 中调整：
 在公司目前的 2 台 Linux 部署 Kubernetes + TiDB。先完成 K8s 集群搭建， k3s集群可行！。
@@ -307,12 +307,14 @@ https://docs.pingcap.com/zh/tidb-in-kubernetes/stable/get-started/
 第 4 步：连接 TiDB 集群/  方案1：使用 NodePort 暴露 TiDB 服务
 kubectl patch svc basic-tidb -n tidb-cluster -p '{"spec":{"type":"NodePort","ports":[{"port":4000,"targetPort":4000,"nodePort":30400}]}}'
 使用 --address 0.0.0.0 暴露到所有网络接口
+
 # TiDB Dashboard
 kubectl port-forward --address 0.0.0.0 -n tidb-cluster svc/basic-tidb-dashboard-exposed 12333 > /dev/null 2>&1 &
 http://192.168.109.66:12333/dashboard/#/signin     用户名root，默认密码为空
 # Grafana 监控面板
 kubectl port-forward --address 0.0.0.0 -n tidb-cluster svc/basic-grafana 3000 > /dev/null 2>&1 &
-http://192.168.109.66:3000/login  用户名和密码都是 "admin" 
+http://192.168.109.66:3000/login  用户名admin  密码=gaf8706
+
 第 5 步：升级 TiDB 集群
 如果重启后 TiDB 没有自动启动：
 # 1. 检查 PV 是否存在
@@ -339,3 +341,27 @@ ls -lh /root/backup/   备份配置：
         kubectl apply -f /root/backup/pvs.yaml
 【家里电脑】需 https://pingkai.cn/docs/tidb/stable/quick-start-with-tidb/
       在单机上模拟部署生产环境集群 ； 旧版本的https://pingkai.cn/docs/pingkaidb/stable/production-deployment-using-tiup/
+Grafana : 告诉你“系统怎么了”（比如写入变慢了）
+TiDB Dashboard : 深入分析,告诉你“为什么慢”（比如某条 SQL 没走索引，或 Region 热点）
+109.66 这台Master 执行> watch kubectl get po -n tidb-cluster
+kubectl get ns
+电脑重启后： kubectl 的证书验证失败，需要重新配置 kubeconfig。
+  修复 kubectl 证书问题
+    cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+    chmod 600 ~/.kube/config
+    kubectl get nodes
+电脑重启后： 重新启动端口转发
+# TiDB Dashboard
+kubectl port-forward --address 0.0.0.0 -n tidb-cluster svc/basic-tidb-dashboard-exposed 12333 > /dev/null 2>&1 &
+# Grafana
+kubectl port-forward --address 0.0.0.0 -n tidb-cluster svc/basic-grafana 3000 > /dev/null 2>&1 &
+@ 可省略！-- TiDB 数据库
+kubectl port-forward --address 0.0.0.0 -n tidb-cluster svc/basic-tidb 4000 > /dev/null 2>&1 &
+最后运行 netstat -tlnp | grep -E '12333|3000|4000'
+通过 DBeaver 或 MySQL 客户端连接到 TiDB：
+  SET PASSWORD FOR 'root'@'%' = '你的新密码';     FLUSH PRIVILEGES;
+  CREATE USER 'app_user'@'%' IDENTIFIED BY '你的强密码';
+限制特定 IP 访问（可选，更安全）CREATE USER 'app_user'@'192.168.109.%' IDENTIFIED BY '密码';
+    GRANT ALL PRIVILEGES ON myapp_db.* TO 'app_user'@'192.168.109.%';
+MySQL/TiDB：一个数据库就是一个命名空间，表直接在数据库下，SCHEMA 和 DATABASE 是完全等价的概念；事务作用域是单个数据库DATABASE
+PostgreSQL：一个数据库可以包含多个模式（schema）
