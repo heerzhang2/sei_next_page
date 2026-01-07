@@ -29,3 +29,40 @@ curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"
 [现象]：token刷新太慢了，保存无结果超时,  【解决】数据库重启，redis重启。
 
 架构顶部加apisix网关，浏览器面对网关https://192.168.171.3:9443/ 前端服务器就退居幕后不需要https协议，apisix做https转http，/ssl/目录给网关了。
+调试端口无法连接 Gradle Language Server 出问题导致的。让我帮你解决：步骤1：清理 Gradle Language Server 缓存
+      方法1：清理 VS Code Gradle 缓存；
+您希望为哪种语言的代码编写文档注释？或者需要为哪个具体文件生成文档注释？
+Opening Java Project，Activating task providers java；java服务报错：Failed to attach to localhost:55076 是因为：先执行了 bootRun，应用启动时使用了随机调试端口，然后尝试附加调试器，端口已经变化了，正确做法：直接在 VS Code 中用 Debug 模式启动，不要单独执行 bootRun。
+方案2：手动修复步骤，      重新打开 VS Code ；     按 Ctrl+Shift+P
+      输入 Java: Clean Java Language Server Workspace      这个重置后，恢复很慢。
+PS D:\home\sei-rearend> .\quick-fix-lsp.ps1     
+  1. Reopen VS Code
+  2. Press Ctrl+Shift+P and run: Java: Clean Java Language Server Workspace
+  3. Wait for sync to complete
+Failed to delete c:\Users\1\AppData\Roaming\Code\User\workspaceStorage\c79565b2af90faca9590defbcae8fd52\redhat.java\jdt_ws: Error: EBUSY: resource busy or locked, unlink 'c:\Users\1\AppData\Roaming\Code\User\globalStorage\redhat.java\1.51.0\config_ss_win\org.eclipse.core.runtime\.extraData.3'
+  强制删除被锁文件c:\Users\1\AppData\Roaming\Code\User\workspaceStorage\c79565b2af90faca9590defbcae8fd52\redhat.java\jdt_ws:
+Activating task providers java
+Error: there is no registered task type 'Java'. Did you miss installing an extension that provides a corresponding task provider?
+因为 VS Code 的 Java 扩展加载顺序问题。Java 扩展还未完全初始化时，任务提供者（task provider）就已经被激活了。
+扩展的 Java Extension Pack 点击红心图标禁用再重新启用
+这是 VS Code 的 Gradle 扩展和 Java 扩展冲突导致的。问题：
+.settings 文件夹缺失 - Eclipse 项目配置被误删
+资源移动错误 - 工作区缓存损坏
+调试端口随机 - bootRun 每次使用随机端口
+Gradle 面板的 bootRun 会使用随机端口，导致调试器无法连接。使用 VS Code 的 Debug 配置可以避免这个问题。
+2. 重启 VS Code
+3. 正确调试方式（推荐）
+不要使用 Gradle 面板的 bootRun，而是：
+按 F5 或点击左侧调试图标
+选择 "Debug Spring Boot"
+VS Code 会自动启动应用并使用固定端口
+4. 如果仍需使用 bootRun
+在 build.gradle 中添加固定调试端口：
+application {
+    applicationDefaultJvmArgs = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005']
+}
+这是 LSP4J 签名不匹配的经典错误。Java 扩展和 Gradle 扩展使用了不同版本的 LSP4J 库。
+已配置 VS Code 禁用自动 Gradle 导入。
+禁用 Gradle 扩展后，Gradle 面板将不可用，但仍可通过：
+终端运行 gradlew.bat 命令
+使用 .vscode/tasks.json 中的任务
