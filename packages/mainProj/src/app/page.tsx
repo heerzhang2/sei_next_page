@@ -34,10 +34,10 @@ export default function Home() {
                             <Link href="/offline">离线018管理</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/rep/fbDjUTVZSha7EIr24Y0wjFJlcG9ydA/SLIDING_JJ/1">Precahe重新注册前3份报告-滑行车的</Link>
+                            <Link href="/rep/HAAAAAAAAAQAAAAAAAAAAFJlcG9ydA/SLIDING_JJ/1">例子报告-滑行车类</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1">查阅当前1份报告-管道的</Link>
+                            <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1">查阅1份报告-管道的例子</Link>
                         </div>
                         <div className="mt-10">
                             <Link href="/login">登录页。</Link>
@@ -51,7 +51,7 @@ export default function Home() {
                             </Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=KQcbgDF9RO21DgA92H3tQVJlcG9ydA&redId=2#MangInstrument">
+                            <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=HAAAAAAAAAEAAAAAAAAAAFJlcG9ydA&redId=2#MangInstrument">
                                 磁粉检测报告2-2第2分项目流转
                             </Link>
                         </div>

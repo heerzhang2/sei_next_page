@@ -1626,3 +1626,4 @@ docker run -d --name yb-node2 \
 docker exec -it yb-node1 yugabyted status
 docker exec -it yb-node2 yugabyted status
 部署 K8s 集群（k3s + Helm，标准生产方式）
+2026/01/12：服务端页码提取问题：将这个 Server Action 改为普通的 API 路由，这样就不会有 Server Actions 的验证问题：

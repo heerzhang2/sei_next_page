@@ -16,10 +16,17 @@ module.exports = async (phase) => {
             unoptimized: true,
         },
         reactStrictMode: true,
-        
+
         // 基础路径配置，用于子路径部署
         basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
         assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
+
+        experimental: {
+            // 增加 Server Actions 的 body 大小限制（默认为 1MB）
+            serverActions: {
+                bodySizeLimit: '10mb',
+            },
+        },
 
         webpack: (config, { isServer, dev }) => {
             // 排除所有 .node 二进制文件 如果你需要使用这些模块，可以使用 node-loader 代替 ignore-loader 但这通常只在 Node.js 环境中有效，不适用于浏览器

@@ -117,7 +117,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 clearTimeout(timeoutId)
                 if (response.ok) {
                     const healthData = await response.json()
-                    const dbStatus = healthData.components?.cockroachDB?.status
+                    const dbStatus = healthData.components?.mainDB?.status
                     return dbStatus === "UP"
                 }
                 if (attempt < retries) {
