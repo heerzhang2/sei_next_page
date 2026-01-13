@@ -1627,3 +1627,10 @@ docker exec -it yb-node1 yugabyted status
 docker exec -it yb-node2 yugabyted status
 部署 K8s 集群（k3s + Helm，标准生产方式）
 2026/01/12：服务端页码提取问题：将这个 Server Action 改为普通的 API 路由，这样就不会有 Server Actions 的验证问题：
+wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/c/home/sei-rearend && chmod +x fix-server-actions-v3.sh && ./fix-server-actions-v3.sh"
+没改变？ `x-forwarded-host` header with value `192.168.171.3` does not match `origin` header with value `192.168.171.3:9443` fr
+wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/c/home/sei-rearend && chmod +x fix-server-actions-v5.sh && ./fix-server-actions-v5.sh"
+no
+wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/c/home/sei-rearend && chmod +x fix-server-actions-v6.sh && ./fix-server-actions-v6.sh"
+wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/c/home/sei-rearend && chmod +x fix-server-actions-v6.sh && ./fix-server-actions-v6.sh"
+没改变？
