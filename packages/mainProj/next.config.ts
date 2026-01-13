@@ -21,13 +21,6 @@ module.exports = async (phase) => {
         basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
         assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
 
-        experimental: {
-            // 增加 Server Actions 的 body 大小限制（默认为 1MB）
-            serverActions: {
-                bodySizeLimit: '10mb',
-            },
-        },
-
         webpack: (config, { isServer, dev }) => {
             // 排除所有 .node 二进制文件 如果你需要使用这些模块，可以使用 node-loader 代替 ignore-loader 但这通常只在 Node.js 环境中有效，不适用于浏览器
             config.module.rules.push({
@@ -70,6 +63,24 @@ module.exports = async (phase) => {
 
         // 允许特定开发来源;    但是生产环境推荐Nginx反向代理方案
         allowedDevOrigins: process.env.NEXT_PUBLIC_ALLOWED_DEV_ORIGINS?.split(",") || ["192.168.171.3", "192.168.0.100"],
+        experimental: {
+            serverActions: {
+                bodySizeLimit: '10mb',
+                // 允许的 Server Actions 请求来源（包含端口）
+                // 当通过反向代理（如 APISIX）访问时，origin 头会包含端口号
+                allowedOrigins: [
+                "192.168.171.3:9443",
+                "192.168.171.3",
+                "192.168.0.100:9443",
+                "192.168.0.100",
+                // 如果有域名也加上
+                // "yourdomain.com",
+                // "yourdomain.com:9443",
+                ],
+                // 允许的转发主机头
+                allowedForwardedHosts: ["192.168.171.3:9443", "192.168.171.3", "192.168.0.100:9443", "192.168.0.100"],
+            },
+        },
     }
 
     const revision = crypto.randomUUID()

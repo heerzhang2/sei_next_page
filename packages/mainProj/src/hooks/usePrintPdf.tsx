@@ -6,7 +6,7 @@ import {toast} from "sonner";
 import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
 import * as React from "react";
 import type { OutlineData } from "@/components/pdf-outline-analyzer"
-// 不再使用 Server Action，改用 API 路由
+import { extractPageMarkAction } from "@/actions/pdf-actions"
 
 
 /**对接的打印转换器 客户机上的本地 node js server 服务
@@ -101,19 +101,11 @@ export function usePageMarkinfo(
 
             setIsMutating(true)
             try {
-                // 使用 API 路由替代 Server Action，避免反向代理验证问题
-                const response = await fetch('/api/extract-page-mark', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(prjob),
-                })
-
-                const result = await response.json()
+                // 使用 Server Action 提取书签信息
+                const result = await extractPageMarkAction(prjob)
 
                 if(result.success) {
-                    const responseData = result.data?.data as any
+                    const responseData = result.data as any
                     if(responseData?.result === "Success") {
                         toast.success(`服务端提取书签应答`, {
                             description: <>{responseData?.result}</>,
