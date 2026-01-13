@@ -106,11 +106,11 @@ export function usePageMarkinfo(
 
                 if(result.success) {
                     const responseData = result.data as any
-                    if(responseData?.result === "Success") {
+                    if(responseData?.message === "OK") {
                         toast.success(`服务端提取书签应答`, {
                             description: <>{responseData?.result}</>,
                         })
-                        const newOutlineData ={outline: responseData.outline, totalPages: responseData.totalPages }
+                        const newOutlineData ={outline: responseData?.data?.outline, totalPages: responseData?.data?.totalPages }
                         // 调用成功回调函数进行缓存
                         try {
                             await onSuccess(newOutlineData)

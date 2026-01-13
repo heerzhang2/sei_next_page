@@ -1626,11 +1626,6 @@ docker run -d --name yb-node2 \
 docker exec -it yb-node1 yugabyted status
 docker exec -it yb-node2 yugabyted status
 部署 K8s 集群（k3s + Helm，标准生产方式）
-2026/01/12：服务端页码提取问题：将这个 Server Action 改为普通的 API 路由，这样就不会有 Server Actions 的验证问题：
-wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/c/home/sei-rearend && chmod +x fix-server-actions-v3.sh && ./fix-server-actions-v3.sh"
-没改变？ `x-forwarded-host` header with value `192.168.171.3` does not match `origin` header with value `192.168.171.3:9443` fr
-wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/c/home/sei-rearend && chmod +x fix-server-actions-v5.sh && ./fix-server-actions-v5.sh"
-no
-wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/c/home/sei-rearend && chmod +x fix-server-actions-v6.sh && ./fix-server-actions-v6.sh"
-wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/c/home/sei-rearend && chmod +x fix-server-actions-v6.sh && ./fix-server-actions-v6.sh"
-没改变？
+2026/01/13：为 APISIX 的 report-nextjs 路由增加超时时间：
+curl -X PATCH http://127.0.0.1:9180/apisix/admin/routes/report-nextjs -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -H "Content-Type: application/json" -d "{\"timeout\":{\"connect\":60,\"send\":60,\"read\":300}}" 2>&1
+    成功设置超时时间：connect: 60秒；send: 60秒；read: 300秒 (5分钟)。
