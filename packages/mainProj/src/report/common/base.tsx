@@ -251,9 +251,10 @@ export const CCellUnit = ({
  * @param ori 是原始记录页面的
  * 注意DirectLink：主动把直接儿子的 div或span改成了 <a>标签。
  */
-export const RepLink= ( {rep, children, tag, ori, subrid,redId,hash}
-                        : {rep:any, children:React.ReactNode, tag:string,ori?:boolean,subrid?:string,redId?:number,hash?:string}
+export const RepLink= ( {rep, children, tag, ori, subrid,redId,hash,printMode}
+                        : {rep:any, children:React.ReactNode, tag:string,ori?:boolean,subrid?:string,redId?:number,hash?:string,printMode?:boolean}
 ) => {
+    if(printMode)  return children;
     const apds=`${subrid ? '&subrid='+subrid : ''}`
     const apdr=`${redId!==undefined ? '&redId='+redId : ''}`
     if(ori)

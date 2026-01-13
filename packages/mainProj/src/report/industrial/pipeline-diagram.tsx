@@ -96,7 +96,7 @@ const DiagramItem: React.FC<{
                     </div>
                 )}
             </div>
-            <JumpTab
+            <JumpTab printMode={printMode}
                 href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/LineDiagramFile?original=1&lineIndex=${index}#LineDiagram${index}`}
                 className="print:flex-1 print:flex print:flex-col"
             >

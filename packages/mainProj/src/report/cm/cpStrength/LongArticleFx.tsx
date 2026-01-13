@@ -76,8 +76,8 @@ export const LongArticleFx = ({
 
     // 定义新的文本块Schema
     const textBlockSchema = z.object({
-        t: z.string().min(1, "内容是必填的"), // 文本内容
-        a: z.boolean().optional(), // 避免分页
+        t: z.string().min(1, "内容是必填的"), //单纯文本内容
+        a: z.boolean().optional(), //要不要在打印时刻避免分页的
     })
 
     const explanatorySchema = z.object({
@@ -682,13 +682,14 @@ export const LongArticleContent = ({
 
                             return (
                                 textContent && (
-                                    <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${hash}?original=1${apds}${apdr}&from=${i}#${hash}_${i}`}>
+                                    <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${hash}?original=1${apds}${apdr}&from=${i}#${hash}_${i}`}
+                                        printMode={printMode}
+                                    >
                                         <div
                                             className={cn(
                                                 "block",
                                                 avoidPageBreak && "break-inside-avoid-page",
-                                                // 在非打印模式下，如果是 wsPre 模式，添加水平滚动
-                                                wsPre && !printMode && "overflow-x-auto",
+                                                wsPre && "overflow-x-auto",
                                             )}
                                         >
                                             {textContent}

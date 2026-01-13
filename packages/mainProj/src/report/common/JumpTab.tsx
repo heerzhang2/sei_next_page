@@ -11,8 +11,11 @@ interface JumpTabProps extends React.HTMLAttributes<HTMLElement> {
     //默认设置为=true的；
     scroll?: boolean
     tab?: ReportPanelType
+    printMode?: boolean
 }
-/**替代DirectLink：报告编辑器的Context底下的，附带Tabs跳转能力； div span :被替换为<a>; 剥离一层嵌套标签的;
+/**替代DirectLink：报告编辑器的Context底下的，附带Tabs跳转能力； 
+ * div span :被替换为<a>; 剥离一层嵌套标签的;
+ * 打印情况：只有一层的div ,输出PDF格式的，会带<a>标签可点击跳转！
  * 类似上一代的 JumpOrgTag
  * 【限制】遇到是table的必须放在tr的上一层，不能直接放在table那一层的。
  */
@@ -38,6 +41,7 @@ export const JumpTab: React.FunctionComponent<JumpTabProps> = (props: JumpTabPro
         router.prefetch(props.href)
     }, [props.href, router])
 
+    if(props.printMode)  return props.children;
     return (
         <React.Fragment>
             {valChilds.map((one, row) => {
