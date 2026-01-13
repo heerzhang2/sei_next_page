@@ -314,8 +314,8 @@ const makeAuthExchange = (
                         if (print || (connectivity && connectivity.nextjsReachable)) {
                             console.log("[AuthExchange] 通过NextJS API刷新token")
                             const refreshStartTime = Date.now()
-
-                            const response = await fetch("/api/refresh-token", {
+                            //发送给Nextjs服务器的！不是发给Java后端。
+                            const response = await fetch("/report/api/refresh-token", {
                                 method: "POST",
                                 credentials: "include",
                             })
