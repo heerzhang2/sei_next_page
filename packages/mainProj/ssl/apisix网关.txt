@@ -1650,4 +1650,11 @@ curl -X PATCH http://127.0.0.1:9180/apisix/admin/routes/report-nextjs -H "X-API-
                                 method: "POST",
                                 credentials: "include",
                             })
-                            
+[mainProj Auth] GraphQL 认证错误: Error [CombinedError]: [Network] No Content
+    at ignore-listed frames {
+  graphQLErrors: [],
+  networkError: Error: No Content
+      at ignore-listed frames,
+  response: Response {
+    status: 405,  然而 405 错误表明请求根本没有到达后端，而是被 APISIX 拦截了。
+    
