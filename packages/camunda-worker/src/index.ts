@@ -20,6 +20,7 @@ const camundaConfig = {
     CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
     CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
     CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION === "true",
+    ZEEBE_GATEWAY_ADDRESS: process.env.ZEEBE_GATEWAY_ADDRESS || "localhost:26500",
 }
 
 //[文档] https://camunda.github.io/camunda-8-js-sdk/#oauth
