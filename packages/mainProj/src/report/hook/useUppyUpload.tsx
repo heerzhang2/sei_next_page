@@ -815,7 +815,7 @@ export function useUppyUpload({
     const configureTusPlugin = (uppy: Uppy) => {
         uppy.use(Tus, {
             id: "tus-upload",
-            endpoint: `https://192.168.0.100:9443/uploadTUS/`,
+            endpoint: process.env.NEXT_PUBLIC_TUS_UPLOAD_ENDP || `https://192.168.171.3:9443/uploadTUS/`,
             withCredentials: true,
             chunkSize: 5 * 1024 * 1024,
             retryDelays: [0, 2000, 7000, 15000],
