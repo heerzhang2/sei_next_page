@@ -91,29 +91,30 @@ async function getCamunda8Instance() {
     return c8;
 }
 
-// 获取 REST 客户端的函数
-export async function getRestClient() {
+// 获取 Orchestration Cluster API 客户端的函数（Loose 客户端）
+export async function getOrchestrationClient() {
     if (typeof window !== 'undefined') {
-        throw new Error('REST 客户端只能在服务端使用');
+        throw new Error('Orchestration 客户端只能在服务端使用');
     }
 
     const instance = await getCamunda8Instance();
-    
+
     if (!restClient) {
-        restClient = instance.getCamundaRestClient();
+        // 使用 Loose 客户端，适合现有代码迁移（使用普通字符串 ID）
+        restClient = instance.getOrchestrationClusterApiClientLoose();
     }
     return restClient;
 }
 
-// 使用 REST API 创建流程实例的辅助函数
+// 使用 Orchestration Cluster API 创建流程实例的辅助函数
 export async function createProcessInstanceRest(bpmnProcessId: string, variables: Record<string, any>) {
     if (typeof window !== 'undefined') {
         throw new Error('此函数只能在服务端使用');
     }
 
     try {
-        const client = await getRestClient();
-        // 使用 REST API 创建流程实例
+        const client = await getOrchestrationClient();
+        // 使用 Orchestration Cluster API Loose 客户端创建流程实例
         const response = await client.createProcessInstance({
             processDefinitionId: bpmnProcessId,
             variables,
@@ -121,7 +122,10 @@ export async function createProcessInstanceRest(bpmnProcessId: string, variables
 
         return response
     } catch (error) {
-        console.error("Error creating process instance via REST:", error)
+        console.error("Error creating process instance via Orchestration API:", error)
+        console.error("Process Definition ID:", bpmnProcessId)
+        console.error("Variables:", JSON.stringify(variables, null, 2))
+        console.error("Error details:", JSON.stringify(error, null, 2))
         throw error
     }
 }
