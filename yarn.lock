@@ -37,7 +37,7 @@
     typed-env "^2.0.0"
     zod "^4"
 
-"@camunda8/sdk@^8.7.28":
+"@camunda8/sdk@^8.7.28", "@camunda8/sdk@^8.8.4":
   version "8.8.4"
   resolved "https://registry.npmmirror.com/@camunda8/sdk/-/sdk-8.8.4.tgz"
   integrity sha512-Ie7kfTaXSKws8t3dM9FLR6lbw5u1ZUHB/LzlHpW0MbindFC04o4dOgSVwqlrHhUSdCe1djXr3K62xw2l65D6Og==

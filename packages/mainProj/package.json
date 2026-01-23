@@ -45,7 +45,7 @@
     "react-dom": "19.2.3"
   },
   "dependencies": {
-    "@camunda8/sdk": "^8.7.28",
+    "@camunda8/sdk": "^8.8.4",
     "@fjsei/shared-auth-config": "*",
     "@floating-ui/react": "^0.27.16",
     "@hookform/resolvers": "^5.0.1",

@@ -24,12 +24,57 @@ const loadDependencies = async () => {
 };
 
 // Camunda 8 连接配置
-const getCamundaConfig = () => ({
-    CAMUNDA_AUTH_STRATEGY: process.env.CAMUNDA_AUTH_STRATEGY || "",
-    CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
-    CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
-    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION === "true",
-});
+const getCamundaConfig = () => {
+    // 根据认证策略配置不同的方式
+    const authStrategy = process.env.CAMUNDA_AUTH_STRATEGY || "oauth";
+
+    if (authStrategy === "oauth") {
+        // OAuth 认证方式（推荐，用于 SaaS 或带有 OAuth 的自部署）
+        return {
+            CamundaCloud: {
+                clientId: process.env.CAMUNDA_CLIENT_ID || "",
+                clientSecret: process.env.CAMUNDA_CLIENT_SECRET || "",
+                clusterId: process.env.CAMUNDA_CLUSTER_ID || "",
+                clusterRegion: process.env.CAMUNDA_CLUSTER_REGION || "",
+            },
+            // 本地部署的自定义 REST 地址
+            customRestUrl: process.env.ZEEBE_REST_ADDRESS || "",
+            customOperateUrl: process.env.CAMUNDA_OPERATE_URL || "",
+            customTasklistUrl: process.env.CAMUNDA_TASKLIST_URL || "",
+            customOptimizeUrl: process.env.CAMUNDA_OPTIMIZE_URL || "",
+            // 连接配置
+            TLSConfig: {
+                secure: process.env.CAMUNDA_SECURE_CONNECTION === "true",
+                // 如果是自签名证书，可以配置如下
+                allowUnauthorizedConnection: process.env.CAMUNDA_ALLOW_UNAUTHORIZED === "true",
+            },
+        };
+    } else {
+        // Basic 认证方式（用于简单认证的自部署）
+        return {
+            BasicAuth: {
+                username: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
+                password: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
+            },
+            // REST 和 gRPC 地址
+            zeebe: {
+                gatewayAddress: process.env.ZEEBE_GATEWAY_ADDRESS || "",
+                restAddress: process.env.ZEEBE_REST_ADDRESS || "",
+            },
+            operate: {
+                baseUrl: process.env.CAMUNDA_OPERATE_URL || "",
+            },
+            tasklist: {
+                baseUrl: process.env.CAMUNDA_TASKLIST_URL || "",
+            },
+            // 连接配置
+            TLSConfig: {
+                secure: process.env.CAMUNDA_SECURE_CONNECTION === "true",
+                allowUnauthorizedConnection: process.env.CAMUNDA_ALLOW_UNAUTHORIZED === "true",
+            },
+        };
+    }
+};
 
 // 获取 Camunda8 实例的函数
 async function getCamunda8Instance() {
@@ -40,7 +85,8 @@ async function getCamunda8Instance() {
     await loadDependencies();
 
     if (!c8) {
-        c8 = new Camunda8.Camunda8(getCamundaConfig());
+        const config = getCamundaConfig();
+        c8 = new Camunda8.Camunda8(config);
     }
     return c8;
 }
