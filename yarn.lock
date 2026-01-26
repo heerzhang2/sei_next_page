@@ -37,7 +37,16 @@
     typed-env "^2.0.0"
     zod "^4"
 
-"@camunda8/sdk@^8.7.28", "@camunda8/sdk@^8.8.4":
+"@camunda8/orchestration-cluster-api@^8.8.2":
+  version "8.8.2"
+  resolved "https://registry.npmmirror.com/@camunda8/orchestration-cluster-api/-/orchestration-cluster-api-8.8.2.tgz#f2419a9c45edef1dffa6776ab2b4be7f754ff0fe"
+  integrity sha512-0lLLRQky76RA586UdBddpqVvOs8RhEwZmMWiJ2KUEjDEiV+T3FG5zNlkntll6f0cie/lX1jkJEzYzoKUtZTBiQ==
+  dependencies:
+    p-retry "^6.0.1"
+    typed-env "^2.0.0"
+    zod "^4"
+
+"@camunda8/sdk@^8.7.28":
   version "8.8.4"
   resolved "https://registry.npmmirror.com/@camunda8/sdk/-/sdk-8.8.4.tgz"
   integrity sha512-Ie7kfTaXSKws8t3dM9FLR6lbw5u1ZUHB/LzlHpW0MbindFC04o4dOgSVwqlrHhUSdCe1djXr3K62xw2l65D6Og==
