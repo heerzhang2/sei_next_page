@@ -1,29 +1,28 @@
-import * as Minio from 'minio';
+import { S3Client, PutObjectCommand, PutObjectRetentionCommand, ObjectLockMode } from '@aws-sdk/client-s3';
 import * as fs from 'fs-extra';
 import dotenv from "dotenv";
-import {Retention} from "minio";
 import moment from 'moment';
 import {v4 as uuidv4} from 'uuid';
 import { promises as fsPromises } from 'fs';
 
-// const path = require('path');
-
 // 加载环境变量
 dotenv.config()
-// 配置参数
-const config = {
-    minio: {
-        endPoint: process.env.MINIO_ENDPOINT!,
-        port: process.env.MINIO_PORT as unknown as number,
-        useSSL: process.env.MINIO_USESSL==="true",
-        accessKey: process.env.MINIO_ACCESSKEY,
-        secretKey: process.env.MINIO_SECRETKEY
-    }
-};
 
-// 初始化 MinIO 客户端
-const minioClient = new Minio.Client(config.minio);
-minioClient.setRequestOptions({rejectUnauthorized: false})
+// RustFS 配置
+const rustfsEndpoint = process.env.RUSTFS_ENDPOINT_URL || 'http://192.168.109.66:30900';
+const rustfsAccessKeyId = process.env.RUSTFS_ACCESS_KEY_ID || 'rustfsadmin';
+const rustfsSecretAccessKey = process.env.RUSTFS_SECRET_ACCESS_KEY || 'rustfsadmin';
+
+// 初始化 S3 客户端（兼容 RustFS）
+const s3Client = new S3Client({
+    region: "cn-east-1",
+    credentials: {
+        accessKeyId: rustfsAccessKeyId,
+        secretAccessKey: rustfsSecretAccessKey,
+    },
+    endpoint: rustfsEndpoint,
+    forcePathStyle: true,  // 对于非 AWS S3，通常需要设置为 true
+});
 
 interface FileUploaderOptions {
     large_file_threshold: number;
@@ -40,8 +39,6 @@ export class FileUploader {
     // 批量上传入口
     async ossUpload(filePath:string, metaData: any) {
         try {
-            await minioClient.bucketExists(this.options.bucketName!) ||
-                                                 minioClient.makeBucket(this.options.bucketName!);
             const pdfFiles =[filePath];
             console.log(`发现 ${pdfFiles.length} 个PDF文件待上传`);
 
@@ -56,13 +53,12 @@ export class FileUploader {
             const objectId = `${dateDir}${uuidv4()}`;
 
             // 上传文件
-            const result = await this.uploadFileToMinio({
+            const result = await this.uploadFileToRustFS({
                 objectName: objectId,
                 filePath,
                 metaData
             })
             console.log(`上传${filePath} [${result?.etag ? '✅ 成功' : '❌ 失败'}]`)
-            //etag{ etag ,}: UploadedObjectInfo;
             if(result?.etag)    return objectId;
         } catch (err) {
             console.error('上传失败:', err);
@@ -70,49 +66,57 @@ export class FileUploader {
         return null
     }
 
-    //和java后端的tus上传后接续再复制给minio的模式中的做法不一样。nextjs可能也能用。
-    // 核心上传函数
-    async  uploadFileToMinio({ objectName, filePath, metaData } :any
-    ) {
-        const bucketName=this.options.bucketName;
-        // 确保 bucket 存在
-        const bucketExists = await minioClient.bucketExists(bucketName)
-        if (!bucketExists) {
-            throw new Error(`存储桶${bucketName}未建`);
-            // await minioClient.makeBucket(bucketName)
-        }
-        const expirationDate=metaData["X-Amz-Object-Lock-Retain-Until-Date"];
-        metaData["X-Amz-Object-Lock-Retain-Until-Date"] =undefined;
+    // 核心上传函数 - 使用 AWS SDK v3 连接 RustFS
+    async uploadFileToRustFS({ objectName, filePath, metaData }: any) {
+        const bucketName = this.options.bucketName;
+        const expirationDate = metaData["X-Amz-Object-Lock-Retain-Until-Date"];
 
-        const fileStats = fs.statSync(filePath)
-        const fileSize = fileStats.size
-        let etag
-        let method
-        // 根据文件大小选择上传方式
+        // 从 metaData 中移除 Object Lock 参数，单独设置
+        const uploadMetaData = { ...metaData };
+        delete uploadMetaData["X-Amz-Object-Lock-Retain-Until-Date"];
+
+        const fileStats = fs.statSync(filePath);
+        const fileSize = fileStats.size;
+
+        // 构造上传命令
+        let etag;
+        let method;
+
+        // 将 lockMode 字符串转换为 ObjectLockMode 枚举
+        const lockMode = expirationDate ? (this.options.lockMode === 'COMPLIANCE' ? ObjectLockMode.COMPLIANCE : ObjectLockMode.GOVERNANCE) : undefined;
+
         if (fileSize > this.options.large_file_threshold) {
-            // 大文件使用流式上传（MinIO 会自动分块） ；     还必须加上：Content-Type
-            const fileStream = fs.createReadStream(filePath)
-            etag = await minioClient.putObject(bucketName, objectName, fileStream, fileSize, metaData)
-            method = "chunked"
+            // 大文件使用流式上传
+            const fileStream = fs.createReadStream(filePath);
+            const putCommand = new PutObjectCommand({
+                Bucket: bucketName,
+                Key: objectName,
+                Body: fileStream,
+                ContentLength: fileSize,
+                Metadata: uploadMetaData,
+                ObjectLockRetainUntilDate: expirationDate ? new Date(expirationDate) : undefined,
+                ObjectLockMode: lockMode,
+            });
+            const response = await s3Client.send(putCommand);
+            etag = response.ETag;
+            method = "chunked";
         } else {
-            // 小文件直接上传
-            etag = await minioClient.fPutObject(bucketName, objectName, filePath, metaData)
-            method = "direct"
+            // 小文件直接上传（读取文件内容）
+            const fileContent = await fs.readFile(filePath);
+            const putCommand = new PutObjectCommand({
+                Bucket: bucketName,
+                Key: objectName,
+                Body: fileContent,
+                Metadata: uploadMetaData,
+                ObjectLockRetainUntilDate: expirationDate ? new Date(expirationDate) : undefined,
+                ObjectLockMode: lockMode,
+            });
+            const response = await s3Client.send(putCommand);
+            etag = response.ETag;
+            method = "direct";
         }
-        //【增加】
-        // const retention = await minioClient.getObjectRetention( bucketName, objectName );
-        // console.log('Lock status:', retention);
-        //设置对象保留期限的
-        await minioClient.putObjectRetention(
-            bucketName,
-            objectName,
-            {
-                governanceBypass: true,
-                mode: this.options.lockMode,
-                retainUntilDate: expirationDate,
-            } as Retention
-        );
-        return { etag, method }
+
+        return { etag, method };
     }
 }
 

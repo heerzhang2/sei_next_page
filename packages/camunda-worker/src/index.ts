@@ -55,10 +55,10 @@ async function startWorker() {
       const filepath= dir+"/"+ prjob?.name +".pdf";
         //可能+步骤2： +水印,电子盖章;
         //步骤3： 然后上传到OSS 文件访问路径;
-      //不经过java后端服务器做代理上传的，那样要再多一次复制。直接上传到OSS集群。
+      //不经过java后端服务器做代理上传的，那样要再多一次复制。直接上传到RustFS集群。
       const uploader = new FileUploader({
           large_file_threshold: 10 * 1024 * 1024,            //设置大文件阈值 (10MB)，走分块上传模式
-          bucketName: process.env.MINIO_BUCKETNAME!,
+          bucketName: process.env.RUSTFS_BUCKETNAME || 'ywmast',
           lockMode: "COMPLIANCE",
       });
         // 设置元数据
