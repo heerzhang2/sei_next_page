@@ -1,11 +1,8 @@
-import { Camunda8,  } from '@camunda8/sdk'
+import { createCamundaClient } from '@camunda8/orchestration-cluster-api'
 import axios from "axios"
 import dotenv from "dotenv"
 import {deleteDirWithRm, FileUploader} from "./local-uploader";
 import type {ConfigRoot, FileTransform} from "page2pdf_server/src";
-import {MaybeTimeDuration} from "typed-duration";
-import {RestJob} from "@camunda8/sdk/dist/c8/lib/C8Dto";
-import {IProcessVariables, JobCompletionInterfaceRest} from "@camunda8/sdk/dist/zeebe/types";
 
 const { exec } = require('child_process');
 const os = require('os');
@@ -14,37 +11,34 @@ const path = require('path');
 
 // 加载环境变量
 dotenv.config()
-// Camunda 8 连接配置
-const camundaConfig = {
-    CAMUNDA_AUTH_STRATEGY: process.env.CAMUNDA_AUTH_STRATEGY || "",
-    CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
-    CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
-    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION === "true",
-    ZEEBE_GATEWAY_ADDRESS: process.env.ZEEBE_GATEWAY_ADDRESS || "localhost:26500",
-}
 
-//[文档] https://camunda.github.io/camunda-8-js-sdk/#oauth
-//https://docs.camunda.io/docs/next/self-managed/setup/deploy/local/manual/
-// https://docs.camunda.io/docs/guides/getting-started-java-spring/
-// 创建Zeebe客户端  https://www.npmjs.com/package/@camunda8/sdk  需要Node服务端环境运行的；
-const c8 = new Camunda8(camundaConfig as any)
-console.log(`当前camundaConfig:`, camundaConfig);
-const restClient = c8.getCamundaRestClient()     // 8.6.0 New REST API
+// Camunda 8 Orchestration Cluster API 配置
+const CAMUNDA_REST_ADDRESS = process.env.CAMUNDA_REST_ADDRESS || 'http://192.168.109.66:30000';
+
+const camundaClient = createCamundaClient({
+    config: {
+        CAMUNDA_REST_ADDRESS,
+        CAMUNDA_AUTH_STRATEGY: (process.env.CAMUNDA_AUTH_STRATEGY || 'BASIC') as 'BASIC' | 'NONE' | 'OAUTH',
+        CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || 'demo',
+        CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || 'demo',
+    }
+});
+
+console.log(`Camunda 客户端配置:`, JSON.stringify(camundaClient.getConfig(), null, 2));
 
 // PDF服务的URL
 const PDF_SERVICE_URL = "http://localhost:9389/api/pdf"
+
 // 启动Worker
 async function startWorker() {
-   const zbWorker= restClient.createJobWorker({
-        type: "pdf-generation-task",
-        worker: "urlToPdfTask",
-        maxJobsToActivate: 1,
-       //重启可能，设置太长了导致：接受新任务有延迟的。
-        timeout: 20*60*1000,
+   const zbWorker= camundaClient.createJobWorker({
+        jobType: "pdf-generation-task",
+        maxParallelJobs: 1,
+        jobTimeoutMs: 20*60*1000,
         jobHandler: urlToPdfTask
     });
 
-    async function urlToPdfTask(job: RestJob & JobCompletionInterfaceRest<IProcessVariables>) {
+    async function urlToPdfTask(job: any) {
     try {
       const prjob= job.variables?.pdfJob as unknown as ConfigRoot<FileTransform>;
       // 发送HTTP请求到PDF服务
