@@ -42,7 +42,7 @@ export async function getCamundaClient() {
 /**
  * 使用 Orchestration Cluster API 创建流程实例
  */
-export async function createProcessInstanceRest(bpmnProcessId: string, variables: Record<string, any>) {
+export async function createProcessInstanceRest(processDefinitionId: string, variables: Record<string, any>) {
     if (typeof window !== 'undefined') {
         throw new Error('此函数只能在服务端使用');
     }
@@ -50,30 +50,41 @@ export async function createProcessInstanceRest(bpmnProcessId: string, variables
     try {
         const client = await getCamundaClient();
 
-        console.log("创建流程实例 - bpmnProcessId:", bpmnProcessId);
-        console.log("创建流程实例 - variables:", JSON.stringify(variables, null, 2));
+        // Orchestration Cluster API 的 createProcessInstance 需要 processDefinitionKey（数字）
+        // 先查询流程定义获取 key
+        const definitions = await (client as any).searchProcessDefinitions(
+            {},  // 查询所有
+            { consistency: { waitUpToMs: 5000 } }
+        );
 
-        // 检查 createProcessInstance 方法的签名
-        console.log("检查 createProcessInstance 方法签名...");
-        const methodStr = (client as any).createProcessInstance.toString();
-        console.log("方法字符串:", methodStr.substring(0, 500));
+        if (!definitions.items || definitions.items.length === 0) {
+            throw new Error(`未找到任何流程定义`);
+        }
 
-        // 尝试使用正确的字段名
-        // Orchestration Cluster API 使用 processDefinitionKey 字段
+        // searchProcessDefinitions 返回的字段名是 processDefinitionId
+        const definition = definitions.items.find((d: any) => d.processDefinitionId === processDefinitionId);
+        if (!definition) {
+            const available = definitions.items.map((d: any) => ({
+                processDefinitionId: d.processDefinitionId,
+                name: d.name
+            })).join(', ');
+            throw new Error(`未找到 processDefinitionId 为 "${processDefinitionId}" 的流程定义。可用的: ${available}`);
+        }
+
+        // 使用 processDefinitionKey（数字）创建流程实例
         const response = await client.createProcessInstance({
-            processDefinitionKey: bpmnProcessId,
+            processDefinitionKey: definition.processDefinitionKey,
             variables,
         });
 
-        console.log("流程实例创建成功:", JSON.stringify(response, null, 2));
         return response;
     } catch (error: any) {
         // 如果是 404 错误，说明流程定义不存在
         if (error.status === 404) {
-            throw new Error(`流程定义 "${bpmnProcessId}" 不存在。请确保流程已部署到 Camunda。可以检查 Java 后端是否已成功部署该流程。`);
+            throw new Error(`流程定义 "${processDefinitionId}" 不存在。请确保流程已部署到 Camunda。可以检查 Java 后端是否已成功部署该流程。`);
         }
         console.error("Error creating process instance:", error);
-        console.error("Process Definition ID:", bpmnProcessId);
+        console.error("Process Definition ID:", processDefinitionId);
         console.error("Variables:", JSON.stringify(variables, null, 2));
         console.error("Error details:", JSON.stringify(error, null, 2));
         throw error;
