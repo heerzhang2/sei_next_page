@@ -61,21 +61,18 @@ async function startWorker() {
           bucketName: process.env.RUSTFS_BUCKETNAME || 'ywmast',
           lockMode: "COMPLIANCE",
       });
-        // 设置元数据
+        // 设置元数据 - AWS SDK v3 中 Content-Type 直接设置，自定义元数据不需要 X-Amz-Meta- 前缀
         const metaData = {
-            'Content-Type': 'application/pdf',
-            'X-Amz-Meta-Author': job.variables?.Author,
-            'X-Amz-Meta-Rep': job.variables?.repId
+            'author': job.variables?.author,
+            'rep': job.variables?.repId
         } as any;
-        //【这里不能加的】 前缀会改成X-Amz-Meta-  等于无效啊。X-Amz-Meta-X-Amz-Object-Lock-Mode  X-Amz-Meta-X-Amz-Object-Lock-Retain-Until-Date
-        metaData["X-Amz-Object-Lock-Retain-Until-Date"] = job.variables?.expiration;
-      const ossObjId= await uploader.ossUpload(filepath, metaData);
+      const ossObjId= await uploader.ossUpload(filepath, metaData, job.variables?.expiration);
       //最可读的链接 http://127.0.0.1:9000/ywmast/ +ossObjId（202506/0315/xxx-）
         if(!ossObjId){
             throw new Error(`OSS上传失败,${filepath}`);
         }
       await deleteDirWithRm(dir);
-      //完成job并返回结果：
+      //就算上传没有实际运行，这里居然也会自动完成？ 完成job并返回结果：
       return job.complete({
           result: true,
           ossId: ossObjId,

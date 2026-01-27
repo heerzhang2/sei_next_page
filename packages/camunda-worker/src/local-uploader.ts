@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, PutObjectRetentionCommand, ObjectLockMode } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, PutObjectRetentionCommand, ObjectLockMode, ObjectLockLegalHold } from '@aws-sdk/client-s3';
 import * as fs from 'fs-extra';
 import dotenv from "dotenv";
 import moment from 'moment';
@@ -37,7 +37,7 @@ export class FileUploader {
     }
 
     // 批量上传入口
-    async ossUpload(filePath:string, metaData: any) {
+    async ossUpload(filePath:string, metaData: any, expirationDate?: string) {
         try {
             const pdfFiles =[filePath];
             console.log(`发现 ${pdfFiles.length} 个PDF文件待上传`);
@@ -56,7 +56,8 @@ export class FileUploader {
             const result = await this.uploadFileToRustFS({
                 objectName: objectId,
                 filePath,
-                metaData
+                metaData,
+                expirationDate
             })
             console.log(`上传${filePath} [${result?.etag ? '✅ 成功' : '❌ 失败'}]`)
             if(result?.etag)    return objectId;
@@ -67,13 +68,8 @@ export class FileUploader {
     }
 
     // 核心上传函数 - 使用 AWS SDK v3 连接 RustFS
-    async uploadFileToRustFS({ objectName, filePath, metaData }: any) {
+    async uploadFileToRustFS({ objectName, filePath, metaData, expirationDate }: any) {
         const bucketName = this.options.bucketName;
-        const expirationDate = metaData["X-Amz-Object-Lock-Retain-Until-Date"];
-
-        // 从 metaData 中移除 Object Lock 参数，单独设置
-        const uploadMetaData = { ...metaData };
-        delete uploadMetaData["X-Amz-Object-Lock-Retain-Until-Date"];
 
         const fileStats = fs.statSync(filePath);
         const fileSize = fileStats.size;
@@ -82,9 +78,10 @@ export class FileUploader {
         let etag;
         let method;
 
-        // 将 lockMode 字符串转换为 ObjectLockMode 枚举
-        const lockMode = expirationDate ? (this.options.lockMode === 'COMPLIANCE' ? ObjectLockMode.COMPLIANCE : ObjectLockMode.GOVERNANCE) : undefined;
+        console.log(`上传参数 - bucketName: ${bucketName}, objectName: ${objectName}, expirationDate: ${expirationDate}`);
+        console.log(`元数据:`, metaData);
 
+        // 先上传文件（不设置 Object Lock）
         if (fileSize > this.options.large_file_threshold) {
             // 大文件使用流式上传
             const fileStream = fs.createReadStream(filePath);
@@ -93,9 +90,8 @@ export class FileUploader {
                 Key: objectName,
                 Body: fileStream,
                 ContentLength: fileSize,
-                Metadata: uploadMetaData,
-                ObjectLockRetainUntilDate: expirationDate ? new Date(expirationDate) : undefined,
-                ObjectLockMode: lockMode,
+                ContentType: 'application/pdf',
+                Metadata: metaData,
             });
             const response = await s3Client.send(putCommand);
             etag = response.ETag;
@@ -107,15 +103,35 @@ export class FileUploader {
                 Bucket: bucketName,
                 Key: objectName,
                 Body: fileContent,
-                Metadata: uploadMetaData,
-                ObjectLockRetainUntilDate: expirationDate ? new Date(expirationDate) : undefined,
-                ObjectLockMode: lockMode,
+                ContentType: 'application/pdf',
+                Metadata: metaData,
             });
             const response = await s3Client.send(putCommand);
             etag = response.ETag;
             method = "direct";
         }
 
+        // 上传成功后，使用单独的 API 设置 Object Lock
+        if (expirationDate) {
+            try {
+                const lockMode = this.options.lockMode === 'COMPLIANCE' ? ObjectLockMode.COMPLIANCE : ObjectLockMode.GOVERNANCE;
+                const retentionCommand = new PutObjectRetentionCommand({
+                    Bucket: bucketName,
+                    Key: objectName,
+                    Retention: {
+                        Mode: lockMode,
+                        RetainUntilDate: new Date(expirationDate),
+                    },
+                });
+                await s3Client.send(retentionCommand);
+                console.log(`✅ Object Lock 设置成功 - Mode: ${lockMode}, RetainUntilDate: ${expirationDate}`);
+            } catch (error) {
+                console.warn(`⚠️ Object Lock 设置失败:`, error);
+                // 不影响上传结果，只是没有设置锁定
+            }
+        }
+
+        console.log(`上传完成 - etag: ${etag}, method: ${method}`);
         return { etag, method };
     }
 }
