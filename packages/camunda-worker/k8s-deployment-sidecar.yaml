@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: camunda-worker
+  namespace: apisix
+spec:
+  replicas: 1  # 每个副本都包含一个 PDF 服务实例
+  selector:
+    matchLabels:
+      app: camunda-worker
+  template:
+    metadata:
+      labels:
+        app: camunda-worker
+    spec:
+      containers:
+      # PDF 服务容器 (Sidecar)
+      - name: pdf-service
+        image: page2pdf-server:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9389
+          name: pdf-api
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        # 健康检查
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9389
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9389
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+      # Camunda Worker 容器
+      - name: camunda-worker
+        image: camunda-worker:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        # Camunda 配置
+        - name: CAMUNDA_AUTH_STRATEGY
+          value: "BASIC"
+        - name: CAMUNDA_BASIC_AUTH_USERNAME
+          value: "demo"
+        - name: CAMUNDA_BASIC_AUTH_PASSWORD
+          value: "demo"
+        - name: CAMUNDA_SECURE_CONNECTION
+          value: "false"
+        - name: CAMUNDA_REST_ADDRESS
+          value: "http://camunda-rest.camunda.svc.cluster.local:8080"
+        - name: CAMUNDA_LOG_LEVEL
+          value: "info"
+        # RustFS 配置
+        - name: RUSTFS_ENDPOINT_URL
+          value: "http://rustfs.rustfs.svc.cluster.local:9000"
+        - name: RUSTFS_ACCESS_KEY_ID
+          value: "rustfsadmin"
+        - name: RUSTFS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rustfs-secret
+              key: secret-key
+        - name: RUSTFS_BUCKETNAME
+          value: "ywmast"
+        # PDF 服务配置 - 通过 localhost 访问同一 Pod 中的 PDF 服务
+        - name: PDF_SERVICE_URL
+          value: "http://localhost:9389/api/pdf"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # 健康检查
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "pgrep -f 'node dist/index.js' || exit 1"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "pgrep -f 'node dist/index.js' || exit 1"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rustfs-secret
+  namespace: apisix
+type: Opaque
+stringData:
+  secret-key: "rustfsadmin"

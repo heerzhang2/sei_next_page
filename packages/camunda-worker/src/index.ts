@@ -4,11 +4,6 @@ import dotenv from "dotenv"
 import {deleteDirWithRm, FileUploader} from "./local-uploader";
 import type {ConfigRoot, FileTransform} from "page2pdf_server/src";
 
-const { exec } = require('child_process');
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
-
 // 加载环境变量
 dotenv.config()
 
@@ -92,80 +87,6 @@ process.on("SIGTERM", async () => {
   console.log("Shutting down...")
   process.exit(0)
 })
-
-//【毛病】一台电脑可能多个的本服务进程一起跑啊。
-//单台机器仅启动一个服务; 锁文件路径（根据系统选择临时目录）
-const lockFilePath = path.join(os.tmpdir(), 'camunda-worker-node-service.lock');
-
-// 检查 PID 是否存在的函数
-function checkPidValidity(pid: number) {
-    return new Promise((resolve, reject) => {
-        let command;
-        if (os.platform() === 'win32') {
-            // Windows 使用 tasklist 或 PowerShell
-            command = `tasklist /FI "PID eq ${pid}" 2>&1`;
-        } else {
-            // Linux/macOS 使用 ps 命令
-            command = `ps -p ${pid} -o pid= 2>&1`;
-        }
-
-        exec(command, (error: any, stdout: string, stderr: any) => {
-            if (error) {
-                // 命令执行出错（如权限不足）
-                resolve(false);
-                return;
-            }
-
-            // 判断输出是否包含 PID
-            const pidExists = stdout.trim() === pid.toString();
-            resolve(pidExists);
-        });
-    });
-}
-
-// 示例：启动服务时检查锁文件
-const pid = process.pid;
-
-function getProcessInfo(pid: number) {
-    return new Promise((resolve) => {
-        const command = os.platform() === 'win32'
-            ? `wmic process where ProcessId=${pid} get Name,ExecutablePath`
-            : `ps -p ${pid} -o comm=`;
-
-        exec(command, (error: any, stdout: string) => {
-            resolve(stdout.trim());
-        });
-    });
-}
-// 检查现有锁文件
-if (fs.existsSync(lockFilePath)) {
-    const existingPid = parseInt(fs.readFileSync(lockFilePath, 'utf8'), 10);
-    checkPidValidity(existingPid).then((isValid) => {
-        if (isValid) {
-            getProcessInfo(existingPid).then((info) => {
-                console.log(`已有进程运行中,进程信息: ${info}，PID: ${existingPid}`);
-            });
-            // console.log(`已有进程运行中，PID: ${existingPid}`);
-            process.exit(1);
-        } else {
-            console.log(`检测到残留锁文件，PID: ${existingPid} 已失效，继续启动...`);
-            fs.unlinkSync(lockFilePath);
-        }
-    });
-}
-
-// 写入新锁文件
-fs.writeFileSync(lockFilePath, pid.toString());
-
-// 监听进程退出事件清理锁文件
-process.on('exit', () => {
-    if (fs.existsSync(lockFilePath)) {
-        fs.unlinkSync(lockFilePath);
-    }
-});
-
-// 业务逻辑...
-console.log('服务 camunda-worker-node-service 已启动，PID:', pid);
 
 
 // 启动Worker
