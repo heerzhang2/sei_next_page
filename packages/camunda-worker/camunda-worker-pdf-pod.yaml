@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: camunda-worker-pdf
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: camunda-worker-pdf
+  template:
+    metadata:
+      labels:
+        app: camunda-worker-pdf
+    spec:
+      # 共享数据卷（emptyDir：Pod 删除时数据丢失，但支持水平扩展）
+      volumes:
+        - name: shared-data
+          emptyDir: {}
+
+      containers:
+        # Camunda Worker 容器
+        - name: camunda-worker
+          image: camunda-worker:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            # Camunda 配置
+            - name: CAMUNDA_REST_ADDRESS
+              value: "http://192.168.109.66:30000"
+            - name: CAMUNDA_AUTH_STRATEGY
+              value: "BASIC"
+            - name: CAMUNDA_BASIC_AUTH_USERNAME
+              value: "demo"
+            - name: CAMUNDA_BASIC_AUTH_PASSWORD
+              value: "demo"
+
+            # PDF 服务地址（Sidecar 模式通过 localhost 访问）
+            - name: PDF_SERVICE_URL
+              value: "http://localhost:9389/api/pdf"
+
+            # RustFS 配置
+            - name: RUSTFS_ENDPOINT_URL
+              value: "http://192.168.109.66:30900"
+            - name: RUSTFS_ACCESS_KEY_ID
+              value: "rustfsadmin"
+            - name: RUSTFS_SECRET_ACCESS_KEY
+              value: "rustfsadmin"
+            - name: RUSTFS_BUCKETNAME
+              value: "ywmast"
+
+            # 共享卷路径
+            - name: SHARED_VOLUME_PATH
+              value: "/shared"
+
+          # 资源限制
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          # 健康检查
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "ps aux | grep node || exit 1"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "ps aux | grep node || exit 1"
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          # 共享卷挂载（用于文件交换）
+          volumeMounts:
+            - name: shared-data
+              mountPath: /shared
+
+        # Page2PDF Server Sidecar 容器
+        - name: page2pdf-server
+          image: page2pdf-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9389
+              name: http
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: NODE_USE_SYSTEM_CA
+              value: "1"
+            - name: PORT
+              value: "9389"
+            - name: CHROME_PATH
+              value: "/usr/bin/chromium-browser"
+            - name: OUTPUT_PATH
+              value: "/app/shared"
+
+          # 资源限制
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+
+          # 健康检查
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9389
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9389
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          # 共享卷挂载（用于文件交换）
+          volumeMounts:
+            - name: shared-data
+              mountPath: /app/shared
+
+
