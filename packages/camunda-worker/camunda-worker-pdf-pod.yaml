@@ -20,8 +20,8 @@ spec:
       containers:
         # Camunda Worker 容器
         - name: camunda-worker
-          image: camunda-worker:latest
-          imagePullPolicy: IfNotPresent
+          image: docker.io/library/camunda-worker:latest
+          imagePullPolicy: Never
           env:
             # Camunda 配置
             - name: CAMUNDA_REST_ADDRESS
@@ -49,7 +49,7 @@ spec:
 
             # 共享卷路径
             - name: SHARED_VOLUME_PATH
-              value: "/shared"
+              value: "/app/data"
 
           # 资源限制
           resources:
@@ -82,12 +82,12 @@ spec:
           # 共享卷挂载（用于文件交换）
           volumeMounts:
             - name: shared-data
-              mountPath: /shared
+              mountPath: /app/data
 
         # Page2PDF Server Sidecar 容器
         - name: page2pdf-server
-          image: page2pdf-server:latest
-          imagePullPolicy: IfNotPresent
+          image: docker.io/library/page2pdf-server:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 9389
               name: http
@@ -112,20 +112,6 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
-
-          # 健康检查
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 9389
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 9389
-            initialDelaySeconds: 10
-            periodSeconds: 5
 
           # 共享卷挂载（用于文件交换）
           volumeMounts:

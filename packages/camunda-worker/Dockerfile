@@ -10,18 +10,18 @@ RUN apk add --no-cache dumb-init
 WORKDIR /app
 
 # 复制 package 文件
-COPY package*.json ./
+COPY package.json ./
 
 # 安装依赖
-RUN npm ci --only=production
+RUN npm install --legacy-peer-deps --production
 
 # 复制源代码
 COPY dist ./dist
 COPY src ./src
 
 # 创建非 root 用户
-RUN addgroup -g appuser && \
-    adduser -D -u 1000 -G appuser appuser && \
+RUN addgroup appuser && \
+    adduser -D -G appuser appuser && \
     chown -R appuser:appuser /app
 
 # 切换用户
