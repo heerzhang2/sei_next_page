@@ -32,6 +32,7 @@ export async function getCamundaClient() {
 
 /**
  * 使用 Orchestration Cluster API 创建流程实例
+ * 注意：Zeebe Gateway REST API 支持 processDefinitionId (字符串)
  */
 export async function createProcessInstanceRest(processDefinitionId: string, variables: Record<string, any>) {
     if (typeof window !== 'undefined') {
@@ -39,15 +40,15 @@ export async function createProcessInstanceRest(processDefinitionId: string, var
     }
 
     try {
-        console.log(`使用 Camunda Orchestration Cluster API 创建流程实例: processDefinitionId="${processDefinitionId}"`);
+        console.log(`使用 Zeebe Gateway REST API 创建流程实例: processDefinitionId="${processDefinitionId}"`);
         console.log("流程变量:", JSON.stringify(variables, null, 2));
 
         const client = await getCamundaClient();
 
         // 创建流程实例
-        // 注意：新 SDK 使用 processDefinitionId (字符串)
+        // Zeebe Gateway REST API 支持 processDefinitionId (字符串，如 "genRepPdf")
         const processInstance = await client.createProcessInstance({
-            processDefinitionId,
+            processDefinitionId: processDefinitionId,
             variables: variables || {}
         });
 
