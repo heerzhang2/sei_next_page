@@ -42,10 +42,12 @@ export async function startPdfCvtProcess({ processId, variables, bpmnProcessId }
         variables["author"] = session?.user?.name;
 
         console.log("启动流程 - processId:", processId, "bpmnProcessId:", bpmnProcessId);
-        console.log("使用的 processDefinitionId:", bpmnProcessId || processId);
+        // 直接使用 processDefinitionId (即 bpmnProcessId 或 processId)
+        const processDefinitionId = bpmnProcessId || processId;
+        console.log("使用的 processDefinitionId:", processDefinitionId);
 
-        // 使用 REST API 创建流程实例
-        const result = await createProcessInstanceRest(bpmnProcessId || processId, variables)
+        // 使用 REST API 创建流程实例（无需查询，直接使用 processDefinitionId）
+        const result = await createProcessInstanceRest(processDefinitionId, variables)
 
         return {
             success: true,

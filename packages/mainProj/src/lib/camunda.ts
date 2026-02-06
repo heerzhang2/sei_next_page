@@ -73,70 +73,23 @@ export async function getCamundaRestClient() {
 /**
  * 使用 REST API 创建流程实例
  */
-export async function createProcessInstanceRest(bpmnProcessId: string, variables: Record<string, any>) {
+export async function createProcessInstanceRest(processDefinitionId: string, variables: Record<string, any>) {
     if (typeof window !== 'undefined') {
         throw new Error('此函数只能在服务端使用');
     }
 
     try {
-        console.log(`使用 Camunda8 SDK 创建流程实例: bpmnProcessId="${bpmnProcessId}"`);
+        console.log(`使用 Camunda8 SDK 创建流程实例: processDefinitionId="${processDefinitionId}"`);
         console.log("流程变量:", JSON.stringify(variables, null, 2));
 
         const client = await getCamundaRestClient();
 
-        // 先查询流程定义，获取 processDefinitionKey（数字）
-        console.log("查询流程定义，寻找 bpmnProcessId:", bpmnProcessId);
-        
-        let processDefinitionKey: string;
-        let processDefinitionId: string;
-
-        try {
-            // 使用空的 filter 查询所有流程定义
-            const searchResult = await client.searchProcessDefinitions({});
-            
-            console.log(`查询到 ${searchResult.items?.length || 0} 个流程定义`);
-            
-            if (!searchResult.items || searchResult.items.length === 0) {
-                throw new Error(`没有找到任何流程定义`);
-            }
-
-            // 打印第一个流程定义的完整结构，用于调试
-            console.log("第一个流程定义的完整结构:", JSON.stringify(searchResult.items[0], null, 2));
-            console.log("所有流程定义:", searchResult.items.map((item: any) => ({
-                bpmnProcessId: item.bpmnProcessId,
-                processDefinitionKey: item.processDefinitionKey,
-                version: item.version
-            })));
-
-            // 查找匹配的流程定义
-            const matchingProcess = searchResult.items.find((item: any) => 
-                item.bpmnProcessId === bpmnProcessId || item.processDefinitionId === bpmnProcessId
-            );
-
-            if (!matchingProcess) {
-                console.log("所有流程定义详细信息:", JSON.stringify(searchResult.items, null, 2));
-                throw new Error(`找不到流程定义: ${bpmnProcessId}`);
-            }
-
-            processDefinitionKey = String(matchingProcess.processDefinitionKey);
-            processDefinitionId = matchingProcess.bpmnProcessId || matchingProcess.processDefinitionId || bpmnProcessId;
-
-            console.log("找到流程定义:");
-            console.log("  - processDefinitionId:", processDefinitionId);
-            console.log("  - processDefinitionKey:", processDefinitionKey);
-            console.log("  - version:", matchingProcess.version);
-        } catch (error) {
-            console.error("查询流程定义失败:", error);
-            throw error;
-        }
-
-        // 使用 processDefinitionKey 创建实例
-        console.log("使用 processDefinitionKey 创建实例...");
+        // 直接使用 processDefinitionId 创建实例，不需要查询
+        console.log("使用 processDefinitionId 创建实例...");
 
         // 直接使用 createProcessInstance 方法
-        // 注意：processDefinitionKey 需要使用字符串格式，不能使用 Number
         const processInstance = await client.createProcessInstance({
-            processDefinitionKey: processDefinitionKey,  // 使用字符串格式
+            processDefinitionId: processDefinitionId,
             variables: variables || {}
         });
 
@@ -145,9 +98,7 @@ export async function createProcessInstanceRest(bpmnProcessId: string, variables
 
         return {
             processInstanceKey: processInstance.processInstanceKey,
-            processDefinitionId: processDefinitionId,
-            processDefinitionKey: processDefinitionKey,
-            bpmnProcessId: bpmnProcessId
+            processDefinitionId: processDefinitionId
         };
     } catch (error: any) {
         console.error("创建流程实例失败:", error);
