@@ -31,12 +31,18 @@ module.exports = async (phase) => {
             config.infrastructureLogging = {
                 level: "warn",
             }
-            
+
+            // 确保 @camunda8/sdk 在服务端正确解析
+            if (isServer) {
+                config.externals = config.externals || [];
+                config.externals.push('@camunda8/sdk');
+            }
+
             // 调试模式下启用source maps
             if (dev) {
                 config.devtool = 'source-map'
             }
-            
+
             return config
         },
 
@@ -81,6 +87,13 @@ module.exports = async (phase) => {
                 ],
                 // 允许的转发主机头
                 allowedForwardedHosts: ["192.168.171.3:9443", "192.168.171.3", "192.168.0.100:9443", "192.168.0.100"],
+            },
+            // Turbopack 配置
+            turbo: {
+                resolveAlias: {
+                    // 确保 @camunda8/sdk 从正确的位置解析
+                    '@camunda8/sdk': '@camunda8/sdk',
+                },
             },
         },
     }

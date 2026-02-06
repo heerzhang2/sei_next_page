@@ -12,6 +12,7 @@
     "AI胡诌的": "yarn upgrade @radix-ui/react-dialog @radix-ui/react-slot @radix-ui/react-tooltip",
     "dev": "next dev -p 3765",
     "dev:http": "cross-env NEXT_PUBLIC_BASE_PATH=/report next dev -p 3765",
+    "dev:no-turbopack": "cross-env NEXT_DEV_TURBOPACK=0 next dev -p 3765",
     "dev:debug:break": "cross-env NODE_OPTIONS='--inspect-brk' next dev -p 3765",
     "dev:ts-node": "ts-node --project tsconfig.json -r tsconfig-paths/register node_modules/.bin/next dev",
     "dev:ts-node:debug": "ts-node --inspect -r tsconfig-paths/register node_modules/.bin/next dev",
@@ -46,7 +47,7 @@
   },
   "dependencies": {
     "@fjsei/shared-auth-config": "*",
-    "@camunda8/orchestration-cluster-api": "^8.8.3",
+    "@camunda8/sdk": "^8.8.4",
     "@floating-ui/react": "^0.27.16",
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-accordion": "^1.2.3",
