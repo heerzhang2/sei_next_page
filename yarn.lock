@@ -789,7 +789,7 @@
   dependencies:
     "@floating-ui/dom" "^1.7.5"
 
-"@floating-ui/react@^0.27.16":
+"@floating-ui/react@^0.27.17":
   version "0.27.17"
   resolved "https://registry.npmmirror.com/@floating-ui/react/-/react-0.27.17.tgz#f1d74e01cf10016825a4167b3b0139a4d5af118a"
   integrity sha512-LGVZKHwmWGg6MRHjLLgsfyaX2y2aCNgnD1zT/E6B+/h+vxg+nIJUqHPAlTzsHDyqdgEpJ1Np5kxWuFEErXzoGg==
@@ -803,7 +803,7 @@
   resolved "https://registry.npmmirror.com/@floating-ui/utils/-/utils-0.2.10.tgz#a2a1e3812d14525f725d011a73eceb41fef5bc1c"
   integrity sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==
 
-"@hookform/resolvers@^5.0.1":
+"@hookform/resolvers@^5.2.2":
   version "5.2.2"
   resolved "https://registry.npmmirror.com/@hookform/resolvers/-/resolvers-5.2.2.tgz#5ac16cd89501ca31671e6e9f0f5c5d762a99aa12"
   integrity sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==
@@ -1985,7 +1985,7 @@
     source-map "0.8.0-beta.0"
     zod "4.3.6"
 
-"@serwist/next@^9.2.3":
+"@serwist/next@^9.5.4":
   version "9.5.4"
   resolved "https://registry.npmmirror.com/@serwist/next/-/next-9.5.4.tgz#ac0e3e36ef83be8fa1879809bec95df9d350fc2c"
   integrity sha512-bkPkvMs4GfNV3C3tSZg9O5mb+B7Rq8zLpkZNF2hV96zep6d/ujA7yBp8o8bD1rmLb7I++ifsIMQzH2a+vVc/ag==
@@ -3217,7 +3217,7 @@
     preact "^10.26.10"
     pretty-bytes "^6.1.1"
 
-"@uppy/core@^5.1.1":
+"@uppy/core@^5.2.0":
   version "5.2.0"
   resolved "https://registry.npmmirror.com/@uppy/core/-/core-5.2.0.tgz#baeb0f9f1ef5bec1882eac912f5a41094af69f84"
   integrity sha512-uvfNyz4cnaplt7LYJmEZHuqOuav0tKp4a9WKJIaH6iIj7XiqYvS2J5SEByexAlUFlzefOAyjzj4Ja2dd/8aMrw==
@@ -3231,7 +3231,7 @@
     nanoid "^5.0.9"
     preact "^10.5.13"
 
-"@uppy/dashboard@^5.0.3":
+"@uppy/dashboard@^5.1.1":
   version "5.1.1"
   resolved "https://registry.npmmirror.com/@uppy/dashboard/-/dashboard-5.1.1.tgz#6e95c65c5658e9f85cf5bf8927f544cafe1aa6be"
   integrity sha512-6H/xVvhhdfwp1+FRMp2C+tudyaedqD5+LMDB8Iw20k9+QCL1eGzOh4wXm6MCqJtNfQ1tLaprGMG1jlo7yS/uyw==
@@ -3246,7 +3246,7 @@
     preact "^10.26.10"
     shallow-equal "^3.0.0"
 
-"@uppy/drag-drop@^5.0.2":
+"@uppy/drag-drop@^5.1.0":
   version "5.1.0"
   resolved "https://registry.npmmirror.com/@uppy/drag-drop/-/drag-drop-5.1.0.tgz#8ddf101b161ac09c7b3b2c3025ea8a37c4b24e51"
   integrity sha512-P36E6bBc/U8wxooV9IerPpEbrl8i2N3P+twmm5nPywcKHfjS7BtyHUEs2JmWgyRRibI75c2Ge5wWchKtQclEvw==
@@ -3262,7 +3262,7 @@
     "@uppy/utils" "^6.2.2"
     preact "^10.5.13"
 
-"@uppy/locales@^5.0.1":
+"@uppy/locales@^5.1.1":
   version "5.1.1"
   resolved "https://registry.npmmirror.com/@uppy/locales/-/locales-5.1.1.tgz#375a17cfeea48921cd7785f26421a518cc773918"
   integrity sha512-zSbDU27JzfdssRJoa5/xmGOsrEtS+2Z9j41weaoCa/NoK4wqZzkFNQ0Z44etbTg3PDVFakZVDu/Z+c+vsJCfdQ==
@@ -3289,7 +3289,7 @@
     p-queue "^8.0.0"
     preact "^10.5.13"
 
-"@uppy/react@^5.1.1":
+"@uppy/react@^5.2.0":
   version "5.2.0"
   resolved "https://registry.npmmirror.com/@uppy/react/-/react-5.2.0.tgz#ddee35205344efb80781bb86d13103a277ef79c0"
   integrity sha512-6lzPutg2XGavs7P6ALmqOBPitd/Jqi3r1jCJQD5nx8xtNlBRwvlBR6hrZgo8XOI9cR+OaNDrJ0vEFxXDWb04Ag==
@@ -3311,7 +3311,7 @@
     "@uppy/utils" "^7.1.4"
     exifr "^7.0.0"
 
-"@uppy/tus@^5.0.2":
+"@uppy/tus@^5.1.1":
   version "5.1.1"
   resolved "https://registry.npmmirror.com/@uppy/tus/-/tus-5.1.1.tgz#2bd6673ac1c2a504685a641736f36c9a8208f798"
   integrity sha512-316kLQfO5H/uUJIMhBYhBrTpeN0Q+d6ykW3pomCvdTkFGCvg20rF3oH/owE3lf2UZZN7ZqBk+wHO0WlQePoklg==
@@ -3336,7 +3336,7 @@
     lodash "^4.17.21"
     preact "^10.5.13"
 
-"@uppy/webcam@^5.0.2":
+"@uppy/webcam@^5.1.0":
   version "5.1.0"
   resolved "https://registry.npmmirror.com/@uppy/webcam/-/webcam-5.1.0.tgz#9a4d820278fc1923a87013255d23c67140768179"
   integrity sha512-SHI+yiNrD4JrTFhQPyt7Mi9nL5r5YDwyXtYXuSRM3URB0etKes6u02MKY5GEn2LEpCSqSceXUi84Prig7UWYIw==
@@ -3345,7 +3345,7 @@
     is-mobile "^4.0.0"
     preact "^10.5.13"
 
-"@uppy/xhr-upload@^5.0.2":
+"@uppy/xhr-upload@^5.1.1":
   version "5.1.1"
   resolved "https://registry.npmmirror.com/@uppy/xhr-upload/-/xhr-upload-5.1.1.tgz#97b16a0db71f93ee9caec194676bf2fee2140e95"
   integrity sha512-Vp0HWVA8o+niC2uISxPt0pZ+95bHHkk9HzNaUTrff/vq+20Ln68BS2auJhc9ecJzI6SKAlGZ342dcTQ/onw0nA==
@@ -3369,13 +3369,13 @@
     "@urql/core" "^6.0.0"
     wonka "^6.3.2"
 
-"@urql/exchange-graphcache@^8.1.0":
-  version "8.1.0"
-  resolved "https://registry.npmmirror.com/@urql/exchange-graphcache/-/exchange-graphcache-8.1.0.tgz#8755932011c2bd7646680120fd50509739c8985d"
-  integrity sha512-KxdDFcGAWhYOkpCz/NLNHb8SaWSxE2G1iv+jlFty2f/ZlCkD+FjtzwQuieGl7fk1MVR8DG1zLmxGNlwfCNksfQ==
+"@urql/exchange-graphcache@^9.0.0":
+  version "9.0.0"
+  resolved "https://registry.npmmirror.com/@urql/exchange-graphcache/-/exchange-graphcache-9.0.0.tgz#6e4d512070e36a89425e65ab3da6300df354b9c4"
+  integrity sha512-5ACktvMFdnD5JC6DaSUrlj345c1JIUi7PwgvmnkwVOWsCRt/Vo9946UaG+sg69ku8seESMBK4xkeI41M39Dd5A==
   dependencies:
     "@0no-co/graphql.web" "^1.0.13"
-    "@urql/core" "^6.0.0"
+    "@urql/core" "^6.0.1"
     wonka "^6.3.2"
 
 "@urql/exchange-persisted@^5.0.1":
@@ -5791,7 +5791,7 @@ graphql@^14.0.2:
   dependencies:
     iterall "^1.2.2"
 
-graphql@^16.11.0:
+graphql@^16.11.0, graphql@^16.12.0:
   version "16.12.0"
   resolved "https://registry.npmmirror.com/graphql/-/graphql-16.12.0.tgz#28cc2462435b1ac3fdc6976d030cef83a0c13ac7"
   integrity sha512-DKKrynuQRne0PNpEbzuEdHlYOMksHSUI8Zc9Unei5gTsMNA2/vMpoMz/yKba50pejK56qj98qM0SjYxAKi13gQ==
@@ -6917,7 +6917,7 @@ next-tick@^1.1.0:
   resolved "https://registry.npmmirror.com/next-tick/-/next-tick-1.1.0.tgz#1836ee30ad56d67ef281b22bd199f709449b35eb"
   integrity sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==
 
-next@^16.1.1:
+next@^16.1.6:
   version "16.1.6"
   resolved "https://registry.npmmirror.com/next/-/next-16.1.6.tgz#24a861371cbe211be7760d9a89ddf2415e3824de"
   integrity sha512-hkyRkcu5x/41KoqnROkfTm2pZVbKxvbZRuNvKXLRXxs3VfyO0WhY50TQS40EuKO9SW3rBj/sF3WbVwDACeMZyw==
@@ -7637,10 +7637,10 @@ react-day-picker@^9.8.0:
     date-fns "^4.1.0"
     date-fns-jalali "^4.1.0-0"
 
-react-dom@19.2.3:
-  version "19.2.3"
-  resolved "https://registry.npmmirror.com/react-dom/-/react-dom-19.2.3.tgz#f0b61d7e5c4a86773889fcc1853af3ed5f215b17"
-  integrity sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg==
+react-dom@19.2.4:
+  version "19.2.4"
+  resolved "https://registry.npmmirror.com/react-dom/-/react-dom-19.2.4.tgz#6fac6bd96f7db477d966c7ec17c1a2b1ad8e6591"
+  integrity sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==
   dependencies:
     scheduler "^0.27.0"
 
@@ -7649,7 +7649,7 @@ react-error-boundary@^6.0.0:
   resolved "https://registry.npmmirror.com/react-error-boundary/-/react-error-boundary-6.1.0.tgz#d2965de0723d65d60d20aef2e120bd2c171ae4d7"
   integrity sha512-02k9WQ/mUhdbXir0tC1NiMesGzRPaCsJEWU/4bcFrbY1YMZOtHShtZP6zw0SJrBWA/31H0KT9/FgdL8+sPKgHA==
 
-react-hook-form@^7.64.0:
+react-hook-form@^7.71.1:
   version "7.71.1"
   resolved "https://registry.npmmirror.com/react-hook-form/-/react-hook-form-7.71.1.tgz#6a758958861682cf0eb22131eead684ba3618f66"
   integrity sha512-9SUJKCGKo8HUSsCO+y0CtqkqI5nNuaDqTxyqPsZPqIwudpj4rCrAz/jZV+jn57bx5gtZKOh3neQu94DXMc+w5w==
@@ -7712,10 +7712,10 @@ react-use-clipboard@^1.0.9:
   dependencies:
     copy-to-clipboard "^3.3.1"
 
-react@19.2.3:
-  version "19.2.3"
-  resolved "https://registry.npmmirror.com/react/-/react-19.2.3.tgz#d83e5e8e7a258cf6b4fe28640515f99b87cd19b8"
-  integrity sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA==
+react@19.2.4:
+  version "19.2.4"
+  resolved "https://registry.npmmirror.com/react/-/react-19.2.4.tgz#438e57baa19b77cb23aab516cf635cd0579ee09a"
+  integrity sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==
 
 read@^1.0.4:
   version "1.0.7"
@@ -8059,7 +8059,7 @@ semver@~7.5.0, semver@~7.5.4:
   dependencies:
     lru-cache "^6.0.0"
 
-serwist@9.5.4, serwist@^9.2.3:
+serwist@9.5.4, serwist@^9.5.4:
   version "9.5.4"
   resolved "https://registry.npmmirror.com/serwist/-/serwist-9.5.4.tgz#1d2634ca58615a4abf0f54b4ebaa217c6887019b"
   integrity sha512-uTHBzpIeA6rE3oyRt392MbtNQDs2JVZelKD1KkT18UkhX6HRwCeassoI1Nd1h52DqYqa7ZfBeldJ4awy+PYrnQ==
@@ -8236,7 +8236,7 @@ socks@^2.8.3:
     ip-address "^10.0.1"
     smart-buffer "^4.2.0"
 
-sonner@^2.0.3:
+sonner@^2.0.7:
   version "2.0.7"
   resolved "https://registry.npmmirror.com/sonner/-/sonner-2.0.7.tgz#810c1487a67ec3370126e0f400dfb9edddc3e4f6"
   integrity sha512-W6ZN4p58k8aDKA4XPcx2hpIQXBRAgyiWVkYhT7CvK6D3iAu7xjvVyhQHg2/iaKJZ1XVJ4r7XuwGL+WGEK37i9w==
@@ -9270,12 +9270,7 @@ yocto-queue@^0.1.0:
   resolved "https://registry.npmmirror.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zod@4.1.12:
-  version "4.1.12"
-  resolved "https://registry.npmmirror.com/zod/-/zod-4.1.12.tgz#64f1ea53d00eab91853195653b5af9eee68970f0"
-  integrity sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==
-
-zod@4.3.6, zod@^4:
+zod@4.3.6, zod@^4, zod@^4.3.6:
   version "4.3.6"
   resolved "https://registry.npmmirror.com/zod/-/zod-4.3.6.tgz#89c56e0aa7d2b05107d894412227087885ab112a"
   integrity sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==
