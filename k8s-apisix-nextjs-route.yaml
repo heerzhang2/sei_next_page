@@ -1,0 +1,23 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: sei-nextjs-route
+  namespace: seirep
+spec:
+  http:
+  - name: sei-nextjs-http
+    match:
+      paths:
+      - /report/*
+    backends:
+    - serviceName: sei-nextjs
+      servicePort: 3765
+    plugins:
+    - name: proxy-rewrite
+      enable: true
+      config:
+        regex_uri:
+        - "^/report/(.*)"
+        - "/$1"
+    - name: cors
+      enable: true

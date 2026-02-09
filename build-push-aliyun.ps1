@@ -1,53 +1,54 @@
-# 构建 Next.js Docker 镜像并推送到阿里云
+# Build Next.js Docker image and push to Aliyun
 
 Write-Host "============================================" -ForegroundColor Green
-Write-Host "构建 Docker 镜像" -ForegroundColor Green
+Write-Host "Building Docker image" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
 
 $imageName = "sei-nextjs"
 $aliyunRegistry = "crpi-lr1czs92lrq7vzhm.cn-shanghai.personal.cr.aliyuncs.com"
+$aliyunNamespace = "sei-rearend"
 $tag = "latest"
 
-# 构建镜像
+# Build image
 docker build -t "${imageName}:${tag}" .
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Docker 构建失败！" -ForegroundColor Red
+    Write-Host "Docker build failed!" -ForegroundColor Red
     exit 1
 }
 
 Write-Host "`n============================================" -ForegroundColor Green
-Write-Host "登录阿里云容器镜像服务" -ForegroundColor Green
+Write-Host "Login to Aliyun container registry" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
 
-$credential = ConvertTo-SecureString "kjf78Yuu" -AsPlainText -Force
-docker login --username=aliyun4071831155 --password-stdin $aliyunRegistry <<< "kjf78Yuu"
+$password = "kjf78Yuu"
+$password | docker login --username=aliyun4071831155 --password-stdin $aliyunRegistry
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Docker 登录失败！" -ForegroundColor Red
+    Write-Host "Docker login failed!" -ForegroundColor Red
     exit 1
 }
 
 Write-Host "`n============================================" -ForegroundColor Green
-Write-Host "标记镜像" -ForegroundColor Green
+Write-Host "Tagging image" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
 
-docker tag "${imageName}:${tag}" "${aliyunRegistry}/${imageName}:${tag}"
+docker tag "${imageName}:${tag}" "${aliyunRegistry}/${aliyunNamespace}/${imageName}:${tag}"
 
 Write-Host "`n============================================" -ForegroundColor Green
-Write-Host "推送镜像到阿里云" -ForegroundColor Green
+Write-Host "Pushing image to Aliyun" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
 
-docker push "${aliyunRegistry}/${imageName}:${tag}"
+docker push "${aliyunRegistry}/${aliyunNamespace}/${imageName}:${tag}"
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Docker 推送失败！" -ForegroundColor Red
+    Write-Host "Docker push failed!" -ForegroundColor Red
     exit 1
 }
 
 Write-Host "`n============================================" -ForegroundColor Green
-Write-Host "推送成功！" -ForegroundColor Green
+Write-Host "Push successful!" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
-Write-Host "镜像地址: ${aliyunRegistry}/${imageName}:${tag}" -ForegroundColor Yellow
-Write-Host "`n现在可以在 K3s 服务器执行:" -ForegroundColor Cyan
+Write-Host "Image address: ${aliyunRegistry}/${aliyunNamespace}/${imageName}:${tag}" -ForegroundColor Yellow
+Write-Host "`nYou can now execute on K3s server:" -ForegroundColor Cyan
 Write-Host "kubectl apply -f k8s-nextjs-deployment.yaml" -ForegroundColor Cyan

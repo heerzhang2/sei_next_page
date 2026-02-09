@@ -1,8 +1,5 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
     typescript: {
         // 警告：这允许生产构建在项目有类型错误的情况下成功完成
         ignoreBuildErrors: true,
@@ -79,13 +76,9 @@ const nextConfig = {
             // 允许的转发主机头
             allowedForwardedHosts: ["192.168.171.3:9443", "192.168.171.3", "192.168.0.100:9443", "192.168.0.100"],
         },
-        // Turbopack 配置
-        turbo: {
-            resolveAlias: {
-                '@camunda8/sdk': '@camunda8/sdk',
-            },
-        },
     },
+    // Turbopack 配置（Next.js 16 默认启用）
+    turbopack: {},
 };
 
 export default nextConfig;

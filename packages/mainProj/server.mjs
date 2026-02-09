@@ -46,62 +46,28 @@ const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
 
 app.prepare().then(() => {
-    let server
-
-    // 尝试读取 SSL 证书
-    try {
-        const httpsOptions = {
-            key: fs.readFileSync(path.join(__dirname, "ssl/localhost.key")),
-            cert: fs.readFileSync(path.join(__dirname, "ssl/localhost.crt")),
+    // 直接使用 HTTP 服务器
+    console.log("Starting HTTP server (HTTPS is terminated by Nginx)")
+    const server = createHttpServer(async (req, res) => {
+        try {
+            const parsedUrl = parse(req.url, true)
+            await handle(req, res, parsedUrl)
+        } catch (err) {
+            console.error("Error occurred handling", req.url, err)
+            res.statusCode = 500
+            res.end("internal server error")
         }
+    })
 
-        // 创建 HTTPS 服务器
-        server = createServer(httpsOptions, async (req, res) => {
-            try {
-                const parsedUrl = parse(req.url, true)
-                await handle(req, res, parsedUrl)
-            } catch (err) {
-                console.error("Error occurred handling", req.url, err)
-                res.statusCode = 500
-                res.end("internal server error")
-            }
-        })
-
-        server.listen(port, (err) => {
-            if (err) throw err
-            const localIP = getLocalIP()
-            console.log(`> Ready on https://${hostname}:${port}`)
-            console.log(`> HTTPS server started successfully`)
-            console.log(`> Local:    https://localhost:${port}`)
-            console.log(`> Network:  https://${localIP}:${port}`)
-            console.log(`> For mobile devices, use the Network URL`)
-        })
-    } catch (error) {
-        console.warn("HTTPS certificates not found, starting HTTP server instead")
-        console.warn('Run "npm run generate-ssl" to create SSL certificates')
-        console.warn("Error details:", error.message)
-
-        // 回退到 HTTP 服务器
-        server = createHttpServer(async (req, res) => {
-            try {
-                const parsedUrl = parse(req.url, true)
-                await handle(req, res, parsedUrl)
-            } catch (err) {
-                console.error("Error occurred handling", req.url, err)
-                res.statusCode = 500
-                res.end("internal server error")
-            }
-        })
-
-        server.listen(port, (err) => {
-            if (err) throw err
-            const localIP = getLocalIP()
-            console.log(`> Ready on http://${hostname}:${port}`)
-            console.log(`> Local:    http://localhost:${port}`)
-            console.log(`> Network:  http://${localIP}:${port}`)
-            console.log(`> Note: PWA features require HTTPS. Generate SSL certificates with "npm run generate-ssl"`)
-        })
-    }
+    server.listen(port, '0.0.0.0', (err) => {
+        if (err) throw err
+        const localIP = getLocalIP()
+        console.log(`> Ready on http://${hostname}:${port}`)
+        console.log(`> HTTP server started successfully`)
+        console.log(`> Local:    http://localhost:${port}`)
+        console.log(`> Network:  http://${localIP}:${port}`)
+        console.log(`> HTTPS is terminated by Nginx/APISIX`)
+    })
 
     // 优雅关闭
     process.on("SIGTERM", () => {
