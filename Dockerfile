@@ -6,8 +6,7 @@ FROM node:21-alpine AS builder
 
 WORKDIR /app
 
-# 设置环境变量
-ENV NODE_ENV=production
+# 设置环境变量（不设置 NODE_ENV=production，以确保 devDependencies 被安装）
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # 复制依赖文件
@@ -16,7 +15,7 @@ COPY packages/mainProj/package.json ./packages/mainProj/
 COPY packages/shared-auth-config/package.json ./packages/shared-auth-config/
 COPY tsconfig.json ./
 
-# 安装依赖
+# 安装依赖（devDependencies 也会被安装）
 RUN yarn install --frozen-lockfile
 
 # 复制源代码

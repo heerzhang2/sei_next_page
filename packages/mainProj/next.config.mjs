@@ -1,25 +1,3 @@
-import withSerwistInit from "@serwist/next";
-import crypto from "crypto";
-
-const revision = crypto.randomUUID();
-const disableSerwist = process.env.NEXT_DEV_TURBOPACK === "0" || false;
-
-const withSerwist = withSerwistInit({
-    disable: process.env.NODE_ENV !== "production" && disableSerwist,
-    swSrc: "src/sw.ts",
-    swDest: "public/sw.js",
-    reloadOnOnline: false,
-    cacheOnNavigation: false,
-    register: true,
-    maximumFileSizeToCacheInBytes: 9000000, // 减小到9MB
-    additionalPrecacheEntries: [
-        { url: "/", revision },
-        { url: "/login", revision },
-        { url: "/~offline", revision },
-        { url: "/offline", revision },
-    ],
-});
-
 /** @type {import("next").NextConfig} */
 const nextConfig = {
     eslint: {
@@ -110,4 +88,4 @@ const nextConfig = {
     },
 };
 
-export default withSerwist(nextConfig);
+export default nextConfig;
