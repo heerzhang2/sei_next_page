@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: camunda-worker-pdf
+  namespace: seirep
 spec:
   replicas: 3
   selector:
@@ -12,6 +13,8 @@ spec:
       labels:
         app: camunda-worker-pdf
     spec:
+      imagePullSecrets:
+      - name: aliyun-registry
       # 共享数据卷（emptyDir：Pod 删除时数据丢失，但支持水平扩展）
       volumes:
         - name: shared-data
@@ -20,8 +23,8 @@ spec:
       containers:
         # Camunda Worker 容器
         - name: camunda-worker
-          image: docker.io/library/camunda-worker:latest
-          imagePullPolicy: Never
+          image: crpi-lr1czs92lrq7vzhm.cn-shanghai.personal.cr.aliyuncs.com/sei-rearend/camunda-worker:latest
+          imagePullPolicy: Always
           env:
             # Camunda 配置
             - name: CAMUNDA_REST_ADDRESS
@@ -86,8 +89,8 @@ spec:
 
         # Page2PDF Server Sidecar 容器
         - name: page2pdf-server
-          image: docker.io/library/page2pdf-server:latest
-          imagePullPolicy: Never
+          image: crpi-lr1czs92lrq7vzhm.cn-shanghai.personal.cr.aliyuncs.com/sei-rearend/page2pdf-server:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 9389
               name: http
