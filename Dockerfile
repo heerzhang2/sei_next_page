@@ -2,7 +2,7 @@
 # 多阶段构建：builder -> runner
 
 # ==================== 构建阶段 ====================
-FROM node:21-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ WORKDIR /app/packages/mainProj
 RUN yarn build
 
 # ==================== 运行阶段 ====================
-FROM node:21-alpine AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 

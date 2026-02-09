@@ -29,7 +29,7 @@
     "build:serwist-9": "next build",
     "build:serwist-10": "next build",
     "build:standalone": "cross-env BUILD_STANDALONE=true next build",
-    "build": "serwist build",
+    "build": "next build",
     "start:https": "cross-env NODE_ENV=production NODE_TLS_REJECT_UNAUTHORIZED=0 node server.mjs",
     "start2:apisix": "cross-env NODE_ENV=production NODE_TLS_REJECT_UNAUTHORIZED=0 NEXT_PUBLIC_BASE_PATH=/report node server.mjs",
     "start:pm2": "pm2 start ecosystem.config.js",
