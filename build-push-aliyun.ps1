@@ -7,7 +7,7 @@ Write-Host "============================================" -ForegroundColor Green
 $imageName = "sei-nextjs"
 $aliyunRegistry = "crpi-lr1czs92lrq7vzhm.cn-shanghai.personal.cr.aliyuncs.com"
 $aliyunNamespace = "sei-rearend"
-$tag = "latest"
+$tag = Get-Date -Format "yyyyMMdd-HHmmss"  # 使用时间戳作为标签
 
 # Build image
 docker build -t "${imageName}:${tag}" .

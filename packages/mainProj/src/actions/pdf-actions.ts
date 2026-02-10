@@ -10,7 +10,7 @@ const PDF_SERVICE_TOKEN = process.env.PDF_SERVICE_TOKEN || "your-secret-token"
 const headers = {
     Accept: "application/json",
     "Content-Type": "application/json; charset=utf-8",
-    Authorization: `Basic ${PDF_SERVICE_TOKEN}`,   //文书打印转换器backend模式，添加安全认证
+    Authorization: `Basic ${PDF_SERVICE_TOKEN}`,   //文书打印转换器backend模式，添加安全认证 (token 已是 Base64 编码)
 }
 
 /**这是在 nextjs 服务器当中才能运行的代码，就不会泄露api接口的密码信息给用户一侧的。

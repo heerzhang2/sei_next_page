@@ -66,7 +66,9 @@ spec:
 
         # PDF 服务配置
         - name: PDF_SERVICE_URL
-          value: "http://192.168.171.3:9389"
+          value: "http://page2pdf-server.seirep.svc.cluster.local:9389"
+        - name: PDF_SERVICE_TOKEN
+          value: "YWRtaW46Q2VyNmpzJGt3OWUwV2E="
 
         # NextAuth 配置
         - name: NEXTAUTH_SECRET
