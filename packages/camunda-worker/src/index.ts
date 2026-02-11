@@ -1,11 +1,26 @@
 import { createCamundaClient } from '@camunda8/orchestration-cluster-api'
 import axios from "axios"
 import dotenv from "dotenv"
+import path from "path"
 import {deleteDirWithRm, FileUploader} from "./local-uploader";
 import type {ConfigRoot, FileTransform} from "page2pdf_server/src";
 
-// 加载环境变量
-dotenv.config()
+// 加载环境变量 - 优先读取 .env.local
+const envPath = path.join(__dirname, '../.env.local')
+console.log('Loading env from:', envPath)
+console.log('.env.local exists:', require('fs').existsSync(envPath))
+
+if (require('fs').existsSync(envPath)) {
+    // 读取 .env.local，强制覆盖已存在的环境变量
+    const result = dotenv.config({ path: envPath, override: true })
+    console.log('Env load result (.env.local):', result.error ? result.error.message : 'Success')
+} else {
+    // 回退到读取默认的 .env
+    const result = dotenv.config({ path: path.join(__dirname, '../.env') })
+    console.log('Env load result (.env):', result.error ? result.error.message : 'Success')
+}
+
+console.log('CAMUNDA_REST_ADDRESS:', process.env.CAMUNDA_REST_ADDRESS)
 
 // Camunda 8 Orchestration Cluster API 配置
 const CAMUNDA_REST_ADDRESS = process.env.CAMUNDA_REST_ADDRESS || 'http://192.168.109.66:30000';
