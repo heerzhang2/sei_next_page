@@ -87,7 +87,7 @@ export default function ProcessDiagramViewer({
             setLoading(true)
             setError(null)
 
-            const response = await fetch(`/api/camunda/process-instance/${processInstanceKey}`)
+            const response = await fetch(`/report/api/camunda/process-instance/${processInstanceKey}`)
             const result = await response.json()
 
             if (!result.success) {

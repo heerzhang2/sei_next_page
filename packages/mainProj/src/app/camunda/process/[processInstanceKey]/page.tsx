@@ -1,9 +1,10 @@
 import ProcessInstanceView from '@/components/camunda/ProcessInstanceView'
 
-export default function ProcessInstancePage({
+export default async function ProcessInstancePage({
     params,
 }: {
-    params: { processInstanceKey: string }
+    params: Promise<{ processInstanceKey: string }>
 }) {
-    return <ProcessInstanceView processInstanceKey={params.processInstanceKey} />
+    const { processInstanceKey } = await params
+    return <ProcessInstanceView processInstanceKey={processInstanceKey} />
 }

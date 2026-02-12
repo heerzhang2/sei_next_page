@@ -57,7 +57,7 @@ function MyComponent() {
 
 ## API 数据结构
 
-### GET /api/camunda/process-instance/:processInstanceKey
+### GET /report/api/camunda/process-instance/:processInstanceKey
 
 返回数据结构：
 

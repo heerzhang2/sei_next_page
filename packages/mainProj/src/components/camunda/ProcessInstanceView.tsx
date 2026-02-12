@@ -91,7 +91,7 @@ function FlowNodeListWrapper({ processInstanceKey }: { processInstanceKey: strin
             setLoading(true)
             setError(null)
 
-            const response = await fetch(`/api/camunda/process-instance/${processInstanceKey}`)
+            const response = await fetch(`/report/api/camunda/process-instance/${processInstanceKey}`)
             const result = await response.json()
 
             if (!result.success) {
@@ -130,7 +130,7 @@ function VariablesWrapper({ processInstanceKey }: { processInstanceKey: string }
 
     async function fetchVariables() {
         try {
-            const response = await fetch(`/api/camunda/process-instance/${processInstanceKey}`)
+            const response = await fetch(`/report/api/camunda/process-instance/${processInstanceKey}`)
             const result = await response.json()
             setData(result.data?.variables)
         } catch (err: any) {
