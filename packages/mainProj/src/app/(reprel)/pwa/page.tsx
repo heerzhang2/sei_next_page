@@ -479,10 +479,14 @@ export default function Page() {
             return
         }
 
+        // 改进：检查 SW 是否激活，允许手动重试
         if (!navigator.serviceWorker.controller) {
-            setPrecacheStatus("error")
-            setPrecacheMessage("Service Worker 未激活，请刷新页面重试")
-            return
+            // 给用户一个提示，而不是直接返回错误
+            console.warn("[PWA] Service Worker 未激活，但允许继续尝试")
+            // 不立即返回，让用户可以通过点击"重新预缓存"来重试
+            // setPrecacheStatus("error")
+            // setPrecacheMessage("Service Worker 未激活，请刷新页面重试")
+            // return
         }
 
         const urlsToCache = []
@@ -509,6 +513,20 @@ export default function Page() {
         setPrecacheProgress({ completed: 0, total: urlsToCache.length, currentItem: "" })
         setPrecacheResults([])
         setFailedItems([])
+
+        // 改进：检查 SW 激活状态并给出更详细的提示
+        if (!navigator.serviceWorker.controller) {
+            const registrations = await navigator.serviceWorker.getRegistrations()
+            if (registrations.length === 0) {
+                setPrecacheStatus("error")
+                setPrecacheMessage("Service Worker 未注册，请等待页面右下角的状态提示")
+                return
+            } else {
+                setPrecacheStatus("error")
+                setPrecacheMessage("Service Worker 已注册但未激活，请点击右下角'刷新'按钮")
+                return
+            }
+        }
 
         // 替换原有的 navigator.serviceWorker.controller.postMessage 调用部分
         try {

@@ -13,11 +13,40 @@ spec:
     - serviceName: sei-nextjs
       servicePort: 3765
     plugins:
+    # Service Worker 特殊处理
     - name: proxy-rewrite
       enable: true
       config:
         regex_uri:
-        - "^/report/(.*)"
-        - "/$1"
+          - "^/report/sw\\.js$"
+          - "/sw.js"
+    - name: response-rewrite
+      enable: true
+      config:
+        vars:
+          - sw-allowed
+        headers:
+          - key: Service-Worker-Allowed
+            value: /report/
+          - key: Cache-Control
+            value: "public, max-age=0, must-revalidate"
+          - key: Content-Type
+            value: "application/javascript; charset=utf-8"
+        regex_uri:
+          - "^/report/sw\\.js$"
+        # 当匹配 sw.js 时设置正确的 header
+        match:
+          - arg_var:
+            - value: sw-allowed
+              op: ">"
+              val: "0"
+        when:
+          - uri: "^/report/sw\\.js$"
+    - name: proxy-rewrite
+      enable: true
+      config:
+        regex_uri:
+          - "^/report/(.*)"
+          - "/$1"
     - name: cors
       enable: true

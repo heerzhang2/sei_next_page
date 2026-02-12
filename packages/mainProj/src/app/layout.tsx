@@ -16,6 +16,7 @@ import { NetworkStatusProvider } from "@/contexts/network-status-context"
 import { SessionSync } from "@/components/session-sync"
 import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
 import { SerwistMessageHandler } from "@/components/serwist-message-handler"
+import { ServiceWorkerRegister } from "@/components/service-worker-register"
 import { withBasePath } from '@/lib/tool'
 const APP_NAME = "报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
@@ -68,6 +69,7 @@ export default async function RootLayout({
               <NetworkStatusProvider>
                 <GraphQLProvider>
                   <SerwistMessageHandler />
+                  <ServiceWorkerRegister />
                   <SessionSync />
                   <TokenRefreshOverlay />
                   <OfflineStatusIndicator />
@@ -79,6 +81,14 @@ export default async function RootLayout({
             </SessionProvider>
           </PrintSettingsProvider>
         </ThemeProvider>
+        {/* 注入全局变量供 SW 注册使用 */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if (typeof window !== 'undefined') {
+              window.__NEXT_PUBLIC_BASE_PATH__ = '${process.env.NEXT_PUBLIC_BASE_PATH || ''}';
+            }
+          `
+        }} />
       </body>
     </html>
   )
