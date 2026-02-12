@@ -118,7 +118,12 @@ export default function ProcessDiagramViewer({
                 incident: node.hasIncident
             }))
 
-            renderDiagram(result.data.bpmnXml, flowNodes)
+            const sequenceFlows = result.data.sequenceFlows?.map((flow: any) => ({
+                sequenceFlowId: flow.sequenceFlowId,
+                elementId: flow.elementId
+            })) || []
+
+            renderDiagram(result.data.bpmnXml, flowNodes, sequenceFlows)
 
         } catch (err: any) {
             setError(err.message)
@@ -170,9 +175,29 @@ export default function ProcessDiagramViewer({
                     stroke-width: 2px !important;
                 }
 
+                /* 流转连接线动画 */
+                .flow-active.djs-connection .djs-visual > :first-child {
+                    stroke: #3b82f6 !important;
+                    stroke-width: 3px !important;
+                    stroke-dasharray: 10, 10;
+                    animation: flowDash 1.5s linear infinite;
+                    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
+                }
+
+                /* 当前活动节点到下一个节点的流向动画 */
+                .running:not(.djs-connection) .djs-visual > :first-child {
+                    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+                }
+
                 @keyframes dash {
                     to {
                         stroke-dashoffset: -10;
+                    }
+                }
+
+                @keyframes flowDash {
+                    to {
+                        stroke-dashoffset: -20;
                     }
                 }
             `}</style>
