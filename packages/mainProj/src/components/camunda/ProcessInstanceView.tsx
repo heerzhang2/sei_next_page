@@ -6,7 +6,7 @@ import FlowNodeList from './FlowNodeList'
 import { RefreshCw } from 'lucide-react'
 
 export default function ProcessInstanceView({ processInstanceKey }: { processInstanceKey: string }) {
-    const [activeTab, setActiveTab] = useState<'diagram' | 'nodes' | 'variables'>('diagram')
+    const [activeTab, setActiveTab] = useState<'diagram' | 'nodes'>('diagram')
 
     return (
         <div className="w-full max-w-7xl mx-auto p-4">
@@ -32,8 +32,7 @@ export default function ProcessInstanceView({ processInstanceKey }: { processIns
                 <nav className="flex gap-4">
                     {[
                         { id: 'diagram', label: '流程图' },
-                        { id: 'nodes', label: '节点记录' },
-                        { id: 'variables', label: '流程变量' }
+                        { id: 'nodes', label: '节点记录' }
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -64,12 +63,6 @@ export default function ProcessInstanceView({ processInstanceKey }: { processIns
                         <FlowNodeListWrapper processInstanceKey={processInstanceKey} />
                     </div>
                 )}
-
-                {activeTab === 'variables' && (
-                    <div className="p-4">
-                        <VariablesWrapper processInstanceKey={processInstanceKey} />
-                    </div>
-                )}
             </div>
         </div>
     )
@@ -98,7 +91,17 @@ function FlowNodeListWrapper({ processInstanceKey }: { processInstanceKey: strin
                 throw new Error(result.message || '获取流程实例数据失败')
             }
 
-            setData(result.data.flowNodes)
+            const flowNodes = result.data.flowNodes.map((node: any) => ({
+                flowNodeInstanceId: node.elementInstanceKey,
+                flowNodeId: node.elementId,
+                flowNodeName: node.elementName,
+                type: node.type,
+                state: node.state,
+                startDate: node.startDate,
+                endDate: node.endDate,
+                incident: node.hasIncident
+            }))
+            setData(flowNodes)
         } catch (err: any) {
             setError(err.message)
             console.error('获取节点列表失败:', err)
@@ -116,65 +119,4 @@ function FlowNodeListWrapper({ processInstanceKey }: { processInstanceKey: strin
     }
 
     return <FlowNodeList flowNodes={data || []} />
-}
-
-// 变量展示包装器
-function VariablesWrapper({ processInstanceKey }: { processInstanceKey: string }) {
-    const [data, setData] = useState<any>(null)
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        fetchVariables()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [processInstanceKey])
-
-    async function fetchVariables() {
-        try {
-            const response = await fetch(`/report/api/camunda/process-instance/${processInstanceKey}`)
-            const result = await response.json()
-            setData(result.data?.variables)
-        } catch (err: any) {
-            console.error('获取变量失败:', err)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    if (loading) {
-        return <div className="text-center py-8 text-gray-500">加载中...</div>
-    }
-
-    if (!data || Object.keys(data).length === 0) {
-        return <div className="text-center py-8 text-gray-500">暂无变量数据</div>
-    }
-
-    return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-                <thead>
-                    <tr className="border-b">
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">变量名</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">类型</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">值</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Object.entries(data).map(([key, value]: [string, any]) => (
-                        <tr key={key} className="border-b hover:bg-gray-50">
-                            <td className="py-2 px-3 font-mono text-blue-600">{key}</td>
-                            <td className="py-2 px-3 text-gray-600">
-                                {value === null ? 'null' : typeof value}
-                            </td>
-                            <td className="py-2 px-3 text-gray-700 break-all max-w-md">
-                                {typeof value === 'object'
-                                    ? JSON.stringify(value, null, 2)
-                                    : String(value)
-                                }
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    )
 }
