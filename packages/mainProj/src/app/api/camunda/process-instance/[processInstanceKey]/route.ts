@@ -31,64 +31,83 @@ export async function GET(
 
         const client = getClient()
 
-        // 1. 使用 Operate API 搜索流程实例
-        const processInstances = await client.operate.searchProcessInstances({
-            filter: {
-                processInstanceKey: BigInt(processInstanceKey)
-            },
-            size: 1
-        })
+        // 1. 获取流程实例详情
+        const processInstance = await client.getProcessInstance(
+            { processInstanceKey: BigInt(processInstanceKey) },
+            {
+                consistency: {
+                    waitUpToMs: 5000,
+                    pollIntervalMs: 200,
+                }
+            }
+        )
 
-        const processInstance = processInstances?.items?.[0]
         if (!processInstance) {
             return NextResponse.json({ error: '流程实例不存在' }, { status: 404 })
         }
 
-        // 2. 获取活动节点历史（流程扭转经过的节点）
-        const flowNodes = await client.operate.searchFlowNodeInstances({
-            filter: {
-                processInstanceKey: BigInt(processInstanceKey)
+        // 2. 获取流程定义（包含 BPMN XML）
+        const processDefinition = await client.getProcessDefinition(
+            { processDefinitionKey: processInstance.processDefinitionKey },
+            {
+                consistency: {
+                    waitUpToMs: 5000,
+                    pollIntervalMs: 200,
+                }
+            }
+        )
+
+        // 3. 获取 BPMN XML
+        let bpmnXml = processDefinition?.resource || ''
+
+        if (!bpmnXml) {
+            const processDefinitionXml = await client.getProcessDefinitionXml(
+                { processDefinitionKey: processInstance.processDefinitionKey },
+                {
+                    consistency: {
+                        waitUpToMs: 5000,
+                        pollIntervalMs: 200,
+                    }
+                }
+            )
+            // getProcessDefinitionXml 直接返回 XML 字符串
+            bpmnXml = processDefinitionXml || ''
+        }
+
+        // 4. 获取活动节点（element instances）
+        const elementInstancesResult = await client.searchElementInstances(
+            {
+                filter: {
+                    processInstanceKey: processInstance.processInstanceKey
+                }
             },
-            size: 100 // 获取最多100条历史记录
-        })
+            {
+                consistency: {
+                    waitUpToMs: 5000,
+                    pollIntervalMs: 200,
+                }
+            }
+        )
 
-        // 3. 获取流程变量
-        const variables = await client.operate.getProcessInstanceVariables({
-            processInstanceKey: BigInt(processInstanceKey)
-        })
-
-        // 4. 获取流程定义（需要使用其他 API）
-        const processDefinition = await client.operate.getProcessDefinition({
-            processDefinitionKey: processInstance.processDefinitionKey
-        })
-
-        // 整理数据
-        const flowNodesList = flowNodes?.items?.map((node: any) => ({
-            flowNodeInstanceId: node.flowNodeInstanceId?.toString(),
-            flowNodeId: node.flowNodeId,
-            flowNodeName: node.flowNodeName,
-            type: node.type,
-            state: node.state, // ACTIVATED, COMPLETED, TERMINATED, FAILED
-            startDate: node.startDate,
-            endDate: node.endDate,
-            incident: node.incident
-        })) || []
+        // 5. 获取流转线路（sequence flows）
+        const sequenceFlowsResult = await client.getProcessInstanceSequenceFlows(
+            { processInstanceKey: processInstance.processInstanceKey },
+            {
+                consistency: {
+                    waitUpToMs: 5000,
+                    pollIntervalMs: 200,
+                }
+            }
+        )
 
         return NextResponse.json({
             success: true,
             data: {
-                processInstance: {
-                    processInstanceKey: processInstance.processInstanceKey?.toString(),
-                    processDefinitionKey: processInstance.processDefinitionKey?.toString(),
-                    processDefinitionId: processInstance.processDefinitionId,
-                    bpmnProcessId: processInstance.bpmnProcessId,
-                    state: processInstance.state,
-                    startDate: processInstance.startDate,
-                    endDate: processInstance.endDate
-                },
-                bpmnXml: processDefinition?.resource || '',
-                flowNodes: flowNodesList,
-                variables: variables
+                processInstance,
+                bpmnXml,
+                flowNodes: elementInstancesResult?.items || [],
+                sequenceFlows: sequenceFlowsResult?.items || [],
+                variables: {}
             }
         })
 

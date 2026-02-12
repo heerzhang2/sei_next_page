@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import BpmnModeler from 'bpmn-js/lib/Modeler'
+import BpmnViewer from 'bpmn-js/lib/Viewer'
 import type { ModdleElement } from 'bpmn-js/lib/model/Types'
 
 interface FlowNode {
@@ -20,12 +20,17 @@ interface ProcessDiagramViewerProps {
     height?: string
 }
 
+interface SequenceFlow {
+    sequenceFlowId: string
+    elementId: string
+}
+
 export default function ProcessDiagramViewer({
     processInstanceKey,
     height = '600px'
 }: ProcessDiagramViewerProps) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const modelerRef = useRef<BpmnModeler | null>(null)
+    const viewerRef = useRef<BpmnViewer | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -34,27 +39,24 @@ export default function ProcessDiagramViewer({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [processInstanceKey])
 
-    const renderDiagram = useCallback((bpmnXml: string, flowNodes: FlowNode[]) => {
+    const renderDiagram = useCallback((bpmnXml: string, flowNodes: FlowNode[], sequenceFlows?: SequenceFlow[]) => {
         if (!containerRef.current) return
 
-        // 如果已存在模型器，先销毁
-        if (modelerRef.current) {
-            modelerRef.current.destroy()
+        // 如果已存在查看器，先销毁
+        if (viewerRef.current) {
+            viewerRef.current.destroy()
         }
 
-        const modeler = new BpmnModeler({
+        const viewer = new BpmnViewer({
             container: containerRef.current,
-            height,
-            keyboard: {
-                bindTo: window
-            }
+            height
         })
 
-        modelerRef.current = modeler
+        viewerRef.current = viewer
 
-        modeler.importXML(bpmnXml).then(() => {
-            const canvas: any = modeler.get('canvas')
-            const elementRegistry: any = modeler.get('elementRegistry')
+        viewer.importXML(bpmnXml).then(() => {
+            const canvas: any = viewer.get('canvas')
+            const elementRegistry: any = viewer.get('elementRegistry')
 
             // 高亮所有节点
             flowNodes.forEach(node => {
@@ -63,7 +65,7 @@ export default function ProcessDiagramViewer({
                     // 根据节点状态设置不同的标记
                     let marker = 'completed'
 
-                    if (node.state === 'ACTIVATED') {
+                    if (node.state === 'ACTIVE') {
                         marker = 'running'
                     } else if (node.state === 'FAILED' || node.incident) {
                         marker = 'failed'
@@ -72,6 +74,16 @@ export default function ProcessDiagramViewer({
                     canvas.addMarker(node.flowNodeId, marker)
                 }
             })
+
+            // 高亮流转连接线
+            if (sequenceFlows && sequenceFlows.length > 0) {
+                sequenceFlows.forEach((flow, index) => {
+                    const flowElement: ModdleElement | undefined = elementRegistry.get(flow.elementId)
+                    if (flowElement) {
+                        canvas.addMarker(flow.elementId, 'flow-active')
+                    }
+                })
+            }
 
             // 自动缩放以适应画布
             canvas.zoom('fit-viewport')
@@ -94,7 +106,19 @@ export default function ProcessDiagramViewer({
                 throw new Error(result.message || '获取流程实例数据失败')
             }
 
-            renderDiagram(result.data.bpmnXml, result.data.flowNodes)
+            // 转换 API 返回的数据格式以适配组件
+            const flowNodes = result.data.flowNodes.map((node: any) => ({
+                flowNodeInstanceId: node.elementInstanceKey,
+                flowNodeId: node.elementId,
+                flowNodeName: node.elementName,
+                type: node.type,
+                state: node.state,
+                startDate: node.startDate,
+                endDate: node.endDate,
+                incident: node.hasIncident
+            }))
+
+            renderDiagram(result.data.bpmnXml, flowNodes)
 
         } catch (err: any) {
             setError(err.message)

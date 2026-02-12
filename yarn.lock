@@ -639,7 +639,7 @@
   dependencies:
     min-dash "^5.0.0"
 
-"@camunda8/orchestration-cluster-api@^8.8.3", "@camunda8/orchestration-cluster-api@^8.8.4":
+"@camunda8/orchestration-cluster-api@^8.8.4":
   version "8.8.4"
   resolved "https://registry.npmmirror.com/@camunda8/orchestration-cluster-api/-/orchestration-cluster-api-8.8.4.tgz"
   integrity sha512-hrs9pP5dDa2zCeRBAdFj9eMFk5nV9djQkYF6NtX8M1IGiFk8t3gGYd2Y9x3hv8ZetnA4ZNpBf3Q2HuGJ6VZdbQ==
