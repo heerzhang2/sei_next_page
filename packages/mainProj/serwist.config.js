@@ -27,5 +27,19 @@ export default {
     define: {
       'import.meta.env.BASE_PATH': JSON.stringify(basePath)
     }
+  },
+
+  // 排除字体文件从预缓存（字体数量多且变化大，改用 runtime cache）
+  globDirectory: "public",
+  globPatterns: [
+    "**/*.{js,css,html,json,ico,svg,png,jpg,jpeg,webp,avif}",
+    "!**/*.woff2",
+    "!**/*.woff",
+    "!**/*.ttf",
+    "!**/*.eot"
+  ],
+  // 使用 modifyURLPrefix 修正路径前缀
+  modifyURLPrefix: {
+    '': basePath
   }
 };

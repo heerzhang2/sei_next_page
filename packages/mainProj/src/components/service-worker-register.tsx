@@ -22,7 +22,7 @@ export function ServiceWorkerRegister() {
         // 检查现有注册并清理不匹配的
         navigator.serviceWorker.getRegistrations().then(async (registrations) => {
             console.log('[SW Register] 现有注册数量:', registrations.length)
-            
+
             for (const registration of registrations) {
                 console.log('[SW Register] 现有注册:', {
                     scope: registration.scope,
@@ -34,14 +34,11 @@ export function ServiceWorkerRegister() {
                     continue
                 }
 
-                // 如果有 basePath 但注册在根路径，注销它
-                if (basePath && registration.scope === '/' && !registration.active?.scriptURL?.includes(basePath)) {
-                    console.log('[SW Register] 注销不匹配作用域的旧 SW:', registration.scope)
-                    await registration.unregister()
-                }
+                // 检查 scope 是否匹配当前页面
+                const currentOrigin = window.location.origin
+                const expectedScope = basePath ? `${currentOrigin}${basePath}` : `${currentOrigin}/`
 
-                // 如果注册在错误的作用域，注销它
-                const expectedScope = basePath || '/'
+                // 如果注册的作用域与预期不符，注销它
                 if (registration.scope !== expectedScope) {
                     console.log('[SW Register] 注销错误作用域的 SW:', registration.scope, '期望:', expectedScope)
                     await registration.unregister()

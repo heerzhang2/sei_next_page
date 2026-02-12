@@ -125,6 +125,22 @@ const customCache: RuntimeCaching[] = [
             ],
         }),
     },
+    // 字体文件使用 CacheFirst 策略，优先从缓存读取
+    {
+        matcher: ({ url: { pathname }, sameOrigin }) =>
+            sameOrigin && pathname.match(/\/_next\/static\/media\/.*\.woff2?$/),
+        handler: new NetworkFirst({
+            cacheName: "fonts",
+            networkTimeoutSeconds: 3,
+            plugins: [
+                new ExpirationPlugin({
+                    maxEntries: 500,
+                    maxAgeSeconds: 365 * 24 * 60 * 60, // 缓存一年
+                    maxAgeFrom: "last-used",
+                }),
+            ],
+        }),
+    },
     {
         matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && pathname.startsWith("/rep/"),
         handler: new NetworkFirst({

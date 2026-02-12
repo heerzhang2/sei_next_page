@@ -22,7 +22,7 @@
     "start:apisix": "next start -p 3765",
     "start:apisix:subpath": "cross-env NODE_ENV=production NEXT_PUBLIC_BASE_PATH=/report next start -p 3765",
     "lint": "next lint",
-    "start-test-offline": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 node server.mjs",
+    "start-test-offline": "cross-env NODE_ENV=production NEXT_PUBLIC_BASE_PATH=/report NODE_TLS_REJECT_UNAUTHORIZED=0 node server.mjs",
     "start:debug": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_OPTIONS='--inspect' SERWIST_SUPPRESS_TURBOPACK_WARNING=1 NEXT_DEV_TURBOPACK=0 node server.mjs",
     "start:debug:break": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_OPTIONS='--inspect-brk' SERWIST_SUPPRESS_TURBOPACK_WARNING=1 NEXT_DEV_TURBOPACK=0 node server.mjs",
     "prebuild": "node scripts/generate-build-info.mjs",
