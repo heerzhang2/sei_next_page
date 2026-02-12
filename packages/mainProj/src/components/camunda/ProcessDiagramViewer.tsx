@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import BpmnViewer from 'bpmn-js/lib/Viewer'
+import BpmnViewer from 'bpmn-js/lib/NavigatedViewer'
 import type { ModdleElement } from 'bpmn-js/lib/model/Types'
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 
 interface FlowNode {
     flowNodeInstanceId: string
@@ -36,6 +37,8 @@ export default function ProcessDiagramViewer({
     const currentStepRef = useRef(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [zoomLevel, setZoomLevel] = useState(1)
+    const touchStartRef = useRef<{ x: number; y: number; distance: number } | null>(null)
 
     useEffect(() => {
         fetchProcessInstanceData()
@@ -71,6 +74,12 @@ export default function ProcessDiagramViewer({
         viewer.importXML(bpmnXml).then(() => {
             const canvas: any = viewer.get('canvas')
             const elementRegistry: any = viewer.get('elementRegistry')
+            const eventBus: any = viewer.get('eventBus')
+
+            // 禁用鼠标滚轮缩放以避免非 passive 事件警告
+            eventBus.on('zoomScroll.step', function() {
+                return false // 阻止默认的滚轮缩放行为
+            })
 
             // 按时间排序节点
             const sortedNodes = [...flowNodes].sort((a, b) =>
@@ -115,8 +124,14 @@ export default function ProcessDiagramViewer({
                 }
             })
 
-            // 自动缩放以适应画布
+            // 自动缩放以适应画布并获取缩放级别
             canvas.zoom('fit-viewport')
+            setZoomLevel(canvas.zoom() || 1)
+
+            // 添加触摸手势支持
+            if (containerRef.current) {
+                setupTouchGestures(canvas, containerRef.current)
+            }
 
             // 开始动画
             startAnimation(canvas, elementRegistry)
@@ -126,6 +141,84 @@ export default function ProcessDiagramViewer({
             setError(`渲染流程图失败: ${err.message}`)
         })
     }, [height])
+
+    const handleZoomIn = useCallback(() => {
+        if (!viewerRef.current) return
+        const canvas: any = viewerRef.current.get('canvas')
+        const currentZoom = canvas.zoom() || 1
+        const newZoom = Math.min(currentZoom * 1.2, 3)
+        canvas.zoom(newZoom)
+        setZoomLevel(newZoom)
+    }, [])
+
+    const handleZoomOut = useCallback(() => {
+        if (!viewerRef.current) return
+        const canvas: any = viewerRef.current.get('canvas')
+        const currentZoom = canvas.zoom() || 1
+        const newZoom = Math.max(currentZoom / 1.2, 0.2)
+        canvas.zoom(newZoom)
+        setZoomLevel(newZoom)
+    }, [])
+
+    const handleFitView = useCallback(() => {
+        if (!viewerRef.current) return
+        const canvas: any = viewerRef.current.get('canvas')
+        canvas.zoom('fit-viewport')
+        setZoomLevel(canvas.zoom() || 1)
+    }, [])
+
+    const setupTouchGestures = useCallback((canvas: any, container: HTMLElement) => {
+        let initialDistance = 0
+        let initialZoom = 1
+
+        const handleTouchStart = (e: TouchEvent) => {
+            if (e.touches.length === 2) {
+                initialDistance = getDistance(e.touches[0], e.touches[1])
+                initialZoom = canvas.zoom() || 1
+                e.preventDefault()
+            }
+        }
+
+        const handleTouchMove = (e: TouchEvent) => {
+            if (e.touches.length === 2) {
+                const currentDistance = getDistance(e.touches[0], e.touches[1])
+                const scale = currentDistance / initialDistance
+                const newZoom = Math.max(0.2, Math.min(3, initialZoom * scale))
+
+                // 计算缩放中心点（两个手指的中心）
+                const touch1 = e.touches[0]
+                const touch2 = e.touches[1]
+                const centerX = (touch1.clientX + touch2.clientX) / 2
+                const centerY = (touch1.clientY + touch2.clientY) / 2
+
+                // 获取画布的边界矩形
+                const rect = container.getBoundingClientRect()
+                const viewBox = canvas.viewbox()
+
+                // 计算相对于画布的坐标
+                const x = centerX - rect.left
+                const y = centerY - rect.top
+
+                canvas.zoom(newZoom, { x: viewBox.x + x / viewBox.scale, y: viewBox.y + y / viewBox.scale })
+                setZoomLevel(newZoom)
+                e.preventDefault()
+            }
+        }
+
+        const getDistance = (touch1: Touch, touch2: Touch) => {
+            const dx = touch1.clientX - touch2.clientX
+            const dy = touch1.clientY - touch2.clientY
+            return Math.sqrt(dx * dx + dy * dy)
+        }
+
+        container.addEventListener('touchstart', handleTouchStart, { passive: false })
+        container.addEventListener('touchmove', handleTouchMove, { passive: false })
+
+        return () => {
+            container.removeEventListener('touchstart', handleTouchStart)
+            container.removeEventListener('touchmove', handleTouchMove)
+        }
+    }, [])
 
     const startAnimation = useCallback((canvas: any, elementRegistry: any) => {
         const flowPath = flowPathRef.current
@@ -245,7 +338,37 @@ export default function ProcessDiagramViewer({
 
     return (
         <>
-            <div ref={containerRef} className="w-full border rounded-lg" style={{ height }} />
+            <div className="relative w-full border rounded-lg bg-white" style={{ height }}>
+                {/* 缩放控制工具栏 */}
+                <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-white rounded-lg shadow-lg border p-1">
+                    <button
+                        onClick={handleZoomIn}
+                        className="p-2 hover:bg-gray-100 rounded transition-colors"
+                        title="放大"
+                    >
+                        <ZoomIn className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                        onClick={handleZoomOut}
+                        className="p-2 hover:bg-gray-100 rounded transition-colors"
+                        title="缩小"
+                    >
+                        <ZoomOut className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <div className="w-px h-4 bg-gray-300 mx-1" />
+                    <button
+                        onClick={handleFitView}
+                        className="p-2 hover:bg-gray-100 rounded transition-colors"
+                        title="适应屏幕"
+                    >
+                        <Maximize2 className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <div className="px-2 py-1 text-xs text-gray-500 font-mono">
+                        {Math.round(zoomLevel * 100)}%
+                    </div>
+                </div>
+                <div ref={containerRef} className="w-full h-full" style={{ paddingTop: '48px' }} />
+            </div>
             <style>{`
                 .completed:not(.djs-connection) .djs-visual > :first-child {
                     stroke: #10b981 !important;

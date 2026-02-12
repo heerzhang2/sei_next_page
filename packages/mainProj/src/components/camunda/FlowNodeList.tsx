@@ -102,10 +102,10 @@ export default function FlowNodeList({ flowNodes }: FlowNodeListProps) {
                             <div className="col-span-1 text-gray-400 font-mono">
                                 {index + 1}
                             </div>
-                            <div className="col-span-2 font-medium truncate" title={node.flowNodeName}>
+                            <div className="col-span-2 font-medium break-all">
                                 {node.flowNodeName || '-'}
                             </div>
-                            <div className="col-span-2 font-mono text-gray-600 truncate" title={node.flowNodeId}>
+                            <div className="col-span-2 font-mono text-gray-600 break-all">
                                 {node.flowNodeId}
                             </div>
                             <div className="col-span-2">

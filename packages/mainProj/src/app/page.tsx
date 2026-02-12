@@ -8,8 +8,8 @@ export default function Home() {
     // 定义设置离线报告的函数
     const setOfflineReports = () => {
         const reports = [
-            "fbDjUTVZSha7EIr24Y0wjFJlcG9ydA",
-            "yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA"
+            "HAAAAAAAAAQAAAAAAAAAAFJlcG9ydA",
+            "HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA"
         ];
         // 将数组转换为 JSON 字符串并存入 localStorage
         localStorage.setItem("offline-reports", JSON.stringify(reports));
