@@ -2130,22 +2130,6 @@
     source-map "0.8.0-beta.0"
     zod "4.3.6"
 
-"@serwist/next@^9.5.5":
-  version "9.5.5"
-  resolved "https://registry.npmmirror.com/@serwist/next/-/next-9.5.5.tgz"
-  integrity sha512-07Pom4DqKz0E5asAHu1ak8MhuubAvBGcToFoIx/bk3e7q06ZPHcTNjZC1b+jMRYZTGFSlrkD6puw/5IIqqAV2g==
-  dependencies:
-    "@serwist/build" "9.5.5"
-    "@serwist/utils" "9.5.5"
-    "@serwist/webpack-plugin" "9.5.5"
-    "@serwist/window" "9.5.5"
-    browserslist "4.28.1"
-    glob "10.5.0"
-    kolorist "1.8.0"
-    semver "7.7.3"
-    serwist "9.5.5"
-    zod "4.3.6"
-
 "@serwist/turbopack@^9.5.5":
   version "9.5.5"
   resolved "https://registry.npmmirror.com/@serwist/turbopack/-/turbopack-9.5.5.tgz"
@@ -2165,16 +2149,6 @@
   version "9.5.5"
   resolved "https://registry.npmmirror.com/@serwist/utils/-/utils-9.5.5.tgz"
   integrity sha512-PJ96S9PXkWiiPK1+Czex5Lq5vhvp7yXBwtDOqPF2F1zVpoLga+do4kJZ+LrEWOr3IOiQ1WAfLvSMiK7aj/jrmg==
-
-"@serwist/webpack-plugin@9.5.5":
-  version "9.5.5"
-  resolved "https://registry.npmmirror.com/@serwist/webpack-plugin/-/webpack-plugin-9.5.5.tgz"
-  integrity sha512-m4BP7sJOLMkSRo9JuQhDBJiiM7mZyYbjgIshELO0H1+cjG/H0MmmSTMs/8p5yNSiZzNv4o0GkefGzMB1Ev2ZMQ==
-  dependencies:
-    "@serwist/build" "9.5.5"
-    "@serwist/utils" "9.5.5"
-    pretty-bytes "6.1.1"
-    zod "4.3.6"
 
 "@serwist/window@9.5.5":
   version "9.5.5"
@@ -8734,6 +8708,7 @@ string-split-by@^1.0.0:
     parenthesis "^3.1.5"
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0:
+  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.npmmirror.com/string-width/-/string-width-4.2.3.tgz"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -8832,6 +8807,7 @@ string_decoder@~1.1.1:
     safe-buffer "~5.1.0"
 
 "strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+  name strip-ansi-cjs
   version "6.0.1"
   resolved "https://registry.npmmirror.com/strip-ansi/-/strip-ansi-6.0.1.tgz"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==

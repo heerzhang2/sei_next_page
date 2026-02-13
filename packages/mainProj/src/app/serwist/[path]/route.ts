@@ -1,5 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { createSerwistRoute } from "@serwist/turbopack";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 // 如果使用的 Next.js 版本低于 15.0.0，请添加
 // `nextConfig` 选项，以便 Serwist 可以根据你的配置
@@ -16,6 +18,20 @@ const revision = spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
+// 在构建前注入 basePath 到 sw.ts 源文件
+const swSrcPath = join(process.cwd(), "src/app/sw.ts");
+try {
+  let swContent = readFileSync(swSrcPath, "utf-8");
+  // 替换占位符
+  swContent = swContent.replace(
+    /__NEXT_PUBLIC_BASE_PATH__\s*=\s*"[^"]*"/,
+    `__NEXT_PUBLIC_BASE_PATH__ = "${basePath}"`
+  );
+  writeFileSync(swSrcPath, swContent, "utf-8");
+} catch (error) {
+  console.warn("Failed to inject basePath into sw.ts:", error);
+}
+
 export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } = createSerwistRoute({
   additionalPrecacheEntries: [
     { url: `${basePath}/`, revision },
@@ -23,7 +39,7 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
     { url: `${basePath}/~offline`, revision },
     { url: `${basePath}/offline`, revision },
   ],
-  swSrc: "src/sw.ts", // 指向你编写的服务工作线程源文件
+  swSrc: "src/app/sw.ts", // 指向你编写的服务工作线程源文件
   // nextConfig, // 在 Next.js < 15 时使用
   // 如果设置为 `false`，Serwist 将尝试使用 `esbuild-wasm`。
   useNativeEsbuild: true,
