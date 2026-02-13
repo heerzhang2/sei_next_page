@@ -27,7 +27,7 @@ export default function DepTask() {
                                     千里马（+平台）</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://deal.ggzy.gov.cn/ds/deal/dealList.jsp?HEADER_DEAL_TYPE=02">全国公共资源+特种设备+10天</Link>
+                                <Link href="https://www.ggzy.gov.cn/deal/dealList.html">全国公共资源+特种设备+10天</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://search.ccgp.gov.cn/bxsearch?searchtype=1&page_index=1&bidSort=0&buyerName=&projectId=&pinMu=0&bidType=0&dbselect=bidx&kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&start_time=2025%3A02%3A07&end_time=2025%3A03%3A10&timeType=3&displayZone=&zoneId=&pppStatus=0&agentName=">

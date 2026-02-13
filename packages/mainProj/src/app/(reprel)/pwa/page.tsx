@@ -494,7 +494,22 @@ export default function Page() {
         for (const template of templatesToCache) {
             try {
                 const templateUrls = await importTemplateUrls(template.templateId, template.version)
-                urlsToCache.push(...templateUrls)
+
+                // 将通配符 URL 替换为实际的 repId URL
+                // 例如：/rep/*/SLIDING_JJ/1 -> /rep/HAAAA.../SLIDING_JJ/1
+                const actualUrls = []
+                for (const url of templateUrls) {
+                    if (url.includes('/rep/*/')) {
+                        // 使用所有 offlineReports 中的 repId 替换通配符
+                        for (const report of offlineReports) {
+                            const actualUrl = url.replace('/rep/*/', `/rep/${report.repId}/`)
+                            actualUrls.push(actualUrl)
+                        }
+                    } else {
+                        actualUrls.push(url)
+                    }
+                }
+                urlsToCache.push(...actualUrls)
             } catch (error) {
                 console.error(`[v0] Error importing URLs for template ${template.templateId}/${template.version}:`, error)
             }

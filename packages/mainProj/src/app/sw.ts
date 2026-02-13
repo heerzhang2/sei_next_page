@@ -62,9 +62,16 @@ const errorHandlingPlugin = {
 // 报告路由约定使用的：这个并非preloadCache，没有参数自动过滤
 const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
-  console.log("normalizeReportCacheKey", url);
+  const basePath = getBasePath();
+
+  // 移除 basePath 前缀，得到标准化的相对路径
+  let pathname = url.pathname;
+  if (basePath && pathname.startsWith(basePath)) {
+    pathname = pathname.slice(basePath.length);
+  }
+
   // 提取路径部分，移除动态的 repid
-  const pathParts = url.pathname.split("/");
+  const pathParts = pathname.split("/");
   if (pathParts[1] === "rep" && pathParts.length >= 4) {
     const hasAction = pathParts.length >= 5 && pathParts[5] !== ""; // 若有编辑器的子路由
     if (hasAction) {
@@ -84,8 +91,8 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
       const isRSC = request.headers.get("RSC") === "1";
       searchParams.set("_v", isRSC ? "rsc" : "html");
 
-      // 构建标准化的缓存键
-      const normalizedUrl = `${url.origin}${normalizedPath}?${searchParams.toString()}`;
+      // 构建标准化的缓存键（带 basePath）
+      const normalizedUrl = `${url.origin}${basePath}${normalizedPath}?${searchParams.toString()}`;
       return normalizedUrl;
     } else {
       const normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`;
@@ -96,8 +103,8 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
       const isRSC = request.headers.get("RSC") === "1";
       searchParams.set("_v", isRSC ? "rsc" : "html");
 
-      // 构建标准化的缓存键
-      const normalizedUrl = `${url.origin}${normalizedPath}?${searchParams.toString()}`;
+      // 构建标准化的缓存键（带 basePath）
+      const normalizedUrl = `${url.origin}${basePath}${normalizedPath}?${searchParams.toString()}`;
       return normalizedUrl;
     }
   }
@@ -330,6 +337,41 @@ function createErrorPageResponse(options: {
 
 serwist.addEventListeners();
 
+// 添加自定义的 fetch 拦截器，自动为 /rep/ 路径添加 basePath
+self.addEventListener("fetch", (event) => {
+  const basePath = getBasePath();
+  if (!basePath) return;
+
+  const url = new URL(event.request.url);
+  const pathname = url.pathname;
+
+  // 如果请求路径以 /rep/ 开头，但没有 basePath 前缀，则重定向到带 basePath 的 URL
+  if (pathname.startsWith("/rep/") && !pathname.startsWith(basePath + "/rep/")) {
+    const newPath = basePath + pathname;
+    const newUrl = new URL(newPath, url.origin);
+
+    console.log(`[SW]fetch 重定向: ${pathname} -> ${newPath}`);
+
+    // 使用 Request 构造函数克隆请求
+    const newRequest = new Request(newUrl, event.request);
+
+    // 使用 event.respondWith 拦截并返回新的请求
+    event.respondWith(
+      fetch(newRequest).catch((error) => {
+        console.error(`[SW]fetch 请求失败: ${newUrl}`, error);
+        // 如果网络请求失败，尝试从缓存中读取
+        return caches.match(newRequest).then((cachedResponse) => {
+          if (cachedResponse) {
+            console.log(`[SW]fetch 从缓存返回: ${newUrl}`);
+            return cachedResponse;
+          }
+          throw error;
+        });
+      })
+    );
+  }
+});
+
 const APP_VERSION = "1.0"; // 构建时替换
 
 self.addEventListener("install", (event) => {
@@ -425,14 +467,47 @@ const getBasePath = () => {
 async function cacheUrls(urls: string[]): Promise<boolean> {
   try {
     const basePath = getBasePath();
-    console.log(`[SW]cacheUrls basePath: ${basePath}`);
     console.log(`[SW]cacheUrls 开始批量缓存 ${urls.length} 个 URLs`);
+
     const cachePromises = urls.map(async (url) => {
       try {
         // 如果是相对路径且以 / 开头，添加 basePath
         let fullUrl = url;
         if (url.startsWith('/') && basePath && !url.startsWith(basePath)) {
           fullUrl = basePath + url;
+        }
+
+        // 构建标准化的缓存键（与 normalizeReportCacheKey 一致）
+        let normalizedCacheKey = fullUrl;
+        const urlObj = new URL(fullUrl, self.location.origin);
+        const pathname = urlObj.pathname;
+
+        // 提取路径部分，移除动态的 repid（与 normalizeReportCacheKey 逻辑一致）
+        const pathParts = pathname.split("/");
+
+        // 确保移除 basePath 后再判断
+        let normalizedPath = pathname;
+        if (basePath && normalizedPath.startsWith(basePath)) {
+          normalizedPath = normalizedPath.slice(basePath.length);
+        }
+
+        const normalizedPathParts = normalizedPath.split("/");
+
+        if (normalizedPathParts[1] === "rep" && normalizedPathParts.length >= 4) {
+          const hasAction = normalizedPathParts.length >= 5 && normalizedPathParts[5] !== "";
+          if (hasAction) {
+            // 重构路径：/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
+            const pathPart = `/rep/*/${normalizedPathParts.slice(3).join("/")}`;
+            // 构建查询参数
+            const searchParams = new URLSearchParams();
+            searchParams.set("_v", "html");
+            normalizedCacheKey = `${urlObj.origin}${basePath}${pathPart}?${searchParams.toString()}`;
+          } else {
+            const pathPart = `/rep/*/${normalizedPathParts[3]}/${normalizedPathParts[4]}`;
+            const searchParams = new URLSearchParams();
+            searchParams.set("_v", "html");
+            normalizedCacheKey = `${urlObj.origin}${basePath}${pathPart}?${searchParams.toString()}`;
+          }
         }
 
         const htmlRequest = new Request(fullUrl, {
@@ -446,6 +521,7 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
               "%5B%22%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%5D%7D%2Cnull%2Cnull%2Ctrue%5D",
           },
         });
+
         // 每个url都有两种请求：
         const [htmlResponse, rscResponse] = await Promise.all([
           fetch(htmlRequest).catch((e) => {
@@ -464,29 +540,19 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
         let rscCached = false;
 
         if (htmlResponse && htmlResponse.ok) {
-          const normalizedHtmlKey = await normalizeReportCacheKey({
-            request: htmlRequest,
-          });
-          await reportCache.put(normalizedHtmlKey, htmlResponse.clone());
+          // 使用标准化的缓存键（与 normalizeReportCacheKey 一致）
+          await reportCache.put(normalizedCacheKey, htmlResponse.clone());
           htmlCached = true;
-          console.log(`[SW]cacheUrls ✓缓存 HTML: ${normalizedHtmlKey}`);
         }
 
         if (rscResponse && rscResponse.ok) {
-          const normalizedRscKey = await normalizeReportCacheKey({
-            request: rscRequest,
-          });
-          await reportCache.put(normalizedRscKey, rscResponse.clone());
+          // RSC 请求使用不同的 _v 参数
+          let rscCacheKey = normalizedCacheKey;
+          if (rscCacheKey.includes("_v=html")) {
+            rscCacheKey = rscCacheKey.replace("_v=html", "_v=rsc");
+          }
+          await reportCache.put(rscCacheKey, rscResponse.clone());
           rscCached = true;
-          console.log(`[SW]cacheUrls ✓缓存 RSC: ${normalizedRscKey}`);
-        }
-
-        if (htmlCached && rscCached) {
-          console.log(`[SW]cacheUrls ✓ 完整缓存: ${url} (HTML + RSC)`);
-        } else if (htmlCached || rscCached) {
-          console.warn(`[SW]cacheUrls ⚠️ 部分缓存: ${url} (HTML=${htmlCached}, RSC=${rscCached})`);
-        } else {
-          console.error(`[SW]cacheUrls ✗ 缓存失败: ${url}`);
         }
 
         return htmlCached && rscCached;
