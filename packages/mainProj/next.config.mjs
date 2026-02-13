@@ -1,4 +1,4 @@
-import withSerwist from "@serwist/next/next";
+import { withSerwist } from "@serwist/turbopack";
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
@@ -83,10 +83,4 @@ const nextConfig = {
     turbopack: {},
 };
 
-export default withSerwist(nextConfig, {
-    // swSrc 指向 Service Worker 源文件
-    swSrc: "src/sw.ts",
-    swDest: "public/sw.js",
-    // 其他选项...
-    // 参见：https://serwist.pages.dev/docs/next/next
-});
+export default withSerwist(nextConfig);

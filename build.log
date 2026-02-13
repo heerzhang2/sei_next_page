@@ -1,0 +1,45 @@
+
+> camunda-worker-monorepo@1.0.0 build
+> turbo run build
+
+turbo 2.5.4
+
+• Packages in scope: @fjsei/shared-auth-config, camunda-worker, main_proj
+• Running build in 3 packages
+• Remote caching disabled
+@fjsei/shared-auth-config:build: cache miss, executing d671ca02795d94ad
+camunda-worker:build: cache hit, replaying logs 220cc4d5d4cc8e53
+camunda-worker:build: yarn run v1.22.22
+camunda-worker:build: warning package.json: No license field
+camunda-worker:build: $ tsc
+camunda-worker:build: Done in 2.24s.
+@fjsei/shared-auth-config:build: yarn run v1.22.22
+@fjsei/shared-auth-config:build: $ tsc
+@fjsei/shared-auth-config:build: Done in 1.50s.
+main_proj:build: cache miss, executing 72df50cca02c3ac1
+main_proj:build: yarn run v1.22.22
+main_proj:build: $ node scripts/generate-build-info.mjs
+main_proj:build: ✓ Generated build-info.json: {
+main_proj:build:   version: '1770885912025',
+main_proj:build:   buildTime: '2026-02-12T08:45:12.025Z',
+main_proj:build:   nodeVersion: 'v24.9.0'
+main_proj:build: }
+main_proj:build: $ next build
+main_proj:build: ⨯ Failed to load next.config.mjs, see more info here https://nextjs.org/docs/messages/next-config-error
+main_proj:build: 
+main_proj:build: > Build error occurred
+main_proj:build: Error: Package subpath './next' is not defined by "exports" in C:\home\sei_next_page\node_modules\@serwist\next\package.json imported from C:\home\sei_next_page\packages\mainProj\next.config.mjs
+main_proj:build:     at ignore-listed frames {
+main_proj:build:   code: 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+main_proj:build: }
+main_proj:build: error Command failed with exit code 1.
+main_proj:build: info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+main_proj:build: ERROR: command finished with error: command (C:\home\sei_next_page\packages\mainProj) c:\home\sei_next_page\node_modules\.bin\yarn.cmd run build exited (1)
+main_proj#build: command (C:\home\sei_next_page\packages\mainProj) c:\home\sei_next_page\node_modules\.bin\yarn.cmd run build exited (1)
+
+ Tasks:    2 successful, 3 total
+Cached:    1 cached, 3 total
+  Time:    4.099s 
+Failed:    main_proj#build
+
+ ERROR  run failed: command  exited (1)

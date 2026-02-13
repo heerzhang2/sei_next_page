@@ -9,7 +9,8 @@ export function ServiceWorkerRegister() {
     useEffect(() => {
         // 从全局变量获取 basePath（由 Next.js 注入）
         const basePath = typeof window !== 'undefined' && (window as any).__NEXT_PUBLIC_BASE_PATH__ || '';
-        const swUrl = basePath ? `${basePath}/sw.js` : '/sw.js';
+        // 使用 @serwist/turbopack 的默认路径
+        const swUrl = basePath ? `${basePath}/serwist/sw.js` : '/serwist/sw.js';
 
         console.log('[SW Register] basePath:', basePath, 'swUrl:', swUrl)
 
