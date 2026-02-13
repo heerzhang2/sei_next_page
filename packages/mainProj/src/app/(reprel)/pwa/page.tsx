@@ -80,6 +80,23 @@ export default function Page() {
     const checkCacheStatus = async () => {
         console.log("checkCacheStatus function is called")
         try {
+            // 检查 report-pages-normalized 缓存
+            if ("caches" in window) {
+                const cacheNames = await caches.keys();
+                const reportCacheName = cacheNames.find(name => name.includes("report-pages-normalized"));
+                if (reportCacheName) {
+                    const reportCache = await caches.open(reportCacheName);
+                    const keys = await reportCache.keys();
+                    console.log(`[PWA] report-pages-normalized 缓存中有 ${keys.length} 个请求`);
+                    // 打印前5个缓存键作为示例
+                    for (let i = 0; i < Math.min(5, keys.length); i++) {
+                        console.log(`[PWA]   缓存键 ${i}: ${keys[i].url}`);
+                    }
+                } else {
+                    console.log("[PWA] 未找到 report-pages-normalized 缓存");
+                }
+            }
+
             const statusList: CacheStatus[] = []
             const cacheTimeData = localStorage.getItem("cache-time")
             const cacheTimeObj = cacheTimeData ? JSON.parse(cacheTimeData) : {}
@@ -489,24 +506,29 @@ export default function Page() {
             // return
         }
 
+        const basePath = "/report"  // 从 .env 读取 NEXT_PUBLIC_BASE_PATH
         const urlsToCache = []
 
         for (const template of templatesToCache) {
             try {
                 const templateUrls = await importTemplateUrls(template.templateId, template.version)
 
-                // 将通配符 URL 替换为实际的 repId URL
-                // 例如：/rep/*/SLIDING_JJ/1 -> /rep/HAAAA.../SLIDING_JJ/1
+                // 将通配符 URL 替换为实际的 repId URL，并添加 basePath 前缀
+                // 例如：/rep/*/SLIDING_JJ/1 -> /report/rep/HAAAA.../SLIDING_JJ/1
                 const actualUrls = []
                 for (const url of templateUrls) {
                     if (url.includes('/rep/*/')) {
                         // 使用所有 offlineReports 中的 repId 替换通配符
                         for (const report of offlineReports) {
                             const actualUrl = url.replace('/rep/*/', `/rep/${report.repId}/`)
-                            actualUrls.push(actualUrl)
+                            // 添加 basePath 前缀（如果还没有）
+                            const urlWithBasePath = actualUrl.startsWith(basePath) ? actualUrl : `${basePath}${actualUrl}`
+                            actualUrls.push(urlWithBasePath)
                         }
                     } else {
-                        actualUrls.push(url)
+                        // 添加 basePath 前缀（如果还没有）
+                        const urlWithBasePath = url.startsWith(basePath) ? url : `${basePath}${url}`
+                        actualUrls.push(urlWithBasePath)
                     }
                 }
                 urlsToCache.push(...actualUrls)
@@ -518,8 +540,11 @@ export default function Page() {
         if (includeCustomUrls) {
             customUrls
                 .filter((url) => url.enabled)
-                .forEach((url) => {
-                    urlsToCache.push(url.urlPattern)
+                .forEach((urlItem) => {
+                    const url = urlItem.urlPattern
+                    // 添加 basePath 前缀（如果还没有）
+                    const urlWithBasePath = url.startsWith(basePath) ? url : `${basePath}${url}`
+                    urlsToCache.push(urlWithBasePath)
                 })
         }
 

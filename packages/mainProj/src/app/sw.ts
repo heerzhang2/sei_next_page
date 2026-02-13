@@ -18,33 +18,131 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 const createCacheKeyPlugin = (normalizeFunction: (param: { request: Request }) => Promise<string>) => ({
-  cacheKeyWillBeUsed: normalizeFunction,
-  cachedResponseWillBeUsed: async ({ request, cachedResponse }: { request: Request; cachedResponse?: Response }) => {
-    if (!cachedResponse) {
-      return null;
+  cacheKeyWillBeUsed: async ({ request }: { request: Request }) => {
+    const normalizedKey = await normalizeFunction({ request });
+    console.log(`[SW]cacheKeyWillBeUsed: ${request.url} -> ${normalizedKey}`);
+
+    // 调试：查找缓存中是否匹配的键
+    if (normalizedKey.includes("/rep/*/")) {
+      try {
+        const reportCache = await caches.open("report-pages-normalized");
+        const keys = await reportCache.keys();
+        // 查找包含相同路径部分的键
+        const pathPart = normalizedKey.split("/rep/*/")[1]?.split("?")[0];
+        const matchingKeys = keys.filter(k => k.url.includes(`/rep/*/${pathPart}`));
+        console.log(`[SW]查找路径 /rep/*/${pathPart} 的缓存，找到 ${matchingKeys.length} 个匹配项`);
+        if (matchingKeys.length > 0) {
+          console.log(`[SW]缓存中的键: ${matchingKeys[0].url}`);
+        }
+      } catch (e) {
+        console.error("[SW]查找缓存失败:", e);
+      }
     }
+
+    return normalizedKey;
+  },
+  cachedResponseWillBeUsed: async ({ request, cachedResponse, cacheName }: { request: Request; cachedResponse?: Response; cacheName: string }) => {
     const url = new URL(request.url);
-    if (!url.pathname.startsWith("/rep/")) {
+
+    // 如果没有找到缓存的响应，进行详细调试
+    if (!cachedResponse && cacheName === "report-pages-normalized" && url.pathname.includes("/rep/")) {
+      console.log(`[SW]KeyPlugin没有找到缓存，尝试手动查找: ${request.url}`);
+      
+      try {
+        const reportCache = await caches.open(cacheName);
+        
+        // 获取所有缓存键
+        const allKeys = await reportCache.keys();
+        const repKeys = allKeys.filter(k => k.url.includes("/rep/*/"));
+        
+        console.log(`[SW]report-pages-normalized 中共有 ${repKeys.length} 个 /rep/*/ 缓存`);
+        
+        // 提取请求的路径部分
+        const pathPart = url.pathname.split("/rep/*/")[1]?.split("?")[0];
+        if (pathPart) {
+          const matchingKeys = repKeys.filter(k => k.url.includes(`/rep/*/${pathPart}`));
+          console.log(`[SW]找到 ${matchingKeys.length} 个路径匹配项: ${pathPart}`);
+          
+          // 检查每个匹配项
+          for (const matchKey of matchingKeys) {
+            const cached = await reportCache.match(matchKey);
+            console.log(`[SW]  - ${matchKey.url}: ${cached ? "有内容" : "无内容"}`);
+          }
+        }
+      } catch (e) {
+        console.error("[SW]手动查找缓存失败:", e);
+      }
+    }
+
+    // 如果找到了缓存的响应
+    if (cachedResponse) {
+      if (url.pathname.includes("/rep/")) {
+        const isRSCRequest = request.headers.get("RSC") === "1";
+        const isNavigationRequest = request.mode === "navigate";
+
+        const contentType = cachedResponse.headers.get("content-type") || "";
+        const isRSCResponse = contentType.includes("text/x-component");
+
+        if (isNavigationRequest && isRSCResponse) {
+          console.warn(`[SW]KeyPlugin导航请求不应返回 RSC 响应: ${request.url}`);
+          return null;
+        }
+
+        if (isRSCRequest && !isRSCResponse) {
+          console.warn(`[SW]KeyPluginRSC 请求不应返回 HTML 响应: ${request.url}`);
+          return null;
+        }
+
+        console.log(`[SW]KeyPlugin✓返回匹配的缓存响应: ${request.url}, RSC=${isRSCResponse}`);
+      }
       return cachedResponse;
     }
-    const isRSCRequest = request.headers.get("RSC") === "1";
-    const isNavigationRequest = request.mode === "navigate";
 
-    const contentType = cachedResponse.headers.get("content-type") || "";
-    const isRSCResponse = contentType.includes("text/x-component");
+    // 如果没有找到精确匹配，尝试查找相同路径的另一种格式
+    if (cacheName === "report-pages-normalized" && url.pathname.includes("/rep/")) {
+      try {
+        const isRSCRequest = request.headers.get("RSC") === "1";
+        const searchParams = new URLSearchParams(url.search);
+        const currentV = searchParams.get("_v");
 
-    if (isNavigationRequest && isRSCResponse) {
-      console.warn(`KeyPlugin导航请求不应返回 RSC 响应: ${request.url}`);
-      return null;
+        // 如果当前请求是 _v=rsc 或 _v=html，尝试查找另一种格式
+        if (currentV === "rsc" || currentV === "html") {
+          // 创建回退的 URL
+          searchParams.set("_v", currentV === "rsc" ? "html" : "rsc");
+          url.search = searchParams.toString();
+
+          const reportCache = await caches.open(cacheName);
+          const fallbackResponse = await reportCache.match(url.toString());
+
+          if (fallbackResponse) {
+            const contentType = fallbackResponse.headers.get("content-type") || "";
+            const isRSCResponse = contentType.includes("text/x-component");
+
+            // 对于导航请求，HTML 响应可以接受
+            if (request.mode === "navigate" && !isRSCResponse) {
+              console.log(`[SW]KeyPlugin使用 HTML 回退响应（导航请求）: ${request.url}`);
+              return fallbackResponse;
+            }
+
+            // 如果请求的是 RSC 但只有 HTML 回退
+            if (isRSCRequest && !isRSCResponse) {
+              console.warn(`[SW]KeyPluginRSC 请求只有 HTML 缓存，返回 null: ${request.url}`);
+              return null;
+            }
+
+            console.log(`[SW]KeyPlugin使用回退响应: ${request.url}`);
+            return fallbackResponse;
+          } else {
+            console.log(`[SW]KeyPlugin没有找到回退缓存: ${url.toString()}`);
+          }
+        }
+      } catch (e) {
+        console.error("[SW]查找回退缓存失败:", e);
+      }
     }
 
-    if (isRSCRequest && !isRSCResponse) {
-      console.warn(`KeyPlugin请求不应返回 HTML 响应: ${request.url}`);
-      return null;
-    }
-
-    console.log(`KeyPlugin✓返回匹配的缓存响应: ${request.url}, RSC=${isRSCResponse}`);
-    return cachedResponse;
+    console.log(`[SW]KeyPlugin没有找到缓存 - ${request.url}`);
+    return null;
   },
 });
 
@@ -87,24 +185,30 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
       searchParams.delete("unitIndex");
       // 控制器情况
       searchParams.delete("modelkey");
+      // 删除动态的 _rsc 参数（这个值是动态的，不参与缓存键）
+      searchParams.delete("_rsc");
 
       const isRSC = request.headers.get("RSC") === "1";
       searchParams.set("_v", isRSC ? "rsc" : "html");
 
       // 构建标准化的缓存键（带 basePath）
       const normalizedUrl = `${url.origin}${basePath}${normalizedPath}?${searchParams.toString()}`;
+      console.log(`[SW]normalizeReportCacheKey (有子路由): ${request.url} -> ${normalizedUrl}`);
       return normalizedUrl;
     } else {
       const normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`;
       // 移除 ?print=1 查询参数
       const searchParams = new URLSearchParams(url.search);
       searchParams.delete("original");
+      // 删除动态的 _rsc 参数（这个值是动态的，不参与缓存键）
+      searchParams.delete("_rsc");
 
       const isRSC = request.headers.get("RSC") === "1";
       searchParams.set("_v", isRSC ? "rsc" : "html");
 
       // 构建标准化的缓存键（带 basePath）
       const normalizedUrl = `${url.origin}${basePath}${normalizedPath}?${searchParams.toString()}`;
+      console.log(`[SW]normalizeReportCacheKey (无子路由): ${request.url} -> ${normalizedUrl}`);
       return normalizedUrl;
     }
   }
@@ -133,8 +237,11 @@ const customCache: RuntimeCaching[] = [
   },
   // 字体文件使用 CacheFirst 策略，优先从缓存读取
   {
-    matcher: ({ url: { pathname }, sameOrigin }) =>
-      sameOrigin && pathname.match(/\/_next\/static\/media\/.*\.woff2?$/),
+    matcher: ({ url: { pathname }, sameOrigin }) => {
+      const basePath = getBasePath();
+      const mediaPath = basePath ? `${basePath}/_next/static/media/` : "/_next/static/media/";
+      return sameOrigin && (pathname.startsWith(mediaPath) && pathname.match(/.*\.woff2?$/));
+    },
     handler: new NetworkFirst({
       cacheName: "fonts",
       networkTimeoutSeconds: 3,
@@ -148,7 +255,15 @@ const customCache: RuntimeCaching[] = [
     }),
   },
   {
-    matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && pathname.startsWith("/rep/"),
+    matcher: ({ url: { pathname }, sameOrigin }) => {
+      const basePath = getBasePath();
+      const repPath = basePath ? `${basePath}/rep/` : "/rep/";
+      const matches = sameOrigin && pathname.startsWith(repPath);
+      if (matches) {
+        console.log(`[SW]Matcher 匹配报告路由: ${pathname}, basePath=${basePath}, repPath=${repPath}`);
+      }
+      return matches;
+    },
     handler: new NetworkFirst({
       cacheName: "report-pages-normalized",
       networkTimeoutSeconds: 3,
@@ -159,16 +274,33 @@ const customCache: RuntimeCaching[] = [
           maxAgeFrom: "last-used",
         }),
         errorHandlingPlugin, // 避免未加载完成页面没动静
+        {
+          fetchDidSucceed: async ({ request, response }: { request: Request; response: Response }) => {
+            // 如果网络响应是 502 或 5xx 错误，不使用缓存
+            if (response.status >= 500) {
+              console.warn(`[SW]网络返回错误状态 ${response.status}，尝试使用缓存: ${request.url}`);
+              // 抛出错误，让策略尝试使用缓存
+              throw new Error(`Network error: ${response.status}`);
+            }
+            return response;
+          },
+        },
       ],
     }),
   },
   {
-    matcher: ({ request, url: { pathname }, sameOrigin }) =>
-      request.headers.get("RSC") === "1" &&
-      request.headers.get("Next-Router-Prefetch") === "1" &&
-      sameOrigin &&
-      !pathname.startsWith("/api/") &&
-      !pathname.startsWith("/rep/"),
+    matcher: ({ request, url: { pathname }, sameOrigin }) => {
+      const basePath = getBasePath();
+      const repPath = basePath ? `${basePath}/rep/` : "/rep/";
+      const apiPath = basePath ? `${basePath}/api/` : "/api/";
+      return (
+        request.headers.get("RSC") === "1" &&
+        request.headers.get("Next-Router-Prefetch") === "1" &&
+        sameOrigin &&
+        !pathname.startsWith(apiPath) &&
+        !pathname.startsWith(repPath)
+      );
+    },
     handler: new NetworkFirst({
       cacheName: PAGES_CACHE_NAME.rscPrefetch,
       plugins: [
@@ -179,11 +311,17 @@ const customCache: RuntimeCaching[] = [
     }),
   },
   {
-    matcher: ({ request, url: { pathname }, sameOrigin }) =>
-      request.headers.get("RSC") === "1" &&
-      sameOrigin &&
-      !pathname.startsWith("/api/") &&
-      !pathname.startsWith("/rep/"),
+    matcher: ({ request, url: { pathname }, sameOrigin }) => {
+      const basePath = getBasePath();
+      const repPath = basePath ? `${basePath}/rep/` : "/rep/";
+      const apiPath = basePath ? `${basePath}/api/` : "/api/";
+      return (
+        request.headers.get("RSC") === "1" &&
+        sameOrigin &&
+        !pathname.startsWith(apiPath) &&
+        !pathname.startsWith(repPath)
+      );
+    },
     handler: new NetworkFirst({
       cacheName: PAGES_CACHE_NAME.rsc,
       plugins: [
@@ -219,7 +357,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  disableDevLogs: true,
+  disableDevLogs: false, // 启用调试日志
   runtimeCaching: customCache,
   fallbacks: {
     entries: [
@@ -337,41 +475,6 @@ function createErrorPageResponse(options: {
 
 serwist.addEventListeners();
 
-// 添加自定义的 fetch 拦截器，自动为 /rep/ 路径添加 basePath
-self.addEventListener("fetch", (event) => {
-  const basePath = getBasePath();
-  if (!basePath) return;
-
-  const url = new URL(event.request.url);
-  const pathname = url.pathname;
-
-  // 如果请求路径以 /rep/ 开头，但没有 basePath 前缀，则重定向到带 basePath 的 URL
-  if (pathname.startsWith("/rep/") && !pathname.startsWith(basePath + "/rep/")) {
-    const newPath = basePath + pathname;
-    const newUrl = new URL(newPath, url.origin);
-
-    console.log(`[SW]fetch 重定向: ${pathname} -> ${newPath}`);
-
-    // 使用 Request 构造函数克隆请求
-    const newRequest = new Request(newUrl, event.request);
-
-    // 使用 event.respondWith 拦截并返回新的请求
-    event.respondWith(
-      fetch(newRequest).catch((error) => {
-        console.error(`[SW]fetch 请求失败: ${newUrl}`, error);
-        // 如果网络请求失败，尝试从缓存中读取
-        return caches.match(newRequest).then((cachedResponse) => {
-          if (cachedResponse) {
-            console.log(`[SW]fetch 从缓存返回: ${newUrl}`);
-            return cachedResponse;
-          }
-          throw error;
-        });
-      })
-    );
-  }
-});
-
 const APP_VERSION = "1.0"; // 构建时替换
 
 self.addEventListener("install", (event) => {
@@ -471,19 +574,18 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
 
     const cachePromises = urls.map(async (url) => {
       try {
-        // 如果是相对路径且以 / 开头，添加 basePath
+        // URL 已经在 page.tsx 中添加了 basePath，直接使用
         let fullUrl = url;
-        if (url.startsWith('/') && basePath && !url.startsWith(basePath)) {
-          fullUrl = basePath + url;
+
+        // 如果是相对路径，添加 origin
+        if (!url.startsWith('http')) {
+          fullUrl = new URL(url, self.location.origin).href;
         }
 
         // 构建标准化的缓存键（与 normalizeReportCacheKey 一致）
         let normalizedCacheKey = fullUrl;
-        const urlObj = new URL(fullUrl, self.location.origin);
+        const urlObj = new URL(fullUrl);
         const pathname = urlObj.pathname;
-
-        // 提取路径部分，移除动态的 repid（与 normalizeReportCacheKey 逻辑一致）
-        const pathParts = pathname.split("/");
 
         // 确保移除 basePath 后再判断
         let normalizedPath = pathname;
@@ -551,8 +653,11 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
           if (rscCacheKey.includes("_v=html")) {
             rscCacheKey = rscCacheKey.replace("_v=html", "_v=rsc");
           }
+          console.log(`[SW]cacheUrls 缓存 RSC 响应: ${rscCacheKey}`);
           await reportCache.put(rscCacheKey, rscResponse.clone());
           rscCached = true;
+        } else if (rscResponse && !rscResponse.ok) {
+          console.warn(`[SW]cacheUrls RSC 响应非 200: ${rscResponse.status} for ${normalizedCacheKey}`);
         }
 
         return htmlCached && rscCached;
