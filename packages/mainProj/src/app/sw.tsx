@@ -16,6 +16,14 @@ declare global {
 }
 
 declare const self: ServiceWorkerGlobalScope;
+// 从 Service Worker 获取 basePath
+// basePath 在构建时注入，默认为空
+const __NEXT_PUBLIC_BASE_PATH__ = "/report";
+
+const getBasePath = () => {
+  // 使用构建时注入的 basePath，来自环境变量 NEXT_PUBLIC_BASE_PATH
+  return __NEXT_PUBLIC_BASE_PATH__;
+};
 
 const createCacheKeyPlugin = (normalizeFunction: (param: { request: Request }) => Promise<string>) => ({
   cacheKeyWillBeUsed: async ({ request }: { request: Request }) => {
@@ -409,7 +417,7 @@ const serwist = new Serwist({
     entries: [
       {
         url: `${getBasePath()}/~offline`, // 回退页面 URL（包含 basePath）
-        matcher({ request }) {
+        matcher: ({ request }: { request: Request }) => {
           // 当请求目标是文档（HTML 页面）时触发回退
           return request.destination === "document";
         },
@@ -603,15 +611,6 @@ self.addEventListener("message", (event) => {
     return;
   }
 });
-
-// 从 Service Worker 获取 basePath
-// basePath 在构建时注入，默认为空
-const __NEXT_PUBLIC_BASE_PATH__ = "/report";
-
-const getBasePath = () => {
-  // 使用构建时注入的 basePath，来自环境变量 NEXT_PUBLIC_BASE_PATH
-  return __NEXT_PUBLIC_BASE_PATH__;
-};
 
 async function cacheUrls(urls: string[]): Promise<boolean> {
   try {
