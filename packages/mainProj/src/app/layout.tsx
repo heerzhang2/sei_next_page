@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { SessionProvider } from "next-auth/react"
 import { auth } from "@/app/auth"
-
 import { GraphQLProvider } from "@/auth/graphql-component"
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
@@ -16,8 +15,9 @@ import { NetworkStatusProvider } from "@/contexts/network-status-context"
 import { SessionSync } from "@/components/session-sync"
 import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
 import { SerwistMessageHandler } from "@/components/serwist-message-handler"
-import { ServiceWorkerRegister } from "@/components/service-worker-register"
 import { withBasePath } from '@/lib/tool'
+import { SerwistProvider } from "../lib/serwist/client"
+
 const APP_NAME = "报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
 
@@ -55,7 +55,7 @@ export default async function RootLayout({
   const session = await auth()
   // 因为客户端需要知道完整的 API URL
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth` : "/api/auth"
-
+  const swPathBase = process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}` : ""
   return (
     <html suppressHydrationWarning lang="zh-CN">
       <body
@@ -63,24 +63,26 @@ export default async function RootLayout({
              bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 @container
             `}
       >
-        <ThemeProvider>
-          <PrintSettingsProvider>
-            <SessionProvider session={session} basePath={basePath}>
-              <NetworkStatusProvider>
-                <GraphQLProvider>
-                  <SerwistMessageHandler />
-                  <ServiceWorkerRegister />
-                  <SessionSync />
-                  <TokenRefreshOverlay />
-                  <OfflineStatusIndicator />
-                  {children}
-                  <PWAInstaller />
-                  <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
-                </GraphQLProvider>
-              </NetworkStatusProvider>
-            </SessionProvider>
-          </PrintSettingsProvider>
-        </ThemeProvider>
+        <SerwistProvider swUrl={`${swPathBase}/serwist/sw.js`}>
+          <ThemeProvider>
+            <PrintSettingsProvider>
+              <SessionProvider session={session} basePath={basePath}>
+                <NetworkStatusProvider>
+                  <GraphQLProvider>
+                    <SerwistMessageHandler />
+                    {/* <ServiceWorkerRegister /> */}
+                    <SessionSync />
+                    <TokenRefreshOverlay />
+                    <OfflineStatusIndicator />
+                    {children}
+                    <PWAInstaller />
+                    <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
+                  </GraphQLProvider>
+                </NetworkStatusProvider>
+              </SessionProvider>
+            </PrintSettingsProvider>
+          </ThemeProvider>
+        </SerwistProvider>
         {/* 注入全局变量供 SW 注册使用 */}
         <script dangerouslySetInnerHTML={{
           __html: `
