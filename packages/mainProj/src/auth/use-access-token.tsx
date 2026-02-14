@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { useSession } from 'next-auth/react';
 import { getCookie } from "cookies-next/client"
 import {useNetworkStatusContext} from "@/contexts/network-status-context";
+import { withBasePath } from "@/lib/tool";
 
 interface UseAccessTokenReturn {
     accessToken: string | null
@@ -102,7 +103,7 @@ export function useAccessToken() {
                     "当前功能需要登录后才能使用。是否现在跳转到登录页面？accessToken",
                     () => {
                         const currentPath = window.location.pathname + window.location.search
-                        window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`
+                        window.location.href = `${withBasePath('/login')}?callbackUrl=${encodeURIComponent(currentPath)}`
                     },
                     () => {
                         toast.info("已取消登录", {

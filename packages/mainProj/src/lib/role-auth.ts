@@ -3,6 +3,7 @@
 import { auth } from "@/app/auth";
 import { UserInfoCache } from "@/lib/redis";
 import { redirect } from "next/navigation";
+import { withBasePath } from "@/lib/tool";
 
 /**任意一个角色有的就能通过的： requireRole是服务器环境运行的。
  * 里面的const userinfo = await getUserInfo(userId,accessToken) ；redis.get(cacheKey) 似乎在浏览器环境是不能复用的，浏览器需要另外发起后端的api做查询。
@@ -11,7 +12,7 @@ export async function requireRole(requiredRoles: string[]) {
   const session = await auth();
   if (!session?.user?.id || !session?.user?.accessToken) {
     console.log("requireRole跳转login", session);
-    redirect("/login");
+    redirect(withBasePath("/login"));
     //这里后面的代码实际上再浏览器调用的路数下会继续运行的？单纯服务器环境不会！ redirect也会同时做的。 应该加 return;
   }
   const userRoles =
@@ -35,7 +36,7 @@ export async function requireAllRole(requiredRoles: string[]) {
   const session = await auth();
   if (!session?.user?.id || !session?.user?.accessToken) {
     console.log("requireAllRole跳转login", session);
-    redirect("/login");
+    redirect(withBasePath("/login"));
   }
   const userRoles =
     (await UserInfoCache.getUserRoles(

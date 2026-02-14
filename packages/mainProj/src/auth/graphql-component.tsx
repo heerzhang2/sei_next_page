@@ -20,6 +20,7 @@ import type { SerializedRequest } from "@urql/exchange-graphcache"
 import schema from "./urql-schema.json"
 import { useAccessToken } from "./use-access-token"
 import {AuthCompQuery} from "@/component/header-wrapper";
+import { withBasePath } from "@/lib/tool"
 
 export const isNetworkError = (error: any): boolean => {
     if (!error) return false
@@ -358,7 +359,7 @@ const makeAuthExchange = (
 
                                     setTimeout(() => {
                                         if (typeof window !== "undefined") {
-                                            window.location.href = "/login"
+                                            window.location.href = withBasePath("/login")
                                         }
                                     }, 4000)
 
@@ -391,7 +392,7 @@ const makeAuthExchange = (
 
                                 setTimeout(() => {
                                     if (typeof window !== "undefined") {
-                                        window.location.href = "/login"
+                                        window.location.href = withBasePath("/login")
                                     }
                                 }, 4000)
 

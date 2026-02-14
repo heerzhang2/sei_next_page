@@ -1,13 +1,14 @@
 "use client"
 
 import { useSession, signOut, signIn } from "next-auth/react"
+import { withBasePath } from "@/lib/tool"
 
 export function UserNav() {
 	const { data: session } = useSession();
     const handleSignOut = async () => {
         await signOut({
             redirect: true,
-            redirectTo: '/login'        // Redirect to home after sign out
+            redirectTo: withBasePath('/login')        // Redirect to home after sign out
         });
         //useRouter().push(data.url)
     }

@@ -1,4 +1,5 @@
 import { toast } from "sonner"
+import { withBasePath } from "@/lib/tool"
 // import { getSession } from 'next-auth/react';
 // import {useSession} from "next-auth/react";
 //只能在浏览器端用的： 获取令牌的函数
@@ -17,7 +18,7 @@ export async function getAuthToken() {
                 description: "您的登录凭证已过期，请重新登录",
                 duration: 5000,
             })
-            window.location.href = "/login"
+            window.location.href = withBasePath("/login")
             return null
           }
         } catch (error) {

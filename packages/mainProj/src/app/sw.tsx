@@ -17,7 +17,7 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 // 从 Service Worker 获取 basePath
-// basePath 在构建时注入，默认为空
+//【极为特殊的】在build命令运行之后，这里可能被直接自动修改的； basePath 在构建时注入，默认为空
 const __NEXT_PUBLIC_BASE_PATH__ = "/report";
 
 const getBasePath = () => {

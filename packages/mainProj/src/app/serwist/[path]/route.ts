@@ -37,6 +37,7 @@ try {
     /__NEXT_PUBLIC_BASE_PATH__\s*=\s*"[^"]*"/,
     `__NEXT_PUBLIC_BASE_PATH__ = "${basePath}"`
   );
+  //这个修改源代码实际是build命令就自动预先运行，导致src/app/sw.tsx源代码 basePath 的直接被修改掉。
   writeFileSync(swSrcPath, swContent, "utf-8");
 } catch (error) {
   console.warn("Failed to inject basePath into sw source:", error);
