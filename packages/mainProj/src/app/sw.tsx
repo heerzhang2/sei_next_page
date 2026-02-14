@@ -146,9 +146,55 @@ const createCacheKeyPlugin = (normalizeFunction: (param: { request: Request }) =
   },
 });
 
-// 创建自定义的错误处理插件
+// 创建自定义的错误处理插件 - 优先从缓存中查找，最后才返回错误页面
 const errorHandlingPlugin = {
   handlerDidError: async ({ request, error }: { request: Request; error: Error }) => {
+    console.log(`[SW]handlerDidError 触发: ${request.url}, 错误: ${error.message}`);
+
+    // 尝试从 report-pages-normalized 缓存中手动查找
+    try {
+      const normalizedKey = await normalizeReportCacheKey({ request });
+      const reportCache = await caches.open("report-pages-normalized");
+
+      // 先尝试精确匹配
+      let cachedResponse = await reportCache.match(normalizedKey);
+      if (cachedResponse) {
+        console.log(`[SW]handlerDidError 从缓存中找到精确匹配: ${normalizedKey}`);
+        return cachedResponse.clone();
+      }
+
+      // 如果精确匹配失败，尝试查找 _v=html 版本（导航请求通常需要 HTML）
+      if (normalizedKey.includes("_v=rsc")) {
+        const htmlKey = normalizedKey.replace("_v=rsc", "_v=html");
+        cachedResponse = await reportCache.match(htmlKey);
+        if (cachedResponse) {
+          console.log(`[SW]handlerDidError 从缓存中找到 HTML 回退: ${htmlKey}`);
+          return cachedResponse.clone();
+        }
+      }
+
+      // 最后兜底：在所有缓存键中搜索路径匹配
+      const url = new URL(normalizedKey);
+      const pathPart = url.pathname.split("/rep/*/")[1]?.split("?")[0];
+      if (pathPart) {
+        const allKeys = await reportCache.keys();
+        const htmlSuffix = `_v=html`;
+        for (const key of allKeys) {
+          if (key.url.includes(`/rep/*/${pathPart}`) && key.url.includes(htmlSuffix)) {
+            cachedResponse = await reportCache.match(key);
+            if (cachedResponse) {
+              console.log(`[SW]handlerDidError 通过路径搜索找到缓存: ${key.url}`);
+              return cachedResponse.clone();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[SW]handlerDidError 查找缓存失败:", e);
+    }
+
+    // 所有缓存查找都失败，返回错误页面
+    console.warn(`[SW]handlerDidError 没有找到任何缓存，返回错误页面: ${request.url}`);
     return createErrorPageResponse({
       errorType: "CHUNK_LOAD_ERROR",
       originalUrl: request.url,
@@ -356,13 +402,13 @@ const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST, // 注入点，包含需要预缓存的资源列表
   skipWaiting: true,
   clientsClaim: true,
-  navigationPreload: true,
+  navigationPreload: false, // 禁用: 与自定义 cacheKeyWillBeUsed 插件冲突，导致离线时 502 响应绕过缓存回退
   disableDevLogs: false, // 启用调试日志
   runtimeCaching: customCache,
   fallbacks: {
     entries: [
       {
-        url: "/~offline", // 回退页面 URL
+        url: `${getBasePath()}/~offline`, // 回退页面 URL（包含 basePath）
         matcher({ request }) {
           // 当请求目标是文档（HTML 页面）时触发回退
           return request.destination === "document";

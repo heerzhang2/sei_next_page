@@ -1,13 +1,17 @@
 import crypto from "crypto";
+import { existsSync } from "node:fs";
 
 const revision = crypto.randomUUID();
 
 // 获取 basePath
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
+// 兼容 .ts 和 .tsx（v0 环境可能自动重命名）
+const swSrc = existsSync("src/app/sw.ts") ? "src/app/sw.ts" : "src/app/sw.tsx";
+
 /** @type {import("serwist").SerwistOptions} */
 export default {
-  swSrc: "src/sw.ts",
+  swSrc,
   swDest: "public/sw.js",
   reloadOnOnline: false,
   cacheOnNavigation: false,
