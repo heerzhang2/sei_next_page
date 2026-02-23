@@ -52,7 +52,7 @@ export default function Home() {
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=HAAAAAAAAAEAAAAAAAAAAFJlcG9ydA&redId=2#MangInstrument">
-                                磁粉检测报告2-2第2分项目流转
+                                磁粉检测报告2-2第2分项目流转的
                             </Link>
                         </div>
                         <div className="mt-10">

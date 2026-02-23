@@ -2,7 +2,9 @@ import NextAuth from "next-auth"
 import { authConfig } from "@/app/auth.config"
 import { type NextRequest, NextResponse } from "next/server"
 
-//https://nextjs.org/docs/messages/middleware-to-proxy
+// TODO: Next.js 16 建议使用 proxy 替代 middleware
+// 详见: https://nextjs.org/docs/messages/middleware-to-proxy
+// 目前 NextAuth v5 仍需要传统 middleware，暂保持现状
 // 应用 NextAuth 中间件
 const authMiddleware = NextAuth(authConfig).auth
 
