@@ -212,6 +212,8 @@ const errorHandlingPlugin = {
 };
 
 // 报告路由约定使用的：这个并非preloadCache，没有参数自动过滤
+// 注意：查询参数（如 original, lineIndex 等）会被保留在缓存键中
+// 这样离线访问时不会丢失关键参数，避免页面显示异常
 const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
   const basePath = getBasePath();
@@ -235,7 +237,8 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
       searchParams.delete("redId");
 
       searchParams.delete("from");
-      searchParams.delete("original");
+      // 注意：保留 "original" 和其他关键参数，避免离线时丢失
+      // searchParams.delete("original");
       searchParams.delete("unitIndex");
       // 控制器情况
       searchParams.delete("modelkey");
@@ -251,9 +254,11 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
       return normalizedUrl;
     } else {
       const normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`;
-      // 移除 ?print=1 查询参数
+      // 保留查询参数（包括 original, lineIndex 等），避免离线时丢失
+      // 只删除动态和不需要缓存的参数
       const searchParams = new URLSearchParams(url.search);
-      searchParams.delete("original");
+      // 注意：保留 "original" 和其他关键参数
+      // searchParams.delete("original");
       // 删除动态的 _rsc 参数（这个值是动态的，不参与缓存键）
       searchParams.delete("_rsc");
 

@@ -4,9 +4,19 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "🚀 MainProj Dev",
+      "name": "🚀 MainProj Dev-不适合PWA",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/packages/mainProj",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "🚀 MainProj-PWA",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start"],
       "cwd": "${workspaceFolder}/packages/mainProj",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
