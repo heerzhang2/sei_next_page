@@ -52,14 +52,14 @@ export default function Home() {
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=HAAAAAAAAAEAAAAAAAAAAFJlcG9ydA&redId=2#MangInstrument">
-                                磁粉检测报告2-2第2分项目流转的
+                                磁粉检测报告2-2第2分项目流转带开头的 /的
                             </Link>
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/T6-14?#T6-14">分项报告的一第1份报告</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?#T6-14">分项报告的一第2份报告</Link>
+                            <Link href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?#T6-14">分项报告的一第2份报告</Link>
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">滑行车类大型游乐设施监督检验</Link>

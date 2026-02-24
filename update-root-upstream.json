@@ -1,0 +1,17 @@
+{
+  "uri": "/report",
+  "upstream_id": "frontend-nextjs",
+  "priority": 140,
+  "enable_websocket": true,
+  "plugins": {
+    "proxy-rewrite": {
+      "uri": "/report"
+    },
+    "cors": {
+      "exposed_headers": ["Content-Length"],
+      "headers": ["Content-Type", "Authorization"],
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "origin": "*"
+    }
+  }
+}

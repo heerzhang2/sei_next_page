@@ -15,13 +15,6 @@ import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
 // 离线认证函数
 const authenticateOffline = async (username: string, password: string, deviceId: string) => {
     try {
-        // 客户端密码哈希（与服务端保持一致）
-        const encoder = new TextEncoder()
-        const data = encoder.encode(password)
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-        const hashArray = Array.from(new Uint8Array(hashBuffer))
-        const hashedPassword = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
 
@@ -45,7 +38,7 @@ const authenticateOffline = async (username: string, password: string, deviceId:
             }
           }
         `,
-                variables: { username, password: hashedPassword },
+                variables: { username, password },
             }),
         })
 

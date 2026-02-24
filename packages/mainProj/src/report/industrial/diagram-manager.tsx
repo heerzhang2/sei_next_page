@@ -24,6 +24,7 @@ import { useCallback, useState, useEffect } from "react"
 import { toast } from "sonner"
 import { fileOperationsQueue } from "@/lib/file-operations-queue"
 import { useRouter } from "next/navigation"
+import { withBasePath } from "@/lib/tool"
 
 interface EditorItem {
     单元表: IPipingUnitEntity[]
@@ -223,7 +224,7 @@ export const SingleLineDiagram = ({ children, show, label = "管道单线图-管
     const getOfflineFilePageUrl = useCallback(
         (index: number) => {
             if (!rep?.id) return "#"
-            return `/rep/${rep.id}/INDPL_DJ/1/LineDiagramFile?original=1&lineIndex=${index}#LineDiagram${index}`
+            return withBasePath(`/rep/${rep.id}/INDPL_DJ/1/LineDiagramFile?original=1&lineIndex=${index}#LineDiagram${index}`)
         },
         [rep?.id],
     )

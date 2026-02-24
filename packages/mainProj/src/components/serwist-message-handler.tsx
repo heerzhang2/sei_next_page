@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { toast } from "sonner"
+import { withBasePath } from "@/lib/tool"
 
 export function SerwistMessageHandler() {
     useEffect(() => {
@@ -16,7 +17,7 @@ export function SerwistMessageHandler() {
                 action: {
                     label: "前往",
                     onClick: () => {
-                        window.location.href = "/pwa"
+                        window.location.href = withBasePath("/pwa")
                     },
                 },
                 cancel: {
@@ -38,7 +39,7 @@ export function SerwistMessageHandler() {
                     action: {
                         label: "前往",
                         onClick: () => {
-                            window.location.href = "/pwa"
+                            window.location.href = withBasePath("/pwa")
                         },
                     }
                 })

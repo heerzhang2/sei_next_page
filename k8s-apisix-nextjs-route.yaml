@@ -9,6 +9,7 @@ spec:
     match:
       paths:
       - /report/*
+      - /report
     backends:
     - serviceName: sei-nextjs
       servicePort: 3765
@@ -46,7 +47,7 @@ spec:
       enable: true
       config:
         regex_uri:
-          - "^/report/(.*)"
+          - "^/report(/.*)?$"
           - "/$1"
     - name: cors
       enable: true
