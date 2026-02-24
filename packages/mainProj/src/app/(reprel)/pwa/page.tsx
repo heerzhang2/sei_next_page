@@ -228,6 +228,36 @@ export default function Page() {
             checkCacheStatus()
         }
     }, [reportTemplates])
+
+    // 检查 PWA 环境支持 - 恢复代码
+    useEffect(() => {
+        const checkPWAEnv = () => {
+            // 检查是否为 HTTPS
+            const isHttps = window.location.protocol === 'https:'
+
+            // 检查是否为 IP 地址
+            const isIpAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(window.location.hostname)
+
+            if (isIpAddress) {
+                const certTrusted = sessionStorage.getItem('pwa-cert-trusted')
+                if (certTrusted !== 'true') {
+                    setSwError("PWA 待启用：使用 IP 地址访问需要手动信任 SSL 证书。点击右下角'查看证书说明'了解操作步骤，或使用域名访问。")
+                    console.warn('[PWA] IP 地址访问，需要信任证书')
+                    return
+                }
+                // 证书已信任，不设置错误
+            }
+
+            if (!isHttps && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                setSwError("PWA 不支持：当前不是 HTTPS 环境。Service Worker 需要使用 HTTPS 协议")
+                console.warn('[PWA] 非 HTTPS 环境')
+                return
+            }
+        }
+
+        checkPWAEnv()
+    }, [])
+
     useEffect(() => {
         const fetchBuildVersion = async () => {
             try {

@@ -9,6 +9,19 @@ WORKDIR /app
 # 设置环境变量（不设置 NODE_ENV=production，以确保 devDependencies 被安装）
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# 构建时环境变量参数
+ARG NEXT_PUBLIC_BASE_PATH=/report
+ARG NEXT_PUBLIC_BACK_END
+ARG NEXT_PUBLIC_WEBSOCKET_END
+ARG NEXT_PUBLIC_OSS_ENDP
+ARG NEXT_PUBLIC_TUS_UPLOAD_ENDP
+
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
+ENV NEXT_PUBLIC_BACK_END=${NEXT_PUBLIC_BACK_END}
+ENV NEXT_PUBLIC_WEBSOCKET_END=${NEXT_PUBLIC_WEBSOCKET_END}
+ENV NEXT_PUBLIC_OSS_ENDP=${NEXT_PUBLIC_OSS_ENDP}
+ENV NEXT_PUBLIC_TUS_UPLOAD_ENDP=${NEXT_PUBLIC_TUS_UPLOAD_ENDP}
+
 # 复制依赖文件
 COPY package.json yarn.lock ./
 COPY packages/mainProj/package.json ./packages/mainProj/
@@ -22,7 +35,7 @@ RUN yarn install --frozen-lockfile
 COPY packages/mainProj ./packages/mainProj
 COPY packages/shared-auth-config ./packages/shared-auth-config
 
-# 构建项目
+# 构建项目（使用 ARG 设置的 ENV 环境变量）
 WORKDIR /app/packages/mainProj
 RUN yarn build
 

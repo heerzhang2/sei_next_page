@@ -43,6 +43,22 @@ spec:
         - name: NEXT_PUBLIC_BASE_PATH
           value: "/report"
 
+        # 后端 API 配置 - 通过 APISIX 网关访问
+        - name: NEXT_PUBLIC_BACK_END
+          value: "https://192.168.109.66:30443/api"
+
+        # WebSocket 配置 - 通过 APISIX 网关访问
+        - name: NEXT_PUBLIC_WEBSOCKET_END
+          value: "wss://192.168.109.66:30443"
+
+        # MinIO 配置 - 通过 APISIX 网关访问
+        - name: NEXT_PUBLIC_OSS_ENDP
+          value: "https://192.168.109.66:30443/minio"
+
+        # TUS 文件上传配置 - 通过 APISIX 网关访问
+        - name: NEXT_PUBLIC_TUS_UPLOAD_ENDP
+          value: "https://192.168.109.66:30443/uploadTUS/"
+
         # Camunda 8 K3s 集群配置
         - name: CAMUNDA_REST_ADDRESS
           value: "http://camunda-zeebe-gateway.orchestration.svc.cluster.local:8080"
