@@ -16,6 +16,7 @@ docker build -t "${imageName}:${tag}" `
   --build-arg NEXT_PUBLIC_WEBSOCKET_END=wss://192.168.109.66:30443 `
   --build-arg NEXT_PUBLIC_OSS_ENDP=https://192.168.109.66:30443/minio `
   --build-arg NEXT_PUBLIC_TUS_UPLOAD_ENDP=https://192.168.109.66:30443/uploadTUS/ `
+  --build-arg NEXT_PUBLIC_APP_WEB=https://192.168.109.66:30443/report `
   .
 
 if ($LASTEXITCODE -ne 0) {

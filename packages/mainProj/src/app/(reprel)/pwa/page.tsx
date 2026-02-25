@@ -6,7 +6,7 @@ import { useClient } from "@urql/next"
 import { ReportQuery } from "@/component/rep/report-data"
 import { Button } from "@/components/ui"
 import { Home } from "lucide-react"
-import { ServiceWorkerRegister } from "@/components/service-worker-register"
+import { PWAStatusIndicator } from "@/components/service-worker-register"
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -708,7 +708,7 @@ export default function Page() {
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-            <ServiceWorkerRegister />
+            <PWAStatusIndicator />
             {(swError) && (
                 <div className="fixed top-4 right-4 max-w-md bg-white border-l-4 border-orange-500 rounded-lg shadow-lg p-4 z-50">
                     <div className="flex items-start">
@@ -1202,18 +1202,18 @@ export default function Page() {
                             </div>
                         </div>
                     )}
-                    <div className="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
+                    <div className="mt-8 mb-32 bg-blue-50 border border-blue-200 rounded-md p-4">
                         <h2 className="text-lg font-semibold text-blue-800 mb-2">注意事项！</h2>
                         <p>为了避免离线编辑报告出现无法访问的问题:</p>
                         <ul className="list-disc pl-5 mt-2 space-y-1">
-                            <li>若您添加了新的报告编辑任务后，而且是新模板或新版本号的报告，请在模板列表点击对应的“更新”按钮。</li>
-                            <li>如果基础缓存的大小出现异常（最新基础缓存大约<strong> 8.19 MB</strong>的），那么必须做个彻底地更新，请点下方“完全重置”，然后再点“重新预缓存”。</li>
+                            <li>若您添加了新的报告编辑任务后，而且是新模板或新版本号的报告，请在模板列表点击对应的"更新"按钮。</li>
+                            <li>如果基础缓存的大小出现异常（最新基础缓存大约<strong> 8.19 MB</strong>的），那么必须做个彻底地更新，请点下方"完全重置"，然后再点"重新预缓存"。</li>
                         </ul>
                     </div>
                 </div>
 
                 {/* 底部按钮区域 */}
-                <div className="fixed bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
+                <div className="fixed bottom-24 left-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
                     <div className="flex justify-between items-center">
                         <div className="flex space-x-2">
                             <button

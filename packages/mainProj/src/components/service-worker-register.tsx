@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 
-export function ServiceWorkerRegister() {
-    const [swStatus, setSwStatus] = useState<'unregistered' | 'registering' | 'active' | 'failed' | 'pending'>('unregistered')
+export function PWAStatusIndicator() {
+    const [swStatus, setSwStatus] = useState<'active' | 'failed' | 'pending'>('active')
     const [message, setMessage] = useState('')
 
     // 监听来自证书说明窗口的消息 - 必须在所有条件语句之前调用
@@ -18,14 +18,8 @@ export function ServiceWorkerRegister() {
         return () => window.removeEventListener('message', handleMessage)
     }, [])
 
+    // 仅检查环境，不注册 SW（由 SerwistProvider 自动处理）
     useEffect(() => {
-        // 从全局变量获取 basePath（由 Next.js 注入）
-        const basePath = typeof window !== 'undefined' && (window as any).__NEXT_PUBLIC_BASE_PATH__ || '';
-        // 使用 @serwist/turbopack 的默认路径
-        const swUrl = basePath ? `${basePath}/serwist/sw.js` : '/serwist/sw.js';
-
-        console.log('[SW Register] basePath:', basePath, 'swUrl:', swUrl)
-
         if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
             setSwStatus('failed')
             setMessage('Service Worker 不支持')
@@ -35,7 +29,7 @@ export function ServiceWorkerRegister() {
         // 检查是否为 HTTPS 协议
         const isHttps = window.location.protocol === 'https:'
         if (!isHttps && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            console.warn('[SW Register] 非安全源，Service Worker 需要 HTTPS')
+            console.warn('[SW Status] 非安全源，Service Worker 需要 HTTPS')
             setSwStatus('failed')
             setMessage('需要 HTTPS 协议')
             return
@@ -46,89 +40,38 @@ export function ServiceWorkerRegister() {
         if (isIpAddress) {
             const certTrusted = sessionStorage.getItem('pwa-cert-trusted')
             if (certTrusted !== 'true') {
-                console.warn('[SW Register] IP 地址访问，需要先信任 SSL 证书')
+                console.warn('[SW Status] IP 地址访问，需要先信任 SSL 证书')
                 setSwStatus('pending')
                 setMessage('需要信任证书 (点击查看说明)')
                 return
             }
-            console.log('[SW Register] 证书已确认信任，继续注册 Service Worker')
+            console.log('[SW Status] 证书已确认信任')
         }
 
-        // 检查现有注册并清理不匹配的
-        navigator.serviceWorker.getRegistrations().then(async (registrations) => {
-            console.log('[SW Register] 现有注册数量:', registrations.length)
-
-            for (const registration of registrations) {
-                console.log('[SW Register] 现有注册:', {
-                    scope: registration.scope,
-                    scriptURL: registration.active?.scriptURL
-                })
-
-                // 如果没有 basePath 但注册在根路径，保留
-                if (!basePath && registration.scope === '/') {
-                    continue
-                }
-
-                // 检查 scope 是否匹配当前页面
-                const currentOrigin = window.location.origin
-                const expectedScope = basePath ? `${currentOrigin}${basePath}` : `${currentOrigin}/`
-
-                // 如果注册的作用域与预期不符，注销它
-                if (registration.scope !== expectedScope) {
-                    console.log('[SW Register] 注销错误作用域的 SW:', registration.scope, '期望:', expectedScope)
-                    await registration.unregister()
-                }
-            }
-        })
-
-        // 注册新的 Service Worker
-        setSwStatus('registering')
-        setMessage('正在注册...')
-
-        navigator.serviceWorker.register(swUrl, {
-            scope: basePath || '/'  // 设置正确的作用域
-        }).then((registration) => {
-            console.log('[SW Register] Service Worker 注册成功:', {
-                scope: registration.scope,
-                scriptURL: registration.active?.scriptURL
-            })
+        // 监听 Service Worker 状态变化
+        if (navigator.serviceWorker.controller) {
+            console.log('[SW Status] Service Worker 已激活')
             setSwStatus('active')
             setMessage(`已激活 (${new Date().toLocaleTimeString('zh-CN')})`)
-
-            // 监听更新
-            if (registration.addEventListener) {
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing
-                    if (newWorker) {
-                        console.log('[SW Register] 发现新版本 Service Worker')
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('[SW Register] 新版本已安装，通知跳过等待')
-                                // 告诉新版本立即激活
-                                newWorker.postMessage({ type: 'SKIP_WAITING' })
-                            }
-                        })
-                    }
-                })
-            }
-
-            // 监听控制权变化
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                console.log('[SW Register] Service Worker 已接管页面')
-                setSwStatus('active')
-                // 延迟刷新，让 SW 完全接管
-                setTimeout(() => {
-                    window.location.reload()
-                }, 500)
-            })
-        }).catch((error) => {
-            console.error('[SW Register] Service Worker 注册失败:', error)
+        } else {
+            console.log('[SW Status] Service Worker 未激活，等待 SerwistProvider 注册...')
             setSwStatus('failed')
-            setMessage(`注册失败: ${error.message}`)
-        })
-    }, [])
+            setMessage('未激活，等待注册...')
+        }
 
-    if (swStatus === 'unregistered') return null
+        // 监听控制权变化
+        const handleControllerChange = () => {
+            console.log('[SW Status] Service Worker 已接管页面')
+            setSwStatus('active')
+            setMessage(`已激活 (${new Date().toLocaleTimeString('zh-CN')})`)
+        }
+
+        navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
+
+        return () => {
+            navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
+        }
+    }, [])
 
     const handleCertTrust = () => {
         const certWindow = window.open('', 'PWA 证书说明', 'width=800,height=600,scrollbars=yes')
@@ -231,13 +174,11 @@ fetch('${window.location.href}', { method: 'HEAD', mode: 'cors' })
             <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${
                     swStatus === 'active' ? 'bg-green-500 animate-pulse' :
-                    swStatus === 'registering' ? 'bg-yellow-500 animate-bounce' :
                     swStatus === 'pending' ? 'bg-orange-500 animate-pulse' :
                     'bg-red-500'
                 }`} />
                 <span className="font-medium">SW: {
                     swStatus === 'active' ? '✓' :
-                    swStatus === 'registering' ? '注册中...' :
                     swStatus === 'pending' ? '等待证书' : '✗'
                 }</span>
             </div>
