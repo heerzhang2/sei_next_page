@@ -6,6 +6,18 @@ export function ServiceWorkerRegister() {
     const [swStatus, setSwStatus] = useState<'unregistered' | 'registering' | 'active' | 'failed' | 'pending'>('unregistered')
     const [message, setMessage] = useState('')
 
+    // 监听来自证书说明窗口的消息 - 必须在所有条件语句之前调用
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'CERT_TRUSTED') {
+                sessionStorage.setItem('pwa-cert-trusted', 'true')
+                window.location.reload()
+            }
+        }
+        window.addEventListener('message', handleMessage)
+        return () => window.removeEventListener('message', handleMessage)
+    }, [])
+
     useEffect(() => {
         // 从全局变量获取 basePath（由 Next.js 注入）
         const basePath = typeof window !== 'undefined' && (window as any).__NEXT_PUBLIC_BASE_PATH__ || '';
@@ -117,18 +129,6 @@ export function ServiceWorkerRegister() {
     }, [])
 
     if (swStatus === 'unregistered') return null
-
-    // 监听来自证书说明窗口的消息 - 移到组件顶部，避免条件调用
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            if (event.data?.type === 'CERT_TRUSTED') {
-                sessionStorage.setItem('pwa-cert-trusted', 'true')
-                window.location.reload()
-            }
-        }
-        window.addEventListener('message', handleMessage)
-        return () => window.removeEventListener('message', handleMessage)
-    }, [])
 
     const handleCertTrust = () => {
         const certWindow = window.open('', 'PWA 证书说明', 'width=800,height=600,scrollbars=yes')

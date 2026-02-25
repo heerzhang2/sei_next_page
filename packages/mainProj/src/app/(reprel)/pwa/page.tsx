@@ -6,6 +6,7 @@ import { useClient } from "@urql/next"
 import { ReportQuery } from "@/component/rep/report-data"
 import { Button } from "@/components/ui"
 import { Home } from "lucide-react"
+import { ServiceWorkerRegister } from "@/components/service-worker-register"
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -707,6 +708,7 @@ export default function Page() {
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+            <ServiceWorkerRegister />
             {(swError) && (
                 <div className="fixed top-4 right-4 max-w-md bg-white border-l-4 border-orange-500 rounded-lg shadow-lg p-4 z-50">
                     <div className="flex items-start">

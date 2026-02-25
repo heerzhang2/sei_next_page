@@ -70,7 +70,6 @@ export default async function RootLayout({
                 <NetworkStatusProvider>
                   <GraphQLProvider>
                     <SerwistMessageHandler />
-                    {/* <ServiceWorkerRegister /> */}
                     <SessionSync />
                     <TokenRefreshOverlay />
                     <OfflineStatusIndicator />

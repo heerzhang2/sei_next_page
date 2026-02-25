@@ -45,8 +45,10 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             const offlineReports = localStorage.getItem("offline-reports")
             if (!offlineReports) return
 
-            // 检查当前页面是否是 /pwa
-            if (window.location.pathname === "/pwa") return
+            // 检查当前页面是否是 /pwa（考虑 basePath）
+            const basePath = typeof window !== 'undefined' && (window as any).__NEXT_PUBLIC_BASE_PATH__ || '';
+            const pwaPath = `${basePath}/pwa`;
+            if (window.location.pathname === pwaPath || window.location.pathname === '/pwa') return
 
             const serverVersion = data.version
             const lastCacheWarmup = localStorage.getItem("last-cache-warmup")
@@ -61,7 +63,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                     action: {
                         label: "前往",
                         onClick: () => {
-                            window.location.href = "/pwa"
+                            window.location.href = pwaPath
                         },
                     },
                 })
@@ -196,8 +198,10 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             const offlineReports = localStorage.getItem("offline-reports")
             if (!offlineReports) return
 
-            // 检查当前页面是否是 /pwa
-            if (window.location.pathname === "/pwa") return
+            // 检查当前页面是否是 /pwa（考虑 basePath）
+            const basePath = typeof window !== 'undefined' && (window as any).__NEXT_PUBLIC_BASE_PATH__ || '';
+            const pwaPath = `${basePath}/pwa`;
+            if (window.location.pathname === pwaPath || window.location.pathname === '/pwa') return
 
             console.log("[SW] Service Worker 已更新")
 
@@ -207,7 +211,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 action: {
                     label: "前往",
                     onClick: () => {
-                        window.location.href = "/pwa"
+                        window.location.href = pwaPath
                     },
                 },
             })
