@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { WifiOff, Database, CloudOff, AlertTriangle } from "lucide-react"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
+import { withBasePath } from "@/lib/tool"
 
 export function OfflineStatusIndicator() {
     const { isClientOnline, isOnline, isGraphQLBackendReachable, offlineQueue } = useNetworkStatusContext()
@@ -100,7 +101,7 @@ export function OfflineStatusIndicator() {
         }
 
         if (typeof window !== "undefined") {
-            window.location.href = "/offline"
+            window.location.href = withBasePath("/offline")
         }
     }
 

@@ -143,7 +143,7 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
                                     <span className="sr-only">注销</span>
                                 </Button>
                             ) : (
-                                <Button variant="ghost" size="icon" className="ml-14" onClick={() => signIn()}>
+                                <Button variant="ghost" size="icon" className="ml-14" onClick={() => window.location.href = '/report/login'}>
                                     <LogIn className="h-4 w-4" />
                                     <span className="sr-only">登录</span>
                                 </Button>
