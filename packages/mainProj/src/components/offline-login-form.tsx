@@ -131,7 +131,7 @@ export function OfflineLoginForm() {
                 duration: 2000,
             })
             // 跳转到首页
-            router.push("/")
+            window.location.href = "/report/"
         } catch (error: any) {
             console.error("离线登录失败:", error)
             toast.error("登录失败", {

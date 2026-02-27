@@ -183,9 +183,12 @@ export default function SignInForm() {
                 </div>
                 <div className="p-6 border-t border-gray-200">
                     <div className="mt-4">
-                        <Link href="/" className="text-blue-600 hover:underline">
+                        <span 
+                            className="text-blue-600 hover:underline cursor-pointer"
+                            onClick={() => window.location.href = '/report/'}
+                        >
                             首页
-                        </Link>
+                        </span>
                     </div>
                     <div className="mt-4">
                         <Link href="/user" className="text-blue-600 hover:underline">

@@ -497,9 +497,12 @@ export function RepFootLink({
                         <div className="mr-8 text-blue-600 hover:text-blue-800 text-sm font-medium">-返回主报告-</div>
                     </RepLink>
                 )}
-                <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                <span 
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
+                    onClick={() => window.location.href = '/report/'}
+                >
                     -{!single && original ? "原始记录" : "报告"}完毕,返回-
-                </Link>
+                </span>
             </div>
             <div
                 className={cn(

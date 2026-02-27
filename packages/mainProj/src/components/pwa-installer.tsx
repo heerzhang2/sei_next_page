@@ -139,14 +139,7 @@ export function PWAInstaller() {
     }
 
     if (isInstalled) {
-        return (
-            <div className="fixed bottom-4 right-4 z-50">
-                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                    <Download className="w-3 h-3 mr-1" />
-                    已安装 PWA
-                </Badge>
-            </div>
-        )
+        return null
     }
 
     if (!showInstallPrompt) return null
