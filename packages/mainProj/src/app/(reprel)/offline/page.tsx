@@ -28,6 +28,7 @@ import Link from "next/link"
 import { PendingReportsManager } from "@/components/pending-reports-manager"
 import { FileOperationsManager } from "@/components/file-operations-manager"
 import { useGroupedUppyStates } from "@/hooks/useGroupedUppyStates"
+import { withBasePath } from '@/lib/tool' 
 
 export default function OfflinePage() {
     const { data: session } = useSession()
@@ -50,14 +51,16 @@ export default function OfflinePage() {
     const refreshPage = () => {
         window.location.reload()
     }
+
+    const goToHome = () => {
+        window.location.href = withBasePath('/')
+    }
     // value={activeTab}
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl relative">
-            <Button asChild variant="outline" size="sm" className="absolute top-4 right-4 bg-transparent">
-                <Link href="/">
-                    <Home className="w-4 h-4 mr-2" />
-                    返回首页
-                </Link>
+            <Button variant="outline" size="sm" className="absolute top-4 right-4 bg-transparent" onClick={goToHome}>
+                <Home className="w-4 h-4 mr-2" />
+                返回首页
             </Button>
             <div className="space-y-6">
                 <div className="text-center space-y-2">

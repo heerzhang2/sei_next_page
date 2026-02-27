@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { withBasePath } from "@/lib/tool"
 import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
 import { usePrintPdf } from "@/hooks/usePrintPdf"
 import { toast } from "sonner"
@@ -396,7 +397,7 @@ export function RepFootLink({
                                 </button>
 
                                 <button
-                                    onClick={() => handleNavigation("/")}
+                                    onClick={() => window.location.href = withBasePath("/")}
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
                                 >
                                     回首页

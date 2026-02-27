@@ -237,8 +237,10 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
       searchParams.delete("redId");
 
       searchParams.delete("from");
-      // 保留 "original" 和 "lineIndex" 参数，确保离线导航能正常工作
-      // 这些参数虽然只用于显示重组，但在离线模式下必须保留以触发页面重新渲染
+      // 删除 "original" 和 "lineIndex" 参数，确保离线导航能正常工作
+      // 这些参数只用于显示重组，不影响缓存键
+      searchParams.delete("original");
+      searchParams.delete("lineIndex");
       searchParams.delete("unitIndex");
       // 控制器情况
       searchParams.delete("modelkey");
@@ -254,9 +256,11 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
       return normalizedUrl;
     } else {
       const normalizedPath = `/rep/*/${pathParts[3]}/${pathParts[4]}`;
-      // 保留查询参数（包括 original, lineIndex 等），确保离线导航能正常工作
+      // 删除查询参数中的某些参数，确保离线导航能正常工作
       const searchParams = new URLSearchParams(url.search);
-      // 保留 "original" 和 "lineIndex" 参数，避免离线时无法正确导航
+      // 删除 "original" 和 "lineIndex" 参数，避免离线时无法正确导航
+      searchParams.delete("original");
+      searchParams.delete("lineIndex");
       // 删除动态的 _rsc 参数（这个值是动态的，不参与缓存键）
       searchParams.delete("_rsc");
 
@@ -648,13 +652,16 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
           if (hasAction) {
             // 重构路径：/rep/[repid]/INDPL_DJ/1/ALL -> /rep/*/INDPL_DJ/1/ALL
             const pathPart = `/rep/*/${normalizedPathParts.slice(3).join("/")}`;
-            // 构建查询参数
-            const searchParams = new URLSearchParams();
+            // 构建查询参数，保留 original 和 lineIndex 参数
+            const searchParams = new URLSearchParams(urlObj.search);
+            searchParams.delete("_rsc");
             searchParams.set("_v", "html");
             normalizedCacheKey = `${urlObj.origin}${basePath}${pathPart}?${searchParams.toString()}`;
           } else {
             const pathPart = `/rep/*/${normalizedPathParts[3]}/${normalizedPathParts[4]}`;
-            const searchParams = new URLSearchParams();
+            // 构建查询参数，保留 original 和 lineIndex 参数
+            const searchParams = new URLSearchParams(urlObj.search);
+            searchParams.delete("_rsc");
             searchParams.set("_v", "html");
             normalizedCacheKey = `${urlObj.origin}${basePath}${pathPart}?${searchParams.toString()}`;
           }
