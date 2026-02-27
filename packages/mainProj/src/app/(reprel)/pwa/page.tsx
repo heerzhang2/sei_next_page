@@ -6,7 +6,6 @@ import { useClient } from "@urql/next"
 import { ReportQuery } from "@/component/rep/report-data"
 import { Button } from "@/components/ui"
 import { Home } from "lucide-react"
-import { PWAStatusIndicator } from "@/components/service-worker-register"
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -76,6 +75,45 @@ export default function Page() {
     const [isCalculatingCache, setIsCalculatingCache] = useState(false)
     const [showCustomUrlSection, setShowCustomUrlSection] = useState(false)
     const [currentBuildVersion, setCurrentBuildVersion] = useState<string>("")
+    const [pwaCertStatus, setPwaCertStatus] = useState<'active' | 'failed' | 'pending'>('active')
+
+    // 检查 PWA 证书状态
+    const checkPwaCertStatus = () => {
+        if (typeof window === 'undefined') return 'failed'
+
+        // 检查是否为 HTTPS 协议
+        const isHttps = window.location.protocol === 'https:'
+        if (!isHttps && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            return 'failed'
+        }
+
+        // 检查是否为 IP 地址访问
+        const isIpAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(window.location.hostname)
+        if (isIpAddress) {
+            const certTrusted = sessionStorage.getItem('pwa-cert-trusted')
+            if (certTrusted !== 'true') {
+                return 'pending'
+            }
+        }
+
+        return 'active'
+    }
+
+    // 在组件加载时检查 PWA 证书状态
+    useEffect(() => {
+        setPwaCertStatus(checkPwaCertStatus())
+
+        // 监听来自证书说明窗口的消息
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'CERT_TRUSTED') {
+                sessionStorage.setItem('pwa-cert-trusted', 'true')
+                setPwaCertStatus('active')
+                window.location.reload()
+            }
+        }
+        window.addEventListener('message', handleMessage)
+        return () => window.removeEventListener('message', handleMessage)
+    }, [])
 
     // 简化的缓存状态检查 - 只检查是否有缓存时间
     const checkCacheStatus = async () => {
@@ -708,33 +746,6 @@ export default function Page() {
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-            <PWAStatusIndicator />
-            {(swError) && (
-                <div className="fixed top-4 right-4 max-w-md bg-white border-l-4 border-orange-500 rounded-lg shadow-lg p-4 z-50">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                            <svg
-                                className="w-5 h-5 text-orange-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                style={{ height: "2rem" }}
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                                />
-                            </svg>
-                        </div>
-                        <div className="ml-3 flex-1">
-                            <div className="mt-1 text-sm text-orange-700">{swError}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <Button asChild variant="outline" size="sm" className="absolute top-4 right-4 bg-transparent">
                 <Link href="/">
@@ -1206,6 +1217,100 @@ export default function Page() {
                         <h2 className="text-lg font-semibold text-blue-800 mb-2">注意事项！</h2>
                         <p>为了避免离线编辑报告出现无法访问的问题:</p>
                         <ul className="list-disc pl-5 mt-2 space-y-1">
+                            {swError && (
+                                <li className="text-orange-700 font-medium">
+                                    ⚠️ {swError}
+                                </li>
+                            )}
+                            {pwaCertStatus === 'pending' && (
+                                <li className="text-orange-700 font-medium">
+                                    ⚠️ PWA 待启用：使用 IP 地址访问需要手动信任 SSL 证书。
+                                    <button
+                                        onClick={() => {
+                                            const certWindow = window.open('', 'PWA 证书说明', 'width=800,height=600,scrollbars=yes')
+                                            if (certWindow) {
+                                                certWindow.document.write(`
+                                                    <html>
+                                                    <head>
+                                                        <title>PWA 证书信任说明</title>
+                                                        <style>
+                                                            body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+                                                            h1 { color: #333; }
+                                                            .step { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                                                            .note { background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107; }
+                                                            code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; }
+                                                        </style>
+                                                    </head>
+                                                    <body>
+                                                        <h1>如何信任 SSL 证书以启用 PWA 功能</h1>
+                                                        <div class="note">
+                                                            <strong>注意：</strong> 由于您使用 IP 地址（${window.location.hostname}）访问此应用，浏览器不会自动信任自签名证书。您需要手动导入并信任证书。
+                                                        </div>
+                                                        <h2>步骤 1: 下载证书</h2>
+                                                        <div class="step">
+                                                            <p>请访问服务器并下载 SSL 证书文件（通常是 <code>.crt</code> 或 <code>.pem</code> 格式）</p>
+                                                            <p>如果证书在服务器上，可以通过以下命令下载：</p>
+                                                            <pre><code># 示例：从服务器下载证书
+scp user@server:/path/to/certificate.crt ./</code></pre>
+                                                        </div>
+                                                        <h2>步骤 2: 导入证书（Windows）</h2>
+                                                        <div class="step">
+                                                            <ol>
+                                                                <li>双击下载的证书文件</li>
+                                                                <li>选择"安装证书"</li>
+                                                                <li>选择"本地计算机"，点击下一步</li>
+                                                                <li>选择"将所有的证书放入下列存储"</li>
+                                                                <li>点击"浏览"，选择"受信任的根证书颁发机构"</li>
+                                                                <li>点击"确定"，然后完成安装</li>
+                                                            </ol>
+                                                        </div>
+                                                        <h2>步骤 3: 验证证书信任</h2>
+                                                        <div class="step">
+                                                            <ol>
+                                                                <li>关闭此说明窗口</li>
+                                                                <li>在浏览器中访问 <code>${window.location.href}</code></li>
+                                                                <li>确认地址栏不再显示"不安全"警告</li>
+                                                                <li>刷新页面，PWA 功能应该正常工作</li>
+                                                            </ol>
+                                                        </div>
+                                                        <h2>步骤 4: 确认信任</h2>
+                                                        <div class="step">
+                                                            <p>如果证书已正确导入，点击下方按钮确认：</p>
+                                                            <button onclick="
+                                                                window.opener.postMessage({ type: 'CERT_TRUSTED' }, '*');
+                                                                window.close();
+                                                                alert('已确认，请刷新主页面');
+                                                            " style="
+                                                                background: #4CAF50; color: white; padding: 10px 20px;
+                                                                border: none; border-radius: 5px; cursor: pointer;
+                                                                font-size: 16px;
+                                                            ">
+                                                                我已信任证书，启用 PWA
+                                                            </button>
+                                                        </div>
+                                                        <h2>替代方案：使用域名访问</h2>
+                                                        <div class="step">
+                                                            <p>如果不想手动导入证书，建议配置域名并使用受信任的 SSL 证书：</p>
+                                                            <ul>
+                                                                <li>配置 DNS 解析</li>
+                                                                <li>使用 Let's Encrypt 免费证书</li>
+                                                                <li>或购买商业 SSL 证书</li>
+                                                            </ul>
+                                                        </div>
+                                                        <p style="margin-top: 20px; color: #666;">
+                                                            如有疑问，请联系系统管理员。
+                                                        </p>
+                                                    </body>
+                                                    </html>
+                                                `)
+                                            }
+                                        }}
+                                        className="ml-2 text-xs bg-orange-600 hover:bg-orange-500 text-white px-3 py-1 rounded transition-colors"
+                                    >
+                                        查看证书说明
+                                    </button>
+                                </li>
+                            )}
                             <li>若您添加了新的报告编辑任务后，而且是新模板或新版本号的报告，请在模板列表点击对应的"更新"按钮。</li>
                             <li>如果基础缓存的大小出现异常（最新基础缓存大约<strong> 8.19 MB</strong>的），那么必须做个彻底地更新，请点下方"完全重置"，然后再点"重新预缓存"。</li>
                         </ul>
