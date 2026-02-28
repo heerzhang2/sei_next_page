@@ -36,6 +36,7 @@ export default function SignInForm() {
     const [isPending, setIsPending] = useState(false)
     const [error, setError] = React.useState("")
     const [hasJustLoggedIn, setHasJustLoggedIn] = useState(false)
+    const [isServerAvailable, setIsServerAvailable] = useState(true)
 
     // 检查 URL 中的错误参数
     React.useEffect(() => {
@@ -46,6 +47,51 @@ export default function SignInForm() {
             setError(errorMessage)
         }
     }, [errorParam])
+
+    // 检测服务器可用性
+    React.useEffect(() => {
+        const checkServerAvailability = async () => {
+            try {
+                // 使用 fetch 检测服务器是否可用，设置较短的超时时间
+                const controller = new AbortController()
+                const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+                // 获取 basePath
+                const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
+                const url = `${basePath}/api/auth/csrf`
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    signal: controller.signal,
+                    cache: 'no-cache'
+                })
+
+                clearTimeout(timeoutId)
+
+                // 检查响应状态码，如果不是 2xx，则认为服务器不可用
+                if (!response.ok) {
+                    console.error("服务器不可用，状态码:", response.status)
+                    setIsServerAvailable(false)
+                    setError("前端服务器当前不可用，请试试离线登录")
+                    return
+                }
+
+                setIsServerAvailable(true)
+            } catch (error) {
+                console.error("服务器不可用:", error)
+                setIsServerAvailable(false)
+                setError("前端服务器当前不可用，请试试离线登录")
+            }
+        }
+
+        // 初始检测
+        checkServerAvailability()
+
+        // 设置定时检测
+        const intervalId = setInterval(checkServerAvailability, 30000) // 每30秒检测一次
+
+        return () => clearInterval(intervalId)
+    }, [])
 
     // 监听 session 变化，登录成功后处理存储
     React.useEffect(() => {
@@ -95,16 +141,41 @@ export default function SignInForm() {
         try {
             console.log("登录formData:", { username, password: "***", deviceId })
 
-            const result = await signIn("credentials", {
-                username: username,
-                password: password,
-                deviceId: deviceId,
-                redirect: false,
+            // 检查网络连接
+            if (!navigator.onLine) {
+                setError("网络不可用，请检查网络连接")
+                setIsPending(false)
+                return
+            }
+
+            // 设置超时检测
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("请求超时")), 10000)
             })
+
+            const result = await Promise.race([
+                signIn("credentials", {
+                    username: username,
+                    password: password,
+                    deviceId: deviceId,
+                    redirect: false,
+                }),
+                timeoutPromise
+            ]) as any
 
             if (result?.error) {
                 console.error("Login error:", result.error)
-                setError(result.error === "CredentialsSignin" ? "用户名或密码错误" : `登录失败: ${result.error}`)
+                // 检查是否是网络相关错误
+                const networkErrors = ['NetworkError', 'fetch failed', 'Failed to fetch', 'timeout', 'ERR_CONNECTION_REFUSED', 'ERR_NETWORK']
+                const isNetworkError = networkErrors.some(err => 
+                    result.error.toLowerCase().includes(err.toLowerCase())
+                )
+
+                if (isNetworkError) {
+                    setError("无法连接到服务器，请检查网络连接或稍后再试")
+                } else {
+                    setError(result.error === "CredentialsSignin" ? "用户名或密码错误" : `登录失败: ${result.error}`)
+                }
                 setIsPending(false)
                 return
             }
@@ -114,9 +185,15 @@ export default function SignInForm() {
 
             // 标记刚刚登录成功，等待 session 更新后的 useEffect 处理
             setHasJustLoggedIn(true)
-        } catch (error) {
+        } catch (error: any) {
             console.error("登录过程中出错:", error)
-            setError("登录过程中出现错误")
+            // 检查是否是网络错误或超时
+            if (error.message === "请求超时" || 
+                (error instanceof TypeError && error.message.includes('fetch'))) {
+                setError("无法连接到服务器，请检查网络连接或稍后再试")
+            } else {
+                setError("登录过程中出现错误")
+            }
             setIsPending(false)
         }
     }
@@ -171,8 +248,12 @@ export default function SignInForm() {
                     )}
 
                     <div className="flex justify-end">
-                        <Button disabled={isPending} className="w-full mt-4" type="submit">
-                            {isPending ? "登录中..." : "登录"}
+                        <Button 
+                            disabled={isPending || !isServerAvailable} 
+                            className="w-full mt-4" 
+                            type="submit"
+                        >
+                            {isPending ? "登录中..." : !isServerAvailable ? "服务器不可用" : "登录"}
                         </Button>
                     </div>
                 </form>

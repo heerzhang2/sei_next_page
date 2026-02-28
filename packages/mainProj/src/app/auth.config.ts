@@ -121,8 +121,9 @@ export const authConfig: NextAuthConfig = {
   // pages 路径需要相对于根路径，NextAuth 会自动添加 basePath
   pages: {
     signIn: signInPath,
-    error: signInPath,
   },
   // 确保信任所有主机（在反向代理后面时需要）
   trustHost: true,
+  // 禁用自动错误重定向，让客户端处理错误
+  debug: process.env.NODE_ENV === "development",
 }

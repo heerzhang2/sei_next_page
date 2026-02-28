@@ -1318,18 +1318,18 @@ scp user@server:/path/to/certificate.crt ./</code></pre>
                 </div>
 
                 {/* 底部按钮区域 */}
-                <div className="fixed bottom-24 left-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
-                    <div className="flex justify-between items-center">
-                        <div className="flex space-x-2">
+                <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 p-2 sm:p-3">
+                    <div className="flex justify-between items-center max-w-7xl mx-auto">
+                        <div className="flex space-x-2 w-full justify-center sm:justify-start">
                             <button
                                 onClick={handleCompleteReset}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                                className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs sm:text-sm"
                             >
                                 完全重置
                             </button>
                             <button
                                 onClick={handleHardRefresh}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs sm:text-sm"
                             >
                                 刷新
                             </button>
@@ -1342,7 +1342,7 @@ scp user@server:/path/to/certificate.crt ./</code></pre>
                                         alert("无法获取当前版本信息");
                                     }
                                 }}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                className="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs sm:text-sm"
                             >
                                 升级确认
                             </button>
