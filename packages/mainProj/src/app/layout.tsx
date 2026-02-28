@@ -56,6 +56,8 @@ export default async function RootLayout({
   // 因为客户端需要知道完整的 API URL
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth` : "/api/auth"
   const swPathBase = process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}` : ""
+  // 检查是否启用 PWA 功能
+  const enablePWA = process.env.NEXT_PUBLIC_ENABLE_PWA !== 'false'
   return (
     <html suppressHydrationWarning lang="zh-CN">
       <body
@@ -63,25 +65,42 @@ export default async function RootLayout({
              bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 @container
             `}
       >
-        <SerwistProvider swUrl={`${swPathBase}/serwist/sw.js`}>
+        {enablePWA ? (
+          <SerwistProvider swUrl={`${swPathBase}/serwist/sw.js`}>
+            <ThemeProvider>
+              <PrintSettingsProvider>
+                <SessionProvider session={session} basePath={basePath}>
+                  <NetworkStatusProvider>
+                    <GraphQLProvider>
+                      <SerwistMessageHandler />
+                      <SessionSync />
+                      <TokenRefreshOverlay />
+                      <OfflineStatusIndicator />
+                      {children}
+                      <PWAInstaller />
+                      <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
+                    </GraphQLProvider>
+                  </NetworkStatusProvider>
+                </SessionProvider>
+              </PrintSettingsProvider>
+            </ThemeProvider>
+          </SerwistProvider>
+        ) : (
           <ThemeProvider>
             <PrintSettingsProvider>
               <SessionProvider session={session} basePath={basePath}>
                 <NetworkStatusProvider>
                   <GraphQLProvider>
-                    <SerwistMessageHandler />
                     <SessionSync />
                     <TokenRefreshOverlay />
-                    <OfflineStatusIndicator />
                     {children}
-                    <PWAInstaller />
                     <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
                   </GraphQLProvider>
                 </NetworkStatusProvider>
               </SessionProvider>
             </PrintSettingsProvider>
           </ThemeProvider>
-        </SerwistProvider>
+        )}
         {/* 注入全局变量供 SW 注册使用 */}
         <script dangerouslySetInnerHTML={{
           __html: `

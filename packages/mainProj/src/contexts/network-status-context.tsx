@@ -103,16 +103,18 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
     // 检查GraphQL后端连通性
     const checkGraphQLBackendConnectivity = useCallback(async (retries = 1) => {
-        // 如果上次检查失败，增加重试间隔
-        const lastCheckFailed = !networkStatus.isGraphQLBackendReachable
-        const retryDelay = lastCheckFailed ? 60000 : 15000 // 失败后等待60秒，成功后等待15秒
+        // 使用固定的重试间隔，避免依赖 networkStatus 状态导致的循环
+        const retryDelay = 15000 // 固定15秒检查一次
 
         for (let attempt = 0; attempt < retries; attempt++) {
             try {
                 const controller = new AbortController()
                 const timeoutId = setTimeout(() => controller.abort(), 5000) // 减少超时时间到5秒
                 const backendUrl = process.env.NEXT_PUBLIC_BACK_END
-                if (!backendUrl) return false
+                if (!backendUrl) {
+                    setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+                    return false
+                }
 
                 const response = await fetch(`${backendUrl}/actuator/health`, {
                     method: "GET",
@@ -124,21 +126,31 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 if (response.ok) {
                     const healthData = await response.json()
                     const dbStatus = healthData.components?.mainDB?.status
-                    return dbStatus === "UP"
+                    const isReachable = dbStatus === "UP"
+                    // 更新后端可达性状态
+                    setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: isReachable }))
+                    return isReachable
                 }
+
+                // 响应不成功，更新状态为不可达
+                setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+
                 if (attempt < retries) {
                     console.log(`健康检查失败，第${attempt + 1}次重试...`)
                     await new Promise((resolve) => setTimeout(resolve, retryDelay))
                 }
             } catch (error) {
                 console.warn(`健康检查尝试${attempt + 1}失败:`, error)
+                // 发生错误时，更新状态为不可达
+                setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+
                 if (attempt < retries) {
                     await new Promise((resolve) => setTimeout(resolve, retryDelay))
                 }
             }
         }
         return false
-    }, [networkStatus.isGraphQLBackendReachable])
+    }, [])
 
     // 获取连接信息
     const getConnectionInfo = useCallback(() => {
@@ -152,27 +164,29 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     // 更新网络状态
     const updateNetworkStatus = useCallback(
         async (isClientOnline: boolean, error: Error | null = null) => {
-            const isNextJSServerReachable = isClientOnline
-            const isGraphQLBackendReachable = isClientOnline
             const connectionType = getConnectionInfo()
-            const isOnline = isClientOnline && isNextJSServerReachable
-            setNetworkStatus((prev) => ({
-                ...prev,
-                isOnline,
-                isClientOnline,
-                isNextJSServerReachable,
-                isGraphQLBackendReachable,
-                lastError: error,
-                lastOnlineTime: isOnline ? new Date() : prev.lastOnlineTime,
-                lastOfflineTime: !isOnline ? new Date() : prev.lastOfflineTime,
-                connectionType,
-            }))
+            setNetworkStatus((prev) => {
+                const isNextJSServerReachable = isClientOnline && prev.isNextJSServerReachable
+                // 保持 isGraphQLBackendReachable 不变，不由客户端网络状态决定
+                const isOnline = isClientOnline && isNextJSServerReachable && prev.isGraphQLBackendReachable
+
+                return {
+                    ...prev,
+                    isOnline,
+                    isClientOnline,
+                    isNextJSServerReachable,
+                    // 不更新 isGraphQLBackendReachable，它由 checkGraphQLBackendConnectivity 单独管理
+                    lastError: error,
+                    lastOnlineTime: isOnline ? new Date() : prev.lastOnlineTime,
+                    lastOfflineTime: !isOnline ? new Date() : prev.lastOfflineTime,
+                    connectionType,
+                }
+            })
         },
         [
             checkNextJSServerConnectivity,
             checkGraphQLBackendConnectivity,
             getConnectionInfo,
-            networkStatus.isGraphQLBackendReachable,
         ],
     )
 
@@ -233,15 +247,20 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     }, [])
 
     useEffect(() => {
-        // 初始状态更新
+        // 初始状态更新 - 只更新客户端网络状态，不影响后端可达性
         updateNetworkStatus(navigator.onLine)
         const handleOnline = () => {
             console.log("Network: 客户端网络在线事件检测到")
+            // 只更新客户端网络状态，不直接设置后端可达性
             updateNetworkStatus(true)
+            // 立即触发一次后端检查
+            checkGraphQLBackendConnectivity()
         }
         const handleOffline = () => {
             console.log("Network: 客户端网络离线事件检测到")
+            // 离线时，更新客户端状态并设置后端为不可达
             updateNetworkStatus(false)
+            setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
         }
         // 定期服务器检查
         const serverCheckInterval = print
@@ -303,11 +322,11 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 isGraphQLBackendReachable: isGraphQLReachable,
             }))
         }
-        // Initial status update with delayed backend check
+        // 只更新客户端网络状态，不影响后端可达性
         updateNetworkStatus(navigator.onLine)
         // Check initial queue after a short delay
         setTimeout(checkInitialQueue, 1000)
-    }, [updateNetworkStatus, checkGraphQLBackendConnectivity])
+    }, [])
 
     return (
         <NetworkStatusContext.Provider value={contextValue}>
