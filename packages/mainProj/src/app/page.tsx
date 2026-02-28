@@ -31,7 +31,7 @@ export default function Home() {
                             <Link href="/deptask">每日采集 →</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/offline">离线018管理</Link>
+                            <Link href="/offline">离线管理</Link>
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/HAAAAAAAAAQAAAAAAAAAAFJlcG9ydA/SLIDING_JJ/1">例子报告-滑行车类</Link>
@@ -52,7 +52,7 @@ export default function Home() {
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=HAAAAAAAAAEAAAAAAAAAAFJlcG9ydA&redId=2#MangInstrument">
-                                磁粉检测报告2-2第2分项目流转带开头的 /的
+                                磁粉检测报告2-2第2分项目
                             </Link>
                         </div>
                         <div className="mt-10">

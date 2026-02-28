@@ -4,7 +4,8 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { useQuery, gql } from "@urql/next"
 import { useStorage } from "@/report/StorageContext"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { DirectLink } from "@/routing/Link"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { toast } from "sonner"
 import { AlertTriangle } from "lucide-react"
@@ -188,6 +189,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
     const [hasUppyUnsavedStates, setHasUppyUnsavedStates] = useState(false)
     const searchParams = useSearchParams()
+    const router = useRouter()
     const isPrintMode = searchParams?.get("print") === "1"
 
     useEffect(() => {
@@ -385,7 +387,12 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     if (!report) {
         return (
             <div className="content-center text-center h-screen w-screen">
-                <Link href="/">没有找到该份报告，返回首页</Link>
+                <span
+                    className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                    onClick={() => window.location.href = '/report/'}
+                >
+                    没有找到该份报告，返回首页
+                </span>
             </div>
         )
     }
@@ -426,6 +433,7 @@ function CommonReportDataSub({
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
     const [hasUppyUnsavedStates, setHasUppyUnsavedStates] = useState(false)
     const searchParams = useSearchParams()
+    const router = useRouter()
     const isPrintMode = searchParams?.get("print") === "1"
 
     useEffect(() => setMounted(true), [])
@@ -619,14 +627,24 @@ function CommonReportDataSub({
     if (!report) {
         return (
             <div className="content-center text-center h-screen w-screen">
-                <Link href="/">没有找到该份报告，返回首页</Link>
+                <span
+                    className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                    onClick={() => window.location.href = '/report/'}
+                >
+                    没有找到该份报告，返回首页
+                </span>
             </div>
         )
     }
     if (!reportSub) {
         return (
             <div className="content-center text-center h-screen w-screen">
-                <Link href="/">没有该独立流转子报告，返回首页</Link>
+                <span
+                    className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                    onClick={() => window.location.href = '/report/'}
+                >
+                    没有该独立流转子报告，返回首页
+                </span>
             </div>
         )
     }
