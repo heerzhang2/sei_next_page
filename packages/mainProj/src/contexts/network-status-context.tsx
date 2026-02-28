@@ -103,10 +103,14 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
     // 检查GraphQL后端连通性
     const checkGraphQLBackendConnectivity = useCallback(async (retries = 1) => {
+        // 如果上次检查失败，增加重试间隔
+        const lastCheckFailed = !networkStatus.isGraphQLBackendReachable
+        const retryDelay = lastCheckFailed ? 60000 : 15000 // 失败后等待60秒，成功后等待15秒
+
         for (let attempt = 0; attempt < retries; attempt++) {
             try {
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 15000)
+                const timeoutId = setTimeout(() => controller.abort(), 5000) // 减少超时时间到5秒
                 const backendUrl = process.env.NEXT_PUBLIC_BACK_END
                 if (!backendUrl) return false
 
@@ -124,17 +128,17 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 }
                 if (attempt < retries) {
                     console.log(`健康检查失败，第${attempt + 1}次重试...`)
-                    await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 15)))
+                    await new Promise((resolve) => setTimeout(resolve, retryDelay))
                 }
             } catch (error) {
                 console.warn(`健康检查尝试${attempt + 1}失败:`, error)
                 if (attempt < retries) {
-                    await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 15)))
+                    await new Promise((resolve) => setTimeout(resolve, retryDelay))
                 }
             }
         }
         return false
-    }, [])
+    }, [networkStatus.isGraphQLBackendReachable])
 
     // 获取连接信息
     const getConnectionInfo = useCallback(() => {
@@ -253,7 +257,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                         isOnline: prev.isClientOnline && isNextJSReachable,
                     }))
                 }
-            }, 40000)
+            }, 120000) // 将检查间隔从40秒增加到120秒（2分钟）
 
         const handleConnectionChange = () => {
             const connectionType = getConnectionInfo()
