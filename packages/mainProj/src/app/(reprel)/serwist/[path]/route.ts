@@ -46,6 +46,10 @@ try {
 export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } = createSerwistRoute({
   // 注意：关键页面的预缓存在 Service Worker 的 install 事件中手动处理
   // 使用带 basePath 的完整 URL，避免 basePath 导致的缓存 key 不匹配问题
+  //这个部分也已经被注释掉了src/app/sw.tsx中处理预缓存,不再在这里处理预缓存了。
+    // additionalPrecacheEntries: [
+    //   { url: `${basePath}/login`, revision },
+    // ],
 
   swSrc: swSrcPath.includes(".tsx") ? "src/app/sw.tsx" : "src/app/sw.ts", // 指向你编写的服务工作线程源文件（兼容 .ts 和 .tsx）
   // nextConfig, // 在 Next.js < 15 时使用

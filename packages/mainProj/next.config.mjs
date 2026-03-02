@@ -83,22 +83,4 @@ const nextConfig = {
     turbopack: {},
 };
 
-export default withSerwist(nextConfig, {
-    swSrc: "src/app/sw.tsx",
-    reloadOnOnline: false,
-    cacheOnNavigation: false,
-    register: false,
-    maximumFileSizeToCacheInBytes: 9000000,
-
-    // 注意：关键页面的预缓存在 Service Worker 的 install 事件中手动处理
-    // 使用带 basePath 的完整 URL，避免 basePath 导致的缓存 key 不匹配问题
-
-    globDirectory: "public",
-    globPatterns: [
-        "**/*.{js,css,html,json,ico,svg,png,jpg,jpeg,webp,avif}",
-        "!**/*.woff2",
-        "!**/*.woff",
-        "!**/*.ttf",
-        "!**/*.eot"
-    ],
-});
+export default withSerwist(nextConfig);
