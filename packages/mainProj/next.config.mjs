@@ -83,4 +83,30 @@ const nextConfig = {
     turbopack: {},
 };
 
-export default withSerwist(nextConfig);
+export default withSerwist(nextConfig, {
+    swSrc: "src/app/sw.tsx",
+    swDest: "public/sw.js",
+    reloadOnOnline: false,
+    cacheOnNavigation: false,
+    register: false,
+    maximumFileSizeToCacheInBytes: 9000000,
+
+    // 预缓存关键页面 - Service Worker 安装时就会缓存这些页面
+    // 注意：这些是相对路径，Serwist 不会自动添加 basePath
+    // 实际的预缓存在 Service Worker 的 install 事件中处理
+    additionalPrecacheEntries: [
+        { url: "/", revision: "1" },
+        { url: "/login", revision: "1" },
+        { url: "/~offline", revision: "1" },
+        { url: "/offline", revision: "1" },
+    ],
+
+    globDirectory: "public",
+    globPatterns: [
+        "**/*.{js,css,html,json,ico,svg,png,jpg,jpeg,webp,avif}",
+        "!**/*.woff2",
+        "!**/*.woff",
+        "!**/*.ttf",
+        "!**/*.eot"
+    ],
+});

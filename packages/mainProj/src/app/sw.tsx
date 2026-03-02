@@ -154,6 +154,7 @@ const OFFLINE_FALLBACK_HTML = `<!DOCTYPE html>
       </ul>
     </div>
     <a href="/" class="btn" onclick="window.location.reload()">🔄 重试连接</a>
+    <a href="${getBasePath()}" class="btn btn-secondary">🏠 返回首页</a>
     <a href="${getBasePath()}/pwa" class="btn btn-secondary">📊 PWA管理</a>
     <div class="status">
       <div class="status-dot"></div>
@@ -621,7 +622,7 @@ const customCache: RuntimeCaching[] = [
     },
     handler: new NetworkFirst({
       cacheName: "pwa-pages",
-      networkTimeoutSeconds: 1,
+      networkTimeoutSeconds: 2,
       plugins: [
         smartRequestHandler, // 智能请求处理
         enhancedErrorHandlingPlugin,
@@ -879,13 +880,50 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       await self.skipWaiting();
-      // 预缓存离线页面
+
+      const basePath = getBasePath();
       const cache = await caches.open('serwist-precache-v1');
-      const offlineUrl = `${getBasePath()}/~offline`;
-      await cache.put(offlineUrl, new Response(OFFLINE_FALLBACK_HTML, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      }));
-      console.log(`[SW] 离线页面已预缓存: ${offlineUrl}`);
+
+      // 预缓存关键页面 - 使用带 basePath 的完整 URL
+      const pagesToPrecache = [
+        `${basePath}/`,
+        `${basePath}/login`,
+        `${basePath}/~offline`,
+        `${basePath}/offline`,
+      ];
+
+      console.log(`[SW] 开始预缓存 ${pagesToPrecache.length} 个关键页面...`);
+
+      for (const pageUrl of pagesToPrecache) {
+        try {
+          console.log(`[SW] 预缓存页面: ${pageUrl}`);
+          const response = await fetch(pageUrl, {
+            mode: 'cors',
+            cache: 'no-store',
+          });
+
+          if (response.ok) {
+            await cache.put(pageUrl, response.clone());
+            console.log(`[SW] ✓ 预缓存成功: ${pageUrl}`);
+          } else {
+            console.log(`[SW] ✗ 预缓存失败 (HTTP ${response.status}): ${pageUrl}`);
+          }
+        } catch (error) {
+          console.error(`[SW] ✗ 预缓存失败: ${pageUrl}`, error);
+        }
+      }
+
+      // 预缓存离线页面 HTML（如果没有成功从服务器获取）
+      const offlineUrl = `${basePath}/~offline`;
+      const existingOffline = await cache.match(offlineUrl);
+      if (!existingOffline) {
+        console.log(`[SW] 预缓存默认离线页面: ${offlineUrl}`);
+        await cache.put(offlineUrl, new Response(OFFLINE_FALLBACK_HTML, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        }));
+      }
+
+      console.log(`[SW] 预缓存完成`);
     })(),
   );
 });

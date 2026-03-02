@@ -2118,45 +2118,45 @@
   resolved "https://registry.npmmirror.com/@rushstack/eslint-patch/-/eslint-patch-1.15.0.tgz"
   integrity sha512-ojSshQPKwVvSMR8yT2L/QtUkV5SXi/IfDiJ4/8d6UbTPjiHVmxZzUAzGD8Tzks1b9+qQkZa0isUOvYObedITaw==
 
-"@serwist/build@9.5.5":
-  version "9.5.5"
-  resolved "https://registry.npmmirror.com/@serwist/build/-/build-9.5.5.tgz"
-  integrity sha512-XrKpO2+vydp0pQr5iSwkg8xI4BiGjO+o0BakLRHeuaEmJj8mNqkziUKdoBTd4qtcblcvfg5jsW6jvhi72/zXkQ==
+"@serwist/build@9.5.6":
+  version "9.5.6"
+  resolved "https://registry.npmmirror.com/@serwist/build/-/build-9.5.6.tgz#843f8e45ae274220818322380585b7e1b85d0937"
+  integrity sha512-/YUi2BKrvnIkYg8k/PW5N/lAR4N0h/F8eBaqCaDNOy2fdOiNCkvRaWq/ZaoYN5tocvNsMc7OSm7+m1aJqR7trQ==
   dependencies:
-    "@serwist/utils" "9.5.5"
+    "@serwist/utils" "9.5.6"
     common-tags "1.8.2"
     glob "10.5.0"
     pretty-bytes "6.1.1"
     source-map "0.8.0-beta.0"
     zod "4.3.6"
 
-"@serwist/turbopack@^9.5.5":
-  version "9.5.5"
-  resolved "https://registry.npmmirror.com/@serwist/turbopack/-/turbopack-9.5.5.tgz"
-  integrity sha512-3SIbB5/YRYWMFv7tFmkX5Q35fOeZkLSm6m99UumRTvurElqKvbQ2il5TXViOdJ/5FWr9UzJSoaDKXFao/hRZOA==
+"@serwist/turbopack@^9.5.6":
+  version "9.5.6"
+  resolved "https://registry.npmmirror.com/@serwist/turbopack/-/turbopack-9.5.6.tgz#fe9ece1999a3257f0b55d08b4b38300bb555cb57"
+  integrity sha512-wgy0bp/Aejq3HGw2X3AZ8fYbkFKmuRA1rOpB2jNjk2hpsUH1CraN3r1rkSS5eU8qL82YlabXE/tMfmKStHpE7Q==
   dependencies:
-    "@serwist/build" "9.5.5"
-    "@serwist/utils" "9.5.5"
-    "@serwist/window" "9.5.5"
+    "@serwist/build" "9.5.6"
+    "@serwist/utils" "9.5.6"
+    "@serwist/window" "9.5.6"
     "@swc/core" "1.15.11"
     browserslist "4.28.1"
     kolorist "1.8.0"
     semver "7.7.3"
-    serwist "9.5.5"
+    serwist "9.5.6"
     zod "4.3.6"
 
-"@serwist/utils@9.5.5":
-  version "9.5.5"
-  resolved "https://registry.npmmirror.com/@serwist/utils/-/utils-9.5.5.tgz"
-  integrity sha512-PJ96S9PXkWiiPK1+Czex5Lq5vhvp7yXBwtDOqPF2F1zVpoLga+do4kJZ+LrEWOr3IOiQ1WAfLvSMiK7aj/jrmg==
+"@serwist/utils@9.5.6":
+  version "9.5.6"
+  resolved "https://registry.npmmirror.com/@serwist/utils/-/utils-9.5.6.tgz#0f44de1d3d8acecba432b480739cced48ac5c574"
+  integrity sha512-WV5hAZd/Oo8hyHv7Pd39EDZu3bIhKe0lW39lyMlKVHm5gIGEnPdrH3DojlXAFHiV18nz/bLeqkVo6rK82kBGHw==
 
-"@serwist/window@9.5.5":
-  version "9.5.5"
-  resolved "https://registry.npmmirror.com/@serwist/window/-/window-9.5.5.tgz"
-  integrity sha512-aX9gyS0QCJcUEAUgfWIbjEHQIfA4ljvq961XMHwdmWu5xeEBBYSAokc1+HqAukh9lRnzWPLa5T8HEhwWEOSFcg==
+"@serwist/window@9.5.6":
+  version "9.5.6"
+  resolved "https://registry.npmmirror.com/@serwist/window/-/window-9.5.6.tgz#ec983b5b6853cc8f24619afbc0131ac4ff52a3a0"
+  integrity sha512-/RztZ97HxiEFlDSCpiLd/6nGz3oDQkKMSDF8epJcta7xdUTAZVwMksEodl3x9Y7jyGItF6T/jY7OBCPrN5IVqQ==
   dependencies:
     "@types/trusted-types" "2.0.7"
-    serwist "9.5.5"
+    serwist "9.5.6"
 
 "@smithy/abort-controller@^4.2.8":
   version "4.2.8"
@@ -8439,12 +8439,12 @@ semver@~7.5.0, semver@~7.5.4:
   dependencies:
     lru-cache "^6.0.0"
 
-serwist@9.5.5, serwist@^9.5.5:
-  version "9.5.5"
-  resolved "https://registry.npmmirror.com/serwist/-/serwist-9.5.5.tgz"
-  integrity sha512-qfyQpAR56KSYujr+47PqyDdxhK3GM3RVJxNjQm20KjB6vl5TbtEhtAxjl+aAQvzFQFcRlR12I2hCxuXyDTLHmQ==
+serwist@9.5.6, serwist@^9.5.6:
+  version "9.5.6"
+  resolved "https://registry.npmmirror.com/serwist/-/serwist-9.5.6.tgz#be915c59e6c8921e2ca5df0ed2d75cba76c07c7b"
+  integrity sha512-WoseghF1DUevNGnEqsmyXzVyk1KT18S3CJoFZmzav4vEqGWit+I7ErFav+ocrYq2IUoDhJpbTg15a68UdZy0Vw==
   dependencies:
-    "@serwist/utils" "9.5.5"
+    "@serwist/utils" "9.5.6"
     idb "8.0.3"
 
 set-function-length@^1.2.2:
