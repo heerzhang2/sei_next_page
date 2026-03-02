@@ -280,7 +280,7 @@ const smartRequestHandler = {
       if (cachedResponse) {
         // 即使有缓存,也尝试网络以获取最新版本
         const networkPromise = fetch(request.clone())
-          .then(async response => {
+          .then(response => {
             if (response.ok) {
               // 更新缓存
               const cache = await caches.open('serwist-precache-v1');
