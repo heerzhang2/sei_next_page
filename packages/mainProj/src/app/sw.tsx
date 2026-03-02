@@ -356,6 +356,17 @@ const smartRequestHandler = {
 
       // 最后兜底:返回离线页面
       console.log(`[SW][智能路由] 返回离线页面`);
+
+      // 优先使用缓存的离线页面
+      const offlinePageUrl = `${getBasePath()}/~offline`;
+      const cachedOffline = await caches.match(offlinePageUrl);
+      if (cachedOffline) {
+        console.log(`[SW][智能路由] 使用缓存的离线页面: ${offlinePageUrl}`);
+        return cachedOffline.clone();
+      }
+
+      // 如果缓存中没有，使用预构建的离线页面
+      console.log(`[SW][智能路由] 使用预构建的离线页面`);
       return new Response(OFFLINE_FALLBACK_HTML, {
         status: 200,
         headers: {
@@ -873,6 +884,17 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
           // 最后兜底:返回离线页面
           console.log(`[SW][自定义Fetch] 返回离线页面`);
+
+          // 优先使用缓存的离线页面
+          const offlinePageUrl = `${getBasePath()}/~offline`;
+          const cachedOffline = await caches.match(offlinePageUrl);
+          if (cachedOffline) {
+            console.log(`[SW][自定义Fetch] 使用缓存的离线页面: ${offlinePageUrl}`);
+            return cachedOffline.clone();
+          }
+
+          // 如果缓存中没有，使用预构建的离线页面
+          console.log(`[SW][自定义Fetch] 使用预构建的离线页面`);
           return new Response(OFFLINE_FALLBACK_HTML, {
             status: 200,
             headers: {
