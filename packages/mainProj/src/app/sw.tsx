@@ -144,13 +144,14 @@ const OFFLINE_FALLBACK_HTML = `<!DOCTYPE html>
       <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
         <li>查看已缓存的报告页面</li>
         <li>编辑和保存报告内容(本地存储)</li>
-        <li>浏览应用界面</li>
+        <li>浏览报告应用界面</li>
+        <li>上传新文件</li>
+        <li>提交表单数据</li>
       </ul>
       <strong>⚠️ 不可用功能:</strong>
       <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-        <li>上传新文件</li>
-        <li>提交表单数据</li>
         <li>获取最新数据</li>
+        <li>浏览非报告应用界面</li>
       </ul>
     </div>
     <a href="/" class="btn" onclick="window.location.reload()">🔄 重试连接</a>
@@ -759,6 +760,28 @@ self.addEventListener('fetch', (event: FetchEvent) => {
             return cachedResponse.clone();
           }
 
+          // 1.5. 特殊处理首页：如果访问 /report，尝试查找 /report/ 的缓存（反之亦然）
+          const basePath = getBasePath();
+          if (url.pathname === basePath || url.pathname === `${basePath}/`) {
+            const alternativeUrl = url.pathname === basePath ? `${basePath}/` : basePath;
+            console.log(`[SW][自定义Fetch] 首页尝试替代 URL: ${alternativeUrl}`);
+            const alternativeRequest = new Request(url.origin + alternativeUrl, {
+              method: event.request.method,
+              headers: event.request.headers,
+              mode: event.request.mode,
+              credentials: event.request.credentials,
+              cache: event.request.cache,
+              redirect: event.request.redirect,
+              referrer: event.request.referrer,
+              referrerPolicy: event.request.referrerPolicy,
+            });
+            cachedResponse = await caches.match(alternativeRequest);
+            if (cachedResponse) {
+              console.log(`[SW][自定义Fetch] 使用缓存(首页替代): ${url.pathname}`);
+              return cachedResponse.clone();
+            }
+          }
+
           // 2. 对于 report 路由，尝试使用规范化的 key 匹配
           if (url.pathname.includes('/rep/')) {
             try {
@@ -885,14 +908,18 @@ self.addEventListener("install", (event) => {
       const cache = await caches.open('serwist-precache-v1');
 
       // 预缓存关键页面 - 使用带 basePath 的完整 URL
+      // 注意：首页需要缓存 /report 和 /report/ 两个版本，因为尾部斜杠的差异
       const pagesToPrecache = [
-        `${basePath}/`,
+        `${basePath}`,      // /report
+        `${basePath}/`,     // /report/
         `${basePath}/login`,
-        `${basePath}/~offline`,
+        `${basePath}/~offline`,     //似乎都没法作为离线页面
         `${basePath}/offline`,
       ];
 
       console.log(`[SW] 开始预缓存 ${pagesToPrecache.length} 个关键页面...`);
+
+      let homepageResponse: Response | null = null;
 
       for (const pageUrl of pagesToPrecache) {
         try {
@@ -903,6 +930,11 @@ self.addEventListener("install", (event) => {
           });
 
           if (response.ok) {
+            // 对于首页，保存响应供第二个版本使用
+            if ((pageUrl === `${basePath}` || pageUrl === `${basePath}/`) && homepageResponse === null) {
+              homepageResponse = response.clone();
+            }
+
             await cache.put(pageUrl, response.clone());
             console.log(`[SW] ✓ 预缓存成功: ${pageUrl}`);
           } else {
@@ -910,6 +942,19 @@ self.addEventListener("install", (event) => {
           }
         } catch (error) {
           console.error(`[SW] ✗ 预缓存失败: ${pageUrl}`, error);
+        }
+      }
+
+      // 确保首页的两个版本都缓存了相同的响应
+      if (homepageResponse) {
+        const homepageUrls = [`${basePath}`, `${basePath}/`];
+        for (const url of homepageUrls) {
+          try {
+            await cache.put(url, homepageResponse.clone());
+            console.log(`[SW] ✓ 确保首页响应已缓存: ${url}`);
+          } catch (e) {
+            console.error(`[SW] ✗ 缓存首页响应失败: ${url}`, e);
+          }
         }
       }
 
