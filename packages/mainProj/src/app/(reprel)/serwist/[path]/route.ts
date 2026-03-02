@@ -44,12 +44,9 @@ try {
 }
 
 export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } = createSerwistRoute({
-  additionalPrecacheEntries: [
-    { url: `${basePath}/`, revision },
-    { url: `${basePath}/login`, revision },
-    { url: `${basePath}/~offline`, revision },
-    { url: `${basePath}/offline`, revision },
-  ],
+  // 注意：关键页面的预缓存在 Service Worker 的 install 事件中手动处理
+  // 使用带 basePath 的完整 URL，避免 basePath 导致的缓存 key 不匹配问题
+
   swSrc: swSrcPath.includes(".tsx") ? "src/app/sw.tsx" : "src/app/sw.ts", // 指向你编写的服务工作线程源文件（兼容 .ts 和 .tsx）
   // nextConfig, // 在 Next.js < 15 时使用
   // 如果设置为 `false`，Serwist 将尝试使用 `esbuild-wasm`。

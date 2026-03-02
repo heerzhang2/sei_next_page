@@ -85,21 +85,13 @@ const nextConfig = {
 
 export default withSerwist(nextConfig, {
     swSrc: "src/app/sw.tsx",
-    swDest: "public/sw.js",
     reloadOnOnline: false,
     cacheOnNavigation: false,
     register: false,
     maximumFileSizeToCacheInBytes: 9000000,
 
-    // 预缓存关键页面 - Service Worker 安装时就会缓存这些页面
-    // 注意：这些是相对路径，Serwist 不会自动添加 basePath
-    // 实际的预缓存在 Service Worker 的 install 事件中处理
-    additionalPrecacheEntries: [
-        { url: "/", revision: "1" },
-        { url: "/login", revision: "1" },
-        { url: "/~offline", revision: "1" },
-        { url: "/offline", revision: "1" },
-    ],
+    // 注意：关键页面的预缓存在 Service Worker 的 install 事件中手动处理
+    // 使用带 basePath 的完整 URL，避免 basePath 导致的缓存 key 不匹配问题
 
     globDirectory: "public",
     globPatterns: [
