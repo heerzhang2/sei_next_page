@@ -56,7 +56,7 @@ export function FileOperationsManager() {
 
                                             {group.originalPageUrl ? (
                                                 <Button asChild size="sm" className="text-white bg-blue-300 hover:bg-blue-500">
-                                                    <Link href={stripOrigin(group.originalPageUrl)}>
+                                                    <Link href={group.originalPageUrl}>
                                                         <ExternalLink className="w-4 h-4 mr-2" />
                                                         跳转编辑
                                                     </Link>

@@ -161,7 +161,8 @@ const addFilesWithHandlesToUppy = async (
 // 获取当前页面URL用于恢复
 const getCurrentPageUrl = () => {
     if (typeof window !== "undefined") {
-        return window.location.href
+        // 返回已经去除了协议和域名的路径
+        return window.location.pathname + window.location.search + window.location.hash
     }
     return ""
 }
@@ -633,9 +634,8 @@ export function useOfflineUppyUpload(params: {
             const nextSnapshot = sortedSnapshots[nextIndex]
 
             if (nextSnapshot.meta?.originalPageUrl) {
-                // 使用 stripOrigin 保持一致性
-                const cleanUrl = stripOrigin(nextSnapshot.meta.originalPageUrl)
-                router.push(cleanUrl)
+                // originalPageUrl 已经是去除了协议和域名的路径
+                router.push(nextSnapshot.meta.originalPageUrl)
             } else {
                 toast.warning("下一条操作无有效跳转链接")
             }
