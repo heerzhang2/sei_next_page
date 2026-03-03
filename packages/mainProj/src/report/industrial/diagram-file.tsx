@@ -399,7 +399,7 @@ export const LineDiagramFile = ({ rep, children, show = false, label = "单线�
                                     <div className="space-y-2">
                                         <h4 className="font-medium text-amber-800">检测到未完成的离线文件操作</h4>
                                         <p className="text-xs text-amber-600 mt-2">
-                                            提示：这个情况不要空对象无法直接点保存自动删除的。
+                                            提示：这个情形之下不要着急清理空对象，等待恢复在线之后再考虑点保存删除空对象。
                                         </p>
                                     </div>
                                 </div>

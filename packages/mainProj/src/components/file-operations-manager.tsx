@@ -7,10 +7,22 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ExternalLink, FolderOpen, FileText, Hash } from "lucide-react"
 import Link from "next/link"
 import { useGroupedUppyStates } from "@/hooks/useGroupedUppyStates"
-import { stripOrigin } from "@/lib/utils";
 
 export function FileOperationsManager() {
     const { groups, loading } = useGroupedUppyStates()
+    
+    // 获取 basePath，用于处理链接
+    const basePath = "/report";
+    
+    // 处理链接，移除重复的 basePath 前缀
+    const normalizeUrl = (url: string) => {
+        if (!url) return url;
+        // 如果 URL 已经以 basePath 开头，则移除它
+        if (url.startsWith(basePath)) {
+            return url.slice(basePath.length);
+        }
+        return url;
+    };
 
     return (
         <div className="space-y-4">
@@ -56,7 +68,7 @@ export function FileOperationsManager() {
 
                                             {group.originalPageUrl ? (
                                                 <Button asChild size="sm" className="text-white bg-blue-300 hover:bg-blue-500">
-                                                    <Link href={group.originalPageUrl}>
+                                                    <Link href={normalizeUrl(group.originalPageUrl)}>
                                                         <ExternalLink className="w-4 h-4 mr-2" />
                                                         跳转编辑
                                                     </Link>

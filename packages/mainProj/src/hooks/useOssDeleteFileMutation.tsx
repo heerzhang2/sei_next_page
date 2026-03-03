@@ -23,11 +23,22 @@ export default function useOssDeleteFileMutation() {
             console.log("useOssDeleteFileMutation=应答=", result)
 
             if (result.error) {
+                // 检查是否为 502 错误或其他服务器错误
+                const errorStr = result.error.toString()
+                const isServerError = errorStr.includes("502") || 
+                                     errorStr.includes("503") || 
+                                     errorStr.includes("504") ||
+                                     errorStr.includes("Bad Gateway") ||
+                                     errorStr.includes("Service Unavailable") ||
+                                     errorStr.includes("Gateway Timeout")
+                
+                const errorMessage = isServerError ? "OSS服务不可用" : errorStr
+                
                 toast.error("删除oss文件失败", {
-                    description: result.error.toString(),
+                    description: errorMessage,
                 })
                 console.log("Oh no!", result.error)
-                callback && callback(result.error.toString(), file)
+                callback && callback(errorMessage, file)
             } else {
                 const {ossDeleteFile: ack } = result?.data
                 callback && callback(ack, file)

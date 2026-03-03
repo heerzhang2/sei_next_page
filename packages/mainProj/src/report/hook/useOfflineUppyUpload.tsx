@@ -610,6 +610,19 @@ export function useOfflineUppyUpload(params: {
         ],
     )
 
+    // 获取 basePath，用于处理链接
+    const basePath = "/report";
+    
+    // 处理链接，移除重复的 basePath 前缀
+    const normalizeUrl = (url: string) => {
+        if (!url) return url;
+        // 如果 URL 已经以 basePath 开头，则移除它
+        if (url.startsWith(basePath)) {
+            return url.slice(basePath.length);
+        }
+        return url;
+    };
+    
     //跳转到下一条待处理离线操作
     const navigateToNextPendingOperation = useCallback(async () => {
         try {
@@ -634,8 +647,8 @@ export function useOfflineUppyUpload(params: {
             const nextSnapshot = sortedSnapshots[nextIndex]
 
             if (nextSnapshot.meta?.originalPageUrl) {
-                // originalPageUrl 已经是去除了协议和域名的路径
-                router.push(nextSnapshot.meta.originalPageUrl)
+                // 使用 normalizeUrl 处理 URL，移除重复的 basePath 前缀
+                router.push(normalizeUrl(nextSnapshot.meta.originalPageUrl))
             } else {
                 toast.warning("下一条操作无有效跳转链接")
             }
