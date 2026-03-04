@@ -345,19 +345,8 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         print,
     ])
 
-    useEffect(() => {
-        const checkInitialQueue = async () => {
-            const isGraphQLReachable = navigator.onLine ? await checkGraphQLBackendConnectivity() : false
-            setNetworkStatus((prev) => ({
-                ...prev,
-                isGraphQLBackendReachable: isGraphQLReachable,
-            }))
-        }
-        // 只更新客户端网络状态，不影响后端可达性
-        updateNetworkStatus(navigator.onLine)
-        // Check initial queue after a short delay
-        setTimeout(checkInitialQueue, 1000)
-    }, [])
+    // 移除了第二个 useEffect，避免状态被多次更新
+    // 第一个 useEffect 已经包含了初始状态更新和定期检查
 
     return (
         <NetworkStatusContext.Provider value={contextValue}>
