@@ -741,6 +741,85 @@ const serwist = new Serwist({
 });
 
 // ============================================================
+// 服务器状态跟踪
+// ============================================================
+let serverStatus = {
+  isOnline: true,
+  lastCheckTime: 0,
+  consecutiveFailures: 0,
+  lastNotificationTime: 0
+};
+
+// 发送服务器状态更新消息到主线程
+function notifyServerStatus(isOnline: boolean) {
+  const now = Date.now();
+  // 避免频繁发送消息，至少间隔 5 秒
+  if (now - serverStatus.lastNotificationTime < 5000) {
+    console.log(`[SW][服务器状态] 距离上次通知不足5秒，跳过发送`);
+    return;
+  }
+
+  serverStatus.lastNotificationTime = now;
+  serverStatus.isOnline = isOnline;
+
+  console.log(`[SW][服务器状态] 准备发送服务器状态更新: ${isOnline}`);
+  // 发送消息到所有客户端
+  self.clients.matchAll({ type: 'window' }).then(clients => {
+    console.log(`[SW][服务器状态] 找到 ${clients.length} 个客户端窗口`);
+    clients.forEach(client => {
+      console.log(`[SW][服务器状态] 向客户端发送消息: ${isOnline}`);
+      client.postMessage({
+        type: 'SERVER_STATUS_UPDATE',
+        isOnline: isOnline,
+        timestamp: now
+      });
+    });
+  });
+}
+
+// 检查服务器状态
+function checkServerStatus(response: Response, request: Request) {
+  const now = Date.now();
+  const url = new URL(request.url);
+  
+  // 检查是否为 Next.js 页面请求（包括文档请求和 RSC 请求）
+  const isDocumentRequest = request.destination === 'document';
+  const isRSCRequest = request.headers.get('RSC') === '1';
+  const isNextJSPageRequest = isDocumentRequest || isRSCRequest;
+  
+  console.log(`[SW][服务器状态] 检查请求: ${url.pathname}, isDocumentRequest: ${isDocumentRequest}, isRSCRequest: ${isRSCRequest}, isNextJSPageRequest: ${isNextJSPageRequest}`);
+  
+  // 只处理 Next.js 页面请求，不处理 API 请求和健康检查请求
+  if (!isNextJSPageRequest) {
+    return;
+  }
+
+  // 检查是否为 502 错误
+  if (response.status === 502) {
+    serverStatus.consecutiveFailures++;
+    console.log(`[SW][服务器状态] 检测到 502 错误，连续失败次数: ${serverStatus.consecutiveFailures}`);
+    
+    // 连续失败 1 次以上，认为服务器不可用
+    if (serverStatus.consecutiveFailures >= 1) {
+      console.log(`[SW][服务器状态] 达到失败阈值，通知主线程服务器不可用`);
+      notifyServerStatus(false);
+    }
+  } else if (response.status >= 200 && response.status < 300) {
+    // 成功响应，重置失败计数器
+    if (serverStatus.consecutiveFailures > 0) {
+      serverStatus.consecutiveFailures = 0;
+      console.log(`[SW][服务器状态] 服务器响应正常，重置失败计数器`);
+    }
+    
+    // 如果之前服务器不可用，现在恢复正常，发送通知
+    if (!serverStatus.isOnline) {
+      console.log(`[SW][服务器状态] 服务器从不可用恢复为可用，通知主线程`);
+      notifyServerStatus(true);
+    }
+  }
+}
+
+// ============================================================
 // 自定义 fetch 处理器 - 最高优先级
 // ============================================================
 self.addEventListener('fetch', (event: FetchEvent) => {
@@ -759,6 +838,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     // 尝试快速检查网络状态
     const networkPromise = fetch(event.request.clone())
       .then(response => {
+        // 检查服务器状态
+        checkServerStatus(response, event.request);
+        
         // 如果是 5xx 错误,也视为失败
         if (response.status >= 500) {
           throw new Error(`Server error: ${response.status}`);

@@ -232,6 +232,28 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     }
 
     useEffect(() => {
+        // Service Worker 消息监听
+        const handleServiceWorkerMessage = (event: MessageEvent) => {
+            console.log(`[NetworkStatus] 收到 Service Worker 消息:`, event.data);
+            if (event.data?.type === 'SERVER_STATUS_UPDATE') {
+                const { isOnline, timestamp } = event.data;
+                console.log(`[NetworkStatus] 收到服务器状态更新: ${isOnline}, 时间戳: ${timestamp}`);
+                console.log(`[NetworkStatus] 更新前 isNextJSServerReachable: ${networkStatus.isNextJSServerReachable}`);
+                setNetworkStatus(prev => {
+                    console.log(`[NetworkStatus] 更新后 isNextJSServerReachable: ${isOnline}`);
+                    return {
+                        ...prev,
+                        isNextJSServerReachable: isOnline
+                    };
+                });
+            }
+        };
+
+        // 注册 Service Worker 消息监听
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+        }
+
         // Service Worker 更新监听
         const handleServiceWorkerUpdate = () => {
             // 检查是否有离线报告数据
@@ -264,6 +286,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         return () => {
             if ("serviceWorker" in navigator) {
                 navigator.serviceWorker.removeEventListener("controllerchange", handleServiceWorkerUpdate)
+                navigator.serviceWorker.removeEventListener("message", handleServiceWorkerMessage)
             }
         }
     }, [])
