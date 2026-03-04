@@ -6,7 +6,7 @@ import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { withBasePath } from "@/lib/tool"
 
 export function OfflineStatusIndicator() {
-    const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const { isClientOnline,isNextJSServerReachable,isGraphQLBackendReachable } = useNetworkStatusContext()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
     const [isInitialCheck, setIsInitialCheck] = useState(true)
 
@@ -58,14 +58,14 @@ export function OfflineStatusIndicator() {
 
     useEffect(() => {
         setShowOfflineBar(
-            !isClientOnline || !isOnline || !isGraphQLBackendReachable || showEmptyArrayReminder,
+            !isClientOnline || !isNextJSServerReachable || !isGraphQLBackendReachable || showEmptyArrayReminder,
         )
         
         // 如果所有状态都已初始化（不再是 undefined），则标记初始检查完成
-        if (isClientOnline !== undefined && isOnline !== undefined && isGraphQLBackendReachable !== undefined) {
+        if (isClientOnline !== undefined && isNextJSServerReachable !== undefined && isGraphQLBackendReachable !== undefined) {
             setIsInitialCheck(false)
         }
-    }, [isClientOnline, isOnline, isGraphQLBackendReachable, showEmptyArrayReminder])
+    }, [isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable, showEmptyArrayReminder])
 
     if (!showOfflineBar) return null
 
@@ -86,7 +86,7 @@ export function OfflineStatusIndicator() {
                 color: "bg-red-100 border-red-300 text-red-900",
             }
         }
-        if (!isGraphQLBackendReachable && !isOnline) {
+        if (!isGraphQLBackendReachable && !isNextJSServerReachable) {
             return {
                 icon: AlertTriangle,
                 message: "服务器全部离线",

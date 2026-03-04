@@ -8,13 +8,12 @@ import { withBasePath } from '@/lib/tool'
 
 export interface NetworkStatus {
     isClientOnline: boolean         // 表示客户端网络状态（依赖浏览器 navigator.onLine）
-    isOnline: boolean               //表示整体在线状态（只依赖nextjs前端服务器）
-    isGraphQLBackendReachable: boolean
+    isNextJSServerReachable: boolean  //表示Next.js服务器在线状态
+    isGraphQLBackendReachable: boolean  //表示Java后端在线状态
     lastError: Error | null
     lastOnlineTime: Date | null
     lastOfflineTime: Date | null
     connectionType: string | null
-    isNextJSServerReachable: boolean
     showOfflineQueueDialog?: (queueLength: number) => void
 }
 
@@ -38,7 +37,6 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         lastOfflineTime: null,
         connectionType: null,
         isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-        isOnline: true,
         isNextJSServerReachable: true,
         isGraphQLBackendReachable: true,
     })
@@ -164,25 +162,18 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         return null
     }, [])
 
-    // 更新网络状态
+    // 更新客户端网络状态
     const updateNetworkStatus = useCallback(
         async (isClientOnline: boolean, error: Error | null = null) => {
             const connectionType = getConnectionInfo()
             setNetworkStatus((prev) => {
-                const isNextJSServerReachable = isClientOnline && prev.isNextJSServerReachable
-                // 保持 isGraphQLBackendReachable 不变，不由客户端网络状态决定
-                // 注意：isOnline 只依赖前端服务器，不依赖 Java 后端，避免后端健康检查阻塞前端状态显示
-                const isOnline = isClientOnline && isNextJSServerReachable
-
                 return {
                     ...prev,
-                    isOnline,
                     isClientOnline,
-                    isNextJSServerReachable,
                     // 不更新 isGraphQLBackendReachable，它由 checkGraphQLBackendConnectivity 单独管理
                     lastError: error,
-                    lastOnlineTime: isOnline ? new Date() : prev.lastOnlineTime,
-                    lastOfflineTime: !isOnline ? new Date() : prev.lastOfflineTime,
+                    lastOnlineTime: isClientOnline ? new Date() : prev.lastOnlineTime,
+                    lastOfflineTime: !isClientOnline ? new Date() : prev.lastOfflineTime,
                     connectionType,
                 }
             })
@@ -215,14 +206,11 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         const graphQLResult = isGraphQLBackendReachable.status === "fulfilled" ? isGraphQLBackendReachable.value : false
         
         // 更新网络状态
-        // 注意：isOnline 现在只依赖前端服务器状态，不依赖 Java 后端
-        // 这样前端服务器的可用状态可以立即反映，不会被后端健康检查阻塞
         setNetworkStatus((prev) => ({
             ...prev,
             isClientOnline,
             isNextJSServerReachable: nextJSResult,
             isGraphQLBackendReachable: graphQLResult,
-            isOnline: isClientOnline && nextJSResult, // 移除 isGraphQLBackendReachable 依赖
         }))
 
         // 返回网络状态，供 page.tsx 使用

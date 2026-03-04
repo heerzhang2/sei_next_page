@@ -34,7 +34,7 @@ import { withBasePath } from '@/lib/tool'
 
 export default function OfflinePage() {
     const { data: session } = useSession()
-    const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const { isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable } = useNetworkStatusContext()
     const { checkNetworkStatus } = useNetworkStatusActions()
     const searchParams = useSearchParams()
     const activeTab = searchParams.get("tab") || "pending"
@@ -157,14 +157,14 @@ export default function OfflinePage() {
 
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                {isOnline ? (
+                                                {isNextJSServerReachable ? (
                                                     <CheckCircle className="w-4 h-4 text-green-500" />
                                                 ) : (
                                                     <XCircle className="w-4 h-4 text-red-500" />
                                                 )}
                                                 <span>前端服务器</span>
                                             </div>
-                                            <Badge variant={isOnline ? "default" : "destructive"}>{isOnline ? "可用" : "不可用"}</Badge>
+                                            <Badge variant={isNextJSServerReachable ? "default" : "destructive"}>{isNextJSServerReachable ? "可用" : "不可用"}</Badge>
                                         </div>
 
                                         <div className="flex items-center justify-between">
@@ -214,7 +214,7 @@ export default function OfflinePage() {
                                         <User className="w-5 h-5" />
                                         用户信息
                                     </CardTitle>
-                                    <CardDescription>{isOnline ? "当前会话信息" : "离线缓存的用户信息"}</CardDescription>
+                                    <CardDescription>{isNextJSServerReachable ? "当前会话信息" : "离线缓存的用户信息"}</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {session?.user ? (
@@ -234,7 +234,7 @@ export default function OfflinePage() {
                                         <Alert>
                                             <AlertTriangle className="h-4 w-4" />
                                             <AlertDescription>
-                                                {!isOnline ? "离线状态下无法验证登录信息，请连接网络后重试。" : "请先登录以使用完整功能。"}
+                                                {!isNextJSServerReachable ? "前端服务器离线状态下无法验证登录信息，请连接网络后重试。" : "请先登录以使用完整功能。"}
                                             </AlertDescription>
                                         </Alert>
                                     )}

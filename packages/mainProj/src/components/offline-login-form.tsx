@@ -147,7 +147,7 @@ export function OfflineLoginForm() {
             <CardHeader>
                 <CardTitle className="text-2xl">离线登录</CardTitle>
                 <CardDescription>
-                    {networkStatus.isOnline ? "Next.js服务器正常，建议使用标准登录" : "Next.js服务器离线，使用直连后端登录"}
+                    {networkStatus.isNextJSServerReachable ? "Next.js服务器正常，建议使用标准登录" : "Next.js服务器离线，使用直连后端登录"}
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">

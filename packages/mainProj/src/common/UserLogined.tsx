@@ -26,7 +26,7 @@ const UserLogined = () => {
         if (!isClient) return
 
         // 如果网络离线或服务器不可达，跳过认证检查
-        if (!networkStatus.isOnline || !networkStatus.isNextJSServerReachable) {
+        if (!networkStatus.isNextJSServerReachable) {
             console.log("UserLogined: 离线模式或服务器不可达，跳过认证检查")
             return
         }

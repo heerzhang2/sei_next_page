@@ -74,14 +74,14 @@ export function useAccessToken() {
         return (
             !print &&
             networkStatus.connectionType !== null &&
-            networkStatus.isOnline &&
+            networkStatus.isNextJSServerReachable &&
             networkStatus.isGraphQLBackendReachable &&
             !accessToken
         )
     }, [
         print,
         networkStatus.connectionType,
-        networkStatus.isOnline,
+        networkStatus.isNextJSServerReachable,
         networkStatus.isGraphQLBackendReachable,
         accessToken,
     ])
