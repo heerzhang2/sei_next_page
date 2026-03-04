@@ -36,9 +36,15 @@ export const isNetworkError = (error: any): boolean => {
         "err_network",
         "err_internet_disconnected",
     ]
+    // 检查是否为 502 Bad Gateway 错误
+    const is502Error = errorMessage.includes("502") || 
+                       errorMessage.includes("bad gateway") ||
+                       (error.response && error.response.status === 502)
+
     return (
         networkErrorKeywords.some((keyword) => errorMessage.includes(keyword)) ||
-        (error.name === "TypeError" && errorMessage.includes("fetch"))
+        (error.name === "TypeError" && errorMessage.includes("fetch")) ||
+        is502Error
     )
 }
 

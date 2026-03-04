@@ -620,7 +620,7 @@ function CommonReportDataSub({
         if (hasNetworkError) {
             return report && reportSub ? children : null
         } else {
-            return <div>报告取数据错: {error?.message || errorSub?.message}</div>
+            return <div>子报告取数据错: {error?.message || errorSub?.message}</div>
         }
     }
     if (report && !report.snapshot) return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
