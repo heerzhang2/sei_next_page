@@ -58,7 +58,7 @@ const maskToken = (token: string | null): string => {
 }
 
 const updateBackendStatusExchange = (
-    updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
+    updateGraphQLBackendStatus: (isReachable: boolean) => void,
 ): Exchange => {
     return ({ forward, client }) => {
         return (operations$) => {
@@ -80,14 +80,14 @@ const updateBackendStatusExchange = (
                             errorCount++
                             lastErrorTime = now
                             if (errorCount <= MAX_ERRORS_PER_MINUTE) {
-                                updateGraphQLBackendStatus(false, false)
+                                updateGraphQLBackendStatus(false)
                                 if (typeof window !== "undefined") {
                                     ;(window as any).__graphqlBackendReachable = false
                                 }
                             }
                         } else {
                             if (result.data) {
-                                updateGraphQLBackendStatus(true, true)
+                                updateGraphQLBackendStatus(true)
                                 if (typeof window !== "undefined") {
                                     ;(window as any).__graphqlBackendReachable = true
                                 }
@@ -95,7 +95,7 @@ const updateBackendStatusExchange = (
                             }
                         }
                     } else if (result.data) {
-                        updateGraphQLBackendStatus(true, true)
+                        updateGraphQLBackendStatus(true)
                         if (typeof window !== "undefined") {
                             ;(window as any).__graphqlBackendReachable = true
                         }

@@ -19,7 +19,7 @@ export interface NetworkStatus {
 }
 
 export interface NetworkStatusActions {
-    updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void
+    updateGraphQLBackendStatus: (isReachable: boolean) => void
     checkNetworkStatus: () => Promise<{
         isClientOnline: boolean
         isNextJSServerReachable: boolean
@@ -194,14 +194,10 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         ],
     )
 
-    const updateGraphQLBackendStatus = useCallback((isReachable: boolean, isClientOnline = true) => {
+    const updateGraphQLBackendStatus = useCallback((isReachable: boolean) => {
         setNetworkStatus((prev) => ({
             ...prev,
             isGraphQLBackendReachable: isReachable,
-            isClientOnline: isClientOnline,
-            isOnline: isClientOnline && prev.isNextJSServerReachable, // 不依赖 GraphQL 后端状态
-            lastOnlineTime: isReachable && isClientOnline ? new Date() : prev.lastOnlineTime,
-            lastOfflineTime: !isReachable || !isClientOnline ? new Date() : prev.lastOfflineTime,
         }))
     }, [])
 
