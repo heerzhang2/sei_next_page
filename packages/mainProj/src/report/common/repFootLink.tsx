@@ -1,6 +1,5 @@
 //src\report\common\repFootLink.tsx
 "use client"
-import { OfflineAwareLink } from "@/components/offline-aware-link"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -397,12 +396,12 @@ export function RepFootLink({
                                     流转(流程)
                                 </button>
 
-                                <OfflineAwareLink
-                                    href=".."
+                                <Link
+                                    href={"/"}
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
                                 >
                                     回首页
-                                </OfflineAwareLink>
+                                </Link>
                                 {!subrid && (
                                     <button
                                         onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`, true, "editor")}
