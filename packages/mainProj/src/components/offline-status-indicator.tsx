@@ -6,8 +6,9 @@ import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { withBasePath } from "@/lib/tool"
 
 export function OfflineStatusIndicator() {
-    const { isClientOnline, isOnline, isGraphQLBackendReachable, offlineQueue } = useNetworkStatusContext()
+    const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
     const [showOfflineBar, setShowOfflineBar] = useState(false)
+    const [isInitialCheck, setIsInitialCheck] = useState(true)
 
     const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
     const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false)
@@ -59,11 +60,25 @@ export function OfflineStatusIndicator() {
         setShowOfflineBar(
             !isClientOnline || !isOnline || !isGraphQLBackendReachable || showEmptyArrayReminder,
         )
+        
+        // 如果所有状态都已初始化（不再是 undefined），则标记初始检查完成
+        if (isClientOnline !== undefined && isOnline !== undefined && isGraphQLBackendReachable !== undefined) {
+            setIsInitialCheck(false)
+        }
     }, [isClientOnline, isOnline, isGraphQLBackendReachable, showEmptyArrayReminder])
 
     if (!showOfflineBar) return null
 
     const getStatusMessage = () => {
+        // 如果是初始检查阶段，显示"状态核实中"
+        if (isInitialCheck) {
+            return {
+                icon: AlertTriangle,
+                message: "核实中",
+                color: "bg-blue-100 border-blue-300 text-blue-900",
+            }
+        }
+        
         if (!isClientOnline) {
             return {
                 icon: WifiOff,

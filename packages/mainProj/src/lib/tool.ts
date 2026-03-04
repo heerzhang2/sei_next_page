@@ -1,6 +1,6 @@
 /**
  * 为 API 路径添加 basePath 前缀
- * @example withBasePath('/api/health') => '/report/api/health'
+ * @example withBasePath('/api/nextLive') => '/report/api/nextLive'
  *为静态资源路径添加 basePath 前缀
  * @example withAssetPath('/images/seal.png') => '/report/images/seal.png'
  */

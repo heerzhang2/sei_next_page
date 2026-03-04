@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,7 +20,8 @@ import {
     CheckCircle,
 } from "lucide-react"
 import { VersionConflictManager } from "@/components/version-conflict-manager"
-import { useNetworkStatusContext } from "@/contexts/network-status-context"
+import { useNetworkStatusContext, useNetworkStatusActions } from "@/contexts/network-status-context"
+import { toast } from "sonner"
 import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
 import { useQuery } from "@urql/next"
 import { AuthCompQuery } from "@/component/header-wrapper"
@@ -33,11 +35,13 @@ import { withBasePath } from '@/lib/tool'
 export default function OfflinePage() {
     const { data: session } = useSession()
     const { isClientOnline, isOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const { checkNetworkStatus } = useNetworkStatusActions()
     const searchParams = useSearchParams()
     const activeTab = searchParams.get("tab") || "pending"
     const { totalConflicts } = useVersionConflictManager()
     const { groups: fileOperationGroups, loading: fileOperationsLoading } = useGroupedUppyStates()
     const hasFileOperations = !fileOperationsLoading && fileOperationGroups.length > 0
+    const [isCheckingNetwork, setIsCheckingNetwork] = useState(false)
 
     const [result] = useQuery({
         query: AuthCompQuery,
@@ -50,6 +54,37 @@ export default function OfflinePage() {
 
     const refreshPage = () => {
         window.location.reload()
+    }
+
+    const handleCheckNetworkStatus = async () => {
+        setIsCheckingNetwork(true)
+        try {
+            const result = await checkNetworkStatus()
+            const { isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable } = result
+            
+            // 根据检查结果显示相应的提示
+            if (isClientOnline && isNextJSServerReachable && isGraphQLBackendReachable) {
+                toast.success("网络状态检查完成", {
+                    description: "所有服务均可用，网络连接正常",
+                })
+            } else {
+                const issues = []
+                if (!isClientOnline) issues.push("客户端离线")
+                if (!isNextJSServerReachable) issues.push("前端服务器不可用")
+                if (!isGraphQLBackendReachable) issues.push("后端服务器不可用")
+                
+                toast.warning("网络状态检查完成", {
+                    description: `发现问题: ${issues.join(", ")}`,
+                })
+            }
+        } catch (error) {
+            console.error("网络状态检查失败:", error)
+            toast.error("网络状态检查失败", {
+                description: "无法完成网络状态检查，请稍后重试",
+            })
+        } finally {
+            setIsCheckingNetwork(false)
+        }
     }
 
     const goToHome = () => {
@@ -166,9 +201,9 @@ export default function OfflinePage() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="flex gap-4 justify-center">
-                                        <Button onClick={refreshPage} variant="outline">
-                                            <RefreshCw className="w-4 h-4 mr-2" />
-                                            刷新页面
+                                        <Button onClick={handleCheckNetworkStatus} variant="outline" disabled={isCheckingNetwork}>
+                                            <RefreshCw className={`w-4 h-4 mr-2 ${isCheckingNetwork ? "animate-spin" : ""}`} />
+                                            {isCheckingNetwork ? "在检查中..." : "检查网络服务状态"}
                                         </Button>
                                     </div>
                                 </CardContent>

@@ -7,8 +7,8 @@ import { toast } from "sonner"
 import { withBasePath } from '@/lib/tool'
 
 export interface NetworkStatus {
-    isClientOnline: boolean
-    isOnline: boolean
+    isClientOnline: boolean         // 表示客户端网络状态（依赖浏览器 navigator.onLine）
+    isOnline: boolean               //表示整体在线状态（只依赖nextjs前端服务器）
     isGraphQLBackendReachable: boolean
     lastError: Error | null
     lastOnlineTime: Date | null
@@ -20,6 +20,11 @@ export interface NetworkStatus {
 
 export interface NetworkStatusActions {
     updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void
+    checkNetworkStatus: () => Promise<{
+        isClientOnline: boolean
+        isNextJSServerReachable: boolean
+        isGraphQLBackendReachable: boolean
+    }>
 }
 const NetworkStatusContext = createContext<NetworkStatus | null>(null)
 const NetworkStatusActionsContext = createContext<NetworkStatusActions | null>(null)
@@ -28,12 +33,12 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
     const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
-        isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
         lastError: null,
         lastOnlineTime: null,
         lastOfflineTime: null,
         connectionType: null,
         isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
+        isOnline: true,
         isNextJSServerReachable: true,
         isGraphQLBackendReachable: true,
     })
@@ -79,10 +84,21 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         try {
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), 5000)
-            const response = await fetch(withBasePath('/api/nextLive'), {
+            
+            // 使用当前页面的源，确保直接访问 Next.js 服务器
+            const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+            const url = `${baseUrl}${withBasePath('/api/nextLive')}`
+            
+            // 添加时间戳参数，确保绕过 Service Worker 的缓存
+            const timestamp = Date.now()
+            const urlWithTimestamp = `${url}?t=${timestamp}`
+            
+            const response = await fetch(urlWithTimestamp, {
                 method: "GET",
                 cache: "no-cache",
                 signal: controller.signal,
+                // 添加 credentials，确保请求包含认证信息
+                credentials: 'same-origin',
             })
 
             clearTimeout(timeoutId)
@@ -102,54 +118,41 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     }, [checkVersion])
 
     // 检查GraphQL后端连通性
-    const checkGraphQLBackendConnectivity = useCallback(async (retries = 1) => {
-        // 使用固定的重试间隔，避免依赖 networkStatus 状态导致的循环
-        const retryDelay = 15000 // 固定15秒检查一次
-
-        for (let attempt = 0; attempt < retries; attempt++) {
-            try {
-                const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 5000) // 减少超时时间到5秒
-                const backendUrl = process.env.NEXT_PUBLIC_BACK_END
-                if (!backendUrl) {
-                    setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
-                    return false
-                }
-
-                const response = await fetch(`${backendUrl}/actuator/health`, {
-                    method: "GET",
-                    mode: "cors",
-                    cache: "no-cache",
-                    signal: controller.signal,
-                })
-                clearTimeout(timeoutId)
-                if (response.ok) {
-                    const healthData = await response.json()
-                    const dbStatus = healthData.components?.mainDB?.status
-                    const isReachable = dbStatus === "UP"
-                    // 更新后端可达性状态
-                    setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: isReachable }))
-                    return isReachable
-                }
-
-                // 响应不成功，更新状态为不可达
+    const checkGraphQLBackendConnectivity = useCallback(async () => {
+        try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 5000) // 超时时间5秒
+            const backendUrl = process.env.NEXT_PUBLIC_BACK_END
+            if (!backendUrl) {
                 setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
-
-                if (attempt < retries) {
-                    console.log(`健康检查失败，第${attempt + 1}次重试...`)
-                    await new Promise((resolve) => setTimeout(resolve, retryDelay))
-                }
-            } catch (error) {
-                console.warn(`健康检查尝试${attempt + 1}失败:`, error)
-                // 发生错误时，更新状态为不可达
-                setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
-
-                if (attempt < retries) {
-                    await new Promise((resolve) => setTimeout(resolve, retryDelay))
-                }
+                return false
             }
+
+            const response = await fetch(`${backendUrl}/actuator/health`, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-cache",
+                signal: controller.signal,
+            })
+            clearTimeout(timeoutId)
+            if (response.ok) {
+                const healthData = await response.json()
+                const dbStatus = healthData.components?.mainDB?.status
+                const isReachable = dbStatus === "UP"
+                // 更新后端可达性状态
+                setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: isReachable }))
+                return isReachable
+            }
+
+            // 响应不成功，更新状态为不可达
+            setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+            return false
+        } catch (error) {
+            console.warn("健康检查失败:", error)
+            // 发生错误时，更新状态为不可达
+            setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+            return false
         }
-        return false
     }, [])
 
     // 获取连接信息
@@ -168,7 +171,8 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             setNetworkStatus((prev) => {
                 const isNextJSServerReachable = isClientOnline && prev.isNextJSServerReachable
                 // 保持 isGraphQLBackendReachable 不变，不由客户端网络状态决定
-                const isOnline = isClientOnline && isNextJSServerReachable && prev.isGraphQLBackendReachable
+                // 注意：isOnline 只依赖前端服务器，不依赖 Java 后端，避免后端健康检查阻塞前端状态显示
+                const isOnline = isClientOnline && isNextJSServerReachable
 
                 return {
                     ...prev,
@@ -195,14 +199,48 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             ...prev,
             isGraphQLBackendReachable: isReachable,
             isClientOnline: isClientOnline,
-            isOnline: isClientOnline && prev.isNextJSServerReachable,
+            isOnline: isClientOnline && prev.isNextJSServerReachable, // 不依赖 GraphQL 后端状态
             lastOnlineTime: isReachable && isClientOnline ? new Date() : prev.lastOnlineTime,
             lastOfflineTime: !isReachable || !isClientOnline ? new Date() : prev.lastOfflineTime,
         }))
     }, [])
 
+    const checkNetworkStatus = useCallback(async () => {
+        const isClientOnline = typeof navigator !== "undefined" ? navigator.onLine : false
+        
+        // 独立并同时发起三个检查
+        const [isNextJSServerReachable, isGraphQLBackendReachable] = await Promise.allSettled([
+            checkNextJSServerConnectivity(),
+            checkGraphQLBackendConnectivity()
+        ])
+        
+        // 提取检查结果
+        const nextJSResult = isNextJSServerReachable.status === "fulfilled" ? isNextJSServerReachable.value : false
+        const graphQLResult = isGraphQLBackendReachable.status === "fulfilled" ? isGraphQLBackendReachable.value : false
+        
+        // 更新网络状态
+        // 注意：isOnline 现在只依赖前端服务器状态，不依赖 Java 后端
+        // 这样前端服务器的可用状态可以立即反映，不会被后端健康检查阻塞
+        setNetworkStatus((prev) => ({
+            ...prev,
+            isClientOnline,
+            isNextJSServerReachable: nextJSResult,
+            isGraphQLBackendReachable: graphQLResult,
+            isOnline: isClientOnline && nextJSResult, // 移除 isGraphQLBackendReachable 依赖
+        }))
+
+        // 返回网络状态，供 page.tsx 使用
+        return {
+            isClientOnline,
+            isNextJSServerReachable: nextJSResult,
+            isGraphQLBackendReachable: graphQLResult,
+        }
+    }, [checkNextJSServerConnectivity, checkGraphQLBackendConnectivity])
+
+
     const actions: NetworkStatusActions = {
         updateGraphQLBackendStatus,
+        checkNetworkStatus,
     }
 
     const contextValue: NetworkStatus = {
@@ -267,16 +305,9 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             ? undefined
             : setInterval(async () => {
                 if (navigator.onLine) {
-                    const isNextJSReachable = await checkNextJSServerConnectivity()
-                    const isGraphQLReachable = await checkGraphQLBackendConnectivity()
-                    setNetworkStatus((prev) => ({
-                        ...prev,
-                        isNextJSServerReachable: isNextJSReachable,
-                        isGraphQLBackendReachable: isGraphQLReachable,
-                        isOnline: prev.isClientOnline && isNextJSReachable,
-                    }))
+                    await checkNetworkStatus()
                 }
-            }, 120000) // 将检查间隔从40秒增加到120秒（2分钟）
+            }, 40000) // 检查间隔为40秒
 
         const handleConnectionChange = () => {
             const connectionType = getConnectionInfo()

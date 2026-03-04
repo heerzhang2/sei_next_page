@@ -748,6 +748,12 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
   console.log(`[SW][自定义Fetch] ${event.request.method} ${url.pathname}`);
 
+  // 跳过健康检查请求，直接传递到网络
+  if (url.pathname.includes('/api/nextLive') || url.pathname.includes('/api/actuator/health')) {
+    console.log(`[SW][自定义Fetch] 健康检查请求，直接传递到网络: ${url.pathname}`);
+    return; // 让 Serwist 处理这些请求
+  }
+
   // 检查是否为文档请求
   if (event.request.destination === 'document') {
     // 尝试快速检查网络状态
