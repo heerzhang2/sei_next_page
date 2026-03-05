@@ -122,7 +122,8 @@ const customFetchExchange: Exchange = ({ forward }) => {
                 const controller = new AbortController()
                 const isOffline =
                     typeof window !== "undefined" && (!(window as any).__graphqlBackendReachable || !navigator.onLine)
-                const timeout = isOffline ? 3000 : 180000
+                // 离线模式下超时时间缩短到 500ms，快速失败
+                const timeout = isOffline ? 500 : 180000
                 const timeoutId = setTimeout(() => controller.abort(), timeout)
 
                 const deviceId = getDeviceId()

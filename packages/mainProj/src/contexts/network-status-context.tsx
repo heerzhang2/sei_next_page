@@ -31,15 +31,88 @@ const NetworkStatusActionsContext = createContext<NetworkStatusActions | null>(n
 export function NetworkStatusProvider({ children }: { children: React.ReactNode }) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
-    const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
-        lastError: null,
-        lastOnlineTime: null,
-        lastOfflineTime: null,
-        connectionType: null,
-        isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-        isNextJSServerReachable: true,
-        isGraphQLBackendReachable: true,
-    })
+
+    // 从 sessionStorage 恢复网络状态
+    const getInitialNetworkStatus = useCallback((): NetworkStatus => {
+        if (typeof window === "undefined") {
+            return {
+                lastError: null,
+                lastOnlineTime: null,
+                lastOfflineTime: null,
+                connectionType: null,
+                isClientOnline: true,
+                isNextJSServerReachable: true,
+                isGraphQLBackendReachable: true,
+            }
+        }
+
+        try {
+            const savedStatus = sessionStorage.getItem("network-status")
+            if (savedStatus) {
+                const parsed = JSON.parse(savedStatus)
+                const now = Date.now()
+                // 只恢复最近 5 分钟内的状态，避免使用过期的状态
+                const MAX_AGE = 5 * 60 * 1000
+                if (parsed.timestamp && (now - parsed.timestamp) < MAX_AGE) {
+                    console.log("[NetworkStatus] 从 sessionStorage 恢复网络状态:", {
+                        isNextJSServerReachable: parsed.isNextJSServerReachable,
+                        isGraphQLBackendReachable: parsed.isGraphQLBackendReachable,
+                    })
+                    return {
+                        lastError: null,
+                        lastOnlineTime: parsed.lastOnlineTime ? new Date(parsed.lastOnlineTime) : null,
+                        lastOfflineTime: parsed.lastOfflineTime ? new Date(parsed.lastOfflineTime) : null,
+                        connectionType: null,
+                        isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
+                        isNextJSServerReachable: parsed.isNextJSServerReachable ?? true,
+                        isGraphQLBackendReachable: parsed.isGraphQLBackendReachable ?? true,
+                    }
+                } else {
+                    console.log("[NetworkStatus] sessionStorage 中的状态已过期，使用默认值")
+                }
+            }
+        } catch (error) {
+            console.error("[NetworkStatus] 从 sessionStorage 读取状态失败:", error)
+        }
+
+        return {
+            lastError: null,
+            lastOnlineTime: null,
+            lastOfflineTime: null,
+            connectionType: null,
+            isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
+            isNextJSServerReachable: true,
+            isGraphQLBackendReachable: true,
+        }
+    }, [])
+
+    const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(getInitialNetworkStatus)
+
+    // 保存网络状态到 sessionStorage
+    const saveNetworkStatus = useCallback((status: NetworkStatus) => {
+        if (typeof window === "undefined") return
+        try {
+            const toSave = {
+                isNextJSServerReachable: status.isNextJSServerReachable,
+                isGraphQLBackendReachable: status.isGraphQLBackendReachable,
+                lastOnlineTime: status.lastOnlineTime?.toISOString() || null,
+                lastOfflineTime: status.lastOfflineTime?.toISOString() || null,
+                timestamp: Date.now(),
+            }
+            sessionStorage.setItem("network-status", JSON.stringify(toSave))
+        } catch (error) {
+            console.error("[NetworkStatus] 保存状态到 sessionStorage 失败:", error)
+        }
+    }, [])
+
+    // 包装 setNetworkStatus，自动保存到 sessionStorage
+    const setNetworkStatusWithSave = useCallback((updater: React.SetStateAction<NetworkStatus>) => {
+        setNetworkStatus((prev) => {
+            const newStatus = typeof updater === "function" ? updater(prev) : updater
+            saveNetworkStatus(newStatus)
+            return newStatus
+        })
+    }, [saveNetworkStatus])
 
     // 版本检查逻辑
     const checkVersion = useCallback((data: any) => {
@@ -120,11 +193,11 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         try {
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), 5000) // 超时时间5秒
-            const backendUrl = process.env.NEXT_PUBLIC_BACK_END
-            if (!backendUrl) {
-                setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
-                return false
-            }
+        const backendUrl = process.env.NEXT_PUBLIC_BACK_END
+        if (!backendUrl) {
+            setNetworkStatusWithSave(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+            return false
+        }
 
             const response = await fetch(`${backendUrl}/actuator/health`, {
                 method: "GET",
@@ -138,17 +211,17 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 const dbStatus = healthData.components?.mainDB?.status
                 const isReachable = dbStatus === "UP"
                 // 更新后端可达性状态
-                setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: isReachable }))
+                setNetworkStatusWithSave(prev => ({ ...prev, isGraphQLBackendReachable: isReachable }))
                 return isReachable
             }
 
             // 响应不成功，更新状态为不可达
-            setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+            setNetworkStatusWithSave(prev => ({ ...prev, isGraphQLBackendReachable: false }))
             return false
         } catch (error) {
             console.warn("健康检查失败:", error)
             // 发生错误时，更新状态为不可达
-            setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+            setNetworkStatusWithSave(prev => ({ ...prev, isGraphQLBackendReachable: false }))
             return false
         }
     }, [])
@@ -166,7 +239,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     const updateNetworkStatus = useCallback(
         async (isClientOnline: boolean, error: Error | null = null) => {
             const connectionType = getConnectionInfo()
-            setNetworkStatus((prev) => {
+            setNetworkStatusWithSave((prev) => {
                 return {
                     ...prev,
                     isClientOnline,
@@ -178,19 +251,15 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 }
             })
         },
-        [
-            checkNextJSServerConnectivity,
-            checkGraphQLBackendConnectivity,
-            getConnectionInfo,
-        ],
+        [setNetworkStatusWithSave, getConnectionInfo],
     )
 
     const updateGraphQLBackendStatus = useCallback((isReachable: boolean) => {
-        setNetworkStatus((prev) => ({
+        setNetworkStatusWithSave((prev) => ({
             ...prev,
             isGraphQLBackendReachable: isReachable,
         }))
-    }, [])
+    }, [setNetworkStatusWithSave])
 
     const checkNetworkStatus = useCallback(async () => {
         const isClientOnline = typeof navigator !== "undefined" ? navigator.onLine : false
@@ -200,7 +269,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         const graphQLResult = await checkGraphQLBackendConnectivity()
 
         // 更新网络状态（Next.js 服务器状态由 Service Worker 更新）
-        setNetworkStatus((prev) => ({
+        setNetworkStatusWithSave((prev) => ({
             ...prev,
             isClientOnline,
             isGraphQLBackendReachable: graphQLResult,
@@ -212,7 +281,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             isNextJSServerReachable: networkStatus.isNextJSServerReachable,
             isGraphQLBackendReachable: graphQLResult,
         }
-    }, [checkGraphQLBackendConnectivity, networkStatus.isNextJSServerReachable])
+    }, [checkGraphQLBackendConnectivity, networkStatus.isNextJSServerReachable, setNetworkStatusWithSave])
 
 
     const actions: NetworkStatusActions = {
@@ -234,7 +303,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                         if (event.data?.type === 'SERVER_STATUS_RESPONSE') {
                             const { isOnline, timestamp } = event.data;
                             console.log(`[NetworkStatus] 从 SW 获取服务器状态: ${isOnline}, 时间戳: ${timestamp}`);
-                            setNetworkStatus(prev => ({
+                            setNetworkStatusWithSave(prev => ({
                                 ...prev,
                                 isNextJSServerReachable: isOnline
                             }));
@@ -257,18 +326,18 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         // Service Worker 消息监听
         const handleServiceWorkerMessage = (event: MessageEvent) => {
             console.log(`[NetworkStatus] 收到 Service Worker 消息:`, event.data);
-            if (event.data?.type === 'SERVER_STATUS_UPDATE') {
-                const { isOnline, timestamp } = event.data;
-                console.log(`[NetworkStatus] 收到服务器状态更新: ${isOnline}, 时间戳: ${timestamp}`);
-                console.log(`[NetworkStatus] 更新前 isNextJSServerReachable: ${networkStatus.isNextJSServerReachable}`);
-                setNetworkStatus(prev => {
-                    console.log(`[NetworkStatus] 更新后 isNextJSServerReachable: ${isOnline}`);
-                    return {
-                        ...prev,
-                        isNextJSServerReachable: isOnline
-                    };
-                });
-            }
+        if (event.data?.type === 'SERVER_STATUS_UPDATE') {
+            const { isOnline, timestamp } = event.data;
+            console.log(`[NetworkStatus] 收到服务器状态更新: ${isOnline}, 时间戳: ${timestamp}`);
+            console.log(`[NetworkStatus] 更新前 isNextJSServerReachable: ${networkStatus.isNextJSServerReachable}`);
+            setNetworkStatusWithSave(prev => {
+                console.log(`[NetworkStatus] 更新后 isNextJSServerReachable: ${isOnline}`);
+                return {
+                    ...prev,
+                    isNextJSServerReachable: isOnline
+                };
+            });
+        }
         };
 
         // 注册 Service Worker 消息监听
@@ -327,7 +396,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             console.log("Network: 客户端网络离线事件检测到")
             // 离线时，更新客户端状态并设置后端为不可达
             updateNetworkStatus(false)
-            setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
+            setNetworkStatusWithSave(prev => ({ ...prev, isGraphQLBackendReachable: false }))
         }
         // 定期 GraphQL 后端检查（Next.js 服务器由 Service Worker 定期检查）
         const serverCheckInterval = print
@@ -336,7 +405,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                 if (navigator.onLine) {
                     // 只检查 GraphQL 后端，Next.js 服务器由 Service Worker 检查
                     const graphQLResult = await checkGraphQLBackendConnectivity()
-                    setNetworkStatus((prev) => ({
+                    setNetworkStatusWithSave((prev) => ({
                         ...prev,
                         isGraphQLBackendReachable: graphQLResult,
                     }))
@@ -345,7 +414,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
         const handleConnectionChange = () => {
             const connectionType = getConnectionInfo()
-            setNetworkStatus((prev) => ({
+            setNetworkStatusWithSave((prev) => ({
                 ...prev,
                 connectionType,
             }))
@@ -373,9 +442,9 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         }
     }, [
         updateNetworkStatus,
-        checkNextJSServerConnectivity,
         checkGraphQLBackendConnectivity,
         getConnectionInfo,
+        setNetworkStatusWithSave,
         print,
     ])
 

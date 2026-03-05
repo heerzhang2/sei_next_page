@@ -221,8 +221,9 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
     const requestPolicy = useMemo(() => {
+        // 离线模式：完全使用缓存，不发起任何网络请求
         if (!isClientOnline || !isGraphQLBackendReachable) {
-            return "cache-first"
+            return "cache-only"
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable])
@@ -462,12 +463,12 @@ function CommonReportDataSub({
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
     const requestPolicy = useMemo(() => {
+        // 离线模式：完全使用缓存，不发起任何网络请求
         if (!isClientOnline || !isGraphQLBackendReachable) {
-            return "cache-first"
+            return "cache-only"
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable])
-
     const [result] = useQuery({
         query: ReportQuery,
         variables: mainQueryVariables,

@@ -1,9 +1,9 @@
 "use client"
 
-import type React from "react"
+import React, { useEffect,  useMemo } from "react"
 import { SiteMainbar } from "@/components/site-mainbar"
 import { gql, useQuery } from "@urql/next"
-import { useEffect } from "react"
+import { useNetworkStatusContext } from "@/contexts/network-status-context"
 
 export const AuthCompQuery = gql`
       query AuthCompQuery {
@@ -26,10 +26,18 @@ interface HeaderWrapperProps {
 }
 
 export default function HeaderWrapper({ items, children }: HeaderWrapperProps) {
+    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const requestPolicy = useMemo(() => {
+        // 离线模式：完全使用缓存，不发起任何网络请求
+        if (!isClientOnline || !isGraphQLBackendReachable) {
+            return "cache-only"
+        }
+        return "cache-and-network"
+    }, [isClientOnline, isGraphQLBackendReachable])
     const [result, reexecuteQuery] = useQuery({
         query: AuthCompQuery,
         variables: {},
-        requestPolicy: "cache-first",
+        requestPolicy,
     })
 
     useEffect(() => {
