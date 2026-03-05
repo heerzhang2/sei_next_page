@@ -120,10 +120,33 @@ const customFetchExchange: Exchange = ({ forward }) => {
             operations$,
             map((operation: Operation) => {
                 const controller = new AbortController()
-                const isOffline =
-                    typeof window !== "undefined" && (!(window as any).__graphqlBackendReachable || !navigator.onLine)
-                // 离线模式下超时时间缩短到 500ms，快速失败
-                const timeout = isOffline ? 500 : 180000
+                // 检查离线状态：使用 window.__graphqlBackendReachable 或 sessionStorage 中的状态
+                let isOffline = false
+                if (typeof window !== "undefined") {
+                    if (!(window as any).__graphqlBackendReachable) {
+                        isOffline = true
+                    } else if (!navigator.onLine) {
+                        isOffline = true
+                    } else {
+                        // 尝试从 sessionStorage 读取后端状态
+                        try {
+                            const savedStatus = sessionStorage.getItem("network-status")
+                            if (savedStatus) {
+                                const parsed = JSON.parse(savedStatus)
+                                const now = Date.now()
+                                const MAX_AGE = 5 * 60 * 1000 // 5 分钟
+                                if (parsed.timestamp && (now - parsed.timestamp) < MAX_AGE && parsed.isGraphQLBackendReachable === false) {
+                                    isOffline = true
+                                }
+                            }
+                        } catch (error) {
+                            // 忽略错误，保持 isOffline = false
+                        }
+                    }
+                }
+
+                // 离线模式下超时时间缩短到 300ms，快速失败
+                const timeout = isOffline ? 300 : 180000
                 const timeoutId = setTimeout(() => controller.abort(), timeout)
 
                 const deviceId = getDeviceId()
