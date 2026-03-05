@@ -571,7 +571,7 @@ const customCache: RuntimeCaching[] = [
         pathname.includes("webpack-")),
     handler: new NetworkFirst({
       cacheName: "next-chunks",
-      networkTimeoutSeconds: 1, // 1秒超时,快速回退到缓存
+      networkTimeoutSeconds: 2, // 2秒超时,快速回退到缓存
       plugins: [
         new ExpirationPlugin({
           maxEntries: 2000,
@@ -612,7 +612,7 @@ const customCache: RuntimeCaching[] = [
     },
     handler: new NetworkFirst({
       cacheName: "report-pages-normalized",
-      networkTimeoutSeconds: 2, // 2秒超时
+      networkTimeoutSeconds: isOfflineMode ? 0 : 2, // 离线模式立即返回缓存
       plugins: [
         createCacheKeyPlugin(normalizeReportCacheKey),
         new ExpirationPlugin({
@@ -666,7 +666,7 @@ const customCache: RuntimeCaching[] = [
     },
     handler: new NetworkFirst({
       cacheName: PAGES_CACHE_NAME.rscPrefetch,
-      networkTimeoutSeconds: 1,
+      networkTimeoutSeconds: 3,
       plugins: [
         new ExpirationPlugin({
           maxAgeSeconds: 48 * 60 * 60,
@@ -689,7 +689,7 @@ const customCache: RuntimeCaching[] = [
     },
     handler: new NetworkFirst({
       cacheName: PAGES_CACHE_NAME.rsc,
-      networkTimeoutSeconds: 1,
+      networkTimeoutSeconds: 5,
       plugins: [
         new ExpirationPlugin({
           maxAgeSeconds: 48 * 60 * 60,
@@ -750,6 +750,9 @@ let serverStatus = {
   lastNotificationTime: 0
 };
 
+// 离线模式标志 - 当服务器连续失败后立即切换到离线模式
+let isOfflineMode = false;
+
 // 发送服务器状态更新消息到主线程
 function notifyServerStatus(isOnline: boolean) {
   const now = Date.now();
@@ -761,6 +764,10 @@ function notifyServerStatus(isOnline: boolean) {
 
   serverStatus.lastNotificationTime = now;
   serverStatus.isOnline = isOnline;
+
+  // 更新离线模式标志
+  isOfflineMode = !isOnline;
+  console.log(`[SW][服务器状态] 离线模式: ${isOfflineMode}`);
 
   console.log(`[SW][服务器状态] 准备发送服务器状态更新: ${isOnline}`);
   // 发送消息到所有客户端
@@ -781,14 +788,14 @@ function notifyServerStatus(isOnline: boolean) {
 function checkServerStatus(response: Response, request: Request) {
   const now = Date.now();
   const url = new URL(request.url);
-  
+
   // 检查是否为 Next.js 页面请求（包括文档请求和 RSC 请求）
   const isDocumentRequest = request.destination === 'document';
   const isRSCRequest = request.headers.get('RSC') === '1';
   const isNextJSPageRequest = isDocumentRequest || isRSCRequest;
-  
+
   console.log(`[SW][服务器状态] 检查请求: ${url.pathname}, isDocumentRequest: ${isDocumentRequest}, isRSCRequest: ${isRSCRequest}, isNextJSPageRequest: ${isNextJSPageRequest}`);
-  
+
   // 只处理 Next.js 页面请求，不处理 API 请求和健康检查请求
   if (!isNextJSPageRequest) {
     return;
@@ -798,7 +805,7 @@ function checkServerStatus(response: Response, request: Request) {
   if (response.status === 502) {
     serverStatus.consecutiveFailures++;
     console.log(`[SW][服务器状态] 检测到 502 错误，连续失败次数: ${serverStatus.consecutiveFailures}`);
-    
+
     // 连续失败 1 次以上，认为服务器不可用
     if (serverStatus.consecutiveFailures >= 1) {
       console.log(`[SW][服务器状态] 达到失败阈值，通知主线程服务器不可用`);
@@ -810,12 +817,26 @@ function checkServerStatus(response: Response, request: Request) {
       serverStatus.consecutiveFailures = 0;
       console.log(`[SW][服务器状态] 服务器响应正常，重置失败计数器`);
     }
-    
+
     // 如果之前服务器不可用，现在恢复正常，发送通知
     if (!serverStatus.isOnline) {
       console.log(`[SW][服务器状态] 服务器从不可用恢复为可用，通知主线程`);
       notifyServerStatus(true);
     }
+  }
+}
+
+// 快速检查网络可用性（用于离线模式检测）
+async function quickNetworkCheck(): Promise<boolean> {
+  try {
+    const response = await fetch(`${getBasePath()}/api/nextLive`, {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(1000), // 1秒超时
+    });
+    return response.ok;
+  } catch (error) {
+    return false;
   }
 }
 
@@ -825,7 +846,7 @@ function checkServerStatus(response: Response, request: Request) {
 self.addEventListener('fetch', (event: FetchEvent) => {
   const url = new URL(event.request.url);
 
-  console.log(`[SW][自定义Fetch] ${event.request.method} ${url.pathname}`);
+  console.log(`[SW][自定义Fetch] ${event.request.method} ${url.pathname}, 离线模式: ${isOfflineMode}`);
 
   // 跳过健康检查请求，直接传递到网络
   if (url.pathname.includes('/api/nextLive') || url.pathname.includes('/api/actuator/health')) {
@@ -835,36 +856,47 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
   // 检查是否为文档请求
   if (event.request.destination === 'document') {
-    // 尝试快速检查网络状态
-    const networkPromise = fetch(event.request.clone())
-      .then(response => {
-        // 检查服务器状态
-        checkServerStatus(response, event.request);
-        
-        // 如果是 5xx 错误,也视为失败
-        if (response.status >= 500) {
-          throw new Error(`Server error: ${response.status}`);
+    // 离线模式：直接使用缓存，不等待网络
+    if (isOfflineMode) {
+      console.log(`[SW][自定义Fetch] 离线模式，直接使用缓存: ${url.pathname}`);
+      event.respondWith((async () => {
+        // 1. 尝试精确匹配原始请求
+        let cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          console.log(`[SW][自定义Fetch] 使用缓存(精确): ${url.pathname}`);
+          return cachedResponse.clone();
         }
-        return response;
-      })
-      .catch(error => {
-        console.log(`[SW][自定义Fetch] 网络失败: ${error.message}`);
 
-        // 尝试从缓存获取 - 支持规范化 key
-        return (async () => {
-          // 1. 尝试精确匹配原始请求
-          let cachedResponse = await caches.match(event.request);
+        // 2. 特殊处理首页：如果访问 /report，尝试查找 /report/ 的缓存（反之亦然）
+        const basePath = getBasePath();
+        if (url.pathname === basePath || url.pathname === `${basePath}/`) {
+          const alternativeUrl = url.pathname === basePath ? `${basePath}/` : basePath;
+          console.log(`[SW][自定义Fetch] 首页尝试替代 URL: ${alternativeUrl}`);
+          const alternativeRequest = new Request(url.origin + alternativeUrl, {
+            method: event.request.method,
+            headers: event.request.headers,
+            mode: event.request.mode,
+            credentials: event.request.credentials,
+            cache: event.request.cache,
+            redirect: event.request.redirect,
+            referrer: event.request.referrer,
+            referrerPolicy: event.request.referrerPolicy,
+          });
+          cachedResponse = await caches.match(alternativeRequest);
           if (cachedResponse) {
-            console.log(`[SW][自定义Fetch] 使用缓存(精确): ${url.pathname}`);
+            console.log(`[SW][自定义Fetch] 使用缓存(首页替代): ${url.pathname}`);
             return cachedResponse.clone();
           }
+        }
 
-          // 1.5. 特殊处理首页：如果访问 /report，尝试查找 /report/ 的缓存（反之亦然）
-          const basePath = getBasePath();
-          if (url.pathname === basePath || url.pathname === `${basePath}/`) {
-            const alternativeUrl = url.pathname === basePath ? `${basePath}/` : basePath;
-            console.log(`[SW][自定义Fetch] 首页尝试替代 URL: ${alternativeUrl}`);
-            const alternativeRequest = new Request(url.origin + alternativeUrl, {
+        // 3. 对于 report 路由，尝试使用规范化的 key 匹配
+        if (url.pathname.includes('/rep/')) {
+          try {
+            const normalizedKey = await normalizeReportCacheKey({ request: event.request });
+            console.log(`[SW][自定义Fetch] 尝试规范化 key: ${normalizedKey}`);
+
+            // 创建一个带有规范化 URL 的 Request
+            const normalizedRequest = new Request(normalizedKey, {
               method: event.request.method,
               headers: event.request.headers,
               mode: event.request.mode,
@@ -874,21 +906,19 @@ self.addEventListener('fetch', (event: FetchEvent) => {
               referrer: event.request.referrer,
               referrerPolicy: event.request.referrerPolicy,
             });
-            cachedResponse = await caches.match(alternativeRequest);
+
+            cachedResponse = await caches.match(normalizedRequest);
             if (cachedResponse) {
-              console.log(`[SW][自定义Fetch] 使用缓存(首页替代): ${url.pathname}`);
+              console.log(`[SW][自定义Fetch] 使用缓存(规范化): ${url.pathname}`);
               return cachedResponse.clone();
             }
-          }
 
-          // 2. 对于 report 路由，尝试使用规范化的 key 匹配
-          if (url.pathname.includes('/rep/')) {
-            try {
-              const normalizedKey = await normalizeReportCacheKey({ request: event.request });
-              console.log(`[SW][自定义Fetch] 尝试规范化 key: ${normalizedKey}`);
+            // 4. 如果 RSC 请求没找到缓存，尝试查找 HTML 版本
+            if (url.searchParams.has('_rsc') || normalizedKey.includes('_v=rsc')) {
+              const htmlKey = normalizedKey.replace('_v=rsc', '_v=html');
+              console.log(`[SW][自定义Fetch] RSC 请求未找到缓存，尝试查找 HTML 版本: ${htmlKey}`);
 
-              // 创建一个带有规范化 URL 的 Request
-              const normalizedRequest = new Request(normalizedKey, {
+              const htmlRequest = new Request(htmlKey, {
                 method: event.request.method,
                 headers: event.request.headers,
                 mode: event.request.mode,
@@ -899,101 +929,277 @@ self.addEventListener('fetch', (event: FetchEvent) => {
                 referrerPolicy: event.request.referrerPolicy,
               });
 
-              cachedResponse = await caches.match(normalizedRequest);
+              cachedResponse = await caches.match(htmlRequest);
               if (cachedResponse) {
-                console.log(`[SW][自定义Fetch] 使用缓存(规范化): ${url.pathname}`);
+                console.log(`[SW][自定义Fetch] 使用缓存(HTML 版本): ${url.pathname}`);
                 return cachedResponse.clone();
               }
-
-              // 3. 如果 RSC 请求没找到缓存，尝试查找 HTML 版本
-              if (url.searchParams.has('_rsc') || normalizedKey.includes('_v=rsc')) {
-                const htmlKey = normalizedKey.replace('_v=rsc', '_v=html');
-                console.log(`[SW][自定义Fetch] RSC 请求未找到缓存，尝试查找 HTML 版本: ${htmlKey}`);
-
-                const htmlRequest = new Request(htmlKey, {
-                  method: event.request.method,
-                  headers: event.request.headers,
-                  mode: event.request.mode,
-                  credentials: event.request.credentials,
-                  cache: event.request.cache,
-                  redirect: event.request.redirect,
-                  referrer: event.request.referrer,
-                  referrerPolicy: event.request.referrerPolicy,
-                });
-
-                cachedResponse = await caches.match(htmlRequest);
-                if (cachedResponse) {
-                  console.log(`[SW][自定义Fetch] 使用缓存(HTML 版本): ${url.pathname}`);
-                  return cachedResponse.clone();
-                }
-              }
-            } catch (e) {
-              console.error(`[SW][自定义Fetch] 规范化匹配失败:`, e);
             }
-
-            // 4. 如果规范化匹配失败，尝试从 report-pages-normalized 缓存中智能查找
-            try {
-              const reportCache = await caches.open('report-pages-normalized');
-              const allKeys = await reportCache.keys();
-              console.log(`[SW][自定义Fetch] report-pages-normalized 缓存中有 ${allKeys.length} 个条目`);
-
-              // 提取路径特征（去除 reportId 和查询参数）
-              const pathPattern = url.pathname.replace(/\/rep\/[^/]+/, '/rep/*');
-              console.log(`[SW][自定义Fetch] 路径模式: ${pathPattern}`);
-
-              // 遍历所有缓存的 key，寻找匹配的路径
-              for (const key of allKeys) {
-                const cachedUrl = new URL(key.url);
-                const cachedPathPattern = cachedUrl.pathname.replace(/\/rep\/[^/]+/, '/rep/*');
-
-                // 比较路径模式
-                if (cachedPathPattern === pathPattern) {
-                  console.log(`[SW][自定义Fetch] 找到路径匹配: ${key.url}`);
-
-                  // 尝试获取这个缓存响应
-                  const response = await reportCache.match(key);
-                  if (response) {
-                    console.log(`[SW][自定义Fetch] 使用缓存(模糊匹配): ${key.url}`);
-                    return response.clone();
-                  }
-                }
-              }
-
-              // 打印所有 key 用于调试
-              if (allKeys.length > 0 && allKeys.length <= 10) {
-                allKeys.forEach((key, index) => {
-                  console.log(`[SW][自定义Fetch] 缓存 key ${index + 1}: ${key.url}`);
-                });
-              }
-            } catch (e) {
-              console.error(`[SW][自定义Fetch] 查询缓存失败:`, e);
-            }
+          } catch (e) {
+            console.error(`[SW][自定义Fetch] 规范化匹配失败:`, e);
           }
 
-          // 最后兜底:返回离线页面
-          console.log(`[SW][自定义Fetch] 返回离线页面`);
+          // 5. 如果规范化匹配失败，尝试从 report-pages-normalized 缓存中智能查找
+          try {
+            const reportCache = await caches.open('report-pages-normalized');
+            const allKeys = await reportCache.keys();
+            console.log(`[SW][自定义Fetch] report-pages-normalized 缓存中有 ${allKeys.length} 个条目`);
 
-          // 优先使用缓存的离线页面
-          const offlinePageUrl = `${getBasePath()}/~offline`;
-          const cachedOffline = await caches.match(offlinePageUrl);
-          if (cachedOffline) {
-            console.log(`[SW][自定义Fetch] 使用缓存的离线页面: ${offlinePageUrl}`);
-            return cachedOffline.clone();
+            // 提取路径特征（去除 reportId 和查询参数）
+            const pathPattern = url.pathname.replace(/\/rep\/[^/]+/, '/rep/*');
+            console.log(`[SW][自定义Fetch] 路径模式: ${pathPattern}`);
+
+            // 遍历所有缓存的 key，寻找匹配的路径
+            for (const key of allKeys) {
+              const cachedUrl = new URL(key.url);
+              const cachedPathPattern = cachedUrl.pathname.replace(/\/rep\/[^/]+/, '/rep/*');
+
+              // 比较路径模式
+              if (cachedPathPattern === pathPattern) {
+                console.log(`[SW][自定义Fetch] 找到路径匹配: ${key.url}`);
+
+                // 尝试获取这个缓存响应
+                const response = await reportCache.match(key);
+                if (response) {
+                  console.log(`[SW][自定义Fetch] 使用缓存(模糊匹配): ${key.url}`);
+                  return response.clone();
+                }
+              }
+            }
+          } catch (e) {
+            console.error(`[SW][自定义Fetch] 查询缓存失败:`, e);
           }
+        }
 
-          // 如果缓存中没有，使用预构建的离线页面
-          console.log(`[SW][自定义Fetch] 使用预构建的离线页面`);
-          return new Response(OFFLINE_FALLBACK_HTML, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'X-Offline-Mode': 'true',
-            },
+        // 6. 最后兜底:返回离线页面
+        console.log(`[SW][自定义Fetch] 返回离线页面`);
+
+        // 优先使用缓存的离线页面
+        const offlinePageUrl = `${getBasePath()}/~offline`;
+        const cachedOffline = await caches.match(offlinePageUrl);
+        if (cachedOffline) {
+          console.log(`[SW][自定义Fetch] 使用缓存的离线页面: ${offlinePageUrl}`);
+          return cachedOffline.clone();
+        }
+
+        // 如果缓存中没有，使用预构建的离线页面
+        console.log(`[SW][自定义Fetch] 使用预构建的离线页面`);
+        return new Response(OFFLINE_FALLBACK_HTML, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'X-Offline-Mode': 'true',
+          },
+        });
+      })());
+      return;
+    }
+
+    // 在线模式：尝试网络，但快速失败到缓存
+    event.respondWith((async () => {
+      // 先快速检查缓存，如果有缓存，同时发起网络请求
+      const cachedResponse = await caches.match(event.request);
+      if (cachedResponse) {
+        console.log(`[SW][自定义Fetch] 找到缓存，立即返回并在后台更新: ${url.pathname}`);
+
+        // 在后台尝试更新缓存
+        fetch(event.request.clone())
+          .then(response => {
+            if (response.ok) {
+              // 检查服务器状态
+              checkServerStatus(response, event.request);
+              caches.open('serwist-precache-v1').then(cache => {
+                cache.put(event.request, response.clone());
+              });
+            }
+          })
+          .catch(error => {
+            console.log(`[SW][自定义Fetch] 后台更新失败: ${error.message}`);
           });
-        })();
-      });
 
-    event.respondWith(networkPromise);
+        return cachedResponse.clone();
+      }
+
+      // 没有缓存，尝试网络请求，使用快速超时
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2秒超时
+
+      try {
+        const response = await fetch(event.request.clone(), {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        // 检查服务器状态
+        checkServerStatus(response, event.request);
+
+        // 如果响应正常，缓存它
+        if (response.ok) {
+          const cache = await caches.open('serwist-precache-v1');
+          cache.put(event.request, response.clone());
+          return response;
+        }
+
+        throw new Error(`Server returned ${response.status}`);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        console.log(`[SW][自定义Fetch] 网络请求失败: ${error.message}`);
+
+        // 尝试智能查找缓存（同上面的逻辑）
+        const basePath = getBasePath();
+        let cachedResponse: Response | null = null;
+
+        // 首页替代处理
+        if (url.pathname === basePath || url.pathname === `${basePath}/`) {
+          const alternativeUrl = url.pathname === basePath ? `${basePath}/` : basePath;
+          const alternativeRequest = new Request(url.origin + alternativeUrl, {
+            method: event.request.method,
+            headers: event.request.headers,
+            mode: event.request.mode,
+            credentials: event.request.credentials,
+            cache: event.request.cache,
+            redirect: event.request.redirect,
+            referrer: event.request.referrer,
+            referrerPolicy: event.request.referrerPolicy,
+          });
+          cachedResponse = await caches.match(alternativeRequest);
+        }
+
+        // report 路由规范化匹配
+        if (!cachedResponse && url.pathname.includes('/rep/')) {
+          try {
+            const normalizedKey = await normalizeReportCacheKey({ request: event.request });
+            const normalizedRequest = new Request(normalizedKey, {
+              method: event.request.method,
+              headers: event.request.headers,
+              mode: event.request.mode,
+              credentials: event.request.credentials,
+              cache: event.request.cache,
+              redirect: event.request.redirect,
+              referrer: event.request.referrer,
+              referrerPolicy: event.request.referrerPolicy,
+            });
+            cachedResponse = await caches.match(normalizedRequest);
+
+            // RSC 降级到 HTML
+            if (!cachedResponse && (url.searchParams.has('_rsc') || normalizedKey.includes('_v=rsc'))) {
+              const htmlKey = normalizedKey.replace('_v=rsc', '_v=html');
+              const htmlRequest = new Request(htmlKey, {
+                method: event.request.method,
+                headers: event.request.headers,
+                mode: event.request.mode,
+                credentials: event.request.credentials,
+                cache: event.request.cache,
+                redirect: event.request.redirect,
+                referrer: event.request.referrer,
+                referrerPolicy: event.request.referrerPolicy,
+              });
+              cachedResponse = await caches.match(htmlRequest);
+            }
+          } catch (e) {
+            console.error(`[SW][自定义Fetch] 规范化匹配失败:`, e);
+          }
+        }
+
+        if (cachedResponse) {
+          return cachedResponse.clone();
+        }
+
+        // 最后兜底：离线页面
+        const offlinePageUrl = `${getBasePath()}/~offline`;
+        const cachedOffline = await caches.match(offlinePageUrl);
+        if (cachedOffline) {
+          return cachedOffline.clone();
+        }
+
+        return new Response(OFFLINE_FALLBACK_HTML, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'X-Offline-Mode': 'true',
+          },
+        });
+      }
+    })());
+    return;
+  }
+
+  // RSC 请求特殊处理 - 使用快速网络检查策略
+  if (event.request.headers.get('RSC') === '1') {
+    event.respondWith((async () => {
+      // 先检查缓存
+      let cachedResponse = await caches.match(event.request);
+
+      if (isOfflineMode) {
+        // 离线模式：直接返回缓存或查找替代
+        console.log(`[SW][自定义Fetch] RSC 离线模式: ${url.pathname}`);
+
+        if (cachedResponse) {
+          console.log(`[SW][自定义Fetch] 使用 RSC 缓存: ${url.pathname}`);
+          return cachedResponse.clone();
+        }
+
+        // 尝试 HTML 版本
+        const htmlKey = url.href.replace('_v=rsc', '_v=html');
+        const htmlRequest = new Request(htmlKey, {
+          method: event.request.method,
+          headers: event.request.headers,
+          mode: event.request.mode,
+          credentials: event.request.credentials,
+          cache: event.request.cache,
+        });
+        const htmlResponse = await caches.match(htmlRequest);
+        if (htmlResponse) {
+          console.log(`[SW][自定义Fetch] RSC 降级到 HTML: ${url.pathname}`);
+          return htmlResponse.clone();
+        }
+
+        throw new Error('No cache found for RSC request');
+      }
+
+      // 在线模式：有缓存则先返回缓存，后台更新
+      if (cachedResponse) {
+        console.log(`[SW][自定义Fetch] RSC 找到缓存，立即返回: ${url.pathname}`);
+
+        // 后台更新
+        fetch(event.request.clone())
+          .then(response => {
+            if (response.ok) {
+              checkServerStatus(response, event.request);
+              caches.open('serwist-precache-v1').then(cache => {
+                cache.put(event.request, response.clone());
+              });
+            }
+          })
+          .catch(() => {});
+
+        return cachedResponse.clone();
+      }
+
+      // 没有缓存，快速网络请求
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // RSC 请求 5秒超时
+
+      try {
+        const response = await fetch(event.request.clone(), {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        checkServerStatus(response, event.request);
+
+        if (response.ok) {
+          const cache = await caches.open('serwist-precache-v1');
+          cache.put(event.request, response.clone());
+          return response;
+        }
+
+        throw new Error(`Server returned ${response.status}`);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    })());
     return;
   }
 
