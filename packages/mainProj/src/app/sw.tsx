@@ -756,7 +756,32 @@ let isOfflineMode = false;
 // 发送服务器状态更新消息到主线程
 function notifyServerStatus(isOnline: boolean) {
   const now = Date.now();
-  // 避免频繁发送消息，至少间隔 5 秒
+
+  // 如果状态是从离线恢复到在线，立即发送，不要节流
+  if (!serverStatus.isOnline && isOnline) {
+    console.log(`[SW][服务器状态] 检测到服务器从离线恢复为在线，立即发送通知`);
+    serverStatus.lastNotificationTime = now;
+    serverStatus.isOnline = isOnline;
+    isOfflineMode = false;
+    console.log(`[SW][服务器状态] 离线模式: ${isOfflineMode}`);
+
+    console.log(`[SW][服务器状态] 准备发送服务器状态更新: ${isOnline}`);
+    // 发送消息到所有客户端
+    self.clients.matchAll({ type: 'window' }).then(clients => {
+      console.log(`[SW][服务器状态] 找到 ${clients.length} 个客户端窗口`);
+      clients.forEach(client => {
+        console.log(`[SW][服务器状态] 向客户端发送消息: ${isOnline}`);
+        client.postMessage({
+          type: 'SERVER_STATUS_UPDATE',
+          isOnline: isOnline,
+          timestamp: now
+        });
+      });
+    });
+    return;
+  }
+
+  // 其他情况，避免频繁发送消息，至少间隔 5 秒
   if (now - serverStatus.lastNotificationTime < 5000) {
     console.log(`[SW][服务器状态] 距离上次通知不足5秒，跳过发送`);
     return;
@@ -843,6 +868,25 @@ async function quickNetworkCheck(): Promise<boolean> {
     return false;
   }
 }
+
+// ============================================================
+// 网络状态变化监听
+// ============================================================
+self.addEventListener('online', async () => {
+  console.log(`[SW] 网络连接已恢复`);
+
+  // 如果当前是离线模式，立即检查服务器状态
+  if (isOfflineMode) {
+    console.log(`[SW] 当前处于离线模式，检查服务器是否恢复...`);
+    const isServerOnline = await quickNetworkCheck();
+    if (isServerOnline) {
+      console.log(`[SW] 服务器已恢复，立即更新状态`);
+      notifyServerStatus(true);
+    } else {
+      console.log(`[SW] 服务器仍不可用，保持离线模式`);
+    }
+  }
+});
 
 // ============================================================
 // 自定义 fetch 处理器 - 最高优先级
@@ -1481,7 +1525,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   const { data } = event;
   console.log(`[SW] 收到消息:`, data);
-  
+
   if (data?.type === "CACHE_URLS") {
     event.waitUntil(
       cacheUrls(data.payload.urlsToCache)
@@ -1501,6 +1545,10 @@ self.addEventListener("message", (event) => {
       isOnline: serverStatus.isOnline,
       timestamp: serverStatus.lastNotificationTime
     });
+  } else if (data?.type === "SERVER_RECOVERED") {
+    // 主线程检测到服务器恢复，通知 Service Worker
+    console.log(`[SW] 收到服务器恢复通知，更新离线模式状态`);
+    notifyServerStatus(true);
   }
 });
 

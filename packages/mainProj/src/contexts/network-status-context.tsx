@@ -192,19 +192,35 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         }))
     }, [])
 
+    // 通知 Service Worker 服务器状态变化
+    const notifyServiceWorker = useCallback((isServerOnline: boolean) => {
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            console.log(`[NetworkStatus] 通知 Service Worker 服务器状态: ${isServerOnline}`);
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SERVER_RECOVERED',
+                isOnline: isServerOnline,
+                timestamp: Date.now()
+            });
+        }
+    }, [])
+
     const checkNetworkStatus = useCallback(async () => {
         const isClientOnline = typeof navigator !== "undefined" ? navigator.onLine : false
-        
+
         // 独立并同时发起三个检查
         const [isNextJSServerReachable, isGraphQLBackendReachable] = await Promise.allSettled([
             checkNextJSServerConnectivity(),
             checkGraphQLBackendConnectivity()
         ])
-        
+
         // 提取检查结果
         const nextJSResult = isNextJSServerReachable.status === "fulfilled" ? isNextJSServerReachable.value : false
         const graphQLResult = isGraphQLBackendReachable.status === "fulfilled" ? isGraphQLBackendReachable.value : false
-        
+
+        // 检查是否从离线恢复到在线
+        const wasOffline = !networkStatus.isNextJSServerReachable;
+        const isNowOnline = nextJSResult;
+
         // 更新网络状态
         setNetworkStatus((prev) => ({
             ...prev,
@@ -213,13 +229,19 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             isGraphQLBackendReachable: graphQLResult,
         }))
 
+        // 如果服务器从离线恢复到在线，通知 Service Worker
+        if (wasOffline && isNowOnline) {
+            console.log(`[NetworkStatus] 服务器从离线恢复到在线，通知 Service Worker`);
+            notifyServiceWorker(true);
+        }
+
         // 返回网络状态，供 page.tsx 使用
         return {
             isClientOnline,
             isNextJSServerReachable: nextJSResult,
             isGraphQLBackendReachable: graphQLResult,
         }
-    }, [checkNextJSServerConnectivity, checkGraphQLBackendConnectivity])
+    }, [checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, networkStatus.isNextJSServerReachable, notifyServiceWorker])
 
 
     const actions: NetworkStatusActions = {
