@@ -869,6 +869,53 @@ async function quickNetworkCheck(): Promise<boolean> {
   }
 }
 
+// 定期健康检查机制
+let healthCheckInterval: NodeJS.Timeout | number | null = null;
+
+function startPeriodicHealthCheck() {
+  // 清除之前的定时器
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval as NodeJS.Timeout);
+  }
+
+  // 每 30 秒检查一次
+  healthCheckInterval = setInterval(async () => {
+    console.log(`[SW][定期健康检查] 检查服务器状态...`);
+    const isServerOnline = await quickNetworkCheck();
+
+    if (isServerOnline) {
+      // 服务器在线
+      if (!serverStatus.isOnline) {
+        console.log(`[SW][定期健康检查] 服务器已恢复，更新状态为在线`);
+        serverStatus.consecutiveFailures = 0;
+        notifyServerStatus(true);
+      }
+    } else {
+      // 服务器离线
+      if (serverStatus.isOnline) {
+        serverStatus.consecutiveFailures++;
+        console.log(`[SW][定期健康检查] 服务器不可用，连续失败次数: ${serverStatus.consecutiveFailures}`);
+
+        // 连续失败 3 次以上，认为服务器不可用
+        if (serverStatus.consecutiveFailures >= 3) {
+          console.log(`[SW][定期健康检查] 达到失败阈值(3次)，通知主线程服务器不可用`);
+          notifyServerStatus(false);
+        }
+      }
+    }
+  }, 30000); // 30 秒
+
+  console.log(`[SW][定期健康检查] 已启动，每30秒检查一次服务器状态`);
+}
+
+function stopPeriodicHealthCheck() {
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval as NodeJS.Timeout);
+    healthCheckInterval = null;
+    console.log(`[SW][定期健康检查] 已停止`);
+  }
+}
+
 // ============================================================
 // 网络状态变化监听
 // ============================================================
@@ -1517,6 +1564,10 @@ self.addEventListener("activate", (event) => {
           version: APP_VERSION,
         });
       });
+
+      // 启动定期健康检查
+      startPeriodicHealthCheck();
+
       console.log("[SW] Service Worker 激活完成");
     })(),
   );

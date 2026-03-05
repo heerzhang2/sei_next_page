@@ -192,56 +192,27 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         }))
     }, [])
 
-    // 通知 Service Worker 服务器状态变化
-    const notifyServiceWorker = useCallback((isServerOnline: boolean) => {
-        if (typeof window !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            console.log(`[NetworkStatus] 通知 Service Worker 服务器状态: ${isServerOnline}`);
-            navigator.serviceWorker.controller.postMessage({
-                type: 'SERVER_RECOVERED',
-                isOnline: isServerOnline,
-                timestamp: Date.now()
-            });
-        }
-    }, [])
-
     const checkNetworkStatus = useCallback(async () => {
         const isClientOnline = typeof navigator !== "undefined" ? navigator.onLine : false
 
-        // 独立并同时发起三个检查
-        const [isNextJSServerReachable, isGraphQLBackendReachable] = await Promise.allSettled([
-            checkNextJSServerConnectivity(),
-            checkGraphQLBackendConnectivity()
-        ])
+        // Next.js 服务器状态由 Service Worker 定期检查并通知主线程，这里不再主动检查
+        // 只检查 GraphQL 后端状态
+        const graphQLResult = await checkGraphQLBackendConnectivity()
 
-        // 提取检查结果
-        const nextJSResult = isNextJSServerReachable.status === "fulfilled" ? isNextJSServerReachable.value : false
-        const graphQLResult = isGraphQLBackendReachable.status === "fulfilled" ? isGraphQLBackendReachable.value : false
-
-        // 检查是否从离线恢复到在线
-        const wasOffline = !networkStatus.isNextJSServerReachable;
-        const isNowOnline = nextJSResult;
-
-        // 更新网络状态
+        // 更新网络状态（Next.js 服务器状态由 Service Worker 更新）
         setNetworkStatus((prev) => ({
             ...prev,
             isClientOnline,
-            isNextJSServerReachable: nextJSResult,
             isGraphQLBackendReachable: graphQLResult,
         }))
-
-        // 如果服务器从离线恢复到在线，通知 Service Worker
-        if (wasOffline && isNowOnline) {
-            console.log(`[NetworkStatus] 服务器从离线恢复到在线，通知 Service Worker`);
-            notifyServiceWorker(true);
-        }
 
         // 返回网络状态，供 page.tsx 使用
         return {
             isClientOnline,
-            isNextJSServerReachable: nextJSResult,
+            isNextJSServerReachable: networkStatus.isNextJSServerReachable,
             isGraphQLBackendReachable: graphQLResult,
         }
-    }, [checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, networkStatus.isNextJSServerReachable, notifyServiceWorker])
+    }, [checkGraphQLBackendConnectivity, networkStatus.isNextJSServerReachable])
 
 
     const actions: NetworkStatusActions = {
@@ -358,12 +329,17 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             updateNetworkStatus(false)
             setNetworkStatus(prev => ({ ...prev, isGraphQLBackendReachable: false }))
         }
-        // 定期服务器检查
+        // 定期 GraphQL 后端检查（Next.js 服务器由 Service Worker 定期检查）
         const serverCheckInterval = print
             ? undefined
             : setInterval(async () => {
                 if (navigator.onLine) {
-                    await checkNetworkStatus()
+                    // 只检查 GraphQL 后端，Next.js 服务器由 Service Worker 检查
+                    const graphQLResult = await checkGraphQLBackendConnectivity()
+                    setNetworkStatus((prev) => ({
+                        ...prev,
+                        isGraphQLBackendReachable: graphQLResult,
+                    }))
                 }
             }, 40000) // 检查间隔为40秒
 

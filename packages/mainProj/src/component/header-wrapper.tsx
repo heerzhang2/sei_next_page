@@ -29,7 +29,7 @@ export default function HeaderWrapper({ items, children }: HeaderWrapperProps) {
     const [result, reexecuteQuery] = useQuery({
         query: AuthCompQuery,
         variables: {},
-        requestPolicy: "network-only",
+        requestPolicy: "cache-first",
     })
 
     useEffect(() => {
