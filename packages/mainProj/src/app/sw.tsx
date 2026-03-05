@@ -1143,20 +1143,30 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     event.respondWith((async () => {
       // 检查是否为 prefetch 请求
       const isPrefetch = event.request.headers.get('Next-Router-Prefetch') === '1';
+      console.log(`[SW][RSC-ENTER] ${url.pathname}, prefetch: ${isPrefetch}, offline: ${isOfflineMode}`);
 
       // 先检查缓存
       let cachedResponse = await caches.match(event.request);
 
       if (isOfflineMode) {
         // 离线模式：直接返回缓存或查找替代
-        console.log(`[SW][自定义Fetch] RSC 离线模式${isPrefetch ? '(prefetch)' : ''}: ${url.pathname}`);
+        console.log(`[SW][自定义Fetch] RSC 离线模式${isPrefetch ? '(prefetch)' : '(navigation)'}: ${url.pathname}, 有缓存: ${!!cachedResponse}`);
 
-        // Prefetch 请求在离线模式下静默失败
+        // Prefetch 请求在离线模式下尝试返回缓存，如果没有缓存则返回空 RSC
         if (isPrefetch) {
-          console.log(`[SW][自定义Fetch] RSC prefetch 离线模式，跳过: ${url.pathname}`);
-          return new Response('', {
-            status: 204, // No Content
+          console.log(`[SW][自定义Fetch] RSC prefetch 离线模式: ${url.pathname}`);
+          if (cachedResponse) {
+            console.log(`[SW][自定义Fetch] RSC prefetch 使用缓存: ${url.pathname}`);
+            return cachedResponse.clone();
+          }
+          // 返回一个简单的占位 RSC 响应
+          // 注意：在离线模式下，prefetch 返回空响应后，Next.js 点击 Link 时
+          // 会发送真实的 navigation RSC 请求，我们需要确保那个请求能正确处理
+          const emptyRsc = '[["$","div",null,{"children":[["$","$L1",null,{"children":"Loading..."}]]}]]';
+          return new Response(emptyRsc, {
+            status: 200,
             headers: {
+              'Content-Type': 'text/x-component',
               'X-Prefetch-Skipped': 'offline',
             },
           });
@@ -1232,7 +1242,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
       // 在线模式：有缓存则先返回缓存，后台更新
       if (cachedResponse) {
-        console.log(`[SW][自定义Fetch] RSC 找到缓存${isPrefetch ? '(prefetch)' : ''}，立即返回: ${url.pathname}`);
+        console.log(`[SW][自定义Fetch] RSC 找到缓存${isPrefetch ? '(prefetch)' : '(navigation)'}，立即返回: ${url.pathname}`);
 
         // Prefetch 请求不需要后台更新
         if (!isPrefetch) {
@@ -1287,11 +1297,14 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
         console.log(`[SW][自定义Fetch] RSC 网络请求失败${isPrefetch ? '(prefetch)' : ''}: ${error.message}, 尝试查找缓存`);
 
-        // Prefetch 请求失败时静默处理
+        // Prefetch 请求失败时返回空 RSC 响应
         if (isPrefetch) {
-          return new Response('', {
-            status: 204, // No Content
+          console.log(`[SW][自定义Fetch] RSC prefetch 失败，返回空响应: ${url.pathname}`);
+          const emptyRsc = '[]';
+          return new Response(emptyRsc, {
+            status: 200,
             headers: {
+              'Content-Type': 'text/x-component',
               'X-Prefetch-Failed': 'true',
             },
           });
