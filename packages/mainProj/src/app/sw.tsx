@@ -794,28 +794,32 @@ function checkServerStatus(response: Response, request: Request) {
   const isRSCRequest = request.headers.get('RSC') === '1';
   const isNextJSPageRequest = isDocumentRequest || isRSCRequest;
 
-  console.log(`[SW][服务器状态] 检查请求: ${url.pathname}, isDocumentRequest: ${isDocumentRequest}, isRSCRequest: ${isRSCRequest}, isNextJSPageRequest: ${isNextJSPageRequest}`);
+  console.log(`[SW][服务器状态] 检查请求: ${url.pathname}, status: ${response.status}, isNextJSPageRequest: ${isNextJSPageRequest}, 当前离线模式: ${isOfflineMode}`);
 
   // 只处理 Next.js 页面请求，不处理 API 请求和健康检查请求
-  if (!isNextJSPageRequest) {
+  // 并且跳过 prefetch 请求（prefetch 失败不应影响服务器状态判断）
+  if (!isNextJSPageRequest || request.headers.get('Next-Router-Prefetch') === '1') {
     return;
   }
 
-  // 检查是否为 502 错误
-  if (response.status === 502) {
-    serverStatus.consecutiveFailures++;
-    console.log(`[SW][服务器状态] 检测到 502 错误，连续失败次数: ${serverStatus.consecutiveFailures}`);
+  // 检查是否为 5xx 服务器错误
+  const isServerError = response.status >= 500 && response.status <= 599;
+  const isSuccess = response.status >= 200 && response.status < 300;
 
-    // 连续失败 1 次以上，认为服务器不可用
-    if (serverStatus.consecutiveFailures >= 1) {
-      console.log(`[SW][服务器状态] 达到失败阈值，通知主线程服务器不可用`);
+  if (isServerError) {
+    serverStatus.consecutiveFailures++;
+    console.log(`[SW][服务器状态] 检测到 ${response.status} 错误，连续失败次数: ${serverStatus.consecutiveFailures}`);
+
+    // 连续失败 3 次以上，认为服务器不可用
+    if (serverStatus.consecutiveFailures >= 3) {
+      console.log(`[SW][服务器状态] 达到失败阈值(3次)，通知主线程服务器不可用`);
       notifyServerStatus(false);
     }
-  } else if (response.status >= 200 && response.status < 300) {
+  } else if (isSuccess) {
     // 成功响应，重置失败计数器
     if (serverStatus.consecutiveFailures > 0) {
       serverStatus.consecutiveFailures = 0;
-      console.log(`[SW][服务器状态] 服务器响应正常，重置失败计数器`);
+      console.log(`[SW][服务器状态] 服务器响应正常(${response.status})，重置失败计数器`);
     }
 
     // 如果之前服务器不可用，现在恢复正常，发送通知
@@ -1043,7 +1047,17 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         throw new Error(`Server returned ${response.status}`);
       } catch (error) {
         clearTimeout(timeoutId);
-        console.log(`[SW][自定义Fetch] 网络请求失败: ${error.message}`);
+
+        // 网络错误计入失败
+        serverStatus.consecutiveFailures++;
+        console.log(`[SW][自定义Fetch] 文档请求网络错误: ${error.message}, 连续失败次数: ${serverStatus.consecutiveFailures}`);
+
+        // 连续失败 3 次，认为服务器不可用
+        if (serverStatus.consecutiveFailures >= 3) {
+          notifyServerStatus(false);
+        }
+
+        console.log(`[SW][自定义Fetch] 网络请求失败，尝试查找缓存`);
 
         // 尝试智能查找缓存（同上面的逻辑）
         const basePath = getBasePath();
@@ -1127,12 +1141,26 @@ self.addEventListener('fetch', (event: FetchEvent) => {
   // RSC 请求特殊处理 - 使用快速网络检查策略
   if (event.request.headers.get('RSC') === '1') {
     event.respondWith((async () => {
+      // 检查是否为 prefetch 请求
+      const isPrefetch = event.request.headers.get('Next-Router-Prefetch') === '1';
+
       // 先检查缓存
       let cachedResponse = await caches.match(event.request);
 
       if (isOfflineMode) {
         // 离线模式：直接返回缓存或查找替代
-        console.log(`[SW][自定义Fetch] RSC 离线模式: ${url.pathname}`);
+        console.log(`[SW][自定义Fetch] RSC 离线模式${isPrefetch ? '(prefetch)' : ''}: ${url.pathname}`);
+
+        // Prefetch 请求在离线模式下静默失败
+        if (isPrefetch) {
+          console.log(`[SW][自定义Fetch] RSC prefetch 离线模式，跳过: ${url.pathname}`);
+          return new Response('', {
+            status: 204, // No Content
+            headers: {
+              'X-Prefetch-Skipped': 'offline',
+            },
+          });
+        }
 
         if (cachedResponse) {
           console.log(`[SW][自定义Fetch] 使用 RSC 缓存: ${url.pathname}`);
@@ -1154,24 +1182,72 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           return htmlResponse.clone();
         }
 
-        throw new Error('No cache found for RSC request');
+        // 尝试从所有缓存中查找（包括规范化后的路径）
+        try {
+          // 对于报告页面，尝试使用规范化 key 查找
+          if (url.pathname.includes('/rep/')) {
+            const normalizedKey = await normalizeReportCacheKey({ request: event.request });
+            const normalizedRequest = new Request(normalizedKey, {
+              method: event.request.method,
+              headers: event.request.headers,
+              mode: event.request.mode,
+              credentials: event.request.credentials,
+              cache: event.request.cache,
+            });
+            const normalizedResponse = await caches.match(normalizedRequest);
+            if (normalizedResponse) {
+              console.log(`[SW][自定义Fetch] RSC 使用规范化缓存: ${url.pathname}`);
+              return normalizedResponse.clone();
+            }
+
+            // 尝试查找 HTML 版本的规范化缓存
+            const htmlNormalizedKey = normalizedKey.replace('_v=rsc', '_v=html');
+            const htmlNormalizedRequest = new Request(htmlNormalizedKey, {
+              method: event.request.method,
+              headers: event.request.headers,
+              mode: event.request.mode,
+              credentials: event.request.credentials,
+              cache: event.request.cache,
+            });
+            const htmlNormalizedResponse = await caches.match(htmlNormalizedRequest);
+            if (htmlNormalizedResponse) {
+              console.log(`[SW][自定义Fetch] RSC 降级到 HTML (规范化): ${url.pathname}`);
+              return htmlNormalizedResponse.clone();
+            }
+          }
+        } catch (e) {
+          console.error(`[SW][自定义Fetch] RSC 查找缓存失败:`, e);
+        }
+
+        // 完全没有缓存，返回空 RSC 响应（避免报错）
+        console.log(`[SW][自定义Fetch] RSC 无缓存可用，返回空响应: ${url.pathname}`);
+        return new Response('', {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/x-component',
+            'X-Cache-Miss': 'true',
+          },
+        });
       }
 
       // 在线模式：有缓存则先返回缓存，后台更新
       if (cachedResponse) {
-        console.log(`[SW][自定义Fetch] RSC 找到缓存，立即返回: ${url.pathname}`);
+        console.log(`[SW][自定义Fetch] RSC 找到缓存${isPrefetch ? '(prefetch)' : ''}，立即返回: ${url.pathname}`);
 
-        // 后台更新
-        fetch(event.request.clone())
-          .then(response => {
-            if (response.ok) {
-              checkServerStatus(response, event.request);
-              caches.open('serwist-precache-v1').then(cache => {
-                cache.put(event.request, response.clone());
-              });
-            }
-          })
-          .catch(() => {});
+        // Prefetch 请求不需要后台更新
+        if (!isPrefetch) {
+          // 后台更新
+          fetch(event.request.clone())
+            .then(response => {
+              if (response.ok) {
+                checkServerStatus(response, event.request);
+                caches.open('serwist-precache-v1').then(cache => {
+                  cache.put(event.request, response.clone());
+                });
+              }
+            })
+            .catch(() => {});
+        }
 
         return cachedResponse.clone();
       }
@@ -1197,7 +1273,90 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         throw new Error(`Server returned ${response.status}`);
       } catch (error) {
         clearTimeout(timeoutId);
-        throw error;
+
+        // 网络错误（超时、连接失败）也计入失败
+        if (!isPrefetch) {
+          serverStatus.consecutiveFailures++;
+          console.log(`[SW][自定义Fetch] RSC 网络错误: ${error.message}, 连续失败次数: ${serverStatus.consecutiveFailures}`);
+
+          // 连续失败 3 次，认为服务器不可用
+          if (serverStatus.consecutiveFailures >= 3) {
+            notifyServerStatus(false);
+          }
+        }
+
+        console.log(`[SW][自定义Fetch] RSC 网络请求失败${isPrefetch ? '(prefetch)' : ''}: ${error.message}, 尝试查找缓存`);
+
+        // Prefetch 请求失败时静默处理
+        if (isPrefetch) {
+          return new Response('', {
+            status: 204, // No Content
+            headers: {
+              'X-Prefetch-Failed': 'true',
+            },
+          });
+        }
+
+        // 网络失败时，尝试查找缓存（同离线模式逻辑）
+        try {
+          // 尝试 HTML 版本
+          const htmlKey = url.href.replace('_v=rsc', '_v=html');
+          const htmlRequest = new Request(htmlKey, {
+            method: event.request.method,
+            headers: event.request.headers,
+            mode: event.request.mode,
+            credentials: event.request.credentials,
+            cache: event.request.cache,
+          });
+          const htmlResponse = await caches.match(htmlRequest);
+          if (htmlResponse) {
+            console.log(`[SW][自定义Fetch] RSC 网络失败，降级到 HTML: ${url.pathname}`);
+            return htmlResponse.clone();
+          }
+
+          // 对于报告页面，尝试使用规范化 key 查找
+          if (url.pathname.includes('/rep/')) {
+            const normalizedKey = await normalizeReportCacheKey({ request: event.request });
+            const normalizedRequest = new Request(normalizedKey, {
+              method: event.request.method,
+              headers: event.request.headers,
+              mode: event.request.mode,
+              credentials: event.request.credentials,
+              cache: event.request.cache,
+            });
+            const normalizedResponse = await caches.match(normalizedRequest);
+            if (normalizedResponse) {
+              console.log(`[SW][自定义Fetch] RSC 网络失败，使用规范化缓存: ${url.pathname}`);
+              return normalizedResponse.clone();
+            }
+
+            const htmlNormalizedKey = normalizedKey.replace('_v=rsc', '_v=html');
+            const htmlNormalizedRequest = new Request(htmlNormalizedKey, {
+              method: event.request.method,
+              headers: event.request.headers,
+              mode: event.request.mode,
+              credentials: event.request.credentials,
+              cache: event.request.cache,
+            });
+            const htmlNormalizedResponse = await caches.match(htmlNormalizedRequest);
+            if (htmlNormalizedResponse) {
+              console.log(`[SW][自定义Fetch] RSC 网络失败，降级到 HTML (规范化): ${url.pathname}`);
+              return htmlNormalizedResponse.clone();
+            }
+          }
+        } catch (e) {
+          console.error(`[SW][自定义Fetch] RSC 失败后查找缓存异常:`, e);
+        }
+
+        // 最后兜底：返回空响应（避免页面崩溃）
+        console.log(`[SW][自定义Fetch] RSC 完全失败，返回空响应: ${url.pathname}`);
+        return new Response('', {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/x-component',
+            'X-Fetch-Failed': 'true',
+          },
+        });
       }
     })());
     return;
