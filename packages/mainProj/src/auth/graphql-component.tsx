@@ -7,7 +7,7 @@ import { authExchange } from "@urql/exchange-auth"
 import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
-import { pipe, tap, map } from "wonka"
+import { pipe, tap, map, filter } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
@@ -119,7 +119,6 @@ const customFetchExchange: Exchange = ({ forward }) => {
         return pipe(
             operations$,
             map((operation: Operation) => {
-                const controller = new AbortController()
                 // 检查离线状态：使用 window.__graphqlBackendReachable 或 sessionStorage 中的状态
                 let isOffline = false
                 if (typeof window !== "undefined") {
@@ -145,16 +144,23 @@ const customFetchExchange: Exchange = ({ forward }) => {
                     }
                 }
 
+                console.log("[customFetchExchange] 检测到离线状态:", isOffline, "操作类型:", operation.kind)
+
+                const controller = new AbortController()
+
                 // 离线模式下超时时间缩短到 300ms，快速失败
                 const timeout = isOffline ? 300 : 180000
                 const timeoutId = setTimeout(() => controller.abort(), timeout)
 
                 const deviceId = getDeviceId()
                 const existingHeaders = operation.context.fetchOptions?.headers || {}
+
+                // 在 context 中标记离线状态，供后续 exchange 使用
                 return {
                     ...operation,
                     context: {
                         ...operation.context,
+                        _isOffline: isOffline,
                         fetchOptions: {
                             ...operation.context.fetchOptions,
                             signal: controller.signal,

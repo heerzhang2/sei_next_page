@@ -465,7 +465,11 @@ function CommonReportDataSub({
     const requestPolicy = useMemo(() => {
         // 离线模式：完全使用缓存，不发起任何网络请求
         if (!isClientOnline || !isGraphQLBackendReachable) {
-            return "cache-first"
+            console.log("[report-data] 离线模式，使用 cache-only 策略", {
+                isClientOnline,
+                isGraphQLBackendReachable,
+            })
+            return "cache-only"
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable])
