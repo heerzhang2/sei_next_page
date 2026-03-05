@@ -1480,6 +1480,8 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   const { data } = event;
+  console.log(`[SW] 收到消息:`, data);
+  
   if (data?.type === "CACHE_URLS") {
     event.waitUntil(
       cacheUrls(data.payload.urlsToCache)
@@ -1491,6 +1493,14 @@ self.addEventListener("message", (event) => {
           event.ports[0]?.postMessage(false);
         }),
     );
+  } else if (data?.type === "GET_SERVER_STATUS") {
+    // 响应主线程的服务器状态查询请求
+    console.log(`[SW] 响应服务器状态查询:`, serverStatus);
+    event.ports[0]?.postMessage({
+      type: "SERVER_STATUS_RESPONSE",
+      isOnline: serverStatus.isOnline,
+      timestamp: serverStatus.lastNotificationTime
+    });
   }
 });
 

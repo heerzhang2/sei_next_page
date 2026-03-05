@@ -232,6 +232,35 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     }
 
     useEffect(() => {
+        // 从 Service Worker 获取当前服务器状态
+        const fetchServerStatusFromSW = async () => {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                try {
+                    const messageChannel = new MessageChannel();
+                    messageChannel.port1.onmessage = (event) => {
+                        if (event.data?.type === 'SERVER_STATUS_RESPONSE') {
+                            const { isOnline, timestamp } = event.data;
+                            console.log(`[NetworkStatus] 从 SW 获取服务器状态: ${isOnline}, 时间戳: ${timestamp}`);
+                            setNetworkStatus(prev => ({
+                                ...prev,
+                                isNextJSServerReachable: isOnline
+                            }));
+                        }
+                    };
+                    
+                    navigator.serviceWorker.controller.postMessage(
+                        { type: 'GET_SERVER_STATUS' },
+                        [messageChannel.port2]
+                    );
+                } catch (error) {
+                    console.error(`[NetworkStatus] 从 SW 获取服务器状态失败:`, error);
+                }
+            }
+        };
+
+        // 组件挂载时立即获取服务器状态
+        fetchServerStatusFromSW();
+
         // Service Worker 消息监听
         const handleServiceWorkerMessage = (event: MessageEvent) => {
             console.log(`[NetworkStatus] 收到 Service Worker 消息:`, event.data);
