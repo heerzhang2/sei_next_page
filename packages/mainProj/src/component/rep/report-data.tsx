@@ -232,10 +232,27 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         query: ReportQuery,
         variables: queryVariables,
         requestPolicy,
-        pause: false,
+        pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
     })
 
     const { data, fetching, error } = result
+
+    // 在data为空时，每隔200毫秒查询一次，最多10次
+    useEffect(() => {
+        if (mounted && !data) {
+            let count = 0
+            const maxRetries = 10
+            const interval = setInterval(() => {
+                count++
+                if (count >= maxRetries || data) {
+                    clearInterval(interval)
+                    return
+                }
+                reexecuteQuery({ requestPolicy: requestPolicy })
+            }, 200)
+            return () => clearInterval(interval)
+        }
+    }, [mounted, data, reexecuteQuery, requestPolicy])
     const report = data && data.getReport
     const { setStorage, setSubrType, setOffline, storage, modified, setModeltype, setModelversion } = useStorage()
 
@@ -477,18 +494,36 @@ function CommonReportDataSub({
         query: ReportQuery,
         variables: mainQueryVariables,
         requestPolicy,
-        pause: false,
+        pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
     })
 
     const [resultSub] = useQuery({
         query: ReportSubQuery,
         variables: subQueryVariables,
         requestPolicy,
-        pause: false,
+        pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
     })
 
     const { data, fetching, error } = result
     const { data: dataSub, fetching: fetchingSub, error: errorSub } = resultSub
+
+    // 在data为空时，每隔200毫秒查询一次，最多10次
+    useEffect(() => {
+        if (mounted && !data) {
+            let count = 0
+            const maxRetries = 10
+            const interval = setInterval(() => {
+                count++
+                if (count >= maxRetries || data) {
+                    clearInterval(interval)
+                    return
+                }
+                result.reexecuteQuery({ requestPolicy: requestPolicy })
+                resultSub.reexecuteQuery({ requestPolicy: requestPolicy })
+            }, 200)
+            return () => clearInterval(interval)
+        }
+    }, [mounted, data, result, resultSub, requestPolicy])
     const report = data && data?.getReport
     const reportSub = React.useMemo(() => {
         const reportSub = dataSub && dataSub?.getReport
@@ -630,6 +665,8 @@ function CommonReportDataSub({
     }
     if (report && !report.snapshot) return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
     if (!report) {
+        if(fetching || error)
+            return <div className="p-4 text-sm text-muted-foreground">加载报告数据还没完...</div>
         return (
             <div className="content-center text-center h-screen w-screen">
                 <span
