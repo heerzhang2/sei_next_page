@@ -43,6 +43,9 @@ export default function Home() {
                             <Link href="/login">登录页。</Link>
                         </div>
                         <div className="mt-10">
+                            <Link href="/rep/fAAAAAAAdTUAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1">002报告-管道例子</Link>
+                        </div>
+                        <div className="mt-10">
                             <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">查阅当前2份报告-滑行车</Link>
                         </div>
                         <div className="mt-10">
@@ -96,9 +99,9 @@ export default function Home() {
                     </Link>
                     <Link
                         className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                        href="/reptype"
+                        href="/lookId"
                     >
-                        docs
+                        ID转换
                     </Link>
                     <a
                         className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"

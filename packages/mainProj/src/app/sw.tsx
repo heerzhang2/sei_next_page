@@ -869,52 +869,38 @@ async function quickNetworkCheck(): Promise<boolean> {
   }
 }
 
-// 定期健康检查机制
-let healthCheckInterval: NodeJS.Timeout | number | null = null;
+// ============================================================
+// 移除了 SW 内部的定期健康检查机制
+// 理由：Service Worker 的 setInterval 在页面刷新后不可靠
+// 现在由主线程统一管理健康检查，并通过消息通知 SW
+// ============================================================
 
-function startPeriodicHealthCheck() {
-  // 清除之前的定时器
-  if (healthCheckInterval) {
-    clearInterval(healthCheckInterval as NodeJS.Timeout);
-  }
+// 接收主线程的服务器状态更新
+self.addEventListener('message', async (event) => {
+  if (event.data?.type === 'NEXTJS_SERVER_STATUS_UPDATE') {
+    const { isOnline, timestamp } = event.data;
+    console.log(`[SW] 收到主线程的 Next.js 服务器状态更新: ${isOnline}, 时间戳: ${timestamp}`);
 
-  // 每 30 秒检查一次
-  healthCheckInterval = setInterval(async () => {
-    console.log(`[SW][定期健康检查] 检查服务器状态...`);
-    const isServerOnline = await quickNetworkCheck();
-
-    if (isServerOnline) {
-      // 前端服务器在线
+    if (isOnline) {
       if (!serverStatus.isOnline) {
-        console.log(`[SW][定期健康检查] 服务器已恢复，更新状态为在线`);
+        console.log(`[SW][主线程通知] Next.js 服务器已恢复，更新状态为在线`);
         serverStatus.consecutiveFailures = 0;
         notifyServerStatus(true);
       }
     } else {
-      // nextjs前端服务器目前 是离线
       if (serverStatus.isOnline) {
         serverStatus.consecutiveFailures++;
-        console.log(`[SW][定期健康检查] 服务器不可用，连续失败次数: ${serverStatus.consecutiveFailures}`);
+        console.log(`[SW][主线程通知] Next.js 服务器不可用，连续失败次数: ${serverStatus.consecutiveFailures}`);
 
         // 连续失败 1 次以上，认为服务器不可用
         if (serverStatus.consecutiveFailures >= 1) {
-          console.log(`[SW][定期健康检查] 达到失败阈值(1次)，通知主线程服务器不可用`);
+          console.log(`[SW][主线程通知] 达到失败阈值(1次)，通知主线程服务器不可用`);
           notifyServerStatus(false);
         }
       }
     }
-  }, 30000); // 30 秒
-
-  console.log(`[SW][定期健康检查] 已启动，每30秒检查一次服务器状态`);
-}
-
-function stopPeriodicHealthCheck() {
-  if (healthCheckInterval) {
-    clearInterval(healthCheckInterval as NodeJS.Timeout);
-    healthCheckInterval = null;
-    console.log(`[SW][定期健康检查] 已停止`);
   }
-}
+});
 
 // ============================================================
 // 网络状态变化监听
@@ -1565,8 +1551,8 @@ self.addEventListener("activate", (event) => {
         });
       });
 
-      // 启动定期健康检查
-      startPeriodicHealthCheck();
+      // 不再在此启动定期健康检查
+      // 现在由主线程统一管理健康检查，并通过消息通知 SW
 
       console.log("[SW] Service Worker 激活完成");
     })(),
