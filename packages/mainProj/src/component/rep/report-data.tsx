@@ -232,16 +232,16 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         query: ReportQuery,
         variables: queryVariables,
         requestPolicy,
-        pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
+        pause: false,
     })
 
     const { data, fetching, error } = result
 
     // 在data为空时，每隔200毫秒查询一次，最多10次
     useEffect(() => {
-        if (mounted && !data) {
+        if ((!isClientOnline || !isGraphQLBackendReachable) && mounted && !data) {
             let count = 0
-            const maxRetries = 10
+            const maxRetries = 20
             const interval = setInterval(() => {
                 count++
                 if (count >= maxRetries || data) {
@@ -249,7 +249,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
                     return
                 }
                 reexecuteQuery({ requestPolicy: requestPolicy })
-            }, 200)
+            }, 150)
             return () => clearInterval(interval)
         }
     }, [mounted, data, reexecuteQuery, requestPolicy])
@@ -490,14 +490,14 @@ function CommonReportDataSub({
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable])
-    const [result] = useQuery({
+    const [result, reexecuteQuery] = useQuery({
         query: ReportQuery,
         variables: mainQueryVariables,
         requestPolicy,
         pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
     })
 
-    const [resultSub] = useQuery({
+    const [resultSub, reexecuteQuerySub] = useQuery({
         query: ReportSubQuery,
         variables: subQueryVariables,
         requestPolicy,
@@ -509,21 +509,22 @@ function CommonReportDataSub({
 
     // 在data为空时，每隔200毫秒查询一次，最多10次
     useEffect(() => {
-        if (mounted && !data) {
+        if ((!isClientOnline || !isGraphQLBackendReachable) && mounted && (!data || !dataSub)) {
             let count = 0
-            const maxRetries = 10
+            const maxRetries = 20
             const interval = setInterval(() => {
                 count++
                 if (count >= maxRetries || data) {
                     clearInterval(interval)
                     return
                 }
-                result.reexecuteQuery({ requestPolicy: requestPolicy })
-                resultSub.reexecuteQuery({ requestPolicy: requestPolicy })
-            }, 200)
+                reexecuteQuery({ requestPolicy: requestPolicy })
+                reexecuteQuerySub({ requestPolicy: requestPolicy })
+            }, 150)
             return () => clearInterval(interval)
         }
-    }, [mounted, data, result, resultSub, requestPolicy])
+    }, [mounted, data, reexecuteQuery, reexecuteQuerySub, requestPolicy])
+
     const report = data && data?.getReport
     const reportSub = React.useMemo(() => {
         const reportSub = dataSub && dataSub?.getReport
@@ -561,9 +562,9 @@ function CommonReportDataSub({
         lastQueryTimeRef.current = 0
         pausedUntilRef.current = 0
         setQueryEnabled(true)
-        result.reexecuteQuery({ requestPolicy: "cache-and-network" })
-        resultSub.reexecuteQuery({ requestPolicy: "cache-and-network" })
-    }, [result, resultSub, isClientOnline, isGraphQLBackendReachable])
+        reexecuteQuery({ requestPolicy: "cache-and-network" })
+        reexecuteQuerySub({ requestPolicy: "cache-and-network" })
+    }, [reexecuteQuery, reexecuteQuerySub, isClientOnline, isGraphQLBackendReachable])
 
     useEffect(() => {
         if (!isClientOnline || !isGraphQLBackendReachable) return
