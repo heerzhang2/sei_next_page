@@ -884,21 +884,21 @@ function startPeriodicHealthCheck() {
     const isServerOnline = await quickNetworkCheck();
 
     if (isServerOnline) {
-      // 服务器在线
+      // 前端服务器在线
       if (!serverStatus.isOnline) {
         console.log(`[SW][定期健康检查] 服务器已恢复，更新状态为在线`);
         serverStatus.consecutiveFailures = 0;
         notifyServerStatus(true);
       }
     } else {
-      // 服务器离线
+      // nextjs前端服务器目前 是离线
       if (serverStatus.isOnline) {
         serverStatus.consecutiveFailures++;
         console.log(`[SW][定期健康检查] 服务器不可用，连续失败次数: ${serverStatus.consecutiveFailures}`);
 
-        // 连续失败 3 次以上，认为服务器不可用
-        if (serverStatus.consecutiveFailures >= 3) {
-          console.log(`[SW][定期健康检查] 达到失败阈值(3次)，通知主线程服务器不可用`);
+        // 连续失败 1 次以上，认为服务器不可用
+        if (serverStatus.consecutiveFailures >= 1) {
+          console.log(`[SW][定期健康检查] 达到失败阈值(1次)，通知主线程服务器不可用`);
           notifyServerStatus(false);
         }
       }

@@ -232,7 +232,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         query: ReportQuery,
         variables: queryVariables,
         requestPolicy,
-        pause: false,
+        pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
     })
 
     const { data, fetching, error } = result
