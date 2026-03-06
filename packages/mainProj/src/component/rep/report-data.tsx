@@ -223,7 +223,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const requestPolicy = useMemo(() => {
         // 离线模式：优先使用缓存，缓存不存在时会发起网络请求（但会快速失败）
         if (!isClientOnline || !isGraphQLBackendReachable) {
-            return "cache-first"
+            return "cache-only"     //不要使用"cache-first"
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable])
