@@ -183,6 +183,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const queryCountRef = useRef(0)
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
+    const periodicRefreshRef = useRef<NodeJS.Timeout | null>(null)
 
     const [isClient, setIsClient] = useState(false)
     const { isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable } = useNetworkStatusContext()
@@ -224,9 +225,12 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         // 优先使用缓存的场景：
         // 1. 客户端离线
         // 2. GraphQL后端离线
-        // 3. Next.js前端离线（页面刷新模式，避免多余请求）
-        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) {
+        if (!isClientOnline || !isGraphQLBackendReachable) {
             return "cache-only"
+        }
+        else if(!isNextJSServerReachable){
+           // 3. Next.js 前端离线 + GraphQL 后端在线( 页面刷新模式，避免多余请求）
+           return "cache-first"
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
@@ -393,6 +397,58 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         }
     }, [report, storage, setStorage, setSubrType, modified])
 
+    // Next.js 离线但 GraphQL 在线时，定期刷新数据（10分钟）
+    useEffect(() => {
+        // 清理旧的定时器
+        if (periodicRefreshRef.current) {
+            clearInterval(periodicRefreshRef.current)
+            periodicRefreshRef.current = null
+        }
+
+        // 只在 Next.js 离线但 GraphQL 在线时启用定期刷新
+        if (!isNextJSServerReachable && isClientOnline && isGraphQLBackendReachable && data) {
+            console.log("[ReportData] 启用定期刷新（Next.js 离线 + GraphQL 在线）")
+
+            // sessionStorage key - 包含 repId 以区分不同报告
+            const STORAGE_KEY = `reportData_lastRefresh_${repId}`
+
+            // 检查是否需要立即刷新（距离上次刷新超过10分钟）
+            const checkAndRefresh = () => {
+                const lastRefresh = sessionStorage.getItem(STORAGE_KEY)
+                const now = Date.now()
+
+                if (!lastRefresh || now - parseInt(lastRefresh) >= 10 * 60 * 1000) {
+                    console.log("[ReportData] 执行定期刷新（10分钟间隔）")
+                    reexecuteQuery({ requestPolicy: "cache-and-network" })
+                    sessionStorage.setItem(STORAGE_KEY, now.toString())
+                }
+            }
+
+            // 立即检查一次
+            checkAndRefresh()
+
+            // 设置定时器，每分钟检查一次是否需要刷新
+            periodicRefreshRef.current = setInterval(checkAndRefresh, 60 * 1000)
+        }
+
+        // Next.js 服务器恢复正常时，清理所有 reportData_lastRefresh_ 相关的 sessionStorage
+        if (isNextJSServerReachable) {
+            console.log("[ReportData] Next.js 服务器已恢复，清理刷新时间记录")
+            Object.keys(sessionStorage).forEach(key => {
+                if (key.startsWith("reportData_lastRefresh_")) {
+                    sessionStorage.removeItem(key)
+                }
+            })
+        }
+
+        return () => {
+            if (periodicRefreshRef.current) {
+                clearInterval(periodicRefreshRef.current)
+                periodicRefreshRef.current = null
+            }
+        }
+    }, [isNextJSServerReachable, isClientOnline, isGraphQLBackendReachable, data, reexecuteQuery])
+
     useEffect(() => {
         const hasNetworkError = isNetworkError(error)
         const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable
@@ -457,6 +513,7 @@ function CommonReportDataSub({
     const queryCountRef = useRef(0)
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
+    const periodicRefreshRef = useRef<NodeJS.Timeout | null>(null)
 
     const { isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable } = useNetworkStatusContext()
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -492,13 +549,10 @@ function CommonReportDataSub({
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
     const requestPolicy = useMemo(() => {
         // 优先使用缓存的场景（包括 Next.js 前端离线）
-        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) {
-            console.log("[report-data] 离线模式，使用 cache-only 策略", {
-                isClientOnline,
-                isGraphQLBackendReachable,
-                isNextJSServerReachable,
-            })
+        if (!isClientOnline || !isGraphQLBackendReachable) {
             return "cache-only"
+        }else if(!isNextJSServerReachable){
+           return "cache-first"
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
@@ -658,6 +712,32 @@ function CommonReportDataSub({
             console.error("[ReportData] Error parsing sub-report data:", error)
         }
     }, [report, reportSub, storage, setStorage, setSubrType, setParrepfs, modified])
+
+    // Next.js 离线但 GraphQL 在线时，定期刷新数据（10分钟）- 子报告
+    useEffect(() => {
+        // 清理旧的定时器
+        if (periodicRefreshRef.current) {
+            clearInterval(periodicRefreshRef.current)
+            periodicRefreshRef.current = null
+        }
+
+        // 只在 Next.js 离线但 GraphQL 在线时启用定期刷新
+        if (!isNextJSServerReachable && isClientOnline && isGraphQLBackendReachable && data && dataSub) {
+            console.log("[ReportData] 启用子报告定期刷新（Next.js 离线 + GraphQL 在线）")
+            periodicRefreshRef.current = setInterval(() => {
+                console.log("[ReportData] 执行子报告定期刷新（10分钟间隔）")
+                reexecuteQuery({ requestPolicy: "network-only" })
+                reexecuteQuerySub({ requestPolicy: "network-only" })
+            }, 10 * 60 * 1000) // 10分钟
+        }
+
+        return () => {
+            if (periodicRefreshRef.current) {
+                clearInterval(periodicRefreshRef.current)
+                periodicRefreshRef.current = null
+            }
+        }
+    }, [isNextJSServerReachable, isClientOnline, isGraphQLBackendReachable, data, dataSub, reexecuteQuery, reexecuteQuerySub])
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
