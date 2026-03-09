@@ -185,7 +185,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     const pausedUntilRef = useRef(0)
 
     const [isClient, setIsClient] = useState(false)
-    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const { isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable } = useNetworkStatusContext()
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
     const [hasUppyUnsavedStates, setHasUppyUnsavedStates] = useState(false)
     const searchParams = useSearchParams()
@@ -221,25 +221,28 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
     const requestPolicy = useMemo(() => {
-        // 离线模式：优先使用缓存，缓存不存在时会发起网络请求（但会快速失败）
-        if (!isClientOnline || !isGraphQLBackendReachable) {
-            return "cache-only"     //不要使用"cache-first"
+        // 优先使用缓存的场景：
+        // 1. 客户端离线
+        // 2. GraphQL后端离线
+        // 3. Next.js前端离线（页面刷新模式，避免多余请求）
+        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) {
+            return "cache-only"
         }
         return "cache-and-network"
-    }, [isClientOnline, isGraphQLBackendReachable])
+    }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
 
     const [result, reexecuteQuery] = useQuery({
         query: ReportQuery,
         variables: queryVariables,
         requestPolicy,
-        pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
+        pause: (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) && !mounted ? true : false,
     })
 
     const { data, fetching, error } = result
 
     // 在data为空时，每隔200毫秒查询一次，最多10次
     useEffect(() => {
-        if ((!isClientOnline || !isGraphQLBackendReachable) && mounted && !data) {
+        if ((!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) && mounted && !data) {
             let count = 0
             const maxRetries = 20
             const interval = setInterval(() => {
@@ -252,7 +255,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
             }, 150)
             return () => clearInterval(interval)
         }
-    }, [mounted, data, reexecuteQuery, requestPolicy])
+    }, [mounted, data, reexecuteQuery, requestPolicy, isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
     const report = data && data.getReport
     const { setStorage, setSubrType, setOffline, storage, modified, setModeltype, setModelversion } = useStorage()
 
@@ -289,12 +292,20 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     }, [report, repId, modified])
 
     const refreshData = useCallback(() => {
-        if (!isClientOnline || !isGraphQLBackendReachable) {
+        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) {
+            const reasons = []
+            if (!isClientOnline) reasons.push("终端断网中")
+            if (!isGraphQLBackendReachable) reasons.push("Java后端服务断了")
+            if (!isNextJSServerReachable) reasons.push("Next.js前端服务断了")
             toast.error(`离线状态下无法刷新数据`, {
                 description: (
                     <>
-                        {!isClientOnline ? "终端断网中" : "后端服务断了"}
-                        <br />
+                        {reasons.map((r, i) => (
+                            <React.Fragment key={i}>
+                                {r}
+                                {i < reasons.length - 1 && <br />}
+                            </React.Fragment>
+                        ))}
                     </>
                 ),
             })
@@ -309,7 +320,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     }, [reexecuteQuery, isClientOnline, isGraphQLBackendReachable])
 
     useEffect(() => {
-        if (!isClientOnline || !isGraphQLBackendReachable) return
+        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) return
 
         if (fetching) {
             const now = Date.now()
@@ -384,9 +395,9 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error)
-        const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable
+        const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable
         setOffline(shouldBeOffline)
-    }, [error, isClientOnline, isGraphQLBackendReachable, setOffline])
+    }, [error, isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable, setOffline])
     if (!isClient || !mounted) {
         return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     }
@@ -447,7 +458,7 @@ function CommonReportDataSub({
     const lastQueryTimeRef = useRef(0)
     const pausedUntilRef = useRef(0)
 
-    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const { isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable } = useNetworkStatusContext()
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
     const [hasUppyUnsavedStates, setHasUppyUnsavedStates] = useState(false)
     const searchParams = useSearchParams()
@@ -467,7 +478,7 @@ function CommonReportDataSub({
                     (group) => group.repId === repId && group.subrid === subrid
                 )
 
-                setHasUppyUnsavedStates(currentGroup && currentGroup.count > 0)
+                setHasUppyUnsavedStates(!!(currentGroup && currentGroup.count > 0))
             } catch (error) {
                 console.error("[ReportData] Failed to check uppy states:", error)
                 setHasUppyUnsavedStates(false)
@@ -480,28 +491,29 @@ function CommonReportDataSub({
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
     const requestPolicy = useMemo(() => {
-        // 离线模式：完全使用缓存，不发起任何网络请求
-        if (!isClientOnline || !isGraphQLBackendReachable) {
+        // 优先使用缓存的场景（包括 Next.js 前端离线）
+        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) {
             console.log("[report-data] 离线模式，使用 cache-only 策略", {
                 isClientOnline,
                 isGraphQLBackendReachable,
+                isNextJSServerReachable,
             })
             return "cache-only"
         }
         return "cache-and-network"
-    }, [isClientOnline, isGraphQLBackendReachable])
+    }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
     const [result, reexecuteQuery] = useQuery({
         query: ReportQuery,
         variables: mainQueryVariables,
         requestPolicy,
-        pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
+        pause: (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) && !mounted ? true : false,
     })
 
     const [resultSub, reexecuteQuerySub] = useQuery({
         query: ReportSubQuery,
         variables: subQueryVariables,
         requestPolicy,
-        pause: (!isClientOnline || !isGraphQLBackendReachable) && !mounted ? true : false,
+        pause: (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) && !mounted ? true : false,
     })
 
     const { data, fetching, error } = result
@@ -509,7 +521,7 @@ function CommonReportDataSub({
 
     // 在data为空时，每隔200毫秒查询一次，最多10次
     useEffect(() => {
-        if ((!isClientOnline || !isGraphQLBackendReachable) && mounted && (!data || !dataSub)) {
+        if ((!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) && mounted && (!data || !dataSub)) {
             let count = 0
             const maxRetries = 20
             const interval = setInterval(() => {
@@ -523,7 +535,7 @@ function CommonReportDataSub({
             }, 150)
             return () => clearInterval(interval)
         }
-    }, [mounted, data, reexecuteQuery, reexecuteQuerySub, requestPolicy])
+    }, [mounted, data, reexecuteQuery, reexecuteQuerySub, requestPolicy, isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
 
     const report = data && data?.getReport
     const reportSub = React.useMemo(() => {
@@ -553,7 +565,7 @@ function CommonReportDataSub({
     }, [repId, subrid, modified])
 
     const refreshData = useCallback(() => {
-        if (!isClientOnline || !isGraphQLBackendReachable) {
+        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) {
             console.log("离线状态下无法刷新数据")
             return
         }
@@ -564,10 +576,10 @@ function CommonReportDataSub({
         setQueryEnabled(true)
         reexecuteQuery({ requestPolicy: "cache-and-network" })
         reexecuteQuerySub({ requestPolicy: "cache-and-network" })
-    }, [reexecuteQuery, reexecuteQuerySub, isClientOnline, isGraphQLBackendReachable])
+    }, [reexecuteQuery, reexecuteQuerySub, isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
 
     useEffect(() => {
-        if (!isClientOnline || !isGraphQLBackendReachable) return
+        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) return
         if (fetching || fetchingSub) {
             const now = Date.now()
             if (now < pausedUntilRef.current) {
@@ -649,9 +661,9 @@ function CommonReportDataSub({
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
-        const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable
+        const shouldBeOffline = hasNetworkError || !isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable
         setOffline(shouldBeOffline)
-    }, [error, errorSub, isClientOnline, isGraphQLBackendReachable, setOffline])
+    }, [error, errorSub, isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable, setOffline])
 
     if (!mounted) return <div className="p-4 text-sm text-muted-foreground">正在准备编辑环境...</div>
     if (fetching || fetchingSub) return <div>加载中...</div>

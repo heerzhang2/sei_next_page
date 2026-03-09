@@ -20,12 +20,16 @@ export function useActualRepId(): string {
 
         if (repIndex !== -1 && pathSegments[repIndex + 1]) {
             const extractedRepId = pathSegments[repIndex + 1]
+            console.log(`[useActualRepId] pathname: ${pathname}, extractedRepId: ${extractedRepId}`)
             if (extractedRepId !== "*") {
                 setActualRepId(extractedRepId)
             }
         }
     }, [pathname])
 
-    // 返回实际的repId，如果解析失败则回退到params中的值
-    return actualRepId || (params.repId as string) || ""
+    // 返回实际的repId，如果解析失败则返回空字符串
+    const result = actualRepId || ""
+    console.log(`[useActualRepId] returning: ${result}, actualRepId: ${actualRepId}, params.repId: ${params.repId}`)
+    return result
 }
+
