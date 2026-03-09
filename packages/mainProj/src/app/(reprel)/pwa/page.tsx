@@ -587,8 +587,16 @@ export default function Page() {
                 const actualUrls = []
                 for (const url of templateUrls) {
                     if (url.includes('/rep/*/')) {
-                        // 使用所有 offlineReports 中的 repId 替换通配符
-                        for (const report of offlineReports) {
+                        // 1. 首先添加通配符 URL 本身（用于规范化缓存）
+                        const wildcardUrlWithBasePath = url.startsWith(basePath) ? url : `${basePath}${url}`
+                        actualUrls.push(wildcardUrlWithBasePath)
+
+                        // 2. 然后只使用与当前模板类型匹配的 repId 替换通配符
+                        const matchingReports = offlineReports.filter(report => {
+                            // 报告的 templateId 与当前预缓存的模板匹配
+                            return report.templateId === template.templateId
+                        })
+                        for (const report of matchingReports) {
                             const actualUrl = url.replace('/rep/*/', `/rep/${report.repId}/`)
                             // 添加 basePath 前缀（如果还没有）
                             const urlWithBasePath = actualUrl.startsWith(basePath) ? actualUrl : `${basePath}${actualUrl}`

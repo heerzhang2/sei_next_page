@@ -1087,13 +1087,18 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
         // 在后台尝试更新缓存
         fetch(event.request.clone())
-          .then(response => {
+          .then(async response => {
             if (response.ok) {
               // 检查服务器状态
               checkServerStatus(response, event.request);
-              caches.open('serwist-precache-v1').then(cache => {
-                cache.put(event.request, response.clone());
-              });
+              // 避免缓存空响应
+              const clonedResponse = response.clone();
+              const blob = await clonedResponse.blob();
+              if (blob.size > 0) {
+                caches.open('serwist-precache-v1').then(cache => {
+                  cache.put(event.request, response.clone());
+                });
+              }
             }
           })
           .catch(error => {
@@ -1118,8 +1123,13 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
         // 如果响应正常，缓存它
         if (response.ok) {
-          const cache = await caches.open('serwist-precache-v1');
-          cache.put(event.request, response.clone());
+          const clonedResponse = response.clone();
+          const blob = await clonedResponse.blob();
+          // 避免缓存空响应
+          if (blob.size > 0) {
+            const cache = await caches.open('serwist-precache-v1');
+            cache.put(event.request, response.clone());
+          }
           return response;
         }
 
@@ -1327,12 +1337,16 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         if (!isPrefetch) {
           // 后台更新
           fetch(event.request.clone())
-            .then(response => {
+            .then(async response => {
               if (response.ok) {
                 checkServerStatus(response, event.request);
-                caches.open('serwist-precache-v1').then(cache => {
-                  cache.put(event.request, response.clone());
-                });
+                const clonedResponse = response.clone();
+                const blob = await clonedResponse.blob();
+                if (blob.size > 0) {
+                  caches.open('serwist-precache-v1').then(cache => {
+                    cache.put(event.request, response.clone());
+                  });
+                }
               }
             })
             .catch(() => {});
@@ -1354,8 +1368,12 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         checkServerStatus(response, event.request);
 
         if (response.ok) {
-          const cache = await caches.open('serwist-precache-v1');
-          cache.put(event.request, response.clone());
+          const clonedResponse = response.clone();
+          const blob = await clonedResponse.blob();
+          if (blob.size > 0) {
+            const cache = await caches.open('serwist-precache-v1');
+            cache.put(event.request, response.clone());
+          }
           return response;
         }
 
@@ -1502,8 +1520,14 @@ self.addEventListener("install", (event) => {
               homepageResponse = response.clone();
             }
 
-            await cache.put(pageUrl, response.clone());
-            console.log(`[SW] ✓ 预缓存成功: ${pageUrl}`);
+            const clonedResponse = response.clone();
+            const blob = await clonedResponse.blob();
+            if (blob.size > 0) {
+              await cache.put(pageUrl, response.clone());
+              console.log(`[SW] ✓ 预缓存成功: ${pageUrl}`);
+            } else {
+              console.log(`[SW] ✗ 预缓存失败 (空响应): ${pageUrl}`);
+            }
           } else {
             console.log(`[SW] ✗ 预缓存失败 (HTTP ${response.status}): ${pageUrl}`);
           }
@@ -1553,6 +1577,9 @@ self.addEventListener("activate", (event) => {
         });
       });
 
+      // 清理空缓存项
+      await cleanupEmptyCacheEntries();
+
       // 不再在此启动定期健康检查
       // 现在由主线程统一管理健康检查，并通过消息通知 SW
 
@@ -1560,6 +1587,34 @@ self.addEventListener("activate", (event) => {
     })(),
   );
 });
+
+// ============================================================
+// 清理空缓存项
+// ============================================================
+async function cleanupEmptyCacheEntries() {
+  try {
+    const cacheNames = await caches.keys();
+    for (const cacheName of cacheNames) {
+      const cache = await caches.open(cacheName);
+      const keys = await cache.keys();
+
+      for (const request of keys) {
+        const response = await cache.match(request);
+        if (response) {
+          const clonedResponse = response.clone();
+          const blob = await clonedResponse.blob();
+          if (blob.size === 0) {
+            console.log(`[SW] 清理空缓存: ${cacheName} - ${request.url}`);
+            await cache.delete(request);
+          }
+        }
+      }
+    }
+    console.log(`[SW] 空缓存清理完成`);
+  } catch (error) {
+    console.error(`[SW] 清理空缓存时出错:`, error);
+  }
+}
 
 self.addEventListener("message", (event) => {
   const { data } = event;
@@ -1601,6 +1656,12 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
 
     const cachePromises = urls.map(async (url) => {
       try {
+        // 跳过通配符 URL，它们不需要被直接缓存
+        if (url.includes('/rep/*/')) {
+          console.log(`[SW] 跳过通配符 URL: ${url}`);
+          return true; // 返回 true 表示成功处理
+        }
+
         let fullUrl = url;
         if (!url.startsWith('http')) {
           fullUrl = new URL(url, self.location.origin).href;
@@ -1613,9 +1674,13 @@ async function cacheUrls(urls: string[]): Promise<boolean> {
 
         const response = await fetch(htmlRequest).catch(() => null);
         if (response && response.ok) {
-          const reportCache = await caches.open("report-pages-normalized");
-          await reportCache.put(htmlRequest, response.clone());
-          return true;
+          const clonedResponse = response.clone();
+          const blob = await clonedResponse.blob();
+          if (blob.size > 0) {
+            const reportCache = await caches.open("report-pages-normalized");
+            await reportCache.put(htmlRequest, response.clone());
+            return true;
+          }
         }
         return false;
       } catch (error) {
