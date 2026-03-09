@@ -574,7 +574,6 @@ const customCache: RuntimeCaching[] = [
       networkTimeoutSeconds: 2, // 2秒超时,快速回退到缓存
       plugins: [
         new ExpirationPlugin({
-          maxEntries: 2000,
           maxAgeSeconds: 30 * 24 * 60 * 60,
           maxAgeFrom: "last-used",
         }),
@@ -593,8 +592,7 @@ const customCache: RuntimeCaching[] = [
       networkTimeoutSeconds: 2,
       plugins: [
         new ExpirationPlugin({
-          maxEntries: 500,
-          maxAgeSeconds: 365 * 24 * 60 * 60,
+          maxAgeSeconds: 90 * 24 * 60 * 60,
         }),
       ],
     }),
@@ -621,23 +619,6 @@ const customCache: RuntimeCaching[] = [
         }),
         enhancedErrorHandlingPlugin, // 使用增强的错误处理
         aggressiveNetworkErrorPlugin, // 激进的网络错误拦截
-      ],
-    }),
-  },
-  {
-    // PWA 管理页面 - 优先缓存
-    matcher: ({ url: { pathname }, sameOrigin }) => {
-      const basePath = getBasePath();
-      const pwaPath = `${basePath}/pwa`;
-      const offlinePath = `${basePath}/~offline`;
-      return sameOrigin && (pathname === pwaPath || pathname === offlinePath);
-    },
-    handler: new NetworkFirst({
-      cacheName: "pwa-pages",
-      networkTimeoutSeconds: 2,
-      plugins: [
-        smartRequestHandler, // 智能请求处理
-        enhancedErrorHandlingPlugin,
       ],
     }),
   },
@@ -699,17 +680,38 @@ const customCache: RuntimeCaching[] = [
     }),
   },
   {
-    // Cross-origin
+    // 同源静态图片资源 - 覆盖 defaultCache 中的 static-image-assets
+    matcher: ({ url: { pathname }, sameOrigin }) => {
+      const basePath = getBasePath();
+      const publicPath = basePath ? `${basePath}/` : "/";
+      return (
+        sameOrigin &&
+        pathname.startsWith(publicPath) &&
+        /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i.test(pathname)
+      );
+    },
+    handler: new NetworkFirst({
+      cacheName: "static-image-assets",
+      networkTimeoutSeconds: 3,
+      plugins: [
+        new ExpirationPlugin({
+          maxAgeSeconds: 30 * 24 * 60 * 60,
+          maxAgeFrom: "last-used",
+        }),
+      ],
+    }),
+  },
+  {
+    // Cross-origin（包含 MinIO OSS 图片） - CacheFirst
     matcher: ({ sameOrigin }) => !sameOrigin,
     handler: new NetworkFirst({
       cacheName: "cross-origin",
+      networkTimeoutSeconds: 3,
       plugins: [
         new ExpirationPlugin({
-          maxEntries: 2000,
-          maxAgeSeconds: 4 * 60 * 60,
+          maxAgeSeconds: 30 * 24 * 60 * 60,
         }),
       ],
-      networkTimeoutSeconds: 5,
     }),
   },
   ...defaultCache,
