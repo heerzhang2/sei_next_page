@@ -4,7 +4,7 @@ import { fetchExchange, createClient, errorExchange } from "@urql/next"
 import { UrqlProvider } from "@urql/next"
 import { ssrExchange as ssrExchangeNext } from "@urql/next"
 import { authExchange } from "@urql/exchange-auth"
-import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
+import { type ReactNode, useRef, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { Exchange, Operation, OperationResult } from "@urql/core"
 import { pipe, tap, map, filter } from "wonka"
@@ -586,13 +586,13 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         currentTokenRef.current = accessToken
     }, [accessToken])
 
-    const clientRef = useRef<any>(null)
-    const ssrRef = useRef<any>(null)
+    const [client, setClient] = useState<any>(null)
+    const [ssrState, setSsrState] = useState<any>(null)
+    const clientInitializedRef = useRef(false)
 
-    const createClientStable = useCallback(() => {
-        if (!isClient) {
-            return [null, null]
-        }
+    useEffect(() => {
+        if (!isClient || clientInitializedRef.current) return
+
         const getCurrentToken = () => {
             if (currentTokenRef.current) {
                 return currentTokenRef.current
@@ -629,12 +629,12 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             storage,
         })
 
-        const ssr = ssrExchangeNext({
+        const ssrInstance = ssrExchangeNext({
             isClient: typeof window !== "undefined",
         })
 
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
-        const client = createClient({
+        const newClient = createClient({
             url: `${endpoint}/graphql`,
             exchanges: [
                 errorExchange({
@@ -687,7 +687,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 manualRetryExchange,
                 makeAuthExchange(getCurrentToken, undefined, print),
                 updateBackendStatusExchange(updateGraphQLBackendStatus),
-                ssr,
+                ssrInstance,
                 fetchAbortExchange,
                 customFetchExchange,
                 fetchExchange,
@@ -709,19 +709,11 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
         })
 
-        clientRef.current = client
-        ssrRef.current = ssr
-        return [client, ssr]
+        clientInitializedRef.current = true
+        setClient(newClient)
+        setSsrState(ssrInstance)
+        console.log("[GraphQLProvider] Client 已初始化")
     }, [isClient, updateGraphQLBackendStatus, print, addConflictRequest])
-
-    const [client, ssr] = useMemo(() => {
-        if (!isClient) return [null, null]
-        if (clientRef.current) {
-            return [clientRef.current, ssrRef.current]
-        }
-        const result = createClientStable()
-        return result
-    }, [isClient, createClientStable])
 
     useEffect(() => {
         const handleRefreshCache = () => {
@@ -791,11 +783,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const handleManualTokenRefresh = async () => {
-            if (clientRef.current) {
-                const tempClient = clientRef.current;
+            if (client) {
                 try {
                     //发送一个测试查询来触发认证流程
-                    await tempClient.query(AuthCompQuery, { }, {requestPolicy: 'network-only'}).toPromise();
+                    await client.query(AuthCompQuery, { }, {requestPolicy: 'network-only'}).toPromise();
                 } catch (error) {
                     console.log("[GraphQLProvider] 手动刷新触发完成");
                 }
@@ -808,14 +799,14 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return () => {
             window.removeEventListener("token:refresh-needed", handleTokenRefreshNeeded);
         };
-    }, []);
+    }, [client]);
 
-    if (!client) {
+    if (!client || !ssrState) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
 
     return (
-        <UrqlProvider client={client} ssr={ssr}>
+        <UrqlProvider client={client} ssr={ssrState}>
             {children}
             {pathname !== "/login" && ConfirmDialog}
         </UrqlProvider>
