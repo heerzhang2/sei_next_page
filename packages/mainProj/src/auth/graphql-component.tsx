@@ -4,9 +4,9 @@ import { fetchExchange, createClient, errorExchange } from "@urql/next"
 import { UrqlProvider } from "@urql/next"
 import { ssrExchange as ssrExchangeNext } from "@urql/next"
 import { authExchange } from "@urql/exchange-auth"
-import { type ReactNode, useRef, useEffect, useState } from "react"
+import { type ReactNode, useRef, useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
-import type { Exchange, Operation, OperationResult } from "@urql/core"
+import type { Exchange, Operation, OperationResult, Client } from "@urql/core"
 import { pipe, tap, map, filter } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
@@ -17,6 +17,7 @@ import { acquireRefreshLock } from "@/lib/token-refresh-lock"
 import { customQueryCacheExchange } from "@/lib/custom-query-cache-exchange"
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
 import type { SerializedRequest } from "@urql/exchange-graphcache"
+import type { SSRExchange } from "@urql/next"
 import schema from "./urql-schema.json"
 import { useAccessToken } from "./use-access-token"
 import {AuthCompQuery} from "@/component/header-wrapper";
@@ -574,43 +575,53 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
     const print = "1" === searchParams?.get("print")
     const { accessToken, ConfirmDialog } = useAccessToken()
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
-    const [isClient, setIsClient] = useState(false)
     const { addConflictRequest } = useVersionConflictManager()
     const currentTokenRef = useRef<string | null>(null)
-
+    const clientInitializedRef = useRef(false)
+    
+    // 使用 ref 存储回调函数以避免依赖变化
+    const updateGraphQLBackendStatusRef = useRef(updateGraphQLBackendStatus)
+    const addConflictRequestRef = useRef(addConflictRequest)
+    
+    // 使用 useState 来存储 client 和 ssr，确保 SSR 和客户端首次渲染一致（都是 null）
+    const [clientState, setClientState] = useState<{ client: Client | null; ssr: SSRExchange | null }>({
+        client: null,
+        ssr: null,
+    })
+    
     useEffect(() => {
-        setIsClient(true)
-    }, [])
+        updateGraphQLBackendStatusRef.current = updateGraphQLBackendStatus
+    }, [updateGraphQLBackendStatus])
+    
+    useEffect(() => {
+        addConflictRequestRef.current = addConflictRequest
+    }, [addConflictRequest])
 
     useEffect(() => {
         currentTokenRef.current = accessToken
     }, [accessToken])
 
-    const [client, setClient] = useState<any>(null)
-    const [ssrState, setSsrState] = useState<any>(null)
-    const clientInitializedRef = useRef(false)
-
+    // 在 useEffect 中初始化 client，确保只在客户端执行且 SSR/客户端首次渲染一致
     useEffect(() => {
-        if (!isClient || clientInitializedRef.current) return
-
+        if (clientInitializedRef.current) return
+        clientInitializedRef.current = true
+        
         const getCurrentToken = () => {
             if (currentTokenRef.current) {
                 return currentTokenRef.current
             }
 
-            if (typeof window !== "undefined") {
-                try {
-                    const offlineAuth = localStorage.getItem("offline_auth")
-                    if (offlineAuth) {
-                        const authData = JSON.parse(offlineAuth)
-                        if (authData.accessToken && authData.expiresAt > Date.now()) {
-                            console.log("[getCurrentToken] 从localStorage读取token作为fallback")
-                            return authData.accessToken
-                        }
+            try {
+                const offlineAuth = localStorage.getItem("offline_auth")
+                if (offlineAuth) {
+                    const authData = JSON.parse(offlineAuth)
+                    if (authData.accessToken && authData.expiresAt > Date.now()) {
+                        console.log("[getCurrentToken] 从localStorage读取token作为fallback")
+                        return authData.accessToken
                     }
-                } catch (error) {
-                    console.error("[getCurrentToken] 读取localStorage失败:", error)
                 }
+            } catch (error) {
+                console.error("[getCurrentToken] 读取localStorage失败:", error)
             }
 
             return null
@@ -630,7 +641,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         })
 
         const ssrInstance = ssrExchangeNext({
-            isClient: typeof window !== "undefined",
+            isClient: true,
         })
 
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
@@ -662,7 +673,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                 })
                             }, 50)
 
-                            addConflictRequest(operation, error)
+                            addConflictRequestRef.current(operation, error)
                             if (operation.kind === "mutation") {
                                 const request: SerializedRequest = {
                                     query: operation.query.loc?.source?.body || "",
@@ -686,7 +697,7 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                 preventDuplicateExchange,
                 manualRetryExchange,
                 makeAuthExchange(getCurrentToken, undefined, print),
-                updateBackendStatusExchange(updateGraphQLBackendStatus),
+                updateBackendStatusExchange((isReachable) => updateGraphQLBackendStatusRef.current(isReachable)),
                 ssrInstance,
                 fetchAbortExchange,
                 customFetchExchange,
@@ -709,11 +720,9 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             },
         })
 
-        clientInitializedRef.current = true
-        setClient(newClient)
-        setSsrState(ssrInstance)
         console.log("[GraphQLProvider] Client 已初始化")
-    }, [isClient, updateGraphQLBackendStatus, print, addConflictRequest])
+        setClientState({ client: newClient, ssr: ssrInstance })
+    }, [print])
 
     useEffect(() => {
         const handleRefreshCache = () => {
@@ -783,10 +792,10 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const handleManualTokenRefresh = async () => {
-            if (client) {
+            if (clientState.client) {
                 try {
                     //发送一个测试查询来触发认证流程
-                    await client.query(AuthCompQuery, { }, {requestPolicy: 'network-only'}).toPromise();
+                    await clientState.client.query(AuthCompQuery, { }, {requestPolicy: 'network-only'}).toPromise();
                 } catch (error) {
                     console.log("[GraphQLProvider] 手动刷新触发完成");
                 }
@@ -799,14 +808,15 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
         return () => {
             window.removeEventListener("token:refresh-needed", handleTokenRefreshNeeded);
         };
-    }, [client]);
+    }, [clientState.client]);
 
-    if (!client || !ssrState) {
+    // 在 SSR 期间或客户端初始化之前显示加载状态
+    if (!clientState.client || !clientState.ssr) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
 
     return (
-        <UrqlProvider client={client} ssr={ssrState}>
+        <UrqlProvider client={clientState.client} ssr={clientState.ssr}>
             {children}
             {pathname !== "/login" && ConfirmDialog}
         </UrqlProvider>
