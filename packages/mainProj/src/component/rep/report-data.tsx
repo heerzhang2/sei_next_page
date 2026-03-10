@@ -724,11 +724,38 @@ function CommonReportDataSub({
         // 只在 Next.js 离线但 GraphQL 在线时启用定期刷新
         if (!isNextJSServerReachable && isClientOnline && isGraphQLBackendReachable && data && dataSub) {
             console.log("[ReportData] 启用子报告定期刷新（Next.js 离线 + GraphQL 在线）")
-            periodicRefreshRef.current = setInterval(() => {
-                console.log("[ReportData] 执行子报告定期刷新（10分钟间隔）")
-                reexecuteQuery({ requestPolicy: "network-only" })
-                reexecuteQuerySub({ requestPolicy: "network-only" })
-            }, 10 * 60 * 1000) // 10分钟
+
+            // sessionStorage key - 包含 repId 和 subrid 以区分不同子报告
+            const STORAGE_KEY = `reportData_lastRefresh_${repId}_${subrid}`
+
+            // 检查是否需要立即刷新（距离上次刷新超过10分钟）
+            const checkAndRefresh = () => {
+                const lastRefresh = sessionStorage.getItem(STORAGE_KEY)
+                const now = Date.now()
+
+                if (!lastRefresh || now - parseInt(lastRefresh) >= 10 * 60 * 1000) {
+                    console.log("[ReportData] 执行子报告定期刷新（10分钟间隔）")
+                    reexecuteQuery({ requestPolicy: "cache-and-network" })
+                    reexecuteQuerySub({ requestPolicy: "cache-and-network" })
+                    sessionStorage.setItem(STORAGE_KEY, now.toString())
+                }
+            }
+
+            // 立即检查一次
+            checkAndRefresh()
+
+            // 设置定时器，每分钟检查一次是否需要刷新
+            periodicRefreshRef.current = setInterval(checkAndRefresh, 60 * 1000)
+        }
+
+        // Next.js 服务器恢复正常时，清理所有 reportData_lastRefresh_ 相关的 sessionStorage
+        if (isNextJSServerReachable) {
+            console.log("[ReportData] Next.js 服务器已恢复，清理子报告刷新时间记录")
+            Object.keys(sessionStorage).forEach(key => {
+                if (key.startsWith("reportData_lastRefresh_")) {
+                    sessionStorage.removeItem(key)
+                }
+            })
         }
 
         return () => {
@@ -737,7 +764,7 @@ function CommonReportDataSub({
                 periodicRefreshRef.current = null
             }
         }
-    }, [isNextJSServerReachable, isClientOnline, isGraphQLBackendReachable, data, dataSub, reexecuteQuery, reexecuteQuerySub])
+    }, [isNextJSServerReachable, isClientOnline, isGraphQLBackendReachable, data, dataSub, repId, subrid, reexecuteQuery, reexecuteQuerySub])
 
     useEffect(() => {
         const hasNetworkError = isNetworkError(error) || isNetworkError(errorSub)
