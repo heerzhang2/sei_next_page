@@ -230,7 +230,7 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         }
         else if(!isNextJSServerReachable){
            // 3. Next.js 前端离线 + GraphQL 后端在线( 页面刷新模式，避免多余请求）
-           return "cache-first"
+           return "cache-only"
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
@@ -552,7 +552,7 @@ function CommonReportDataSub({
         if (!isClientOnline || !isGraphQLBackendReachable) {
             return "cache-only"
         }else if(!isNextJSServerReachable){
-           return "cache-first"
+           return "cache-only"
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
