@@ -64,6 +64,9 @@ export default function HeaderWrapper({ items, children }: HeaderWrapperProps) {
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
+
+    // 不使用 pause: true，因为 requestPolicy 已经处理了缓存策略
+    // pause: true 会阻止缓存读取，使用 cache-only 策略可以让 URQL 从缓存中读取数据
     const [result, reexecuteQuery] = useQuery({
         query: AuthCompQuery,
         variables: {},

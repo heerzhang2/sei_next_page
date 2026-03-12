@@ -221,6 +221,10 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
     }, [repId])
 
     const queryVariables = useMemo(() => ({ id: repId }), [repId])
+    // 判断是否应该暂停查询（只有 repId 为空时才暂停，避免发送无效请求）
+    // 网络离线时使用 requestPolicy: cache-only 来从缓存读取，而不是 pause（pause 会阻止缓存读取）
+    const shouldPauseQuery = !repId
+    
     const requestPolicy = useMemo(() => {
         // 优先使用缓存的场景：
         // 1. 客户端离线
@@ -235,11 +239,12 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
 
+    // 当后端不可达时始终暂停查询，不依赖 mounted
     const [result, reexecuteQuery] = useQuery({
         query: ReportQuery,
         variables: queryVariables,
         requestPolicy,
-        pause: (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) && !mounted ? true : false,
+        pause: shouldPauseQuery,
     })
 
     const { data, fetching, error } = result
@@ -468,8 +473,25 @@ function CommonReportData({ repId, children }: { repId: string; children: React.
             return <div>报告取数据错: {error.message}</div>
         }
     }
+    // 网络不可达且没有缓存数据时的提示
+    const isNetworkUnavailable = !isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable
+
     if (report && !report.snapshot) return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
     if (!report) {
+        // 当网络不可用时，显示不同的提示
+        if (isNetworkUnavailable) {
+            return (
+                <div className="content-center text-center h-screen w-screen">
+                    <div className="text-gray-600 mb-4">当前网络不可用，无法加载报告数据</div>
+                    <span
+                        className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                        onClick={() => window.location.href = '/report/'}
+                    >
+                        返回首页
+                    </span>
+                </div>
+            )
+        }
         return (
             <div className="content-center text-center h-screen w-screen">
                 <span
@@ -547,6 +569,10 @@ function CommonReportDataSub({
 
     const mainQueryVariables = useMemo(() => ({ id: repId }), [repId])
     const subQueryVariables = useMemo(() => ({ id: subrid }), [subrid])
+    // 判断是否应该暂停查询（只有 ID 为空时才暂停）
+    // 网络离线时使用 requestPolicy: cache-only 来从缓存读取
+    const shouldPauseQuery = !repId || !subrid
+    
     const requestPolicy = useMemo(() => {
         // 优先使用缓存的场景（包括 Next.js 前端离线）
         if (!isClientOnline || !isGraphQLBackendReachable) {
@@ -556,18 +582,20 @@ function CommonReportDataSub({
         }
         return "cache-and-network"
     }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
+    
+    // 当后端不可达时始终暂停查询，不依赖 mounted
     const [result, reexecuteQuery] = useQuery({
         query: ReportQuery,
         variables: mainQueryVariables,
         requestPolicy,
-        pause: (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) && !mounted ? true : false,
+        pause: shouldPauseQuery,
     })
 
     const [resultSub, reexecuteQuerySub] = useQuery({
         query: ReportSubQuery,
         variables: subQueryVariables,
         requestPolicy,
-        pause: (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) && !mounted ? true : false,
+        pause: shouldPauseQuery,
     })
 
     const { data, fetching, error } = result
@@ -783,10 +811,28 @@ function CommonReportDataSub({
             return <div>子报告取数据错: {error?.message || errorSub?.message}</div>
         }
     }
+    // 网络不可达且没有缓存数据时的提示
+    const isNetworkUnavailable = !isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable
+    
     if (report && !report.snapshot) return <React.Fragment>该报告的基础信息未赋值</React.Fragment>
     if (!report) {
-        if(fetching || error)
+        if (fetching || error) {
             return <div className="p-4 text-sm text-muted-foreground">加载报告数据还没完...</div>
+        }
+        // 当网络不可用时，显示不同的提示
+        if (isNetworkUnavailable) {
+            return (
+                <div className="content-center text-center h-screen w-screen">
+                    <div className="text-gray-600 mb-4">当前网络不可用，无法加载报告数据</div>
+                    <span
+                        className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                        onClick={() => window.location.href = '/report/'}
+                    >
+                        返回首页
+                    </span>
+                </div>
+            )
+        }
         return (
             <div className="content-center text-center h-screen w-screen">
                 <span
@@ -799,6 +845,20 @@ function CommonReportDataSub({
         )
     }
     if (!reportSub) {
+        // 当网络不可用时，显示不同的提示
+        if (isNetworkUnavailable) {
+            return (
+                <div className="content-center text-center h-screen w-screen">
+                    <div className="text-gray-600 mb-4">当前网络不可用，无法加载子报告数据</div>
+                    <span
+                        className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                        onClick={() => window.location.href = '/report/'}
+                    >
+                        返回首页
+                    </span>
+                </div>
+            )
+        }
         return (
             <div className="content-center text-center h-screen w-screen">
                 <span

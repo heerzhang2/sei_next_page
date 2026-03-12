@@ -64,8 +64,9 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                         lastOfflineTime: parsed.lastOfflineTime ? new Date(parsed.lastOfflineTime) : null,
                         connectionType: null,
                         isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-                        isNextJSServerReachable: parsed.isNextJSServerReachable ?? true,
-                        isGraphQLBackendReachable: parsed.isGraphQLBackendReachable ?? true,
+                        // 从 sessionStorage 恢复时也默认 false，避免使用过期的缓存状态
+                        isNextJSServerReachable: parsed.isNextJSServerReachable ?? false,
+                        isGraphQLBackendReachable: parsed.isGraphQLBackendReachable ?? false,
                     }
                 } else {
                     console.log("[NetworkStatus] sessionStorage 中的状态已过期，使用默认值")
@@ -81,8 +82,10 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             lastOfflineTime: null,
             connectionType: null,
             isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-            isNextJSServerReachable: true,
-            isGraphQLBackendReachable: true,
+            // 初始值设为 false，避免在网络状态检查完成前发起不必要的请求
+            // 只有当检查确认服务器可达时才设置为 true
+            isNextJSServerReachable: false,
+            isGraphQLBackendReachable: false,
         }
     }, [])
 
@@ -400,6 +403,24 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     useEffect(() => {
         // 初始状态更新 - 只更新客户端网络状态，不影响后端可达性
         updateNetworkStatus(navigator.onLine)
+
+        // 组件挂载时立即触发一次后端检查，避免初始状态为 true 时发起不必要的请求
+        // 由于初始状态已设为 false，这里立即检查可以快速更新为正确的状态
+        if (navigator.onLine) {
+            Promise.all([
+                checkNextJSServerConnectivity(),
+                checkGraphQLBackendConnectivity()
+            ]).then(([nextjsResult, graphQLResult]) => {
+                setNetworkStatusWithSave((prev) => ({
+                    ...prev,
+                    isNextJSServerReachable: nextjsResult,
+                    isGraphQLBackendReachable: graphQLResult,
+                }))
+            }).catch(() => {
+                // 检查失败时保持 false 状态（默认状态）
+            })
+        }
+
         const handleOnline = () => {
             console.log("Network: 客户端网络在线事件检测到")
             // 只更新客户端网络状态，不直接设置后端可达性

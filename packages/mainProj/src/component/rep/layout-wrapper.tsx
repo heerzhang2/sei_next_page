@@ -1,7 +1,7 @@
 //src\component\rep\layout-wrapper.tsx
 "use client"
 import type React from "react"
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useMemo } from "react"
 import { useQuery } from "@urql/next"
 import ReportLayout from "@/component/rep/reportLayout"
 import { type ReportParams, ReportQuery } from "@/component/rep/report-data"
@@ -12,6 +12,7 @@ import { useActualRepId } from "@/report/hook/use-actual-rep-id"
 import { EditControlProvider } from "@/component/rep/editControl-provider"
 import ReportMakeable from "@/common/ReportMakeable"
 import {ReportEntryProps} from "@/report/common/base";
+import { useNetworkStatusContext } from "@/contexts/network-status-context";
 
 interface ReportLayoutWrapperProps {
     children: React.ReactNode
@@ -25,8 +26,25 @@ export function ReportLayoutWrapper({ children, ReportView, useCatalog }: Report
     const { action } = params;
     const searchParams = useSearchParams();
     const print = "1" === searchParams!.get("print");
+    const { isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable } = useNetworkStatusContext()
 
-    const [result] = useQuery({ query: ReportQuery, variables: { id: repId } });
+    // 当 repId 为空时暂停查询，避免发送无效请求
+    const shouldPauseQuery = !repId
+
+    // 使用 requestPolicy 控制缓存策略，而不是 pause（pause 会阻止缓存读取）
+    const requestPolicy = useMemo(() => {
+        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) {
+            return "cache-only"
+        }
+        return "cache-and-network"
+    }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
+
+    const [result] = useQuery({
+        query: ReportQuery,
+        variables: { id: repId },
+        pause: shouldPauseQuery,
+        requestPolicy,
+    });
     const { getReport: report } = result?.data || {};
     const catItems = useCatalog();
 
