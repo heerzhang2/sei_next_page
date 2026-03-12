@@ -145,6 +145,62 @@ export const ReportSubQuery = gql`
   }
 `
 
+// PWA 预缓存专用查询 - 包含完整的子报告数据（包括 snapshot）
+export const ReportQueryWithSubReports = gql`
+  query pagegetReportWithSubReportsQuery($id: ID!) {
+    getReport(id: $id) {
+      id
+      version
+      data
+      snapshot
+      modeltype
+      modelversion
+      isp {
+        id
+        no
+        report {
+          id
+        }
+        dev {
+          id
+          cod
+        }
+        bsType
+        reps {
+          edges {
+            node {
+              id
+              modeltype
+              data
+              version
+              stm {
+                id
+                sta
+                authr {
+                  id
+                  username
+                  person {
+                    id
+                    name
+                  }
+                }
+                reviewer {
+                  id
+                  username
+                  person {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
 function getDataSource(result: any) {
     const cacheOutcome = result?.operation?.context?.meta?.cacheOutcome
     if (cacheOutcome === "hit") return "cache"

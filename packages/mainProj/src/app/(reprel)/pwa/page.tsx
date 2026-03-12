@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useClient } from "@urql/next"
-import { ReportQuery } from "@/component/rep/report-data"
+import { ReportQueryWithSubReports, ReportSubQuery } from "@/component/rep/report-data"
 import { Button } from "@/components/ui"
 import { Home } from "lucide-react"
 
@@ -194,8 +194,25 @@ export default function Page() {
                         continue
                     }
                     try {
-                        const result = await client.query(ReportQuery, { id: repId }).toPromise()
+                        // 先获取主报告数据（包含子报告列表）
+                        const result = await client.query(ReportQueryWithSubReports, { id: repId }).toPromise()
                         queryResults.push(result)
+
+                        // 获取主报告后，遍历所有子报告并单独查询，填充 urql 缓存
+                        if (result?.data?.getReport?.isp?.reps?.edges) {
+                            const subReports = result.data.getReport.isp.reps.edges
+                            for (const { node: subReport } of subReports) {
+                                if (subReport?.id) {
+                                    try {
+                                        // 为每个子报告发起单独查询，使用与普通页面相同的查询
+                                        await client.query(ReportSubQuery, { id: subReport.id }).toPromise()
+                                        console.log(`[PWA] 预缓存子报告: ${subReport.id}`)
+                                    } catch (subErr) {
+                                        console.warn(`[PWA] 预缓存子报告失败 ${subReport.id}:`, subErr)
+                                    }
+                                }
+                            }
+                        }
                     } catch (err) {
                         console.error(`Failed to fetch report ${repId}:`, err)
                         queryResults.push(null)
