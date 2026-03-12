@@ -525,8 +525,9 @@ const normalizeReportCacheKey = async ({ request }: { request: Request }) => {
     if (hasAction) {
       const normalizedPath = `/rep/*/${pathParts.slice(3).join("/")}`;
       const searchParams = new URLSearchParams(url.search);
-      searchParams.delete("subrid");
-      searchParams.delete("redId");
+      // 保留 subrid 和 redId，这些是子报告的关键标识
+      // searchParams.delete("subrid");
+      // searchParams.delete("redId");
       searchParams.delete("from");
       searchParams.delete("original");
       searchParams.delete("lineIndex");
