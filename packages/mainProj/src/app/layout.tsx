@@ -17,6 +17,7 @@ import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
 import { SerwistMessageHandler } from "@/components/serwist-message-handler"
 import { withBasePath } from '@/lib/tool'
 import { SerwistProvider } from "../lib/serwist/client"
+import { OfflineSessionPatcher } from "@/components/offline-session-patcher"
 
 const APP_NAME = "报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
@@ -71,6 +72,7 @@ export default async function RootLayout({
               <PrintSettingsProvider>
                 <SessionProvider session={session} basePath={basePath}>
                   <NetworkStatusProvider>
+                    <OfflineSessionPatcher />
                     <GraphQLProvider>
                       <SerwistMessageHandler />
                       <SessionSync />
@@ -90,6 +92,7 @@ export default async function RootLayout({
             <PrintSettingsProvider>
               <SessionProvider session={session} basePath={basePath}>
                 <NetworkStatusProvider>
+                  <OfflineSessionPatcher />
                   <GraphQLProvider>
                     <SessionSync />
                     <TokenRefreshOverlay />
