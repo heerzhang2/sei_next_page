@@ -1,17 +1,72 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { WifiOff, Database, CloudOff, AlertTriangle } from "lucide-react"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { withBasePath } from "@/lib/tool"
 
 export function OfflineStatusIndicator() {
-    const { isClientOnline,isNextJSServerReachable,isGraphQLBackendReachable } = useNetworkStatusContext()
-    const [showOfflineBar, setShowOfflineBar] = useState(false)
+    const { isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable } = useNetworkStatusContext()
+    const [showMessage, setShowMessage] = useState(false)
     const [isInitialCheck, setIsInitialCheck] = useState(true)
-
+    const [isSmallScreen, setIsSmallScreen] = useState(false)
     const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
     const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false)
+    const [hasOfflineStatus, setHasOfflineStatus] = useState(false)
+
+    // 用于控制消息显示的定时器
+    const hideTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+    // 检测小屏幕
+    useEffect(() => {
+        const checkScreenSize = () => {
+            const width = window.innerWidth
+            const height = window.innerHeight
+            setIsSmallScreen(width < 768 || height < 768)
+        }
+        checkScreenSize()
+        window.addEventListener("resize", checkScreenSize)
+        return () => window.removeEventListener("resize", checkScreenSize)
+    }, [])
+
+    // 监听网络状态变化，控制消息显示
+    useEffect(() => {
+        // 清除之前的定时器
+        if (hideTimerRef.current) {
+            clearTimeout(hideTimerRef.current)
+            hideTimerRef.current = null
+        }
+
+        // 计算当前是否有离线状态
+        const offline = !isClientOnline || !isNextJSServerReachable || !isGraphQLBackendReachable || showEmptyArrayReminder
+        setHasOfflineStatus(offline)
+
+        if (offline) {
+            // 有离线状态时，显示消息
+            setShowMessage(true)
+            // 30秒后隐藏消息文字
+            hideTimerRef.current = setTimeout(() => {
+                setShowMessage(false)
+            }, 30000)
+        } else {
+            // 没有离线状态时，隐藏消息
+            setShowMessage(false)
+        }
+
+        // 如果所有状态都已初始化，则标记初始检查完成
+        if (isClientOnline !== undefined && isNextJSServerReachable !== undefined && isGraphQLBackendReachable !== undefined) {
+            setIsInitialCheck(false)
+        }
+    }, [isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable, showEmptyArrayReminder])
+
+    // 清理定时器
+    useEffect(() => {
+        return () => {
+            if (hideTimerRef.current) {
+                clearTimeout(hideTimerRef.current)
+            }
+        }
+    }, [])
 
     useEffect(() => {
         const handleEmptyArrayReminder = (event: CustomEvent) => {
@@ -41,11 +96,9 @@ export function OfflineStatusIndicator() {
             }
         }
 
-        // 监听自定义事件
         window.addEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
         window.addEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
 
-        // 保留原有的轮询检查作为备用
         checkEmptyArrayReminderStatus()
         const interval = setInterval(checkEmptyArrayReminderStatus, 2000)
 
@@ -56,21 +109,8 @@ export function OfflineStatusIndicator() {
         }
     }, [])
 
-    useEffect(() => {
-        setShowOfflineBar(
-            !isClientOnline || !isNextJSServerReachable || !isGraphQLBackendReachable || showEmptyArrayReminder,
-        )
-        
-        // 如果所有状态都已初始化（不再是 undefined），则标记初始检查完成
-        if (isClientOnline !== undefined && isNextJSServerReachable !== undefined && isGraphQLBackendReachable !== undefined) {
-            setIsInitialCheck(false)
-        }
-    }, [isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable, showEmptyArrayReminder])
-
-    if (!showOfflineBar) return null
-
-    const getStatusMessage = () => {
-        // 如果是初始检查阶段，显示"状态核实中"
+    // 计算状态消息
+    const getStatusInfo = () => {
         if (isInitialCheck) {
             return {
                 icon: AlertTriangle,
@@ -107,11 +147,21 @@ export function OfflineStatusIndicator() {
         }
     }
 
-    const { icon: Icon, message, color } = getStatusMessage()
+    const { icon: Icon, message, color } = getStatusInfo()
+
+    // 动态设置透明度样式
+    const getOpacityStyle = () => {
+        if (isSmallScreen) {
+            return {
+                opacity: 0.6,
+                backgroundColor: undefined,
+            }
+        }
+        return { opacity: undefined }
+    }
 
     const handleClick = () => {
         if (showEmptyArrayReminder && isProcessingOfflineQueue) {
-            // 可以添加一个toast提示用户等待
             return
         }
 
@@ -120,15 +170,20 @@ export function OfflineStatusIndicator() {
         }
     }
 
+    // 如果没有任何离线状态，不显示指示器
+    if (!hasOfflineStatus && !isInitialCheck) return null
+
     return (
         <div
             className={`print:hidden fixed top-0 left-1/2 transform -translate-x-1/2 z-50 ${color} px-4 py-2 text-sm font-medium flex items-center justify-center gap-2 rounded-b-md shadow-sm cursor-pointer hover:shadow-md transition-shadow`}
-            style={{ pointerEvents: "auto" }}
+            style={{ pointerEvents: "auto", ...getOpacityStyle() }}
             onClick={handleClick}
             title={"离线队列"}
         >
-            <Icon className="h-4 w-4" />
-            <span>{message}</span>
+            <Icon className="h-4 w-4 flex-shrink-0" />
+            {showMessage && (
+                <span className="animate-fade-in">{message}</span>
+            )}
         </div>
     )
 }
