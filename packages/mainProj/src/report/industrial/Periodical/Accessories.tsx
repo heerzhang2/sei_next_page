@@ -150,7 +150,7 @@ export const Accessories = ({
                                 <FormItem className="pt-2 w-full break-inside-avoid @5xl:col-span-2 @5xl:row-span-2">
                                     <FormLabel className="select-text">备注：</FormLabel>
                                     <FormControl className="w-full">
-                                        <Textarea rows={4} {...field} />
+                                        <Textarea rows={4} {...field} value={typeof field.value === 'string' ? field.value : ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

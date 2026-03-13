@@ -87,7 +87,6 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
 
 export const ReportView = ({ rep, printMode }: ReportEntryProps) => {
     const searchParams = useSearchParams()
-    // const original = "1" === searchParams!.get("original")
     const { storage, parrepfs } = useStorage()
     const Component = OfficialReport
     const [mapFxian] = useItemsMapPressure({ projects: storage.Projects })

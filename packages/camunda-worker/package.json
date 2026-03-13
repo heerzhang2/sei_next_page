@@ -11,9 +11,9 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.975.0",
+    "@aws-sdk/client-s3": "^3.1008.0",
     "@camunda8/orchestration-cluster-api": "^8.8.4",
-    "axios": "^1.6.2",
+    "axios": "^1.13.6",
     "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "fs-extra": "^11.3.0",

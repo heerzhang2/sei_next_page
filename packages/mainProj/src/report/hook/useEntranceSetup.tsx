@@ -9,7 +9,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { BlobInputList } from "@/components/chub"
 
 /**
- * 用于 EntranceSetup 组件的通用 hook
+ * 用于 EntranceSetup 组件的通用 hook，避免重复的类似的代码
  * 提供 schema 验证、默认值和名称冲突检查功能
  */
 export function useEntranceSetup(rep?: any) {

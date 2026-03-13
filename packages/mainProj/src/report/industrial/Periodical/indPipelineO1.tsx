@@ -23,14 +23,13 @@ import {config硬度仪, HardEvaluation, hard示说选} from "@/report/cm/hardne
 import {config光谱测仪, OptcEvaluation, optc示说选} from "@/report/cm/optical/Optical1";
 import {config强度核概, CpsvCalculation, cpsv结果选} from "@/report/cm/cpStrength/csVerification1";
 import {LongArticleFx} from "@/report/cm/cpStrength/LongArticleFx";
-import {config射线仪概, config射线测仪, RadoEvaluation, RadoWorkpiece, rado示说选, rado结果选} from "@/report/cm/radio/Radiography1";
+import {config射线仪概, RadoEvaluation, RadoWorkpiece, rado示说选, rado结果选} from "@/report/cm/radio/Radiography1";
 import {config渗透仪概, PermEvaluation, perm示说选, perm结果选} from "@/report/cm/permeation/PermTest1";
 import {config光析仪概, SpetChemicCompo, SpetElementSet, spet示说选, spet结果选} from "@/report/cm/spectr/SpetrAnalys1";
 import {CardContent} from "@/components/ui";
 import {CollapsibleFormSection} from "@/components/chub";
 import {useFormFramework} from "@/report/hook/useFormFramework";
 import {DevToolsSection, useEntranceSetup} from "@/report/hook/useEntranceSetup"
-import {setupItemAreaRoute} from "@/report/recreation/slidingJj/slidingJjO1";
 
 /**有的 是非Pdf的原始记录 *.doc附件形式：
  *  因为模板已经里另外做一个ConcAppendix附页编辑器了，参数na:不需要再设置了 ha:也不要用;

@@ -254,6 +254,7 @@ export function assertNamesUnique(arr: PlainArConfigs[]) :boolean {
   return true;    //全部 没冲突的！
 }
 
+//根据recordPrintList和itemActions生成registerUrl函数，供 PWA预缓存 页面生成该报告的URL列表。
 export function crtUrlRegistGen(recordPrintList: EditorAreaConfig[], itemActions: string[]) {
     return function registerUrl(template: string, version: string): string[] {
         const baseUrl = `/rep/*/${template}/${version}`;
