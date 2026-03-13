@@ -19,6 +19,18 @@ export function PWAInstaller() {
     const [platform, setPlatform] = useState<"ios" | "android" | "desktop" | "unknown">("unknown")
     const [browser, setBrowser] = useState<"chrome" | "safari" | "firefox" | "edge" | "other">("other")
 
+    // 检查是否在30天内点击过"稍后"
+    const checkInstallPromptDelay = () => {
+        const lastDismissTime = localStorage.getItem('pwa-install-dismissed')
+        if (lastDismissTime) {
+            const daysSinceDismiss = (Date.now() - parseInt(lastDismissTime)) / (1000 * 60 * 60 * 24)
+            if (daysSinceDismiss < 30) {
+                return true // 在30天内，不显示
+            }
+        }
+        return false // 超过30天或从未点击过"稍后"
+    }
+
     useEffect(() => {
         // 检测平台和浏览器
         const detectPlatform = () => {
@@ -60,8 +72,8 @@ export function PWAInstaller() {
             e.preventDefault()
             setDeferredPrompt(e as BeforeInstallPromptEvent)
 
-            // 只在桌面和 Android Chrome 上显示安装提示
-            if ((platform === "desktop" || platform === "android") && browser === "chrome") {
+            // 只在桌面和 Android Chrome 上显示安装提示，且不在30天内点击过"稍后"
+            if ((platform === "desktop" || platform === "android") && browser === "chrome" && !checkInstallPromptDelay()) {
                 setShowInstallPrompt(true)
             }
         }
@@ -80,7 +92,7 @@ export function PWAInstaller() {
         window.addEventListener("appinstalled", handleAppInstalled)
 
         // iOS 特殊处理
-        if (platform === "ios" && browser === "safari" && !isInstalled) {
+        if (platform === "ios" && browser === "safari" && !isInstalled && !checkInstallPromptDelay()) {
             // 延迟显示 iOS 安装提示
             const timer = setTimeout(() => {
                 setShowInstallPrompt(true)
@@ -89,7 +101,7 @@ export function PWAInstaller() {
         }
 
         // Android Chrome 特殊处理
-        if (platform === "android" && browser === "chrome" && !isInstalled && !deferredPrompt) {
+        if (platform === "android" && browser === "chrome" && !isInstalled && !deferredPrompt && !checkInstallPromptDelay()) {
             const timer = setTimeout(() => {
                 setShowInstallPrompt(true)
             }, 5000)
@@ -224,7 +236,16 @@ export function PWAInstaller() {
                             {browser === "chrome" && <Rabbit className="w-3 h-3 mr-1" />}
                             {instructions.action}
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setShowInstallPrompt(false)} className="text-xs">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                                setShowInstallPrompt(false)
+                                // 记录点击"稍后"的时间
+                                localStorage.setItem('pwa-install-dismissed', Date.now().toString())
+                            }} 
+                            className="text-xs"
+                        >
                             稍后
                         </Button>
                     </div>

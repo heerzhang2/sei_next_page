@@ -40,7 +40,15 @@ export function OfflineStatusIndicator() {
         }
 
         // 计算当前是否有离线状态
-        const offline = !isClientOnline || !isNextJSServerReachable || !isGraphQLBackendReachable || showEmptyArrayReminder
+        // 注意：undefined 表示"未知"状态，不应该算作离线
+        const isNextJSOnline = isNextJSServerReachable === true
+        const isGraphQLOnline = isGraphQLBackendReachable === true
+        const isClientNetworkOnline = isClientOnline === true
+        
+        const offline = (!isClientNetworkOnline || !isNextJSOnline || !isGraphQLOnline || showEmptyArrayReminder) 
+            && isNextJSServerReachable !== undefined 
+            && isGraphQLBackendReachable !== undefined
+        
         setHasOfflineStatus(offline)
 
         // 生成当前状态的唯一标识
@@ -162,7 +170,8 @@ export function OfflineStatusIndicator() {
 
     // 计算状态消息
     const getStatusInfo = () => {
-        if (isInitialCheck) {
+        // 如果状态还在检查中（undefined），显示"核实中"
+        if (isInitialCheck || isNextJSServerReachable === undefined || isGraphQLBackendReachable === undefined) {
             return {
                 icon: AlertTriangle,
                 message: "核实中",

@@ -919,6 +919,13 @@
   dependencies:
     "@floating-ui/utils" "^0.2.10"
 
+"@floating-ui/core@^1.7.5":
+  version "1.7.5"
+  resolved "https://registry.npmmirror.com/@floating-ui/core/-/core-1.7.5.tgz#d4af157a03330af5a60e69da7a4692507ada0622"
+  integrity sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==
+  dependencies:
+    "@floating-ui/utils" "^0.2.11"
+
 "@floating-ui/dom@^1.7.5":
   version "1.7.5"
   resolved "https://registry.npmmirror.com/@floating-ui/dom/-/dom-1.7.5.tgz"
@@ -927,26 +934,46 @@
     "@floating-ui/core" "^1.7.4"
     "@floating-ui/utils" "^0.2.10"
 
-"@floating-ui/react-dom@^2.0.0", "@floating-ui/react-dom@^2.1.7":
+"@floating-ui/dom@^1.7.6":
+  version "1.7.6"
+  resolved "https://registry.npmmirror.com/@floating-ui/dom/-/dom-1.7.6.tgz#f915bba5abbb177e1f227cacee1b4d0634b187bf"
+  integrity sha512-9gZSAI5XM36880PPMm//9dfiEngYoC6Am2izES1FF406YFsjvyBMmeJ2g4SAju3xWwtuynNRFL2s9hgxpLI5SQ==
+  dependencies:
+    "@floating-ui/core" "^1.7.5"
+    "@floating-ui/utils" "^0.2.11"
+
+"@floating-ui/react-dom@^2.0.0":
   version "2.1.7"
   resolved "https://registry.npmmirror.com/@floating-ui/react-dom/-/react-dom-2.1.7.tgz"
   integrity sha512-0tLRojf/1Go2JgEVm+3Frg9A3IW8bJgKgdO0BN5RkF//ufuz2joZM63Npau2ff3J6lUVYgDSNzNkR+aH3IVfjg==
   dependencies:
     "@floating-ui/dom" "^1.7.5"
 
-"@floating-ui/react@^0.27.17":
-  version "0.27.17"
-  resolved "https://registry.npmmirror.com/@floating-ui/react/-/react-0.27.17.tgz"
-  integrity sha512-LGVZKHwmWGg6MRHjLLgsfyaX2y2aCNgnD1zT/E6B+/h+vxg+nIJUqHPAlTzsHDyqdgEpJ1Np5kxWuFEErXzoGg==
+"@floating-ui/react-dom@^2.1.8":
+  version "2.1.8"
+  resolved "https://registry.npmmirror.com/@floating-ui/react-dom/-/react-dom-2.1.8.tgz#5fb5a20d10aafb9505f38c24f38d00c8e1598893"
+  integrity sha512-cC52bHwM/n/CxS87FH0yWdngEZrjdtLW/qVruo68qg+prK7ZQ4YGdut2GyDVpoGeAYe/h899rVeOVm6Oi40k2A==
   dependencies:
-    "@floating-ui/react-dom" "^2.1.7"
-    "@floating-ui/utils" "^0.2.10"
+    "@floating-ui/dom" "^1.7.6"
+
+"@floating-ui/react@^0.27.19":
+  version "0.27.19"
+  resolved "https://registry.npmmirror.com/@floating-ui/react/-/react-0.27.19.tgz#d8d5d895b7cb97dac370bfbf55f3e630878fdf1f"
+  integrity sha512-31B8h5mm8YxotlE7/AU/PhNAl8eWxAmjL/v2QOxroDNkTFLk3Uu82u63N3b6TXa4EGJeeZLVcd/9AlNlVqzeog==
+  dependencies:
+    "@floating-ui/react-dom" "^2.1.8"
+    "@floating-ui/utils" "^0.2.11"
     tabbable "^6.0.0"
 
 "@floating-ui/utils@^0.2.10":
   version "0.2.10"
   resolved "https://registry.npmmirror.com/@floating-ui/utils/-/utils-0.2.10.tgz"
   integrity sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==
+
+"@floating-ui/utils@^0.2.11":
+  version "0.2.11"
+  resolved "https://registry.npmmirror.com/@floating-ui/utils/-/utils-0.2.11.tgz#a269e055e40e2f45873bae9d1a2fdccbd314ea3f"
+  integrity sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==
 
 "@hookform/resolvers@^5.2.2":
   version "5.2.2"
@@ -8024,10 +8051,10 @@ react-error-boundary@^6.0.0:
   resolved "https://registry.npmmirror.com/react-error-boundary/-/react-error-boundary-6.1.0.tgz"
   integrity sha512-02k9WQ/mUhdbXir0tC1NiMesGzRPaCsJEWU/4bcFrbY1YMZOtHShtZP6zw0SJrBWA/31H0KT9/FgdL8+sPKgHA==
 
-react-hook-form@^7.71.1:
-  version "7.71.1"
-  resolved "https://registry.npmmirror.com/react-hook-form/-/react-hook-form-7.71.1.tgz"
-  integrity sha512-9SUJKCGKo8HUSsCO+y0CtqkqI5nNuaDqTxyqPsZPqIwudpj4rCrAz/jZV+jn57bx5gtZKOh3neQu94DXMc+w5w==
+react-hook-form@^7.71.2:
+  version "7.71.2"
+  resolved "https://registry.npmmirror.com/react-hook-form/-/react-hook-form-7.71.2.tgz#a5f1d2b855be9ecf1af6e74df9b80f54beae7e35"
+  integrity sha512-1CHvcDYzuRUNOflt4MOq3ZM46AronNJtQ1S7tnX6YN4y72qhgiUItpacZUAQ0TyWYci3yz1X+rXaSxiuEm86PA==
 
 react-icons@^5.4.0:
   version "5.5.0"

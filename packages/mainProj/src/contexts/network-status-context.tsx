@@ -8,8 +8,8 @@ import { withBasePath } from '@/lib/tool'
 
 export interface NetworkStatus {
     isClientOnline: boolean         // 表示客户端网络状态（依赖浏览器 navigator.onLine）
-    isNextJSServerReachable: boolean  //表示Next.js服务器在线状态
-    isGraphQLBackendReachable: boolean  //表示Java后端在线状态
+    isNextJSServerReachable: boolean | undefined  //表示Next.js服务器在线状态，undefined表示"未知"状态
+    isGraphQLBackendReachable: boolean | undefined  //表示Java后端在线状态，undefined表示"未知"状态
     lastError: Error | null
     lastOnlineTime: Date | null
     lastOfflineTime: Date | null
@@ -21,8 +21,8 @@ export interface NetworkStatusActions {
     updateGraphQLBackendStatus: (isReachable: boolean) => void
     checkNetworkStatus: () => Promise<{
         isClientOnline: boolean
-        isNextJSServerReachable: boolean
-        isGraphQLBackendReachable: boolean
+        isNextJSServerReachable: boolean | undefined
+        isGraphQLBackendReachable: boolean | undefined
     }>
 }
 const NetworkStatusContext = createContext<NetworkStatus | null>(null)
@@ -82,10 +82,10 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             lastOfflineTime: null,
             connectionType: null,
             isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-            // 初始值设为 false，避免在网络状态检查完成前发起不必要的请求
-            // 只有当检查确认服务器可达时才设置为 true
-            isNextJSServerReachable: false,
-            isGraphQLBackendReachable: false,
+            // 初始值设为 undefined，表示"未知"状态，避免在检查完成前误报
+            // 只有当检查确认服务器可达时才设置为 true，离线时设置为 false
+            isNextJSServerReachable: undefined,
+            isGraphQLBackendReachable: undefined,
         }
     }, [])
 
