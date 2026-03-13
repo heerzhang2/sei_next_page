@@ -53,6 +53,7 @@ export function OfflineStatusIndicator() {
 
         // 从sessionStorage获取上次保存的状态
         const lastStatus = sessionStorage.getItem('last-network-status')
+        const messageStartTime = sessionStorage.getItem('message-start-time')
 
         if (offline) {
             // 只有在状态真正变化时才显示消息
@@ -63,18 +64,43 @@ export function OfflineStatusIndicator() {
                 sessionStorage.setItem('last-network-status', currentStatus)
                 lastSavedStatusRef.current = currentStatus
 
+                // 记录消息开始显示的时间
+                const now = Date.now()
+                sessionStorage.setItem('message-start-time', now.toString())
+
                 // 显示消息
                 setShowMessage(true)
                 // 30秒后隐藏消息文字
                 hideTimerRef.current = setTimeout(() => {
                     setShowMessage(false)
+                    sessionStorage.removeItem('message-start-time')
                 }, 30000)
+            } else if (messageStartTime) {
+                // 状态未变化，但检查是否需要继续显示消息
+                const startTime = parseInt(messageStartTime, 10)
+                const elapsed = Date.now() - startTime
+                const remainingTime = 30000 - elapsed
+
+                if (remainingTime > 0) {
+                    // 还有剩余时间，继续显示消息
+                    setShowMessage(true)
+                    // 设置剩余时间的定时器
+                    hideTimerRef.current = setTimeout(() => {
+                        setShowMessage(false)
+                        sessionStorage.removeItem('message-start-time')
+                    }, remainingTime)
+                } else {
+                    // 已经过去30秒，隐藏消息并清除时间记录
+                    setShowMessage(false)
+                    sessionStorage.removeItem('message-start-time')
+                }
             }
         } else {
             // 没有离线状态时，隐藏消息
             setShowMessage(false)
-            // 清除保存的状态
+            // 清除保存的状态和时间
             sessionStorage.removeItem('last-network-status')
+            sessionStorage.removeItem('message-start-time')
             lastSavedStatusRef.current = null
         }
 
