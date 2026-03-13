@@ -23,7 +23,7 @@ function convertToSession(authData: OfflineAuthData) {
 
 /**
  * OfflineSessionPatcher 组件
- * 
+ *
  * 在 Next.js 服务器离线时，拦截 NextAuth 的 /api/auth/session 请求，
  * 返回缓存的离线认证数据，避免 502 错误导致的 JSON 解析失败
  */
@@ -56,20 +56,20 @@ export function OfflineSessionPatcher() {
 
             const authData = cachedAuth
             const originalFetch = window.fetch
-            
+
             window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-                const url = typeof input === 'string' 
-                    ? input 
-                    : input instanceof URL 
-                        ? input.href 
+                const url = typeof input === 'string'
+                    ? input
+                    : input instanceof URL
+                        ? input.href
                         : (input as Request).url
-                
+
                 // 拦截 session 请求
                 if (url.includes('/api/auth/session')) {
                     console.log("[OfflineSessionPatcher] 拦截 /api/auth/session 请求，返回缓存数据")
-                    
+
                     const session = convertToSession(authData)
-                    
+
                     return new Response(JSON.stringify(session), {
                         status: 200,
                         headers: {
@@ -77,7 +77,7 @@ export function OfflineSessionPatcher() {
                         },
                     })
                 }
-                
+
                 return originalFetch(input, init)
             }
 
@@ -90,18 +90,7 @@ export function OfflineSessionPatcher() {
         }
     }, [isNextJSServerReachable, cachedAuth])
 
-    // 监听网络状态变化
-    useEffect(() => {
-        const handleNetworkChange = () => {
-            console.log("[OfflineSessionPatcher] 网络状态变化")
-        }
-
-        window.addEventListener('network:status-changed', handleNetworkChange)
-        
-        return () => {
-            window.removeEventListener('network:status-changed', handleNetworkChange)
-        }
-    }, [])
+    // 网络状态变化通过 useNetworkStatusContext 的 isNextJSServerReachable 自动处理，无需额外事件监听
 
     // 服务器恢复在线时的日志
     useEffect(() => {
