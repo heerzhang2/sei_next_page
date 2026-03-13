@@ -16,6 +16,8 @@ export function OfflineStatusIndicator() {
 
     // 用于控制消息显示的定时器
     const hideTimerRef = useRef<NodeJS.Timeout | null>(null)
+    // 用于跟踪上次保存的网络状态
+    const lastSavedStatusRef = useRef<string | null>(null)
 
     // 检测小屏幕
     useEffect(() => {
@@ -41,16 +43,39 @@ export function OfflineStatusIndicator() {
         const offline = !isClientOnline || !isNextJSServerReachable || !isGraphQLBackendReachable || showEmptyArrayReminder
         setHasOfflineStatus(offline)
 
+        // 生成当前状态的唯一标识
+        const currentStatus = JSON.stringify({
+            isClientOnline,
+            isNextJSServerReachable,
+            isGraphQLBackendReachable,
+            showEmptyArrayReminder
+        })
+
+        // 从sessionStorage获取上次保存的状态
+        const lastStatus = sessionStorage.getItem('last-network-status')
+
         if (offline) {
-            // 有离线状态时，显示消息
-            setShowMessage(true)
-            // 30秒后隐藏消息文字
-            hideTimerRef.current = setTimeout(() => {
-                setShowMessage(false)
-            }, 30000)
+            // 只有在状态真正变化时才显示消息
+            const statusChanged = lastStatus !== currentStatus
+
+            if (statusChanged) {
+                // 保存当前状态到sessionStorage
+                sessionStorage.setItem('last-network-status', currentStatus)
+                lastSavedStatusRef.current = currentStatus
+
+                // 显示消息
+                setShowMessage(true)
+                // 30秒后隐藏消息文字
+                hideTimerRef.current = setTimeout(() => {
+                    setShowMessage(false)
+                }, 30000)
+            }
         } else {
             // 没有离线状态时，隐藏消息
             setShowMessage(false)
+            // 清除保存的状态
+            sessionStorage.removeItem('last-network-status')
+            lastSavedStatusRef.current = null
         }
 
         // 如果所有状态都已初始化，则标记初始检查完成
