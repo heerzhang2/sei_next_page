@@ -93,4 +93,4 @@ npx shadcn@latest add accordion alert alert-dialog aspect-ratio avatar badge bre
 **检查依赖**：更新后可能需要更新相关依赖包
 npm update @radix-ui/react-* class-variance-authority clsx tailwind-merge
 yarn upgrade-interactive --latest
-
+shadcn/ui 的设计理念是：**不是传统的 npm 包** - 它不会从 `node_modules` 导入组件,而是复制代码到src\components\ui目录的，允许自主修改和扩展组件。

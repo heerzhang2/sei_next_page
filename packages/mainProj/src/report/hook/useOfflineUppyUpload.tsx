@@ -8,7 +8,6 @@ import type Uppy from "@uppy/core"
 import { Button } from "@/components/ui/button"
 import { Upload, FolderOpen, Trash2, RotateCcw, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
-import { stripOrigin } from "@/lib/utils"
 
 // 检查浏览器是否支持 File System Access API
 const isFileSystemAccessSupported = () => {

@@ -18,6 +18,11 @@ import { SerwistMessageHandler } from "@/components/serwist-message-handler"
 import { withBasePath } from '@/lib/tool'
 import { SerwistProvider } from "../lib/serwist/client"
 import { OfflineSessionPatcher } from "@/components/offline-session-patcher"
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const APP_NAME = "报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
@@ -60,7 +65,7 @@ export default async function RootLayout({
   // 检查是否启用 PWA 功能
   const enablePWA = process.env.NEXT_PUBLIC_ENABLE_PWA !== 'false'
   return (
-    <html suppressHydrationWarning lang="zh-CN">
+    <html suppressHydrationWarning lang="zh-CN" className={cn("font-sans", geist.variable)}>
       <body
         className={`${notoSans.variable} ${notoSerif.variable} antialiased
              bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 @container
@@ -70,37 +75,41 @@ export default async function RootLayout({
           <SerwistProvider swUrl={`${swPathBase}/serwist/sw.js`}>
             <ThemeProvider>
               <PrintSettingsProvider>
-                <SessionProvider session={session} basePath={basePath}>
-                  <NetworkStatusProvider>
-                    <OfflineSessionPatcher />
-                    <GraphQLProvider>
-                      <SerwistMessageHandler />
-                      <SessionSync />
-                      <TokenRefreshOverlay />
-                      <OfflineStatusIndicator />
-                      {children}
-                      <PWAInstaller />
-                      <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
-                    </GraphQLProvider>
-                  </NetworkStatusProvider>
-                </SessionProvider>
+                <TooltipProvider>
+                  <SessionProvider session={session} basePath={basePath}>
+                    <NetworkStatusProvider>
+                      <OfflineSessionPatcher />
+                      <GraphQLProvider>
+                        <SerwistMessageHandler />
+                        <SessionSync />
+                        <TokenRefreshOverlay />
+                        <OfflineStatusIndicator />
+                        {children}
+                        <PWAInstaller />
+                        <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
+                      </GraphQLProvider>
+                    </NetworkStatusProvider>
+                  </SessionProvider>
+                </TooltipProvider>
               </PrintSettingsProvider>
             </ThemeProvider>
           </SerwistProvider>
         ) : (
           <ThemeProvider>
             <PrintSettingsProvider>
-              <SessionProvider session={session} basePath={basePath}>
-                <NetworkStatusProvider>
-                  <OfflineSessionPatcher />
-                  <GraphQLProvider>
-                    <SessionSync />
-                    <TokenRefreshOverlay />
-                    {children}
-                    <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
-                  </GraphQLProvider>
-                </NetworkStatusProvider>
-              </SessionProvider>
+              <TooltipProvider>
+                <SessionProvider session={session} basePath={basePath}>
+                  <NetworkStatusProvider>
+                    <OfflineSessionPatcher />
+                    <GraphQLProvider>
+                      <SessionSync />
+                      <TokenRefreshOverlay />
+                      {children}
+                      <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
+                    </GraphQLProvider>
+                  </NetworkStatusProvider>
+                </SessionProvider>
+              </TooltipProvider>
             </PrintSettingsProvider>
           </ThemeProvider>
         )}
