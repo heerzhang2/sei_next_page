@@ -1,3 +1,4 @@
+//src\report\common\repFootLink.tsx
 "use client"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { withBasePath } from "@/lib/tool"
 import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
 import { usePrintPdf } from "@/hooks/usePrintPdf"
 import { toast } from "sonner"
@@ -394,12 +396,12 @@ export function RepFootLink({
                                     流转(流程)
                                 </button>
 
-                                <button
-                                    onClick={() => handleNavigation("/")}
+                                <Link
+                                    href={"/"}
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
                                 >
                                     回首页
-                                </button>
+                                </Link>
                                 {!subrid && (
                                     <button
                                         onClick={() => handleNavigation(`/rep/${repId}/${template}/${verId}/ALL`, true, "editor")}
@@ -495,15 +497,18 @@ export function RepFootLink({
                         <div className="mr-8 text-blue-600 hover:text-blue-800 text-sm font-medium">-返回主报告-</div>
                     </RepLink>
                 )}
-                <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                <span 
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
+                    onClick={() => window.location.href = '/report/'}
+                >
                     -{!single && original ? "原始记录" : "报告"}完毕,返回-
-                </Link>
+                </span>
             </div>
             <div
                 className={cn(
                     "flex justify-center",
                     "fixed bottom-4 -translate-x-1/2 z-50",
-                    screenHeight! < 500 ? "left-20" : screenWidth! < 500 ? "left-8 bottom-8" : "left-1/2",
+                    screenHeight! < 500 ? "left-40" : screenWidth! < 500 ? "left-32 bottom-8" : "left-72",
                 )}
             >
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -521,9 +526,9 @@ export function RepFootLink({
                                 "transition-all duration-200", // 新增：过渡动画
                                 "opacity-90", // 新增：基础透明度
                                 screenHeight! < 500
-                                    ? "h-4 w-10 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
+                                    ? "h-6 w-10 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
                                     : screenWidth! < 500
-                                        ? "h-6 w-6 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
+                                        ? "h-8 w-8 rounded-xs gap-1 px-1 has-[>svg]:px-1.5"
                                         : "",
                             )}
                             data-scroll-ignore="true"

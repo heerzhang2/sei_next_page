@@ -9,6 +9,7 @@ import {MainContent} from "./MainContent";
 import { getSession } from 'next-auth/react';
 import {auth} from "@/app/auth";
 import { redirect } from 'next/navigation'
+import { withBasePath } from '@/lib/tool'
 
 //用户凭证无效的：只有这个才能真正重定向登录页面；这个是RSC后端运行的SSR代码，前端转发nextjs后端应答浏览器的数据包是运行结果信息。
 // export const dynamic = 'force-dynamic'  // Alternative to default-no-store
@@ -28,7 +29,7 @@ export default async function ClientComponent() {
     if(!session?.user || !session?.user?.accessToken)
     {
         console.log("user: 跳转login", session?.user)
-        redirect('/login')
+        redirect(withBasePath('/login'))
     }
     //useLazyLoadQuery必须配套use client的；
 

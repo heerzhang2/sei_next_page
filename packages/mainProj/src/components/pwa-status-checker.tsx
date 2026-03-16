@@ -360,7 +360,7 @@ export function PWAStatusChecker() {
                 <Button variant="outline" size="sm" onClick={() => setShowStatus(true)} className="shadow-lg">
                     <Database className="w-4 h-4 mr-1" />
                     PWA 状态
-                    {status.isOnline ? (
+                    {status.isNextJSServerReachable ? (
                         <Wifi className="w-4 h-4 ml-1 text-green-500" />
                     ) : (
                         <WifiOff className="w-4 h-4 ml-1 text-red-500" />
@@ -484,13 +484,13 @@ export function PWAStatusChecker() {
                     <div className="flex items-center justify-between border-t pt-2">
                         <span className="text-sm">网络连接</span>
                         <div className="flex items-center gap-2">
-                            {status.isOnline ? (
+                            {status.isNextJSServerReachable ? (
                                 <Wifi className="w-4 h-4 text-green-500" />
                             ) : (
                                 <WifiOff className="w-4 h-4 text-red-500" />
                             )}
-                            <Badge variant={status.isOnline ? "default" : "destructive"} className="text-xs">
-                                {status.isOnline ? "在线" : "离线"}
+                            <Badge variant={status.isNextJSServerReachable ? "default" : "destructive"} className="text-xs">
+                                {status.isNextJSServerReachable ? "在线" : "离线"}
                             </Badge>
                         </div>
                     </div>

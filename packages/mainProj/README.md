@@ -85,3 +85,12 @@ yarn start:cluster
 # 或使用HTTPS本机测试环境的
 yarn start:https
 
+# 更新 shadcn 组件到最新版本有以下几种方法：
+# 或者更新多个组件
+npx shadcn@latest add button card textarea --overwrite
+## 更新所有已安装的组件
+npx shadcn@latest add accordion alert alert-dialog aspect-ratio avatar badge breadcrumb button calendar card carousel chart checkbox collapsible command context-menu dialog drawer dropdown-menu form hover-card input input-otp label menubar navigation-menu pagination popover progress radio-group resizable scroll-area select separator sheet sidebar skeleton slider sonner switch table tabs textarea toggle toggle-group tooltip --overwrite
+**检查依赖**：更新后可能需要更新相关依赖包
+npm update @radix-ui/react-* class-variance-authority clsx tailwind-merge
+yarn upgrade-interactive --latest
+shadcn/ui 的设计理念是：**不是传统的 npm 包** - 它不会从 `node_modules` 导入组件,而是复制代码到src\components\ui目录的，允许自主修改和扩展组件。

@@ -1,0 +1,100 @@
+/**
+ * 角色守卫组件示例
+ *
+ * 用于根据用户角色控制组件显示
+ */
+
+"use client"
+
+import { useSession } from "next-auth/react"
+import { hasRole, hasAnyRole, hasAllRoles } from "@fjsei/shared-auth-config"
+import { ReactNode } from "react"
+
+interface RoleGuardProps {
+  children: ReactNode
+  roles?: string[] // 单个或多个角色（OR 逻辑）
+  requireAll?: boolean // 是否需要所有角色（AND 逻辑）
+  fallback?: ReactNode // 无权限时显示的内容
+}
+
+/**
+ * 单个角色守卫
+ */
+export function RoleGuard({ children, roles, requireAll = false, fallback = null }: RoleGuardProps) {
+  const { data: session } = useSession()
+  const userRoles = session?.user?.authorities?.map((a) => a.name) || []
+
+  // 未登录，显示 fallback
+  if (!session) {
+    return <>{fallback}</>
+  }
+
+  // 没有角色要求，直接渲染
+  if (!roles || roles.length === 0) {
+    return <>{children}</>
+  }
+
+  // 检查角色
+  const hasAccess = requireAll
+    ? hasAllRoles(userRoles, roles)
+    : hasAnyRole(userRoles, roles)
+
+  return hasAccess ? <>{children}</> : <>{fallback}</>
+}
+
+/**
+ * 预定义的角色守卫
+ */
+
+export function AdminOnly({ children, fallback = null }: Omit<RoleGuardProps, "roles" | "requireAll">) {
+  return <RoleGuard roles={["ADMIN"]}>{children}</RoleGuard>
+}
+
+export function EditorOnly({ children, fallback = null }: Omit<RoleGuardProps, "roles" | "requireAll">) {
+  return <RoleGuard roles={["EDITOR"]}>{children}</RoleGuard>
+}
+
+export function ViewerOnly({ children, fallback = null }: Omit<RoleGuardProps, "roles" | "requireAll">) {
+  return <RoleGuard roles={["VIEWER"]}>{children}</RoleGuard>
+}
+
+export function AdminOrEditor({ children, fallback = null }: Omit<RoleGuardProps, "roles" | "requireAll">) {
+  return <RoleGuard roles={["ADMIN", "EDITOR"]}>{children}</RoleGuard>
+}
+
+/**
+ * 使用示例：
+ *
+ * import { RoleGuard, AdminOnly, EditorOnly } from "@/components/RoleGuard"
+ *
+ * function MyPage() {
+ *   return (
+ *     <div>
+ *       <h1>报告系统</h1>
+ *
+ *       <RoleGuard roles={["ADMIN"]}>
+ *         <Button>删除报告</Button>
+ *       </RoleGuard>
+ *
+ *       <RoleGuard roles={["EDITOR", "ADMIN"]} fallback={<p>您没有编辑权限</p>}>
+ *         <Button>编辑报告</Button>
+ *       </RoleGuard>
+ *
+ *       <AdminOnly>
+ *         <div>仅管理员可见的内容</div>
+ *       </AdminOnly>
+ *
+ *       <EditorOnly fallback={<p>需要编辑权限</p>}>
+ *         <div>仅编辑者可见的内容</div>
+ *       </EditorOnly>
+ *
+ *       <RoleGuard
+ *         roles={["USER", "VERIFIER"]}
+ *         requireAll={true} // 需要同时拥有两个角色
+ *       >
+ *         <div>需要用户+验证员双重身份</div>
+ *       </RoleGuard>
+ *     </div>
+ *   )
+ * }
+ */

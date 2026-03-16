@@ -1,194 +1,129 @@
-import type { NextAuthConfig } from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
+import { cookies } from "next/headers"
+import { createSharedAuthConfig } from "@fjsei/shared-auth-config"
 import { createServerUrqlClient } from "@/auth/urql"
+import type { NextAuthConfig } from "next-auth"
 
-// GraphQL mutations
-const AUTHENTICATE_MUTATION = `
-  mutation Authenticate($username: String!, $password: String!) {
-    authenticate(username: $username, password: $password) {
-      accessToken
-      refreshToken
-      user {
-        id
-      }
-    }
+/**
+ * 项目特定的授权函数实现
+ * 使用 urql 客户端调用后端 GraphQL 认证接口
+ */
+const authorize = async (credentials: {
+  username?: string | null
+  password?: string | null
+  deviceId?: string | null
+}) => {
+  const username = credentials.username || ""
+  const password = credentials.password || ""
+  const deviceId = credentials.deviceId || ""
+
+  if (!username || !password) {
+    return null
   }
-`
 
-const REFRESH_MUTATION = `
-  mutation RefreshToken($refreshToken: String!) {
-    refreshToken(refreshToken: $refreshToken) {
-      accessToken
-      refreshToken
-      user {
-        id
-      }
+  try {
+    console.log("[mainProj Auth] 开始认证 - username:", username, "deviceId:", deviceId)
+
+    const client = createServerUrqlClient(deviceId)
+    const result = await client
+      .mutation(
+        `
+        mutation Authenticate($username: String!, $password: String!) {
+          authenticate(username: $username, password: $password, setCookie: false) {
+            accessToken
+            refreshToken
+            user {
+              id
+              username
+            }
+          }
+        }
+      `,
+        {
+          username,
+          password,
+        },
+      )
+      .toPromise()
+
+    if (result.error) {
+      console.error("[mainProj Auth] GraphQL 认证错误:", result.error)
+      return null
     }
+
+    if (!result.data?.authenticate) {
+      console.error("[mainProj Auth] 认证失败: 无数据返回")
+      return null
+    }
+
+    const authData = result.data.authenticate
+
+    // 设置 refreshToken cookie
+    const cookieStore = await cookies()
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
+    cookieStore.set("refreshToken", authData.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 60, // 60 天
+      path: `${basePath}/api/refresh-token`,
+    })
+    console.log("[mainProj Auth] refreshToken cookie 已设置")
+
+    return {
+      id: authData.user.id,
+      name: authData.user.name || authData.user.username,
+      email: authData.user.email,
+      accessToken: authData.accessToken,
+      refreshToken: authData.refreshToken,
+      deviceId: deviceId,
+      authorities: authData.user.authorities || [],
+    }
+  } catch (error) {
+    console.error("[mainProj Auth] 认证异常:", error)
+    return null
   }
-`
-
-// 刷新 access token
-export async function refreshAccessToken(token: any) {
-    try {
-        console.log("开始刷新 token...")
-
-        if (!token.refreshToken) {
-            throw new Error("No refresh token available")
-        }
-
-        const client = createServerUrqlClient()
-        const result = await client
-            .mutation(REFRESH_MUTATION, {
-                refreshToken: token.refreshToken,
-            })
-            .toPromise()
-
-        if (result.error) {
-            console.error("Token refresh GraphQL error:", result.error)
-            throw new Error("Token refresh failed")
-        }
-
-        if (!result.data?.refreshToken) {
-            throw new Error("No refresh token data returned")
-        }
-
-        const refreshData = result.data.refreshToken
-        console.log("Token 刷新成功=", refreshData)
-        return {
-            ...token,
-            accessToken: refreshData.accessToken,
-            refreshToken: refreshData.refreshToken,
-            accessTokenExpires: Date.now() + 60 * 60 * 1000, // 1 hour from now
-            user: {
-                ...token.user,
-                ...refreshData.user,
-            },
-        }
-    } catch (error) {
-        console.error("refreshAccessToken error:", error)
-        return {
-            ...token,
-            error: "RefreshAccessTokenError",
-        }
-    }
 }
 
+/**
+ * 导出共享认证配置
+ */
+const baseConfig = createSharedAuthConfig({
+  authorize,
+})
+
+// 从 NEXTAUTH_URL 中提取 basePath
+const getNextAuthBasePath = () => {
+  const nextAuthUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL
+  if (nextAuthUrl) {
+    try {
+      const url = new URL(nextAuthUrl)
+      const pathname = url.pathname
+      if (pathname !== "/") {
+        return pathname.endsWith("/api/auth") ? pathname : `${pathname}/api/auth`
+      }
+    } catch (e) {
+      console.warn("Failed to parse NEXTAUTH_URL:", e)
+    }
+  }
+
+  // 回退到 NEXT_PUBLIC_BASE_PATH
+  return process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth` : "/api/auth"
+}
+
+const signInPath=process.env.NEXT_PUBLIC_BASE_PATH ? `${process.env.NEXT_PUBLIC_BASE_PATH}/login` : "/login";
+/**
+ * 合并配置，添加 basePath 支持
+ */
 export const authConfig: NextAuthConfig = {
-    providers: [
-        CredentialsProvider({
-            name: "credentials",
-            credentials: {
-                username: { label: "用户名", type: "text" },
-                password: { label: "密码", type: "password" },
-            },
-            async authorize(credentials) {
-                if (!credentials?.username || !credentials?.password) {
-                    return null
-                }
-
-                try {
-                    const hashedPassword = credentials.password as string
-
-                    const client = createServerUrqlClient()
-                    const result = await client
-                        .mutation(AUTHENTICATE_MUTATION, {
-                            username: credentials.username,
-                            password: hashedPassword,
-                        })
-                        .toPromise()
-
-                    if (result.error) {
-                        console.error("Authentication GraphQL error:", result.error)
-                        return null
-                    }
-
-                    if (!result.data?.authenticate) {
-                        return null
-                    }
-
-                    const authData = result.data.authenticate
-                    return {
-                        id: authData.user.id,
-                        name: authData.user.name || authData.user.username,
-                        email: authData.user.email,
-                        accessToken: authData.accessToken,
-                        refreshToken: authData.refreshToken,
-                        accessTokenExpires: authData.accessTokenExpires,
-                    }
-                } catch (error) {
-                    console.error("Authentication error:", error)
-                    return null
-                }
-            },
-        }),
-    ],
-    callbacks: {
-        async jwt({ token, user, trigger, profile }) {
-            // 初次登录时，将用户信息保存到 token
-            if (user) {
-                return {
-                    ...token,
-                    accessToken: user.accessToken,
-                    refreshToken: user.refreshToken,
-                    accessTokenExpires: user.accessTokenExpires,
-                    user: {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                    },
-                }
-            }
-            // 检查 access token 是否即将过期（提前 5 分钟刷新）  token里面没有accessTokenExpires字段，而是用exp替代的
-            const {accessToken, exp }=token
-            // console.log("jwt. . .",{trigger, profile, token,user})
-            //accessToken是JWT字符串； 该如何提取accessToken有效期的？
-            const shouldRefresh = exp && Date.now() > ((exp as number) - 5 * 60) * 1000
-            if(trigger==="update" || shouldRefresh || !accessToken){
-                if (shouldRefresh || !accessToken)
-                    console.log("Token 即将过期，开始刷新...")
-                else
-                    console.log("trigger==update...刷新token=>")
-                const refreshedToken = await refreshAccessToken(token)
-                if (refreshedToken.error) {
-                    console.error("Token刷新失败:", refreshedToken.error)
-                    return null
-                }
-                const newJwt={
-                    user: {
-                        ...token.user,
-                    },
-                    accessToken:   refreshedToken.accessToken,
-                    refreshToken:  refreshedToken.refreshToken,
-                    accessTokenExpires: refreshedToken.accessTokenExpires,
-                };
-                return newJwt;
-            }
-            return token
-        },
-        async session({ session, token }) {
-            //这个执行频繁！   将 token 信息传递给 session
-            if (token) {
-                session.user = {
-                    ...session.user,
-                    id: token.user?.id as string,
-                    accessToken: token.accessToken as string,
-                    refreshToken: token.refreshToken as string,
-                    accessTokenExpires: token.exp as number,
-                }
-                // 如果有刷新错误，也传递给 session
-                if (token.error) {
-                    ;(session as any).error = token.error
-                }
-            }
-            return session
-        },
-    },
-    pages: {
-        signIn: "/login",
-    },
-    session: {
-        strategy: "jwt",
-        maxAge: 24 * 60 * 60, // 24 hours
-    },
-    secret: process.env.NEXTAUTH_SECRET,
+  ...baseConfig,
+  // NextAuth basePath 是相对于 Next.js 应用的，不需要包含 Next.js basePath
+  basePath: "/api/auth",
+  // pages 路径需要相对于根路径，NextAuth 会自动添加 basePath
+  pages: {
+    signIn: signInPath,
+  },
+  // 确保信任所有主机（在反向代理后面时需要）
+  trustHost: true,
+  // 禁用自动错误重定向，让客户端处理错误
+  debug: process.env.NODE_ENV === "development",
 }

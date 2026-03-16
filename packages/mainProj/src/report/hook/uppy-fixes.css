@@ -1,39 +1,170 @@
 /* Fix for Uppy Dashboard styles that get overridden by Tailwind */
 .uppy-Dashboard-AddFiles-title {
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 1 !important;
-  white-space: nowrap !important;
+    position: absolute !important;
+    top: 60% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 1 !important;
+    white-space: nowrap !important;
 }
 
 /* Ensure other critical Uppy styles aren't overridden */
 .uppy-Dashboard-inner {
-  position: relative !important;
+    position: relative !important;
+    margin: auto;
+    max-height: 100vh;
 }
 
 .uppy-Dashboard-AddFiles {
-  position: relative !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  align-items: center !important;
-  height: 100% !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 100% !important;
 }
 
 /* Preserve Uppy's z-index layering */
 .uppy-Dashboard-files {
-  position: relative !important;
-  z-index: 2 !important;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
 /* Ensure Uppy modal appears above other content */
 .uppy-Dashboard--modal {
-  z-index: 1001 !important;
+    z-index: 1001 !important;
 }
 
 /* Force Uppy styles to take precedence over Tailwind */
 .uppy-Dashboard * {
-  box-sizing: border-box !important;
+    box-sizing: border-box !important;
+}
+
+/* Fix icon sizes in specific Uppy components */
+.uppy-StatusBar-actionCircleBtn .uppy-c-icon,
+.uppy-StatusBar-actionBtn--retry .uppy-c-icon {
+    height: 1.8rem !important;
+    width: 2.2rem !important;
+}
+
+/* 针对窄屏幕设备的自适应调整 */
+@media (max-width: 480px) {
+    .uppy-StatusBar-actionCircleBtn .uppy-c-icon,
+    .uppy-StatusBar-actionBtn--retry .uppy-c-icon {
+        height: 1.5rem !important;
+        width: 2rem !important;
+    }
+}
+
+/* 重试按钮容器样式 */
+.uppy-StatusBar-actionBtn--retry {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    padding: 0.25rem 0.75rem !important;
+    white-space: nowrap !important;
+    position: relative !important;
+    line-height: 1.4 !important;
+    min-height: 1.4rem !important;
+    height: auto !important;
+    font-size: 0.875rem !important;
+    border-radius: 0.375rem !important;
+    transition: all 0.2s ease !important;
+}
+
+/* 重试按钮图标样式 */
+.uppy-StatusBar-actionBtn--retry .uppy-c-icon {
+    height: 1.4rem !important;
+    width: 1rem !important;
+    margin-right: 0 !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+}
+
+/* 确保重试按钮文字正常显示 */
+.uppy-StatusBar-actionBtn--retry::before {
+    content: " " !important;
+    display: inline !important;
+    width: 0.5rem;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+/* Customize the TUS Resume/Retry button to look like a standard button with text */
+.uppy-StatusBar-actionCircleBtn[title="恢复上传"],
+.uppy-StatusBar-actionCircleBtn[aria-label="恢复上传"],
+.uppy-StatusBar-actionCircleBtn[title="暂停"],
+.uppy-StatusBar-actionCircleBtn[aria-label="暂停"] {
+    border-radius: 4px !important;
+    width: auto !important;
+    height: auto !important;
+    /* Reduced padding to make the button smaller */
+    padding: 4px 4px !important;
+    background-color: #2563eb !important; /* Blue-600 to match primary buttons */
+    color: white !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+    transition: background-color 0.2s !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.uppy-StatusBar-actionCircleBtn[title="恢复上传"]:hover,
+.uppy-StatusBar-actionCircleBtn[aria-label="恢复上传"]:hover,
+.uppy-StatusBar-actionCircleBtn[title="暂停"]:hover,
+.uppy-StatusBar-actionCircleBtn[aria-label="暂停"]:hover {
+    background-color: #1d4ed8 !important; /* Blue-700 */
+}
+
+/* Add text label using pseudo-element */
+.uppy-StatusBar-actionCircleBtn[title="恢复上传"]::after,
+.uppy-StatusBar-actionCircleBtn[aria-label="恢复上传"]::after {
+    content: "恢复上传";
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 500 !important;
+    line-height: 1.25rem !important;
+}
+
+/* Add text label for Pause button */
+.uppy-StatusBar-actionCircleBtn[title="暂停"]::after,
+.uppy-StatusBar-actionCircleBtn[aria-label="暂停"]::after {
+    content: "暂停上传";
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 500 !important;
+    line-height: 1.25rem !important;
+}
+
+/* Adjust the icon inside the button */
+.uppy-StatusBar-actionCircleBtn[title="恢复上传"] svg,
+.uppy-StatusBar-actionCircleBtn[aria-label="恢复上传"] svg,
+.uppy-StatusBar-actionCircleBtn[title="暂停"] svg,
+.uppy-StatusBar-actionCircleBtn[aria-label="暂停"] svg {
+    /* Increased icon size */
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 !important;
+}
+
+/* Hide the grey circle background in the SVG to make it cleaner */
+.uppy-StatusBar-actionCircleBtn[title="恢复上传"] svg circle,
+.uppy-StatusBar-actionCircleBtn[aria-label="恢复上传"] svg circle,
+.uppy-StatusBar-actionCircleBtn[title="暂停"] svg circle,
+.uppy-StatusBar-actionCircleBtn[aria-label="暂停"] svg circle {
+    fill: transparent !important;
+    display: none !important;
+}
+
+/* Ensure the play icon is white */
+.uppy-StatusBar-actionCircleBtn[title="恢复上传"] svg path,
+.uppy-StatusBar-actionCircleBtn[aria-label="恢复上传"] svg path,
+.uppy-StatusBar-actionCircleBtn[title="暂停"] svg path,
+.uppy-StatusBar-actionCircleBtn[aria-label="暂停"] svg path {
+    fill: currentColor !important;
+}
+
+.uppy-StatusBar {
+    z-index: 0;
 }

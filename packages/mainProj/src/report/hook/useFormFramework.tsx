@@ -1,7 +1,9 @@
 "use client"
 
-import type React from "react"
-import { useEffect,useRef } from "react"
+import React from "react"
+
+import type { ReactNode } from "react"
+import { useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -12,9 +14,15 @@ import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
 import { useState } from "react"
-import { Save, Pencil } from "lucide-react"
+import { Save, Pencil, ExternalLink } from "lucide-react"
 import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
+import Link from "next/link"
 
+// 在文件顶部添加设备ID获取函数
+const getDeviceId = (): string => {
+    if (typeof window === "undefined") return ""
+    return localStorage.getItem("clientId") || ""
+}
 // 将空字符串转为 undefined，但保留字段
 const convertEmptyToUndefined = (obj: any): any => {
     if (Array.isArray(obj)) {
@@ -128,37 +136,33 @@ const serializeErrors = (errors: any): string => {
     }
 }
 
-export const withTimeout = <T,>(
-    promise: Promise<T>,
-    timeoutMs = 5*60*1000,
-    signal?: AbortSignal
-): Promise<T> => {
+export const withTimeout = <T,>(promise: Promise<T>, timeoutMs = 5 * 60 * 1000, signal?: AbortSignal): Promise<T> => {
     if (signal?.aborted) {
-        return Promise.reject(new DOMException('Aborted', 'AbortError'));
+        return Promise.reject(new DOMException("Aborted", "AbortError"))
     }
     return Promise.race([
         promise,
         new Promise<T>((_, reject) => {
             const timeoutId = setTimeout(() => {
-                reject(new Error(`操作超时 (${timeoutMs}ms)`));
-            }, timeoutMs);
+                reject(new Error(`操作超时 (${timeoutMs}ms)`))
+            }, timeoutMs)
             // 如果提供了 signal，监听取消事件
             if (signal) {
-                signal.addEventListener('abort', () => {
-                    clearTimeout(timeoutId);
-                    reject(new DOMException('Aborted', 'AbortError'));
-                });
+                signal.addEventListener("abort", () => {
+                    clearTimeout(timeoutId)
+                    reject(new DOMException("Aborted", "AbortError"))
+                })
             }
         }),
-    ]);
-};
+    ])
+}
 
 interface UseFormFrameworkProps {
     // 接收外部传入的schema和默认值
     schema: z.ZodObject<any>
     defaultValues: Record<string, any>
     //[可选方式一]接收外部传入的内容渲染函数工厂，从构造函数传递form环境的。[可选方式二]是用本hook返回的form在上外部组件直接引用然后传递给render()的做法。
-    contentRendererFactory?: (form: any, arrays?: Record<string, any>) => React.ReactNode
+    contentRendererFactory?: (form: any, arrays?: Record<string, any>) => ReactNode
     // 数组字段配置
     arrayFields?: {
         name: string //每一张表格存储名；
@@ -187,7 +191,7 @@ export function useFormFramework({
                                      redId,
                                      modType,
                                  }: UseFormFrameworkProps) {
-    const abortControllerRef = useRef<AbortController | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null)
     const { storage, setStorage, setModified, modified } = useStorage()
 
     // 创建表单
@@ -195,6 +199,16 @@ export function useFormFramework({
         resolver: zodResolver(schema),
         defaultValues: defaultValues as any,
     })
+
+    const prevDefaultValuesRef = useRef<string>("")
+    useEffect(() => {
+        const currentDefaultValuesStr = JSON.stringify(defaultValues)
+        if (prevDefaultValuesRef.current && prevDefaultValuesRef.current !== currentDefaultValuesStr) {
+            console.log("[v0] defaultValues changed, resetting form with new values")
+            form.reset(defaultValues as any)
+        }
+        prevDefaultValuesRef.current = currentDefaultValuesStr
+    }, [defaultValues, form])
 
     // 使用自定义 hook 处理数组字段
     const arrayControls = useFieldArrays(form.control, arrayFields)
@@ -205,12 +219,17 @@ export function useFormFramework({
     //保存：处理表单提交
     const handleSubmit = async (values: any) => {
         if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
+            abortControllerRef.current.abort()
         }
-        abortControllerRef.current = new AbortController();
-        const signal = abortControllerRef.current.signal;
+        abortControllerRef.current = new AbortController()
+        const signal = abortControllerRef.current.signal
         if (customOnSubmit) {
             await customOnSubmit(values)
+            return
+        }
+        const deviceId = getDeviceId()
+        if (!deviceId) {
+            toast.error("无法获取设备信息，请刷新页面重试")
             return
         }
         // 默认提交处理
@@ -239,42 +258,46 @@ export function useFormFramework({
             const result = await withTimeout(
                 updateOriginal({
                     id: subrid ?? rep?.id,
-                    operationType: 1,
+                    client: deviceId,
                     version: _version,
                     data: JSON.stringify(cleanedRepData),
                 }),
                 120000, // 超时时间
-                signal // 传递 abort signal
-            );
+                signal, // 传递 abort signal
+            )
             if (signal.aborted) {
-                console.log("请求已被取消");
-                return;
+                console.log("请求已被取消")
+                return
             }
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败,断网会自动重新再发送...", {
+                toast.error("保存失败", {
                     duration: 2000,
                 })
                 console.log("Oh no!", result.error)
             } else {
                 toast.success("数据已成功保存到服务器", {
-                    duration: 2000,
+                    duration: 3000,
                 })
-                // 保存成功后，设置 modified 为 false
                 setModified(false)
+
+                // Auto-refresh page after successful save
+                // setTimeout(() => {
+                //     window.location.reload()
+                // }, 1000)
             }
         } catch (error) {
             console.log("updateOriginalResult=异常=", error)
-            if (error.name === 'AbortError') {
-                console.warn("请求已被取消");
-                return;
+            if (error.name === "AbortError") {
+                console.warn("请求已被取消")
+                return
             }
             if (error instanceof Error && error.message.includes("操作超时")) {
                 toast.error("保存超时，请检查网络连接后重试", {
                     duration: 3000,
                 })
             } else {
-                toast.error("保存失败,断网会自动重新再发送...", {
+                toast.error("保存失败", {
                     duration: 2000,
                 })
             }
@@ -311,25 +334,35 @@ export function useFormFramework({
 
     useEffect(() => {
         const handleMutationCompleted = (event: CustomEvent) => {
-            const objId= subrid ?? rep?.id;
-            console.log('【终结】Mutation操作已完成:', event.detail);
-            if(event.detail.hasError && 'useOriginalDataMutation'===event.detail.operation && objId===event.detail.variables.id) {
+            const objId = subrid ?? rep?.id
+            console.log("【终结】Mutation操作已完成:", event.detail)
+            if (
+                event.detail.hasError &&
+                "useOriginalDataMutation" === event.detail.operation &&
+                objId === event.detail.variables.id
+            ) {
                 if (abortControllerRef.current) {
-                    abortControllerRef.current.abort();  //但是不会影响后端JAVA数据库事务的执行。
+                    abortControllerRef.current.abort() //但是不会影响后端JAVA数据库事务的执行。
                 }
-                form.reset({}, { keepValues: true });
+                form.reset({}, { keepValues: true })
             }
-        };
-        window.addEventListener('mutation-completed', handleMutationCompleted as EventListener);
+        }
+        window.addEventListener("mutation-completed", handleMutationCompleted as EventListener)
         return () => {
-            window.removeEventListener('mutation-completed', handleMutationCompleted as EventListener);
-        };
-    }, [rep?.id, subrid, form]);
+            window.removeEventListener("mutation-completed", handleMutationCompleted as EventListener)
+        }
+    }, [rep?.id, subrid, form])
 
     // 使用contentRendererFactory创建内容渲染器
     const contentRenderer = contentRendererFactory ? contentRendererFactory(form, arrayControls) : null
 
-    // 创建渲染函数 把@container上移给CollapsibleFormSection;这里node和contentRendererFactory其中之一必须有注入的，因为Form必须在最外面。
+    const pendingReportsUrl = React.useMemo(() => {
+        const repId = rep?.id
+        if (!repId) return "/offline?tab=pending"
+        const reportKey = `${repId}${subrid ? `:${subrid}` : ""}`
+        return `/offline?tab=pending&highlight=${encodeURIComponent(reportKey)}`
+    }, [rep?.id, subrid])
+
     const render = (node: any) => (
         <>
             <Form {...form}>
@@ -349,8 +382,17 @@ export function useFormFramework({
                             <Button type="button" variant="outline" onClick={handleConfirm}>
                                 确认
                             </Button>
-                            <Button type="submit" disabled={(form.formState.isSubmitting && updateResult?.fetching) || !modified}>
+                            <Button
+                                type="submit"
+                                disabled={(form.formState.isSubmitting && updateResult?.fetching) || !modified}
+                                title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
+                            >
                                 {form.formState.isSubmitting && updateResult?.fetching ? "保存到后端..." : "保存"}
+                            </Button>
+                            <Button asChild variant="outline" type="button">
+                                <Link href={pendingReportsUrl} title="查看待发送报告列表">
+                                    <ExternalLink className="w-4 h-4" />
+                                </Link>
                             </Button>
                         </div>
                     </CardFooter>
@@ -387,8 +429,10 @@ export const ModificationIndicator = () => {
  */
 interface UseFrameEditorBarProps {
     rep?: any
-    //必须相对于根部存储的，或者可重复分项情况下的是分项相对根部存储。
-    values: Record<string, any>
+    // 这样 hook 可以自动从 storage 中获取最新数据，无需组件手动同步
+    storageKeys?: string[]
+    //可代替storageKeys：用于转换 storage 数据的函数
+    transformValues?: (storage: any) => Record<string, any>
     //校验当前编辑区域的字段取值合理性,或给出提醒信息；
     onVerify?: (values: any) => boolean
     onReset?: () => void
@@ -402,12 +446,14 @@ interface UseFrameEditorBarProps {
     //逻辑上优先！强调确保是根路径存储的； #针对分项控制器的特别情况的：不嵌套。
     root?: boolean
 }
-/**不依赖react-hook-form环境的版本，表单简单的情形下就可以使用，【缺点】需自己管理表单状态。
+/**不依赖react-hook-form环境的版本，表单简单的情形下就可以使用，
+ * 【缺点】调用的组件需自己管理表单状态，须依据storage加载到局部化的状态变量。nextjs离线模式需确保从storage动态恢复最新数据！
  * 支持声明 modType && redId 或者subrid 来申明存储的实际位置转移：存储到分项数据结构中。
  * */
 export function useFrameEditorBar({
                                       rep,
-                                      values,
+                                      storageKeys,
+                                      transformValues,
                                       onReset,
                                       onVerify,
                                       subrid,
@@ -415,20 +461,36 @@ export function useFrameEditorBar({
                                       modType,
                                       root,
                                   }: UseFrameEditorBarProps) {
-    const abortControllerRef = useRef<AbortController | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified, modified } = useStorage()
+    // 当 storage 更新时（如从 IndexedDB 加载），values 会自动更新
+    const values = React.useMemo(() => {
+        if (transformValues) {
+            return transformValues(storage)
+        }
+        // 默认行为：从 storage 中提取指定的 keys
+        const result: Record<string, any> = {}
+        storageKeys?.forEach((key) => {
+            result[key] = storage?.[key]
+        })
+        return result
+    }, [storage, storageKeys, transformValues])
     //用URQL mutation来保存变更数据到后端数据库的
     const [updateResult, updateOriginal] = useMutation(OriginalDataMutation)
     //保存：处理表单提交
     const handleSubmit = async () => {
         if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
+            abortControllerRef.current.abort()
         }
-        abortControllerRef.current = new AbortController();
-        const signal = abortControllerRef.current.signal;
+        abortControllerRef.current = new AbortController()
+        const signal = abortControllerRef.current.signal
         if (onVerify && !onVerify(values)) return
-        // 默认提交处理
+        const deviceId = getDeviceId()
+        if (!deviceId) {
+            toast.error("无法获取设备信息，请刷新页面重试")
+            return
+        }
         // console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
         const oldStore = storage?.[`_${modType}_${redId}`]
 
@@ -454,25 +516,29 @@ export function useFrameEditorBar({
             const result = await withTimeout(
                 updateOriginal({
                     id: subrid ?? rep?.id,
-                    operationType: 1,
+                    client: deviceId,
                     version: _version,
                     data: JSON.stringify(cleanedRepData),
                 }),
                 120000, // 超时时间
-                signal // 传递 abort signal
+                signal, // 传递 abort signal
             )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败,若因断网原因会自动重新发。", {
+                toast.error("保存失败", {
                     duration: 2000,
                 })
                 console.log("Oh no!", result.error)
             } else {
                 toast.success("数据已成功保存到服务器", {
-                    duration: 2000,
+                    duration: 3000,
                 })
-                // 保存成功后，设置 modified 为 false
                 setModified(false)
+
+                // Auto-refresh page after successful save
+                // setTimeout(() => {
+                //     window.location.reload()
+                // }, 1000)
             }
         } catch (error) {
             console.log("updateOriginalResult=异常=", error)
@@ -482,7 +548,7 @@ export function useFrameEditorBar({
                     duration: 3000,
                 })
             } else {
-                toast.error("保存失败,若因断网原因会自动重新发。", {
+                toast.error("保存失败", {
                     duration: 2000,
                 })
             }
@@ -519,20 +585,30 @@ export function useFrameEditorBar({
     }
     useEffect(() => {
         const handleMutationCompleted = (event: CustomEvent) => {
-            const objId= subrid ?? rep?.id;
-            console.log('【终结】Mutation操作已完成:', event.detail);
-            if(event.detail.hasError && 'useOriginalDataMutation'===event.detail.operation && objId===event.detail.variables.id) {
+            const objId = subrid ?? rep?.id
+            console.log("【终结】Mutation操作已完成:", event.detail)
+            if (
+                event.detail.hasError &&
+                "useOriginalDataMutation" === event.detail.operation &&
+                objId === event.detail.variables.id
+            ) {
                 if (abortControllerRef.current) {
-                    abortControllerRef.current.abort();
+                    abortControllerRef.current.abort()
                 }
             }
-        };
-        window.addEventListener('mutation-completed', handleMutationCompleted as EventListener);
+        }
+        window.addEventListener("mutation-completed", handleMutationCompleted as EventListener)
         return () => {
-            window.removeEventListener('mutation-completed', handleMutationCompleted as EventListener);
-        };
-    }, [rep?.id, subrid]);
-    // 创建渲染函数：只提供按钮条，不依赖于Form环境的。
+            window.removeEventListener("mutation-completed", handleMutationCompleted as EventListener)
+        }
+    }, [rep?.id, subrid])
+    const pendingReportsUrl = React.useMemo(() => {
+        const repId = rep?.id
+        if (!repId) return "/offline?tab=pending"
+        const reportKey = `${repId}${subrid ? `:${subrid}` : ""}`
+        return `/offline?tab=pending&highlight=${encodeURIComponent(reportKey)}`
+    }, [rep?.id, subrid])
+
     const render = () => (
         <div className="flex gap-4 justify-end">
             <Button type="button" variant="outline" onClick={onReset}>
@@ -541,9 +617,19 @@ export function useFrameEditorBar({
             <Button type="button" variant="outline" onClick={handleConfirm}>
                 确认
             </Button>
-            <Button type="submit" disabled={(isSaving && updateResult?.fetching) || !modified} onClick={handleSubmit}>
+            <Button
+                type="submit"
+                disabled={(isSaving && updateResult?.fetching) || !modified}
+                onClick={handleSubmit}
+                title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
+            >
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving && updateResult?.fetching ? "保存到后端..." : "保存"}
+            </Button>
+            <Button asChild variant="outline" type="button">
+                <Link href={pendingReportsUrl} title="查看待发送报告列表">
+                    <ExternalLink className="w-4 h-4" />
+                </Link>
             </Button>
         </div>
     )

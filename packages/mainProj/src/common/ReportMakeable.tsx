@@ -6,7 +6,7 @@ import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
 import { useOfflineAuth } from "@/hooks/use-offline-auth"
 import { toast } from "sonner"
-
+import { withBasePath } from '@/lib/tool'
 /*报告编制的页面必须登录用户才能进去：能用编辑器不一定有权限改，真要保存后端还会控制权限。
 PWA离线模式的情况下：这个控制点就失去意义了，只能事后在java后端控制。
 上一级父组件依旧是服务端SSR的情形下：
@@ -70,7 +70,7 @@ const ReportMakeable = () => {
                 console.log("[v0] Session unauthenticated, double-checking network status")
 
                 try {
-                    const response = await fetch("/api/nextLive", {
+                    const response = await fetch(withBasePath('/api/nextLive'), {
                         method: "GET",
                         cache: "no-cache",
                         signal: AbortSignal.timeout(3000),
@@ -100,7 +100,7 @@ const ReportMakeable = () => {
                         "报告编制功能需要登录后才能使用。是否现在跳转到登录页面？make",
                         () => {
                             console.log("[v0] User confirmed login redirect")
-                            window.location.href = "/login"
+                            window.location.href =withBasePath('/login')
                         },
                         () => {
                             console.log("[v0] User cancelled login redirect")

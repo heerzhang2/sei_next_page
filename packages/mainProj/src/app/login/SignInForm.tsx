@@ -2,27 +2,22 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useActionState, useEffect, useRef, useState } from "react"
-import {signIn, useSession} from "next-auth/react"
+import { useEffect, useState } from "react"
+import { signIn, useSession, getSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
+import type { OfflineAuthData } from "@/hooks/use-offline-auth"
 
-async function sha256Hash(message: string): Promise<string> {
-    const msgBuffer = new TextEncoder().encode(message)
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-    return hashHex
-}
 const isValidCallbackUrl = (url: string): boolean => {
     try {
-        const parsedUrl = new URL(url, window.location.origin);
-        return parsedUrl.origin === window.location.origin;
+        const parsedUrl = new URL(url, window.location.origin)
+        return parsedUrl.origin === window.location.origin
     } catch {
-        return false;
+        return false
     }
 }
 
@@ -30,67 +25,178 @@ export default function SignInForm() {
     const router = useRouter()
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
-    const { data: session } = useSession()
+    const { data: session, update: updateSession } = useSession()
     const searchParams = useSearchParams()
-    const rawCallbackUrl = searchParams.get('callbackUrl');
-    const callbackUrl = rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl)
-        ? rawCallbackUrl
-        : '/';
-    console.log("signIn登录render：——session=",session)
-    const signInAction = async (_prevState: string | undefined, formData: FormData) => {
-        const username = formData.get("username") as string
-        const password = formData.get("password") as string
+    const rawCallbackUrl = searchParams.get("callbackUrl")
+    const callbackUrl = rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl) ? rawCallbackUrl : "/"
+    const errorParam = searchParams.get("error")
 
-        console.log("signInAction 录入formData:", { username, password: "***" })
+    console.log("signIn登录render：——session=", session)
+
+    const [isPending, setIsPending] = useState(false)
+    const [error, setError] = React.useState("")
+    const [hasJustLoggedIn, setHasJustLoggedIn] = useState(false)
+    const [isServerAvailable, setIsServerAvailable] = useState(true)
+
+    // 检查 URL 中的错误参数
+    React.useEffect(() => {
+        if (errorParam) {
+            const errorMessage = errorParam === "CredentialsSignin"
+                ? "用户名或密码错误"
+                : `登录错误: ${errorParam}`
+            setError(errorMessage)
+        }
+    }, [errorParam])
+
+    // 检测服务器可用性
+    React.useEffect(() => {
+        const checkServerAvailability = async () => {
+            try {
+                // 使用 fetch 检测服务器是否可用，设置较短的超时时间
+                const controller = new AbortController()
+                const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+                // 获取 basePath
+                const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
+                const url = `${basePath}/api/auth/csrf`
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    signal: controller.signal,
+                    cache: 'no-cache'
+                })
+
+                clearTimeout(timeoutId)
+
+                // 检查响应状态码，如果不是 2xx，则认为服务器不可用
+                if (!response.ok) {
+                    console.error("服务器不可用，状态码:", response.status)
+                    setIsServerAvailable(false)
+                    setError("前端服务器当前不可用，请试试离线登录")
+                    return
+                }
+
+                setIsServerAvailable(true)
+            } catch (error) {
+                console.error("服务器不可用:", error)
+                setIsServerAvailable(false)
+                setError("前端服务器当前不可用，请试试离线登录")
+            }
+        }
+
+        // 初始检测
+        checkServerAvailability()
+
+        // 设置定时检测
+        const intervalId = setInterval(checkServerAvailability, 30000) // 每30秒检测一次
+
+        return () => clearInterval(intervalId)
+    }, [])
+
+    // 监听 session 变化，登录成功后处理存储
+    React.useEffect(() => {
+        if (hasJustLoggedIn && session?.user?.accessToken) {
+            try {
+                const stored = localStorage.getItem("offline_auth") || "{}"
+                const authData: OfflineAuthData = JSON.parse(stored)
+                localStorage.setItem(
+                    "offline_auth",
+                    JSON.stringify({
+                        ...authData,
+                        accessToken: session.user.accessToken,
+                        user: { id: session.user.id as string },
+                        timestamp: Date.now(),
+                        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+                    }),
+                )
+                window.dispatchEvent(
+                    new CustomEvent("token:refreshed", {
+                        detail: {
+                            accessToken: session.user.accessToken,
+                            user: { id: session.user.id as string },
+                            fromNextjs: true,
+                        },
+                    }),
+                )
+                console.log("[SignInForm] 已触发token:refreshed事件通知新token")
+                router.push(callbackUrl)
+                setHasJustLoggedIn(false)
+                setIsPending(false)
+            } catch (error) {
+                console.error("保存认证失败:", error)
+                setError("保存认证信息失败")
+                setIsPending(false)
+                setHasJustLoggedIn(false)
+            }
+        }
+    }, [hasJustLoggedIn, session, callbackUrl, router])
+
+    const { deviceFingerprint: deviceId } = useDeviceFingerprint()
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        setIsPending(true)
+        setError("")
 
         try {
-            const hashedPassword = await sha256Hash(password)
+            console.log("登录formData:", { username, password: "***", deviceId })
 
-            const result = await signIn("credentials", {
-                username: username,
-                password: hashedPassword, // Send hashed password instead of plain text
-                redirect: false,
-            })
-            if (result?.error) {
-                return `登录失败: ${result.error}`
-            } else {
-                if (typeof window !== "undefined") {
-                    console.log("signIn完成token:refreshed session=",session)
-                    window.dispatchEvent(
-                        new CustomEvent("token:refreshed", {
-                            detail: {
-                                accessToken: null,      //表示依照session提取token
-                                refreshToken: session?.user?.refreshToken,
-                            },
-                        }),
-                    )
-                }
-                // 登录成功，跳转到回调URL或首页
-                router.push(callbackUrl)
-                return "登录成功"
+            // 检查网络连接
+            if (!navigator.onLine) {
+                setError("网络不可用，请检查网络连接")
+                setIsPending(false)
+                return
             }
-        } catch (error) {
+
+            // 设置超时检测
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("请求超时")), 10000)
+            })
+
+            const result = await Promise.race([
+                signIn("credentials", {
+                    username: username,
+                    password: password,
+                    deviceId: deviceId,
+                    redirect: false,
+                }),
+                timeoutPromise
+            ]) as any
+
+            if (result?.error) {
+                console.error("Login error:", result.error)
+                // 检查是否是网络相关错误
+                const networkErrors = ['NetworkError', 'fetch failed', 'Failed to fetch', 'timeout', 'ERR_CONNECTION_REFUSED', 'ERR_NETWORK']
+                const isNetworkError = networkErrors.some(err => 
+                    result.error.toLowerCase().includes(err.toLowerCase())
+                )
+
+                if (isNetworkError) {
+                    setError("无法连接到服务器，请检查网络连接或稍后再试")
+                } else {
+                    setError(result.error === "CredentialsSignin" ? "用户名或密码错误" : `登录失败: ${result.error}`)
+                }
+                setIsPending(false)
+                return
+            }
+
+            // 触发 session 更新
+            await updateSession()
+
+            // 标记刚刚登录成功，等待 session 更新后的 useEffect 处理
+            setHasJustLoggedIn(true)
+        } catch (error: any) {
             console.error("登录过程中出错:", error)
-            return "登录过程中出现错误"
+            // 检查是否是网络错误或超时
+            if (error.message === "请求超时" || 
+                (error instanceof TypeError && error.message.includes('fetch'))) {
+                setError("无法连接到服务器，请检查网络连接或稍后再试")
+            } else {
+                setError("登录过程中出现错误")
+            }
+            setIsPending(false)
         }
     }
-
-    const [response, action, isPending] = useActionState(signInAction, undefined)
-    const usernameRef = useRef<HTMLInputElement>(null)
-    // useEffect(() => {
-    //     const timeout = setTimeout(() => usernameRef.current?.focus(), 100)
-    //     return () => clearTimeout(timeout)
-    // }, [])
-    const [error, setError] = React.useState("")
-
-    // 当 response 有错误信息时显示
-    useEffect(() => {
-        if (response && response !== "登录成功") {
-            setError(response)
-        } else {
-            setError("")
-        }
-    }, [response])
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
@@ -100,14 +206,16 @@ export default function SignInForm() {
                     <p className="text-sm text-gray-500 mb-6">欢迎回来！请输入您的账户信息</p>
                 </div>
 
-                <form action={action} className="mt-8 space-y-6">
+                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                    {/* 隐藏字段传递设备ID */}
+                    <input type="hidden" name="deviceId" value={deviceId} />
+
                     <div className="rounded-md shadow-sm -space-y-px">
                         <div className="mb-4">
                             <Label htmlFor="username">账户</Label>
                             <Input
                                 id="username"
                                 name="username"
-                                ref={usernameRef}
                                 required
                                 onChange={(e) => setUsername(e.currentTarget.value)}
                                 value={username}
@@ -140,23 +248,28 @@ export default function SignInForm() {
                     )}
 
                     <div className="flex justify-end">
-                        <Button disabled={isPending} className="w-full mt-4" type="submit">
-                            {isPending ? "登录中..." : "登录"}
+                        <Button 
+                            disabled={isPending || !isServerAvailable} 
+                            className="w-full mt-4" 
+                            type="submit"
+                        >
+                            {isPending ? "登录中..." : !isServerAvailable ? "服务器不可用" : "登录"}
                         </Button>
                     </div>
                 </form>
-
                 <div className="text-center text-sm text-gray-500">
                     <Link href="/signup" className="text-blue-600 hover:text-blue-700">
                         没有账户？立即注册
                     </Link>
                 </div>
-
                 <div className="p-6 border-t border-gray-200">
                     <div className="mt-4">
-                        <Link href="/" className="text-blue-600 hover:underline">
+                        <span 
+                            className="text-blue-600 hover:underline cursor-pointer"
+                            onClick={() => window.location.href = '/report/'}
+                        >
                             首页
-                        </Link>
+                        </span>
                     </div>
                     <div className="mt-4">
                         <Link href="/user" className="text-blue-600 hover:underline">

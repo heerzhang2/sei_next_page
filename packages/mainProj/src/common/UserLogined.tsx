@@ -6,6 +6,7 @@ import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
 import { useOfflineAuth } from "@/hooks/use-offline-auth"
 import { toast } from "sonner"
+import { withBasePath } from "@/lib/tool"
 
 /*必须登录用户，否则不能用
 【客户端浏览器】情形下的：
@@ -25,7 +26,7 @@ const UserLogined = () => {
         if (!isClient) return
 
         // 如果网络离线或服务器不可达，跳过认证检查
-        if (!networkStatus.isOnline || !networkStatus.isNextJSServerReachable) {
+        if (!networkStatus.isNextJSServerReachable) {
             console.log("UserLogined: 离线模式或服务器不可达，跳过认证检查")
             return
         }
@@ -44,7 +45,7 @@ const UserLogined = () => {
                 "需要登录",
                 "此页面需要登录后才能访问。是否现在跳转到登录页面？UserLogined",
                 () => {
-                    window.location.href = "/login"
+                    window.location.href = withBasePath("/login")
                 },
                 () => {
                     toast.info("已取消登录", {

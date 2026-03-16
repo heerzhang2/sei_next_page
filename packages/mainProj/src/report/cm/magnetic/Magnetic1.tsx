@@ -49,7 +49,7 @@ export const MagneticVw = ({
             <TableBody>
                 <TableRow id={'MangDiagram_'+redId}  className="border border-gray-700">
                     <TableCell  className="border border-gray-700">
-                        <RepLink ori rep={rep} tag={"MangDiagram"} subrid={subrid} redId={redId}>
+                        <RepLink ori rep={rep} tag={"MangDiagram"} subrid={subrid} redId={redId} printMode={printMode}>
                             <div className="text-sm">检测部位、缺陷位置示意图：&nbsp;
                                 {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
                                 {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
@@ -62,7 +62,7 @@ export const MagneticVw = ({
                                 <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
                                     {i > 0 && <hr />}
                                     <JumpTab
-                                        key={i}
+                                        key={i} printMode={printMode}
                                         href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/MangDiagram?original=1${apds}${apdr}#FxDiagram_pf${i}`}
                                     >
                                         <div className="flex justify-around items-center my-0.5">

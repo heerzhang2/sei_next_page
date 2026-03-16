@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
-import {Menu, X, FileText, Home, Settings, User, LogIn, LogOut, WifiOff, WifiZero} from "lucide-react"
+import { Menu, X, FileText, Home, Settings, User, LogIn, LogOut, WifiOff, Activity } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useSession, signOut, signIn } from "next-auth/react"
+import { signIn } from "next-auth/react"
+import { useLogout } from "@/hooks/use-logout"
 
 interface ReportSidebarProps {
     items?: {
@@ -29,6 +30,7 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
     const [isOpen, setIsOpen] = React.useState(false)
     const sidebarRef = React.useRef<HTMLDivElement>(null)
     const triggerRef = React.useRef<HTMLButtonElement>(null)
+    const { logout } = useLogout()
 
     // Default menu items if none provided
     const menuItems =
@@ -63,7 +65,7 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
                 {
                     title: "离线队列",
                     url: `/offline`,
-                    icon: WifiZero,
+                    icon: Activity,
                 },
             ]
     // Handle clicks outside the sidebar to close it
@@ -133,18 +135,19 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
                     <div className="flex items-center justify-between p-4 border-b">
                         {/* 客户端 Header 组件 */}
                         <div className="flex items-center">
-                            { userInfo?.name?? ''}
-                            {(userInfo?.name) ? <Button variant="ghost" size="icon" onClick={() => signOut()}>
+                            {userInfo?.name ?? ""}
+                            {userInfo?.name ? (
+                                <Button variant="ghost" size="icon" onClick={() => logout()}>
                                     <LogOut className="h-4 w-4" />
+                                    {/*客户注销 - 清理所有认证存储并调用后端logout*/}
                                     <span className="sr-only">注销</span>
                                 </Button>
-                                :
-                                <Button variant="ghost" size="icon" className="ml-14"
-                                        onClick={() => signIn()}>
+                            ) : (
+                                <Button variant="ghost" size="icon" className="ml-14" onClick={() => window.location.href = '/report/login'}>
                                     <LogIn className="h-4 w-4" />
                                     <span className="sr-only">登录</span>
                                 </Button>
-                            }
+                            )}
                         </div>
                         <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
                             <X className="h-4 w-4" />

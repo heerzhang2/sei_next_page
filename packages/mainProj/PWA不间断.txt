@@ -1,86 +1,183 @@
+官方文档 https://serwist.pages.dev/docs/serwist/runtime-caching/plugins
 不用生产版"start:https": "cross-env NODE_ENV=production "真的无法发挥PWA的全部功能。
-serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Service worker is installing...
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker installed.
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist Registered service worker activated.
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist The registered service worker is active but not yet controlling the page. Reload or run `clients.claim()` in the service worker.
-Chromek开发者工具》 应用》》 [Service workers]标签页：
-   状态  O小圆圈#绿色的#  已激活 #299 次，当前正在运行  （停止）
-   状态  O#白底的# 正在尝试安装
-   状态  O#灰色的# 第 74 项为多余项                 #没激活的
-   更新周期里面的 Install Wait Activate 时间轴的长度 明显太短暂了。
-存储/ IndexedDB>> sersit-expiration 。。。
+cacheName: "next-chunks", 静态资源,DEV模式才用? 但是dev没法用serwist没页面只显示rsc代码;
+重新build导致的 /_next/static/开头资源，要求任何模板任意版本都需要重新做缓存的，否则无法确保能够访问。
+【证书信任】PS D:\home\sei_next_page\packages\mainProj\ssl> python -m http.server 8000    开发本机:受信任的根证书颁发机构
+苹果safari手机访问   http://192.168.0.100:8000/ca.cer  Safari 会自动识别 .cer 文件并弹出“安装描述文件”提示 → 点击 “允许” → “安装” → 输入锁屏密码。
+打开 设置（Settings）进入：通用（General） > 关于本机（About）滚动到底部 → 点击 “证书信任设置”（如果看不到这一项，说明你安装的不是根证书，或格式不对）在 “针对根证书启用完全信任” 列表中，找到你的 CA 名称（如 localhost 或 MyDevCA）打开右侧开关，启用信任。
+【urql offlinecahce问题】版本：
+1003 17：36； optimistic可能遭遇退回。第一次保存丢失，刷新后显示不一致，同步机会拖延，第一次的编辑区丢失更新。
+0928  10：21； 刷新较小的可能导致丢失，cache估计也没了，最后复原了。
+0926  06：30； 失效token、401导致?，有极小概率显示不一致的。小概率丢失:2个少了一个mutation。
+1006---保存后死循环，刷新丢失列表。
+      保存后期间若离线或401，可能导致第一次的mutation丢失。小概率丢失更新列表1/2个的。
+## 问题1: 为什么 #html 会变成 #rsc？
+**根本原因**：Cache API **不支持 URL fragment（#）作为缓存键的区分**！
+Cache API 会**忽略 fragment 部分**，把它们当作**同一个键**！所以第二次 `cache.put()` 会覆盖第一次的内容。这就是为什么 `#html` 被 `#rsc` 覆盖的原因。
+**解决方案**：使用**查询参数**而不是 fragment 来区分 HTML 和 RS。
+## 问题2: 为什么需要自定义处理 CACHE_URLS？
+Serwist 的内置消息处理只针对 **precache manifest**（`__SW_MANIFEST`），不支持：
+Next.js RSC 增加了复杂度，因为需要管理两个版本的页面和它们之间的关系。
+集群环境下，TUS 协议的 请求确实可能因为负载均衡而出现问题， 解决方案，会话超时时间足够长（≥ 文件上传最大预计时间）
+curl -X POST https://192.168.171.3:8673/uploadTUS/ -H "Accept: application/json"  -H "Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoZXJ6aGFuZyIsImlhdCI6MTc2MjMxMjI3NywiZGV2aWNlSWQiOiJlMnM4dGx5IiwiZXhwIjoxNzYyMzE0Mjc3fQ.wrXNrENlhSH3o_3BXlLkQxEXCuZqO3Tt14cBAYYQMofFjt4greMWdXxekaf9uuSJiDfWRBSGXuvTABc3Vo6S0A" -H "Tus-Resumable: 1.0.0"  -H "Upload-Length: 1024"  --http1.1  -k -v
+负载均衡的TUS协议问题：类比的@tus/server; https://github.com/tus/tusd/blob/main/examples/nginx.conf
+        # Disable request and response buffering
+        proxy_request_buffering  off;
+        # Add X-Forwarded-* headers
+        proxy_set_header X-Forwarded-Host $host:$server_port;   头部标识扩展
+        proxy_set_header X-Forwarded-Proto $scheme;
+[现象]：token刷新太慢了，保存无结果超时,  【解决】数据库重启，redis重启。
+
+架构顶部加apisix网关，浏览器面对网关https://192.168.171.3:9443/ 前端服务器就退居幕后不需要https协议，apisix做https转http，/ssl/目录给网关了。
+调试端口无法连接 Gradle Language Server 出问题导致的。让我帮你解决：步骤1：清理 Gradle Language Server 缓存
+      方法1：清理 VS Code Gradle 缓存；
+您希望为哪种语言的代码编写文档注释？或者需要为哪个具体文件生成文档注释？
+Opening Java Project，Activating task providers java；java服务报错：Failed to attach to localhost:55076 是因为：先执行了 bootRun，应用启动时使用了随机调试端口，然后尝试附加调试器，端口已经变化了，正确做法：直接在 VS Code 中用 Debug 模式启动，不要单独执行 bootRun。
+方案2：手动修复步骤，      重新打开 VS Code ；     按 Ctrl+Shift+P
+      输入 Java: Clean Java Language Server Workspace      这个重置后，恢复很慢。
+PS D:\home\sei-rearend> .\quick-fix-lsp.ps1     
+  1. Reopen VS Code
+  2. Press Ctrl+Shift+P and run: Java: Clean Java Language Server Workspace
+  3. Wait for sync to complete
+Failed to delete c:\Users\1\AppData\Roaming\Code\User\workspaceStorage\c79565b2af90faca9590defbcae8fd52\redhat.java\jdt_ws: Error: EBUSY: resource busy or locked, unlink 'c:\Users\1\AppData\Roaming\Code\User\globalStorage\redhat.java\1.51.0\config_ss_win\org.eclipse.core.runtime\.extraData.3'
+  强制删除被锁文件c:\Users\1\AppData\Roaming\Code\User\workspaceStorage\c79565b2af90faca9590defbcae8fd52\redhat.java\jdt_ws:
+Activating task providers java
+Error: there is no registered task type 'Java'. Did you miss installing an extension that provides a corresponding task provider?
+因为 VS Code 的 Java 扩展加载顺序问题。Java 扩展还未完全初始化时，任务提供者（task provider）就已经被激活了。
+扩展的 Java Extension Pack 点击红心图标禁用再重新启用
+这是 VS Code 的 Gradle 扩展和 Java 扩展冲突导致的。问题：
+.settings 文件夹缺失 - Eclipse 项目配置被误删
+资源移动错误 - 工作区缓存损坏
+调试端口随机 - bootRun 每次使用随机端口
+Gradle 面板的 bootRun 会使用随机端口，导致调试器无法连接。使用 VS Code 的 Debug 配置可以避免这个问题。
+2. 重启 VS Code
+3. 正确调试方式（推荐）
+不要使用 Gradle 面板的 bootRun，而是：
+按 F5 或点击左侧调试图标
+选择 "Debug Spring Boot"
+VS Code 会自动启动应用并使用固定端口
+4. 如果仍需使用 bootRun
+在 build.gradle 中添加固定调试端口：
+application {
+    applicationDefaultJvmArgs = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005']
+}
+这是 LSP4J 签名不匹配的经典错误。Java 扩展和 Gradle 扩展使用了不同版本的 LSP4J 库。
+已配置 VS Code 禁用自动 Gradle 导入。
+禁用 Gradle 扩展后，Gradle 面板将不可用，但仍可通过：
+终端运行 gradlew.bat 命令
+使用 .vscode/tasks.json 中的任务
 
 
-serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
-D:\home\sei_next_page\node_modules\serwist\dist\chunks\waitUntil.js:274 serwist A service worker with the same script URL is already controlling this page.
+2026/02/06 Camunda接口？
+总结一下你之前几十次尝试失败的根本原因：
 
-D:\home\sei_next_pag…tallDetails.js:1553 Uncaught unsupported-route-type: The supplied 'capture' parameter was an unsupported type. Please check the docs for serwist.undefined.parseRoute for valid input types.
-    at parseRoute (webpack-internal:///../../node_modules/serwist/dist/chunks/printInstallDetails.js:1587:11)
-    at Serwist.registerCapture (webpack-internal:///../../node_modules/serwist/dist/index.js:472:88)
-    at new Serwist (webpack-internal:///../../node_modules/serwist/dist/index.js:321:22)
-    at eval (webpack-internal:///./src/sw.ts:6:17)
-    at ./src/sw.ts (https://192.168.0.100:3765/sw.js:79:1)
-    at __webpack_require__ (https://192.168.0.100:3765/sw.js:106:42)
-    at https://192.168.0.100:3765/sw.js:203:37
-    at https://192.168.0.100:3765/sw.js:205:12
+核心问题分析
+1. 使用了错误的参数名称
+最开始的失败是因为使用了 bpmnProcessId 参数：
 
-D:\home\sei_next_pag…ks\waitUntil.js:274 serwist Successfully registered service worker. https://192.168.0.100:3765/sw.js
-D:\home\sei_next_pag…ks\waitUntil.js:274 serwist A service worker with the same script URL is already controlling this page.
+typescript
+Copy
+Insert
+New File
+Save
+Apply
+// ❌ 错误 - Camunda 8 REST API 不识别这个参数
+{ bpmnProcessId: processId }
+API 期望的是：
 
-urlPattern
-  matcher: RegExp | string | RouteMatchCallback;
--猪扒是什么样serwist
+typescript
+Copy
+Insert
+New File
+Save
+Apply
+// ✅ 正确
+{ processDefinitionId: processId }
+// 或
+{ processDefinitionKey: processId }
+2. 参数类型错误
+当改用 processDefinitionKey 后，又遇到了类型问题：
 
-D:\home\sei_next_pag…rmFramework.tsx:407
- POST https://192.168.0.100:8673/graphql net::ERR_CONNECTION_REFUSED
-D:\home\sei_next_pag…l-component.tsx:232 [v0] customFetchExchange - 收到响应:
-{operationName: undefined, hasData: false, hasError: true, error: CombinedError: [Network] Failed to fetch
-    at makeErrorResult (webpack-internal:///(app-pages-bro…, response: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:254 [v0] customFetchExchange - 检测到网络错误，立即返回错误结果
-D:\home\sei_next_pag…l-component.tsx:119 [v0] networkErrorExchange - 原始错误对象:
-{error: {…}, networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, operation: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:144 网络错误检测到:
-{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
-D:\home\sei_next_pag…tus-context.tsx:210 [v0] 外部更新GraphQL后端状态:
-{isReachable: false, isClientOnline: false}
-D:\home\sei_next_pag…l-component.tsx:151 [v0] networkErrorExchange - 立即返回网络错误
-D:\home\sei_next_pag…l-component.tsx:426 [v0] authExchange.didAuthError - 详细错误信息:
-{error: {…}, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, graphQLErrors: Array(0), response: undefined, …}
-D:\home\sei_next_pag…l-component.tsx:461 [v0] authExchange.didAuthError - 认证错误判断结果:
-{hasGraphQLAuthError: false, hasNetworkAuthError: false, hasCustomAuthError: false, isSpecial500: false, finalResult: false}
+typescript
+Copy
+Insert
+New File
+Save
+Apply
+// ❌ 错误 - Number() 转换导致类型不匹配
+processDefinitionKey: Number(processId)
 
-D:\home\sei_next_pag…l-component.tsx:775 [v0] errorExchange.onError - 完整错误信息:
-{operationName: undefined, operationType: 'mutation', error: {…}, message: '[Network] Failed to fetch', networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, …}
-D:\home\sei_next_pag…l-component.tsx:798 GraphQL 错误:
-{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
-D:\home\sei_next_pag…l-component.tsx:850 使用全局网络状态更新
+// ✅ 正确 - 必须是字符串
+processDefinitionKey: String(processId)
+// 或
+processDefinitionKey: processId
+3. 过度复杂化流程
+一开始设计了查询流程定义再创建实例的流程：
 
-D:\home\sei_next_pag…rmFramework.tsx:414 updateOriginalResult=应答=
-{operation: {…}, data: undefined, error: {…}, extensions: undefined, hasNext: false, …}
-D:\home\sei_next_pag…rmFramework.tsx:419 Oh no!
-{name: 'CombinedError', graphQLErrors: Array(0), networkError: TypeError: Failed to fetch
-    at fetchOperation (webpack-internal:///(app-pages-browser)/../../nod…, response: undefined, isNetworkError: true, …}
+typescript
+Copy
+Insert
+New File
+Save
+Apply
+// ❌ 过度设计
+1. 先查询流程定义列表
+2. 根据 bpmnProcessId 找到 processDefinitionKey
+3. 再创建流程实例
+实际上可以直接使用 processDefinitionId（即 bpmnProcessId 本身）：
 
-D:\home\sei_next_pag…access-token.ts:110 [v0] useAccessToken: 使用离线认证token作为备选
+typescript
+Copy
+Insert
+New File
+Save
+Apply
+// ✅ 简单直接
+直接使用 bpmnProcessId 作为 processDefinitionId
+4. SDK 版本问题
+使用旧版 @camunda8/sdk 时可能存在：
 
-{id: 'report-pages-normalized|https://192.168.171.3:3765/rep/*/INDPL_DJ/1/Solidify',
- cacheName: 'report-pages-normalized',
-  url: 'https://192.168.171.3:3765/rep/*/INDPL_DJ/1/Solidify',
-   timestamp: 1758187720398}
-//【来源】代码实际上拷贝来自{ defaultCache } from "@serwist/next/worker"，然后自己再修改！
-const PAGES_CACHE_NAME = {
-    rscPrefetch: "pages-rsc-prefetch",
-    rsc: "pages-rsc",
-    html: "pages",
-} as const
+类型定义不清晰
+API 调用方式不统一
+与 Camunda 8.9.0 版本兼容性问题
+5. 环境配置混乱
+在尝试过程中，可能在：
 
-compositeKey
-'report-pages-normalized|/rep/*/SLIDING_JJ/1/Survey'
+云端 Camunda 和本地 Camunda 之间切换
+不同的认证方式（Bearer Token vs Basic Auth）之间切换
+不同的 API 端点配置
+成功的关键点
+现在的成功配置：
 
+typescript
+Copy
+Insert
+New File
+Save
+Apply
+// 1. 使用正确的参数名
+createProcessInstanceRest(processDefinitionId: string, variables) {
+  await camunda.createProcessInstance({
+    processDefinitionId: processDefinitionId,  // ✅ 直接使用
+    variables: variables
+  });
+}
 
+// 2. 使用新版 SDK
+@camunda8/orchestration-cluster-api
+
+// 3. 正确的环境变量
+CAMUNDA_REST_ADDRESS=http://localhost:8080
+CAMUNDA_AUTH_STRATEGY=BASIC
+CAMUNDA_BASIC_AUTH_USERNAME=demo
+CAMUNDA_BASIC_AUTH_PASSWORD=demo
+
+// 4. 简化调用逻辑
+const processDefinitionId = bpmnProcessId || processId;  // 直接使用传入值
+教训总结
+仔细阅读 API 文档：Camunda 8 REST API 的参数名称必须精确匹配
+保持简单：如果 API 支持直接使用，不要添加不必要的查询步骤
+类型安全很重要：字符串就是字符串，不要随意转换类型
+选择合适的 SDK：新版 SDK 提供更好的类型支持和零配置体验
+环境要稳定：在一个配置上测试，不要频繁切换环境
+现在的工作方式非常简洁和正确：直接使用 bpmnProcessId 作为 processDefinitionId 传递给 Camunda API。

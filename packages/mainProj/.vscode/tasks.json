@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "clean-and-restart",
+            "type": "shell",
+            "command": "${workspaceFolder}/debug-clean.bat",
+            "windows": {
+                "command": "${workspaceFolder}/debug-clean.bat"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        }
+    ]
+}

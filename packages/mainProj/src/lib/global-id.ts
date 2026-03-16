@@ -29,14 +29,14 @@ function parseUUID(uuidString: string): { mostSignificantBits: bigint; leastSign
 }
 
 /**
- * 将64位BigInt转换为8字节数组 (大端序)
+ * 将64位BigInt转换为8字节数组 (小端序，与后端Java一致)
  * @param value 64位BigInt值
  * @returns 8字节的Uint8Array
  */
 function bigIntToBytes(value: bigint): Uint8Array {
   const bytes = new Uint8Array(8)
-  for (let i = 7; i >= 0; i--) {
-    bytes[7 - i] = Number((value >> BigInt(i * 8)) & BigInt(0xff))
+  for (let i = 0; i < 8; i++) {
+    bytes[i] = Number((value >> BigInt(i * 8)) & BigInt(0xff))
   }
   return bytes
 }
@@ -51,28 +51,29 @@ function stringToUtf8Bytes(str: string): Uint8Array {
 }
 
 /**
- * 生成GraphQL Global ID
+ * 生成GraphQL Global ID (Long ID 版本)
  * @param type 类型名称
- * @param uuidString UUID字符串
+ * @param id Long 类型的 ID
  * @returns Base64编码的Global ID
  */
-export function toGlobalId(type: string, uuidString: string): string {
+export function toGlobalId(type: string, id: number | bigint): string {
   // 将type转换为UTF-8字节数组
   const typeBytes = stringToUtf8Bytes(type)
 
-  // 解析UUID获取两个64位整数
-  const { mostSignificantBits, leastSignificantBits } = parseUUID(uuidString)
+  // 将 Long ID 转换为 BigInt
+  const idBigInt = typeof id === 'number' ? BigInt(id) : id
 
-  // 创建结果字节数组：16字节UUID + type字节长度
+  // 创建结果字节数组：16字节 (Long ID在前8字节，后8字节补0) + type字节长度
   const resultBytes = new Uint8Array(16 + typeBytes.length)
 
-  // 将mostSignificantBits转换为字节并填入前8字节
-  const mostSignificantBytes = bigIntToBytes(mostSignificantBits)
-  resultBytes.set(mostSignificantBytes, 0)
+  // 将Long ID转换为字节并填入前8字节 (大端序)
+  const idBytes = bigIntToBytes(idBigInt)
+  resultBytes.set(idBytes, 0)
 
-  // 将leastSignificantBits转换为字节并填入8-15字节
-  const leastSignificantBytes = bigIntToBytes(leastSignificantBits)
-  resultBytes.set(leastSignificantBytes, 8)
+  // 后8字节填充0 (因为只使用前64位存储Long ID)
+  for (let i = 8; i < 16; i++) {
+    resultBytes[i] = 0
+  }
 
   // 将type字节数组复制到16字节之后
   if (typeBytes.length > 0) {
@@ -84,11 +85,11 @@ export function toGlobalId(type: string, uuidString: string): string {
 }
 
 /**
- * 解析GraphQL Global ID
+ * 解析GraphQL Global ID (Long ID 版本)
  * @param globalId Base64编码的Global ID
- * @returns 包含type和uuid的对象
+ * @returns 包含type和id的对象
  */
-export function fromGlobalId(globalId: string): { type: string; uuid: string } {
+export function fromGlobalId(globalId: string): { type: string; id: string } {
   try {
     // Base64解码
     const binaryString = atob(globalId)
@@ -101,41 +102,28 @@ export function fromGlobalId(globalId: string): { type: string; uuid: string } {
       throw new Error("Invalid Global ID: too short")
     }
 
-    // 提取前16字节作为UUID
-    const uuidBytes = bytes.slice(0, 16)
-
-    // 重构两个64位整数
-    let mostSignificantBits = BigInt(0)
-    let leastSignificantBits = BigInt(0)
-
+    // 从前8字节提取Long ID (小端序，与后端Java一致)
+    let idBits = BigInt(0)
     for (let i = 0; i < 8; i++) {
-      mostSignificantBits = (mostSignificantBits << BigInt(8)) | BigInt(uuidBytes[i])
-      leastSignificantBits = (leastSignificantBits << BigInt(8)) | BigInt(uuidBytes[i + 8])
+      idBits |= BigInt(bytes[i]) << BigInt(i * 8)
     }
-
-    // 转换为UUID字符串格式
-    const mostHex = mostSignificantBits.toString(16).padStart(16, "0")
-    const leastHex = leastSignificantBits.toString(16).padStart(16, "0")
-    const uuidString = `${mostHex.substring(0, 8)}-${mostHex.substring(8, 12)}-${mostHex.substring(12, 16)}-${leastHex.substring(0, 4)}-${leastHex.substring(4, 16)}`
 
     // 提取type字符串
     const typeBytes = bytes.slice(16)
     const type = new TextDecoder().decode(typeBytes)
 
-    return { type, uuid: uuidString }
+    // 返回类型和ID (ID转为字符串)
+    return { type, id: idBits.toString() }
   } catch (error) {
     throw new Error(`Failed to parse Global ID: ${error}`)
   }
 }
 
 /**
- * 生成随机UUID字符串
- * @returns UUID字符串
+ * 生成随机Long ID
+ * @returns Long类型的ID
  */
 export function generateUUID(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === "x" ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+  // 生成一个随机的正数ID
+  return (Math.floor(Math.random() * 9000000000000000) + 1000000000000000).toString()
 }

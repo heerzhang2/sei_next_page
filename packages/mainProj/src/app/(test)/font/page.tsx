@@ -1,6 +1,6 @@
 "use client"
-// components/VerticalHeaderTable.tsx
 import React from 'react';
+import { useOfflineFileOperations } from "@/hooks/useOfflineFileOperations"
 
 interface Record {
   id: number;
@@ -64,7 +64,7 @@ const VerticalHeaderTable = () => {
       )
     },
   ];
-
+  const { pendingOperations, isProcessing, processQueue } = useOfflineFileOperations()
   return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
@@ -74,7 +74,12 @@ const VerticalHeaderTable = () => {
               这种布局将表头垂直排列在左侧，数据记录水平排列在右侧，特别适合字段较多的数据展示。
             </p>
           </div>
-
+            <div>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">离线文件管理系统</h1>
+                <p>待处理操作: {pendingOperations.length}</p>
+                <p>处理中: {isProcessing ? '是' : '否'}</p>
+                <button onClick={processQueue}>手动处理队列</button>
+            </div>
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* 顶部标题栏 */}
             <div className="bg-gradient-to-r from-indigo-500 to-blue-600 p-4">

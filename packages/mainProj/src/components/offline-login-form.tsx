@@ -8,27 +8,24 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import {useNetworkStatusContext} from "@/contexts/network-status-context";
-import {useSession} from "next-auth/react";
+import { useNetworkStatusContext } from "@/contexts/network-status-context"
+import { useSession } from "next-auth/react"
+import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
 
 // 离线认证函数
-const authenticateOffline = async (username: string, password: string) => {
+const authenticateOffline = async (username: string, password: string, deviceId: string) => {
     try {
-        // 客户端密码哈希（与服务端保持一致）
-        const encoder = new TextEncoder()
-        const data = encoder.encode(password)
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-        const hashArray = Array.from(new Uint8Array(hashBuffer))
-        const hashedPassword = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
 
+        //没有经过URQL直接发送
         const response = await fetch(`${endpoint}/graphql`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "X-Device-Id": deviceId,
             },
+            credentials: "include", // 关键：允许跨域请求发送和接收cookie
             body: JSON.stringify({
                 query: `
           mutation Authenticate($username: String!, $password: String!) {
@@ -41,7 +38,7 @@ const authenticateOffline = async (username: string, password: string) => {
             }
           }
         `,
-                variables: { username, password: hashedPassword },
+                variables: { username, password },
             }),
         })
 
@@ -66,24 +63,18 @@ const authenticateOffline = async (username: string, password: string) => {
     }
 }
 
-// 存储离线认证信息
 const storeOfflineAuth = (authData: any) => {
     if (typeof window === "undefined") return
-
-    // 存储到localStorage
+    // 存储到localStorage - 只存储accessToken和user信息，不存储refreshToken
     localStorage.setItem(
         "offline_auth",
         JSON.stringify({
             accessToken: authData.accessToken,
-            refreshToken: authData.refreshToken,
             user: authData.user,
             timestamp: Date.now(),
-            expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24小时过期
+            expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         }),
     )
-
-    // 存储refreshToken用于后续刷新
-    localStorage.setItem("refresh_token", authData.refreshToken)
 
     // 触发自定义事件通知其他组件
     window.dispatchEvent(
@@ -100,20 +91,17 @@ export function OfflineLoginForm() {
     const router = useRouter()
     const networkStatus = useNetworkStatusContext()
     const { data: session, update } = useSession()
+    const { deviceFingerprint } = useDeviceFingerprint()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
-
         try {
             // 检查Java后端是否可达
             if (!networkStatus.isGraphQLBackendReachable) {
                 throw new Error("无法连接到认证服务器，请检查网络连接")
             }
-
-            const authData = await authenticateOffline(email, password)
-
-            // 存储离线认证信息
+            const authData = await authenticateOffline(email, password, deviceFingerprint)
             storeOfflineAuth(authData)
             try {
                 //若是在Nextjs服务器离线情况下：这实际无效，是没法真正修改session的accessToken。
@@ -128,12 +116,22 @@ export function OfflineLoginForm() {
                 console.error("OfflineLoginForm:更新NextAuth session失败", error)
             }
 
-            toast.success("Next离线情形下登录,与后端服务器连接", {
-                duration: 2000
-            })
+            window.dispatchEvent(
+                new CustomEvent("token:refreshed", {
+                    detail: {
+                        accessToken: authData.accessToken,
+                        user: authData.user,
+                        fromNextjs: false,
+                    },
+                }),
+            )
+            console.log("[OfflineLoginForm] 已触发token:refreshed事件，refreshToken存储在cookie中")
 
+            toast.success("Next离线情形下登录,与后端服务器连接", {
+                duration: 2000,
+            })
             // 跳转到首页
-            router.push("/")
+            window.location.href = "/report/"
         } catch (error: any) {
             console.error("离线登录失败:", error)
             toast.error("登录失败", {
@@ -147,11 +145,9 @@ export function OfflineLoginForm() {
     return (
         <Card className="w-full max-w-sm">
             <CardHeader>
-                <CardTitle className="text-2xl">离线登录</CardTitle>
+                <CardTitle className="text-2xl">前端服务离线情况</CardTitle>
                 <CardDescription>
-                    {networkStatus.isOnline
-                        ? "Next.js服务器正常，建议使用标准登录"
-                        : "Next.js服务器离线，使用直连后端登录"}
+                    {networkStatus.isNextJSServerReachable ? "Next.js服务器正常，建议使用标准登录" : "Next.js服务器离线，使用直连后端登录"}
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">

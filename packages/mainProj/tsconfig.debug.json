@@ -1,0 +1,39 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "sourceMap": true,
+    "sourceRoot": "${workspaceFolder}",
+    "skipLibCheck": true,
+    "isolatedModules": false,
+    "allowJs": true,
+    "checkJs": false,
+    "baseUrl": "${workspaceFolder}",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/pages/*": ["./src/pages/*"],
+      "@/styles/*": ["./src/styles/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/lib/*": ["./src/lib/*"]
+    }
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"],
+    "transpileOnly": true,
+    "files": true,
+    "experimentalSpecifierResolution": "node"
+  },
+  "include": [
+    "src/**/*",
+    "next.config.js",
+    "server.mjs"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next",
+    "out"
+  ]
+}

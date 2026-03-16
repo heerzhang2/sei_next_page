@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut, useSession } from "next-auth/react"
 import Link from "next/link"
 import { useLoginRedirectConfirm } from "@/components/login-redirect-confirm"
+import { withBasePath } from "@/lib/tool"
 
 export function UserNav() {
     const { data: session } = useSession()
@@ -22,7 +23,7 @@ export function UserNav() {
 
     if (!session?.user) {
         return (
-            <Link href="/login">
+            <Link href={withBasePath("/login")}>
                 <Button variant="outline">{"登录"}</Button>
             </Link>
         )
@@ -30,7 +31,7 @@ export function UserNav() {
 
     const handleSignOut = () => {
         showConfirm("确认退出登录", "您确定要退出登录吗？退出后将跳转到登录页面nav。", () => {
-            signOut({ callbackUrl: "/login" })
+            signOut({ callbackUrl: withBasePath("/login") })
         })
     }
 

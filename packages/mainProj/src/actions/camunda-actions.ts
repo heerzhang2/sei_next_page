@@ -1,7 +1,7 @@
 // actions/camunda-actions.ts
 "use server"
 import { requireRole } from "@/lib/role-auth"
-import { createProcessInstanceRest } from "../lib/camunda"
+import { createProcessInstanceRest, listAllProcessDefinitions } from "../lib/camunda"
 
 // 定义启动流程的参数类型
 type StartProcessParams = {
@@ -41,8 +41,13 @@ export async function startPdfCvtProcess({ processId, variables, bpmnProcessId }
     try {
         variables["author"] = session?.user?.name;
 
-        // 使用 REST API 创建流程实例
-        const result = await createProcessInstanceRest(bpmnProcessId || processId, variables)
+        console.log("启动流程 - processId:", processId, "bpmnProcessId:", bpmnProcessId);
+        // 直接使用 processDefinitionId (即 bpmnProcessId 或 processId)
+        const processDefinitionId = bpmnProcessId || processId;
+        console.log("使用的 processDefinitionId:", processDefinitionId);
+
+        // 使用 REST API 创建流程实例（无需查询，直接使用 processDefinitionId）
+        const result = await createProcessInstanceRest(processDefinitionId, variables)
 
         return {
             success: true,
@@ -101,5 +106,24 @@ export async function getProcessInstanceStatus(processInstanceKey: string) {
             status: "ERROR",
             error: error.message,
         }
+    }
+}
+
+/**
+ * 列出所有流程定义（用于调试）
+ */
+export async function listProcessDefinitionsAction() {
+    try {
+        const result = await listAllProcessDefinitions();
+        return {
+            success: true,
+            data: result
+        };
+    } catch (error: any) {
+        console.error("查询流程定义失败:", error);
+        return {
+            success: false,
+            error: error.message
+        };
     }
 }

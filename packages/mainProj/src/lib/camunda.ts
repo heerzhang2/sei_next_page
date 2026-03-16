@@ -1,63 +1,94 @@
-import { Camunda8 } from "@camunda8/sdk"
-import dotenv from "dotenv"
+// Camunda 8 Orchestration Cluster API
+// 使用 @camunda8/orchestration-cluster-api
 
-// 加载环境变量
-dotenv.config()
+import { createCamundaClient } from '@camunda8/orchestration-cluster-api';
 
-// Camunda 8 连接配置
-const camundaConfig = {
-    CAMUNDA_AUTH_STRATEGY: process.env.CAMUNDA_AUTH_STRATEGY || "",
-    CAMUNDA_BASIC_AUTH_USERNAME: process.env.CAMUNDA_BASIC_AUTH_USERNAME || "",
-    CAMUNDA_BASIC_AUTH_PASSWORD: process.env.CAMUNDA_BASIC_AUTH_PASSWORD || "",
-    CAMUNDA_SECURE_CONNECTION: process.env.CAMUNDA_SECURE_CONNECTION === "true",
-}
+// 单例客户端实例
+let camundaClient: any = null;
 
-// 只在服务端初始化 Camunda8 客户端
-let c8: Camunda8 | null = null;
-let restClient: any = null;
-
-// 获取 Camunda8 实例的函数
-function getCamunda8Instance() {
+/**
+ * 获取 Camunda 8 客户端（使用 Orchestration Cluster API）
+ */
+export async function getCamundaClient() {
     if (typeof window !== 'undefined') {
-        throw new Error('Camunda8 SDK 只能在服务端使用');
+        throw new Error('Camunda 客户端只能在服务端使用');
     }
 
-    if (!c8) {
-        c8 = new Camunda8(camundaConfig);
+    if (camundaClient) {
+        return camundaClient;
     }
-    return c8;
+
+    console.log("Creating Camunda Orchestration Cluster API client...");
+
+    // 创建客户端 - 自动从环境变量读取配置
+    // 环境变量: CAMUNDA_REST_ADDRESS, CAMUNDA_AUTH_STRATEGY, CAMUNDA_BASIC_AUTH_USERNAME, CAMUNDA_BASIC_AUTH_PASSWORD
+    const camunda = createCamundaClient();
+
+    camundaClient = camunda;
+    console.log("Camunda 客户端已创建");
+
+    return camundaClient;
 }
 
-// 获取 REST 客户端的函数
-export function getRestClient() {
-    if (typeof window !== 'undefined') {
-        throw new Error('REST 客户端只能在服务端使用');
-    }
-
-    if (!restClient) {
-        const instance = getCamunda8Instance();
-        restClient = instance.getCamundaRestClient();
-    }
-    return restClient;
-}
-
-// 使用 REST API 创建流程实例的辅助函数
-export async function createProcessInstanceRest(bpmnProcessId: string, variables: Record<string, any>) {
+/**
+ * 使用 Orchestration Cluster API 创建流程实例
+ * 注意：Zeebe Gateway REST API 支持 processDefinitionId (字符串)
+ */
+export async function createProcessInstanceRest(processDefinitionId: string, variables: Record<string, any>) {
     if (typeof window !== 'undefined') {
         throw new Error('此函数只能在服务端使用');
     }
 
     try {
-        const client = getRestClient();
-        // 使用 REST API 创建流程实例
-        const response = await client.createProcessInstance({
-            processDefinitionId: bpmnProcessId,
-            variables,
-        })
+        console.log(`使用 Zeebe Gateway REST API 创建流程实例: processDefinitionId="${processDefinitionId}"`);
+        console.log("流程变量:", JSON.stringify(variables, null, 2));
 
-        return response
-    } catch (error) {
-        console.error("Error creating process instance via REST:", error)
-        throw error
+        const client = await getCamundaClient();
+
+        // 创建流程实例
+        // Zeebe Gateway REST API 支持 processDefinitionId (字符串，如 "genRepPdf")
+        const processInstance = await client.createProcessInstance({
+            processDefinitionId: processDefinitionId,
+            variables: variables || {}
+        });
+
+        console.log("流程实例创建成功!");
+        console.log("processInstanceKey:", processInstance.processInstanceKey);
+
+        return {
+            processInstanceKey: processInstance.processInstanceKey,
+            processDefinitionId: processDefinitionId
+        };
+    } catch (error: any) {
+        console.error("创建流程实例失败:", error);
+        throw new Error(`创建流程实例失败: ${error.message}`);
+    }
+}
+
+/**
+ * 查询所有流程定义（用于调试）
+ */
+export async function listAllProcessDefinitions() {
+    if (typeof window !== 'undefined') {
+        throw new Error('此函数只能在服务端使用');
+    }
+
+    try {
+        const client = await getCamundaClient();
+
+        // 查询流程定义
+        const result = await client.searchProcessDefinitions({});
+
+        console.log("查询到的流程定义数量:", result.items?.length || 0);
+        console.log("所有流程定义:", JSON.stringify(result, null, 2));
+
+        return result;
+    } catch (error: any) {
+        console.error("查询流程定义失败:", error);
+
+        return {
+            items: [],
+            message: "查询流程定义失败"
+        };
     }
 }

@@ -1,0 +1,115 @@
+请求头部: {deviceId: 'e2s8tly', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:670 请求头部: {deviceId: 'e2s8tly', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:670 请求头部: {deviceId: 'e2s8tly', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:670 请求头部: {deviceId: 'e2s8tly', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:254 [StorageContext] Setting modeltype: INDPL_DJ
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:259 [StorageContext] Setting modelversion: 1
+C:\home\sei_next_page\packages\mainProj\src\component\rep\report-data.tsx:351 [v0] Updating storage with network data {version: 1141, currentVersion: undefined, isNewer: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:223 [StorageContext] Storage updated (direct) {keys: 139}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:229 [StorageContext] Setting offline status: false
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:83 [StorageContext] Loading from IndexedDB for: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\auth\use-access-token.tsx:93 应该增加跳转登录: 无可用token {old: 0, passedminute: 1764061342676, overtime: true}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:670 请求头部: {deviceId: 'e2s8tly', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\auth\graphql-component.tsx:670 请求头部: {deviceId: 'e2s8tly', hasToken: false}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:254 [StorageContext] Setting modeltype: INDPL_DJ
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:259 [StorageContext] Setting modelversion: 1
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:229 [StorageContext] Setting offline status: false
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:83 [StorageContext] Loading from IndexedDB for: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:254 [StorageContext] Setting modeltype: INDPL_DJ
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:259 [StorageContext] Setting modelversion: 1
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\lib\file-operations-queue.ts:50 [FileQueue] Database opened
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:53 [IndexedDB] Database opened successfully
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:172 [IndexedDB] Loaded report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), ageMinutes: 0, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:172 [IndexedDB] Loaded report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), ageMinutes: 0, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:89 [StorageContext] Restored user edits from IndexedDB {keys: 139, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:172 [IndexedDB] Loaded report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), ageMinutes: 0, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:254 [StorageContext] Setting modeltype: INDPL_DJ
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:259 [StorageContext] Setting modelversion: 1
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:172 [IndexedDB] Loaded report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), ageMinutes: 0, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:89 [StorageContext] Restored user edits from IndexedDB {keys: 139, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:172 [IndexedDB] Loaded report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), ageMinutes: 0, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:172 [IndexedDB] Loaded report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), ageMinutes: 0, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:172 [IndexedDB] Loaded report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), ageMinutes: 0, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:32 [v0] StorageProvider render: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined}
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:156 [StorageContext] Component unmounting, saving immediately
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:135 [v0] saveImmediately called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined, storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:94 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined, storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:117 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), size: 13192, modified: true}
+C:\home\sei_next_page\packages\mainProj\src\app\rep\[repId]\INDPL_DJ\1\[action]\page.tsx:10 ✅ Page mounted
+C:\home\sei_next_page\packages\mainProj\src\app\rep\[repId]\INDPL_DJ\1\[action]\page.tsx:11 ❌ Page unmounted
+C:\home\sei_next_page\packages\mainProj\src\app\rep\[repId]\INDPL_DJ\1\[action]\page.tsx:10 ✅ Page mounted
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: -1, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: -1, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:626 [OfflineUppy] useEffect triggered, calling checkSavedState
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:470 [v0] Initialization START for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:626 [OfflineUppy] useEffect triggered, calling checkSavedState
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:470 [v0] Initialization START for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:474 [OfflineUppy] stateKey changed from yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1 to yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4, resetting states
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:626 [OfflineUppy] useEffect triggered, calling checkSavedState
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:443 [v0] Initialization WAITING - currently initializing yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1, waiting for yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:519 [v0] Initialization END for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:528 [v0] Initialization CLEANUP for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:519 [v0] Initialization END for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:470 [v0] Initialization START for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:387 [v0] Restored Uppy state for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:391 [v0] Restored 0 pending delete operations
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:510 [v0] Applied restored state to Uppy instance with 1 files
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:519 [v0] Initialization END for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useUppyUpload.tsx:528 [v0] Initialization CLEANUP for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\StorageContext.tsx:196 [v0] Auto-save triggered: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined, storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', modified: true, storageKeys: Array(5)}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:94 [v0] IndexedDB save called: {repId: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', subrid: undefined, storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', modified: true, stackTrace: ''}
+C:\home\sei_next_page\packages\mainProj\src\lib\indexed-db-storage.ts:117 [IndexedDB] Saved report data: {storageKey: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA', dataKeys: Array(139), size: 13192, modified: true}
+2C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:1029 [OfflineUppy] Restoring state for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_-1
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:1033 [OfflineUppy] No snapshot or Uppy instance available
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:1033 [OfflineUppy] No snapshot or Uppy instance available
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:1029 [OfflineUppy] Restoring state for key: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:1041 [OfflineUppy] Restoring state: {key: 'yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4', files: 1, pendingDeletes: 0}
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:1049 [OfflineUppy] Found 0 pending delete operations in snapshot
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:1052 [OfflineUppy] Setting restoredPendingDeletes to: []
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:239 [OfflineUppy] Processing file: 1724231505576.jpg {hasHandle: false, isHandleMode: false, hasData: true, hasFileMeta: true}
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:344 [OfflineUppy] Attempting traditional restore: 1724231505576.jpg
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:387 [OfflineUppy] Successfully added traditional file to Uppy: 1724231505576.jpg
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:1107 [OfflineUppy] State restoration completed: 1 files restored (0 from handles), 0 duplicates skipped
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4
+C:\home\sei_next_page\packages\mainProj\src\report\industrial\diagram-file.tsx:217 [DiagramFile] selectedIndex: 4, lineIndexParam: 4, currentDiagrams.length: 5
+C:\home\sei_next_page\packages\mainProj\src\report\hook\useOfflineUppyUpload.tsx:441 [OfflineUppy] Generated stateKey: yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA:LineDiagram_4

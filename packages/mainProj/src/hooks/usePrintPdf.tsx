@@ -101,14 +101,17 @@ export function usePageMarkinfo(
 
             setIsMutating(true)
             try {
+                // 使用 Server Action 提取书签信息
                 const result = await extractPageMarkAction(prjob)
+
                 if(result.success) {
-                    const responseData = result.data?.data as any
-                    if(responseData?.result === "Success") {
+                    const responseData = result.data as any
+                    // 检查 result 字段是否为 "Success"
+                    if(responseData?.data?.result === "Success") {
                         toast.success(`服务端提取书签应答`, {
-                            description: <>{responseData?.result}</>,
+                            description: <>{responseData?.data?.result}</>,
                         })
-                        const newOutlineData ={outline: responseData.outline, totalPages: responseData.totalPages }
+                        const newOutlineData ={outline: responseData?.data?.outline, totalPages: responseData?.data?.totalPages }
                         // 调用成功回调函数进行缓存
                         try {
                             await onSuccess(newOutlineData)
@@ -118,8 +121,8 @@ export function usePageMarkinfo(
                         }
                         return result.data
                     } else {
-                        console.error("大纲提取失败:", responseData.result)
-                        throw new Error(responseData.result)
+                        console.error("大纲提取失败:", responseData?.data?.result || responseData)
+                        throw new Error(responseData?.data?.result || "未知错误")
                     }
                 } else {
                     throw new Error(result.error)

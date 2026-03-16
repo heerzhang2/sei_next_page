@@ -1,127 +1,223 @@
 /* Custom CSS for split view scrolling */
 .split-view-container {
-  height: calc(100vh - 56px); /* Adjust based on your header height */
-  overflow: hidden;
+    height: calc(100vh - 56px); /* Adjust based on your header height */
+    overflow: hidden;
 }
 
 .split-view-panel {
-  height: 100%;
-  overflow: auto;
+    height: 100%;
+    overflow: auto;
 }
 
 .editor-panel {
-  position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.editor-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: white;
-}
-
-.editor-content {
-  flex: 1;
-  /*overflow: auto;*/
-}
-
-
-/* Custom styles for vertical tabs in landscape mode */
-@media (orientation: landscape) {
-  /* Make the TabsList vertical and compact */
-  .vertical-tabs-list {
-    width: auto !important;
-    min-width: 40px !important;
-    background-color: transparent !important;
-    border-right: 1px solid hsl(var(--border));
-    padding: 0 !important;
-    position: sticky;
-    top: 0;
-    align-self: stretch;
+    position: relative;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Style the vertical tab triggers */
-  .vertical-tab-trigger {
-    width: 40px !important;
-    height: auto !important;
-    padding: 16px 4px !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-  }
-
-  /* Vertical text orientation */
-  .vertical-text {
-    writing-mode: vertical-lr;
-    text-orientation: mixed;
-    /*transform: rotate(180deg);*/
-    white-space: nowrap;
-    font-size: 14px;
-    letter-spacing: 0.5px;
-  }
-
-  /* Active state styling */
-  .vertical-tab-trigger[data-state="active"] {
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--primary-foreground)) !important;
-  }
-
-  /* Content area adjustments */
-  [role="tabpanel"] {
-    padding-left: 8px !important;
-  }
+    overflow: hidden; /* 外层容器不滚动 */
 }
 
-/* Ensure the tabs container takes full height */
-@media (orientation: landscape) {
-  [role="tablist"] {
-    height: 100% !important;
-  }
-}
 
-/* Sticky tabs for portrait mode */
-@media (orientation: portrait) {
-  /* Make the tabs container sticky at the top */
-  .sticky-tabs-container {
+.editor-header {
     position: sticky;
     top: 0;
     z-index: 10;
     background-color: white;
-    border-bottom: 1px solid hsl(var(--border));
-  }
+}
+
+.editor-content {
+    flex: 1;
+    /*overflow: auto;*/
+}
+
+/* 新增：确保编辑器插槽有正确的高度和滚动 */
+.editor-slot {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 新增：确保全局编辑器容器在所有布局中都能正确滚动 */
+.global-editor-container {
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 隐藏的编辑器容器 */
+.hidden-editor-container {
+    display: none;
+}
+
+/* Custom styles for vertical tabs in landscape mode */
+@media (orientation: landscape) {
+    /* Make the TabsList vertical and compact */
+    .vertical-tabs-list {
+        width: auto !important;
+        background-color: transparent !important;
+        border-right: 3px solid hsl(var(--primary)); /* 改为 3px 更粗的边框 */
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* 添加阴影效果使边线更明显 */
+        padding: 0 !important;
+        position: sticky;
+        top: 0;
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    /* 新增：为移动端横屏的 TabsList 添加更明显的边线 */
+    @media (max-width: 1024px) {
+        .vertical-tabs-list {
+            border-right: 4px solid hsl(var(--primary)); /* 移动端横屏使用更粗的边框 */
+            box-shadow: 3px 0 12px rgba(0, 0, 0, 0.15); /* 更强的阴影 */
+        }
+    }
+    /* Style the vertical tab triggers */
+    .vertical-tab-trigger {
+        height: auto !important;
+        padding: 16px 1px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    /* Vertical text orientation */
+    .vertical-text {
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        /*transform: rotate(180deg);*/
+        white-space: nowrap;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+
+    /* Active state styling */
+    .vertical-tab-trigger[data-state="active"] {
+        background-color: hsl(var(--primary)) !important;
+        color: hsl(var(--primary-foreground)) !important;
+    }
+
+    /* Content area adjustments */
+    [role="tabpanel"] {
+        padding-left: 8px !important;
+    }
+}
+
+
+/* Ensure the tabs container takes full height */
+@media (orientation: landscape) {
+    [role="tablist"] {
+        height: 100% !important;
+    }
+}
+
+/* Sticky tabs for portrait mode */
+@media (orientation: portrait) {
+    .mobile-editor-slot {
+        height: 100%;
+        width: 100%;
+        position: relative;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch; /* 改善移动端滚动体验 */
+    }
+
+    .mobile-editor-slot .global-editor-container {
+        height: 100%;
+        width: 100%;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 确保报告内容容器也能滚动 */
+    .tabs-content-container {
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Make the tabs container sticky at the top */
+    .sticky-tabs-container {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: white;
+        border-bottom: 1px solid hsl(var(--border));
+    }
 }
 
 /* Ensure content scrolls properly in both orientations */
 .tabs-content-container {
-  overflow-y: auto;
-  flex: 1;
+    overflow-y: auto;
+    flex: 1;
 }
 
 /* Improve scrolling behavior for landscape mode */
 @media (orientation: landscape) {
-  /* Ensure the content container takes full height */
-  .content-scroll-container {
-    height: 100%;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-  }
+    /* Ensure the content container takes full height */
+    .content-scroll-container {
+        height: 100%;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+    }
 
-  /* Add some padding to ensure content is visible when scrolled */
-  .tab-content-wrapper {
-    scroll-margin-top: 16px;
-  }
+    /* Add some padding to ensure content is visible when scrolled */
+    .tab-content-wrapper {
+        scroll-margin-top: 16px;
+    }
 }
 
 /* 手机端优化 */
 @media (max-width: 768px) {
-  .vertical-tab-trigger {
-    min-height: 70px;
-  }
+    .vertical-tab-trigger {
+        min-height: 70px;
+    }
+}
+
+/* 新增：确保 SplitViewSticky 中的内容能够正确滚动 */
+.split-view-sticky-container {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.split-view-sticky-container .split-view-panel {
+    height: 100%;
+    overflow: auto;
+}
+
+/* 新增：移动端编辑器内容滚动 */
+.mobile-editor-slot {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-editor-slot .global-editor-container {
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+}
+
+/* 确保在移动端竖屏模式下，Tabs 内容区域能正确滚动 */
+@media (orientation: portrait) {
+    [role="tabpanel"] {
+        height: 100%;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* 修复 flex 容器中的滚动问题 */
+.flex-col {
+    min-height: 0; /* 关键：允许 flex 子元素收缩 */
+}
+
+.min-h-0 {
+    min-height: 0; /* 关键：允许内容区域滚动 */
 }

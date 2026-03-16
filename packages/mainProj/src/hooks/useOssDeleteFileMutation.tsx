@@ -1,43 +1,50 @@
+// useOssDeleteFileMutation.tsx - 修改版本
 "use client"
 import { gql, useMutation } from 'urql';
 import {toast} from "sonner";
 
-/**删除minIO文件： 真的删掉 ’成功‘ 若不存在该文件返回： '不存在'；
-* */
 const mutation = gql`
   mutation useOssDeleteFileMutation($file: String!,$key: String,$value: String) {
     ossDeleteFile(file: $file,key: $key,value:$value)
   }
 `;
 
-/** devs[] 可支持多个批量关联多个设备台账id。
- * 多个入口：都可能添加任务或给任务添加设备或只是改任务参数。 toast支持链接转移
- * */
-export default function useOssDeleteFileMutation(callback: (resp: any,arIndex:number) => void) {
-  const [updateResult, ossDeleteFile] = useMutation(mutation)
-  const onSubmit = (file:string,arIndex:number,key?:string,value?:string) => {
-    ossDeleteFile({
-      file,
-      key,
-      value,
-    }).then((result) => {
-      console.log("useOssDeleteFileMutation=应答=", result)
+// 支持动态回调的版本
+export default function useOssDeleteFileMutation() {
+    const [updateResult, ossDeleteFile] = useMutation(mutation)
 
-      if (result.error) {
-        // 使用 sonner 的 toast.error 显示错误
-        toast.error("删除oss文件失败", {
-          description: result.error.toString(),
+    const onSubmit = (file: string, key?: string, value?: string, callback?: (resp: any, fileUrl: string) => void) => {
+        //设定一个TAG/key,上传时刻也一样的关键key; key=“eid” value=关联实体的ID
+        ossDeleteFile({
+            file,
+            key,
+            value,
+        }).then((result) => {
+            console.log("useOssDeleteFileMutation=应答=", result)
+
+            if (result.error) {
+                // 检查是否为 502 错误或其他服务器错误
+                const errorStr = result.error.toString()
+                const isServerError = errorStr.includes("502") || 
+                                     errorStr.includes("503") || 
+                                     errorStr.includes("504") ||
+                                     errorStr.includes("Bad Gateway") ||
+                                     errorStr.includes("Service Unavailable") ||
+                                     errorStr.includes("Gateway Timeout")
+                
+                const errorMessage = isServerError ? "OSS服务不可用" : errorStr
+                
+                toast.error("删除oss文件失败", {
+                    description: errorMessage,
+                })
+                console.log("Oh no!", result.error)
+                callback && callback(errorMessage, file)
+            } else {
+                const {ossDeleteFile: ack } = result?.data
+                callback && callback(ack, file)
+            }
         })
-        console.log("Oh no!", result.error)
-      } else {
-        // 使用 sonner 的 toast.success 显示成功消息
-        toast.success("OSS服务器", {
-          description: "文件删除",
-        })
-        const {ossDeleteFile: ack }=result?.data
-        callback(ack,arIndex);
-      }
-    })
-  }
-  return {call: onSubmit};
+    }
+
+    return {call: onSubmit};
 }

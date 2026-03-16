@@ -6,13 +6,14 @@ interface Props {
     children: React.ReactNode;
 }
 
-/**【目的】 跨越路由器或者跨越很多层的子孙嵌套组件也能直接传递控制变量和状态。
+/**淘汰！
+ * DialogEnterReturn.Provider了！这是Context跨越路由器页面数据传递。Context适合范围小点？
+ * 【目的】 跨越路由器或者跨越很多层的子孙嵌套组件也能直接传递控制变量和状态。
  * 注入用户信息:
  * 提供user提前验证，否则后面路由逻辑无法搞定复杂的逻辑分辨的！
  * 必须抽身置顶，为了实现逻辑：浏览器直接输入URI但是已经有了token登录过了，就不要再次跳转login页面；允许没授权访问/free/页面。
  * GlobalState只会执行一趟的。
  * 假如token超时了，auth验证通不过也不知道啊？，接口会报错。
- * #已经淘汰DialogEnterReturn.Provider了！这是Context跨越路由器页面数据传递。Context适合范围小点？
  * */
 const GlobalState = (props:Props) => {
     const [user, setUser] = React.useState();

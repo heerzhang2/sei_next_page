@@ -102,15 +102,9 @@ export interface RepVwProps{
     unfold?: boolean;
 }
 
-
 export const OriginalDataMutation =gql`
-    mutation useOriginalDataMutation(
-        $id: ID!
-        $operationType:Int!
-        $data: String
-        $deduction: String, $version:Int
-    ) {
-        modifyOriginalRecordData(id: $id, operationType: $operationType, data: $data, deduction: $deduction,version: $version) {
+    mutation useOriginalDataMutation( $id: ID! $data: String $client: String!, $version:Int ) {
+        modifyOriginalRecordData(id: $id, data: $data, client: $client,version: $version) {
             id,version,type
             data
             snapshot
@@ -119,7 +113,6 @@ export const OriginalDataMutation =gql`
         }
     }
 `;
-
 
 export type SelectValDescPair = [string, string];    //一对的，转义说明和存储用字。
 
@@ -258,9 +251,10 @@ export const CCellUnit = ({
  * @param ori 是原始记录页面的
  * 注意DirectLink：主动把直接儿子的 div或span改成了 <a>标签。
  */
-export const RepLink= ( {rep, children, tag, ori, subrid,redId,hash}
-                        : {rep:any, children:React.ReactNode, tag:string,ori?:boolean,subrid?:string,redId?:number,hash?:string}
+export const RepLink= ( {rep, children, tag, ori, subrid,redId,hash,printMode}
+                        : {rep:any, children:React.ReactNode, tag:string,ori?:boolean,subrid?:string,redId?:number,hash?:string,printMode?:boolean}
 ) => {
+    if(printMode)  return children;
     const apds=`${subrid ? '&subrid='+subrid : ''}`
     const apdr=`${redId!==undefined ? '&redId='+redId : ''}`
     if(ori)

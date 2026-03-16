@@ -27,7 +27,7 @@ export default function DepTask() {
                                     千里马（+平台）</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="https://deal.ggzy.gov.cn/ds/deal/dealList.jsp?HEADER_DEAL_TYPE=02">全国公共资源+特种设备+10天</Link>
+                                <Link href="https://www.ggzy.gov.cn/deal/dealList.html">全国公共资源+特种设备+10天</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://search.ccgp.gov.cn/bxsearch?searchtype=1&page_index=1&bidSort=0&buyerName=&projectId=&pinMu=0&bidType=0&dbselect=bidx&kw=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87&start_time=2025%3A02%3A07&end_time=2025%3A03%3A10&timeType=3&displayZone=&zoneId=&pppStatus=0&agentName=">
@@ -51,10 +51,10 @@ export default function DepTask() {
                                 <Link href="https://hljcg.hlj.gov.cn/maincms-web/fullSearchingHlj?searchKey=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87">黑龙江政府采购</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="http://ggzy.hebei.gov.cn/hbggfwpt/search/fullsearch.html?wd=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C">河北省公共资源交易平台</Link>
+                                <Link href="http://ssl.hebpr.cn/hbggfwpt/search/fullsearch.html?wd=%E7%89%B9%E7%A7%8D%E8%AE%BE%E5%A4%87%E6%A3%80%E9%AA%8C">河北省公共资源交易平台</Link>
                             </li>
                             <li className="mb-2">
-                                <Link href="http://www.lnggzy.gov.cn/lnggzycs2/showinfo/jyxxsearch.aspx">公共资源交易平台（辽宁省）</Link>
+                                <Link href="http://www.lnggzy.gov.cn/trading">公共资源交易平台（辽宁省）/点政府采购</Link>
                             </li>
                             <li className="mb-2">
                                 <Link href="https://jxsggzy.cn/jyxx/002006/002006001/trade.html">江西省公共资源交易网+近1月</Link>

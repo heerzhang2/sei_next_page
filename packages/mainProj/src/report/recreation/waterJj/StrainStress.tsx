@@ -81,7 +81,7 @@ export const StrainStress = ({ children, show, label, rep,sensit }: Props) => {
             setStorage({...storage, '_FILE_测点': upfile});
             !modified && setModified(true);
         }, [storage, modified,setStorage,setModified]);
-        const [uploadDom]=useUppyUpload({ repId:rep?.id!,
+        const {uploadDom}=useUppyUpload({ eid:rep?.id!,
             maxFile:1, onFinish, storeObj: storage?._FILE_测点 ,liveDays:10
         });
 

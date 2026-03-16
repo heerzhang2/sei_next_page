@@ -1,6 +1,6 @@
 import * as React from "react";
 import {InternalItemProps, OriginalViewProps} from "@/report/common/base";
-import {createItem} from "@/report/common/eHelper";
+import {createItem, crtUrlRegistGen} from "@/report/common/eHelper";
 import {DeviceSurveyD} from "@/report/common/survey";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
@@ -135,3 +135,5 @@ export const OriginalView=({ action, verId, rep}:OriginalViewProps)=>{
           {list}
     </>;
 }
+
+export const registerUrl = crtUrlRegistGen(recordPrintList,['_Controller']);

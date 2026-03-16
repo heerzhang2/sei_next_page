@@ -13,15 +13,12 @@ export default function ReportLayout({
     children: ReactNode
 }) {
     const repId = useActualRepId()
-
     if (!repId || repId==="*") {
-        return <div>Loading...</div>
+        return <div>尝试Load ... {repId}</div>
     }
-
-    // console.log(`🚀ReportLayout running repId=${repId}`, repId)
     return (
         <ErrorBoundaryWrapper>
-            <StorageProvider>
+            <StorageProvider repId={repId}>
                 <ModificationIndicator />
                 <ReportData repId={repId}>{children}</ReportData>
             </StorageProvider>

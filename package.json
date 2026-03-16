@@ -2,18 +2,27 @@
   "name": "camunda-worker-monorepo",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
+    "yarn": "yarn",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
+    "@serwist/turbopack": "^9.5.6",
+    "@types/node": "25.2.2",
+    "esbuild": "^0.27.3",
     "eslint": "^8.48.0",
+    "postcss": "8.5.6",
     "prettier": "^3.0.3",
+    "serwist": "^9.5.6",
+    "tailwindcss": "4.1.18",
     "turbo": "2.5.4",
     "typescript": "^5.2.2"
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "yarn@1.22.22"
 }

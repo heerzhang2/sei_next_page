@@ -23,7 +23,7 @@ export const DirectoryPagePress= ({ orc, rep, suffix,nApxc }:InspectionApprovalP
             </RepLink>
             <div className="w-full">
                 <div className="flex justify-end">
-                    <span className="text-sm mr-4 text-right md:text-right">报告编号：{rep.isp.no}</span>
+                    <span className="text-sm mr-4 text-right md:text-right">报告编号：{rep?.isp.no}</span>
                 </div>
                 <FlexibleTable className="text-sm w-full border-collapse" columnWidths={fixedCw}>
                     <TableHeader>

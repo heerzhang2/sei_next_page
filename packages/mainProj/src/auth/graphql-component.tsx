@@ -1,24 +1,28 @@
 "use client"
 
-import { ssrExchange, fetchExchange, createClient, errorExchange } from "@urql/next"
+import { fetchExchange, createClient, errorExchange } from "@urql/next"
 import { UrqlProvider } from "@urql/next"
-import { useAccessToken } from "./use-access-token"
+import { ssrExchange as ssrExchangeNext } from "@urql/next"
 import { authExchange } from "@urql/exchange-auth"
-import { type ReactNode, useMemo, useRef, useCallback, useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
-import { customOfflineExchange } from "@/lib/custom-offline-exchange"
-import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
-import schema from "./urql-schema.json"
-import type { SerializedRequest } from "@urql/exchange-graphcache"
+import { type ReactNode, useRef, useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
-import type { CombinedError, Exchange, Operation, OperationResult } from "@urql/core"
-import { pipe, tap, map } from "wonka"
+import type { Exchange, Operation, OperationResult, Client } from "@urql/core"
+import { pipe, tap, map, filter } from "wonka"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useNetworkStatusActions } from "@/contexts/network-status-context"
 import { useVersionConflictManager } from "@/hooks/use-version-conflict-manager"
-import { useOfflineQueueManager } from "@/hooks/use-offline-queue-manager"
+import { manualRetryExchange } from "@/lib/manual-retry-exchange"
+import { preventDuplicateExchange } from "@/lib/prevent-duplicate-exchange"
+import { acquireRefreshLock } from "@/lib/token-refresh-lock"
+import { customQueryCacheExchange } from "@/lib/custom-query-cache-exchange"
+import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage"
+import type { SerializedRequest } from "@urql/exchange-graphcache"
+import type { SSRExchange } from "@urql/next"
+import schema from "./urql-schema.json"
+import { useAccessToken } from "./use-access-token"
+import {AuthCompQuery} from "@/component/header-wrapper";
+import { withBasePath } from "@/lib/tool"
 
-// 检查是否为网络错误
 export const isNetworkError = (error: any): boolean => {
     if (!error) return false
     const errorMessage = error.message?.toLowerCase() || ""
@@ -33,22 +37,35 @@ export const isNetworkError = (error: any): boolean => {
         "err_network",
         "err_internet_disconnected",
     ]
+    // 检查是否为 502 Bad Gateway 错误
+    const is502Error = errorMessage.includes("502") || 
+                       errorMessage.includes("bad gateway") ||
+                       (error.response && error.response.status === 502)
+
     return (
         networkErrorKeywords.some((keyword) => errorMessage.includes(keyword)) ||
-        (error.name === "TypeError" && errorMessage.includes("fetch"))
+        (error.name === "TypeError" && errorMessage.includes("fetch")) ||
+        is502Error
     )
 }
 
-// 自定义网络错误处理 Exchange
 let errorCount = 0
 let lastErrorTime = 0
 const MAX_ERRORS_PER_MINUTE = 10
-const ERROR_RESET_TIME = 60000 // 1分钟
+const ERROR_RESET_TIME = 60000
 
-//网络状态更新：
+const getDeviceId = (): string => {
+    if (typeof window === "undefined") return ""
+    return localStorage.getItem("clientId") || ""
+}
+
+const maskToken = (token: string | null): string => {
+    if (!token || token.length < 8) return "***"
+    return `${token.substring(0, 4)}...${token.substring(token.length - 4)}`
+}
+
 const updateBackendStatusExchange = (
-    updateGraphQLBackendStatus: (isReachable: boolean, isClientOnline?: boolean) => void,
-    storage: any,
+    updateGraphQLBackendStatus: (isReachable: boolean) => void,
 ): Exchange => {
     return ({ forward, client }) => {
         return (operations$) => {
@@ -70,25 +87,25 @@ const updateBackendStatusExchange = (
                             errorCount++
                             lastErrorTime = now
                             if (errorCount <= MAX_ERRORS_PER_MINUTE) {
-                                updateGraphQLBackendStatus(false, false)
-                            }
-                            if (result.error.isImmediateError) {
-                                return {
-                                    ...result,
-                                    error: {
-                                        ...result.error,
-                                        message: result.error.message || "网络连接失败，请检查网络后重试",
-                                    },
+                                updateGraphQLBackendStatus(false)
+                                if (typeof window !== "undefined") {
+                                    ;(window as any).__graphqlBackendReachable = false
                                 }
                             }
                         } else {
                             if (result.data) {
-                                updateGraphQLBackendStatus(true, true)
+                                updateGraphQLBackendStatus(true)
+                                if (typeof window !== "undefined") {
+                                    ;(window as any).__graphqlBackendReachable = true
+                                }
                                 errorCount = 0
                             }
                         }
                     } else if (result.data) {
-                        updateGraphQLBackendStatus(true, true)
+                        updateGraphQLBackendStatus(true)
+                        if (typeof window !== "undefined") {
+                            ;(window as any).__graphqlBackendReachable = true
+                        }
                         errorCount = 0
                     }
                     return result
@@ -98,37 +115,73 @@ const updateBackendStatusExchange = (
     }
 }
 
-// 自定义 fetch exchange 来更好地处理网络错误
 const customFetchExchange: Exchange = ({ forward }) => {
     return (operations$) => {
         return pipe(
             operations$,
             map((operation: Operation) => {
-                // 为每个操作添加超时和错误处理
+                // 检查离线状态：使用 window.__graphqlBackendReachable 或 sessionStorage 中的状态
+                let isOffline = false
+                if (typeof window !== "undefined") {
+                    if (!(window as any).__graphqlBackendReachable) {
+                        isOffline = true
+                    } else if (!navigator.onLine) {
+                        isOffline = true
+                    } else {
+                        // 尝试从 sessionStorage 读取后端状态
+                        try {
+                            const savedStatus = sessionStorage.getItem("network-status")
+                            if (savedStatus) {
+                                const parsed = JSON.parse(savedStatus)
+                                const now = Date.now()
+                                const MAX_AGE = 5 * 60 * 1000 // 5 分钟
+                                if (parsed.timestamp && (now - parsed.timestamp) < MAX_AGE && parsed.isGraphQLBackendReachable === false) {
+                                    isOffline = true
+                                }
+                            }
+                        } catch (error) {
+                            // 忽略错误，保持 isOffline = false
+                        }
+                    }
+                }
+
+                console.log("[customFetchExchange] 检测到离线状态:", isOffline, "操作类型:", operation.kind)
+
                 const controller = new AbortController()
-                const timeoutId = setTimeout(() => controller.abort(), 120 * 1000) //120秒超时查询或变更
+
+                // 离线模式下超时时间缩短到 300ms，快速失败
+                const timeout = isOffline ? 300 : 180000
+                const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+                const deviceId = getDeviceId()
+                const existingHeaders = operation.context.fetchOptions?.headers || {}
+
+                // 在 context 中标记离线状态，供后续 exchange 使用
                 return {
                     ...operation,
                     context: {
                         ...operation.context,
+                        _isOffline: isOffline,
                         fetchOptions: {
                             ...operation.context.fetchOptions,
                             signal: controller.signal,
-                            timeoutId: timeoutId, // 添加超时ID到上下文中
+                            timeoutId: timeoutId,
+                            headers: {
+                                ...existingHeaders,
+                                "X-Device-Id": deviceId,
+                            },
                         },
                     },
                 }
             }),
             forward,
             tap((result: OperationResult) => {
-                // 清理超时
                 if (result.operation.context.fetchOptions?.signal) {
                     clearTimeout(result.operation.context.fetchOptions.timeoutId)
                 }
-                const app401 = result.error?.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401 //应用层抛出401错误码
+                const app401 = result.error?.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
                 if (result.error?.response?.status === 401 || app401) {
                     console.log("检测到401错误，token无效，准备触发刷新流程,app401=", app401)
-                    // 确保错误对象包含足够的信息供 authExchange 识别
                     result.error.networkError = result.error.response
                     result.error.isAuthError = true
                     if (result.operation.kind === "mutation")
@@ -142,52 +195,39 @@ const customFetchExchange: Exchange = ({ forward }) => {
     }
 }
 
-const getStoredRefreshToken = (): string | null => {
-    if (typeof window === "undefined") return null
-    return localStorage.getItem("refresh_token")
-}
-
-const setStoredRefreshToken = (token: string | null): void => {
-    if (typeof window === "undefined") return
-    if (token) {
-        localStorage.setItem("refresh_token", token)
-    } else {
-        localStorage.removeItem("refresh_token")
-    }
-}
-
-//直接post原生做法发送请求包了
-const refreshTokenDirectly = async (
-    refreshToken: string,
-): Promise<{ accessToken: string; refreshToken: string } | null> => {
+const refreshTokenDirectly = async (): Promise<{ accessToken: string; refreshToken: string; user: any } | null> => {
     try {
         const endpoint = process.env.NEXT_PUBLIC_BACK_END
         if (!endpoint) throw new Error("Backend endpoint not configured")
+        console.log("[v0] refreshTokenDirectly: Using refresh_token from cookie")
+        const requestBody: any = {
+            query: `
+        mutation RefreshToken($refreshToken: String) {
+          refreshToken(refreshToken: $refreshToken) {
+            accessToken
+            refreshToken
+            user {
+              id
+            }
+          }
+        }
+      `,
+        }
 
+        const deviceId = getDeviceId()
         const response = await fetch(`${endpoint}/graphql`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "X-Device-Id": deviceId,
             },
-            body: JSON.stringify({
-                query: `
-          mutation RefreshToken($refreshToken: String!) {
-            refreshToken(refreshToken: $refreshToken) {
-              accessToken
-              refreshToken
-              user {
-                id
-              }
-            }
-          }
-        `,
-                variables: { refreshToken },
-            }),
+            credentials: "include",
+            body: JSON.stringify(requestBody),
         })
-
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
+        console.log("refreshTokenDirectly Set-Cookie header:", response.headers.get("set-cookie"))
         const result = await response.json()
         if (result.errors) {
             throw new Error(result.errors[0]?.message || "GraphQL error")
@@ -195,10 +235,14 @@ const refreshTokenDirectly = async (
         if (!result.data?.refreshToken) {
             throw new Error("No refresh token data returned")
         }
-        return {
+
+        const newTokens = {
             accessToken: result.data.refreshToken.accessToken,
             refreshToken: result.data.refreshToken.refreshToken,
+            user: result.data.user,
         }
+        console.log("[v0] refreshTokenDirectly: New tokens received, refreshToken stored in cookie only")
+        return newTokens
     } catch (error) {
         console.error("Direct token refresh failed:", error)
         return null
@@ -207,9 +251,7 @@ const refreshTokenDirectly = async (
 
 const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; javaBackendReachable: boolean }> => {
     const results = await Promise.allSettled([
-        // 检查Next.js服务器
-        fetch("/api/nextLive", { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
-        //简易方式做检查Java后端
+        fetch(`${process.env.NEXT_PUBLIC_APP_WEB}/api/nextLive`, { method: "HEAD", cache: "no-cache" }).then((r) => r.ok),
         fetch(`${process.env.NEXT_PUBLIC_BACK_END}/graphql`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -223,7 +265,6 @@ const checkNetworkConnectivity = async (): Promise<{ nextjsReachable: boolean; j
     }
 }
 
-//清理PWA的/api/auth/session的缓存；
 const clearServiceWorkerAuthCache = async (): Promise<void> => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
         return
@@ -249,167 +290,226 @@ const clearServiceWorkerAuthCache = async (): Promise<void> => {
     }
 }
 
-//创建认证交换器
-const makeAuthExchange = (accessToken: string | null, updateSession?: (data: any) => Promise<any>, print?: boolean) => {
+let pendingMetadataBeforeRefresh: SerializedRequest[] = []
+
+const makeAuthExchange = (
+    getCurrentToken: () => string | null,
+    updateSession?: (data: any) => Promise<any>,
+    print?: boolean,
+) => {
     return authExchange(async (utils) => {
         return {
             addAuthToOperation(operation) {
-                const currentToken = accessToken
-                if (!currentToken) {
-                    const refreshToken = getStoredRefreshToken()
-                    if (refreshToken) {
-                        console.log("使用refreshToken作为认证fallback")
-                        return utils.appendHeaders(operation, {
-                            Authorization: `Bearer ${refreshToken}`,
-                            "X-Auth-Type": "refresh", // 标记这是refreshToken认证
-                        })
-                    }
-                    return operation
+                const currentToken = getCurrentToken()
+                const deviceId = getDeviceId()
+                const headers: Record<string, string> = {}
+                if (deviceId) {
+                    headers["X-Device-Id"] = deviceId
                 }
+                if (!currentToken) {
+                    return utils.appendHeaders(operation, headers)
+                }
+                console.log(`[AuthExchange] 为操作添加token: ${maskToken(currentToken)}`)
                 return utils.appendHeaders(operation, {
+                    ...headers,
                     Authorization: `Bearer ${currentToken}`,
                 })
             },
             didAuthError(error) {
-                // 检查 GraphQL 错误
                 const hasGraphQLAuthError = error.graphQLErrors?.some(
                     (e) => e.extensions?.code === "UNAUTHORIZED" || e.extensions?.code === "UNAUTHENTICATED",
                 )
                 const response = error.response || error.networkError
                 const hasNetworkAuthError = response && (response.status === 401 || response.status === 403)
-                // 检查自定义的认证错误标记
                 const hasCustomAuthError = error.isAuthError === true
-                // 检查特殊的 Java 后端 500 错误（实际是 token 过期）
                 const isSpecial500 =
                     response &&
                     response.status === 500 &&
                     response.headers?.get("content-length") === "0" &&
                     response.headers?.get("content-type")?.includes("application/graphql-response+json")
                 const finalResult = hasGraphQLAuthError || hasNetworkAuthError || isSpecial500 || hasCustomAuthError
+
+                if (finalResult) {
+                    const currentToken = getCurrentToken()
+                    console.log("[AuthExchange] 检测到认证错误，当前token:", maskToken(currentToken))
+                }
+
                 return finalResult
             },
             async refreshAuth() {
-                try {
-                    const connectivity = print ? undefined : await checkNetworkConnectivity()
-                    const refreshToken = getStoredRefreshToken()
-                    if (!refreshToken && !print && (!connectivity || !connectivity.nextjsReachable)) {
-                        console.warn("没有refresh token且NextJS不可达，直接跳转登录页")
-                        throw new Error("没有refresh token且NextJS不可达，直接跳转登录页")
-                    }
-                    if (print || (connectivity && connectivity.nextjsReachable)) {
-                        const response = await fetch("/api/refresh-token", {
-                            method: "POST",
-                            credentials: "include",
-                        })
-                        if (response.ok) {
-                            const data = await response.json()
-                            if (data.success) {
-                                await clearServiceWorkerAuthCache()
-                                if (updateSession) {
-                                    try {
-                                        await updateSession({
-                                            accessToken: data.accessToken,
-                                            refreshToken: data.refreshToken,
-                                        })
-                                        await new Promise((resolve) => setTimeout(resolve, 100))
-                                    } catch (error) {
-                                        console.error("更新session失败:", error)
+                const tokenBeforeRefresh = getCurrentToken()
+                console.log("[AuthExchange] 准备刷新token，当前token:", maskToken(tokenBeforeRefresh))
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("token:refresh-start"))
+                }
+                const result = await acquireRefreshLock(async () => {
+                    try {
+                        console.log("[AuthExchange] 已获取refresh锁")
+
+                        const connectivity = print ? undefined : await checkNetworkConnectivity()
+                        let tokenData: { user: any; accessToken: string; refreshToken: string } | null = null
+                        let fromNextjs = true
+                        if (print || (connectivity && connectivity.nextjsReachable)) {
+                            console.log("[AuthExchange] 通过NextJS API刷新token")
+                            const refreshStartTime = Date.now()
+                            //发送给Nextjs服务器的！不是发给Java后端。
+                            const response = await fetch("/report/api/refresh-token", {
+                                method: "POST",
+                                credentials: "include",
+                            })
+
+                            console.log(`[AuthExchange] NextJS API响应时间: ${Date.now() - refreshStartTime}ms`)
+
+                            if (response.ok) {
+                                const data = await response.json()
+                                if (data.success) {
+                                    tokenData = {
+                                        accessToken: data.accessToken,
+                                        refreshToken: data.refreshToken,
+                                        user: data.user,
                                     }
+
+                                    console.log("[AuthExchange] NextJS API刷新成功")
+                                    console.log("  - 新accessToken:", maskToken(tokenData.accessToken))
+                                    console.log("  - 新refreshToken:", maskToken(tokenData.refreshToken))
                                 }
+                            } else {
+                                console.error(`[AuthExchange] NextJS API刷新失败: ${response.status} ${response.statusText}`)
+                                const errorText = await response.text()
+                                console.error("[AuthExchange] 错误响应:", errorText)
+
+                                if (response.status === 401) {
+                                    if (typeof window !== "undefined") {
+                                        window.dispatchEvent(new CustomEvent("token:refresh-failed"))
+                                    }
+
+                                    console.log("[AuthExchange] 401错误，清除认证信息并重定向到首页")
+
+                                    if (typeof window !== "undefined") {
+                                        localStorage.removeItem("offline_auth")
+                                    }
+
+                                    toast.error("登录已失效", {
+                                        description: "您的登录凭证已过期，请重新登录",
+                                        duration: 5000,
+                                    })
+
+                                    setTimeout(() => {
+                                        if (typeof window !== "undefined") {
+                                            window.location.href = withBasePath("/login")
+                                        }
+                                    }, 4000)
+
+                                    return null
+                                }
+                            }
+                        } else if (!print && connectivity && !connectivity.nextjsReachable && connectivity.javaBackendReachable) {
+                            console.log("[AuthExchange] 离线模式直接刷新token")
+                            tokenData = await refreshTokenDirectly()
+                            if (tokenData) {
+                                fromNextjs = false
+                                console.log("[AuthExchange] 直接刷新成功")
+                                console.log("  - 新accessToken:", maskToken(tokenData.accessToken))
+                                console.log("  - 新refreshToken:", maskToken(tokenData.refreshToken))
+                            } else {
+                                console.error("[AuthExchange] 直接刷新失败")
+
                                 if (typeof window !== "undefined") {
-                                    window.dispatchEvent(
-                                        new CustomEvent("token:refreshed", {
-                                            detail: {
-                                                accessToken: data.accessToken,
-                                                refreshToken: data.refreshToken,
-                                            },
-                                        }),
-                                    )
+                                    window.dispatchEvent(new CustomEvent("token:refresh-failed"))
                                 }
-                                toast.success("登录已刷新，会话已自动续期", {
-                                    duration: 2000,
+
+                                if (typeof window !== "undefined") {
+                                    localStorage.removeItem("offline_auth")
+                                }
+
+                                toast.error("登录已失效", {
+                                    description: "您的登录凭证已过期，请重新登录",
+                                    duration: 5000,
                                 })
-                                return
+
+                                setTimeout(() => {
+                                    if (typeof window !== "undefined") {
+                                        window.location.href = withBasePath("/login")
+                                    }
+                                }, 4000)
+
+                                return null
+                            }
+                        } else {
+                            if (!print && (!connectivity || !connectivity.nextjsReachable)) {
+                                if (typeof window !== "undefined") {
+                                    window.dispatchEvent(new CustomEvent("token:refresh-failed"))
+                                }
+                                throw new Error("没有refresh token且NextJS不可达，直接跳转登录页")
                             }
                         }
-                    }
+                        if (!tokenData) {
+                            pendingMetadataBeforeRefresh = []
+                            console.error("[AuthExchange] Token刷新失败，无tokenData返回")
 
-                    if (
-                        !print &&
-                        connectivity &&
-                        !connectivity.nextjsReachable &&
-                        connectivity.javaBackendReachable &&
-                        refreshToken
-                    ) {
-                        const result = await refreshTokenDirectly(refreshToken)
-                        if (result) {
-                            // 更新存储的refreshToken
-                            setStoredRefreshToken(result.refreshToken)
-                            await clearServiceWorkerAuthCache()
-                            if (updateSession) {
-                                try {
-                                    await updateSession({
-                                        accessToken: result.accessToken,
-                                        refreshToken: result.refreshToken,
-                                    })
-                                    await new Promise((resolve) => setTimeout(resolve, 100))
-                                } catch (error) {
-                                    console.error("离线模式更新session失败:", error)
-                                }
-                            }
-                            // 触发自定义事件通知token更新
                             if (typeof window !== "undefined") {
+                                window.dispatchEvent(new CustomEvent("token:refresh-failed"))
+                            }
+
+                            toast.error("登录已过期", {
+                                description: "请重新登录，点导航登录",
+                                duration: 60 * 1000,
+                            })
+                            return tokenData
+                        }
+                        await clearServiceWorkerAuthCache()
+                        if (typeof window !== "undefined") {
+                            console.log("[AuthExchange] 触发token:refreshed事件并更新next-auth session")
+                            window.dispatchEvent(
+                                new CustomEvent("token:refreshed", {
+                                    detail: {
+                                        accessToken: tokenData.accessToken,
+                                        refreshToken: tokenData.refreshToken,
+                                        fromNextjs,
+                                        user: tokenData.user,
+                                        skipUpdate: false,
+                                    },
+                                }),
+                            )
+                        }
+
+                        setTimeout(async () => {
+                            if (pendingMetadataBeforeRefresh.length > 0) {
+                                console.log("[AuthExchange] Token刷新完成，恢复pending metadata:", pendingMetadataBeforeRefresh.length)
+                                for (const request of pendingMetadataBeforeRefresh) {
+                                }
                                 window.dispatchEvent(
-                                    new CustomEvent("token:refreshed", {
-                                        detail: {
-                                            accessToken: result.accessToken,
-                                            refreshToken: result.refreshToken,
-                                        },
+                                    new CustomEvent("graphql-manual-retry", {
+                                        detail: { retryAll: true },
                                     }),
                                 )
+                                pendingMetadataBeforeRefresh = []
                             }
-                            toast.success("离线模式登录刷新直接,直接与后端服务器通信", {
-                                duration: 3000,
-                            })
-                            return
-                        }
-                    }
-                    toast.error("务必重新登录！", {
-                        duration: 30 * 1000,
-                    })
-                } catch (error) {
-                    console.error("Token 刷新失败:", error)
-                    setStoredRefreshToken(null)
-                    toast.error("登录已过期", {
-                        description: "请重新登录",
-                        duration: 5000,
-                    })
-                    setTimeout(() => {
+                        }, 800)
+                        console.log("[AuthExchange] Token刷新流程完成")
+                        return tokenData
+                    } catch (error) {
+                        console.error("Token 刷新失败:", error)
+                        pendingMetadataBeforeRefresh = []
+
                         if (typeof window !== "undefined") {
-                            const protocol = window.location.protocol === "https:" ? "https:" : "http:"
-                            const host = window.location.host
-                            console.error("Token刷新失败，立即跳转login")
-                            window.location.href = `${protocol}//${host}/login`
+                            window.dispatchEvent(new CustomEvent("token:refresh-failed"))
                         }
-                    }, 1000) // 减少到1秒，更快响应
-                }
+
+                        toast.error("登录已过期", {
+                            description: "请重新登录，点导航登录",
+                            duration: 60 * 1000,
+                        })
+                    }
+                })
+
+                console.log("[AuthExchange] Refresh锁已释放")
+                return
             },
         }
     })
 }
 
-const isOfflineError = (error: any): boolean => {
-    if (!error) return false
-    // Network errors should be treated as offline
-    if (isNetworkError(error)) return true
-    // 401 errors should be queued for retry after authentication
-    const has401Error = error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
-    // Version conflicts should NOT be queued (permanent failures)
-    if (isVersionConflictError(error)) return false
-    return has401Error
-}
-
-//避免变更保存按钮的无限等待。
 const fetchAbortExchange: Exchange =
     ({ forward, client }) =>
         (ops$) => {
@@ -418,15 +518,22 @@ const fetchAbortExchange: Exchange =
                 tap((op) => {}),
                 forward,
                 tap((result) => {
-                    // 检测Java后端宕机错误 isJavaBackendDownError
-                    if (result.error && isOfflineError(result.error)) {
-                        //触发自定义事件通知页面, 对于mutation操作，可以设置一个超时来"强制完成"操作
+                    const error = result.error
+                    let offlineError = false,
+                        authError = false
+                    if (isNetworkError(error)) offlineError = true
+                    if (error?.response?.status === 401 || error?.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401)
+                        authError = true
+                    if (isVersionConflictError(error)) offlineError = false
+
+                    if (result.error && (offlineError || authError)) {
                         if (result.operation.kind === "mutation") {
                             const operationName = result.operation.query?.definitions[0]?.name.value
                             if (operationName) {
-                                toast.success("离线或未登录", {
-                                    duration: 2 * 1000,
-                                })
+                                if (offlineError && !authError)
+                                    toast.success("离线中", {
+                                        duration: 2 * 1000,
+                                    })
                                 setTimeout(() => {
                                     if (typeof window !== "undefined") {
                                         window.dispatchEvent(
@@ -434,7 +541,7 @@ const fetchAbortExchange: Exchange =
                                                 detail: {
                                                     operation: operationName,
                                                     variables: {
-                                                        id: result.operation.variables.id, //失败的操作匹配性
+                                                        id: result.operation.variables.id,
                                                     },
                                                     error: result.error,
                                                     hasError: true,
@@ -442,7 +549,7 @@ const fetchAbortExchange: Exchange =
                                             }),
                                         )
                                     }
-                                }, 100) // 短暂延迟确保事件监听器已设置
+                                }, 100)
                             }
                         }
                     }
@@ -450,7 +557,6 @@ const fetchAbortExchange: Exchange =
             )
         }
 
-//严谨："操作数据记录已在其它设备或其他人改动？这个请求失败以后就不会再被离线缓冲收进到metadata列表的。
 const isVersionConflictError = (error: any): boolean => {
     if (!error) return false
     const errorMessage = error.message || ""
@@ -463,213 +569,92 @@ const isVersionConflictError = (error: any): boolean => {
     )
 }
 
-/**
- * 点击Link切换不同的报告，后端恢复能自动发出缓存的报告变更队列,【可能】操作数据记录已在其它设备或其他人改动？只能从graphqlCache缓存找回来?metadata已经被丢弃。
- * 业务上没法按照ACID事务性锁定，乐观锁version机制能用于PWA离线修改报告的做法，很容易遇到考虑数据版本的冲突：
- * 假如流程引擎修改导致的version变动，后端转Pdf就是这个情况，后端网页转为Pdf完成，导致version改了：假如还在改这报告面临无法提交！因version被后台变更导致无法成功提交修改；最好必须等待网页转为Pdf后台已处理完才能继续刷新报告再修改。
- * */
 export function GraphQLProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams()
     const pathname = usePathname()
-    const print = "1" === searchParams!.get("print") //进入页面是打印目的的
+    const print = "1" === searchParams?.get("print")
     const { accessToken, ConfirmDialog } = useAccessToken()
-    const { update } = useSession()
     const { updateGraphQLBackendStatus } = useNetworkStatusActions()
-    const [isClient, setIsClient] = useState(false)
     const { addConflictRequest } = useVersionConflictManager()
-    const { backupOfflineQueue } = useOfflineQueueManager()
-    const pageStartTimeRef = useRef<number>(Date.now())
-    const backendRecoveryTimeRef = useRef<number | null>(null)
-    const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
-    const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false)
-    const emptyArrayReminderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const currentTokenRef = useRef<string | null>(null)
+    const clientInitializedRef = useRef(false)
+    
+    // 使用 ref 存储回调函数以避免依赖变化
+    const updateGraphQLBackendStatusRef = useRef(updateGraphQLBackendStatus)
+    const addConflictRequestRef = useRef(addConflictRequest)
+    
+    // 使用 useState 来存储 client 和 ssr，确保 SSR 和客户端首次渲染一致（都是 null）
+    const [clientState, setClientState] = useState<{ client: Client | null; ssr: SSRExchange | null }>({
+        client: null,
+        ssr: null,
+    })
+    
+    useEffect(() => {
+        updateGraphQLBackendStatusRef.current = updateGraphQLBackendStatus
+    }, [updateGraphQLBackendStatus])
+    
+    useEffect(() => {
+        addConflictRequestRef.current = addConflictRequest
+    }, [addConflictRequest])
 
     useEffect(() => {
-        const handleBackendStatusChange = (event: CustomEvent) => {
-            const { wasOffline, isNowOnline } = event.detail
-            if (wasOffline && isNowOnline) {
-                backendRecoveryTimeRef.current = Date.now()
-                console.log("[v0] 检测到后端恢复在线，记录恢复时间")
-            }
-        }
-
-        window.addEventListener("backend-status-changed", handleBackendStatusChange as EventListener)
-
-        return () => {
-            window.removeEventListener("backend-status-changed", handleBackendStatusChange as EventListener)
-        }
-    }, [])
-
-    const isInCriticalTimeWindow = useCallback((): boolean => {
-        const now = Date.now()
-        const pageStartWindow = now - pageStartTimeRef.current <= 60000 //页面加载60秒内
-        const backendRecoveryWindow = backendRecoveryTimeRef.current && now - backendRecoveryTimeRef.current <= 60000 //后端恢复60秒内
-        return pageStartWindow || !!backendRecoveryWindow
-    }, [])
-
-    useEffect(() => {
-        setIsClient(true)
-    }, [])
-
-    const instanceIdRef = useRef(Math.random().toString(36).slice(2, 11))
-    const mountCountRef = useRef(0)
-
-    useEffect(() => {
-        mountCountRef.current++
-        console.log(`[v0] GraphQLProvider mounted - 实例ID: ${instanceIdRef.current}, 挂载次数: ${mountCountRef.current}`)
-
-        return () => {
-            console.log(`[v0] GraphQLProvider unmounted - 实例ID: ${instanceIdRef.current}`)
-        }
-    }, [])
-
-    const clientRef = useRef<any>(null)
-    const ssrRef = useRef<any>(null)
-    const lastTokenRef = useRef<string | null>(null)
-    const initializedRef = useRef(false)
-
-    useEffect(() => {
-        if (!initializedRef.current) {
-            initializedRef.current = true
-        }
-        return () => {}
-    }, [])
-
-    useEffect(() => {
-        if (lastTokenRef.current !== accessToken) {
-            console.log(`[v0] 复用现有客户端 - 实例ID: ${instanceIdRef.current}`)
-            lastTokenRef.current = accessToken
-        }
+        currentTokenRef.current = accessToken
     }, [accessToken])
 
-    const createClientStable = useCallback(() => {
-        if (!isClient) {
-            return [null, null]
-        }
-        if (lastTokenRef.current === accessToken && clientRef.current) {
-            return [clientRef.current, ssrRef.current]
-        }
-        lastTokenRef.current = accessToken
-        let storage
-        if (typeof window !== "undefined") {
-            const defaultStorage = makeDefaultStorage({
-                idbName: "graphcache-sei",
-                maxAge: 7,
-            })
-            storage = { ...defaultStorage }
-        } else {
-            storage = {
-                writeData: (data: any) => Promise.resolve(),
-                readData: () => Promise.resolve(null),
-                writeMetadata: (data: any) => Promise.resolve(),
-                readMetadata: () => Promise.resolve(null),
+    // 在 useEffect 中初始化 client，确保只在客户端执行且 SSR/客户端首次渲染一致
+    useEffect(() => {
+        if (clientInitializedRef.current) return
+        clientInitializedRef.current = true
+        
+        const getCurrentToken = () => {
+            if (currentTokenRef.current) {
+                return currentTokenRef.current
             }
+
+            try {
+                const offlineAuth = localStorage.getItem("offline_auth")
+                if (offlineAuth) {
+                    const authData = JSON.parse(offlineAuth)
+                    if (authData.accessToken && authData.expiresAt > Date.now()) {
+                        console.log("[getCurrentToken] 从localStorage读取token作为fallback")
+                        return authData.accessToken
+                    }
+                }
+            } catch (error) {
+                console.error("[getCurrentToken] 读取localStorage失败:", error)
+            }
+
+            return null
         }
 
-        const cache = customOfflineExchange({
+        const storage = makeDefaultStorage({
+            idbName: "graphcache-sei",
+            maxAge: 7,
+        })
+
+        const cache = customQueryCacheExchange({
             schema,
             keys: {
                 RepLink: () => null,
             },
-            isOfflineError: (error: undefined | CombinedError, result: OperationResult) => {
-                const shouldQueue = isOfflineError(error)
-                if (shouldQueue && result.operation.kind === "mutation") {
-                    console.log(
-                        "[customOfflineExchange] 将mutation加入离线队列:",
-                        result.operation.query.definitions[0]?.name?.value,
-                        "error:",
-                        error?.message,
-                    )
-                }
-                return shouldQueue
-            },
-            startupTimeWindow: 30000, // 30秒
-            recoveryTimeWindow: 30000, // 30秒
-            storage: {
-                ...storage,
-                writeMetadata: async (json: SerializedRequest[]) => {
-                    console.log("[GraphQLProvider] 已确认写入，数据长度:", json.length)
-                    if (json?.length !== 0) {
-                        const uniqueRequests: SerializedRequest[] = []
-                        const seen = new Map<string, SerializedRequest>()
-
-                        for (let i = json.length - 1; i >= 0; i--) {
-                            const request = json[i]
-                            const key = request.variables?.id
-                                ? `${request.query}-${request.variables.id}-${request.variables?.opType || ""}`
-                                : `${request.query}-${JSON.stringify(request.variables || {})}`
-                            if (!seen.has(key)) {
-                                seen.set(key, request)
-                                uniqueRequests.unshift(request)
-                            }
-                        }
-
-                        const filteredRequests = uniqueRequests.filter((request) => {
-                            if (request.variables?.id && request.query.includes("mutation")) {
-                                return true
-                            }
-                            return true
-                        })
-
-                        await storage.writeMetadata!(filteredRequests)
-
-                        if (typeof window !== "undefined") {
-                            localStorage.setItem(
-                                "urql-metadata",
-                                JSON.stringify({
-                                    length: filteredRequests.length,
-                                    timestamp: new Date().toLocaleString(),
-                                }),
-                            )
-                        }
-                        console.log("[customOfflineExchange] writeMetadata写:", filteredRequests.length, "items")
-                    } else {
-                        await storage.writeMetadata!(json)
-                        if (typeof window !== "undefined") {
-                            localStorage.setItem(
-                                "urql-metadata",
-                                JSON.stringify({ length: 0, timestamp: new Date().toLocaleString() }),
-                            )
-                        }
-                        console.log("[customOfflineExchange] writeMetadata写:", 0, "items")
-                    }
-                },
-            } as any,
-            resolverExchange: false,
-            optimistic: {
-                modifyOriginalRecordData(args, cache, info) {
-                    return {
-                        __typename: "Report",
-                        id: args.id,
-                        data: args.data,
-                    }
-                },
-            },
+            storage,
         })
 
-        const ssr = ssrExchange({
-            isClient: typeof window !== "undefined",
+        const ssrInstance = ssrExchangeNext({
+            isClient: true,
         })
-        const epoint = process.env.NEXT_PUBLIC_BACK_END
-        const client = createClient({
-            url: `${epoint}/graphql`,
+
+        const endpoint = process.env.NEXT_PUBLIC_BACK_END
+        const newClient = createClient({
+            url: `${endpoint}/graphql`,
             exchanges: [
-                cache,
                 errorExchange({
                     onError: (error, operation) => {
                         if (isVersionConflictError(error)) {
-                            console.log("[ErrorExchange] 开始处理版本冲突错误")
-
                             const errorMessage = error.message || error.graphQLErrors?.[0]?.message || "版本冲突错误"
                             const invalidId = error.graphQLErrors?.[0]?.extensions?.invalidId || "未知ID"
 
-                            console.log("[ErrorExchange] 准备显示版本冲突toast")
-
-                            // 确保toast在下一个事件循环中显示，避免被其他逻辑阻塞
                             setTimeout(() => {
-                                console.log("[ErrorExchange] 正在显示版本冲突toast")
-
-                                // 显示详细的版本冲突toast提示
                                 toast.error("数据版本冲突", {
                                     description: (
                                         <div className="space-y-2">
@@ -678,39 +663,25 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                                             <p className="text-sm text-gray-500">
                                                 该记录已被其他设备或用户修改，请刷新页面获取最新数据后重新操作。
                                             </p>
-                                            <p className="text-sm text-blue-600">冲突请求已从离线队列中移除，并保存到版本冲突列表中。</p>
                                         </div>
                                     ),
-                                    duration: 4 * 60 * 60 * 1000, // 4小时
+                                    duration: 24 * 60 * 60 * 1000,
                                     action: {
                                         label: "刷新页面",
                                         onClick: () => window.location.reload(),
                                     },
                                 })
-
-                                console.log("[ErrorExchange] 版本冲突toast已显示")
                             }, 50)
 
-                            // 添加到版本冲突管理器
-                            addConflictRequest(operation, error)
-
-                            // 通知自定义离线交换器移除请求（双重保障）
-                            if (typeof window !== "undefined") {
-                                setTimeout(() => {
-                                    window.dispatchEvent(
-                                        new CustomEvent("graphql-force-remove-request", {
-                                            detail: {
-                                                operation,
-                                                reason: "version-conflict",
-                                            },
-                                        }),
-                                    )
-                                }, 200)
+                            addConflictRequestRef.current(operation, error)
+                            if (operation.kind === "mutation") {
+                                const request: SerializedRequest = {
+                                    query: operation.query.loc?.source?.body || "",
+                                    variables: operation.variables,
+                                    extensions: operation.extensions,
+                                }
                             }
-
-                            return
                         }
-
                         const has401Error =
                             error.response?.status === 401 || error.graphQLErrors?.[0]?.extensions?.httpStatusCode === 401
                         if (has401Error && operation.kind === "mutation") {
@@ -722,9 +693,12 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
                         }
                     },
                 }),
-                makeAuthExchange(accessToken, update, print),
-                updateBackendStatusExchange(updateGraphQLBackendStatus, storage),
-                ssr,
+                cache,
+                preventDuplicateExchange,
+                manualRetryExchange,
+                makeAuthExchange(getCurrentToken, undefined, print),
+                updateBackendStatusExchange((isReachable) => updateGraphQLBackendStatusRef.current(isReachable)),
+                ssrInstance,
                 fetchAbortExchange,
                 customFetchExchange,
                 fetchExchange,
@@ -732,90 +706,117 @@ export function GraphQLProvider({ children }: { children: ReactNode }) {
             suspense: true,
             preferGetMethod: false,
             fetchOptions: () => {
-                const currentToken = accessToken
-                console.warn("authorization Bearer:", currentToken)
-                return {
-                    headers: {
-                        authorization: currentToken ? `Bearer ${currentToken}` : "",
-                    },
+                const currentToken = getCurrentToken()
+                const deviceId = getDeviceId()
+                const headers: Record<string, string> = {}
+                if (deviceId) {
+                    headers["X-Device-Id"] = deviceId
                 }
+                if (currentToken) {
+                    headers["Authorization"] = `Bearer ${currentToken}`
+                }
+                console.log("请求头部:", { deviceId, hasToken: !!currentToken })
+                return { headers }
             },
         })
-        clientRef.current = client
-        ssrRef.current = ssr
-        return [client, ssr]
-    }, [accessToken, isClient, update, updateGraphQLBackendStatus, addConflictRequest, backupOfflineQueue])
 
-    const memoizedClientRef = useRef<[any, any] | null>(null)
-    const lastAccessTokenRef = useRef(accessToken)
-    const [client, ssr] = useMemo(() => {
-        if (!isClient) {
-            return [null, null]
-        }
-        if (lastAccessTokenRef.current === accessToken && memoizedClientRef.current) {
-            return memoizedClientRef.current
-        }
-        lastAccessTokenRef.current = accessToken
-        const result = createClientStable()
-        memoizedClientRef.current = result
-        return result
-    }, [accessToken, createClientStable, isClient])
+        console.log("[GraphQLProvider] Client 已初始化")
+        setClientState({ client: newClient, ssr: ssrInstance })
+    }, [print])
 
     useEffect(() => {
-        const handleEmptyArrayReminder = (event: CustomEvent) => {
-            const { show } = event.detail
-            console.log("[v0] 收到空数组提醒事件:", show)
-            setShowEmptyArrayReminder(show)
-            if (show) {
-                setIsProcessingOfflineQueue(true)
-                // 设置超时自动隐藏
-                if (emptyArrayReminderTimeoutRef.current) {
-                    clearTimeout(emptyArrayReminderTimeoutRef.current)
-                }
-                emptyArrayReminderTimeoutRef.current = setTimeout(() => {
-                    setShowEmptyArrayReminder(false)
-                    setIsProcessingOfflineQueue(false)
-                }, 10000)
-            }
+        const handleRefreshCache = () => {
+            pendingMetadataBeforeRefresh = []
         }
-
-        const handleProcessingQueue = (event: CustomEvent) => {
-            const { processing, total } = event.detail
-            console.log("[v0] 收到队列处理事件:", processing, "总数:", total)
-            setIsProcessingOfflineQueue(processing)
-            if (!processing) {
-                setShowEmptyArrayReminder(false)
-            }
-        }
-
-        const handleBackendRecovery = () => {
-            backendRecoveryTimeRef.current = Date.now()
-            console.log("[v0] 收到后端恢复事件")
-            // 触发自定义事件通知自定义离线交换器
-            window.dispatchEvent(new CustomEvent("graphql-backend-recovery"))
-        }
-
-        window.addEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
-        window.addEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
-        window.addEventListener("backend-status-changed", handleBackendRecovery as EventListener)
-
+        window.addEventListener("urql:refresh-cache", handleRefreshCache)
         return () => {
-            window.removeEventListener("graphql-empty-array-reminder", handleEmptyArrayReminder as EventListener)
-            window.removeEventListener("graphql-processing-queue", handleProcessingQueue as EventListener)
-            window.removeEventListener("backend-status-changed", handleBackendRecovery as EventListener)
+            window.removeEventListener("urql:refresh-cache", handleRefreshCache)
         }
     }, [])
 
-    if (!client) {
+    useEffect(() => {
+        const handleOfflineLogin = (event: CustomEvent) => {
+            console.log("[GraphQLProvider] 检测到离线登录，强制更新token ref")
+            const { accessToken: newAccessToken } = event.detail
+            if (newAccessToken) {
+                currentTokenRef.current = newAccessToken
+                console.log("[GraphQLProvider] Token ref已更新")
+            }
+        }
+
+        const handleTokenRefreshed = (event: CustomEvent) => {
+            console.log("[GraphQLProvider] 检测到token刷新，更新token ref和localStorage")
+            const { accessToken: newAccessToken, refreshToken: newRefreshToken, user: newUser } = event.detail
+            if (newAccessToken) {
+                currentTokenRef.current = newAccessToken
+                console.log("[GraphQLProvider] Token ref已从token:refreshed事件更新")
+
+                if (typeof window !== "undefined") {
+                    try {
+                        const offlineAuth = localStorage.getItem("offline_auth")
+                        if (offlineAuth) {
+                            const authData = JSON.parse(offlineAuth)
+                            authData.accessToken = newAccessToken
+                            if (newUser) {
+                                authData.user = newUser
+                            }
+                            authData.expiresAt = Date.now() + 60 * 60 * 1000
+                            localStorage.setItem("offline_auth", JSON.stringify(authData))
+                            console.log("[GraphQLProvider] localStorage已同步更新新token (不含refreshToken)")
+                        }
+                    } catch (error) {
+                        console.error("[GraphQLProvider] 更新localStorage失败:", error)
+                    }
+                }
+            }
+        }
+
+        const handleLogout = () => {
+            console.log("[GraphQLProvider] 检测到注销事件，清空token ref")
+            currentTokenRef.current = null
+            console.log("[GraphQLProvider] Token ref已清空")
+        }
+
+        window.addEventListener("offline:login", handleOfflineLogin as EventListener)
+        window.addEventListener("token:refreshed", handleTokenRefreshed as EventListener)
+        window.addEventListener("auth:logout", handleLogout)
+        window.addEventListener("user:logout", handleLogout)
+
+        return () => {
+            window.removeEventListener("offline:login", handleOfflineLogin as EventListener)
+            window.removeEventListener("token:refreshed", handleTokenRefreshed as EventListener)
+            window.removeEventListener("auth:logout", handleLogout)
+            window.removeEventListener("user:logout", handleLogout)
+        }
+    }, [])
+
+    useEffect(() => {
+        const handleManualTokenRefresh = async () => {
+            if (clientState.client) {
+                try {
+                    //发送一个测试查询来触发认证流程
+                    await clientState.client.query(AuthCompQuery, { }, {requestPolicy: 'network-only'}).toPromise();
+                } catch (error) {
+                    console.log("[GraphQLProvider] 手动刷新触发完成");
+                }
+            }
+        };
+        const handleTokenRefreshNeeded = () => {
+            handleManualTokenRefresh();
+        };
+        window.addEventListener("token:refresh-needed", handleTokenRefreshNeeded);
+        return () => {
+            window.removeEventListener("token:refresh-needed", handleTokenRefreshNeeded);
+        };
+    }, [clientState.client]);
+
+    // 在 SSR 期间或客户端初始化之前显示加载状态
+    if (!clientState.client || !clientState.ssr) {
         return <div className="p-4 text-sm text-muted-foreground">正在初始化GraphQL客户端...</div>
     }
+
     return (
-        <UrqlProvider client={client} ssr={ssr}>
-            <div
-                data-empty-array-reminder={showEmptyArrayReminder.toString()}
-                data-processing-queue={isProcessingOfflineQueue.toString()}
-                style={{ display: "none" }}
-            />
+        <UrqlProvider client={clientState.client} ssr={clientState.ssr}>
             {children}
             {pathname !== "/login" && ConfirmDialog}
         </UrqlProvider>

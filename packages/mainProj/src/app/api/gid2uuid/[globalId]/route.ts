@@ -4,14 +4,14 @@ import { auth } from "@/app/auth"
 // export const dynamic = "force-static"
 // export const revalidate = false
 
-const BACKEND_BASE_URL = `${process.env.NEXT_PUBLIC_BACK_END}/teacher/globalId`
+const BACKEND_BASE_URL = `${process.env.NEXT_PUBLIC_BACK_END}/adminUse/globalId`
 
 /**
  这个是代理后端接口的做法。{二传手复制的模式}：第二代前端不能直接访问该后端api了
  * */
-export async function GET(request: NextRequest, { params }: { params: { globalId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ globalId: string }> }) {
     try {
-        const { globalId } = params
+        const { globalId } = await params
         const url = `${BACKEND_BASE_URL}/${globalId}`
         //不能直接用const token = await getAuthToken() 它只能在浏览器端用的，服务端不能调用自己本机api？ fetch('/api/refresh-token'；
         const session = await auth()

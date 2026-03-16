@@ -315,6 +315,35 @@ export const customOfflineExchange =
                 })
 
                 return (operations$) => {
+                    // 在查询请求发出前检查离线状态，避免不必要的网络请求
+                    const isBackendOffline = (): boolean => {
+                        if (typeof window === "undefined") return false
+
+                        // 1. 检查 window.__graphqlBackendReachable
+                        if ((window as any).__graphqlBackendReachable === false) {
+                            return true
+                        }
+
+                        // 2. 检查 sessionStorage 中的网络状态
+                        try {
+                            const savedStatus = sessionStorage.getItem("network-status")
+                            if (savedStatus) {
+                                const parsed = JSON.parse(savedStatus)
+                                const now = Date.now()
+                                const MAX_AGE = 5 * 60 * 1000 // 5 分钟
+                                if (parsed.timestamp && (now - parsed.timestamp) < MAX_AGE) {
+                                    if (parsed.isGraphQLBackendReachable === false || parsed.isNextJSServerReachable === false) {
+                                        return true
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            // 忽略错误
+                        }
+
+                        return false
+                    }
+
                     const opsAndRebound$ = merge([
                         reboundOps$,
                         pipe(
@@ -322,6 +351,13 @@ export const customOfflineExchange =
                             onPush((operation) => {
                                 if (operation.kind === "query" && !hasRehydrated) {
                                 } else if (operation.kind === "teardown") {
+                                } else if (operation.kind === "query") {
+                                    // 查询请求发出前检查离线状态
+                                    if (isBackendOffline()) {
+                                        console.log("[CustomOfflineExchange] 检测到后端离线，强制使用 cache-only 策略")
+                                        // 将请求策略改为 cache-only，避免发起网络请求
+                                        next(toRequestPolicy(operation, "cache-only"))
+                                    }
                                 }
                             }),
                         ),

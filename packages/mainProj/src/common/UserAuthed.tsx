@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/app/auth"
 import { headers } from "next/headers"
+import { withBasePath } from "@/lib/tool"
 
 /*必须登录用户，否则不能用
 【服务端SSR】情形下的：
@@ -38,7 +39,7 @@ const UserAuthed = async () => {
                 return null
             }
             console.log("UserAuthed: 跳转login", session)
-            redirect("/login")
+            redirect(withBasePath("/login"))
         }
     } catch (error) {
         console.error("UserAuthed: 认证检查失败", error)

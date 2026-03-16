@@ -9,7 +9,7 @@ import Link from "next/link";
 // const SlowContentLazy = lazy(() => import("@/app/(auth)/lazy/SlowContent"));
 
 export async function MainContent() {
-    const session = await auth();
+    const session = await auth();   //服务端SSR
 
     if (!session?.user) {
         return <div>还未成功登录!</div>;

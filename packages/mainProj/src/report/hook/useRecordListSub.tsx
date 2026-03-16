@@ -50,9 +50,6 @@ export function useRecordListSubr(rep: any, recordPrintList: EditorAreaConfig[],
                     }
                 </React.Fragment>;
             }else if(action==='ALL'){
-                // if(redId===undefined && subrid){
-                //     return <> {view} </>;
-                // }
                 return recordPrintList.map((each, i) => {
                     if(Array.isArray(each.zoneContent)){
                         if(mapFxian.get(each.itemArea)?.do && (subrType===each.subrType || !subrid))

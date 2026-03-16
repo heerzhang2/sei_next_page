@@ -1,6 +1,6 @@
 import * as React from "react";
 import {InternalItemProps, OriginalViewProps} from "@/report/common/base";
-import {aggregateProj, createItem} from "@/report/common/eHelper";
+import {aggregateProj, createItem, crtUrlRegistGen} from "@/report/common/eHelper";
 import {DeviceSurveyD, DeviceSurveyFx} from "@/report/common/survey";
 import {useRecordListSubr} from "@/report/hook/useRecordListSub";
 import {ProjectR} from "@/report/common/ProjectR";
@@ -23,7 +23,7 @@ import {config硬度仪, HardEvaluation, hard示说选} from "@/report/cm/hardne
 import {config光谱测仪, OptcEvaluation, optc示说选} from "@/report/cm/optical/Optical1";
 import {config强度核概, CpsvCalculation, cpsv结果选} from "@/report/cm/cpStrength/csVerification1";
 import {LongArticleFx} from "@/report/cm/cpStrength/LongArticleFx";
-import {config射线仪概, config射线测仪, RadoEvaluation, RadoWorkpiece, rado示说选, rado结果选} from "@/report/cm/radio/Radiography1";
+import {config射线仪概, RadoEvaluation, RadoWorkpiece, rado示说选, rado结果选} from "@/report/cm/radio/Radiography1";
 import {config渗透仪概, PermEvaluation, perm示说选, perm结果选} from "@/report/cm/permeation/PermTest1";
 import {config光析仪概, SpetChemicCompo, SpetElementSet, spet示说选, spet结果选} from "@/report/cm/spectr/SpetrAnalys1";
 import {CardContent} from "@/components/ui";
@@ -113,7 +113,7 @@ const createRecordList =()=>[
     ]),
     aggregateProj('磁粉检测', 'MAGNT_TS', [
         createItem('MangInstrument', <DeviceSurveyFx config={config磁粉仪概} label='磁粉检测-概要仪器'/>),
-        createItem('MangDiagram', <FxDiagram label="磁粉检测部位缺陷位置图" pic='_FILE_S部位' memo='点图说明' maxFile={5} dlist={mang示说选}/>),
+        createItem('MangDiagram', <FxDiagram label="磁粉检测部位缺陷位置图" pic='_FILE_S部位' memo='点图说明' maxFile={2} dlist={mang示说选}/>),
         createItem('MangPartSummary', <MangPartSummary label='磁粉检测结果评定表'/>),
         createItem('MangConclusion', <FxSimpConclus label={'磁粉检测-检测结果'} clc="结果" clist={["1级"]}/>),
     ]),
@@ -173,12 +173,4 @@ export const OriginalView = ({ action, verId, rep }: OriginalViewProps) => {
     return <>{list}</>
 }
 
-export function registerUrl(template: string, version: string): string[] {
-    const baseUrl = `/rep/*/${template}/${version}`
-    // Define all action routes that need to be cached for this template
-    const actions = ["ALL", "ProjectList", "Survey", "ConcAppendix", "MaterialReview",
-        "TkmsInstrument", "Conclusion","Accessories","RadoInstrument","Solidify","MangInstrument"
-    ]
-    const urls=actions.map((action) => `${baseUrl}/${action}`)
-    return [baseUrl, ...urls]
-}
+export const registerUrl = crtUrlRegistGen(createRecordList(),['_Controller']);

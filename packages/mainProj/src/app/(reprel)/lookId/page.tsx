@@ -37,11 +37,11 @@ async function createPrintJob(url: string, { arg }: any ) {
     }
     return await res.json()
 }
-function usePageMarkLocal(prjob: { type: string, uuid: string }, onSuccess: (outlineData: string) => Promise<void>
+function usePageMarkLocal(prjob: { type: string, id: string }, onSuccess: (outlineData: string) => Promise<void>
 ): [boolean, Function?]
 {
     //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
-    const { trigger, isMutating } = useSWRMutation(`${process.env.NEXT_PUBLIC_BACK_END}/teacher/uuid2gid`, createPrintJob, {
+    const { trigger, isMutating } = useSWRMutation(`${process.env.NEXT_PUBLIC_BACK_END}/adminUse/uuid2gid`, createPrintJob, {
         onSuccess: async (data) => {
             if (data?.success) {
                 const newOutlineData = ' '
@@ -90,14 +90,14 @@ function usePageMarkLocal(prjob: { type: string, uuid: string }, onSuccess: (out
 
 export default function GlobalIdConverter() {
     const [type, setType] = useState("Report")
-    const [uuid, setUuid] = useState("29071b80-317d-44ed-b50e-333dd87ded40")
+    const [uuid, setUuid] = useState("1234567890123456")
     const [globalId, setGlobalId] = useState("")
-    const [parseResult, setParseResult] = useState<{ type: string; uuid: string } | null>(null)
+    const [parseResult, setParseResult] = useState<{ modelType: string; uuidID: string } | null>(null)
     const [error, setError] = useState("")
     const handleCacheSuccess = async (outlineData: string) => {
             setGlobalId(outlineData)
     }
-    const pdf_job={type:type, uuid:uuid}
+    const pdf_job={type:type, id:uuid}
     const [localGetMarking, doGenerate] = usePageMarkLocal(pdf_job, handleCacheSuccess)
     const [loading, setLoading] = useState(false)
     const testApi = async (method: string) => {
@@ -113,8 +113,8 @@ export default function GlobalIdConverter() {
             if (method !== "GET" && method !== "DELETE") {
                 // options.body = requestBody
             }
-
-            const res = await fetch(`/api/gid2uuid/${globalId}`, options)
+            //代理后端接口的做法，#注意！！ 不是直接发请求到java后端的！需传递2个服务端的。
+            const res = await fetch(`/report/api/gid2uuid/${globalId}`, options)
             const data = await res.json()
             return data
         } catch (error) {
@@ -136,8 +136,7 @@ export default function GlobalIdConverter() {
         try {
             setError("")
             const result = await testApi("GET")
-            // const result = fromGlobalId(globalId)
-            setParseResult({ type: result?.modelType, uuid: result?.uuidID })
+            setParseResult({ modelType: result?.modelType, uuidID: result?.uuidID })
         } catch (err) {
             setError(`解析错误: ${err}`)
         }
@@ -171,13 +170,13 @@ export default function GlobalIdConverter() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="uuid">UUID</Label>
+                                <Label htmlFor="uuid">实体的ID</Label>
                                 <div className="flex gap-2">
                                     <Input
                                         id="uuid"
                                         value={uuid}
                                         onChange={(e) => setUuid(e.target.value)}
-                                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                                        placeholder="Long类型ID，例如：1234567890123456"
                                     />
                                     <Button onClick={handleGenerateUUID} variant="outline" size="sm">
                                         生成
@@ -224,11 +223,11 @@ export default function GlobalIdConverter() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>解析出的类型</Label>
-                                    <Input value={parseResult.type} readOnly />
+                                    <Input value={parseResult.modelType} readOnly />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>解析出的UUID</Label>
-                                    <Input value={parseResult.uuid} readOnly />
+                                    <Label>解析出的ID (Long)</Label>
+                                    <Input value={parseResult.uuidID} readOnly />
                                 </div>
                             </div>
                         )}
@@ -244,7 +243,8 @@ export default function GlobalIdConverter() {
                     <div className="space-y-2">
                         <h4 className="font-semibold">编码规则说明</h4>
                         <ul className="text-sm text-muted-foreground space-y-1">
-                            <li>• 前16字节：UUID的两个64位整数（大端序）</li>
+                            <li>• 前8字节：Long ID（大端序）</li>
+                            <li>• 8-15字节：填充0</li>
                             <li>• 后续字节：类型名称的UTF-8编码</li>
                             <li>• 整体使用Base64编码生成最终的Global ID</li>
                             <li>• 用于GraphQL Relay规范的全局唯一标识符</li>

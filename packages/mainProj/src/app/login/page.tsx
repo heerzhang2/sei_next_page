@@ -25,13 +25,13 @@ export default function LoginPage() {
     )
   }
 
-  if (!networkStatus.isOnline && networkStatus.isGraphQLBackendReachable) {
+  if (!networkStatus.isNextJSServerReachable && networkStatus.isGraphQLBackendReachable) {
     // Next.js服务器离线但Java后端可达，只显示离线登录
     return (
         <div className="flex items-center justify-center min-h-screen">
-          <div className="w-full max-w-md space-y-4">
+          <div className="w-full max-w-md space-y-4 flex flex-col items-center">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold">服务器离线模式</h1>
+              <h1 className="text-2xl font-bold">前端服务离线登录</h1>
               <p className="text-muted-foreground">Next.js服务器不可用，使用直连后端登录</p>
             </div>
             <OfflineLoginForm />
@@ -40,7 +40,7 @@ export default function LoginPage() {
     )
   }
 
-  if (!networkStatus.isOnline && !networkStatus.isGraphQLBackendReachable) {
+  if (!networkStatus.isNextJSServerReachable && !networkStatus.isGraphQLBackendReachable) {
     // 完全离线，无法登录
     return (
         <div className="flex items-center justify-center min-h-screen">
@@ -68,7 +68,7 @@ export default function LoginPage() {
               <SignInForm />
             </TabsContent>
 
-            <TabsContent value="offline" className="mt-6">
+            <TabsContent value="offline" className="mt-6 flex justify-center">
               <OfflineLoginForm />
             </TabsContent>
           </Tabs>
@@ -76,9 +76,9 @@ export default function LoginPage() {
           <div className="mt-4 text-center text-sm text-muted-foreground">
             <div className="flex items-center justify-center gap-2">
               <div
-                  className={`w-2 h-2 rounded-full ${networkStatus.isOnline ? "bg-green-500" : "bg-red-500"}`}
+                  className={`w-2 h-2 rounded-full ${networkStatus.isNextJSServerReachable ? "bg-green-500" : "bg-red-500"}`}
               ></div>
-              <span>Next.js: {networkStatus.isOnline ? "在线" : "离线"}</span>
+              <span>Next.js: {networkStatus.isNextJSServerReachable ? "在线" : "离线"}</span>
               <div
                   className={`w-2 h-2 rounded-full ${networkStatus.isGraphQLBackendReachable ? "bg-green-500" : "bg-red-500"}`}
               ></div>
