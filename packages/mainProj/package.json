@@ -31,7 +31,7 @@
     "start-test-offline2": "cross-env NODE_ENV=production NEXT_PUBLIC_BASE_PATH=/report NODE_TLS_REJECT_UNAUTHORIZED=0 node server.mjs",
     "start:debug": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_OPTIONS='--inspect' SERWIST_SUPPRESS_TURBOPACK_WARNING=1 NEXT_DEV_TURBOPACK=0 node server.mjs",
     "start:debug:break": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_OPTIONS='--inspect-brk' SERWIST_SUPPRESS_TURBOPACK_WARNING=1 NEXT_DEV_TURBOPACK=0 node server.mjs",
-    "prebuild": "node scripts/generate-build-info.mjs",
+    "prebuild": "prisma generate && node scripts/generate-build-info.mjs",
     "build:no-pwa": "cross-env NEXT_PUBLIC_ENABLE_PWA=false next build",
     "build:standalone": "cross-env BUILD_STANDALONE=true next build",
     "build": "next build",
