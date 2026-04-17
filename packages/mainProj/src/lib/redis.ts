@@ -36,25 +36,31 @@ export class UserInfoCache {
   private static readonly CACHE_PREFIX = "user_info:"
   private static readonly CACHE_TTL = 600     //延迟10分钟才能刷新,可忍受的。
 
-  static async getUserRoles(userId: string,accessToken?:string): Promise<string[]> {
+  static async getUserRoles(userId: string, accessToken?: string): Promise<string[]> {
     const cacheKey = `${this.CACHE_PREFIX}${userId}`
 
     try {
       const cached = await redis.get(cacheKey)
       if (cached) {
-        const userinfo =JSON.parse(cached)
+        const userinfo = JSON.parse(cached)
         return userinfo?.authorities
       }
 
-      const userinfo = await getUserInfo(userId,accessToken)
-      const roles =userinfo?.authorities
+      const userinfo = await getUserInfo(userId, accessToken)
+      const roles = userinfo?.authorities
       await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(userinfo))
       return roles
-    } catch (error) {
-      console.warn(`Error getting roles for user ${userId}:`, error)
-      const userinfo = await getUserInfo(userId,accessToken)
-      //没开启缓存的：
-      return userinfo?.authorities
+    } catch (error: any) {
+      // 检查是否是 401 未授权错误
+      const response = error?.response
+      if (response?.status === 401) {
+        console.warn(`User ${userId} is not authenticated (401)`)
+        // 重新抛出错误，让调用方处理（如重定向到登录页或返回错误信息）
+        throw new Error("UNAUTHORIZED: 用户未登录或登录已过期")
+      }
+      // 其他错误也继续抛出，不要静默处理
+      console.error(`Error getting roles for user ${userId}:`, error)
+      throw error
     }
   }
 

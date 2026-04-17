@@ -8,8 +8,8 @@ export default function Home() {
     // 定义设置离线报告的函数
     const setOfflineReports = () => {
         const reports = [
-            "HAAAAAAAAAQAAAAAAAAAAFJlcG9ydA",
-            "HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA"
+            "HAAAAAAAAAQAAAAAAAAAAFJlcG9ydA", "fAAAAAAAdTUAAAAAAAAAAFJlcG9ydA",
+            "HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA", "HAAAAAAAAAMAAAAAAAAAAFJlcG9ydA"
         ];
         // 将数组转换为 JSON 字符串并存入 localStorage
         localStorage.setItem("offline-reports", JSON.stringify(reports));
@@ -21,94 +21,45 @@ export default function Home() {
         <div className="grid @apply custom-grid-rows items-center justify-items-center min-h-screen p-8 pb-16 gap-12 sm:p-20 font-[family-name:var(--font-geist-sans)]">
             <HeaderWrapper />
             <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-                <Link className="flex items-center gap-2 hover:underline hover:underline-offset-4" href="/deptask">
-                    <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
-                    每日采集 →
-                </Link>
                 <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
+                    <li className="mb-4">
+                            <Link href="/login">用户登录</Link>
+                    </li>
                     <li className="mb-2">
-                        <div className="mt-10">
-                            <Link href="/deptask">每日采集 →</Link>
+                        检验报告的几个例子
+                        <div className="mt-2">
+                           <Link className="flex items-center gap-2 hover:underline hover:underline-offset-4" href="/rep/HAAAAAAAAAQAAAAAAAAAAFJlcG9ydA/SLIDING_JJ/1">
+                                <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
+                                滑行车类大型游乐设施监督检验-滑行车类-例子 →
+                           </Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/offline">离线管理</Link>
+                            <Link href="/rep/HAAAAAAAAAMAAAAAAAAAAFJlcG9ydA/POWER_AJ/1">电站锅炉的监督检验-例子</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/rep/HAAAAAAAAAQAAAAAAAAAAFJlcG9ydA/SLIDING_JJ/1">例子报告-滑行车类</Link>
+                            <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1">工业管道定期检验报告-例子1</Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1">查阅1份报告-管道的例子</Link>
-                        </div>
-                        <div className="mt-10">
-                            <Link href="/login">登录页。</Link>
-                        </div>
-                        <div className="mt-10">
-                            <Link href="/rep/fAAAAAAAdTUAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1">002报告-管道例子</Link>
-                        </div>
-                        <div className="mt-10">
-                            <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">查阅当前2份报告-滑行车</Link>
-                        </div>
-                        <div className="mt-10">
-                            <Link href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1/_Controller?modelkey=THICK_MS#ProjectList">
-                                查阅当前第1子报告
-                            </Link>
+                            <Link href="/rep/fAAAAAAAdTUAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1">工业管道定期检验报告-例子2</Link>
                         </div>
                         <div className="mt-10">
                             <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=HAAAAAAAAAEAAAAAAAAAAFJlcG9ydA&redId=2#MangInstrument">
-                                磁粉检测报告2-2第2分项目
+                                磁粉检测报告1-分项报告的例子
                             </Link>
                         </div>
                         <div className="mt-10">
-                            <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/SLIDING_JJ/1/T6-14?#T6-14">分项报告的一第1份报告</Link>
-                        </div>
-                        <div className="mt-10">
-                            <Link href="/rep/wjSpD8qsRvGy-zmji0lUK1JlcG9ydA/SLIDING_JJ/1/T6-14?#T6-14">分项报告的一第2份报告</Link>
-                        </div>
-                        <div className="mt-10">
-                            <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">滑行车类大型游乐设施监督检验</Link>
-                        </div>
-                        <div className="mt-10">
-                            <Link href="/process-start">⬅️ 验证rr登录</Link>
+                            <Link href="/rep/HAAAAAAAAAYAAAAAAAAAAFJlcG9ydA/INDPL_DJ/1/MangInstrument?original=1&subrid=LAAAAAAA6mMAAAAAAAAAAFJlcG9ydA&redId=1#MangInstrument">
+                                磁粉检测报告2-分项报告的例子
+                            </Link>
                         </div>
                     </li>
-                    <li>Save and see your changes instantly.</li>
+                    <li className="pt-2">测试时期的功能</li>
                 </ol>
                 <div className="flex gap-4 items-center flex-col sm:flex-row">
-                    <a
-                        className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-                        href="https://192.168.0.100:8673/actuator/health"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <Image
-                            className="dark:invert"
-                            src={withBasePath("/vercel.svg")}
-                            alt="Vercel logomark"
-                            width={20}
-                            height={20}
-                            style={{ width: "auto", height: "1rem" }}
-                        />
-                        Deploy now
-                    </a>
                     <Link
-                        className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
+                        className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
                         href="/reptype"
                     >
-                        <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
-                        模板
-                    </Link>
-                    <Link
-                        className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                        href="/lookId"
-                    >
-                        ID转换
-                    </Link>
-                    <a
-                        className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-                        href="https://192.168.0.100:9000/ywmast/202511/0421/c15313ca-5ac0-43e0-b78a-c958d62a7a8a.jpg"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
                         <Image
                             className="dark:invert"
                             src={withBasePath("/vercel.svg")}
@@ -117,28 +68,34 @@ export default function Home() {
                             height={20}
                             style={{ width: "auto", height: "1rem" }}
                         />
-                        Deploy now
-                    </a>
+                       报告模板列表
+                    </Link>
+                    <Link
+                        className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
+                        href="/camunda"
+                    >
+                        <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
+                        流程示例
+                    </Link>
                 </div>
 
                 {/* 新增的按钮 */}
                 <button
                     onClick={setOfflineReports}
-                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44 mt-4"
+                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44 mt-4 text-blue-600 dark:text-blue-400 font-bold"
                 >
-                    设置离线报告
+                 离线编制的测试（请务必）初始化
                 </button>
 
             </main>
             <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
                 <Image
-                    className="dark:invert"
-                    src={withBasePath("/next.svg")}
-                    alt="Next.js logo"
-                    width={1}
-                    height={1}
+                    src={withBasePath("/fjsei-logo.png")}
+                    alt="福建省特种设备检验研究院"
+                    width={200}
+                    height={60}
                     priority
-                    style={{ width: "auto", height: "2.2rem", objectFit: "contain" }}
+                    style={{ width: "auto", height: "3rem", objectFit: "contain" }}
                 />
             </footer>
         </div>

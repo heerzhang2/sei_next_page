@@ -6,8 +6,6 @@ import type * as React from "react"
 import { useQuery } from "@urql/next"
 import { ReportQuery } from "@/component/rep/report-data"
 import { useActualRepId } from "@/report/hook/use-actual-rep-id"
-import { useNetworkStatusContext } from "@/contexts/network-status-context"
-
 interface ReportPageWrapperProps {
     OriginalView: React.ComponentType<{
         action: string
@@ -21,7 +19,6 @@ export function ReportPageWrapper({ OriginalView, verId = "1" }: ReportPageWrapp
     const params = useParams()
     const repId = useActualRepId()
     const [action, setAction] = useState<string | null>(null)
-    const { isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable } = useNetworkStatusContext()
 
     useEffect(() => {
         if (params && params.action) {
@@ -32,19 +29,11 @@ export function ReportPageWrapper({ OriginalView, verId = "1" }: ReportPageWrapp
     // 当 repId 为空时暂停查询，避免发送无效请求
     const shouldPauseQuery = !repId
 
-    // 使用 requestPolicy 控制缓存策略，而不是 pause（pause 会阻止缓存读取）
-    const requestPolicy = useMemo(() => {
-        if (!isClientOnline || !isGraphQLBackendReachable || !isNextJSServerReachable) {
-            return "cache-only"
-        }
-        return "cache-and-network"
-    }, [isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable])
-
     const [result] = useQuery({
         query: ReportQuery,
         variables: { id: repId },
         pause: shouldPauseQuery,
-        requestPolicy,
+        requestPolicy: "cache-only",
     })
     const { getReport: report } = result?.data || {}
 

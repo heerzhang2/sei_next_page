@@ -163,7 +163,7 @@ export const cbK5_21 =(orc:any,parOrc:any)=> {
     return  {
   edit: (form: UseFormReturn<any, any, any>) => {
     return [false, <div key='1' className="flex flex-wrap items-center gap-1 justify-center content-center">
-        <span>座席距地面最大高度：</span>
+        <span>K5.2座席距地面最大高度：</span>
       <FormField control={form.control} name="座席高"
                  render={({ field }) => (
                      <FormItem className="flex items-center gap-1 pt-1 break-inside-avoid">

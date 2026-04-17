@@ -8,16 +8,26 @@ interface InspectionApprovalProps {
     rep: any
     suffix?: boolean
     nApxc?: boolean     //没有附页附图列的：
+    alone?: boolean //打印模式：true表示目录独占一页（后面不能跟随其他内容），默认为true
 }
 /**允许目录内容可超过1张纸张的
  * 目录页VS
+ * alone: 控制打印布局行为
+ *   - true (默认): 目录打印独占纸张页，后面不能跟随其他内容，但是允许跨越多个纸张打印
+ *   - false: 目录可以与其他内容在同一页打印
  * */
-export const DirectoryPagePress= ({ orc, rep, suffix,nApxc }:InspectionApprovalProps) => {
+export const DirectoryPagePress= ({ orc, rep, suffix, nApxc, alone = true }:InspectionApprovalProps) => {
     const fixedCw=nApxc? ["9%", "%", "18%"] : ["7%", "%", "11%", "18%"]
     let muluSn=1;       //目录显示项目序号
-    //<div className="relative h-full print:h-[calc(100vh-3rem)] flex flex-col justify-center print:mb-10">  print:mt-auto
+    // 根据 alone 决定打印布局：
+    // - alone=true: 独占纸张页，使用 break-after-page 阻止后续内容跟随，使用 min-h-screen 允许跨页
+    // - alone=false: 可以与其他内容同页，仅在前面添加 break-before-page
+    const printContainerClass = alone 
+        ? `print:min-h-screen print:flex print:flex-col print:justify-center print:break-after-page` 
+        : "print:break-before-page print:min-h-screen flex flex-col justify-evenly"
+    
     return (
-        <div id='ProjectList' className="w-full print:break-before-page print:min-h-screen flex flex-col justify-evenly">
+        <div id='ProjectList' className={`w-full ${printContainerClass}`}>
             <RepLink rep={rep} tag={'Entrance'}>
                 <h2 className="text-xl text-center mt-4">目 录</h2>
             </RepLink>
@@ -52,7 +62,8 @@ export const DirectoryPagePress= ({ orc, rep, suffix,nApxc }:InspectionApprovalP
                             );
                         })
                         }
-                        { !(orc?.Projects?.length>0) &&
+
+                       { !(orc?.Projects?.length>0) &&
                             <JumpTab href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/ProjectList#ProjectList`}>
                                 <TableRow>
                                     <CCell colSpan={nApxc? 3:4}>还未初始化！<br/>空目录表</CCell>

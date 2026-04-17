@@ -1,10 +1,20 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { withBasePath } from '@/lib/tool'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { AlertTriangle } from "lucide-react"
 
 export interface NetworkStatus {
     isClientOnline: boolean         // 表示客户端网络状态（依赖浏览器 navigator.onLine）
@@ -27,10 +37,15 @@ export interface NetworkStatusActions {
 }
 const NetworkStatusContext = createContext<NetworkStatus | null>(null)
 const NetworkStatusActionsContext = createContext<NetworkStatusActions | null>(null)
-
+// 检查是否启用 PWA 功能
+const enablePWA = process.env.NEXT_PUBLIC_ENABLE_PWA !== 'false'
 export function NetworkStatusProvider({ children }: { children: React.ReactNode }) {
     const searchParams = useSearchParams()
     const print = "1" === searchParams!.get("print")
+
+    // 版本升级弹窗状态
+    const [showVersionDialog, setShowVersionDialog] = useState(false)
+    const [pwaPathState, setPwaPathState] = useState("")
 
     // 从 sessionStorage 恢复网络状态
     const getInitialNetworkStatus = useCallback((): NetworkStatus => {
@@ -64,9 +79,9 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                         lastOfflineTime: parsed.lastOfflineTime ? new Date(parsed.lastOfflineTime) : null,
                         connectionType: null,
                         isClientOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-                        // 从 sessionStorage 恢复时也默认 false，避免使用过期的缓存状态
-                        isNextJSServerReachable: parsed.isNextJSServerReachable ?? false,
-                        isGraphQLBackendReachable: parsed.isGraphQLBackendReachable ?? false,
+                        // 从 sessionStorage 恢复时直接使用保存的值（包括 undefined）
+                        isNextJSServerReachable: parsed.isNextJSServerReachable,
+                        isGraphQLBackendReachable: parsed.isGraphQLBackendReachable,
                     }
                 } else {
                     console.log("[NetworkStatus] sessionStorage 中的状态已过期，使用默认值")
@@ -90,6 +105,10 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     }, [])
 
     const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(getInitialNetworkStatus)
+
+    // 使用 ref 追踪上一次的状态，避免闭包问题
+    const prevNextJSStatusRef = useRef<boolean | undefined>(networkStatus.isNextJSServerReachable)
+    const lastSWNotificationTimeRef = useRef<number>(0)
 
     // 保存网络状态到 sessionStorage
     const saveNetworkStatus = useCallback((status: NetworkStatus) => {
@@ -134,18 +153,10 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
             if (!lastCacheWarmup || (lastCacheWarmup && serverVersion !== lastCacheWarmup)) {
                 console.log("[Version] 检测到新构建版本:", serverVersion, "上次缓存版本:", lastCacheWarmup)
-
-                toast.info("前端版本升级", {
-                    id: "serverVersion-pwa",
-                    description: "建议访问 /pwa 页面重新缓存，以确保离线报告编制功能",
-                    duration: 10000,
-                    action: {
-                        label: "前往",
-                        onClick: () => {
-                            window.location.href = pwaPath
-                        },
-                    },
-                })
+                if(enablePWA) {
+                    setPwaPathState(pwaPath)
+                    setShowVersionDialog(true)
+                }
             }
         } catch (error) {
             // 忽略错误
@@ -273,6 +284,12 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             checkGraphQLBackendConnectivity()
         ])
 
+        // 使用 ref 获取上一次的状态
+        const prevNextJSStatus = prevNextJSStatusRef.current
+        
+        // 更新 ref
+        prevNextJSStatusRef.current = nextjsResult
+
         // 更新网络状态
         setNetworkStatusWithSave((prev) => ({
             ...prev,
@@ -283,13 +300,15 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
         // 通知 Service Worker Next.js 服务器状态变化
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            if (networkStatus.isNextJSServerReachable !== nextjsResult) {
-                console.log(`[NetworkStatus][checkNetworkStatus] Next.js 服务器状态变化，通知 SW`)
+            const now = Date.now()
+            if (prevNextJSStatus !== nextjsResult) {
+                console.log(`[NetworkStatus][checkNetworkStatus] Next.js 服务器状态变化: ${prevNextJSStatus} -> ${nextjsResult}，通知 SW`)
                 navigator.serviceWorker.controller.postMessage({
                     type: 'NEXTJS_SERVER_STATUS_UPDATE',
                     isOnline: nextjsResult,
-                    timestamp: Date.now()
+                    timestamp: now
                 })
+                lastSWNotificationTimeRef.current = now
             }
         }
 
@@ -299,7 +318,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
             isNextJSServerReachable: nextjsResult,
             isGraphQLBackendReachable: graphQLResult,
         }
-    }, [checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, networkStatus.isNextJSServerReachable, setNetworkStatusWithSave])
+    }, [checkNextJSServerConnectivity, checkGraphQLBackendConnectivity, setNetworkStatusWithSave])
 
 
     const actions: NetworkStatusActions = {
@@ -376,8 +395,8 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
             console.log("[SW] Service Worker 已更新")
 
-            toast.info("应用已更新", {
-                description: "建议访问 /pwa 页面重新做预缓存",
+            toast.info("离线服务工作线程已获取控制", {
+                description: "建议访问 /pwa 页面重新做重新预缓存",
                 duration: 10000,
                 action: {
                     label: "前往",
@@ -404,8 +423,8 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         // 初始状态更新 - 只更新客户端网络状态，不影响后端可达性
         updateNetworkStatus(navigator.onLine)
 
-        // 组件挂载时立即触发一次后端检查，避免初始状态为 true 时发起不必要的请求
-        // 由于初始状态已设为 false，这里立即检查可以快速更新为正确的状态
+        // 组件挂载时立即触发一次后端检查
+        // 只在客户端在线时检查
         if (navigator.onLine) {
             Promise.all([
                 checkNextJSServerConnectivity(),
@@ -417,7 +436,12 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                     isGraphQLBackendReachable: graphQLResult,
                 }))
             }).catch(() => {
-                // 检查失败时保持 false 状态（默认状态）
+                // 检查失败时设置为 false
+                setNetworkStatusWithSave((prev) => ({
+                    ...prev,
+                    isNextJSServerReachable: false,
+                    isGraphQLBackendReachable: false,
+                }))
             })
         }
 
@@ -445,8 +469,12 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
                         checkGraphQLBackendConnectivity()
                     ])
 
-                    // 更新 Next.js 服务器状态
-                    const prevNextJSStatus = networkStatus.isNextJSServerReachable
+                    // 使用 ref 获取上一次的状态，避免闭包问题
+                    const prevNextJSStatus = prevNextJSStatusRef.current
+                    
+                    // 更新 ref
+                    prevNextJSStatusRef.current = nextjsResult
+                    
                     setNetworkStatusWithSave((prev) => ({
                         ...prev,
                         isNextJSServerReachable: nextjsResult,
@@ -455,13 +483,18 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
 
                     // 通知 Service Worker Next.js 服务器状态变化
                     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                        if (prevNextJSStatus !== nextjsResult) {
-                            console.log(`[NetworkStatus] Next.js 服务器状态变化: ${prevNextJSStatus} -> ${nextjsResult}，通知 SW`)
+                        const now = Date.now()
+                        const timeSinceLastNotification = now - lastSWNotificationTimeRef.current
+                        
+                        // 状态变化时通知，或者每 60 秒强制同步一次（确保 SW 状态一致）
+                        if (prevNextJSStatus !== nextjsResult || timeSinceLastNotification > 60000) {
+                            console.log(`[NetworkStatus] Next.js 服务器状态: ${prevNextJSStatus} -> ${nextjsResult}，通知 SW`)
                             navigator.serviceWorker.controller.postMessage({
                                 type: 'NEXTJS_SERVER_STATUS_UPDATE',
                                 isOnline: nextjsResult,
-                                timestamp: Date.now()
+                                timestamp: now
                             })
+                            lastSWNotificationTimeRef.current = now
                         }
                     }
                 }
@@ -512,6 +545,31 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
         <NetworkStatusContext.Provider value={contextValue}>
             <NetworkStatusActionsContext.Provider value={actions}>
                 {children}
+                {/* 版本升级提示弹窗 - 屏幕居中显示 */}
+                <Dialog open={showVersionDialog} onOpenChange={setShowVersionDialog}>
+                    <DialogContent className="sm:max-w-lg border-red-500 border-2" onPointerDownOutside={(e) => e.preventDefault()}>
+                        <DialogHeader className="text-center">
+                            <DialogTitle className="flex flex-col items-center justify-center gap-4">
+                                <AlertTriangle className="h-16 w-16 text-red-600" />
+                                <span className="text-3xl font-bold text-red-600">前端版本升级</span>
+                            </DialogTitle>
+                            <DialogDescription className="text-center space-y-2 pt-4">
+                                <p className="text-lg text-red-500">建议访问 /pwa 离线能力预备页面重新预缓存</p>
+                                <p className="text-lg text-red-500">确保报告离线编制功能正常</p>
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex justify-center sm:justify-center pt-4">
+                            <Button
+                                onClick={() => {
+                                    window.location.href = pwaPathState
+                                }}
+                                className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg"
+                            >
+                                前往 /pwa 页面
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </NetworkStatusActionsContext.Provider>
         </NetworkStatusContext.Provider>
     )

@@ -103,7 +103,7 @@ export const CertMemo =
         setContent(storage?.['证书说明'] ?? "")
     }
 
-    const [render] = useFrameEditorBar({ rep, values: { ['证书说明']: content }, onReset })
+    const [render] = useFrameEditorBar({ rep, transformValues: () => ({ ['证书说明']: content }), onReset })
 
     const isAnyEditing = editingIndex !== null || isAddingNew || isInserting
 

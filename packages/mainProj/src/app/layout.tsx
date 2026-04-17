@@ -15,6 +15,7 @@ import { NetworkStatusProvider } from "@/contexts/network-status-context"
 import { SessionSync } from "@/components/session-sync"
 import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
 import { SerwistMessageHandler } from "@/components/serwist-message-handler"
+import { PendingReportsGuard } from "@/components/pending-reports-guard"
 import { withBasePath } from '@/lib/tool'
 import { SerwistProvider } from "../lib/serwist/client"
 import { OfflineSessionPatcher } from "@/components/offline-session-patcher"
@@ -24,14 +25,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
-const APP_NAME = "报告编制系统"
+const APP_NAME = "福建省特种设备检验研究院报告编制系统"
 const APP_DESCRIPTION = "可支持离线状态编制检验报告和原始记录"
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
   title: {
     default: APP_NAME,
-    template: "%s - 报告编制系统",
+    template: "%s-福建省特种设备检验研究院报告编制系统",
   },
   description: APP_DESCRIPTION,
   manifest: withBasePath('/manifest.json'),
@@ -72,7 +73,7 @@ export default async function RootLayout({
             `}
       >
         {enablePWA ? (
-          <SerwistProvider swUrl={`${swPathBase}/serwist/sw.js`}>
+          <SerwistProvider cacheOnNavigation={false} swUrl={`${swPathBase}/serwist/sw.js`}>
             <ThemeProvider>
               <PrintSettingsProvider>
                 <TooltipProvider>
@@ -84,9 +85,10 @@ export default async function RootLayout({
                         <SessionSync />
                         <TokenRefreshOverlay />
                         <OfflineStatusIndicator />
+                        <PendingReportsGuard />
                         {children}
                         <PWAInstaller />
-                        <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
+                        <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
                       </GraphQLProvider>
                     </NetworkStatusProvider>
                   </SessionProvider>
@@ -104,8 +106,9 @@ export default async function RootLayout({
                     <GraphQLProvider>
                       <SessionSync />
                       <TokenRefreshOverlay />
+                      <PendingReportsGuard />
                       {children}
-                      <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} />
+                      <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
                     </GraphQLProvider>
                   </NetworkStatusProvider>
                 </SessionProvider>

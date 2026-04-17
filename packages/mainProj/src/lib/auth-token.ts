@@ -14,11 +14,9 @@ export async function getAuthToken() {
               console.log("[getAuthToken]获得token1", authData.accessToken)
               return authData.accessToken
             }
-            toast.error("登录已失效", {
-                description: "您的登录凭证已过期，请重新登录",
-                duration: 5000,
-            })
-            window.location.href = withBasePath("/login")
+            if (window.confirm("登录已失效，您的登录凭证已过期，是否跳转到登录页面重新登录？")) {
+                window.location.href = withBasePath("/login")
+            }
             return null
           }
         } catch (error) {

@@ -18,6 +18,20 @@ export function PWAInstaller() {
     const [isInstalled, setIsInstalled] = useState(false)
     const [platform, setPlatform] = useState<"ios" | "android" | "desktop" | "unknown">("unknown")
     const [browser, setBrowser] = useState<"chrome" | "safari" | "firefox" | "edge" | "other">("other")
+    const [isPrintMode, setIsPrintMode] = useState(false)
+
+    // 检测打印模式
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('print')
+        setIsPrintMode(mediaQuery.matches)
+
+        const handleChange = (e: MediaQueryListEvent) => {
+            setIsPrintMode(e.matches)
+        }
+
+        mediaQuery.addEventListener('change', handleChange)
+        return () => mediaQuery.removeEventListener('change', handleChange)
+    }, [])
 
     // 检查是否在30天内点击过"稍后"
     const checkInstallPromptDelay = () => {
@@ -151,6 +165,11 @@ export function PWAInstaller() {
     }
 
     if (isInstalled) {
+        return null
+    }
+
+    // 打印模式下不显示安装提示
+    if (isPrintMode) {
         return null
     }
 

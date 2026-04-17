@@ -39,7 +39,7 @@ export const ReportView = ({ rep }: ReportEntryProps) => {
             <Component source={storage} rep={rep} />
             <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
                          pdf_job={pdf_job} />
-            <div id="PTAIL" />
+            <div id="PTAIL" className="print:hidden" />
         </>
     )
 }

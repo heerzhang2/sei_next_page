@@ -63,7 +63,9 @@ const authenticateOffline = async (username: string, password: string, deviceId:
     }
 }
 
-const storeOfflineAuth = (authData: any) => {
+const AUTH_USERNAME_KEY = "authUsername"
+
+const storeOfflineAuth = (authData: any, username: string) => {
     if (typeof window === "undefined") return
     // 存储到localStorage - 只存储accessToken和user信息，不存储refreshToken
     localStorage.setItem(
@@ -76,6 +78,10 @@ const storeOfflineAuth = (authData: any) => {
         }),
     )
 
+    // 保存用户名到 sessionStorage，用于离线时显示
+    sessionStorage.setItem(AUTH_USERNAME_KEY, username)
+    console.log("[OfflineLoginForm] 保存用户名到 sessionStorage:", username)
+
     // 触发自定义事件通知其他组件
     window.dispatchEvent(
         new CustomEvent("offline:login", {
@@ -85,7 +91,7 @@ const storeOfflineAuth = (authData: any) => {
 }
 
 export function OfflineLoginForm() {
-    const [email, setEmail] = useState("")
+    const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
@@ -101,8 +107,8 @@ export function OfflineLoginForm() {
             if (!networkStatus.isGraphQLBackendReachable) {
                 throw new Error("无法连接到认证服务器，请检查网络连接")
             }
-            const authData = await authenticateOffline(email, password, deviceFingerprint)
-            storeOfflineAuth(authData)
+            const authData = await authenticateOffline(username, password, deviceFingerprint)
+            storeOfflineAuth(authData, username)
             try {
                 //若是在Nextjs服务器离线情况下：这实际无效，是没法真正修改session的accessToken。
                 await update({
@@ -126,6 +132,10 @@ export function OfflineLoginForm() {
                 }),
             )
             console.log("[OfflineLoginForm] 已触发token:refreshed事件，refreshToken存储在cookie中")
+
+            // 清空上次查询时间，确保登录后立刻执行权限查询
+            sessionStorage.removeItem("lastAuthQueryTime")
+            console.log("[OfflineLoginForm] 已清空 lastAuthQueryTime")
 
             toast.success("Next离线情形下登录,与后端服务器连接", {
                 duration: 2000,
@@ -155,12 +165,12 @@ export function OfflineLoginForm() {
                     <div className="grid gap-2">
                         <Label htmlFor="email">用户名/邮箱</Label>
                         <Input
-                            id="email"
+                            id="username"
                             type="text"
-                            placeholder="输入用户名或邮箱"
+                            placeholder="输入用户名"
                             required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2 mt-4">

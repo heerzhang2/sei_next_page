@@ -125,7 +125,7 @@ export const ReportView = ({ rep, printMode }: ReportEntryProps) => {
                     />
                 </>
             )}
-            <div id="PTAIL" />
+            <div id="PTAIL" className="print:hidden" />
         </>
     )
 }
@@ -152,7 +152,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
         const Component = config.component
         return (
             <SingeSubRep rep={rep} subrid={subrid!} title={config.title?? config.catKey}>
-                <Component rep={rep} subrid={subrid} />
+                <Component rep={rep} subrid={subrid} printMode={printMode}/>
             </SingeSubRep>
         )
     }
@@ -190,7 +190,7 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({
                 {注意事项IndPl({ rep,
                     comply: '书为依据《压力管道安全技术监察规程——工业管道》（TSG D0001-2009）、《压力管道定期检验规则——工业管道》（TSG D7005-2018）制定，适用于工业管道定期检验报告的结论报告，检验结论仅代表该设备在检验时的安全状况'
                 })}
-                <DirectoryPagePress orc={orc} rep={rep} nApxc suffix/>
+                <DirectoryPagePress orc={orc} rep={rep} nApxc suffix />
 
                 <ConclusionVw orc={orc} rep={rep} config1={config设备上} config2={config设备下}/>
                 {检验核准WaterJj({ orc, rep, jyt: "编制" })}

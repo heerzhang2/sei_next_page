@@ -9,9 +9,8 @@ import {useParams} from "next/navigation";
 import Skeleton from "@/component/rep/skeleton";
 import Sidebar from "@/component/rep/sidebar";
 import {Loader2} from "lucide-react";
-import {ReportView, useCatalog} from "@/report/industrial/Periodical/indPipelineR1";
 
-//变身 公用组件：
+//报告编辑器顶层的公用组件：
 export default function ReportLayout({
   children,repPanel,items
 }: Readonly<{

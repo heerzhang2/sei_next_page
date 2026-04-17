@@ -19,6 +19,7 @@ import { z } from "zod"
 import type { UseFormReturn } from "react-hook-form"
 import { useFormTableInit } from "@/report/hook/useFieldArrays"
 import {useSearchParams} from "next/navigation";
+import { generateUniqueId } from "@/lib/tool"
 
 /**壁厚测定报告
  *这一代：@不再用import(`./components/${path}`))动态导入的思路： @还是走正规的静态导入：编译时刻已经确定了文件名，不再依赖参数拼凑导入文件名了。构建时确定依赖，优化更充分，性能好点。
@@ -41,6 +42,17 @@ export const ThickMsVw = ({
     const renderUpper = usePrefixDataTable({ config: config壁厚测仪, orc, rep, slash: true })
     const apds = `${subrid ? "&subrid=" + subrid : ""}`
     const apdr = `${redId !== undefined ? "&redId=" + redId : ""}`
+
+    // 为每个图片生成唯一 ID
+    const imageIds = React.useMemo(() => {
+        if (!orc?._FILE_S部位?.length) return {}
+        const ids: Record<number, string> = {}
+        orc._FILE_S部位.forEach((_: any, i: number) => {
+            ids[i] = generateUniqueId("FxDiagram_pf", subrid, redId) + `_${i}`;
+        })
+        return ids
+    }, [orc._FILE_S部位, redId, subrid])
+    
     //{title}这里不加上id； id需上一层的div统一做添加的。
     const render=()=><>
         <FlexibleTable columnWidths={ ["6%", "4%", "45%", "6%", "4%", "%"] } className="text-sm border-collapse">
@@ -95,7 +107,7 @@ export const ThickMsVw = ({
                 </TableRow>
                 <TableRow id={'TkmsDiagram_'+redId}  className="border border-gray-700">
                     <TableCell colSpan={7} className="border border-gray-700">
-                        <RepLink ori rep={rep} tag={"TkmsDiagram"} subrid={subrid} redId={redId}>
+                        <RepLink ori rep={rep} tag={"TkmsDiagram"} subrid={subrid} redId={redId} printMode={printMode}>
                             <div className="text-sm">测厚点位置示图：&nbsp;
                                 {orc?.点图说明 && <span className="whitespace-pre-wrap">{orc.点图说明 || "／"}</span>}
                                 {!(orc?._FILE_S部位?.length > 0) && !orc?.点图说明 && (
@@ -104,12 +116,13 @@ export const ThickMsVw = ({
                             </div>
                         </RepLink>
                         {orc?._FILE_S部位?.map(({ name, url }: any, i: number) => {
+                            const uniqueId = imageIds[i]
                             return (
-                                <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
+                                <div key={i} id={uniqueId} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
                                     {i > 0 && <hr />}
-                                    <JumpTab
+                                    <JumpTab printMode={printMode}
                                         key={i}
-                                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsDiagram?original=1${apds}${apdr}#FxDiagram_pf${i}`}
+                                        href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsDiagram?original=1${apds}${apdr}#${uniqueId}`}
                                     >
                                         <div className="flex justify-around items-center my-0.5">
                                             {url && (
@@ -133,7 +146,7 @@ export const ThickMsVw = ({
         </FlexibleTable>
         <FlexibleTable id={'TkmsMeasurement_'+redId} columnWidths={["8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "7.96%", "8.7%", "%",]}>
             <TableHeader>
-                <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId}>
+                <RepLink ori rep={rep} tag={"TkmsMeasurement"} subrid={subrid} redId={redId} hash={'TkmsMeasurement_'+redId}>
                     <TableRow className="text-sm">
                         <CCell colSpan={12}>测 厚 记 录 （ 测点厚度单位：㎜）</CCell>
                     </TableRow>
@@ -158,7 +171,7 @@ export const ThickMsVw = ({
                     </RepLink>
                 ) : (
                     (orc.测厚表 || []).map(({n1, v1,n2, v2,n3, v3,n4, v4,n5, v5,n6, v6}: any, i: number) => (
-                        <JumpTab key={i}  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsMeasurement?original=1${apds}${apdr}&from=${i}#TkmsMeasurement`}>
+                        <JumpTab key={i}  href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/TkmsMeasurement?original=1${apds}${apdr}&from=${i}#TkmsMeasurement_${redId}`}>
                             <TableRow >
                                 <CCell className="break-all text-sm">{n1 || "／"}</CCell>
                                 <CCell className="break-all text-sm">{v1 || "／"}</CCell>
@@ -213,7 +226,7 @@ export const ThickMsVw = ({
                 <span className="block text-center text-xs">FJB/JK 1050-0-2022</span>
                 <div className="flex justify-between">
                     &nbsp;
-                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
+                    <span className="text-sm @3xl:mr-4">报告编号：{rep?.isp.no}</span>
                 </div>
             </>
         }
@@ -407,7 +420,7 @@ export const TkmsConclusion = ({ rep, children, show = false, label, subrid, red
     const onReset = () => {
         setEditForm({ ...oldValue })
     }
-    const [render] = useFrameEditorBar({ rep, values: { ...editForm }, onReset, subrid, redId, modType })
+    const [render] = useFrameEditorBar({ rep, transformValues: () => ({ ...editForm }), onReset, subrid, redId, modType })
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
             <div className="w-full m-auto">

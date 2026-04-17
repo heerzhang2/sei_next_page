@@ -28,6 +28,20 @@ export const JumpTab: React.FunctionComponent<JumpTabProps> = (props: JumpTabPro
         (event: any) => {
             event.preventDefault()
             event.stopPropagation() // 不想向祖辈组件传递点击事件。
+            
+            // 设置 SPA 导航标记，用于子报告组件区分页面刷新和 SPA 导航
+            // 从 href 中提取 repId 和 subrid
+            const href = props.href
+            const repIdMatch = href.match(/\/rep\/([^\/]+)/)
+            const subridMatch = href.match(/[?&]subrid=([^&]+)/)
+            if (repIdMatch) {
+                const repId = repIdMatch[1]
+                const subrid = subridMatch ? subridMatch[1] : 'main'
+                const navKey = `spa_nav_${repId}_${subrid}`
+                sessionStorage.setItem(navKey, 'true')
+                console.log(`[JumpTab] 设置 SPA 导航标记: ${navKey}`)
+            }
+            
             //加上scroll: false 杜绝报警 auto-scroll behavior due to `position: sticky` or `position: fixed` on element
             router.push(props.href, { scroll: props.scroll===undefined? true : props.scroll })
             if(setActiveTab!==null){

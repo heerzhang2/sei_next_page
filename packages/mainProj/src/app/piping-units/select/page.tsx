@@ -10,6 +10,7 @@ import { SelectedUnitsList } from "@/components/piping-unit/selected-units-list"
 import { DisplayModeSelector } from "@/components/piping-unit/display-mode-selector"
 import { usePipingUnitSelection } from "@/hooks/use-piping-unit-selection"
 
+//这个路由： 已经淘汰不用了
 export default function PipingUnitSelectPage() {
     const router = useRouter()
     const searchParams = useSearchParams()

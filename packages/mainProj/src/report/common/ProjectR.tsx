@@ -42,6 +42,11 @@ interface ProjectItem {
     op?: string
     oa?: string
 }
+
+// 目录配置类型
+interface DirectoryConfig {
+    Projects: ProjectItem[]
+}
 interface ProjectRProps extends InternalItemProps {
     defaultProj: ProjectItem[]
     nRec?: boolean
@@ -49,6 +54,7 @@ interface ProjectRProps extends InternalItemProps {
 }
 /*
 这里表格布局类似于手机上原生的APP用的图片Card方块布局有点类似的，都是无法通用的做法，只能为特定表格做特殊布局，Grid配置也不通用，屏幕适应性差。
+目录打印居中：不超过1页纸张的内容居中显示。
 * */
 export const ProjectR = ({ children, show, defaultProj: defPrj, label, rep, nApx, nRec }: ProjectRProps) => {
     const searchParams = useSearchParams()
@@ -289,7 +295,7 @@ export const ProjectR = ({ children, show, defaultProj: defPrj, label, rep, nApx
     }
     const [render] = useFrameEditorBar({
         rep,
-        transformValues: () => ({ Projects: projects }),
+        transformValues: () => ({ Projects: projects,  }),
         onReset,
         onVerify,
     });

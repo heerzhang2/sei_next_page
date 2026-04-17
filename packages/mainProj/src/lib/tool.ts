@@ -11,3 +11,13 @@ export function withBasePath(path: string): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`
   return `${basePath}${normalizedPath}`
 }
+
+//生成唯一分项报告的 ID / hash的函数
+export const generateUniqueId = (prefix: string, subrid: string|undefined, redId: number|undefined): string => {
+    if(subrid) {
+      // 从 subrid 中提取中间部分与 redId 组合, 比如 HAAAAAAAAAMAAAAAAAAAAFJlcG9ydA
+      return `${prefix}${subrid.substring(6, 13)}_${redId}`;
+    }
+    return `${prefix}_${redId}`;
+}
+

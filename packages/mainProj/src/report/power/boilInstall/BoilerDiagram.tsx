@@ -5,7 +5,7 @@ import {Badge, Card, CardContent, CardFooter, CardHeader, CardTitle,Label,Textar
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import {InternalItemProps, RepLink} from "@/report/common/base";
 import {useStorage} from "@/report/StorageContext";
-import {useUppyUpload} from "@/report/hook/useUppyUpload";
+import {useOfflineUppyUpload} from "@/report/hook/useOfflineUppyUpload";
 import {PrintReserveLeast} from "@/components/print-reserve-least";
 import {FlexibleTable, TableBody, TableCell, TableRow} from "@/components/flexible-table";
 import {JumpTab} from "@/report/common/JumpTab";
@@ -48,15 +48,32 @@ export const BoilerDiagram =
         //_FILE_S简图 : 特例对待的！ 必须保证一致性同步未见系统的数据，避免丢失文件管理者。_FILE_S简图：提取单独，自动确认的。
         setEditForm(content)
     }
-    const onFinish = React.useCallback(async(upfile: any, del:boolean) => {
+    const onFinish = React.useCallback(async(upfile: any, newUpload: boolean) => {
         setStorage({...storage, '_FILE_S简图': upfile});
         !modified && setModified(true);
     }, [storage, modified,setStorage,setModified]);
-    const [uploadDom]=useUppyUpload({ eid:rep?.id!,
-        maxFile:5, onFinish, storeObj: storage?._FILE_S简图 ,liveDays:10, hash:"BoilerDiagram_pf"
+
+    const onSaveState = React.useCallback(async(key: string, fileCount: number, delCount: number) => {
+        if (!modified) setModified(true);
+    }, [modified, setModified]);
+
+    const [uploadDom]=useOfflineUppyUpload({
+        repId: rep?.id!,
+        hash: "BoilerDiagram_pf",
+        id: `BoilerDiagram_pf-${rep?.id}`,
+        storeObj: storage?._FILE_S简图,
+        maxFile: 5,
+        liveDays: 10,
+        business: "rep",
+        onFinish,
+        onSaveState,
     });
     //不是列表对象的编辑输入可以省略掉:不需要从editForm传递给setContent {某一个表行的记录对象再倒腾一次}。
-    const [render] = useFrameEditorBar({ rep, values: { ...editForm }, onReset })
+    const [render] = useFrameEditorBar({ 
+        rep, 
+        transformValues: () => ({ ...editForm }), 
+        onReset 
+    })
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
             <div className="w-full m-auto">
@@ -107,11 +124,12 @@ interface BoilerDiagramVwProps{
     orc: any;
     rep: any;
     title?: string;
-    children?: React.ReactNode
+    children?: React.ReactNode;
+    printMode?: boolean;
 }
 /**锅炉结构简图
  * */
-export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', children}: BoilerDiagramVwProps
+export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', children, printMode }: BoilerDiagramVwProps
 ) => {
     return (<>
         <PrintReserveLeast reserve="6rem"
@@ -119,14 +137,14 @@ export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', childr
                                <h2 id={"BoilerDiagram"} className="text-2xl text-center mt-4">{title}</h2>
                                <div className="flex justify-between">
                                    <span className="text-sm">工程名称：{orc?.工程名称}</span>
-                                   <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
+                                   <span className="text-sm @3xl:mr-4">报告编号：{rep?.isp.no}</span>
                                </div>
                            </>}>
             <FlexibleTable columnWidths={["62%", "%"]} className="text-sm">
                 <TableBody>
                     <TableRow className="border border-gray-700">
                         <TableCell colSpan={2} className="border border-gray-700">
-                            <RepLink ori rep={rep} tag={'BoilerDiagram'}>
+                            <RepLink ori rep={rep} tag={'BoilerDiagram'} printMode={printMode}>
                               <div>
                                 {orc.简图说明 &&
                                     <span className="text-sm whitespace-pre-wrap">
@@ -138,9 +156,9 @@ export const BoilerDiagramVw= ({ orc, rep, title='1.2锅炉结构简图', childr
                               </div>
                             </RepLink>
                             {orc?._FILE_S简图?.map(({name, url}: any, i: number) => {
-                                return <div key={i} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
+                                return <div key={i} id={`BoilerDiagram_pf${i}`} className="break-inside-avoid-page pb-[1px] pt-[1px] overflow-hidden">
                                     {i>0 && <hr/>}
-                                    <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/BoilerDiagram?#BoilerDiagram_pf${i}`}>
+                                    <JumpTab key={i} printMode={printMode} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/BoilerDiagram?#BoilerDiagram_pf${i}`}>
                                         <div className="flex justify-around items-center my-0.5">
                                             {url && (
                                                 <ImageComponent

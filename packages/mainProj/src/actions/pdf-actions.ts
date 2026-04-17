@@ -1,7 +1,6 @@
 "use server"
 
 import type { ConfigRoot, FileTransform } from "page2pdf_server/src"
-import { requireRole } from "@/lib/role-auth"
 
 // 服务器端的认证配置 backend 模式
 const PDF_SERVICE_URL = process.env.PDF_SERVICE_URL || "http://localhost:9389"
@@ -18,16 +17,20 @@ const headers = {
 这是在 nextjs 服务器当中才能运行的代码，就不会泄露api接口的密码信息给用户一侧的。
  * #但是：@这里return { success: true, data }必须通过网络传输的，有些局限性，不是任何数据都行的。而非本地同一台电脑系统当中的普通函数之间调用上下文中的情况允许返回传输任意的数据。
  * Server Action: 提取页面书签信息
+ * 
+ * 注意：权限验证已移至客户端，基于报告的校核人/检验员进行判定
  */
 export async function extractPageMarkAction(job: ConfigRoot<FileTransform>) {
-    // 角色验证
-    const { session, userRoles } = await requireRole(["JyUser"])
+    const startTime = Date.now()
+    const requestId = `pdf_${startTime}_${Math.random().toString(36).substr(2, 9)}`
 
-    if (!session?.user) {
-        return {
-            success: false,
-            error: "用户未登录",
-        }
+    // 审计日志：记录访问尝试（简化版，不再验证角色）
+    console.log(`[AUDIT][${requestId}] PDF书签提取请求 | 时间: ${new Date().toISOString()}`)
+
+    // 记录请求详情（脱敏）
+    const jobInfo = {
+        fileCount: job?.files?.length || 0,
+        fileNames: job?.files?.map((f: { name?: string }) => f?.name?.substring(0, 50)).filter(Boolean) || [],
     }
 
     try {
@@ -37,17 +40,58 @@ export async function extractPageMarkAction(job: ConfigRoot<FileTransform>) {
             body: JSON.stringify(job),
         })
 
+        const duration = Date.now() - startTime
+
         if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`)
+            console.error(`[AUDIT][${requestId}] PDF服务请求失败 | 状态码: ${res.status} | 耗时: ${duration}ms`)
+            
+            // 处理 401 未授权错误
+            if (res.status === 401) {
+                return {
+                    success: false,
+                    error: "用户未登录或登录已过期，请重新登录后再试",
+                    code: "UNAUTHORIZED",
+                }
+            }
+            
+            // 处理 403 禁止访问错误
+            if (res.status === 403) {
+                return {
+                    success: false,
+                    error: "您没有权限执行此操作，请联系管理员",
+                    code: "FORBIDDEN",
+                }
+            }
+            
+            // 处理 500+ 服务器错误
+            if (res.status >= 500) {
+                return {
+                    success: false,
+                    error: "PDF转换服务暂时不可用，请稍后重试",
+                    code: "SERVICE_UNAVAILABLE",
+                }
+            }
+            
+            return {
+                success: false,
+                error: `PDF服务请求失败 (HTTP ${res.status})，请稍后重试`,
+                code: `HTTP_${res.status}`,
+            }
         }
 
         const data = await res.json()
+        console.log(`[AUDIT][${requestId}] PDF书签提取成功 | 耗时: ${duration}ms`)
+
         return { success: true, data }
     } catch (error) {
-        console.error("Extract page mark failed:", error)
+        const duration = Date.now() - startTime
+        const errorMsg = error instanceof Error ? error.message : "Unknown error"
+        console.error(`[AUDIT][${requestId}] PDF书签提取异常 | 耗时: ${duration}ms | 错误: ${errorMsg}`)
+
         return {
             success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
+            error: "连接PDF转换服务异常，请检查前端服务器",
+            code: "NETWORK_ERROR",
         }
     }
 }

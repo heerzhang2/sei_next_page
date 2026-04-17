@@ -3,15 +3,26 @@
 import { useEffect } from "react"
 import { toast } from "sonner"
 import { withBasePath } from "@/lib/tool"
+import { useSearchParams } from "next/navigation"
 
 export function SerwistMessageHandler() {
+    const searchParams = useSearchParams()
+    const isPrintPage = "1" === searchParams?.get("print")
+    
     useEffect(() => {
         let errorHandled = false
         const handleSWactive = (details: any) => {
             if (errorHandled) return
+            
+            // 检查是否是打印页面，打印页面不显示此提示
+            if (isPrintPage) {
+                console.log("[Serwist] 打印页面，跳过服务激活提示")
+                return
+            }
+            
             errorHandled = true
             // 显示用户友好的错误信息
-            toast.error("服务激活加载中...请前往离线能力预备页面去更新", {
+            toast.error("离线工作线程激活了，加载中... 请到离线能力预备页面去预缓存", {
                 duration: 10000,
                 id: "chunk-error-global",
                 action: {
@@ -52,6 +63,14 @@ export function SerwistMessageHandler() {
                     type: "SW_active",
                     message: event.data.error
                 })
+            } else if (event.data?.type === 'CACHE_COMPLETE_NOTIFICATION') {
+                // 显示批量缓存完成通知
+                const { message, successCount, totalPages, totalResources } = event.data.payload;
+                toast.success(message, {
+                    duration: 120000,
+                    id: "cache-complete-notification",
+                    description: `成功缓存 ${successCount} 个页面，共 ${totalResources} 个资源`,
+                });
             }
         }
         // 注册所有事件监听器
@@ -65,6 +84,6 @@ export function SerwistMessageHandler() {
             // 组件卸载时关闭相关的 toast
             toast.dismiss("chunk-error-global");
         }
-    }, [])
+    }, [isPrintPage])
     return null
 }

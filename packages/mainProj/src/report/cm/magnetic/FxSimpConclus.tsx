@@ -52,7 +52,7 @@ export const FxSimpConclus =
     const updateFormField = (field: string, value: any) => {
         setEditForm((prev: any) => ({ ...prev, [field]: value }))
     }
-    const [render] = useFrameEditorBar({ rep, values: { ...editForm }, onReset, subrid, redId, modType })
+    const [render] = useFrameEditorBar({ rep, transformValues: () => ({ ...editForm }), onReset, subrid, redId, modType })
     return (
         <CollapsibleFormSection title={label!} defaultOpen={show}>
             <div className="w-full m-auto">

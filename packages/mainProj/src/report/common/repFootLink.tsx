@@ -19,8 +19,10 @@ import type React from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { useWindowSize } from "@/hooks/use-window-size"
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider"
+import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { RepLink } from "@/report/common/base"
-import { ExternalLink, FileText, Share2 } from "lucide-react"
+import { ExternalLink, FileText, Share2, RefreshCw } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 interface RepFootLinkProps {
     template?: string
@@ -57,7 +59,22 @@ export function RepFootLink({
     const { action } = useParams()
     const original = "1" === searchParams!.get("original")
     const { screenHeight, screenWidth } = useWindowSize()
+    const { isGraphQLBackendReachable, isNextJSServerReachable } = useNetworkStatusContext()
+    const { data: session } = useSession()
     const [isMutating, handleSubmit] = usePrintPdf(pdf_job)
+
+    // 判断当前用户是否有权限点击"后端转pdf"按钮
+    // 条件：报告状态为 SIGN 且当前用户是校核人
+    const canStartPdfFlow = useMemo(() => {
+        const reportSta = rep?.stm?.sta
+        const masterUsername = rep?.stm?.master?.username
+        const currentUsername = session?.user?.name
+        
+        const isSignStatus = reportSta === "SIGN"
+        const isMaster = masterUsername && currentUsername && masterUsername === currentUsername
+        
+        return isSignStatus && isMaster
+    }, [rep?.stm?.sta, rep?.stm?.master?.username, session?.user?.name])
     // Popover 状态
     const [popoverOpen, setPopoverOpen] = useState(false)
     // 输入框引用
@@ -213,6 +230,9 @@ export function RepFootLink({
                 })) as any
 
                 if (success && processInstanceKey) {
+                    // 保存流程实例ID到 localStorage
+                    localStorage.setItem('lastProcessInstanceKey', processInstanceKey)
+                    
                     toast.success(`申请PDF转换成功！保留期限：${displayText}`, {
                         description: (
                             <>
@@ -396,6 +416,25 @@ export function RepFootLink({
                                     流转(流程)
                                 </button>
 
+                                <button
+                                    onClick={() => {
+                                        // 触发全局刷新事件
+                                        window.dispatchEvent(new CustomEvent('refresh-report-data'));
+                                        toast.success("正在刷新报告数据...", {
+                                            duration: 2000,
+                                        });
+                                    }}
+                                    disabled={!isGraphQLBackendReachable}
+                                    className={cn(
+                                        "text-green-600 hover:text-green-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200 flex items-center justify-center gap-1",
+                                        !isGraphQLBackendReachable && "opacity-50 cursor-not-allowed"
+                                    )}
+                                    title={isGraphQLBackendReachable ? "从后端刷新报告数据" : "GraphQL 后端不可用，无法刷新"}
+                                >
+                                    <RefreshCw className="h-3 w-3" />
+                                    刷新数据
+                                </button>
+
                                 <Link
                                     href={"/"}
                                     className="text-blue-600 hover:text-blue-800 text-xs block px-2 py-1.5 rounded-md hover:bg-gray-50 text-center border border-gray-200"
@@ -434,6 +473,14 @@ export function RepFootLink({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => setPdfStatus("redo")}
+                                                disabled={!canStartPdfFlow || !isGraphQLBackendReachable || !isNextJSServerReachable}
+                                                title={
+                                                    !isGraphQLBackendReachable || !isNextJSServerReachable
+                                                        ? "需Java后端和Next.js服务器同时在线"
+                                                        : !canStartPdfFlow
+                                                            ? "仅在签字状态且您是校核人时可操作"
+                                                            : ""
+                                                }
                                                 className="w-full text-xs h-6"
                                             >
                                                 后端再转
@@ -451,11 +498,25 @@ export function RepFootLink({
                                                 <Button
                                                     variant="outline"
                                                     onClick={handlePdfFlow}
-                                                    disabled={isProcessing}
-                                                    className="w-full text-xs h-8 bg-transparent"
+                                                    disabled={isProcessing || !canStartPdfFlow || !isGraphQLBackendReachable || !isNextJSServerReachable}
+                                                    title={
+                                                        !isGraphQLBackendReachable || !isNextJSServerReachable 
+                                                            ? "需Java后端和Next.js服务器同时在线" 
+                                                            : !canStartPdfFlow 
+                                                                ? "仅在签字状态且您是校核人时可操作" 
+                                                                : ""
+                                                    }
+                                                    className="w-full text-xs h-auto min-h-8 py-1 bg-transparent whitespace-normal leading-tight"
                                                     size="sm"
                                                 >
-                                                    {isProcessing ? "发起申请中..." : "后端转pdf"}
+                                                    {isProcessing 
+                                                        ? "发起申请中..." 
+                                                        : !isGraphQLBackendReachable || !isNextJSServerReachable
+                                                            ? "需后端和服务器在线"
+                                                            : !canStartPdfFlow 
+                                                                ? "仅在签字状态且您是校核人时可操作" 
+                                                                : "后端转pdf"
+                                                    }
                                                 </Button>
                                             </div>
                                         </div>
@@ -485,6 +546,7 @@ export function RepFootLink({
             NumberInput,
             UnitSelect,
             screenWidth,
+            isGraphQLBackendReachable,
         ],
     )
 
@@ -549,7 +611,8 @@ export function RepFootLink({
                                 disabled={single}
                                 variant="outline"
                                 onClick={() => {
-                                    const newUrl = pathname + "?" + createQueryString("original", original ? "" : "1")
+                                    // 明确切换 original 参数：1=原始记录, 0=正式报告
+                                    const newUrl = pathname + "?" + createQueryString("original", original ? "0" : "1")
                                     handleNavigation(newUrl, true)
                                 }}
                                 className={cn("text-xs h-8", screenWidth! >= 768 ? "col-span-2 col-end-4" : "col-span-2")}

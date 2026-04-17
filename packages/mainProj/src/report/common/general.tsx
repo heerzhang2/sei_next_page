@@ -186,13 +186,13 @@ export const UnqualifiedIspTable = ({
                         {orc.unq?.map((bug: any, i: number) => {
                             const mapn = mapNoTag!.get(bug.no);
                             return <TableRow key={i}>
-                                        <JumpTab href={`${urlhead}/${mapn?.tag}`}>
+                                        <JumpTab href={`${urlhead}/${mapn?.tag}#ReCheck`}>
                                             <CCell className="px-0">{i + 1}</CCell>
                                             <CCell className="px-0">{`${mapn?.pre ?? ''}${mapn?.iclas ?? ''}${bug.no}`}</CCell>
                                             <CCell className="px-0">{bug.b}</CCell>
                                         </JumpTab>
                                         {/* 复检行 */}
-                                        <JumpTab href={`${urlhead}/ReCheck?from=${bug.no}`}>
+                                        <JumpTab href={`${urlhead}/ReCheck?from=${bug.no}#ReCheck`}>
                                             <CCell className="text-base px-0">{bug.rs}</CCell>
                                             <CCell className="px-0">{bug.d}</CCell>
                                         </JumpTab>
@@ -294,7 +294,7 @@ type JumpMeasureProps = {
 export const JumpMeasure = ({ children, rep, tag }: JumpMeasureProps) => {
     return (
        <JumpTab
-            href={`/rep/${rep.id}/${rep.modeltype}/${rep.modelversion}/${tag}?original=1#${tag}`}
+            href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/${tag}?original=1#${tag}`}
             className="no-underline hover:no-underline group relative cursor-pointer print:hidden"
         >
           <span className="text-h4 font-semibold transition-colors group-hover:text-primary-600 print:text-foreground print:hidden">

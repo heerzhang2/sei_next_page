@@ -8,15 +8,17 @@ import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button, CardFooter, Form } from "@/components/ui"
-import { useMutation } from "@urql/next"
+import { useMutation, useQuery } from "@urql/next"
 import { OriginalDataMutation } from "../common/base"
 import { toast } from "sonner"
 import { useStorage } from "@/report/StorageContext"
 import { useFieldArrays } from "./useFieldArrays"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Save, Pencil, ExternalLink } from "lucide-react"
 import type { Each_ZdSetting } from "@/report/hook/use-table-edit"
 import Link from "next/link"
+import { AuthCompQuery } from "@/component/header-wrapper"
+import { gql } from "@urql/core"
 
 // 在文件顶部添加设备ID获取函数
 const getDeviceId = (): string => {
@@ -194,6 +196,17 @@ export function useFormFramework({
     const abortControllerRef = useRef<AbortController | null>(null)
     const { storage, setStorage, setModified, modified } = useStorage()
 
+    // 查询用户角色权限
+    const [authResult] = useQuery({
+        query: AuthCompQuery,
+        variables: {},
+        requestPolicy: "cache-only",
+    })
+    const { authUser } = authResult?.data || {}
+    const hasJyUserRole = React.useMemo(() => {
+        return authUser?.authorities?.some((auth: any) => auth?.name === "JyUser")
+    }, [authUser])
+
     // 创建表单
     const form = useForm<z.infer<typeof schema>>({
         resolver: zodResolver(schema),
@@ -229,7 +242,7 @@ export function useFormFramework({
         }
         const deviceId = getDeviceId()
         if (!deviceId) {
-            toast.error("无法获取设备信息，请刷新页面重试")
+            toast.error("无法获取设备信息，请注销登录后重试")
             return
         }
         // 默认提交处理
@@ -271,8 +284,12 @@ export function useFormFramework({
             }
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败", {
-                    duration: 2000,
+                // 提取 GraphQL 错误信息
+                const errorMessage = result.error.graphQLErrors?.[0]?.message 
+                    || result.error.message 
+                    || "保存失败"
+                toast.error(errorMessage, {
+                    duration: 3000,
                 })
                 console.log("Oh no!", result.error)
             } else {
@@ -297,8 +314,9 @@ export function useFormFramework({
                     duration: 3000,
                 })
             } else {
-                toast.error("保存失败", {
-                    duration: 2000,
+                const errorMsg = error instanceof Error ? error.message : "保存失败"
+                toast.error(errorMsg, {
+                    duration: 3000,
                 })
             }
             console.log("Caught error!", error)
@@ -379,16 +397,20 @@ export function useFormFramework({
                             <Button type="button" variant="outline" onClick={() => form.reset()}>
                                 重置
                             </Button>
-                            <Button type="button" variant="outline" onClick={handleConfirm}>
-                                确认
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={(form.formState.isSubmitting && updateResult?.fetching) || !modified}
-                                title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
-                            >
-                                {form.formState.isSubmitting && updateResult?.fetching ? "保存到后端..." : "保存"}
-                            </Button>
+                            {hasJyUserRole && (
+                                <>
+                                    <Button type="button" variant="outline" onClick={handleConfirm}>
+                                        确认
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={(form.formState.isSubmitting && updateResult?.fetching) || !modified}
+                                        title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
+                                    >
+                                        {form.formState.isSubmitting && updateResult?.fetching ? "保存到后端..." : "保存"}
+                                    </Button>
+                                </>
+                            )}
                             <Button asChild variant="outline" type="button">
                                 <Link href={pendingReportsUrl} title="查看待发送报告列表">
                                     <ExternalLink className="w-4 h-4" />
@@ -464,6 +486,17 @@ export function useFrameEditorBar({
     const abortControllerRef = useRef<AbortController | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const { storage, setStorage, setModified, modified } = useStorage()
+
+    // 查询用户角色权限
+    const [authResult] = useQuery({
+        query: AuthCompQuery,
+        variables: {},
+        requestPolicy: "cache-only",
+    })
+    const { authUser } = authResult?.data || {}
+    const hasJyUserRole = React.useMemo(() => {
+        return authUser?.authorities?.some((auth: any) => auth?.name === "JyUser")
+    }, [authUser])
     // 当 storage 更新时（如从 IndexedDB 加载），values 会自动更新
     const values = React.useMemo(() => {
         if (transformValues) {
@@ -488,7 +521,7 @@ export function useFrameEditorBar({
         if (onVerify && !onVerify(values)) return
         const deviceId = getDeviceId()
         if (!deviceId) {
-            toast.error("无法获取设备信息，请刷新页面重试")
+            toast.error("无法获取设备信息，请注销登录后重试")
             return
         }
         // console.log("表单值:", JSON.stringify(values, null, 2), "需排除掉w")
@@ -525,8 +558,12 @@ export function useFrameEditorBar({
             )
             console.log("updateOriginalResult=应答=", result)
             if (result.error) {
-                toast.error("保存失败", {
-                    duration: 2000,
+                // 提取 GraphQL 错误信息
+                const errorMessage = result.error.graphQLErrors?.[0]?.message 
+                    || result.error.message 
+                    || "保存失败"
+                toast.error(errorMessage, {
+                    duration: 3000,
                 })
                 console.log("Oh no!", result.error)
             } else {
@@ -548,8 +585,9 @@ export function useFrameEditorBar({
                     duration: 3000,
                 })
             } else {
-                toast.error("保存失败", {
-                    duration: 2000,
+                const errorMsg = error instanceof Error ? error.message : "保存失败"
+                toast.error(errorMsg, {
+                    duration: 3000,
                 })
             }
             console.log("Caught error!", error)
@@ -614,18 +652,22 @@ export function useFrameEditorBar({
             <Button type="button" variant="outline" onClick={onReset}>
                 重置
             </Button>
-            <Button type="button" variant="outline" onClick={handleConfirm}>
-                确认
-            </Button>
-            <Button
-                type="submit"
-                disabled={(isSaving && updateResult?.fetching) || !modified}
-                onClick={handleSubmit}
-                title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
-            >
-                <Save className="w-4 h-4 mr-2" />
-                {isSaving && updateResult?.fetching ? "保存到后端..." : "保存"}
-            </Button>
+            {hasJyUserRole && (
+                <>
+                    <Button type="button" variant="outline" onClick={handleConfirm}>
+                        确认
+                    </Button>
+                    <Button
+                        type="submit"
+                        disabled={(isSaving && updateResult?.fetching) || !modified}
+                        onClick={handleSubmit}
+                        title={!modified ? "没有修改需要保存" : "保存当前报告到服务器"}
+                    >
+                        <Save className="w-4 h-4 mr-2" />
+                        {isSaving && updateResult?.fetching ? "保存到后端..." : "保存"}
+                    </Button>
+                </>
+            )}
             <Button asChild variant="outline" type="button">
                 <Link href={pendingReportsUrl} title="查看待发送报告列表">
                     <ExternalLink className="w-4 h-4" />

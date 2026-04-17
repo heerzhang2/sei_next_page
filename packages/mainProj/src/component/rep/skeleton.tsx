@@ -10,6 +10,7 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import { type ReportPanelType, useEditControlContext } from "@/component/rep/editControl-provider";
 import { cn } from "@/lib/utils";
 
+//报告编辑器的自适应屏幕装配框架
 export default function Skeleton({
                                      children,
                                      repPanel,
@@ -127,7 +128,7 @@ export default function Skeleton({
 
     // 移动端横屏布局 - 修复：确保报告标签下不显示编辑器内容
     const mobileLandscapeTabs = useMemo(() => (
-        <Tabs value={activeTab} className="w-full h-full flex flex-row">
+        <Tabs value={activeTab} orientation="vertical" className="w-full h-full flex! flex-row!">
             <div className="sticky top-0 h-full flex items-center pt-10">
                 <TabsList className="flex flex-col h-auto py-4 space-y-4 bg-muted/30 vertical-tabs-list border-r">
                     <TabsTrigger
@@ -169,8 +170,8 @@ export default function Skeleton({
                     </TabsTrigger>
                 </TabsList>
             </div>
-            <div className="flex-1 flex flex-col min-w-0">
-                <div className="h-full min-h-0"> {/* 关键：添加 min-h-0 */}
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+                <div className="h-full min-h-0 overflow-hidden"> {/* 关键：添加 min-h-0 和 overflow-hidden */}
                     {activeTab === "preview" ? (
                         // 报告标签 - 只显示报告内容
                         <div className="h-full overflow-auto @container">
@@ -178,7 +179,7 @@ export default function Skeleton({
                         </div>
                     ) : (
                         // 编辑器标签 - 只显示编辑器插槽
-                        <div className="mobile-editor-slot h-full" ref={mobileLandscapeSlotRef}>
+                        <div className="mobile-editor-slot h-full overflow-auto" ref={mobileLandscapeSlotRef}>
                             {/* 编辑器内容将动态插入这里 */}
                         </div>
                     )}
@@ -189,7 +190,7 @@ export default function Skeleton({
 
     // 移动端竖屏布局 - 修复滚动问题
     const mobilePortraitTabs = useMemo(() => (
-        <Tabs value={activeTab} className="flex flex-col h-full min-h-0"> {/* 关键：添加 min-h-0 */}
+        <Tabs value={activeTab} orientation="horizontal" className="flex! flex-col! h-full min-h-0"> {/* 关键：添加 min-h-0，使用 ! 覆盖默认样式 */}
             <div className="sticky top-0 bg-white border-b shadow-sm z-10 flex-shrink-0"> {/* 关键：添加 flex-shrink-0 */}
                 <div className="flex items-center justify-between p-0 pl-10">
                     <TabsList className="grid w-full grid-cols-2 h-6 pt-0 bg-transparent p-0 gap-1">

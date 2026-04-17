@@ -55,12 +55,15 @@ export async function POST(request: NextRequest) {
             const refreshData = result.data.refreshToken
             const newRefreshToken = refreshData.refreshToken
             //不同于：java后端在nextjs服务器离线模式下也有做个类似的 refresh_token cookie的。
+            // 使用环境变量动态配置 path，确保与部署的 basePath 一致
+            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
+            const refreshTokenPath = `${basePath}/api/refresh-token`
             cookieStore.set("refreshToken", newRefreshToken, {
                 httpOnly: true,
                 secure: true,
                 sameSite: "lax",
                 maxAge: 60 * 60 * 24 * 60,
-                path: "/api/refresh-token",
+                path: refreshTokenPath,
             })
             const sessionUpdateStartTime = Date.now()
             if (session) {

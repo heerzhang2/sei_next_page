@@ -21,7 +21,7 @@ import {config设备概况, config证书概要} from "@/report/power/boilInstall
 
 /**原始记录 模板缺失，可能是*.doc补充的附件。
 * */
-export const ReportView = ({ rep }: ReportEntryProps) => {
+export const ReportView = ({ rep, printMode }: ReportEntryProps) => {
     const { storage } = useStorage()
     const Component = OfficialReport
     const [mapFxian]=useItemsMapPressure({projects: storage.Projects});
@@ -32,15 +32,15 @@ export const ReportView = ({ rep }: ReportEntryProps) => {
             <div id="PHEAD" />
             <RepHeadLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep} single/>
             <RepTitleUpdate code={storage?.eqpcod} />
-            <Component source={storage} rep={rep} mapFxian={mapFxian}/>
+            <Component source={storage} rep={rep} mapFxian={mapFxian} printMode={printMode}/>
             <RepFootLink template={rep?.modeltype} verId={rep?.modelversion} repId={rep?.id} rep={rep}
                          pdf_job={pdf_job} single/>
-            <div id="PTAIL" />
+            <div id="PTAIL" className="print:hidden" />
         </>
     )
 }
 
-const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,mapFxian}) => {
+const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc, rep,mapFxian,printMode}) => {
     return (
         <>
             <div className="not-print:my-4">
@@ -67,9 +67,9 @@ const OfficialReport: React.FunctionComponent<ReportViewFxProps> = ({source: orc
                 <ConclusionVw orc={orc} rep={rep} config={config设备概况}/>
                 {检验核准WaterJj({orc, rep, jyt:'编制'})}
 
-                {mapFxian.get('锅炉简图')?.do && <BoilerDiagramVw orc={orc} rep={rep}/>}
+                {mapFxian.get('锅炉简图')?.do && <BoilerDiagramVw orc={orc} rep={rep} printMode={printMode}/>}
                 {mapFxian.get('检验过程概述')?.do &&
-                    <ExplanatoryVw orc={orc} rep={rep} title='1.3锅炉安装施工过程概述' />
+                    <ExplanatoryVw orc={orc} rep={rep} printMode={printMode} title='1.3锅炉安装施工过程概述' />
                 }
                 {/*可能有很多的记录页，但还没有看到模板*/}
 

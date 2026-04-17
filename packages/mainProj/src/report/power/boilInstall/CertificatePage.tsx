@@ -25,7 +25,7 @@ export const CertificatePage = ({ orc, rep, children,config }: CertificatePagePr
                     <div>
                         <div className="flex justify-between">
                             &nbsp;
-                            <span className="flex flex-row-reverse mr-8 text-base">证书编号：{rep.isp?.no}</span>
+                            <span className="flex flex-row-reverse mr-8 text-base">证书编号：{rep?.isp?.no}</span>
                         </div>
                         <FlexibleTable  columnWidths={["9.9%","6.8%","37%","12.1%","4%","%"]} className="text-sm border-collapse">
                             <TableBody>

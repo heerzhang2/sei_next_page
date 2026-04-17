@@ -26,10 +26,13 @@ export interface MeasureCallbackReturn {
      * 返回[boolean, 表示是否<tr>整体替代的。
      * */
     view?: () =>[boolean, React.ReactNode];
-    /* 返回[boolean, 表示是否替代默认编辑项的生成；若=false就不会替换掉通常的项目编辑区
+    /**编辑器的回调：可自定义录入字段；返回数组第一个项目boolean：正常的editRp=false，表示不替换默认的编辑器。
+        表示是否替代默认编辑项的生成；若=false就不会替换掉通常的项目编辑区
+      @returns [boolean, React.ReactNode] - 第一个元素表示是否替换默认编辑器，第二个元素是自定义的编辑器内容
     * */
     edit?: (form: UseFormReturn<any, any, any>) =>[boolean, React.ReactNode];
 }
+
 /**观测数据及测量结果记录：游乐报告多了一个备忘列。
  * EachObserveConfig[]才是一个项目编号的，可能有多个小项目分行的。
  * 来源 EachMeasureCritConfig
@@ -76,7 +79,10 @@ export interface EachObserveConfig {
     check?: string;
     //同步检验项目大列表的检验结果字段，配合check才有的，sync=共享存储字段名。
     sync?: string;
-    //回调配置对象：没有类型定义硬约束，看实际的用法。 回调扩展支持， names: [{n:'磨损径',t:'a',l:4}], 不再仅仅是字符串名字了。
+    /**回调配置对象：没有类型定义硬约束，看实际的用法。 回调扩展支持， names: [{n:'磨损径',t:'a',l:4}], 不再仅仅是字符串名字了。
+     * @param orc 当前行的观测数据源对象，
+     * @param parOrc 父级项目的观测数据源对象，配合使用的。比如有些特殊字段需要根据父级项目的观测数据来决定的。
+     * */
     cbo?: (orc:any,parOrc?:any)=>MeasureCallbackReturn;
 }
 
@@ -279,9 +285,9 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                 }
                 //单一个序号的多个小行结束：一个序号对应多个内部小行的，多行就是多个 x: item多个的,可序号都是同一个的。htmlNodes对应同一序号全部几行
                 //隐藏的判定结论行是可能对应多个序号区域的。  className="grid grid-cols-1 @5xl:grid-cols-2 gap-4 text-center"
-                if(checkLine) return <React.Fragment key={i}>
+                if(checkLine) return <div key={i} id={"checkLine"+i} className="mb-4">
                                 {htmlNodes}
-                            </React.Fragment>;
+                            </div>;
                 else{
                     const nClass=htmlNodes.length<=1? "col-span-2 text-center" : "";
                     return <Card key={i} className="py-1">
@@ -291,7 +297,7 @@ export function useObserveEdLine(config: EachObserveConfig[][],
                     </Card>;
                 }
             });
-            //itemsRender类似这样的[ 序号1 , 隐藏判定结论区 ,  序号2区域的, ..]
+            //itemsRender类似这样的[ 序号1 , 隐藏判定结论区(可能跨越多行/可能对应多个序号区域的) ,  独立序号2区域的, ..]
             return (
                 <>
                     {itemsRender}

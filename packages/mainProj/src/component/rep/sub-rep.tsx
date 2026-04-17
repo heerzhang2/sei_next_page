@@ -27,7 +27,7 @@ export function SingeSubRep({
     const subrepidx = React.useMemo(() => {
         const flsReps = rep?.isp?.reps?.edges?.filter(({ node: srep }: any) => {
             return srep?.modeltype === modType
-        })
+        }) ?? []
         const ifind = findNodeIndex(flsReps, subrid)
         return ifind ?? 0
     }, [subrid, modType, rep])

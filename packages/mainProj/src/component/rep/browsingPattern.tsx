@@ -9,7 +9,7 @@ interface ReportProps {
     }[],
     children: React.ReactNode
 }
-/**浏览形态的报告，不带编辑器的
+/**浏览形态的报告，不带编辑器的，没有两半半边内容组合的；
 * */
 export default function BrowsingPattern({ items,children }: ReportProps) {
   // let photos = Array.from({ length: 6 }, (_, i) => i + 1);

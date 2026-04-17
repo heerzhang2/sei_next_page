@@ -6,12 +6,11 @@ import SwrConfigClient from "@/contexts/SwrConfigClient";
 import { ToastContainer, toast } from 'react-toastify';
 import { SessionProvider } from 'next-auth/react';
 import {connection} from "next/server";
-import {MainContent} from "@/app/(auth)/user/MainContent";
 import GlobalState from "@/contexts/GlobalState";
 // import FootBar from "@/component/footbar";
 
 export const metadata: Metadata = {
-  title: "Relay Streaming SSR ✨",
+  title: "✨用户",
 };
 
 // const FootBar = lazy(() => import("@/component/footbar"));
@@ -26,12 +25,7 @@ export default async function SPALayout({children}: { children: ReactNode }) {
         <>
             <GlobalState>
                 <SwrConfigClient>
-
                     {children}
-
-                    <Suspense fallback={<div className="text-yellow-500">Loading56data...</div>}>
-                        <MainContent/>
-                    </Suspense>
                 </SwrConfigClient>
             </GlobalState>
             <ToastContainer/>

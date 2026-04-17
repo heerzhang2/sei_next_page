@@ -119,6 +119,19 @@ export default function SignInForm() {
                     }),
                 )
                 console.log("[SignInForm] 已触发token:refreshed事件通知新token")
+
+                // 设置强制刷新标志，确保跳转到首页后 HeaderWrapper 能获取最新用户信息
+                sessionStorage.setItem("authForceRefresh", "true")
+                console.log("[SignInForm] 已设置 authForceRefresh 标志")
+
+                // 清空上次查询时间，确保登录后立刻执行权限查询
+                sessionStorage.removeItem("lastAuthQueryTime")
+                console.log("[SignInForm] 已清空 lastAuthQueryTime")
+
+                // 触发登录成功事件，通知 HeaderWrapper 刷新用户信息
+                window.dispatchEvent(new CustomEvent("user:login"))
+                console.log("[SignInForm] 已触发user:login事件")
+
                 router.push(callbackUrl)
                 setHasJustLoggedIn(false)
                 setIsPending(false)
@@ -268,18 +281,8 @@ export default function SignInForm() {
                             className="text-blue-600 hover:underline cursor-pointer"
                             onClick={() => window.location.href = '/report/'}
                         >
-                            首页
+                            返回首页
                         </span>
-                    </div>
-                    <div className="mt-4">
-                        <Link href="/user" className="text-blue-600 hover:underline">
-                            用户
-                        </Link>
-                    </div>
-                    <div className="mt-4">
-                        <Link href="/profile" className="text-blue-600 hover:underline">
-                            ⬅ 用户信息
-                        </Link>
                     </div>
                 </div>
             </div>

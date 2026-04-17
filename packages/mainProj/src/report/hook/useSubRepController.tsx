@@ -74,7 +74,7 @@ export function useSubRepController(
         if (subrid) {
             const flsReps = rep?.isp?.reps?.edges?.filter(({ node: srep }: any) => {
                 return srep?.modeltype === modelkey
-            })
+            }) ?? []
             const ifind = findNodeIndex(flsReps, subrid)
             return ifind ?? undefined
         } else return 0 //本地的分项不管有没有id都要加前缀1； localIdx?.length>0 ? 0: undefined;

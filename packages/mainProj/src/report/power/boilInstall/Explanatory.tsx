@@ -197,7 +197,11 @@ export const Explanatory =
         setProjects(storage?.[stname] ?? [])
     }
 
-    const [render] = useFrameEditorBar({ rep, values: { [stname]: projects }, onReset })
+    const [render] = useFrameEditorBar({
+        rep,
+        transformValues: () => ({ [stname]: projects }),
+        onReset
+    })
 
     const isAnyEditing = editingIndex !== null || isAddingNew || isInserting
 
@@ -301,13 +305,14 @@ export interface ExplanatoryVwProps{
     desc?: string;
     hash?: string;
     stname?: string;
+    printMode?: boolean;
 }
 /**最简单的办法 :空白 文字
  * FootMenRowIspCheck 要求2列表格；
  *框架引进的useMediaPrint(true,true)只能确保hx+div 不会被断开打印纸张页的，但是这里是三个元素 h2+div+table没法子确保的？
  *因为长文本 string 改成数组类型 string[]的。可能报错 _orc_stname1.map is not a function；
  * */
-export const ExplanatoryVw= ({ orc, rep, title,desc,hash,stname='长文字页'}: ExplanatoryVwProps
+export const ExplanatoryVw= ({ orc, rep, title,desc,hash,stname='长文字页', printMode }: ExplanatoryVwProps
 ) => {
     return (<>
         <PrintReserveLeast reserve="6rem"
@@ -315,7 +320,7 @@ export const ExplanatoryVw= ({ orc, rep, title,desc,hash,stname='长文字页'}:
                       <h2 id={hash ?? "Explanatory"} className="text-2xl text-center mt-4">{title}</h2>
                       <div className="flex justify-between">
                            <span className="text-sm">工程名称：{orc?.工程名称}</span>
-                           <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
+                           <span className="text-sm @3xl:mr-4">报告编号：{rep?.isp.no}</span>
                       </div>
                    </>}>
             <FlexibleTable columnWidths={["62%", "%"]} className="text-sm">
@@ -323,14 +328,14 @@ export const ExplanatoryVw= ({ orc, rep, title,desc,hash,stname='长文字页'}:
                     <TableRow><TableCell colSpan={2}>{desc}:</TableCell></TableRow>
                 </TableHeader>}
                 <TableBody>
-                    <RepLink ori rep={rep} tag={hash ?? 'Explanatory'}>
+                    <RepLink ori rep={rep} tag={hash ?? 'Explanatory'} printMode={printMode}>
                         <TableRow>
                             <TableCell colSpan={2} className="border border-gray-700">
                                 <div className="text-sm min-h-8 whitespace-pre-wrap">
                                     {orc?.[stname]?.length>0 ? <>
                                             {orc?.[stname]?.map((part: any, i: number) => {
                                                 return part && (
-                                                    <JumpTab key={i} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Explanatory?from=${i}#Explanatory`}>
+                                                    <JumpTab key={i} printMode={printMode} href={`/rep/${rep?.id}/${rep?.modeltype}/${rep?.modelversion}/Explanatory?from=${i}#Explanatory`}>
                                                         <div className="block">
                                                             {part}
                                                         </div>

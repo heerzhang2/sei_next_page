@@ -58,14 +58,16 @@ const authorize = async (credentials: {
     const authData = result.data.authenticate
 
     // 设置 refreshToken cookie
-    const cookieStore = await cookies()
+    // 使用环境变量动态配置 path，确保与部署的 basePath 一致
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
+    const refreshTokenPath = `${basePath}/api/refresh-token`
+    const cookieStore = await cookies()
     cookieStore.set("refreshToken", authData.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 60, // 60 天
-      path: `${basePath}/api/refresh-token`,
+      path: refreshTokenPath,
     })
     console.log("[mainProj Auth] refreshToken cookie 已设置")
 

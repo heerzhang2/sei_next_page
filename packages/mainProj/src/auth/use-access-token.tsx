@@ -32,8 +32,29 @@ export function useAccessToken() {
 
     useEffect(() => {
         const fetchToken = async () => {
-            const token = getCookie("accessToken")
-            const userData = getCookie("user")
+            // 首先尝试从 cookie 获取
+            let token = getCookie("accessToken")
+            let userData = getCookie("user")
+            
+            // 如果 cookie 中没有，尝试从 localStorage 获取（离线模式）
+            if (!token) {
+                try {
+                    const offlineAuth = localStorage.getItem("offline_auth")
+                    if (offlineAuth) {
+                        const authData = JSON.parse(offlineAuth)
+                        if (authData.accessToken) {
+                            token = authData.accessToken
+                            console.log("[useAccessToken] 从 localStorage 获取到 token")
+                        }
+                        if (authData.user) {
+                            userData = JSON.stringify(authData.user)
+                        }
+                    }
+                } catch (error) {
+                    console.error("[useAccessToken] 从 localStorage 读取 token 失败:", error)
+                }
+            }
+            
             setAccessToken(token || null)
             setUser(userData ? JSON.parse(userData) : null)
         }

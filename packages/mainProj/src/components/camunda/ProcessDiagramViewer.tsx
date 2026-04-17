@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import BpmnViewer from 'bpmn-js/lib/NavigatedViewer'
 import type { ModdleElement } from 'bpmn-js/lib/model/Types'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 
@@ -31,54 +30,98 @@ export default function ProcessDiagramViewer({
     height = '600px'
 }: ProcessDiagramViewerProps) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const viewerRef = useRef<BpmnViewer | null>(null)
+    const viewerRef = useRef<any>(null)
     const animationRef = useRef<NodeJS.Timeout | null>(null)
     const flowPathRef = useRef<Array<{ type: 'node' | 'flow', id: string }>>([])
     const currentStepRef = useRef(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [zoomLevel, setZoomLevel] = useState(1)
-    const touchStartRef = useRef<{ x: number; y: number; distance: number } | null>(null)
+    const [bpmnViewerLoaded, setBpmnViewerLoaded] = useState(false)
+    const [bpmnXmlData, setBpmnXmlData] = useState<string | null>(null)
+    const [flowNodesData, setFlowNodesData] = useState<FlowNode[] | null>(null)
+    const [sequenceFlowsData, setSequenceFlowsData] = useState<SequenceFlow[] | null>(null)
 
+    // 预加载 bpmn-js
+    useEffect(() => {
+        let isMounted = true
+        
+        const loadBpmnViewer = async () => {
+            try {
+                const module = await import('bpmn-js/lib/NavigatedViewer')
+                if (isMounted) {
+                    setBpmnViewerLoaded(true)
+                }
+            } catch (err) {
+                console.error('预加载 bpmn-js 失败:', err)
+                if (isMounted) {
+                    setError('加载 BPMN 查看器失败')
+                }
+            }
+        }
+        
+        loadBpmnViewer()
+        
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    // 获取数据
     useEffect(() => {
         fetchProcessInstanceData()
         return () => {
-            // 清理定时器
             if (animationRef.current) {
                 clearTimeout(animationRef.current)
+            }
+            if (viewerRef.current) {
+                viewerRef.current.destroy()
+                viewerRef.current = null
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [processInstanceKey])
 
-    const renderDiagram = useCallback((bpmnXml: string, flowNodes: FlowNode[], sequenceFlows?: SequenceFlow[]) => {
+    // 当 bpmn-js 加载完成且有数据时渲染
+    useEffect(() => {
+        if (bpmnViewerLoaded && bpmnXmlData && flowNodesData) {
+            renderDiagram(bpmnXmlData, flowNodesData, sequenceFlowsData || undefined)
+        }
+    }, [bpmnViewerLoaded, bpmnXmlData, flowNodesData, sequenceFlowsData])
+
+    const renderDiagram = useCallback(async (bpmnXml: string, flowNodes: FlowNode[], sequenceFlows?: SequenceFlow[]) => {
         if (!containerRef.current) return
 
-        // 如果已存在查看器，先销毁
-        if (viewerRef.current) {
-            viewerRef.current.destroy()
-        }
+        try {
+            const module = await import('bpmn-js/lib/NavigatedViewer')
+            const BpmnViewer = module.default
 
-        // 清理之前的动画
-        if (animationRef.current) {
-            clearTimeout(animationRef.current)
-        }
+            // 如果已存在查看器，先销毁
+            if (viewerRef.current) {
+                viewerRef.current.destroy()
+            }
 
-        const viewer = new BpmnViewer({
-            container: containerRef.current,
-            height
-        })
+            // 清理之前的动画
+            if (animationRef.current) {
+                clearTimeout(animationRef.current)
+            }
 
-        viewerRef.current = viewer
+            const viewer = new BpmnViewer({
+                container: containerRef.current,
+                height
+            })
 
-        viewer.importXML(bpmnXml).then(() => {
+            viewerRef.current = viewer
+
+            await viewer.importXML(bpmnXml)
+            
             const canvas: any = viewer.get('canvas')
             const elementRegistry: any = viewer.get('elementRegistry')
             const eventBus: any = viewer.get('eventBus')
 
             // 禁用鼠标滚轮缩放以避免非 passive 事件警告
             eventBus.on('zoomScroll.step', function() {
-                return false // 阻止默认的滚轮缩放行为
+                return false
             })
 
             // 按时间排序节点
@@ -86,13 +129,12 @@ export default function ProcessDiagramViewer({
                 new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
             )
 
-            // 构建流转路径：节点 -> 连接线 -> 节点 -> 连接线...
+            // 构建流转路径
             const flowPath: Array<{ type: 'node' | 'flow', id: string }> = []
 
             sortedNodes.forEach((node, index) => {
                 flowPath.push({ type: 'node', id: node.flowNodeId })
 
-                // 找到从这个节点出发的连接线
                 if (sequenceFlows && sequenceFlows.length > 0) {
                     const outgoingFlow = sequenceFlows.find(f => {
                         const flowElement = elementRegistry.get(f.elementId)
@@ -124,7 +166,7 @@ export default function ProcessDiagramViewer({
                 }
             })
 
-            // 自动缩放以适应画布并获取缩放级别
+            // 自动缩放以适应画布
             canvas.zoom('fit-viewport')
             setZoomLevel(canvas.zoom() || 1)
 
@@ -136,10 +178,10 @@ export default function ProcessDiagramViewer({
             // 开始动画
             startAnimation(canvas, elementRegistry)
 
-        }).catch((err: any) => {
+        } catch (err: any) {
             console.error('渲染 BPMN 流程图失败:', err)
             setError(`渲染流程图失败: ${err.message}`)
-        })
+        }
     }, [height])
 
     const handleZoomIn = useCallback(() => {
@@ -185,17 +227,14 @@ export default function ProcessDiagramViewer({
                 const scale = currentDistance / initialDistance
                 const newZoom = Math.max(0.2, Math.min(3, initialZoom * scale))
 
-                // 计算缩放中心点（两个手指的中心）
                 const touch1 = e.touches[0]
                 const touch2 = e.touches[1]
                 const centerX = (touch1.clientX + touch2.clientX) / 2
                 const centerY = (touch1.clientY + touch2.clientY) / 2
 
-                // 获取画布的边界矩形
                 const rect = container.getBoundingClientRect()
                 const viewBox = canvas.viewbox()
 
-                // 计算相对于画布的坐标
                 const x = centerX - rect.left
                 const y = centerY - rect.top
 
@@ -223,7 +262,6 @@ export default function ProcessDiagramViewer({
     const startAnimation = useCallback((canvas: any, elementRegistry: any) => {
         const flowPath = flowPathRef.current
         const animate = () => {
-            // 清除之前的高亮（包括节点和连接线）
             const prevStep = currentStepRef.current - 1
             if (prevStep >= 0 && flowPath[prevStep]) {
                 const { type, id } = flowPath[prevStep]
@@ -237,9 +275,7 @@ export default function ProcessDiagramViewer({
                 }
             }
 
-            // 如果到达路径末尾，重置
             if (currentStepRef.current >= flowPath.length) {
-                // 清除最后一个高亮
                 const lastStep = flowPath.length - 1
                 if (lastStep >= 0 && flowPath[lastStep]) {
                     const { type, id } = flowPath[lastStep]
@@ -252,7 +288,6 @@ export default function ProcessDiagramViewer({
                         }
                     }
                 }
-                // 暂停1秒后重新开始
                 animationRef.current = setTimeout(() => {
                     currentStepRef.current = 0
                     animate()
@@ -260,7 +295,6 @@ export default function ProcessDiagramViewer({
                 return
             }
 
-            // 高亮当前步骤（节点和连接线都高亮）
             const currentStepItem = flowPath[currentStepRef.current]
             if (currentStepItem) {
                 const { type, id } = currentStepItem
@@ -293,7 +327,6 @@ export default function ProcessDiagramViewer({
                 throw new Error(result.message || '获取流程实例数据失败')
             }
 
-            // 转换 API 返回的数据格式以适配组件
             const flowNodes = result.data.flowNodes.map((node: any) => ({
                 flowNodeInstanceId: node.elementInstanceKey,
                 flowNodeId: node.elementId,
@@ -310,15 +343,18 @@ export default function ProcessDiagramViewer({
                 elementId: flow.elementId
             })) || []
 
-            renderDiagram(result.data.bpmnXml, flowNodes, sequenceFlows)
+            // 保存数据到 state，等待 bpmn-js 加载完成后再渲染
+            setBpmnXmlData(result.data.bpmnXml)
+            setFlowNodesData(flowNodes)
+            setSequenceFlowsData(sequenceFlows)
+            setLoading(false)
 
         } catch (err: any) {
             setError(err.message)
             console.error('获取流程实例数据失败:', err)
-        } finally {
             setLoading(false)
         }
-    }, [processInstanceKey, renderDiagram])
+    }, [processInstanceKey])
 
     if (loading) {
         return (
@@ -389,7 +425,6 @@ export default function ProcessDiagramViewer({
                     fill: rgba(239, 68, 68, 0.2) !important;
                 }
 
-                /* 当前高亮的节点 */
                 .node-highlight:not(.djs-connection) .djs-visual > :first-child {
                     stroke: #f59e0b !important;
                     stroke-width: 4px !important;
@@ -397,7 +432,6 @@ export default function ProcessDiagramViewer({
                     filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.7));
                 }
 
-                /* 当前高亮的连接线 - 明显的颜色变换和动画 */
                 .current-highlight.djs-connection .djs-visual > :first-child {
                     stroke: #f59e0b !important;
                     stroke-width: 5px !important;

@@ -220,10 +220,16 @@ type ApprovalStm {
   id: ID!
   sta: Procedure_Enum!
 
-  """流程开动第一人；当前主控人 特别权利人"""
+  """项目负责人同时也是校核人"""
   master: User
+
+  """检验员"""
   authr: [User]
+
+  """审核人"""
   reviewer: User
+
+  """审批人"""
   approver: User
   cur: Circulation
 
@@ -1793,6 +1799,8 @@ type RepLink {
 type Report implements Node & SimpleReport {
   id: ID!
   version: Int!
+
+  """报告的流程状态机"""
   stm: ApprovalStm
   isp: Isp
   type: ReportType_Enum!
@@ -1900,6 +1908,8 @@ enum RequestSta_Enum {
 interface SimpleReport {
   id: ID!
   version: Int!
+
+  """报告的流程状态机"""
   stm: ApprovalStm
   type: ReportType_Enum!
   modeltype: String

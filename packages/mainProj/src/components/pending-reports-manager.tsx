@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { indexedDBStorage } from "@/lib/indexed-db-storage"
 import { toast } from "sonner"
-import { RefreshCw, Send, Trash2, ExternalLink, AlertTriangle, CheckCircle, X } from "lucide-react"
+import { RefreshCw, Send, Trash2, ExternalLink, AlertTriangle, CheckCircle, X, Trash } from "lucide-react"
 import Link from "next/link"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -76,11 +76,13 @@ function DeleteConfirmDialog({
                                  onClose,
                                  onConfirm,
                                  reportInfo,
+                                 isDeleteAll,
                              }: {
     isOpen: boolean
     onClose: () => void
     onConfirm: () => void
     reportInfo: string
+    isDeleteAll: boolean
 }) {
     if (!isOpen) return null
 
@@ -88,13 +90,15 @@ function DeleteConfirmDialog({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
                 <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-lg font-semibold">确认删除</h3>
+                    <h3 className="text-lg font-semibold">{isDeleteAll ? "确认全部删除" : "确认删除"}</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <X className="w-5 h-5"/>
                     </button>
                 </div>
                 <p className="text-sm text-gray-600 mb-4">
-                    确定要删除这个待发送的报告吗？本地修改将丢失且无法恢复。
+                    {isDeleteAll
+                        ? "确定要删除所有待发送的报告吗？所有本地修改将丢失且无法恢复。"
+                        : "确定要删除这个待发送的报告吗？本地修改将丢失且无法恢复。"}
                 </p>
                 <hr className="my-4"/>
                 <p className="text-sm text-gray-600 mb-4">
@@ -111,7 +115,7 @@ function DeleteConfirmDialog({
                         取消
                     </Button>
                     <Button onClick={onConfirm} variant="destructive">
-                        确认删除
+                        {isDeleteAll ? "确认全部删除" : "确认删除"}
                     </Button>
                 </div>
             </div>
@@ -133,11 +137,13 @@ export function PendingReportsManager() {
         repId: string
         subrid?: string
         reportInfo: string
+        isDeleteAll: boolean
     }>({
         isOpen: false,
         repId: "",
         subrid: undefined,
         reportInfo: "",
+        isDeleteAll: false,
     })
 
     const loadPendingReports = async () => {
@@ -176,21 +182,67 @@ export function PendingReportsManager() {
             repId,
             subrid,
             reportInfo,
+            isDeleteAll: false,
         })
     }
 
     const confirmDelete = async () => {
-        const { repId, subrid } = deleteDialog
-        try {
-            await indexedDBStorage.remove(repId, subrid)
-            toast.success("已删除待发送报告")
-            await loadPendingReports()
-        } catch (error) {
-            console.error("Failed to delete pending report:", error)
-            toast.error("删除失败")
-        } finally {
-            setDeleteDialog({ isOpen: false, repId: "", subrid: undefined, reportInfo: "" })
+        const { repId, subrid, isDeleteAll } = deleteDialog
+
+        if (isDeleteAll) {
+            // 删除全部
+            try {
+                let successCount = 0
+                let failCount = 0
+
+                for (const report of pendingReports) {
+                    try {
+                        await indexedDBStorage.remove(report.repId, report.subrid)
+                        successCount++
+                    } catch (error) {
+                        console.error(`Failed to delete report ${report.repId}:`, error)
+                        failCount++
+                    }
+                }
+
+                if (failCount === 0) {
+                    toast.success(`已删除全部 ${successCount} 个待发送报告`)
+                } else {
+                    toast.warning(`删除完成：成功 ${successCount} 个，失败 ${failCount} 个`)
+                }
+                await loadPendingReports()
+            } catch (error) {
+                console.error("Failed to delete all reports:", error)
+                toast.error("批量删除失败")
+            }
+        } else {
+            // 删除单个
+            try {
+                await indexedDBStorage.remove(repId, subrid)
+                toast.success("已删除待发送报告")
+                await loadPendingReports()
+            } catch (error) {
+                console.error("Failed to delete pending report:", error)
+                toast.error("删除失败")
+            }
         }
+
+        setDeleteDialog({ isOpen: false, repId: "", subrid: undefined, reportInfo: "", isDeleteAll: false })
+    }
+
+    const handleDeleteAll = () => {
+        if (pendingReports.length === 0) {
+            toast.info("没有待删除的报告")
+            return
+        }
+
+        setDeleteDialog({
+            isOpen: true,
+            repId: "",
+            subrid: undefined,
+            reportInfo: `全部 ${pendingReports.length} 个待发送报告`,
+            isDeleteAll: true,
+        })
     }
 
     const handleSendReport = async (report: PendingReport) => {
@@ -201,7 +253,7 @@ export function PendingReportsManager() {
 
         const deviceId = getDeviceId()
         if (!deviceId) {
-            toast.error("无法获取设备信息，请刷新页面重试")
+            toast.error("无法获取设备信息，请注销登录后重试")
             return
         }
 
@@ -293,9 +345,10 @@ export function PendingReportsManager() {
         <div className="space-y-4">
             <DeleteConfirmDialog
                 isOpen={deleteDialog.isOpen}
-                onClose={() => setDeleteDialog({ isOpen: false, repId: "", subrid: undefined, reportInfo: "" })}
+                onClose={() => setDeleteDialog({ isOpen: false, repId: "", subrid: undefined, reportInfo: "", isDeleteAll: false })}
                 onConfirm={confirmDelete}
                 reportInfo={deleteDialog.reportInfo}
+                isDeleteAll={deleteDialog.isDeleteAll}
             />
 
             <div className="flex items-center justify-between">
@@ -318,10 +371,14 @@ export function PendingReportsManager() {
 
             {pendingReports.length > 0 && (
                 <div className="space-y-2">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                         <Button onClick={handleSendAll} disabled={!isGraphQLBackendReachable} variant="default">
                             <Send className="w-4 h-4 mr-2" />
                             发送全部未提交的报告
+                        </Button>
+                        <Button onClick={handleDeleteAll} variant="destructive">
+                            <Trash className="w-4 h-4 mr-2" />
+                            全部删除
                         </Button>
                     </div>
 

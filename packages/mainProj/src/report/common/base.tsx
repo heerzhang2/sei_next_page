@@ -248,7 +248,10 @@ export const CCellUnit = ({
 };
 
 /**目的：避免代码重复性质的字符串的出现太多了：   通常报告表格的点击转编辑器
- * @param ori 是原始记录页面的
+ * @param ori 是原始记录页面的，跳转到原始记录页面。
+ * @param tag 是编辑器区块的id，确保唯一性。
+ * @param hash 是页面锚点定位的，通常是编辑器区块的id，确保唯一性。因为有可能同一个模板出现多个分项报告的情况。
+ * @param printMode 是否为打印模式,避免打印模式生成的PDF文件可点击这个链接跳转。
  * 注意DirectLink：主动把直接儿子的 div或span改成了 <a>标签。
  */
 export const RepLink= ( {rep, children, tag, ori, subrid,redId,hash,printMode}
@@ -280,7 +283,7 @@ export function RepTitleUpdate({code}: {code:string}) {
     const searchParams = useSearchParams()
     React.useEffect(() => {
         const original = "1" === searchParams!.get("original")
-        document.title = `${code}-${original? '原始记录':'报告'}`
+        document.title = `${code}-${original? '原始记录':'报告'}-福建省特种设备检验研究院`
     }, [code, searchParams])
     return null
 }

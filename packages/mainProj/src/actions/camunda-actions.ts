@@ -1,6 +1,7 @@
 // actions/camunda-actions.ts
 "use server"
 import { requireRole } from "@/lib/role-auth"
+import { auth } from "@/app/auth"
 import { createProcessInstanceRest, listAllProcessDefinitions } from "../lib/camunda"
 
 // 定义启动流程的参数类型
@@ -11,6 +12,24 @@ type StartProcessParams = {
 }
 
 const MAX_PDF_YEAR = 30
+
+/**
+ * 检查 Java GraphQL 后端是否在线
+ */
+async function checkGraphQLBackendOnline(): Promise<boolean> {
+    try {
+        const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:8371/graphql"
+        const response = await fetch(graphqlEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "{ __typename }" }),
+            signal: AbortSignal.timeout(3000),
+        })
+        return response.ok
+    } catch {
+        return false
+    }
+}
 
 /**
  * 启动一个新的流程实例 (使用 REST API)
@@ -28,39 +47,94 @@ export async function startPdfCvtProcess({ processId, variables, bpmnProcessId }
         error: `保存期最多${MAX_PDF_YEAR}年`
     }
 
-    // 角色验证
-    const { session, userRoles } = await requireRole(["JyUser"])
+    // 首先尝试使用 requireRole 进行角色验证（会检查 Redis 缓存）
+    const roleCheckResult = await requireRole(["JyUser"])
+    
+    // 如果角色验证通过，直接使用
+    if (roleCheckResult.success) {
+        const { session, userRoles } = roleCheckResult
+        
+        try {
+            variables["author"] = session?.user?.name;
 
-    if (!session?.user) {
-        return {
-            success: false,
-            error: "用户未登录",
+            console.log("启动流程 - processId:", processId, "bpmnProcessId:", bpmnProcessId);
+            const processDefinitionId = bpmnProcessId || processId;
+            console.log("使用的 processDefinitionId:", processDefinitionId);
+
+            const result = await createProcessInstanceRest(processDefinitionId, variables)
+
+            return {
+                success: true,
+                processInstanceKey: result.processInstanceKey,
+                variables: variables,
+                timestamp: new Date().toISOString(),
+            }
+        } catch (error: any) {
+            console.error("启动流程实例失败:", error)
+            return {
+                success: false,
+                error: error.message,
+            }
         }
     }
+    
+    // 角色验证失败，检查是否是未登录错误
+    if (roleCheckResult.code === "UNAUTHORIZED") {
+        // 检查 Java GraphQL 后端是否在线
+        const isBackendOnline = await checkGraphQLBackendOnline()
+        
+        if (isBackendOnline) {
+            // 后端在线，但 requireRole 返回未登录，说明 session 确实有问题
+            // 此时应该返回错误，保持一致性
+            return {
+                success: false,
+                error: roleCheckResult.error,
+                code: "UNAUTHORIZED",
+            }
+        } else {
+            // 后端离线，尝试使用 next-auth 的 session（离线模式）
+            const session = await auth()
+            
+            if (session?.user?.name) {
+                console.log("[startPdfCvtProcess] GraphQL 后端离线，使用 next-auth session:", session.user.name)
+                
+                try {
+                    variables["author"] = session.user.name;
 
-    try {
-        variables["author"] = session?.user?.name;
+                    console.log("启动流程（离线模式）- processId:", processId, "bpmnProcessId:", bpmnProcessId);
+                    const processDefinitionId = bpmnProcessId || processId;
 
-        console.log("启动流程 - processId:", processId, "bpmnProcessId:", bpmnProcessId);
-        // 直接使用 processDefinitionId (即 bpmnProcessId 或 processId)
-        const processDefinitionId = bpmnProcessId || processId;
-        console.log("使用的 processDefinitionId:", processDefinitionId);
+                    const result = await createProcessInstanceRest(processDefinitionId, variables)
 
-        // 使用 REST API 创建流程实例（无需查询，直接使用 processDefinitionId）
-        const result = await createProcessInstanceRest(processDefinitionId, variables)
-
-        return {
-            success: true,
-            processInstanceKey: result.processInstanceKey,
-            variables: variables,
-            timestamp: new Date().toISOString(),
+                    return {
+                        success: true,
+                        processInstanceKey: result.processInstanceKey,
+                        variables: variables,
+                        timestamp: new Date().toISOString(),
+                        offlineMode: true, // 标记为离线模式
+                    }
+                } catch (error: any) {
+                    console.error("启动流程实例失败（离线模式）:", error)
+                    return {
+                        success: false,
+                        error: error.message,
+                    }
+                }
+            } else {
+                return {
+                    success: false,
+                    error: "用户未登录",
+                    code: "UNAUTHORIZED",
+                }
+            }
         }
-    } catch (error: any) {
-        console.error("启动流程实例失败:", error)
-        return {
-            success: false,
-            error: error.message,
-        }
+    }
+    
+    // 其他错误（如权限不足）
+    return {
+        success: false,
+        error: roleCheckResult.error,
+        code: roleCheckResult.code,
     }
 }
 

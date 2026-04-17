@@ -1,11 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useClient } from "@urql/next"
 import { ReportQueryWithSubReports, ReportSubQuery } from "@/component/rep/report-data"
 import { Button } from "@/components/ui"
 import { Home } from "lucide-react"
+import { useNetworkStatusContext } from "@/contexts/network-status-context"
+import { toast } from "sonner"
 
 interface PrecacheResult {
     template: { templateId: string; version: string }
@@ -45,10 +47,33 @@ interface CacheStatus {
     lastCacheTime?: number
 }
 
+/**
+ * 将版本时间戳格式化为可读的日期时间字符串
+ * @param version 版本时间戳（毫秒级时间戳字符串）
+ * @returns 格式化的日期时间字符串
+ */
+function formatVersionTime(version: string | null | undefined): string {
+    if (!version) return "未知"
+    const timestamp = Number.parseInt(version, 10)
+    if (Number.isNaN(timestamp)) return version // 如果不是数字，返回原值
+
+    const date = new Date(timestamp)
+    return date.toLocaleString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+    })
+}
+
 /**需外部配合向localStorage("offline-reports")注入离线报告的id;
  * */
 export default function Page() {
     const client = useClient()
+    const { isNextJSServerReachable,isGraphQLBackendReachable } = useNetworkStatusContext()
     const [precacheStatus, setPrecacheStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
     const [precacheMessage, setPrecacheMessage] = useState("")
     const [precacheProgress, setPrecacheProgress] = useState<PrecacheProgress>({
@@ -59,6 +84,10 @@ export default function Page() {
     const [precacheResults, setPrecacheResults] = useState<PrecacheResult[]>([])
     const [failedItems, setFailedItems] = useState<PrecacheResult[]>([])
     const [swError, setSwError] = useState<string | null>(null)
+    
+    // 添加 ref 来追踪预缓存操作的触发时机
+    const precacheTriggerTimeRef = useRef<number | null>(null)
+    const currentPrecacheOperationRef = useRef<boolean>(false)
 
     const [customUrls, setCustomUrls] = useState<CustomUrlConfig[]>([])
     const [newUrlPattern, setNewUrlPattern] = useState("")
@@ -66,6 +95,8 @@ export default function Page() {
     const [showCustomUrlForm, setShowCustomUrlForm] = useState(false)
 
     const [offlineReports, setOfflineReports] = useState<OfflineReport[]>([])
+    // 保存初始的离线报告列表（只有 repId）
+    const [initialOfflineReports, setInitialOfflineReports] = useState<OfflineReport[]>([])
     const [reportTemplates, setReportTemplates] = useState<{ templateId: string; version: string }[]>([])
     const [cacheStatusList, setCacheStatusList] = useState<CacheStatus[]>([])
 
@@ -76,6 +107,161 @@ export default function Page() {
     const [showCustomUrlSection, setShowCustomUrlSection] = useState(false)
     const [currentBuildVersion, setCurrentBuildVersion] = useState<string>("")
     const [pwaCertStatus, setPwaCertStatus] = useState<'active' | 'failed' | 'pending'>('active')
+
+    // 缓存健康检测状态
+    const [needsCompleteReset, setNeedsCompleteReset] = useState(false)
+    const [resetReason, setResetReason] = useState<string>("")
+    const [cacheHealthStatus, setCacheHealthStatus] = useState<'healthy' | 'warning' | 'critical'>('healthy')
+    const [resetInProgress, setResetInProgress] = useState(() => {
+        // 从 sessionStorage 恢复重置状态，避免页面重新加载后立即检查
+        if (typeof window !== 'undefined') {
+            const resetTimestamp = sessionStorage.getItem('pwa-cache-reset-timestamp')
+            if (resetTimestamp) {
+                const resetTime = parseInt(resetTimestamp, 10)
+                const now = Date.now()
+                // 如果重置时间在过去2分钟内，仍然认为重置进行中
+                if (now - resetTime < 2 * 60 * 1000) {
+                    return true
+                } else {
+                    // 超过2分钟，清理旧的标记
+                    sessionStorage.removeItem('pwa-cache-reset-timestamp')
+                }
+            }
+        }
+        return false
+    })
+
+    // 缓存健康检测配置
+    const CACHE_HEALTH_CONFIG = {
+        minExpectedSize: 5 * 1024 * 1024,  // 5MB
+        maxExpectedSize: 20 * 1024 * 1024, // 20MB
+        expectedSize: 8.46 * 1024 * 1024,   // x MB (预期值)
+        failureThreshold: 0.5,             // 失败率超过50%触发警告
+    }
+
+    // 检查缓存健康状况
+    const checkCacheHealth = async (): Promise<{ status: 'healthy' | 'warning' | 'critical'; reason: string }> => {
+        try {
+            // 检查是否在重置恢复期内（过去2分钟内进行过完全重置）
+            const resetTimestamp = sessionStorage.getItem('pwa-cache-reset-timestamp')
+            if (resetTimestamp) {
+                const resetTime = parseInt(resetTimestamp, 10)
+                const now = Date.now()
+                if (now - resetTime < 2 * 60 * 1000) {
+                    console.log('[CacheHealth] 检测到最近进行过完全重置，跳过健康检查，等待缓存恢复')
+                    return { status: 'healthy', reason: '' }
+                } else {
+                    // 超过2分钟，清理旧的标记
+                    sessionStorage.removeItem('pwa-cache-reset-timestamp')
+                }
+            }
+
+            // 1. 检查缓存大小
+            const cacheNames = await caches.keys()
+            let totalSize = 0
+            let serwistCacheCount = 0
+
+            for (const cacheName of cacheNames) {
+                if (cacheName.includes('serwist') || cacheName.includes('precache')) {
+                    serwistCacheCount++
+                    const cache = await caches.open(cacheName)
+                    const requests = await cache.keys()
+                    // 估算大小
+                    for (const request of requests) {
+                        try {
+                            const response = await cache.match(request)
+                            if (response) {
+                                const blob = await response.blob()
+                                totalSize += blob.size
+                            }
+                        } catch {
+                            // 忽略无法读取的缓存项
+                        }
+                    }
+                }
+            }
+
+            // 2. 检查 Service Worker 状态
+            let swStatus: 'active' | 'inactive' | 'error' = 'inactive'
+            if ('serviceWorker' in navigator) {
+                const registration = await navigator.serviceWorker.getRegistration()
+                if (registration) {
+                    if (registration.active) {
+                        swStatus = 'active'
+                    } else if (registration.installing || registration.waiting) {
+                        swStatus = 'inactive'
+                    }
+                }
+            }
+
+            // 3. 检查版本一致性
+            const lastCacheWarmup = localStorage.getItem("last-cache-warmup")
+            const versionMismatch = currentBuildVersion && lastCacheWarmup && lastCacheWarmup !== currentBuildVersion
+
+            // 4. 判断健康状况
+            if (totalSize < CACHE_HEALTH_CONFIG.minExpectedSize) {
+                return {
+                    status: 'critical',
+                    reason: `缓存大小异常 (${formatBytes(totalSize)})，远低于预期值 ${formatBytes(CACHE_HEALTH_CONFIG.expectedSize)}，可能是缓存损坏或未正确初始化`
+                }
+            }
+
+            if (totalSize > CACHE_HEALTH_CONFIG.maxExpectedSize) {
+                return {
+                    status: 'warning',
+                    reason: `缓存大小异常 (${formatBytes(totalSize)})，超过最大值 ${formatBytes(CACHE_HEALTH_CONFIG.maxExpectedSize)}，可能存在重复或过期缓存`
+                }
+            }
+
+            if (swStatus === 'inactive') {
+                return {
+                    status: 'warning',
+                    reason: 'Service Worker 处于等待状态，可能无法正确提供离线功能'
+                }
+            }
+
+            if (versionMismatch) {
+                return {
+                    status: 'warning',
+                    reason: `缓存版本不匹配 (缓存: ${formatVersionTime(lastCacheWarmup)}, 当前: ${formatVersionTime(currentBuildVersion)})，建议更新缓存`
+                }
+            }
+
+            if (serwistCacheCount === 0) {
+                return {
+                    status: 'critical',
+                    reason: '未检测到 Serwist 预缓存，离线功能可能不可用'
+                }
+            }
+
+            return { status: 'healthy', reason: '' }
+        } catch (error) {
+            console.error("[CacheHealth] 检查缓存健康失败:", error)
+            return { status: 'critical', reason: '缓存健康检查失败，可能存在严重问题' }
+        }
+    }
+
+    // 格式化字节大小
+    const formatBytes = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`
+        return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+    }
+
+    // 触发需要完全重置的提示
+    const triggerResetNeeded = (reason: string, level: 'warning' | 'critical' = 'warning') => {
+        setNeedsCompleteReset(true)
+        setResetReason(reason)
+        setCacheHealthStatus(level)
+        console.warn(`[CacheHealth] 需要完全重置: ${reason}`)
+    }
+
+    // 清除重置提示
+    const clearResetNeeded = () => {
+        setNeedsCompleteReset(false)
+        setResetReason("")
+        setCacheHealthStatus('healthy')
+    }
 
     // 检查 PWA 证书状态
     const checkPwaCertStatus = () => {
@@ -164,9 +350,11 @@ export default function Page() {
                 const savedReports = localStorage.getItem("offline-reports")
                 if (savedReports) {
                     const reports: string[] = JSON.parse(savedReports)
-                    const offlineReportsList: OfflineReport[] = reports.map((repId) => ({ repId }))
-                    setOfflineReports(offlineReportsList)
-                    console.log("[v0] 加载离线报告列表:", offlineReportsList)
+                    // 初始列表只包含 repId
+                    const initialList: OfflineReport[] = reports.map((repId) => ({ repId }))
+                    // 保存初始列表到独立变量
+                    setInitialOfflineReports(initialList)
+                    console.log("[v0] 加载离线报告列表 (初始):", initialList)
                 }
             } catch (error) {
                 console.error("加载离线报告列表失败:", error)
@@ -176,27 +364,52 @@ export default function Page() {
         loadOfflineReports()
     }, []) // 空依赖数组，只运行一次
 
-    // 只有当 offlineReports 改变时才获取数据
+    // 只有当 initialOfflineReports 改变时才获取数据
     useEffect(() => {
         const fetchAllReports = async () => {
-            if (offlineReports.length === 0) {
+            if (initialOfflineReports.length === 0) {
                 setReportQueries([])
                 return
             }
 
             setIsFetching(true)
+            if(isGraphQLBackendReachable === false)
+                toast.error("后端离线，无法获取最新的报告数据", {
+                                description: "当前Java后端离线，没法使用缓存更新功能了",
+                                duration: 30 * 1000,
+                            })
             try {
                 const queryResults = []
-                for (const report of offlineReports) {
+                for (const report of initialOfflineReports) {
                     const repId = report.repId
                     if (!repId) {
                         queryResults.push(null)
                         continue
                     }
                     try {
-                        // 先获取主报告数据（包含子报告列表）
+                        // 检查后端是否可用，如果不可用则直接跳过请求，使用缓存数据
+                        if (isGraphQLBackendReachable === false) {
+                            console.log(`[PWA] 后端离线，直接使用 urql 缓存: ${repId}`)
+                            queryResults.push(null)
+                            continue
+                        }
+
+                        // 后端在线时才发送请求
                         const result = await client.query(ReportQueryWithSubReports, { id: repId }).toPromise()
-                        queryResults.push(result)
+
+                        // 检查是否是网络错误（502 Bad Gateway 等），如果是则抛弃错误响应，使用缓存
+                        const isNetworkError = result?.error?.graphQLErrors?.some(
+                            (e: any) => e?.extensions?.statusCode >= 500 || 
+                                        e?.message?.includes('502') || 
+                                        e?.message?.includes('Failed to fetch')
+                        ) || result?.stale
+
+                        if (isNetworkError) {
+                            console.warn(`[PWA] 后端离线，repId=${repId} 返回 ${result?.error?.graphQLErrors?.[0]?.extensions?.statusCode}，跳过更新`)
+                            queryResults.push(null)
+                        } else {
+                            queryResults.push(result)
+                        }
 
                         // 获取主报告后，遍历所有子报告并单独查询，填充 urql 缓存
                         if (result?.data?.getReport?.isp?.reps?.edges) {
@@ -227,17 +440,17 @@ export default function Page() {
         }
 
         fetchAllReports()
-    }, [offlineReports, client]) // 依赖于 offlineReports 和 client
+    }, [initialOfflineReports, client, isGraphQLBackendReachable]) // 依赖于 initialOfflineReports、client 和 isGraphQLBackendReachable
 
     // 处理报告数据的 useEffect
     useEffect(() => {
-        if (offlineReports.length === 0 || reportQueries.length === 0) return
+        if (initialOfflineReports.length === 0 || reportQueries.length === 0) return
 
         const templates: { templateId: string; version: string }[] = []
         const updatedReports: OfflineReport[] = []
 
-        for (let i = 0; i < offlineReports.length; i++) {
-            const report = offlineReports[i]
+        for (let i = 0; i < initialOfflineReports.length; i++) {
+            const report = initialOfflineReports[i]
             const queryResult = reportQueries[i]
 
             try {
@@ -267,7 +480,7 @@ export default function Page() {
         }
 
         const hasNewData = updatedReports.some((report) => report.modeltype && report.modelversion)
-        if (hasNewData && !offlineReports.some((report) => report.modeltype)) {
+        if (hasNewData && !initialOfflineReports.some((report) => report.modeltype)) {
             setOfflineReports(updatedReports)
             // 过滤重复项
             const tmplAllList = templates.filter(
@@ -277,7 +490,7 @@ export default function Page() {
             setReportTemplates(tmplAllList)
             console.log("[v0] 更新报告数据:", updatedReports, "setReportTemplates?=", tmplAllList)
         }
-    }, [reportQueries, offlineReports]) // 依赖于 reportQueries 和 offlineReports
+    }, [reportQueries, initialOfflineReports]) // 依赖于 reportQueries 和 initialOfflineReports
 
     useEffect(() => {
         if (reportTemplates.length > 0) {
@@ -285,8 +498,50 @@ export default function Page() {
         }
     }, [reportTemplates])
 
+    // 定期检查缓存健康状况
+    useEffect(() => {
+        const performHealthCheck = async () => {
+            // 如果正在进行重置操作，跳过健康检查
+            if (resetInProgress) {
+                console.log("[CacheHealth] 重置进行中，跳过健康检查")
+                return
+            }
+
+            if (!isNextJSServerReachable) {
+                // 服务器离线时不进行检查
+                return
+            }
+            const health = await checkCacheHealth()
+            if (health.status !== 'healthy') {
+                triggerResetNeeded(health.reason, health.status)
+            } else {
+                clearResetNeeded()
+            }
+        }
+
+        // 初始检查
+        performHealthCheck()
+
+        // 每60秒检查一次
+        const interval = setInterval(performHealthCheck, 60000)
+
+        return () => clearInterval(interval)
+    }, [isNextJSServerReachable, currentBuildVersion, resetInProgress])
+
     // 检查 PWA 环境支持 - 恢复代码
     useEffect(() => {
+        // 清理过期的重置时间戳标记
+        const resetTimestamp = sessionStorage.getItem('pwa-cache-reset-timestamp')
+        if (resetTimestamp) {
+            const resetTime = parseInt(resetTimestamp, 10)
+            const now = Date.now()
+            // 如果重置时间超过2分钟，清理标记
+            if (now - resetTime >= 2 * 60 * 1000) {
+                sessionStorage.removeItem('pwa-cache-reset-timestamp')
+                console.log('[CacheHealth] 清理过期的重置时间戳标记')
+            }
+        }
+
         const checkPWAEnv = () => {
             // 检查是否为 HTTPS
             const isHttps = window.location.protocol === 'https:'
@@ -336,6 +591,11 @@ export default function Page() {
     }
     const handleCompleteReset = async () => {
         try {
+            // 设置重置进行中标志，防止在重置期间触发健康检查警告
+            setResetInProgress(true)
+            // 在 sessionStorage 中记录重置时间戳，页面重新加载后仍然有效
+            sessionStorage.setItem('pwa-cache-reset-timestamp', Date.now().toString())
+
             // 1. 清理所有缓存
             if ("caches" in window) {
                 const cacheNames = await caches.keys()
@@ -349,15 +609,16 @@ export default function Page() {
             // 3. 清理本地存储
             // localStorage.clear()
             sessionStorage.clear()
+            // 注意：这里会清除刚刚设置的重置时间戳，但页面重新加载前会重新设置
             // 4. 清理 IndexedDB
             if ("indexedDB" in window) {
                 console.log("[v0] 正在清理 IndexedDB...")
             }
+            // 清除重置提示
+            clearResetNeeded()
 
-            if (currentBuildVersion) {
-                localStorage.setItem("last-cache-warmup", currentBuildVersion)
-                console.log("[v0] 已设置 last-cache-warmup:", currentBuildVersion)
-            }
+            // 在重新加载前重新设置时间戳（因为sessionStorage.clear()会清除它）
+            sessionStorage.setItem('pwa-cache-reset-timestamp', Date.now().toString())
 
             setSwError("系统已完全重置，正在重新加载...")
             setTimeout(() => {
@@ -367,73 +628,98 @@ export default function Page() {
         } catch (error) {
             console.error("完全重置失败:", error)
             setSwError("重置失败，请手动重启浏览器")
+            // 重置失败时也要清除标志
+            setResetInProgress(false)
+            sessionStorage.removeItem('pwa-cache-reset-timestamp')
         }
     }
-    const handleClearCacheData = async () => {
-        if (!confirm("确定要清理所有缓存数据吗？这将删除页面缓存、IndexedDB数据和本地存储的缓存信息，需稍微等待才能真正地清空。")) {
+    const handleClearSiteData = async () => {
+        if (!confirm("⚠️ 确定要清除全部网站数据吗？\n\n这将清除：\n• 所有缓存（Cache Storage）\n• 所有 IndexedDB 数据库\n• 所有 LocalStorage 数据\n• 所有 SessionStorage 数据\n• Service Worker 注册\n• Cookie（同域）\n• 应用状态数据\n\n操作不可恢复，页面将重新加载！")) {
             return;
         }
 
+        const clearResults: string[] = [];
+
         try {
-            // 1. 清理 Cache Storage 中所有 Serwist 相关的缓存
+            // 1. 清理所有 Cache Storage（不只是 Serwist）
             if ("caches" in window) {
                 const cacheNames = await caches.keys();
-                const serwistCaches = cacheNames.filter(name =>
-                    name.includes('serwist') ||
-                    name.includes('pages') ||
-                    name.includes('offline') ||
-                    name.includes('next-chunks')||
-                    name.includes('others')
-                );
-
-                await Promise.all(serwistCaches.map(name => caches.delete(name)));
-                console.log(`已清理 ${serwistCaches.length} 个缓存`);
+                await Promise.all(cacheNames.map(name => {
+                    caches.delete(name);
+                    return name;
+                }));
+                clearResults.push(`✓ Cache Storage: ${cacheNames.length} 个缓存`);
+                console.log(`[清除网站数据] 已清理 ${cacheNames.length} 个缓存:`, cacheNames);
             }
 
-            // 2. 清理 IndexedDB 中 Serwist 相关的数据库
+            // 2. 清理所有 IndexedDB 数据库
             if ("indexedDB" in window) {
                 const dbs = await window.indexedDB.databases();
-                const serwistDBs = dbs.filter(db =>
-                        db.name && (
-                            db.name.includes('serwist') ||
-                            db.name.includes('expiration')
-                        )
-                );
-
-                for (const db of serwistDBs) {
+                for (const db of dbs) {
                     if (db.name) {
                         window.indexedDB.deleteDatabase(db.name);
-                        console.log(`已删除 IndexedDB: ${db.name}`);
                     }
                 }
+                clearResults.push(`✓ IndexedDB: ${dbs.length} 个数据库`);
+                console.log(`[清除网站数据] 已删除 ${dbs.length} 个 IndexedDB:`, dbs.map(d => d.name));
             }
 
-            // 3. 清理 localStorage 中的缓存相关数据
-            const itemsToRemove = [
-                "cache-time",
-                "last-cache-warmup"
-            ];
-
-            itemsToRemove.forEach(key => {
+            // 3. 清理所有 LocalStorage
+            const localStorageKeys = Object.keys(localStorage);
+            localStorageKeys.forEach(key => {
                 localStorage.removeItem(key);
-                console.log(`已清理 localStorage: ${key}`);
             });
+            clearResults.push(`✓ LocalStorage: ${localStorageKeys.length} 项`);
+            console.log(`[清除网站数据] 已清理 LocalStorage:`, localStorageKeys);
 
-            // 4. 更新状态
+            // 4. 清理所有 SessionStorage
+            const sessionStorageKeys = Object.keys(sessionStorage);
+            sessionStorageKeys.forEach(key => {
+                sessionStorage.removeItem(key);
+            });
+            clearResults.push(`✓ SessionStorage: ${sessionStorageKeys.length} 项`);
+            console.log(`[清除网站数据] 已清理 SessionStorage:`, sessionStorageKeys);
+
+            // 5. 注销所有 Service Workers
+            if ("serviceWorker" in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(registrations.map(reg => reg.unregister()));
+                clearResults.push(`✓ Service Workers: ${registrations.length} 个`);
+                console.log(`[清除网站数据] 已注销 ${registrations.length} 个 Service Worker`);
+            }
+
+            // 6. 清理 Cookie（同域）
+            const cookies = document.cookie.split(";");
+            cookies.forEach(cookie => {
+                const [name] = cookie.split("=");
+                const trimmedName = name?.trim();
+                if (trimmedName) {
+                    // 设置过期时间为过去，删除 cookie
+                    document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                    document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+                }
+            });
+            clearResults.push(`✓ Cookies: ${cookies.length} 个`);
+            console.log(`[清除网站数据] 已清理 Cookies:`, cookies.length);
+
+            // 7. 清理应用特定数据
             setCacheSize("0 KB");
             setCacheStatusList([]);
+            setReportTemplates([]);
+            setCustomUrls([]);
+            setOfflineReports([]);
 
-            alert("缓存数据清理完成！");
+            // 8. 显示结果
+            alert(`✅ 网站数据清除完成！\n\n${clearResults.join('\n')}\n\n页面将在 2 秒后重新加载...`);
 
-            // 重新计算缓存大小
+            // 延迟后重新加载页面
             setTimeout(() => {
-                calculateCacheSize();
-                checkCacheStatus();
-            }, 500);
+                window.location.href = "/";
+            }, 2000);
 
         } catch (error) {
-            console.error("清理缓存数据失败:", error);
-            alert("清理缓存数据时出现错误");
+            console.error("[清除网站数据] 失败:", error);
+            alert(`❌ 清除网站数据时出现错误:\n${error instanceof Error ? error.message : String(error)}\n\n请手动清除浏览器数据或联系管理员。`);
         }
     };
     const saveCustomUrls = (urls: CustomUrlConfig[]) => {
@@ -543,7 +829,21 @@ export default function Page() {
             calculateCacheSize()
         }, 30000) // 每30秒更新一次
 
-        return () => clearInterval(interval)
+        // 页面卸载时重置预缓存操作标志
+        const handleBeforeUnload = () => {
+            if (currentPrecacheOperationRef.current) {
+                console.log(`[PWA] 页面即将卸载，取消进行中的预缓存操作 (ID: ${precacheTriggerTimeRef.current})`);
+                currentPrecacheOperationRef.current = false;
+                precacheTriggerTimeRef.current = null;
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        }
     }, [])
     const handlePrecacheSuccess = () => {
         setTimeout(() => {
@@ -664,11 +964,32 @@ export default function Page() {
 
         // 替换原有的 navigator.serviceWorker.controller.postMessage 调用部分
         try {
+            // 防止重复触发
+            if (currentPrecacheOperationRef.current) {
+                console.warn(`[PWA] 检测到正在进行的预缓存操作，取消本次请求`);
+                setPrecacheStatus("error");
+                setPrecacheMessage("请等待当前预缓存操作完成");
+                return;
+            }
+
+            // 标记预缓存操作开始
+            currentPrecacheOperationRef.current = true;
+            precacheTriggerTimeRef.current = Date.now();
+
+            console.log(`[PWA] 准备发送 CACHE_URLS 消息，URLs 数量: ${urlsToCache.length}`);
+            console.log(`[PWA] 发送时间: ${new Date().toISOString()}`);
+            console.log(`[PWA] 当前页面路径: ${window.location.pathname}`);
+            console.log(`[PWA] 操作 ID: ${precacheTriggerTimeRef.current}`);
+            console.log(`[PWA] 要缓存的 URLs:`, urlsToCache);
+            
             // 创建一个 MessageChannel 来建立双向通信
             const channel = new MessageChannel()
 
             // 监听来自 Service Worker 的回应
             channel.port1.onmessage = (event) => {
+                // 清除超时定时器
+                clearTimeout(timeoutId)
+
                 if (event.data === true) {
                     console.log("URLs 缓存成功！")
                     // 在这里更新 UI，例如设置成功状态、隐藏加载指示器等
@@ -685,13 +1006,20 @@ export default function Page() {
                     setTimeout(async () => {
                         await checkCacheStatus()
                     }, 100)
+                    // 预缓存成功，清除重置提示
+                    clearResetNeeded()
                 } else {
                     console.error("缓存过程中可能发生了问题，部分url失败。")
                     setPrecacheStatus("error")
                     setPrecacheMessage("预缓存完成，但可能存在部分失败")
+                    // 触发重置提示
+                    triggerResetNeeded("预缓存部分失败，可能是缓存系统不稳定", 'warning')
                 }
                 // 关闭端口
                 channel.port1.close()
+                // 重置预缓存操作标志
+                currentPrecacheOperationRef.current = false
+                precacheTriggerTimeRef.current = null
             }
 
             // 处理消息错误
@@ -700,7 +1028,23 @@ export default function Page() {
                 setPrecacheStatus("error")
                 setPrecacheMessage("通信错误")
                 channel.port1.close()
+                // 重置预缓存操作标志
+                currentPrecacheOperationRef.current = false
+                precacheTriggerTimeRef.current = null
+                // 触发重置提示
+                triggerResetNeeded("预缓存通信错误，可能是Service Worker状态异常", 'critical')
             }
+
+            // 设置超时处理
+            const timeoutId = setTimeout(() => {
+                console.error("[PWA] 预缓存操作超时")
+                setPrecacheStatus("error")
+                setPrecacheMessage("预缓存超时，请检查网络连接或尝试完全重置")
+                channel.port1.close()
+                currentPrecacheOperationRef.current = false
+                precacheTriggerTimeRef.current = null
+                triggerResetNeeded("预缓存操作超时，可能是缓存系统响应异常", 'warning')
+            }, 5 * 60 * 1000) // 5分钟超时
 
             // 发送消息到 Service Worker，并转移 MessageChannel 的 port2
             navigator.serviceWorker.controller.postMessage(
@@ -712,7 +1056,13 @@ export default function Page() {
             ) // 将 port2 转移给 Service Worker
         } catch (error) {
             setPrecacheStatus("error")
-            setPrecacheMessage(`预缓存失败: ${error instanceof Error ? error.message : "未知错误"}`)
+            const errorMessage = error instanceof Error ? error.message : "未知错误"
+            setPrecacheMessage(`预缓存失败: ${errorMessage}`)
+            // 重置预缓存操作标志
+            currentPrecacheOperationRef.current = false
+            precacheTriggerTimeRef.current = null
+            // 触发重置提示
+            triggerResetNeeded(`预缓存失败: ${errorMessage}，可能是缓存系统异常`, 'critical')
         }
     }
 
@@ -840,7 +1190,12 @@ export default function Page() {
                             <h2 className="text-base font-semibold text-gray-900">模板缓存管理</h2>
                             <button
                                 onClick={handleUpdateAllTemplates}
-                                className="px-4 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                disabled={!isNextJSServerReachable}
+                                className={`px-4 py-1 rounded-lg transition-colors text-sm ${
+                                    isNextJSServerReachable
+                                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
                             >
                                 更新所有模板
                             </button>
@@ -863,7 +1218,7 @@ export default function Page() {
                                             <div className="text-sm text-gray-600">
                                                 {cachedVersion ? (
                                                     <>
-                                                        缓存版本: {cachedVersion}
+                                                        缓存版本: {formatVersionTime(cachedVersion)}
                                                     </>
                                                 ) : (
                                                     "从未缓存"
@@ -884,7 +1239,12 @@ export default function Page() {
                                             </div>
                                             <button
                                                 onClick={() => handleUpdateSingleTemplate(status.templateId, status.version)}
-                                                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                                                disabled={!isNextJSServerReachable}
+                                                className={`px-3 py-1 rounded text-sm transition-colors ${
+                                                    isNextJSServerReachable
+                                                        ? "bg-blue-500 text-white hover:bg-blue-600"
+                                                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                }`}
                                             >
                                                 更新
                                             </button>
@@ -1051,9 +1411,9 @@ export default function Page() {
                     <div className="flex justify-between">
                         <button
                             onClick={() => handlePrecacheReports()}
-                            disabled={precacheStatus === "loading" || reportTemplates.length === 0}
+                            disabled={precacheStatus === "loading" || reportTemplates.length === 0 || !isNextJSServerReachable}
                             className={`px-2 py-1 rounded-lg font-medium transition-colors ${
-                                precacheStatus === "loading" || reportTemplates.length === 0
+                                precacheStatus === "loading" || reportTemplates.length === 0 || !isNextJSServerReachable
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                     : "bg-blue-600 text-white hover:bg-blue-700"
                             }`}
@@ -1067,12 +1427,13 @@ export default function Page() {
                                 `重新预缓存 (${reportTemplates.length + customUrls.filter((u) => u.enabled).length} 项)`
                             )}
                         </button>
-                        {/* 新增清理缓存数据按钮 */}
+                        {/* 清除网站数据按钮 */}
                         <button
-                            onClick={handleClearCacheData}
-                            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+                            onClick={handleClearSiteData}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                            title="清除所有网站数据（类似 Chrome DevTools 的清除网站数据）"
                         >
-                            删除全部缓存
+                            🗑️ 清除网站数据
                         </button>
                     </div>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
@@ -1238,6 +1599,59 @@ export default function Page() {
                             </div>
                         </div>
                     )}
+                    {/* 缓存健康警告提示 - 固定在顶部 */}
+                    {needsCompleteReset && (
+                        <div className={`fixed top-0 left-0 right-0 z-50 rounded-b-lg p-4 shadow-lg ${cacheHealthStatus === 'critical' ? 'bg-red-50 border-b-2 border-red-200' : 'bg-amber-50 border-b-2 border-amber-200'}`}>
+                            <div className="flex items-start space-x-3 max-w-7xl mx-auto">
+                                <svg 
+                                    className={`w-5 h-5 mt-0.5 ${cacheHealthStatus === 'critical' ? 'text-red-600' : 'text-amber-600'}`} 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path 
+                                        strokeLinecap="round" 
+                                        strokeLinejoin="round" 
+                                        strokeWidth={2} 
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+                                    />
+                                </svg>
+                                <div className="flex-1">
+                                    <h3 className={`text-sm font-medium ${cacheHealthStatus === 'critical' ? 'text-red-800' : 'text-amber-800'}`}>
+                                        {cacheHealthStatus === 'critical' ? '检测到严重的缓存异常' : '检测到缓存异常'}
+                                    </h3>
+                                    <p className={`text-sm mt-1 ${cacheHealthStatus === 'critical' ? 'text-red-700' : 'text-amber-700'}`}>
+                                        {resetReason}
+                                    </p>
+                                    <div className="mt-3 flex items-center space-x-3">
+                                        <button
+                                            onClick={handleCompleteReset}
+                                            disabled={!isNextJSServerReachable}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                isNextJSServerReachable
+                                                    ? cacheHealthStatus === 'critical' 
+                                                        ? 'bg-red-600 text-white hover:bg-red-700'
+                                                        : 'bg-amber-600 text-white hover:bg-amber-700'
+                                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            }`}
+                                        >
+                                            立即完全重置
+                                        </button>
+                                        <button
+                                            onClick={() => clearResetNeeded()}
+                                            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                                        >
+                                            暂时忽略
+                                        </button>
+                                    </div>
+                                    <p className={`text-xs mt-2 ${cacheHealthStatus === 'critical' ? 'text-red-600' : 'text-amber-600'}`}>
+                                        提示：完全重置将清理所有缓存并重新注册 Service Worker，重置后需要重新点击"重新预缓存"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mt-8 mb-32 bg-blue-50 border border-blue-200 rounded-md p-4">
                         <h2 className="text-lg font-semibold text-blue-800 mb-2">注意事项！</h2>
                         <p>为了避免离线编辑报告出现无法访问的问题:</p>
@@ -1336,8 +1750,9 @@ scp user@server:/path/to/certificate.crt ./</code></pre>
                                     </button>
                                 </li>
                             )}
-                            <li>若您添加了新的报告编辑任务后，而且是新模板或新版本号的报告，请在模板列表点击对应的"更新"按钮。</li>
-                            <li>如果基础缓存的大小出现异常（最新基础缓存大约<strong> 8.22 MB</strong>的），那么必须做个彻底地更新，请点下方"完全重置"，然后再点"重新预缓存"。</li>
+                            <li>为了避免代码不一致，通常请直接重新预缓存，更新全部模板，而不是在模板列表点击对应的"更新"按钮。</li>
+                            <li>如果基础缓存的大小出现异常（最新基础缓存大约<strong> {(CACHE_HEALTH_CONFIG.expectedSize / (1024 * 1024)).toFixed(2)} MB</strong>的），那么必须做个彻底地更新，请点下方"完全重置"，然后再点"重新预缓存"。</li>
+                            <li>若基础缓存大小是异常的，点击"完全重置"按钮都没反应的情况，请关闭浏览器然后重启再试；若真的无法恢复正常的才需考虑点击“清除网站数据”按钮并重启。</li>
                         </ul>
                     </div>
                 </div>
@@ -1348,7 +1763,12 @@ scp user@server:/path/to/certificate.crt ./</code></pre>
                         <div className="flex space-x-2 w-full justify-center sm:justify-start">
                             <button
                                 onClick={handleCompleteReset}
-                                className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs sm:text-sm"
+                                disabled={!isNextJSServerReachable}
+                                className={`px-3 py-1.5 rounded transition-colors text-xs sm:text-sm ${
+                                    isNextJSServerReachable
+                                        ? "bg-red-600 text-white hover:bg-red-700"
+                                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
                             >
                                 完全重置
                             </button>
@@ -1362,7 +1782,7 @@ scp user@server:/path/to/certificate.crt ./</code></pre>
                                 onClick={() => {
                                     if (currentBuildVersion) {
                                         localStorage.setItem("last-cache-warmup", currentBuildVersion);
-                                        alert(`已确认升级到版本 ${currentBuildVersion}，不再提醒`);
+                                        alert(`已确认升级到版本 ${formatVersionTime(currentBuildVersion)}，不再提醒`);
                                     } else {
                                         alert("无法获取当前版本信息");
                                     }

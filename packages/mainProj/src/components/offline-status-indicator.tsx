@@ -1,15 +1,19 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { WifiOff, Database, CloudOff, AlertTriangle } from "lucide-react"
+import { useParams } from "next/navigation"
+import { WifiOff, Database, CloudOff, AlertTriangle, Loader2 } from "lucide-react"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 import { withBasePath } from "@/lib/tool"
 
 export function OfflineStatusIndicator() {
+    const params = useParams()
+    const action = params?.action as string | undefined
     const { isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable } = useNetworkStatusContext()
     const [showMessage, setShowMessage] = useState(false)
-    const [isInitialCheck, setIsInitialCheck] = useState(true)
+    const [isCheckingStatus, setIsCheckingStatus] = useState(true)
     const [isSmallScreen, setIsSmallScreen] = useState(false)
+    const [isMediumScreen, setIsMediumScreen] = useState(false)
     const [showEmptyArrayReminder, setShowEmptyArrayReminder] = useState(false)
     const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false)
     const [hasOfflineStatus, setHasOfflineStatus] = useState(false)
@@ -18,13 +22,19 @@ export function OfflineStatusIndicator() {
     const hideTimerRef = useRef<NodeJS.Timeout | null>(null)
     // 用于跟踪上次保存的网络状态
     const lastSavedStatusRef = useRef<string | null>(null)
+    // 跟踪是否已经从 sessionStorage 恢复了状态
+    const hasRestoredFromSessionStorage = useRef(false)
+    // 用于控制检查状态定时器
+    const checkStatusTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-    // 检测小屏幕
+    // 检测屏幕尺寸
     useEffect(() => {
         const checkScreenSize = () => {
             const width = window.innerWidth
             const height = window.innerHeight
             setIsSmallScreen(width < 768 || height < 768)
+            // 检测中等屏幕: 1024px <= width < 1280px
+            setIsMediumScreen(width >= 1024 && width < 1280)
         }
         checkScreenSize()
         window.addEventListener("resize", checkScreenSize)
@@ -44,12 +54,23 @@ export function OfflineStatusIndicator() {
         const isNextJSOnline = isNextJSServerReachable === true
         const isGraphQLOnline = isGraphQLBackendReachable === true
         const isClientNetworkOnline = isClientOnline === true
-        
-        const offline = (!isClientNetworkOnline || !isNextJSOnline || !isGraphQLOnline || showEmptyArrayReminder) 
-            && isNextJSServerReachable !== undefined 
-            && isGraphQLBackendReachable !== undefined
-        
+
+        const offline = (!isClientNetworkOnline || !isNextJSOnline || !isGraphQLOnline || showEmptyArrayReminder)
+
         setHasOfflineStatus(offline)
+
+        // 检查是否从 sessionStorage 恢复了状态
+        const sessionStorageStatus = sessionStorage.getItem('network-status')
+        if (sessionStorageStatus && !hasRestoredFromSessionStorage.current) {
+            hasRestoredFromSessionStorage.current = true
+            // 从 sessionStorage 恢复后，立即开始检查，并保持"检查中"状态
+            checkStatusTimerRef.current = setTimeout(() => {
+                setIsCheckingStatus(false)
+            }, 2000) // 给检查2秒时间完成
+        } else if (!hasRestoredFromSessionStorage.current && isNextJSServerReachable !== undefined && isGraphQLBackendReachable !== undefined) {
+            // 如果没有从 sessionStorage 恢复，且状态已确定，停止检查
+            setIsCheckingStatus(false)
+        }
 
         // 生成当前状态的唯一标识
         const currentStatus = JSON.stringify({
@@ -111,11 +132,6 @@ export function OfflineStatusIndicator() {
             sessionStorage.removeItem('message-start-time')
             lastSavedStatusRef.current = null
         }
-
-        // 如果所有状态都已初始化，则标记初始检查完成
-        if (isClientOnline !== undefined && isNextJSServerReachable !== undefined && isGraphQLBackendReachable !== undefined) {
-            setIsInitialCheck(false)
-        }
     }, [isClientOnline, isNextJSServerReachable, isGraphQLBackendReachable, showEmptyArrayReminder])
 
     // 清理定时器
@@ -123,6 +139,9 @@ export function OfflineStatusIndicator() {
         return () => {
             if (hideTimerRef.current) {
                 clearTimeout(hideTimerRef.current)
+            }
+            if (checkStatusTimerRef.current) {
+                clearTimeout(checkStatusTimerRef.current)
             }
         }
     }, [])
@@ -170,11 +189,11 @@ export function OfflineStatusIndicator() {
 
     // 计算状态消息
     const getStatusInfo = () => {
-        // 如果状态还在检查中（undefined），显示"核实中"
-        if (isInitialCheck || isNextJSServerReachable === undefined || isGraphQLBackendReachable === undefined) {
+        // 如果状态还在检查中，显示"检查中"
+        if (isCheckingStatus) {
             return {
-                icon: AlertTriangle,
-                message: "核实中",
+                icon: Loader2,
+                message: "检查中",
                 color: "bg-blue-100 border-blue-300 text-blue-900",
             }
         }
@@ -231,16 +250,27 @@ export function OfflineStatusIndicator() {
     }
 
     // 如果没有任何离线状态，不显示指示器
-    if (!hasOfflineStatus && !isInitialCheck) return null
+    if (!hasOfflineStatus && !isCheckingStatus) return null
+
+    // 判断是否需要贴紧中间线布局
+    const shouldUseSidebarLayout = isMediumScreen && action
 
     return (
         <div
-            className={`print:hidden fixed top-0 left-1/2 transform -translate-x-1/2 z-50 ${color} px-4 py-2 text-sm font-medium flex items-center justify-center gap-2 rounded-b-md shadow-sm cursor-pointer hover:shadow-md transition-shadow`}
-            style={{ pointerEvents: "auto", ...getOpacityStyle() }}
+            className={`print:hidden fixed top-0 z-50 ${color} ${shouldUseSidebarLayout ? 'left-[calc(50%+192px)]' : 'left-1/2'} ${shouldUseSidebarLayout ? '' : 'transform -translate-x-1/2'} ${shouldUseSidebarLayout ? 'rounded-bl-md rounded-br-md' : 'rounded-b-md'} text-sm font-medium flex items-center gap-1.5 cursor-pointer hover:shadow-md transition-shadow`}
+            style={{ 
+                pointerEvents: "auto", 
+                padding: shouldUseSidebarLayout ? '6px 10px' : '4px 8px',
+                ...getOpacityStyle() 
+            }}
             onClick={handleClick}
             title={"离线队列"}
         >
-            <Icon className="h-4 w-4 flex-shrink-0" />
+            {isCheckingStatus ? (
+                <Icon className="h-4 w-4 flex-shrink-0 animate-spin" />
+            ) : (
+                <Icon className="h-4 w-4 flex-shrink-0" />
+            )}
             {showMessage && (
                 <span className="animate-fade-in">{message}</span>
             )}

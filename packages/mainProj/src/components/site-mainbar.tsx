@@ -38,24 +38,19 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
             ? items
             : [
                 {
-                    title: "报告概览",
-                    url: `/rep/`,
-                    icon: Home,
-                },
-                {
-                    title: "报告详情",
-                    url: `/rep/SLIDING_JJ/1`,
-                    icon: FileText,
-                },
-                {
                     title: "用户信息",
                     url: `/user`,
                     icon: User,
                 },
                 {
-                    title: "设置",
-                    url: `/settings`,
-                    icon: Settings,
+                    title: "检验任务",
+                    url: `/`,
+                    icon: Home,
+                },
+                {
+                    title: "待办事项",
+                    url: `/`,
+                    icon: FileText,
                 },
                 {
                     title: "离线能力预备",

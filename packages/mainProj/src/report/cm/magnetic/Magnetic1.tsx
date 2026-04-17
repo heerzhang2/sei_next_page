@@ -145,7 +145,7 @@ export const MagneticVw = ({
                 <span className="block text-center text-xs">FJB/JK 1045-0-2018</span>
                 <div className="flex justify-between">
                     &nbsp;
-                    <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
+                    <span className="text-sm @3xl:mr-4">报告编号：{rep?.isp.no}</span>
                 </div>
             </>
         }

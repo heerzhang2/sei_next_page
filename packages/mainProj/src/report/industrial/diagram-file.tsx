@@ -8,7 +8,7 @@ import { BlobInputList, CollapsibleFormSection } from "@/components/chub"
 import { useFrameEditorBar } from "@/report/hook/useFormFramework"
 import { useCallback, useState, useEffect, useMemo, useRef } from "react"
 import { toast } from "sonner"
-import { type FileStore, useUppyUpload } from "@/report/hook/useUppyUpload"
+import { type FileStore } from "@/report/hook/useUppyUpload"
 import {useOfflineUppyUpload} from "@/report/hook/useOfflineUppyUpload";
 import {fileOperationsQueue} from "@/lib/file-operations-queue";
 import {PendingOfflineState} from "@/report/industrial/diagram-manager";

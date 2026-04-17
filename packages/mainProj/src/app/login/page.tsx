@@ -5,6 +5,8 @@ import { OfflineLoginForm } from "@/components/offline-login-form"
 import {useNetworkStatusContext} from "@/contexts/network-status-context";
 import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Image from "next/image"
+import { withBasePath } from '@/lib/tool'
 
 export default function LoginPage() {
   const [isClient, setIsClient] = useState(false)
@@ -18,6 +20,18 @@ export default function LoginPage() {
     return (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
+            <div className="mb-6">
+              <Image
+                src={withBasePath("/fjsei-logo.png")}
+                alt="福建省特种设备检验研究院"
+                width={200}
+                height={80}
+                priority
+                className="mx-auto"
+                style={{ width: "auto", height: "4rem", objectFit: "contain" }}
+              />
+              <h2 className="mt-4 text-xl font-bold text-gray-800">福建省特种设备检验研究院</h2>
+            </div>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p>正在加载登录页面...</p>
           </div>
@@ -31,8 +45,18 @@ export default function LoginPage() {
         <div className="flex items-center justify-center min-h-screen">
           <div className="w-full max-w-md space-y-4 flex flex-col items-center">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold">前端服务离线登录</h1>
-              <p className="text-muted-foreground">Next.js服务器不可用，使用直连后端登录</p>
+              <Image
+                src={withBasePath("/fjsei-logo.png")}
+                alt="福建省特种设备检验研究院"
+                width={200}
+                height={80}
+                priority
+                className="mx-auto mb-4"
+                style={{ width: "auto", height: "4rem", objectFit: "contain" }}
+              />
+              <h1 className="text-2xl font-bold">福建省特种设备检验研究院</h1>
+              <p className="text-muted-foreground mt-2">前端服务离线登录</p>
+              <p className="text-sm text-muted-foreground">Next.js服务器不可用，使用直连后端登录</p>
             </div>
             <OfflineLoginForm />
           </div>
@@ -45,7 +69,17 @@ export default function LoginPage() {
     return (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center max-w-md">
-            <h1 className="text-2xl font-bold mb-4">完全离线模式</h1>
+            <Image
+              src={withBasePath("/fjsei-logo.png")}
+              alt="福建省特种设备检验研究院"
+              width={200}
+              height={80}
+              priority
+              className="mx-auto mb-4"
+              style={{ width: "auto", height: "4rem", objectFit: "contain" }}
+            />
+            <h1 className="text-2xl font-bold mb-2">福建省特种设备检验研究院</h1>
+            <h2 className="text-xl font-bold mb-4">完全离线模式</h2>
             <p className="text-muted-foreground mb-4">无法连接到任何服务器，新用户无法登录。</p>
             <p className="text-sm text-muted-foreground">如果您之前已登录，请直接访问应用页面使用离线功能。</p>
           </div>
@@ -56,6 +90,18 @@ export default function LoginPage() {
   return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-full max-w-md">
+          <div className="text-center mb-6">
+            <Image
+              src={withBasePath("/fjsei-logo.png")}
+              alt="福建省特种设备检验研究院"
+              width={200}
+              height={80}
+              priority
+              className="mx-auto"
+              style={{ width: "auto", height: "4rem", objectFit: "contain" }}
+            />
+            <h1 className="mt-4 text-xl font-bold text-gray-800">福建省特种设备检验研究院</h1>
+          </div>
           <Tabs defaultValue="standard" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="standard">标准登录</TabsTrigger>

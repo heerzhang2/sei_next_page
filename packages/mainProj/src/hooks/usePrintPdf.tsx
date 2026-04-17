@@ -128,9 +128,22 @@ export function usePageMarkinfo(
                     throw new Error(result.error)
                 }
             } catch (error) {
-                toast.error("服务端提取书签应答", {
-                    description: "文书打印转换器运行错误: " + error,
-                })
+                const errorMsg = error instanceof Error ? error.message : String(error)
+                // 检查是否是已处理的友好错误信息
+                const isFriendlyError = errorMsg.includes("请重新登录") || 
+                                       errorMsg.includes("没有权限") ||
+                                       errorMsg.includes("服务暂时不可用") ||
+                                       errorMsg.includes("网络连接异常")
+                
+                if (isFriendlyError) {
+                    toast.error("提取书签失败", {
+                        description: errorMsg,
+                    })
+                } else {
+                    toast.error("服务端提取书签应答", {
+                        description: "文书打印转换器运行错误: " + errorMsg,
+                    })
+                }
                 throw error
             } finally {
                 setIsMutating(false)

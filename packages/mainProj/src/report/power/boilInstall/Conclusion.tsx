@@ -140,7 +140,7 @@ export const ConclusionVw= ({ orc, rep,config } : { orc: any,rep:any,config:any[
                                <h3 id={"Conclusion"} className="text-xl text-center">1.1锅炉安装监督检验结论报告</h3>
                                <div className="flex justify-between">
                                    <span className="text-sm">工程名称：{orc?.工程名称}</span>
-                                   <span className="text-sm @3xl:mr-4">报告编号：{rep.isp.no}</span>
+                                   <span className="text-sm @3xl:mr-4">报告编号：{rep?.isp.no}</span>
                                </div>
                            </>}>
             <FlexibleTable id='Survey' columnWidths={ ["14.8%", "19%", "%", "11.6%","10%","8%"] } className="text-sm border-collapse">

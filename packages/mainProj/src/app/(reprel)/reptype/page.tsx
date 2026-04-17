@@ -1,188 +1,127 @@
-"use client"
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
+import { 
+    getAllTemplatesInfo, 
+    groupTemplatesByType, 
+    getEquipmentTypeLabel, 
+    getDefaultTab,
+    TemplateInfo 
+} from "./templateUtils";
+import HeaderWrapper from "@/component/header-wrapper";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Copy, Check, ExternalLink } from "lucide-react"
-import Link from "next/link"
+// 编译时生成静态页面
+export const dynamic = 'force-static';
 
-export default function ChromeGuidePage() {
-    const [copied, setCopied] = useState(false)
-    const [origin, setOrigin] = useState("")
+export default function ReportTypesPage() {
+    // 在编译时获取模板信息
+    const templates = getAllTemplatesInfo();
+    const groupedTemplates = groupTemplatesByType(templates);
+    const defaultTab = getDefaultTab(groupedTemplates);
 
-    useEffect(() => {
-        setOrigin(window.location.origin)
-    }, [])
+    // 定义标签顺序
+    const tabOrder = [
+        { key: 'boiler', label: '1锅炉' },
+        { key: 'vessel', label: '2压力容器' },
+        { key: 'elevator', label: '3电梯' },
+        { key: 'crane', label: '4起重' },
+        { key: 'vehicle', label: '5场(厂)车' },
+        { key: 'amusement', label: '6游乐设施' },
+        { key: 'ropeway', label: '9客运索道' },
+        { key: 'piping', label: '8压力管道' },
+        { key: 'atmospheric', label: 'R常压容器' },
+        { key: 'valve', label: 'F安全阀' },
+        { key: 'water', label: 'Z水质' },
+        { key: 'component', label: '7管道元件' },
+        { key: 'other', label: '其它' },
+    ];
 
-    const chromeCommand = `chrome.exe --unsafely-treat-insecure-origin-as-secure="${origin}" --user-data-dir=~/chrome-dev-profile`
-
-    const handleCopy = () => {
-        navigator.clipboard.writeText(chromeCommand)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }
+    // 过滤出有模板的标签
+    const availableTabs = tabOrder.filter(tab => groupedTemplates[tab.key]?.length > 0);
 
     return (
         <div className="container mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-6">目前支持的模板类型</h1>
+            <HeaderWrapper />
+            <Button variant="outline" size="sm" className="absolute top-4 right-4 bg-transparent" asChild>
+                <Link href="/">
+                    <Home className="w-4 h-4 mr-2" />
+                    返回首页
+                </Link>
+            </Button>
+            <h1 className="text-3xl font-bold mb-6">检验报告模板类型</h1>
 
-            <p className="mb-6">
-                由于Chrome的安全策略，从非HTTPS网站访问本地服务（如localhost）会被阻止。
-                以下是几种解决方法，请选择最适合您的方案。
+            <p className="mb-6 text-muted-foreground">
+                已支持的检验报告模板类型，共 {templates.length} 个模板
             </p>
 
-            <Tabs defaultValue="elevator">
-                <TabsList className="mb-4">
-                    <TabsTrigger value="amusement">游乐设施</TabsTrigger>
-                    <TabsTrigger value="boiler">锅炉</TabsTrigger>
-                    <TabsTrigger value="elevator">电梯</TabsTrigger>
-                    <TabsTrigger value="pipe">管道</TabsTrigger>
-                </TabsList>
+            {availableTabs.length > 0 ? (
+                <Tabs defaultValue={defaultTab}>
+                    <TabsList className="mb-4 flex-wrap h-auto">
+                        {availableTabs.map(tab => (
+                            <TabsTrigger key={tab.key} value={tab.key}>
+                                {tab.label}
+                                <span className="ml-1 text-xs text-muted-foreground">
+                                    ({groupedTemplates[tab.key].length})
+                                </span>
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
 
-                <TabsContent value="amusement">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>使用特殊启动参数</CardTitle>
-                            <CardDescription>这是最简单的临时解决方案，适用于开发环境</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ol className="list-decimal pl-5 space-y-4">
-                                <li>
-                                  <Link href="/rep/dP1At1q3QjidlXzd0wSsSlJlcG9ydA/SLIDING_JJ/1">滑行车类大型游乐设施监督检验</Link>
-                                </li>
-                                <li>
-                                    <p>使用以下命令启动Chrome:</p>
-                                    <div className="bg-slate-100 p-3 rounded-md mt-2 flex items-center justify-between">
-                                        <code className="text-sm break-all">{chromeCommand}</code>
-                                        <Button variant="ghost" size="sm" onClick={handleCopy} className="ml-2 flex-shrink-0">
-                                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                                        </Button>
-                                    </div>
-                                </li>
-                                <li>在新打开的Chrome窗口中访问您的应用</li>
-                            </ol>
-                        </CardContent>
-                        <CardFooter>
-                            <p className="text-sm text-muted-foreground">
-                                注意：此方法每次都需要使用命令行启动Chrome，但不需要管理员权限；
-                            </p>
-                        </CardFooter>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="boiler">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>使用Chrome标志</CardTitle>
-                            <CardDescription>通过Chrome的实验性标志禁用安全限制</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ol className="list-decimal pl-5 space-y-4">
-                                <li>
-                                    <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/POWER_AJ/1">电站锅炉安装监检</Link>
-                                </li>
-                                <li>
-                                    在Chrome地址栏中输入: <code>chrome://flags/#block-insecure-private-network-requests</code>
-                                </li>
-                                <li>
-                                    将该选项设置为 <strong>Disabled</strong>
-                                </li>
-                                <li>
-                                    点击底部的 <strong>Relaunch</strong> 按钮重启Chrome
-                                </li>
-                                <li>重新访问您的应用</li>
-                            </ol>
-                        </CardContent>
-                        <CardFooter>
-                            <p className="text-sm text-muted-foreground">
-                                注意：Chrome标志可能会在未来版本中被移除，这是一个临时解决方案
-                            </p>
-                        </CardFooter>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="elevator">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>使用企业策略</CardTitle>
-                            <CardDescription>适用于企业环境的长期解决方案</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="mb-4">管理员可以配置以下Chrome企业策略来允许私有网络请求:</p>
-                            <ul className="list-disc pl-5 space-y-2">
-                                <li>
-                                    <strong>InsecurePrivateNetworkRequestsAllowed</strong> - 允许所有网站
-                                </li>
-                                <li>
-                                    <strong>InsecurePrivateNetworkRequestsAllowedForUrls</strong> - 允许特定网站
-                                </li>
-                            </ul>
-                            <div className="mt-4">
-                                <Link
-                                    href="https://chromeenterprise.google/policies/"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 flex items-center"
-                                >
-                                    查看Chrome企业策略文档
-                                    <ExternalLink className="ml-1 h-4 w-4" />
-                                </Link>
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <p className="text-sm text-muted-foreground">注意：此方法需要管理员权限，适合企业环境</p>
-                        </CardFooter>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="pipe">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>使用企业策略</CardTitle>
-                            <CardDescription>管道</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ol className="list-decimal pl-5 space-y-4">
-                                <li>
-                                    <Link href="/rep/yAEq8hveSa-ZXgUyKHEEHVJlcG9ydA/INDPL_DJ/1">工业管道定期检验</Link>
-                                </li>
-                                <li>
-                                    <Link href="/rep/KQcbgDF9RO21DsI92H3tTVJlcG9ydA/UTILITY_NJ/1">-----公用管道年度检查-----</Link>
-                                </li>
-                                <li>
-                                    在Chrome地址栏中输入: <code>chrome://flags/#block-insecure-private-network-requests</code>
-                                </li>
-                                <li>
-                                    将该选项设置为 <strong>Disabled</strong>
-                                </li>
-                                <li>
-                                    点击底部的 <strong>Relaunch</strong> 按钮重启Chrome
-                                </li>
-                                <li>重新访问您的应用</li>
-                            </ol>
-                        </CardContent>
-                        <CardFooter>
-                            <p className="text-sm text-muted-foreground">注意：此方法需要管理员权限，适合企业环境</p>
-                        </CardFooter>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                    {availableTabs.map(tab => (
+                        <TabsContent key={tab.key} value={tab.key}>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>{tab.label} 模板列表</CardTitle>
+                                    <CardDescription>
+                                        共 {groupedTemplates[tab.key].length} 个报告模板
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <ol className="list-decimal pl-5 space-y-3">
+                                        {groupedTemplates[tab.key].map((template: TemplateInfo) => (
+                                            <li key={template.code}>
+                                                <Link 
+                                                    href={`/rep/*/${template.code}/1`}
+                                                    className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2"
+                                                >
+                                                    <span className="font-medium">{template.name}</span>
+                                                    <span className="text-xs text-muted-foreground bg-gray-100 px-2 py-0.5 rounded">
+                                                        {template.code}
+                                                    </span>
+                                                    {template.config?.vers && (
+                                                        <span className="text-xs text-green-600">
+                                                            v{Object.keys(template.config.vers).join(', v')}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    ))}
+                </Tabs>
+            ) : (
+                <Card>
+                    <CardContent className="py-8">
+                        <p className="text-center text-muted-foreground">
+                            暂无已实现的报告模板，请在 <code>src/app/rep/[repId]/</code> 目录下创建模板文件夹
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
 
             <div className="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
-                <h2 className="text-lg font-semibold text-blue-800 mb-2">最佳长期解决方案</h2>
-                <p>最佳的长期解决方案是将您的应用迁移到HTTPS。如果您需要访问本地服务， 可以考虑以下方案:</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1">
-                    <li>使用HTTPS开发环境</li>
-                    <li>将本地服务也配置为使用HTTPS</li>
-                    <li>使用纯前端PDF生成库替代本地服务</li>
+                <h2 className="text-lg font-semibold text-blue-800 mb-2">使用说明</h2>
+                <ul className="list-disc pl-5 mt-2 space-y-1 text-sm text-blue-700">
+                    <li>点击模板名称可预览报告模板</li>
+                    <li>版本号显示该模板支持的所有版本</li>
+                    <li>旧版本标记为失效的模板将不再推荐使用</li>
                 </ul>
             </div>
-
-            <div className="mt-6 text-center">
-                <Button variant="outline" onClick={() => window.history.back()}>
-                    返回应用
-                </Button>
-            </div>
         </div>
-    )
+    );
 }

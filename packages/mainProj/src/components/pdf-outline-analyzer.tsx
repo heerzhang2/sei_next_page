@@ -1,14 +1,15 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Loader2 } from "lucide-react"
+import { Loader2, Lock } from "lucide-react"
 import { usePageMarkinfo, usePageMarkLocal } from "@/hooks/usePrintPdf"
 import { createPdfJob } from "@/report/footer/job"
 import { PdfOutlineCacheManager, type PdfOutlineCacheItem } from "@/lib/indexeddb-cache"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useSession } from "next-auth/react"
 
 interface OutlineItem {
     title: string
@@ -37,6 +38,24 @@ interface PdfOutlineAnalyzerProps {
 export default function PdfOutlineAnalyzer({ rep, slug, inline, onLoadingChange }: PdfOutlineAnalyzerProps) {
     const dbkvId = rep?.id + "-" + slug //唯一性保证
     const pdf_job = createPdfJob(rep, true)
+    const { data: session } = useSession()
+
+    // 检查用户是否有权限（校核人或检验员）
+    const hasPermission = useMemo(() => {
+        if (!session?.user?.id || !rep?.stm) return false
+
+        const userId = session.user.id
+        const stm = rep.stm
+
+        // 检查是否是校核人（master）
+        const isMaster = stm.master?.id === userId
+
+        // 检查是否是检验员（authr 数组）
+        const isAuthr = stm.authr?.some((user: any) => user?.id === userId)
+
+        return isMaster || isAuthr
+    }, [session?.user?.id, rep?.stm])
+
     // 初始化缓存管理器
     const [cacheManager] = useState(
         () =>
@@ -198,26 +217,35 @@ export default function PdfOutlineAnalyzer({ rep, slug, inline, onLoadingChange 
             )}
             {!inline && (
                 <div className="text-center">
-                    <Button onClick={handleMarkGeneration} disabled={isLoading} className="mb-6">
-                        {localGetMarking ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                本地目录生成...
-                            </>
-                        ) : (
-                            "🎯 本机提取书签"
-                        )}
-                    </Button>
-                    <Button onClick={handleSubmit} disabled={isLoading} className="ml-4 mb-6">
-                        {isGetMarking ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                分析中...
-                            </>
-                        ) : (
-                            "服务端提取书签"
-                        )}
-                    </Button>
+                    {hasPermission ? (
+                        <>
+                            <Button onClick={handleMarkGeneration} disabled={isLoading} className="mb-6">
+                                {localGetMarking ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        本地目录生成...
+                                    </>
+                                ) : (
+                                    "🎯 本机提取书签"
+                                )}
+                            </Button>
+                            <Button onClick={handleSubmit} disabled={isLoading} className="ml-4 mb-6">
+                                {isGetMarking ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        分析中...
+                                    </>
+                                ) : (
+                                    "服务端提取书签"
+                                )}
+                            </Button>
+                        </>
+                    ) : (
+                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 bg-gray-100 p-3 rounded mb-6">
+                            <Lock className="w-4 h-4" />
+                            <span>仅校核人或检验员可执行此操作</span>
+                        </div>
+                    )}
                 </div>
             )}
         </>
