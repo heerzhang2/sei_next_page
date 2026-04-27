@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -15,7 +15,7 @@ model AUTHORITY {
 }
 
 model Adminunit {
-  id                                       BigInt     @id
+  id                                       BigInt     @id @default(autoincrement())
   areacode                                 String?    @unique(map: "IDXt789vk9nrybmrnugtatw5pc8r") @db.VarChar(255)
   prefix                                   String?    @db.VarChar(160)
   zipcode                                  String?    @db.VarChar(255)
@@ -165,7 +165,7 @@ model City {
 }
 
 model Company {
-  id        BigInt     @id
+  id        BigInt     @id @default(autoincrement())
   address   String?    @db.VarChar(256)
   lat       Float?
   linkMen   String?    @db.VarChar(255)
@@ -281,7 +281,7 @@ model Detail_PipingUnit {
 }
 
 model Division {
-  id                                    BigInt     @id
+  id                                    BigInt     @id @default(autoincrement())
   address                               String?    @db.VarChar(255)
   area                                  String?    @db.VarChar(255)
   branch                                Boolean?   @db.Bit(1)
@@ -332,7 +332,7 @@ model HSEARCH_OUTBOX_EVENT {
 }
 
 model Isp {
-  id                           BigInt      @id
+  id                           BigInt      @id @default(autoincrement())
   bsType                       Int?        @db.TinyInt
   conclusion                   String?     @db.VarChar(255)
   entrust                      Boolean?    @db.Bit(1)
@@ -401,7 +401,7 @@ model JsliceMang {
 }
 
 model Office {
-  id        BigInt     @id
+  id        BigInt     @id @default(autoincrement())
   name      String?    @db.VarChar(255)
   dep_id    BigInt
   lare_id   BigInt?
@@ -415,7 +415,7 @@ model Office {
 }
 
 model Person {
-  id         BigInt     @id
+  id         BigInt     @id @default(autoincrement())
   address    String?    @db.VarChar(256)
   gender     String?    @db.VarChar(255)
   lat        Float?
@@ -433,7 +433,7 @@ model Person {
 }
 
 model Province {
-  id                                        BigInt      @id
+  id                                        BigInt      @id @default(autoincrement())
   collapse                                  Boolean?    @db.Bit(1)
   name                                      String?     @db.VarChar(255)
   oldId                                     String?     @db.VarChar(255)
@@ -449,154 +449,9 @@ model Province {
   @@index([country_id], map: "FKdxo5jj1xpckdm45q7e5buyspe")
 }
 
-model QRTZ_BLOB_TRIGGERS {
-  SCHED_NAME    String        @db.VarChar(120)
-  TRIGGER_NAME  String        @db.VarChar(200)
-  TRIGGER_GROUP String        @db.VarChar(200)
-  BLOB_DATA     Bytes?        @db.Blob
-  QRTZ_TRIGGERS QRTZ_TRIGGERS @relation(fields: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP], references: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP], onDelete: NoAction, onUpdate: NoAction, map: "fk_1")
-
-  @@id([SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP])
-}
-
-model QRTZ_CALENDARS {
-  SCHED_NAME    String @db.VarChar(120)
-  CALENDAR_NAME String @db.VarChar(200)
-  CALENDAR      Bytes  @db.Blob
-
-  @@id([SCHED_NAME, CALENDAR_NAME])
-}
-
-model QRTZ_CRON_TRIGGERS {
-  SCHED_NAME      String        @db.VarChar(120)
-  TRIGGER_NAME    String        @db.VarChar(200)
-  TRIGGER_GROUP   String        @db.VarChar(200)
-  CRON_EXPRESSION String        @db.VarChar(200)
-  TIME_ZONE_ID    String?       @db.VarChar(80)
-  QRTZ_TRIGGERS   QRTZ_TRIGGERS @relation(fields: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP], references: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP], onDelete: NoAction, onUpdate: NoAction, map: "fk_1")
-
-  @@id([SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP])
-}
-
-model QRTZ_FIRED_TRIGGERS {
-  SCHED_NAME        String  @db.VarChar(120)
-  ENTRY_ID          String  @db.VarChar(95)
-  TRIGGER_NAME      String  @db.VarChar(200)
-  TRIGGER_GROUP     String  @db.VarChar(200)
-  INSTANCE_NAME     String  @db.VarChar(200)
-  FIRED_TIME        BigInt
-  SCHED_TIME        BigInt
-  PRIORITY          Int
-  STATE             String  @db.VarChar(16)
-  JOB_NAME          String? @db.VarChar(200)
-  JOB_GROUP         String? @db.VarChar(200)
-  IS_NONCONCURRENT  String? @db.VarChar(1)
-  REQUESTS_RECOVERY String? @db.VarChar(1)
-
-  @@id([SCHED_NAME, ENTRY_ID])
-}
-
-model QRTZ_JOB_DETAILS {
-  SCHED_NAME        String          @db.VarChar(120)
-  JOB_NAME          String          @db.VarChar(200)
-  JOB_GROUP         String          @db.VarChar(200)
-  DESCRIPTION       String?         @db.VarChar(250)
-  JOB_CLASS_NAME    String          @db.VarChar(250)
-  IS_DURABLE        String          @db.VarChar(1)
-  IS_NONCONCURRENT  String          @db.VarChar(1)
-  IS_UPDATE_DATA    String          @db.VarChar(1)
-  REQUESTS_RECOVERY String          @db.VarChar(1)
-  JOB_DATA          Bytes?          @db.Blob
-  QRTZ_TRIGGERS     QRTZ_TRIGGERS[]
-
-  @@id([SCHED_NAME, JOB_NAME, JOB_GROUP])
-}
-
-model QRTZ_LOCKS {
-  SCHED_NAME String @db.VarChar(120)
-  LOCK_NAME  String @db.VarChar(40)
-
-  @@id([SCHED_NAME, LOCK_NAME])
-}
-
-model QRTZ_PAUSED_TRIGGER_GRPS {
-  SCHED_NAME    String @db.VarChar(120)
-  TRIGGER_GROUP String @db.VarChar(200)
-
-  @@id([SCHED_NAME, TRIGGER_GROUP])
-}
-
-model QRTZ_SCHEDULER_STATE {
-  SCHED_NAME        String @db.VarChar(120)
-  INSTANCE_NAME     String @db.VarChar(200)
-  LAST_CHECKIN_TIME BigInt
-  CHECKIN_INTERVAL  BigInt
-
-  @@id([SCHED_NAME, INSTANCE_NAME])
-}
-
-model QRTZ_SIMPLE_TRIGGERS {
-  SCHED_NAME      String        @db.VarChar(120)
-  TRIGGER_NAME    String        @db.VarChar(200)
-  TRIGGER_GROUP   String        @db.VarChar(200)
-  REPEAT_COUNT    BigInt
-  REPEAT_INTERVAL BigInt
-  TIMES_TRIGGERED BigInt
-  QRTZ_TRIGGERS   QRTZ_TRIGGERS @relation(fields: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP], references: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP], onDelete: NoAction, onUpdate: NoAction, map: "fk_1")
-
-  @@id([SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP])
-}
-
-model QRTZ_SIMPROP_TRIGGERS {
-  SCHED_NAME    String        @db.VarChar(120)
-  TRIGGER_NAME  String        @db.VarChar(200)
-  TRIGGER_GROUP String        @db.VarChar(200)
-  STR_PROP_1    String?       @db.VarChar(512)
-  STR_PROP_2    String?       @db.VarChar(512)
-  STR_PROP_3    String?       @db.VarChar(512)
-  INT_PROP_1    Int?
-  INT_PROP_2    Int?
-  LONG_PROP_1   BigInt?
-  LONG_PROP_2   BigInt?
-  DEC_PROP_1    Decimal?      @db.Decimal(13, 4)
-  DEC_PROP_2    Decimal?      @db.Decimal(13, 4)
-  BOOL_PROP_1   String?       @db.VarChar(1)
-  BOOL_PROP_2   String?       @db.VarChar(1)
-  QRTZ_TRIGGERS QRTZ_TRIGGERS @relation(fields: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP], references: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_NAME, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP, TRIGGER_GROUP], onDelete: NoAction, onUpdate: NoAction, map: "fk_1")
-
-  @@id([SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP])
-}
-
-model QRTZ_TRIGGERS {
-  SCHED_NAME            String                 @db.VarChar(120)
-  TRIGGER_NAME          String                 @db.VarChar(200)
-  TRIGGER_GROUP         String                 @db.VarChar(200)
-  JOB_NAME              String                 @db.VarChar(200)
-  JOB_GROUP             String                 @db.VarChar(200)
-  DESCRIPTION           String?                @db.VarChar(250)
-  NEXT_FIRE_TIME        BigInt?
-  PREV_FIRE_TIME        BigInt?
-  PRIORITY              Int?
-  TRIGGER_STATE         String                 @db.VarChar(16)
-  TRIGGER_TYPE          String                 @db.VarChar(8)
-  START_TIME            BigInt
-  END_TIME              BigInt?
-  CALENDAR_NAME         String?                @db.VarChar(200)
-  MISFIRE_INSTR         Int?                   @db.SmallInt
-  JOB_DATA              Bytes?                 @db.Blob
-  QRTZ_BLOB_TRIGGERS    QRTZ_BLOB_TRIGGERS?
-  QRTZ_CRON_TRIGGERS    QRTZ_CRON_TRIGGERS?
-  QRTZ_SIMPLE_TRIGGERS  QRTZ_SIMPLE_TRIGGERS?
-  QRTZ_SIMPROP_TRIGGERS QRTZ_SIMPROP_TRIGGERS?
-  QRTZ_JOB_DETAILS      QRTZ_JOB_DETAILS       @relation(fields: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, JOB_NAME, JOB_NAME, JOB_NAME, JOB_NAME, JOB_NAME, JOB_GROUP, JOB_GROUP, JOB_GROUP, JOB_GROUP, JOB_GROUP], references: [SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, SCHED_NAME, JOB_NAME, JOB_NAME, JOB_NAME, JOB_NAME, JOB_NAME, JOB_GROUP, JOB_GROUP, JOB_GROUP, JOB_GROUP, JOB_GROUP], onDelete: NoAction, onUpdate: NoAction, map: "fk_1")
-
-  @@id([SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP])
-  @@index([SCHED_NAME, JOB_NAME, JOB_GROUP], map: "fk_1")
-}
-
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model Report {
-  id                        BigInt       @id
+  id                        BigInt       @id @default(autoincrement())
   data                      String?      @db.MediumText
   link                      String?      @db.Text
   modeltype                 String?      @db.VarChar(255)
@@ -657,7 +512,7 @@ model StoreSync {
 }
 
 model Task {
-  id                           BigInt    @id
+  id                           BigInt    @id @default(autoincrement())
   bsType                       Int?      @db.TinyInt
   charge                       Float?
   crtime                       DateTime? @db.DateTime(6)
@@ -694,7 +549,7 @@ model Task {
 }
 
 model Town {
-  id        BigInt     @id
+  id        BigInt     @id @default(autoincrement())
   name      String?    @db.VarChar(255)
   oldId     String?    @db.VarChar(255)
   county_id BigInt?
@@ -706,14 +561,12 @@ model Town {
 }
 
 model USERS {
-  id                                         BigInt              @id
+  id                                         BigInt              @id @default(autoincrement())
   authName                                   String?             @db.VarChar(255)
   authType                                   String?             @db.VarChar(255)
   email                                      String?             @db.VarChar(70)
   ENABLED                                    Boolean             @db.Bit(1)
-  firstname                                  String?             @db.VarChar(20)
   LASTPASSWORDRESETDATE                      DateTime?           @db.DateTime(6)
-  lastname                                   String?             @db.VarChar(20)
   mobile                                     String?             @db.VarChar(255)
   oldAccount                                 String?             @db.VarChar(255)
   password                                   String?             @db.VarChar(128)
@@ -771,7 +624,7 @@ model USER_PERMIS_ECL {
 }
 
 model Unit {
-  id                       BigInt     @id
+  id                       BigInt     @id @default(autoincrement())
   area                     String?    @db.VarChar(255)
   cancel                   Boolean?   @db.Bit(1)
   crDate                   DateTime?  @db.Date
@@ -808,7 +661,7 @@ model Unit {
 }
 
 model Village {
-  id        BigInt     @id
+  id        BigInt     @id @default(autoincrement())
   address   String?    @db.VarChar(255)
   name      String?    @db.VarChar(255)
   oldId     BigInt?
@@ -823,24 +676,37 @@ model Village {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model migration_task {
   id              BigInt    @id @default(autoincrement())
-  task_name       String    @db.VarChar(200)
-  task_type       String    @db.VarChar(50)
+  taskName        String    @map("task_name") @db.VarChar(200)
+  taskType        String    @map("task_type") @db.VarChar(50)
   status          String    @default("PENDING") @db.VarChar(20)
-  total_count     BigInt?   @default(0)
-  processed_count BigInt?   @default(0)
-  success_count   BigInt?   @default(0)
-  fail_count      BigInt?   @default(0)
+  totalCount      BigInt?   @map("total_count") @default(0)
+  processedCount  BigInt?   @map("processed_count") @default(0)
+  successCount    BigInt?   @map("success_count") @default(0)
+  failCount       BigInt?   @map("fail_count") @default(0)
   progress        Int?      @default(0)
-  error_message   String?   @db.Text
-  create_time     DateTime? @default(now()) @db.Timestamp(0)
-  update_time     DateTime? @default(now()) @db.Timestamp(0)
-  complete_time   DateTime? @db.Timestamp(0)
-  create_by       String?   @db.VarChar(100)
+  errorMessage    String?   @map("error_message") @db.Text
+  createTime      DateTime? @map("create_time") @default(now()) @db.Timestamp(0)
+  updateTime      DateTime? @map("update_time") @default(now()) @db.Timestamp(0)
+  completeTime    DateTime? @map("complete_time") @db.Timestamp(0)
+  createBy        String?   @map("create_by") @db.VarChar(100)
   deleted         Int?      @default(0)
 
-  @@index([create_time], map: "idx_create_time")
+  @@index([createTime], map: "idx_create_time")
   @@index([status], map: "idx_status")
-  @@index([task_type], map: "idx_task_type")
+  @@index([taskType], map: "idx_task_type")
+  @@map("migration_task")
+}
+
+model migration_log {
+  id          BigInt    @id @default(autoincrement())
+  taskId      String    @map("task_id") @db.VarChar(100)
+  level       String    @db.VarChar(20)
+  message     String    @db.Text
+  details     String?   @db.Text
+  createTime  DateTime? @map("create_time") @default(now()) @db.Timestamp(0)
+
+  @@index([taskId], map: "idx_task_id")
+  @@map("migration_log")
 }
 
 model teacher {

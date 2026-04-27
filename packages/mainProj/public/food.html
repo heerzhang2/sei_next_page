@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Midnight Eats — WebMCP Food Delivery Demo</title>
+
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  MIDNIGHT EATS — WebMCP SaaS Food Delivery Demo                ║
+  ║                                                                  ║
+  ║  A DoorDash-style experience showcasing WebMCP in a real-world   ║
+  ║  SaaS context. Demonstrates how an AI agent can:                 ║
+  ║                                                                  ║
+  ║    • Search restaurants by cuisine                               ║
+  ║    • Browse menus                                                ║
+  ║    • Build a cart (add/remove items)                             ║
+  ║    • Apply promo codes                                           ║
+  ║    • Check out via a declarative form tool                       ║
+  ║    • Track order status                                          ║
+  ║                                                                  ║
+  ║  APIs Used:                                                      ║
+  ║    DECLARATIVE → <form toolname="checkout">                      ║
+  ║    IMPERATIVE  → navigator.modelContext.registerTool() x 8       ║
+  ║                                                                  ║
+  ║  Requirements:                                                   ║
+  ║    Chrome 146+ · chrome://flags/#enable-webmcp-testing           ║
+  ║    Model Context Tool Inspector Extension                        ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   RESET & DESIGN TOKENS
+   ═══════════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #09090b;
+  --surface: #141417;
+  --surface-2: #1c1c21;
+  --surface-3: #232329;
+  --border: #27272a;
+  --border-light: #3f3f46;
+  --text: #fafaf9;
+  --text-secondary: #a1a1aa;
+  --text-dim: #52525b;
+  --orange: #f97316;
+  --orange-dim: #f9731622;
+  --orange-glow: #f9731633;
+  --green: #22c55e;
+  --green-dim: #22c55e22;
+  --red: #ef4444;
+  --red-dim: #ef444422;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 4px;
+  --nav-h: 64px;
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body { min-height: 100vh; }
+
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+/* ═══════════════════════════════════════════════════════
+   TOP NAVIGATION
+   ═══════════════════════════════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  background: #09090bf0;
+  backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.logo span { color: var(--orange); }
+
+.address-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 14px 6px 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-left: 12px;
+}
+
+.address-pill .pin { font-size: 15px; }
+
+.nav-spacer { flex: 1; }
+
+.cart-btn {
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.cart-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+.cart-badge {
+  background: var(--orange);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+.cart-badge.pulse { animation: badge-pulse 0.4s ease; }
+
+@keyframes badge-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+.cart-badge:empty { display: none; }
+
+.webmcp-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN CONTENT AREA
+   ═══════════════════════════════════════════════════════ */
+.content {
+  margin-top: var(--nav-h);
+  padding: 32px 28px 100px;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.view { display: none; animation: fadeUp 0.35s ease; }
+.view.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   HOME VIEW — Restaurant Grid
+   ═══════════════════════════════════════════════════════ */
+.home-header { margin-bottom: 32px; }
+
+.home-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  margin-bottom: 6px;
+}
+
+.home-header p { color: var(--text-secondary); font-size: 15px; }
+
+.filters { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+
+.filter-pill {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 100px;
+  padding: 7px 16px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.filter-pill:hover, .filter-pill.active {
+  background: var(--orange-dim);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.restaurant-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.restaurant-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px -15px #00000066, 0 0 0 1px var(--border-light);
+}
+
+.card-banner {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, var(--surface));
+}
+
+.card-body { padding: 16px 20px 20px; }
+.card-body h3 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+.card-cuisine { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.card-meta .star { color: var(--orange); font-weight: 600; }
+.card-meta .time { color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════
+   MENU VIEW
+   ═══════════════════════════════════════════════════════ */
+.menu-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+
+.back-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.back-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+.menu-header-info h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 600; }
+.menu-header-info p { font-size: 13px; color: var(--text-secondary); }
+
+.menu-category { margin-bottom: 28px; }
+
+.menu-category h4 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--orange);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.menu-items { display: flex; flex-direction: column; gap: 8px; }
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  transition: all 0.2s;
+}
+
+.menu-item:hover { border-color: var(--border-light); }
+
+.item-emoji { font-size: 28px; flex-shrink: 0; }
+.item-info { flex: 1; min-width: 0; }
+.item-info h5 { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.item-info p { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+.item-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  margin-right: 12px;
+}
+
+.add-btn {
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.add-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+.add-btn.in-cart { background: var(--green-dim); color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════
+   CART DRAWER
+   ═══════════════════════════════════════════════════════ */
+.cart-overlay {
+  position: fixed; inset: 0;
+  background: #00000088;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.cart-overlay.open { opacity: 1; pointer-events: all; }
+
+.cart-drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 440px;
+  max-width: 92vw;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  z-index: 201;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cart-overlay.open + .cart-drawer,
+.cart-drawer.open { transform: translateX(0); }
+
+.cart-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.cart-header h3 { font-size: 18px; font-weight: 600; }
+
+.close-cart {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  padding: 6px 10px;
+  font-size: 16px;
+  transition: all 0.15s;
+}
+
+.close-cart:hover { border-color: var(--red); color: var(--red); }
+
+.cart-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+.cart-empty { text-align: center; padding: 40px 0; color: var(--text-dim); font-size: 14px; }
+.cart-empty .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-item:last-of-type { border-bottom: none; }
+.cart-item-info { flex: 1; }
+.cart-item-info h5 { font-size: 13px; font-weight: 500; }
+.cart-item-info .cart-item-restaurant { font-size: 11px; color: var(--text-dim); }
+.cart-item-qty { display: flex; align-items: center; gap: 8px; }
+
+.qty-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 26px; height: 26px;
+  border-radius: var(--radius-xs);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.qty-btn:hover { border-color: var(--orange); color: var(--orange); }
+.qty-btn.remove:hover { border-color: var(--red); color: var(--red); }
+
+.cart-item-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 55px;
+  text-align: right;
+}
+
+.promo-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.promo-row input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  outline: none;
+}
+
+.promo-row input:focus { border-color: var(--orange); }
+
+.promo-row button {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 8px 14px;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.promo-row button:hover { border-color: var(--orange); color: var(--orange); }
+
+.promo-applied { font-size: 12px; color: var(--green); margin-top: 6px; }
+
+.cart-totals {
+  padding: 16px 0 0;
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cart-totals .row { display: flex; justify-content: space-between; }
+
+.cart-totals .row.total {
+  font-size: 16px; font-weight: 700;
+  margin-top: 6px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.cart-totals .discount { color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════
+   CHECKOUT FORM (Declarative WebMCP Tool)
+   ═══════════════════════════════════════════════════════ */
+.cart-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.checkout-form { display: flex; flex-direction: column; gap: 10px; }
+.checkout-form .form-row { display: flex; gap: 8px; }
+.checkout-form .form-row > * { flex: 1; }
+
+.checkout-form label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 3px;
+  display: block;
+}
+
+.checkout-form input,
+.checkout-form select,
+.checkout-form textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 11px;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.checkout-form input:focus,
+.checkout-form select:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-dim);
+}
+
+.checkout-form textarea { resize: none; height: 44px; }
+
+.checkout-btn {
+  width: 100%;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+
+.checkout-btn:hover { filter: brightness(1.1); }
+.checkout-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* WebMCP pseudo-classes */
+form:tool-form-active { outline: var(--orange) dashed 2px !important; outline-offset: 4px; }
+button:tool-submit-active { outline: var(--green) dashed 2px !important; outline-offset: 2px; }
+
+/* ═══════════════════════════════════════════════════════
+   ORDER CONFIRMATION
+   ═══════════════════════════════════════════════════════ */
+.order-success { text-align: center; padding: 60px 20px; }
+
+.order-success .check {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--green-dim);
+  color: var(--green);
+  font-size: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.order-success h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.order-success p { color: var(--text-secondary); font-size: 15px; margin-bottom: 4px; }
+
+.order-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--orange);
+  background: var(--orange-dim);
+  padding: 6px 16px;
+  border-radius: 100px;
+  display: inline-block;
+  margin-top: 16px;
+}
+
+.order-tracker { margin-top: 40px; display: flex; justify-content: center; gap: 0; }
+
+.track-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+  position: relative;
+}
+
+.track-step::before {
+  content: '';
+  position: absolute;
+  top: 16px; right: 50%;
+  width: 100%; height: 2px;
+  background: var(--border);
+}
+
+.track-step:first-child::before { display: none; }
+
+.track-dot {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.track-step.completed .track-dot { background: var(--green-dim); border-color: var(--green); }
+
+.track-step.active .track-dot {
+  background: var(--orange-dim);
+  border-color: var(--orange);
+  animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 var(--orange-glow); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+
+.track-label { font-size: 11px; color: var(--text-dim); }
+.track-step.completed .track-label { color: var(--green); }
+.track-step.active .track-label { color: var(--orange); }
+
+.back-home-btn {
+  margin-top: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.back-home-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ═══════════════════════════════════════════════════════
+   AGENT LOG BAR (bottom)
+   ═══════════════════════════════════════════════════════ */
+.agent-log-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #09090bf5;
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 90;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.agent-log-bar .log-label {
+  color: var(--orange);
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 9px;
+  flex-shrink: 0;
+}
+
+.agent-log-bar .log-content { color: var(--text-dim); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.agent-log-bar .tool-count { color: var(--text-dim); flex-shrink: 0; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .content { padding: 24px 16px 100px; }
+  .restaurant-grid { grid-template-columns: 1fr; }
+  .address-pill, .webmcp-badge { display: none; }
+  .cart-drawer { width: 100%; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ═══════ NAVIGATION ═══════ -->
+<nav>
+  <div class="logo">midnight<span>eats</span></div>
+  <div class="address-pill">
+    <span class="pin">📍</span>
+    <span id="nav-address">Set delivery address</span>
+  </div>
+  <div class="nav-spacer"></div>
+  <span class="webmcp-badge">WebMCP Demo</span>
+  <button class="cart-btn" onclick="toggleCart()">
+    🛒 Cart <span class="cart-badge" id="cart-badge"></span>
+  </button>
+</nav>
+
+
+<!-- ═══════ HOME VIEW ═══════ -->
+<div class="content">
+
+<div class="view active" id="view-home">
+  <div class="home-header">
+    <h1>What are you craving?</h1>
+    <p>Choose a restaurant, build your order, and let the AI agent handle the rest.</p>
+  </div>
+  <div class="filters" id="cuisine-filters"></div>
+  <div class="restaurant-grid" id="restaurant-grid"></div>
+</div>
+
+
+<!-- ═══════ MENU VIEW ═══════ -->
+<div class="view" id="view-menu">
+  <div class="menu-header">
+    <button class="back-btn" onclick="showHome()">← Back</button>
+    <div class="menu-header-info">
+      <h2 id="menu-title"></h2>
+      <p id="menu-meta"></p>
+    </div>
+  </div>
+  <div id="menu-content"></div>
+</div>
+
+
+<!-- ═══════ ORDER VIEW ═══════ -->
+<div class="view" id="view-order">
+  <div class="order-success">
+    <div class="check">✓</div>
+    <h2>Order Placed!</h2>
+    <p>Your food is being prepared.</p>
+    <p id="order-eta" style="color: var(--green);"></p>
+    <div class="order-id" id="order-id-display"></div>
+    <div class="order-tracker" id="order-tracker">
+      <div class="track-step completed"><div class="track-dot">✓</div><div class="track-label">Confirmed</div></div>
+      <div class="track-step active"><div class="track-dot">🍳</div><div class="track-label">Preparing</div></div>
+      <div class="track-step"><div class="track-dot">🚗</div><div class="track-label">On the way</div></div>
+      <div class="track-step"><div class="track-dot">📦</div><div class="track-label">Delivered</div></div>
+    </div>
+    <button class="back-home-btn" onclick="resetAndGoHome()">Order Again</button>
+  </div>
+</div>
+
+</div>
+
+
+<!-- ═══════ CART DRAWER ═══════ -->
+<div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-header">
+    <h3>Your Order</h3>
+    <button class="close-cart" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cart-body"></div>
+
+  <!-- ─────────────────────────────────────────────────────────
+       DECLARATIVE WebMCP TOOL — CHECKOUT FORM
+
+       toolname="checkout" makes this form a callable WebMCP tool.
+       tooldescription tells the agent what it does and when to use it.
+       Each input's toolparamdescription describes the parameter to the model.
+
+       When invoked by an agent, Chrome auto-fills these fields
+       and the submit event fires with e.agentInvoked === true.
+       ───────────────────────────────────────────────────────── -->
+  <div class="cart-footer" id="cart-footer" style="display:none;">
+    <form
+      class="checkout-form"
+      id="checkout-form"
+      toolname="checkout"
+      tooldescription="Place a food delivery order and complete checkout. Requires a delivery address. Use this tool AFTER items have been added to the cart using the add_to_cart tool. The cart must have at least one item. Returns the full order confirmation including order ID and estimated delivery time."
+    >
+      <div>
+        <label for="delivery_address">Delivery Address</label>
+        <input type="text" id="delivery_address" name="delivery_address" required
+          placeholder="123 Main St, Apt 4B"
+          toolparamdescription="Full street delivery address including apartment or unit number">
+      </div>
+      <div>
+        <label for="delivery_instructions">Instructions</label>
+        <textarea id="delivery_instructions" name="delivery_instructions"
+          placeholder="Ring doorbell, leave at door..."
+          toolparamdescription="Optional delivery instructions for the driver such as gate codes or drop-off preferences"></textarea>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="tip_amount">Tip ($)</label>
+          <select id="tip_amount" name="tip_amount" required
+            toolparamdescription="Dollar tip amount for the delivery driver">
+            <option value="0">No tip</option>
+            <option value="3">$3.00</option>
+            <option value="5" selected>$5.00</option>
+            <option value="8">$8.00</option>
+            <option value="10">$10.00</option>
+          </select>
+        </div>
+        <div>
+          <label for="payment_method">Payment</label>
+          <select id="payment_method" name="payment_method" required
+            toolparamdescription="Payment method to charge. Choose from saved cards or cash on delivery.">
+            <option value="visa_4242">Visa ···4242</option>
+            <option value="mastercard_8888">MC ···8888</option>
+            <option value="cash">Cash on delivery</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="checkout-btn" id="checkout-btn" disabled>Place Order</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- ═══════ AGENT LOG BAR ═══════ -->
+<div class="agent-log-bar">
+  <span class="log-label">Agent Log</span>
+  <span class="log-content" id="agent-log">Waiting for tool invocation…</span>
+  <span class="tool-count" id="tool-count"></span>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════════ -->
+<script>
+
+/* ═══════════════════════════════════════════════════════════════
+   RESTAURANT DATA
+   ═══════════════════════════════════════════════════════════════ */
+
+const RESTAURANTS = [
+  {
+    id: "koji_ramen", name: "Koji Ramen House", cuisine: "Japanese",
+    rating: 4.8, delivery_time: "20–30 min", delivery_fee: 2.99, emoji: "🍜",
+    gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+    menu: [
+      { id: "tonkotsu", name: "Tonkotsu Ramen", desc: "Rich pork bone broth, chashu, soft egg, nori", price: 16.50, category: "Ramen", emoji: "🍜", tags: [] },
+      { id: "miso_ramen", name: "Miso Ramen", desc: "Fermented soybean broth, corn, butter, bean sprouts", price: 15.00, category: "Ramen", emoji: "🥣", tags: [] },
+      { id: "spicy_tan", name: "Spicy Tantanmen", desc: "Sesame chili broth, ground pork, bok choy", price: 17.00, category: "Ramen", emoji: "🌶️", tags: ["spicy"] },
+      { id: "gyoza", name: "Gyoza (6pc)", desc: "Pan-fried pork dumplings with dipping sauce", price: 8.50, category: "Sides", emoji: "🥟", tags: [] },
+      { id: "edamame", name: "Edamame", desc: "Steamed soybeans with sea salt", price: 5.00, category: "Sides", emoji: "🫛", tags: ["vegan"] },
+      { id: "matcha_mochi", name: "Matcha Mochi Ice Cream", desc: "Green tea ice cream in mochi shell (3pc)", price: 7.00, category: "Dessert", emoji: "🍡", tags: [] },
+    ]
+  },
+  {
+    id: "bella_napoli", name: "Bella Napoli", cuisine: "Italian",
+    rating: 4.6, delivery_time: "25–35 min", delivery_fee: 3.49, emoji: "🍕",
+    gradient: "linear-gradient(135deg, #2d1b1b 0%, #3d1f1f 50%, #4a1e1e 100%)",
+    menu: [
+      { id: "margherita", name: "Margherita Pizza", desc: "San Marzano tomato, fresh mozzarella, basil", price: 14.00, category: "Pizza", emoji: "🍕", tags: ["vegetarian"] },
+      { id: "diavola", name: "Diavola Pizza", desc: "Spicy salami, chili flakes, mozzarella", price: 16.50, category: "Pizza", emoji: "🔥", tags: ["spicy"] },
+      { id: "carbonara", name: "Spaghetti Carbonara", desc: "Guanciale, pecorino, egg yolk, black pepper", price: 15.00, category: "Pasta", emoji: "🍝", tags: [] },
+      { id: "arrabbiata", name: "Penne Arrabbiata", desc: "Spicy tomato sauce, garlic, parsley", price: 13.00, category: "Pasta", emoji: "🌶️", tags: ["vegan", "spicy"] },
+      { id: "bruschetta", name: "Bruschetta (4pc)", desc: "Grilled bread, tomatoes, garlic, basil oil", price: 9.00, category: "Starters", emoji: "🥖", tags: ["vegan"] },
+      { id: "tiramisu", name: "Tiramisu", desc: "Mascarpone, espresso-soaked ladyfingers, cocoa", price: 8.50, category: "Dessert", emoji: "🍰", tags: [] },
+    ]
+  },
+  {
+    id: "green_fork", name: "The Green Fork", cuisine: "Vegan",
+    rating: 4.7, delivery_time: "15–25 min", delivery_fee: 1.99, emoji: "🥗",
+    gradient: "linear-gradient(135deg, #0d1f0d 0%, #1a3318 50%, #0d2818 100%)",
+    menu: [
+      { id: "buddha_bowl", name: "Buddha Bowl", desc: "Quinoa, roasted sweet potato, tahini, avocado", price: 14.50, category: "Bowls", emoji: "🥗", tags: ["vegan", "gf"] },
+      { id: "acai_bowl", name: "Açaí Bowl", desc: "Blended açaí, banana, granola, coconut flakes", price: 12.00, category: "Bowls", emoji: "🫐", tags: ["vegan", "gf"] },
+      { id: "falafel_wrap", name: "Falafel Wrap", desc: "Crispy falafel, hummus, pickled veggies, tahini", price: 11.50, category: "Wraps", emoji: "🌯", tags: ["vegan"] },
+      { id: "mushroom_burger", name: "Portobello Burger", desc: "Grilled portobello, cashew cheese, arugula", price: 13.50, category: "Burgers", emoji: "🍔", tags: ["vegan"] },
+      { id: "green_smoothie", name: "Super Green Smoothie", desc: "Kale, spinach, banana, almond milk, spirulina", price: 7.50, category: "Drinks", emoji: "🥤", tags: ["vegan", "gf"] },
+      { id: "choc_mousse", name: "Avocado Chocolate Mousse", desc: "Dark chocolate, avocado, maple syrup", price: 8.00, category: "Dessert", emoji: "🍫", tags: ["vegan", "gf"] },
+    ]
+  },
+  {
+    id: "seoul_kitchen", name: "Seoul Kitchen", cuisine: "Korean",
+    rating: 4.5, delivery_time: "25–40 min", delivery_fee: 3.49, emoji: "🇰🇷",
+    gradient: "linear-gradient(135deg, #1a1428 0%, #261a3d 50%, #1f1535 100%)",
+    menu: [
+      { id: "bibimbap", name: "Bibimbap", desc: "Mixed rice, vegetables, gochujang, fried egg", price: 14.00, category: "Rice", emoji: "🍚", tags: [] },
+      { id: "bulgogi", name: "Bulgogi", desc: "Marinated grilled beef, sesame, steamed rice", price: 17.00, category: "BBQ", emoji: "🥩", tags: [] },
+      { id: "kimchi_jjigae", name: "Kimchi Jjigae", desc: "Spicy kimchi stew, tofu, pork belly", price: 15.00, category: "Stews", emoji: "🍲", tags: ["spicy"] },
+      { id: "kfc_korean", name: "Korean Fried Chicken", desc: "Double-fried, soy garlic glaze, pickled radish", price: 13.50, category: "Chicken", emoji: "🍗", tags: [] },
+      { id: "japchae", name: "Japchae", desc: "Glass noodles, vegetables, sesame oil, soy sauce", price: 12.00, category: "Noodles", emoji: "🍜", tags: ["vegetarian"] },
+      { id: "hotteok", name: "Hotteok (3pc)", desc: "Sweet pancakes filled with brown sugar and nuts", price: 7.00, category: "Dessert", emoji: "🥞", tags: [] },
+    ]
+  },
+  {
+    id: "smoke_barrel", name: "Smoke & Barrel", cuisine: "BBQ",
+    rating: 4.9, delivery_time: "30–45 min", delivery_fee: 4.49, emoji: "🔥",
+    gradient: "linear-gradient(135deg, #1f1510 0%, #2d1c0e 50%, #3a2010 100%)",
+    menu: [
+      { id: "brisket_plate", name: "Smoked Brisket Plate", desc: "12hr smoked brisket, coleslaw, pickles, white bread", price: 19.50, category: "Plates", emoji: "🥩", tags: [] },
+      { id: "pulled_pork", name: "Pulled Pork Sandwich", desc: "Hickory smoked, Carolina mustard slaw, brioche bun", price: 14.00, category: "Sandwiches", emoji: "🍖", tags: [] },
+      { id: "ribs_half", name: "Half Rack Ribs", desc: "St. Louis style, dry rub, bourbon glaze", price: 22.00, category: "Plates", emoji: "🍖", tags: [] },
+      { id: "mac_cheese", name: "Smoked Mac & Cheese", desc: "Four cheese, smoked gouda, breadcrumb crust", price: 8.50, category: "Sides", emoji: "🧀", tags: ["vegetarian"] },
+      { id: "cornbread", name: "Jalapeño Cornbread", desc: "Honey butter, roasted jalapeño", price: 5.50, category: "Sides", emoji: "🌽", tags: ["vegetarian"] },
+      { id: "banana_pudding", name: "Banana Pudding", desc: "Vanilla wafers, fresh banana, whipped cream", price: 7.00, category: "Dessert", emoji: "🍌", tags: [] },
+    ]
+  },
+  {
+    id: "maison_douce", name: "Maison Douce", cuisine: "French Bakery",
+    rating: 4.7, delivery_time: "10–20 min", delivery_fee: 1.49, emoji: "🥐",
+    gradient: "linear-gradient(135deg, #1f1a14 0%, #2a2318 50%, #33291c 100%)",
+    menu: [
+      { id: "croissant", name: "Butter Croissant", desc: "Flaky, laminated French butter dough", price: 4.50, category: "Pastries", emoji: "🥐", tags: ["vegetarian"] },
+      { id: "pain_choc", name: "Pain au Chocolat", desc: "Croissant dough, dark chocolate batons", price: 5.00, category: "Pastries", emoji: "🍫", tags: ["vegetarian"] },
+      { id: "croque_monsieur", name: "Croque Monsieur", desc: "Gruyère, béchamel, ham, toasted sourdough", price: 12.50, category: "Sandwiches", emoji: "🥪", tags: [] },
+      { id: "quiche", name: "Quiche Lorraine", desc: "Gruyère, lardons, cream, flaky pastry shell", price: 10.00, category: "Savory", emoji: "🥧", tags: [] },
+      { id: "eclair", name: "Chocolate Éclair", desc: "Choux pastry, pastry cream, dark chocolate glaze", price: 6.50, category: "Dessert", emoji: "🍩", tags: [] },
+      { id: "cafe_latte", name: "Café Latte", desc: "Double espresso, steamed milk", price: 5.50, category: "Drinks", emoji: "☕", tags: ["vegetarian"] },
+    ]
+  },
+];
+
+const PROMO_CODES = {
+  "WELCOME20": { discount: 0.20, label: "20% off", type: "percent" },
+  "FREEDELIVERY": { discount: 0, label: "Free delivery", type: "delivery" },
+  "SAVE5": { discount: 5, label: "$5 off", type: "flat" },
+};
+
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════ */
+
+const state = {
+  currentView: 'home',
+  currentRestaurant: null,
+  cart: [],
+  promo: null,
+  promoCode: null,
+  cartOpen: false,
+  order: null,
+  deliveryAddress: '',
+  cuisineFilter: 'all',
+};
+
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDERING HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+function agentLog(msg) { $('#agent-log').textContent = msg; }
+
+function showView(id) {
+  $$('.view').forEach(v => v.classList.remove('active'));
+  $(`#view-${id}`).classList.add('active');
+  state.currentView = id;
+}
+
+function showHome() { state.currentRestaurant = null; showView('home'); }
+
+function showMenu(restaurantId) {
+  const r = RESTAURANTS.find(x => x.id === restaurantId);
+  if (!r) return;
+  state.currentRestaurant = restaurantId;
+  $('#menu-title').textContent = `${r.emoji} ${r.name}`;
+  $('#menu-meta').textContent = `${r.cuisine} · ${r.rating}★ · ${r.delivery_time} · $${r.delivery_fee.toFixed(2)} delivery`;
+  renderMenu(r);
+  showView('menu');
+}
+
+function showOrderConfirmation(order) {
+  state.order = order;
+  $('#order-id-display').textContent = `#${order.id}`;
+  $('#order-eta').textContent = `Estimated delivery: ${order.estimated_delivery}`;
+  showView('order');
+}
+
+function resetAndGoHome() {
+  state.cart = []; state.promo = null; state.promoCode = null; state.order = null;
+  updateCartUI(); showHome();
+}
+
+function renderRestaurants(filter = 'all') {
+  const grid = $('#restaurant-grid');
+  const filtered = filter === 'all' ? RESTAURANTS
+    : RESTAURANTS.filter(r => r.cuisine.toLowerCase().includes(filter.toLowerCase()));
+
+  grid.innerHTML = filtered.map(r => `
+    <div class="restaurant-card" onclick="showMenu('${r.id}')">
+      <div class="card-banner" style="background: ${r.gradient}">${r.emoji}</div>
+      <div class="card-body">
+        <h3>${r.name}</h3>
+        <div class="card-cuisine">${r.cuisine}</div>
+        <div class="card-meta">
+          <span class="star">★ ${r.rating}</span>
+          <span class="time">⏱ ${r.delivery_time}</span>
+          <span>$${r.delivery_fee.toFixed(2)} delivery</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFilters() {
+  const cuisines = ['All', ...new Set(RESTAURANTS.map(r => r.cuisine))];
+  $('#cuisine-filters').innerHTML = cuisines.map(c => {
+    const val = c.toLowerCase();
+    const active = (val === 'all' && state.cuisineFilter === 'all') || val === state.cuisineFilter;
+    return `<button class="filter-pill ${active ? 'active' : ''}" onclick="filterCuisine('${val}')">${c}</button>`;
+  }).join('');
+}
+
+function filterCuisine(cuisine) {
+  state.cuisineFilter = cuisine;
+  renderFilters();
+  renderRestaurants(cuisine);
+}
+
+function renderMenu(restaurant) {
+  const categories = [...new Set(restaurant.menu.map(i => i.category))];
+  $('#menu-content').innerHTML = categories.map(cat => {
+    const items = restaurant.menu.filter(i => i.category === cat);
+    return `<div class="menu-category"><h4>${cat}</h4><div class="menu-items">${items.map(item => {
+      const inCart = state.cart.find(c => c.item.id === item.id);
+      return `<div class="menu-item">
+        <div class="item-emoji">${item.emoji}</div>
+        <div class="item-info"><h5>${item.name}</h5><p>${item.desc}</p></div>
+        <div class="item-price">$${item.price.toFixed(2)}</div>
+        <button class="add-btn ${inCart ? 'in-cart' : ''}"
+          onclick="addToCart('${restaurant.id}','${item.id}')">${inCart ? `✓ ×${inCart.qty}` : '+ Add'}</button>
+      </div>`;
+    }).join('')}</div></div>`;
+  }).join('');
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   CART LOGIC
+   ═══════════════════════════════════════════════════════════════ */
+
+function toggleCart() {
+  state.cartOpen = !state.cartOpen;
+  $('#cart-overlay').classList.toggle('open', state.cartOpen);
+  $('#cart-drawer').classList.toggle('open', state.cartOpen);
+}
+
+function addToCart(restaurantId, itemId, qty = 1, specialInstructions = '') {
+  const restaurant = RESTAURANTS.find(r => r.id === restaurantId);
+  if (!restaurant) return;
+  const item = restaurant.menu.find(i => i.id === itemId);
+  if (!item) return;
+  const existing = state.cart.find(c => c.item.id === itemId);
+  if (existing) {
+    existing.qty += qty;
+    if (specialInstructions) existing.special_instructions = specialInstructions;
+  } else {
+    state.cart.push({ item, restaurant, qty, special_instructions: specialInstructions });
+  }
+  updateCartUI(); pulseBadge();
+  if (state.currentRestaurant) {
+    const r = RESTAURANTS.find(r => r.id === state.currentRestaurant);
+    if (r) renderMenu(r);
+  }
+}
+
+function removeFromCart(itemId) {
+  const idx = state.cart.findIndex(c => c.item.id === itemId);
+  if (idx === -1) return;
+  state.cart[idx].qty -= 1;
+  if (state.cart[idx].qty <= 0) state.cart.splice(idx, 1);
+  updateCartUI();
+  if (state.currentRestaurant) {
+    const r = RESTAURANTS.find(r => r.id === state.currentRestaurant);
+    if (r) renderMenu(r);
+  }
+}
+
+function clearCart() { state.cart = []; state.promo = null; state.promoCode = null; updateCartUI(); }
+
+function getCartTotal() {
+  const subtotal = state.cart.reduce((s, c) => s + (c.item.price * c.qty), 0);
+  const deliveryFees = [...new Set(state.cart.map(c => c.restaurant.id))].reduce((s, rid) => {
+    const r = RESTAURANTS.find(x => x.id === rid);
+    return s + (r ? r.delivery_fee : 0);
+  }, 0);
+  let discount = 0, deliveryDiscount = 0;
+  if (state.promo) {
+    if (state.promo.type === 'percent') discount = subtotal * state.promo.discount;
+    if (state.promo.type === 'flat') discount = Math.min(state.promo.discount, subtotal);
+    if (state.promo.type === 'delivery') deliveryDiscount = deliveryFees;
+  }
+  return { subtotal, deliveryFees, discount, deliveryDiscount, total: subtotal + deliveryFees - discount - deliveryDiscount };
+}
+
+function pulseBadge() {
+  const b = $('#cart-badge');
+  b.classList.remove('pulse');
+  void b.offsetWidth;
+  b.classList.add('pulse');
+}
+
+function updateCartUI() {
+  const totalQty = state.cart.reduce((s, c) => s + c.qty, 0);
+  $('#cart-badge').textContent = totalQty || '';
+  const body = $('#cart-body'), footer = $('#cart-footer'), btn = $('#checkout-btn');
+
+  if (state.cart.length === 0) {
+    body.innerHTML = `<div class="cart-empty"><div class="empty-icon">🛒</div><p>Your cart is empty</p><p style="margin-top:4px;font-size:12px">Add items from a restaurant to get started</p></div>`;
+    footer.style.display = 'none'; btn.disabled = true; return;
+  }
+
+  footer.style.display = 'block'; btn.disabled = false;
+  btn.textContent = `Place Order · $${getCartTotal().total.toFixed(2)}`;
+
+  let html = state.cart.map(c => `
+    <div class="cart-item">
+      <span style="font-size:22px">${c.item.emoji}</span>
+      <div class="cart-item-info"><h5>${c.item.name}</h5><div class="cart-item-restaurant">${c.restaurant.name}${c.special_instructions ? ' · ' + c.special_instructions : ''}</div></div>
+      <div class="cart-item-qty">
+        <button class="qty-btn remove" onclick="removeFromCart('${c.item.id}')">−</button>
+        <span style="font-size:13px;min-width:16px;text-align:center">${c.qty}</span>
+        <button class="qty-btn" onclick="addToCart('${c.restaurant.id}','${c.item.id}')">+</button>
+      </div>
+      <div class="cart-item-price">$${(c.item.price * c.qty).toFixed(2)}</div>
+    </div>`).join('');
+
+  html += `<div class="promo-row"><input type="text" id="promo-input" placeholder="Promo code" value="${state.promoCode || ''}"><button onclick="applyPromoFromUI()">Apply</button></div>`;
+  if (state.promo) html += `<div class="promo-applied">✓ ${state.promo.label} applied (${state.promoCode})</div>`;
+
+  const t = getCartTotal();
+  html += `<div class="cart-totals">
+    <div class="row"><span>Subtotal</span><span>$${t.subtotal.toFixed(2)}</span></div>
+    <div class="row"><span>Delivery</span><span>$${t.deliveryFees.toFixed(2)}</span></div>
+    ${t.discount > 0 ? `<div class="row discount"><span>Promo</span><span>−$${t.discount.toFixed(2)}</span></div>` : ''}
+    ${t.deliveryDiscount > 0 ? `<div class="row discount"><span>Free delivery</span><span>−$${t.deliveryDiscount.toFixed(2)}</span></div>` : ''}
+    <div class="row total"><span>Total</span><span>$${t.total.toFixed(2)}</span></div>
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+function applyPromoFromUI() { applyPromo($('#promo-input')?.value?.trim().toUpperCase()); }
+
+function applyPromo(code) {
+  const promo = PROMO_CODES[code];
+  if (promo) {
+    state.promo = promo; state.promoCode = code; updateCartUI();
+    agentLog(`Promo "${code}" applied: ${promo.label}`);
+    return { success: true, code, ...promo };
+  }
+  return { success: false, error: `Invalid code "${code}". Valid: WELCOME20, FREEDELIVERY, SAVE5` };
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   DECLARATIVE FORM — Submit Handler
+   ═══════════════════════════════════════════════════════════════ */
+
+$('#checkout-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  if (state.cart.length === 0) {
+    if (e.agentInvoked) e.respondWith(Promise.resolve({ success: false, error: "Cart is empty. Add items first." }));
+    return;
+  }
+
+  const data = Object.fromEntries(new FormData(e.target));
+  state.deliveryAddress = data.delivery_address;
+  $('#nav-address').textContent = data.delivery_address;
+
+  const totals = getCartTotal();
+  const order = {
+    id: 'ME-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+    items: state.cart.map(c => ({ name: c.item.name, qty: c.qty, price: c.item.price, restaurant: c.restaurant.name })),
+    delivery_address: data.delivery_address,
+    delivery_instructions: data.delivery_instructions,
+    tip: parseFloat(data.tip_amount || 0),
+    payment_method: data.payment_method,
+    subtotal: totals.subtotal,
+    delivery_fee: totals.deliveryFees,
+    discount: totals.discount + totals.deliveryDiscount,
+    total: totals.total + parseFloat(data.tip_amount || 0),
+    promo: state.promoCode || null,
+    status: "confirmed",
+    estimated_delivery: "30–45 minutes",
+    placed_at: new Date().toISOString(),
+  };
+
+  state.cartOpen = false;
+  $('#cart-overlay').classList.remove('open');
+  $('#cart-drawer').classList.remove('open');
+  showOrderConfirmation(order);
+
+  const src = e.agentInvoked ? 'AGENT' : 'USER';
+  agentLog(`[${src}] Order ${order.id} placed · $${order.total.toFixed(2)}`);
+
+  if (e.agentInvoked) {
+    e.respondWith(Promise.resolve({ success: true, message: `Order ${order.id} placed`, order }));
+  }
+});
+
+
+/* ═══════════════════════════════════════════════════════════════
+   IMPERATIVE API — 8 Tools via navigator.modelContext
+
+   Each tool has:
+   • name         — identifier the agent calls
+   • description  — tells the agent what/when/how
+   • inputSchema  — JSON Schema for parameters
+   • execute()    — runs the tool, returns { content: [...] }
+   ═══════════════════════════════════════════════════════════════ */
+
+if ('modelContext' in navigator) {
+
+  // ── 1. search_restaurants ──────────────────────────────────
+  navigator.modelContext.registerTool({
+    name: "search_restaurants",
+    description: "Search for restaurants by cuisine type, name, or dietary preference (e.g. 'vegan', 'spicy'). Returns a list with IDs, ratings, delivery times. Use when the user asks what's available or wants a specific cuisine.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Cuisine type, restaurant name, or dietary tag. Case-insensitive." }
+      },
+      required: ["query"]
+    },
+    execute: ({ query }) => {
+      const q = query.toLowerCase();
+      const results = RESTAURANTS.filter(r =>
+        r.name.toLowerCase().includes(q) || r.cuisine.toLowerCase().includes(q) ||
+        r.menu.some(i => i.tags.some(t => t.includes(q)))
+      );
+      filterCuisine(q === '' ? 'all' : q); showHome();
+      agentLog(`search_restaurants("${query}") → ${results.length} results`);
+      return { content: [{ type: "text", text: JSON.stringify({
+        success: true, count: results.length,
+        restaurants: results.map(r => ({ id: r.id, name: r.name, cuisine: r.cuisine, rating: r.rating, delivery_time: r.delivery_time, delivery_fee: r.delivery_fee }))
+      }, null, 2)}]};
+    }
+  });
+
+  // ── 2. get_menu ────────────────────────────────────────────
+  navigator.modelContext.registerTool({
+    name: "get_menu",
+    description: "Get the full menu for a restaurant by ID. Returns all items with IDs, names, descriptions, prices, and dietary tags. Also navigates the UI to that restaurant. You need item IDs from here to use add_to_cart.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        restaurant_id: {
+          type: "string",
+          enum: RESTAURANTS.map(r => r.id),
+          description: "Restaurant ID: " + RESTAURANTS.map(r => `'${r.id}' (${r.name})`).join(', ')
+        }
+      },
+      required: ["restaurant_id"]
+    },
+    execute: ({ restaurant_id }) => {
+      const r = RESTAURANTS.find(x => x.id === restaurant_id);
+      if (!r) return { content: [{ type: "text", text: JSON.stringify({ success: false, error: `Not found: ${restaurant_id}` }) }] };
+      showMenu(restaurant_id);
+      agentLog(`get_menu("${restaurant_id}") → ${r.menu.length} items`);
+      return { content: [{ type: "text", text: JSON.stringify({
+        success: true, restaurant: { id: r.id, name: r.name, cuisine: r.cuisine },
+        menu: r.menu.map(i => ({ id: i.id, name: i.name, description: i.desc, price: i.price, category: i.category, dietary_tags: i.tags }))
+      }, null, 2)}]};
+    }
+  });
+
+  // ── 3. add_to_cart ─────────────────────────────────────────
+  navigator.modelContext.registerTool({
+    name: "add_to_cart",
+    description: "Add a menu item to the cart. Get restaurant_id and item_id from get_menu first. Quantity defaults to 1. If item already in cart, quantity increases.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        restaurant_id: { type: "string", description: "Restaurant ID the item belongs to" },
+        item_id: { type: "string", description: "Menu item ID to add" },
+        quantity: { type: "number", description: "How many to add (default 1)" },
+        special_instructions: { type: "string", description: "Optional: 'no onions', 'extra spicy', etc." }
+      },
+      required: ["restaurant_id", "item_id"]
+    },
+    execute: ({ restaurant_id, item_id, quantity, special_instructions }) => {
+      const r = RESTAURANTS.find(x => x.id === restaurant_id);
+      if (!r) return { content: [{ type: "text", text: JSON.stringify({ success: false, error: `Restaurant not found: ${restaurant_id}` }) }] };
+      const item = r.menu.find(i => i.id === item_id);
+      if (!item) return { content: [{ type: "text", text: JSON.stringify({ success: false, error: `Item not found: ${item_id}. Available: ${r.menu.map(i=>i.id).join(', ')}` }) }] };
+      addToCart(restaurant_id, item_id, quantity || 1, special_instructions || '');
+      agentLog(`add_to_cart → ${item.name} ×${quantity || 1}`);
+      return { content: [{ type: "text", text: JSON.stringify({
+        success: true, added: { name: item.name, price: item.price, quantity: quantity || 1 },
+        cart_total_items: state.cart.reduce((s,c) => s+c.qty, 0), cart_total_price: getCartTotal().total
+      })}]};
+    }
+  });
+
+  // ── 4. remove_from_cart ────────────────────────────────────
+  navigator.modelContext.registerTool({
+    name: "remove_from_cart",
+    description: "Remove one quantity of an item from the cart by item_id. Removes entirely if quantity reaches zero.",
+    inputSchema: {
+      type: "object",
+      properties: { item_id: { type: "string", description: "Menu item ID to remove" } },
+      required: ["item_id"]
+    },
+    execute: ({ item_id }) => {
+      const existing = state.cart.find(c => c.item.id === item_id);
+      if (!existing) return { content: [{ type: "text", text: JSON.stringify({ success: false, error: `Item '${item_id}' not in cart` }) }] };
+      const name = existing.item.name;
+      removeFromCart(item_id);
+      agentLog(`remove_from_cart → ${name}`);
+      return { content: [{ type: "text", text: JSON.stringify({
+        success: true, removed: name,
+        cart_total_items: state.cart.reduce((s,c) => s+c.qty, 0), cart_total_price: getCartTotal().total
+      })}]};
+    }
+  });
+
+  // ── 5. get_cart (read-only) ────────────────────────────────
+  navigator.modelContext.registerTool({
+    name: "get_cart",
+    description: "Get current cart contents, quantities, prices, and total. Read-only. Use to verify the order before checkout.",
+    inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: "true" },
+    execute: () => {
+      agentLog(`get_cart → ${state.cart.length} items`);
+      return { content: [{ type: "text", text: JSON.stringify({
+        success: true,
+        items: state.cart.map(c => ({ item_id: c.item.id, name: c.item.name, restaurant: c.restaurant.name, restaurant_id: c.restaurant.id, price: c.item.price, quantity: c.qty, line_total: c.item.price * c.qty, special_instructions: c.special_instructions || null })),
+        promo: state.promoCode || null, ...getCartTotal()
+      }, null, 2)}]};
+    }
+  });
+
+  // ── 6. clear_cart ──────────────────────────────────────────
+  navigator.modelContext.registerTool({
+    name: "clear_cart",
+    description: "Remove all items from the cart and reset promo codes. Use when user wants to start over.",
+    inputSchema: { type: "object", properties: {} },
+    execute: () => {
+      clearCart();
+      agentLog('clear_cart → emptied');
+      return { content: [{ type: "text", text: JSON.stringify({ success: true, message: "Cart cleared" }) }] };
+    }
+  });
+
+  // ── 7. apply_promo_code ────────────────────────────────────
+  navigator.modelContext.registerTool({
+    name: "apply_promo_code",
+    description: "Apply a promotional discount code. Valid codes: WELCOME20 (20% off), FREEDELIVERY (free delivery), SAVE5 ($5 off). Returns descriptive error with valid codes if invalid, so the agent can suggest alternatives.",
+    inputSchema: {
+      type: "object",
+      properties: { code: { type: "string", description: "Promo code, case-insensitive" } },
+      required: ["code"]
+    },
+    execute: ({ code }) => {
+      const result = applyPromo(code.toUpperCase());
+      agentLog(`apply_promo_code("${code}") → ${result.success ? 'applied' : 'failed'}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  });
+
+  // ── 8. get_order_status (read-only) ────────────────────────
+  navigator.modelContext.registerTool({
+    name: "get_order_status",
+    description: "Check the status of the current order. Returns order ID, status, items, total, and ETA. Use when user asks 'where's my food?'",
+    inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: "true" },
+    execute: () => {
+      if (!state.order) return { content: [{ type: "text", text: JSON.stringify({ success: false, error: "No order placed yet." }) }] };
+      showView('order');
+      agentLog(`get_order_status → ${state.order.id}`);
+      return { content: [{ type: "text", text: JSON.stringify({ success: true, order: state.order }, null, 2) }] };
+    }
+  });
+
+  $('#tool-count').textContent = '8 imperative + 1 declarative = 9 tools';
+  agentLog('WebMCP ready — 9 tools registered. Open the Chrome extension to inspect them.');
+
+} else {
+  agentLog('⚠ navigator.modelContext not found — enable chrome://flags/#enable-webmcp-testing');
+  $('#tool-count').textContent = 'WebMCP unavailable';
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   WEBMCP EVENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+window.addEventListener('toolactivated', ({ toolName }) => {
+  agentLog(`🤖 Agent activated: "${toolName}"`);
+});
+
+window.addEventListener('toolcancel', ({ toolName }) => {
+  agentLog(`❌ Agent cancelled: "${toolName}"`);
+});
+
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════ */
+
+renderFilters();
+renderRestaurants();
+updateCartUI();
+
+</script>
+</body>
+</html>

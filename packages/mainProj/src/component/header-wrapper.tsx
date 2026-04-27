@@ -11,7 +11,7 @@ const AUTH_QUERY_CACHE_MS = 10 * 60 * 1000
 export const AuthCompQuery = gql`
       query AuthCompQuery {
           authUser{
-              id,username, person{id,name}
+              id,username, authName, person{id,name}
               dep{id name} office{id name} 
               unit{id name dvs{id name} }
               ispUnits{id,unit{id,name}}

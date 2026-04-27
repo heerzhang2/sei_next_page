@@ -66,29 +66,17 @@ export async function createProcessInstanceRest(processDefinitionId: string, var
 }
 
 /**
- * 查询所有流程定义（用于调试）
+ * 查询流程实例
  */
-export async function listAllProcessDefinitions() {
-    if (typeof window !== 'undefined') {
-        throw new Error('此函数只能在服务端使用');
-    }
+export async function getProcessInstance(processInstanceKey: string): Promise<any> {
+    const client = await getCamundaClient();
+    return client.getProcessInstance(processInstanceKey);
+}
 
-    try {
-        const client = await getCamundaClient();
-
-        // 查询流程定义
-        const result = await client.searchProcessDefinitions({});
-
-        console.log("查询到的流程定义数量:", result.items?.length || 0);
-        console.log("所有流程定义:", JSON.stringify(result, null, 2));
-
-        return result;
-    } catch (error: any) {
-        console.error("查询流程定义失败:", error);
-
-        return {
-            items: [],
-            message: "查询流程定义失败"
-        };
-    }
+/**
+ * 获取所有流程定义列表
+ */
+export async function listAllProcessDefinitions(): Promise<any[]> {
+    const client = await getCamundaClient();
+    return client.listProcessDefinitions();
 }

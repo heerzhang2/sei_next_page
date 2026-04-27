@@ -46,6 +46,7 @@ export default function SignUpForm() {
     const [error, setError] = useState("")
     const [success, setSuccess] = useState("")
     const { deviceFingerprint: deviceId } = useDeviceFingerprint()
+    const [authType, setAuthType] = useState<"none" | "oldPlatform" | "external">("none")
 
     const validateForm = (): boolean => {
         setError("")
@@ -78,10 +79,17 @@ export default function SignUpForm() {
             return false
         }
 
-        // 如果填写了外部认证信息，需要同时填写用户名和密码
-        if (external) {
-            if (!eName || !ePassword) {
-                setError("外部认证需要填写用户名和密码")
+        // 根据认证类型进行验证
+        if (authType === "oldPlatform") {
+            // 旧的智慧平台账户：只需要账户名
+            if (!eName) {
+                setError("旧的智慧平台账户需要填写账户名")
+                return false
+            }
+        } else if (authType === "external") {
+            // 外部认证系统：需要填写系统名称、用户名和密码
+            if (!external || !eName || !ePassword) {
+                setError("外部认证需要填写系统名称、用户名和密码")
                 return false
             }
         }
@@ -103,15 +111,34 @@ export default function SignUpForm() {
         try {
             console.log("注册formData:", { username, mobile, external, eName, deviceId })
 
-            // 使用 urql 发送 mutation 请求
-            const result = await client.mutation(REGISTER_MUTATION, {
+            // 根据认证类型设置external值
+            let externalValue = ''
+            if (authType === "oldPlatform") {
+                externalValue = "旧平台Cod"
+            } else if (authType === "external") {
+                externalValue = external
+            }
+
+            // 准备发送的数据
+            const mutationData: any = {
                 username,
                 password,
                 mobile,
-                external: external || null,
-                eName: eName || null,
-                ePassword: ePassword || null,
-            }).toPromise()
+                external: externalValue,
+            }
+
+            // 只在认证类型不是"none"时才添加eName
+            if (authType !== "none" && eName) {
+                mutationData.eName = eName
+            }
+
+            // 只在认证类型是"external"时才添加ePassword
+            if (authType === "external" && ePassword) {
+                mutationData.ePassword = ePassword
+            }
+
+            // 使用 urql 发送 mutation 请求
+            const result = await client.mutation(REGISTER_MUTATION, mutationData).toPromise()
 
             if (result.error) {
                 const errorMessage = result.error.message || "注册失败"
@@ -237,55 +264,110 @@ export default function SignUpForm() {
                             </div>
                         </div>
 
-                        {/* 外部认证系统 */}
+                        {/* 认证类型选择 */}
                         <div className="mt-4">
-                            <Label htmlFor="external">
-                                外部认证系统 <span className="text-gray-400">(可选)</span>
+                            <Label htmlFor="authType">
+                                认证类型 <span className="text-gray-400">(可选)</span>
                             </Label>
-                            <Input
-                                id="external"
-                                name="external"
-                                onChange={(e) => setExternal(e.currentTarget.value)}
-                                value={external}
-                                type="text"
-                                placeholder="例如：旧平台"
-                                className="mt-1"
+                            <select
+                                id="authType"
+                                name="authType"
+                                value={authType}
+                                onChange={(e) => {
+                                    setAuthType(e.target.value as "none" | "oldPlatform" | "external")
+                                    // 清空相关字段
+                                    if (e.target.value === "none") {
+                                        setExternal("")
+                                        setEName("")
+                                        setEPassword("")
+                                    } else if (e.target.value === "oldPlatform") {
+                                        setExternal("")
+                                        setEPassword("")
+                                    } else if (e.target.value === "external") {
+                                        setEName("")
+                                        setEPassword("")
+                                    }
+                                }}
                                 disabled={isPending}
-                            />
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                            >
+                                <option value="none">不使用外部认证</option>
+                                <option value="oldPlatform">旧的智慧平台账户</option>
+                                <option value="external">外部认证系统</option>
+                            </select>
                         </div>
 
-                        {/* 外部用户名 */}
-                        <div className="mt-4">
-                            <Label htmlFor="eName">
-                                外部系统用户名
-                            </Label>
-                            <Input
-                                id="eName"
-                                name="eName"
-                                onChange={(e) => setEName(e.currentTarget.value)}
-                                value={eName}
-                                type="text"
-                                placeholder="外部系统的用户名"
-                                disabled={isPending || !external}
-                            />
-                        </div>
+                        {/* 根据认证类型显示不同的输入字段 */}
+                        {authType === "oldPlatform" && (
+                            <div className="mt-4">
+                                <Label htmlFor="eName">
+                                    旧平台账户名 <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="eName"
+                                    name="eName"
+                                    onChange={(e) => setEName(e.currentTarget.value)}
+                                    value={eName}
+                                    type="text"
+                                    placeholder="请输入旧平台账户名"
+                                    disabled={isPending}
+                                />
+                            </div>
+                        )}
 
-                        {/* 外部密码 */}
-                        <div className="mt-4">
-                            <Label htmlFor="ePassword">
-                                外部系统密码
-                            </Label>
-                            <Input
-                                id="ePassword"
-                                name="ePassword"
-                                onChange={(e) => setEPassword(e.currentTarget.value)}
-                                value={ePassword}
-                                type="password"
-                                placeholder="外部系统的密码"
-                                autoComplete="off"
-                                disabled={isPending || !external}
-                            />
-                        </div>
+                        {authType === "external" && (
+                            <>
+                                {/* 外部认证系统 */}
+                                <div className="mt-4">
+                                    <Label htmlFor="external">
+                                        外部认证系统 <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input
+                                        id="external"
+                                        name="external"
+                                        onChange={(e) => setExternal(e.currentTarget.value)}
+                                        value={external}
+                                        type="text"
+                                        placeholder="例如：旧平台"
+                                        className="mt-1"
+                                        disabled={isPending}
+                                    />
+                                </div>
+
+                                {/* 外部用户名 */}
+                                <div className="mt-4">
+                                    <Label htmlFor="eName">
+                                        外部系统用户名 <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input
+                                        id="eName"
+                                        name="eName"
+                                        onChange={(e) => setEName(e.currentTarget.value)}
+                                        value={eName}
+                                        type="text"
+                                        placeholder="外部系统的用户名"
+                                        disabled={isPending}
+                                    />
+                                </div>
+
+                                {/* 外部密码 */}
+                                <div className="mt-4">
+                                    <Label htmlFor="ePassword">
+                                        外部系统密码 <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input
+                                        id="ePassword"
+                                        name="ePassword"
+                                        onChange={(e) => setEPassword(e.currentTarget.value)}
+                                        value={ePassword}
+                                        type="password"
+                                        placeholder="外部系统的密码"
+                                        autoComplete="off"
+                                        disabled={isPending}
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* 错误提示 */}

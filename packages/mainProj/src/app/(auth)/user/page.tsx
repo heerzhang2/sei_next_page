@@ -56,7 +56,7 @@ export default async function UserPage() {
             </svg>
             <h2 className="text-xl font-semibold text-yellow-800 mb-2">您还未登录</h2>
             <p className="text-yellow-700 mb-4">请先登录以查看您的账户信息和权限详情</p>
-            <Link href="/login" className="inline-flex items-center px-6 py-3 bg-blue-100 text-white font-bold rounded-lg hover:bg-blue-900 transition-colors shadow-md">
+            <Link href={withBasePath("/login")} className="inline-flex items-center px-6 py-3 bg-blue-100 text-white font-bold rounded-lg hover:bg-blue-900 transition-colors shadow-md">
               前往登录
             </Link>
           </div>
@@ -244,7 +244,7 @@ export default async function UserPage() {
         {/* 操作按钮 */}
         <div className="flex flex-wrap gap-4 justify-center">
           <Link 
-            href="/" 
+            href={withBasePath("/")} 
             className="inline-flex items-center px-6 py-3 bg-blue-200 text-white font-bold rounded-lg hover:bg-blue-900 transition-colors shadow-md"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

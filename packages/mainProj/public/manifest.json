@@ -1,8 +1,8 @@
 {
-  "name": "报告编制系统",
-  "short_name": "报告系统",
+  "name": "福建省特种设备检验研究院报告编制系统",
+  "short_name": "报告编制",
   "id": "/?app=sei_report_system",
-  "description": "支持离线编辑的在线检验报告编制系统",
+  "description": "可支持服务器离线状态之下继续编辑记录的检验报告编制系统",
   "icons": [
     {
       "src": "/report/icons/android-chrome-192x192.png",

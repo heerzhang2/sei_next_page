@@ -1760,6 +1760,12 @@ type Query {
   getUnitFilter(where: UnitCommonInput, first: Int, after: String, last: Int, before: String, orderBy: String, asc: Boolean): UnitConnection
   getUnit(esid: ID, company: Boolean): Unit
   units(uinput: UnitInputPorjection): [Unit]
+
+  """ 部门查询接口"""
+  division(id: ID!): Division
+
+  """ 科室查询接口"""
+  office(id: ID!): Office
   findAllUsers: [UserBase]!
 
   """获取当前用户的授权角色"""
@@ -2117,6 +2123,8 @@ type User implements Uunode & Node & UserBase {
   username: String!
   mobile: String
   person: Person
+  authName: String
+  authType: String
 
   """
    checks: [Isp]  可能20万条

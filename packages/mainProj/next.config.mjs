@@ -15,6 +15,16 @@ const nextConfig = {
     basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
     assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
 
+    // 环境变量配置（服务器端可用）
+    env: {
+        // THIRD_PARTY_API_URL: process.env.THIRD_PARTY_API_URL,
+        // THIRD_PARTY_USERNAME: process.env.THIRD_PARTY_USERNAME,
+        // THIRD_PARTY_PASSWORD: process.env.THIRD_PARTY_PASSWORD,
+        // THIRD_PARTY_USER_TYPE: process.env.THIRD_PARTY_USER_TYPE,
+        // THIRD_PARTY_LOGIN_TYPE: process.env.THIRD_PARTY_LOGIN_TYPE,
+        // THIRD_PARTY_USER_UUID: process.env.THIRD_PARTY_USER_UUID,
+    },
+
     webpack: (config, { isServer, dev }) => {
         // 排除所有 .node 二进制文件
         config.module.rules.push({

@@ -2,6 +2,15 @@ import { cookies } from "next/headers"
 import { createSharedAuthConfig } from "@fjsei/shared-auth-config"
 import { createServerUrqlClient } from "@/auth/urql"
 import type { NextAuthConfig } from "next-auth"
+import { CredentialsSignin, AuthError } from "@auth/core/errors"
+
+// 自定义认证错误类 - 账户未激活
+// 必须继承 CredentialsSignin 才能正确传递 code 到前端 CredentialsSignin
+class UserNotEnabledError extends AuthError {
+  static type = "UserNotEnabled"
+  code = "USER_NOT_ENABLED"
+  // message = "您的账户还未激活，请联系管理员激活账户"
+}
 
 /**
  * 项目特定的授权函数实现
@@ -47,6 +56,13 @@ const authorize = async (credentials: {
 
     if (result.error) {
       console.error("[mainProj Auth] GraphQL 认证错误:", result.error)
+      // 检查是否是账户未激活错误
+      const graphQLError = result.error.graphQLErrors?.[0]
+      if (graphQLError?.message === "用户账户还未激活") {
+        // 抛出 CredentialsSignin 子类错误，NextAuth 会传递 code 到前端
+        // throw new UserNotEnabledError()
+        throw new Error("USER_NOT_ENABLED")
+      }
       return null
     }
 
@@ -82,6 +98,11 @@ const authorize = async (credentials: {
     }
   } catch (error) {
     console.error("[mainProj Auth] 认证异常:", error)
+    // 如果是 CredentialsSignin 错误，重新抛出以便 NextAuth 传递错误码到前端
+    // URL 将包含 error=CredentialsSignin&code=USER_NOT_ENABLED
+    if (error instanceof CredentialsSignin) {
+      throw error
+    }
     return null
   }
 }

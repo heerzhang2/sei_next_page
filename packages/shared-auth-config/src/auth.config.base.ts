@@ -103,6 +103,11 @@ export function createSharedAuthConfig(options: {
             }
           } catch (error) {
             console.error("[Shared Auth] 认证过程中出错:", error)
+            // 如果是 CredentialsSignin 错误，重新抛出以便 NextAuth 传递错误码到前端
+            // 这样 URL 将包含 error=CredentialsSignin&code=xxx
+            if (error instanceof Error && error.constructor?.name === "CredentialsSignin") {
+              throw error
+            }
             return null
           }
         },

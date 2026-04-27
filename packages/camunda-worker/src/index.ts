@@ -4,6 +4,7 @@ import dotenv from "dotenv"
 import path from "path"
 import {deleteDirWithRm, FileUploader} from "./local-uploader";
 import type {ConfigRoot, FileTransform} from "page2pdf_server/src";
+import { startTaskExtractionWorker } from "./task-extraction-worker";
 
 // 加载环境变量 - 优先读取 .env.local
 const envPath = path.join(__dirname, '../.env.local')
@@ -95,7 +96,12 @@ async function startWorker() {
     }
   }
   console.log(`启动Worker线程: pdf-generation-task`)
+  //更多的Worker可以在这里注册：
+  // 启动任务提取 Worker
+  startTaskExtractionWorker(camundaClient);
+
 }
+
 
 // 处理进程退出
 process.on("SIGTERM", async () => {

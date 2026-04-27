@@ -22,6 +22,8 @@ import { OfflineSessionPatcher } from "@/components/offline-session-patcher"
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { NotificationProvider } from "@/contexts/notification-context";
+import { GlobalNotificationBell } from "@/components/global-notification-bell";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -79,17 +81,20 @@ export default async function RootLayout({
                 <TooltipProvider>
                   <SessionProvider session={session} basePath={basePath}>
                     <NetworkStatusProvider>
-                      <OfflineSessionPatcher />
-                      <GraphQLProvider>
-                        <SerwistMessageHandler />
-                        <SessionSync />
-                        <TokenRefreshOverlay />
-                        <OfflineStatusIndicator />
-                        <PendingReportsGuard />
-                        {children}
-                        <PWAInstaller />
-                        <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
-                      </GraphQLProvider>
+                      <NotificationProvider>
+                        <OfflineSessionPatcher />
+                        <GraphQLProvider>
+                          <SerwistMessageHandler />
+                          <SessionSync />
+                          <TokenRefreshOverlay />
+                          <OfflineStatusIndicator />
+                          <PendingReportsGuard />
+                          <GlobalNotificationBell />
+                          {children}
+                          <PWAInstaller />
+                          <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
+                        </GraphQLProvider>
+                      </NotificationProvider>
                     </NetworkStatusProvider>
                   </SessionProvider>
                 </TooltipProvider>
@@ -102,14 +107,17 @@ export default async function RootLayout({
               <TooltipProvider>
                 <SessionProvider session={session} basePath={basePath}>
                   <NetworkStatusProvider>
-                    <OfflineSessionPatcher />
-                    <GraphQLProvider>
-                      <SessionSync />
-                      <TokenRefreshOverlay />
-                      <PendingReportsGuard />
-                      {children}
-                      <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
-                    </GraphQLProvider>
+                    <NotificationProvider>
+                      <OfflineSessionPatcher />
+                      <GraphQLProvider>
+                        <SessionSync />
+                        <TokenRefreshOverlay />
+                        <PendingReportsGuard />
+                        <GlobalNotificationBell />
+                        {children}
+                        <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
+                      </GraphQLProvider>
+                    </NotificationProvider>
                   </NetworkStatusProvider>
                 </SessionProvider>
               </TooltipProvider>

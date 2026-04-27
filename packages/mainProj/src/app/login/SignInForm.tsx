@@ -178,6 +178,12 @@ export default function SignInForm() {
 
             if (result?.error) {
                 console.error("Login error:", result.error)
+                // 检查是否是账户未激活错误
+                if (result.code === "USER_NOT_ENABLED") {
+                    setError("您的账户还未激活，请联系管理员激活账户")
+                    setIsPending(false)
+                    return
+                }
                 // 检查是否是网络相关错误
                 const networkErrors = ['NetworkError', 'fetch failed', 'Failed to fetch', 'timeout', 'ERR_CONNECTION_REFUSED', 'ERR_NETWORK']
                 const isNetworkError = networkErrors.some(err => 
