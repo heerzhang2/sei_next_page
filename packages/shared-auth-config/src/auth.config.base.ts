@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import { CredentialsSignin } from "@auth/core/errors"
 
 /**
  * 统一认证 GraphQL Mutation
@@ -103,10 +104,23 @@ export function createSharedAuthConfig(options: {
             }
           } catch (error) {
             console.error("[Shared Auth] 认证过程中出错:", error)
-            // 如果是 CredentialsSignin 错误，重新抛出以便 NextAuth 传递错误码到前端
-            // 这样 URL 将包含 error=CredentialsSignin&code=xxx
-            if (error instanceof Error && error.constructor?.name === "CredentialsSignin") {
+            // 如果是 CredentialsSignin 或其子类(如 UserNotEnabledError)，
+            // 必须重新抛出以便 NextAuth 把 code 通过 URL ?code=xxx 传到前端。
+            // 注意：这里必须用 instanceof 而不是 constructor.name === "CredentialsSignin"，
+            // 因为子类的 constructor.name 是子类名("UserNotEnabledError")，会匹配失败。
+            if (error instanceof CredentialsSignin) {
               throw error
+            }
+            // 兜底：通过 walking 原型链按名字匹配，避免跨包 instanceof 失效的极端情况
+            // (例如 next-auth/@auth/core 出现多个副本时，class 引用可能不一致)
+            if (error instanceof Error) {
+              let proto = Object.getPrototypeOf(error)
+              while (proto) {
+                if (proto.constructor?.name === "CredentialsSignin") {
+                  throw error
+                }
+                proto = Object.getPrototypeOf(proto)
+              }
             }
             return null
           }
