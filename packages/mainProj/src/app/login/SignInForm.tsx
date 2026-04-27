@@ -30,6 +30,7 @@ export default function SignInForm() {
     const rawCallbackUrl = searchParams.get("callbackUrl")
     const callbackUrl = rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl) ? rawCallbackUrl : "/"
     const errorParam = searchParams.get("error")
+    const codeParam = searchParams.get("code")
 
     console.log("signIn登录render：——session=", session)
 
@@ -38,15 +39,20 @@ export default function SignInForm() {
     const [hasJustLoggedIn, setHasJustLoggedIn] = useState(false)
     const [isServerAvailable, setIsServerAvailable] = useState(true)
 
-    // 检查 URL 中的错误参数
+    // 检查 URL 中的错误参数（处理 NextAuth 默认重定向回登录页的情况）
     React.useEffect(() => {
         if (errorParam) {
+            // 优先根据 code 给出更精确的提示
+            if (codeParam === "USER_NOT_ENABLED") {
+                setError("您的账户还未激活，请联系管理员激活账户")
+                return
+            }
             const errorMessage = errorParam === "CredentialsSignin"
                 ? "用户名或密码错误"
                 : `登录错误: ${errorParam}`
             setError(errorMessage)
         }
-    }, [errorParam])
+    }, [errorParam, codeParam])
 
     // 检测服务器可用性
     React.useEffect(() => {

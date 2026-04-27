@@ -2,14 +2,14 @@ import { cookies } from "next/headers"
 import { createSharedAuthConfig } from "@fjsei/shared-auth-config"
 import { createServerUrqlClient } from "@/auth/urql"
 import type { NextAuthConfig } from "next-auth"
-import { CredentialsSignin, AuthError } from "@auth/core/errors"
+import { CredentialsSignin } from "@auth/core/errors"
 
 // 自定义认证错误类 - 账户未激活
-// 必须继承 CredentialsSignin 才能正确传递 code 到前端 CredentialsSignin
-class UserNotEnabledError extends AuthError {
-  static type = "UserNotEnabled"
+// 必须继承 CredentialsSignin 才能让 NextAuth 把 code 通过重定向 URL 的 ?code=...
+// 传递给前端，最终出现在 signIn() 返回值的 result.code 上。
+class UserNotEnabledError extends CredentialsSignin {
+  // code 会被 NextAuth 序列化到 URL 的 ?code= 参数，禁止包含敏感信息
   code = "USER_NOT_ENABLED"
-  // message = "您的账户还未激活，请联系管理员激活账户"
 }
 
 /**
@@ -59,9 +59,9 @@ const authorize = async (credentials: {
       // 检查是否是账户未激活错误
       const graphQLError = result.error.graphQLErrors?.[0]
       if (graphQLError?.message === "用户账户还未激活") {
-        // 抛出 CredentialsSignin 子类错误，NextAuth 会传递 code 到前端
-        // throw new UserNotEnabledError()
-        throw new Error("USER_NOT_ENABLED")
+        // 抛出 CredentialsSignin 子类实例，NextAuth 会把 code = "USER_NOT_ENABLED"
+        // 通过重定向 URL 的 ?code= 参数传到前端，前端可读取 result.code 进行判断
+        throw new UserNotEnabledError()
       }
       return null
     }
@@ -98,8 +98,9 @@ const authorize = async (credentials: {
     }
   } catch (error) {
     console.error("[mainProj Auth] 认证异常:", error)
-    // 如果是 CredentialsSignin 错误，重新抛出以便 NextAuth 传递错误码到前端
-    // URL 将包含 error=CredentialsSignin&code=USER_NOT_ENABLED
+    // 必须重新抛出 CredentialsSignin 子类（含 UserNotEnabledError），
+    // NextAuth 才会把 code 写入重定向 URL：?error=CredentialsSignin&code=USER_NOT_ENABLED
+    // 一旦在这里 return null，前端只会得到默认 code="credentials"，永远拿不到自定义 code。
     if (error instanceof CredentialsSignin) {
       throw error
     }
