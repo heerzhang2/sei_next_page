@@ -1,25 +1,23 @@
 "use client"
 
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
+import React, { useEffect, useMemo, useState, useRef } from "react"
 import { SiteMainbar } from "@/components/site-mainbar"
 import { gql, useQuery } from "@urql/next"
 import { useNetworkStatusContext } from "@/contexts/network-status-context"
 
 // 10分钟缓存时间
 const AUTH_QUERY_CACHE_MS = 10 * 60 * 1000
-
 export const AuthCompQuery = gql`
       query AuthCompQuery {
-          authUser{
-              id,username, authName, person{id,name}
+          authUser {
+              id,username,enabled,authName, person{id,name}
               dep{id name} office{id name} 
               unit{id name dvs{id name} }
               ispUnits{id,unit{id,name}}
-              authorities{ name}
+              authorities{id, name} 
            }
       }
 `
-
 interface HeaderWrapperProps {
     items?: {
         title: string
@@ -34,7 +32,7 @@ const AUTH_FORCE_REFRESH_KEY = "authForceRefresh"
 const AUTH_USERNAME_KEY = "authUsername"
 
 export default function HeaderWrapper({ items, children }: HeaderWrapperProps) {
-    const { isClientOnline, isGraphQLBackendReachable, isNextJSServerReachable } = useNetworkStatusContext()
+    const { isClientOnline, isGraphQLBackendReachable } = useNetworkStatusContext()
     // 用于强制重新计算 requestPolicy
     const [refreshTrigger, setRefreshTrigger] = useState(0)
     // 使用 ref 缓存 requestPolicy，避免网络状态变化时重复计算
@@ -113,7 +111,7 @@ export default function HeaderWrapper({ items, children }: HeaderWrapperProps) {
             // 不再检查时间差，因为需要确保时间戳反映最后一次成功获取数据的时间
             console.log("[HeaderWrapper] 收到合法响应数据，设置时间标志")
             setLastAuthQueryTime(now)
-            
+
             // 保存用户名到 sessionStorage，用于离线时显示
             if (data.authUser.username && typeof window !== "undefined") {
                 sessionStorage.setItem(AUTH_USERNAME_KEY, data.authUser.username)

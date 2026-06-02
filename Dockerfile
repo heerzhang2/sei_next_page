@@ -6,8 +6,14 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
+# 设置 npm 镜像源为淘宝镜像
+RUN npm config set registry https://registry.npmmirror.com
+
 # 设置环境变量（不设置 NODE_ENV=production，以确保 devDependencies 被安装）
 ENV NEXT_TELEMETRY_DISABLED=1
+# 设置网络超时和重试
+ENV YARN_NETWORK_CONCURRENCY=1
+ENV YARN_NETWORK_TIMEOUT=300000
 
 # 构建时环境变量参数
 ARG NEXT_PUBLIC_BASE_PATH=/report
@@ -44,6 +50,10 @@ RUN yarn build
 # ==================== 运行阶段 ====================
 FROM node:24-alpine AS runner
 
+# 创建非 root 用户（先创建，后续复制文件时指定用户）
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
 WORKDIR /app
 
 # 设置环境变量
@@ -51,26 +61,19 @@ ENV NODE_ENV=production
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 ENV NEXT_PUBLIC_BASE_PATH=/report
 
-# 复制完整的 node_modules
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/yarn.lock ./yarn.lock
-COPY --from=builder /app/tsconfig.json ./tsconfig.json
+# 复制完整的 node_modules（指定用户，避免后续 chown）
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/yarn.lock ./yarn.lock
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 
-# 复制工作区包
-COPY --from=builder /app/packages ./packages
+# 复制工作区包（指定用户）
+COPY --from=builder --chown=nextjs:nodejs /app/packages ./packages
 
-# 复制构建产物
-COPY --from=builder /app/packages/mainProj/public ./packages/mainProj/public
-COPY --from=builder /app/packages/mainProj/.next ./packages/mainProj/.next
-COPY --from=builder /app/packages/mainProj/server.mjs ./packages/mainProj/server.mjs
-
-# 创建非 root 用户
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
-
-# 设置权限
-RUN chown -R nextjs:nodejs /app
+# 复制构建产物（指定用户）
+COPY --from=builder --chown=nextjs:nodejs /app/packages/mainProj/public ./packages/mainProj/public
+COPY --from=builder --chown=nextjs:nodejs /app/packages/mainProj/.next ./packages/mainProj/.next
+COPY --from=builder --chown=nextjs:nodejs /app/packages/mainProj/server.mjs ./packages/mainProj/server.mjs
 
 USER nextjs
 

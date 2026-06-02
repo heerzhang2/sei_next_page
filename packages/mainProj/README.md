@@ -89,7 +89,10 @@ yarn start:https
 # 或者更新多个组件
 npx shadcn@latest add button card textarea --overwrite
 ## 更新所有已安装的组件
-npx shadcn@latest add accordion alert alert-dialog aspect-ratio avatar badge breadcrumb button calendar card carousel chart checkbox collapsible command context-menu dialog drawer dropdown-menu form hover-card input input-otp label menubar navigation-menu pagination popover progress radio-group resizable scroll-area select separator sheet sidebar skeleton slider sonner switch table tabs textarea toggle toggle-group tooltip --overwrite
+cd c:\home\sei_next_page\packages\mainProj && npx shadcn@latest add accordion alert alert-dialog aspect-ratio avatar badge breadcrumb button calendar card carousel chart checkbox collapsible command context-menu dialog drawer dropdown-menu form hover-card input input-otp label menubar navigation-menu pagination popover progress radio-group resizable scroll-area select separator sheet sidebar skeleton slider sonner switch table tabs textarea toggle toggle-group tooltip --overwrite
+
+cd c:\home\sei_next_page && npx shadcn@latest add accordion alert alert-dialog aspect-ratio avatar badge breadcrumb button calendar card carousel chart checkbox collapsible command context-menu dialog drawer dropdown-menu form hover-card input input-otp label menubar navigation-menu pagination popover progress radio-group resizable scroll-area select separator sheet sidebar skeleton slider sonner switch table tabs textarea toggle toggle-group tooltip --overwrite -c packages/mainProj
+
 **检查依赖**：更新后可能需要更新相关依赖包
 npm update @radix-ui/react-* class-variance-authority clsx tailwind-merge
 yarn upgrade-interactive --latest

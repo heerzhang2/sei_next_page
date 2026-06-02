@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation"
 import { useDeviceFingerprint } from "@/report/hook/useDeviceFingerprint"
 import { useClient } from "@urql/next"
 import { gql } from "@urql/core"
+import { PasswordStrength, validatePasswordStrength } from "@/components/password-strength"
 
 const REGISTER_MUTATION = gql`
     mutation RegisterUser(
@@ -46,7 +47,7 @@ export default function SignUpForm() {
     const [error, setError] = useState("")
     const [success, setSuccess] = useState("")
     const { deviceFingerprint: deviceId } = useDeviceFingerprint()
-    const [authType, setAuthType] = useState<"none" | "oldPlatform" | "external">("none")
+    const [authType, setAuthType] = useState<"none" | "oldPlatform" | "external">("oldPlatform")
 
     const validateForm = (): boolean => {
         setError("")
@@ -57,9 +58,10 @@ export default function SignUpForm() {
             return false
         }
 
-        // 验证密码
-        if (!password || password.length < 6) {
-            setError("密码至少需要6个字符")
+        // 验证密码强度
+        const passwordValidation = validatePasswordStrength(password, 2)
+        if (!passwordValidation.valid) {
+            setError(passwordValidation.message || "密码强度不足")
             return false
         }
 
@@ -170,6 +172,20 @@ export default function SignUpForm() {
                 <div className="text-center">
                     <h2 className="text-3xl font-extrabold text-gray-900 mb-4">用户注册</h2>
                     <p className="text-sm text-gray-500 mb-6">创建一个新账户开始使用</p>
+                    <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-amber-700">
+                                    <strong>重要提醒：</strong>用户账户名是全库唯一的，不可与其他用户重名，且注册后不可再更改账户名，请谨慎选择。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -211,6 +227,12 @@ export default function SignUpForm() {
                                 autoComplete="new-password"
                                 className="mt-1"
                                 disabled={isPending}
+                            />
+                            {/* 密码强度检测 */}
+                            <PasswordStrength
+                                password={password}
+                                minStrength={2}
+                                className="mt-2"
                             />
                         </div>
 

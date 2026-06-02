@@ -4,7 +4,7 @@ import { auth } from "@/app/auth"
 // export const dynamic = "force-static"
 // export const revalidate = false
 
-const BACKEND_BASE_URL = `${process.env.NEXT_PUBLIC_BACK_END}/adminUse/globalId`
+const BACKEND_BASE_URL = `${process.env.NEXT_PUBLIC_BACK_END}/util/globalId`
 
 /**
  这个是代理后端接口的做法。{二传手复制的模式}：第二代前端不能直接访问该后端api了

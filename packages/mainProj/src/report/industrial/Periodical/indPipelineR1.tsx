@@ -85,6 +85,7 @@ export const SUBREP_CONFIG: Record<string, SubReportConfig> = {
     },
 }
 
+
 export const ReportView = ({ rep, printMode }: ReportEntryProps) => {
     const searchParams = useSearchParams()
     const { storage, parrepfs } = useStorage()

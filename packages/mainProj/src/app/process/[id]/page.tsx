@@ -1,11 +1,10 @@
-"use client"
-
 import { Suspense } from "react"
 import Link from "next/link"
 import ProcessStatus from "@/components/process-status"
+import ProcessActions from "@/components/process-actions"
 
-export default function ProcessPage({ params }: { params: { id: string } }) {
-  const processInstanceKey = params.id
+export default async function ProcessPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: processInstanceKey } = await params
 
   return (
     <main className="flex min-h-screen flex-col items-center p-24">
@@ -34,22 +33,7 @@ export default function ProcessPage({ params }: { params: { id: string } }) {
 
           <div className="mt-8 border-t pt-6">
             <h2 className="text-xl font-semibold mb-4">流程操作</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md flex items-center justify-center"
-                onClick={() => window.open(`https://operate.camunda.io/processes/${processInstanceKey}`, "_blank")}
-              >
-                在Operate中查看
-              </button>
-
-              <button
-                className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-md flex items-center justify-center"
-                onClick={() => alert("取消功能尚未实现")}
-              >
-                取消流程实例
-              </button>
-            </div>
+            <ProcessActions processInstanceKey={processInstanceKey} />
           </div>
         </div>
       </div>

@@ -43,6 +43,7 @@ const authorize = async (credentials: {
             user {
               id
               username
+              enabled
             }
           }
         }
@@ -95,6 +96,7 @@ const authorize = async (credentials: {
       refreshToken: authData.refreshToken,
       deviceId: deviceId,
       authorities: authData.user.authorities || [],
+      enabled: authData.user.enabled,
     }
   } catch (error) {
     console.error("[mainProj Auth] 认证异常:", error)
@@ -145,6 +147,7 @@ export const authConfig: NextAuthConfig = {
   // pages 路径需要相对于根路径，NextAuth 会自动添加 basePath
   pages: {
     signIn: signInPath,
+    error: signInPath,
   },
   // 确保信任所有主机（在反向代理后面时需要）
   trustHost: true,

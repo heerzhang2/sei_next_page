@@ -5,8 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { broadcastProgress, broadcastCompletion, broadcastFailure } from '../events/route';
+import { updateTaskStatus } from '../status/route';
 
-// 存储进行中的任务状态（生产环境应使用 Redis）
+// 内存缓存（用于快速查询，实际数据存储在 Redis）
 const taskExtractionJobs = new Map<string, {
     status: 'pending' | 'processing' | 'completed' | 'failed';
     progress?: { current: number; total: number; percentage: number };
@@ -47,51 +48,70 @@ export async function POST(request: NextRequest) {
 
         // 根据通知类型处理
         switch (type) {
-            case 'progress':
-                // 更新任务状态和进度
-                taskExtractionJobs.set(targetUser, {
-                    status: 'processing',
+            case 'progress': {
+                const status = {
+                    status: 'processing' as const,
                     progress,
+                    processInstanceKey,
                     updatedAt: new Date(),
-                });
+                };
+                // 更新内存缓存
+                taskExtractionJobs.set(targetUser, status);
+                // 持久化到 Redis
+                await updateTaskStatus(targetUser, status);
                 // 通过 SSE 广播进度（按用户ID）
-                broadcastProgress(targetUser, progress);
+                broadcastProgress(targetUser, {...progress, processInstanceKey });
                 break;
+            }
 
-            case 'completed':
-                // 更新任务状态为完成
-                taskExtractionJobs.set(targetUser, {
-                    status: 'completed',
+            case 'completed': {
+                const completedStatus = {
+                    status: 'completed' as const,
                     result,
+                    processInstanceKey,
                     updatedAt: new Date(),
-                });
+                };
+                // 更新内存缓存
+                taskExtractionJobs.set(targetUser, completedStatus);
+                // 持久化到 Redis
+                await updateTaskStatus(targetUser, completedStatus);
                 // 通过 SSE 广播完成（按用户ID）
-                broadcastCompletion(targetUser, result);
+                broadcastCompletion(targetUser, {...result, processInstanceKey });
                 break;
+            }
 
-            case 'failed':
-                // 更新任务状态为失败
-                taskExtractionJobs.set(targetUser, {
-                    status: 'failed',
-                    result,
+            case 'failed': {
+                const failedStatus = {
+                    status: 'failed' as const,
+                    error: error || 'Unknown error',
+                    processInstanceKey,
                     updatedAt: new Date(),
-                });
+                };
+                // 更新内存缓存
+                taskExtractionJobs.set(targetUser, failedStatus);
+                // 持久化到 Redis
+                await updateTaskStatus(targetUser, failedStatus);
                 // 通过 SSE 广播失败（按用户ID）
-                broadcastFailure(targetUser, error || 'Unknown error');
+                broadcastFailure(targetUser, error || 'Unknown error', processInstanceKey);
                 break;
+            }
 
-            default:
+            default: {
                 // 兼容旧版本：只传 result 表示完成
-                taskExtractionJobs.set(targetUser, {
-                    status: result?.success ? 'completed' : 'failed',
+                const defaultStatus = {
+                    status: result?.success ? 'completed' as const : 'failed' as const,
                     result,
+                    processInstanceKey,
                     updatedAt: new Date(),
-                });
+                };
+                taskExtractionJobs.set(targetUser, defaultStatus);
+                await updateTaskStatus(targetUser, defaultStatus);
                 if (result?.success) {
-                    broadcastCompletion(targetUser, result);
+                    broadcastCompletion(targetUser, {...result, processInstanceKey });
                 } else {
-                    broadcastFailure(targetUser, result?.error || 'Unknown error');
+                    broadcastFailure(targetUser, result?.error || 'Unknown error', processInstanceKey);
                 }
+            }
         }
 
         return NextResponse.json({

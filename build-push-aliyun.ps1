@@ -9,6 +9,10 @@ $aliyunRegistry = "crpi-lr1czs92lrq7vzhm.cn-shanghai.personal.cr.aliyuncs.com"
 $aliyunNamespace = "sei-rearend"
 $tag = Get-Date -Format "yyyyMMdd-HHmmss"  # 使用时间戳作为标签
 
+# 启用 Docker BuildKit 加速构建
+$env:DOCKER_BUILDKIT = "1"
+$env:BUILDKIT_PROGRESS = "plain"
+
 # Build image with production environment variables
 docker build -t "${imageName}:${tag}" `
   --build-arg NEXT_PUBLIC_BASE_PATH=/report `

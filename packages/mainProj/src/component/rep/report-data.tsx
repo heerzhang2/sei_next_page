@@ -146,7 +146,6 @@ export const ReportQuery = gql`
           level
           lay
           safe
-          svp
           pa
         }
       }

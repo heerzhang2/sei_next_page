@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { QueueName, JobPriority } from '../bullmq-config';
 import { queueManager } from '../queue-manager';
 import { getAccessToken } from '@/lib/third-party/auth';
+import { DEFAULT_UNIT_ID } from '@/lib/migration/division-data';
 
 // 部门信息
 interface DivisionInfo {
@@ -83,9 +84,6 @@ export interface UserSyncProgress {
   currentItem?: string;
   percentage: number;
 }
-
-// 默认单位ID
-const DEFAULT_UNIT_ID = '2738188573441261569';
 
 // 第三方 API 基础配置
 const THIRD_PARTY_API = {
@@ -324,6 +322,7 @@ async function syncUserToLocal(
       dep_id: realDivisionId,  // 使用传入的真实部门ID
       office_id: officeId,
       unit_id: BigInt(unitId),
+      ispu_id: BigInt(DEFAULT_UNIT_ID),
       authType: "旧平台Cod",    //从老平台的 loginCod 直接迁移过来的账户
     };
 

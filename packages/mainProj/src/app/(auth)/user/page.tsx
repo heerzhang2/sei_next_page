@@ -1,52 +1,46 @@
-import { auth } from "@/app/auth";
-import { redirect } from 'next/navigation';
-import { withBasePath } from '@/lib/tool';
-import { getUserInfo } from "@/lib/user-roles";
+"use client"
+
+import React, { useState } from "react";
+import { useQuery } from "@urql/next";
+import { AuthCompQuery } from "@/component/header-wrapper";
+import { withBasePath } from "@/lib/tool";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-export const dynamic = 'force-dynamic';
+export default function UserPage() {
+  const router = useRouter();
+  const [refreshingRoles, setRefreshingRoles] = useState(false);
 
-interface UserInfo {
-  id: string;
-  username: string;
-  person?: {
-    id: string;
-    name: string;
+  const handleRefreshRoles = async () => {
+    setRefreshingRoles(true);
+    try {
+      const res = await fetch(withBasePath('/api/user/clear-role-cache'), { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('角色缓存已清除，正在重新加载...');
+        reexecuteQuery({ requestPolicy: 'network-only' });
+      } else {
+        toast.error('清除角色缓存失败: ' + (data.error || '未知错误'));
+      }
+    } catch (e: any) {
+      toast.error('请求失败: ' + e.message);
+    } finally {
+      setRefreshingRoles(false);
+    }
   };
-  dep?: {
-    id: string;
-    name: string;
-  };
-  office?: {
-    id: string;
-    name: string;
-  };
-  unit?: {
-    id: string;
-    name: string;
-    dvs?: Array<{
-      id: string;
-      name: string;
-    }>;
-  };
-  ispUnits?: Array<{
-    id: string;
-    unit: {
-      id: string;
-      name: string;
-    };
-  }>;
-  authorities?: Array<{
-    id: string;
-    name: string;
-  }>;
-}
 
-export default async function UserPage() {
-  const session = await auth();
+  const [result, reexecuteQuery] = useQuery({
+    query: AuthCompQuery,
+    variables: {},
+    requestPolicy: "network-only",
+  });
+
+  const { data, error, fetching } = result;
+  const userInfo = data?.authUser;
   
-  if (!session?.user?.id || !session?.user?.accessToken) {
-    console.log("user: 未登录", session?.user);
+  // 如果未登录，显示登录提示
+  if (!fetching && !userInfo) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-4xl mx-auto">
@@ -56,7 +50,7 @@ export default async function UserPage() {
             </svg>
             <h2 className="text-xl font-semibold text-yellow-800 mb-2">您还未登录</h2>
             <p className="text-yellow-700 mb-4">请先登录以查看您的账户信息和权限详情</p>
-            <Link href={withBasePath("/login")} className="inline-flex items-center px-6 py-3 bg-blue-100 text-white font-bold rounded-lg hover:bg-blue-900 transition-colors shadow-md">
+            <Link href="/login" className="inline-flex items-center px-6 py-3 bg-blue-100 text-white font-bold rounded-lg hover:bg-blue-900 transition-colors shadow-md">
               前往登录
             </Link>
           </div>
@@ -66,14 +60,42 @@ export default async function UserPage() {
   }
 
   // 获取详细的用户信息
-  let userInfo: UserInfo | null = null;
-  let error: string | null = null;
   
-  try {
-    userInfo = await getUserInfo(session.user?.id, session.user?.accessToken);
-  } catch (err: any) {
-    error = err.message || "获取用户信息失败";
-    console.error("获取用户信息失败:", err);
+  // 如果正在加载，显示加载状态
+  if (fetching) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">正在加载用户信息...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果有错误，显示错误信息
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <svg className="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h2 className="text-xl font-semibold text-red-800 mb-2">加载失败</h2>
+            <p className="text-red-700 mb-4">{error.message || "获取用户信息失败，请稍后重试"}</p>
+            <button 
+              onClick={() => reexecuteQuery({ requestPolicy: "network-only" })}
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+            >
+              重新加载
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const formatDate = (timestamp?: number) => {
@@ -117,15 +139,15 @@ export default async function UserPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <span className="text-gray-500">用户ID</span>
-                  <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{session.user.id}</span>
+                  <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{userInfo?.id || '未设置'}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <span className="text-gray-500">用户名</span>
-                  <span className="font-medium text-gray-900">{session.user.name || userInfo?.username || '未设置'}</span>
+                  <span className="font-medium text-gray-900">{userInfo?.username || '未设置'}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                  <span className="text-gray-500">邮箱</span>
-                  <span className="font-medium text-gray-900">{session.user.email || '未设置'}</span>
+                  <span className="text-gray-500">认证名</span>
+                  <span className="font-medium text-gray-900">{userInfo?.authName || '未设置'}</span>
                 </div>
               </div>
               <div className="space-y-4">
@@ -136,12 +158,6 @@ export default async function UserPage() {
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <span className="text-gray-500">登录时间</span>
                   <span className="text-sm text-gray-600">{formatDate(Date.now())}</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                  <span className="text-gray-500">Token过期时间</span>
-                  <span className={`text-sm ${session.user.accessTokenExpires && Date.now() > session.user.accessTokenExpires ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
-                    {formatDate(session.user.accessTokenExpires)}
-                  </span>
                 </div>
               </div>
             </div>
@@ -205,37 +221,46 @@ export default async function UserPage() {
             </h2>
           </div>
           <div className="p-6">
-            {userInfo?.authorities && userInfo.authorities.length > 0 ? (
-              <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="text-gray-600">您拥有以下权限角色：</span>
+            <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+              <span className="text-gray-600">
+                {userInfo?.authorities && userInfo.authorities.length > 0
+                  ? '您拥有以下权限角色：'
+                  : '暂无权限信息'}
+              </span>
+              <div className="flex items-center gap-2">
+                {userInfo?.authorities && userInfo.authorities.length > 0 && (
                   <span className="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
                     共 {userInfo.authorities.length} 个角色
                   </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {userInfo.authorities.map((authority) => (
-                    <div 
-                      key={authority.id} 
-                      className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-purple-50 hover:border-purple-200 transition-colors"
-                    >
-                      <svg className="w-5 h-5 text-purple-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <div className="min-w-0">
-                        <span className="text-sm font-medium text-gray-900 block truncate">{authority.name}</span>
-                        <span className="text-xs text-gray-500 font-mono">{authority.id}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                )}
+                <button
+                  onClick={handleRefreshRoles}
+                  disabled={refreshingRoles}
+                  className="inline-flex items-center px-3 py-1 text-xs rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <svg className={`w-3.5 h-3.5 mr-1 ${refreshingRoles ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {refreshingRoles ? '刷新中...' : '刷新角色'}
+                </button>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <p className="text-gray-500">暂无权限信息</p>
+            </div>
+            {userInfo?.authorities && userInfo.authorities.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {userInfo.authorities.map((authority) => (
+                  <div 
+                    key={authority.id} 
+                    className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-purple-50 hover:border-purple-200 transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-purple-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div className="min-w-0">
+                      <span className="text-sm font-medium text-gray-900 block truncate">{authority.name}</span>
+                      <span className="text-xs text-gray-500 font-mono">{authority.id}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -244,7 +269,7 @@ export default async function UserPage() {
         {/* 操作按钮 */}
         <div className="flex flex-wrap gap-4 justify-center">
           <Link 
-            href={withBasePath("/")} 
+            href={"/"} 
             className="inline-flex items-center px-6 py-3 bg-blue-200 text-white font-bold rounded-lg hover:bg-blue-900 transition-colors shadow-md"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,6 +278,15 @@ export default async function UserPage() {
             返回首页
           </Link>
 
+          <Link 
+            href={"/user/change-password"} 
+            className="inline-flex items-center px-6 py-3 bg-amber-600 text-white font-bold rounded-lg hover:bg-amber-700 transition-colors shadow-md"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            修改密码
+          </Link>
         </div>
       </div>
     </div>

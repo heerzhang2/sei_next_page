@@ -147,7 +147,6 @@ type Amusement implements Equipment & Node & EqpCommon {
   vart: String!
   ust: UseState_Enum!
   reg: RegState_Enum!
-  svp: String
   pa: String
   isps: IspConnection
   cpa: Int
@@ -267,7 +266,6 @@ type Boiler implements Equipment & Node & EqpCommon {
   vart: String!
   ust: UseState_Enum!
   reg: RegState_Enum!
-  svp: String
   pa: String
   isps: IspConnection
   cpa: Int
@@ -450,7 +448,6 @@ type Crane implements Equipment & Node & EqpCommon {
   vart: String!
   ust: UseState_Enum!
   reg: RegState_Enum!
-  svp: String
   pa: String
   isps: IspConnection
   cpa: Int
@@ -612,6 +609,9 @@ type Detail implements Node {
 
   """一份报告关联多个的管道单元队列"""
   pipus: [PipingUnit!]
+
+  """外部引用ID（与旧平台taskId对应）"""
+  outerId: String
 }
 
 type DetailConnection {
@@ -679,7 +679,6 @@ input DeviceCommonInput {
   addr: String
   model: String
   id: ID
-  svp: String
   pa: String
   titl: String
   lpho: String
@@ -823,7 +822,6 @@ type Elevator implements Equipment & Node & EqpCommon {
   vart: String!
   ust: UseState_Enum!
   reg: RegState_Enum!
-  svp: String
   pa: String
   isps: IspConnection
   cpa: Int
@@ -913,7 +911,6 @@ type Eqp implements Equipment & Node & EqpCommon {
   vart: String!
   ust: UseState_Enum!
   reg: RegState_Enum!
-  svp: String
   pa: String
   isps: IspConnection
   cpa: Int
@@ -1025,7 +1022,6 @@ interface Equipment {
   ust: UseState_Enum!
   reg: RegState_Enum!
   isps: IspConnection
-  svp: String
   pa: String
   cpa: Int
   vital: Boolean
@@ -1091,7 +1087,6 @@ type FactoryVehicle implements Equipment & Node & EqpCommon {
   vart: String!
   ust: UseState_Enum!
   reg: RegState_Enum!
-  svp: String
   pa: String
   isps: IspConnection
   cpa: Int
@@ -1310,7 +1305,7 @@ type Mutation {
   agreementAddTask(agreId: ID!, date: Date!, bsType: BusinessCat_Enum!, entrust: Boolean, devs: [ID!]): Task
   updateDetail(id: ID!, inp: DetailInput!): Detail
   abandonDetail(detId: ID!, reason: String): Boolean!
-  fillReportTzFields(detId: ID!): Report
+  fillReportTzFields(ispId: ID!): Report
   newISP(dev: ID!): Isp!
   setISPispMen(id: ID!, users: [ID]): Isp!
   setISPtask(id: ID!, task: ID!): Isp!
@@ -1339,6 +1334,8 @@ type Mutation {
 
   """末尾加权限@authr(qx:["USER","ADMIN"])，没权就用不了接口函数。"""
   newReport(isp: ID!, master: ID, ispMens: [ID], reviewer: ID, approver: ID, modeltype: String!, modelversion: Int!): Report!
+  initReportFromOldPt(isp: ID!, ispMens: [ID], reviewer: ID, approver: ID, modeltype: String!, modelversion: Int!, reportCod: String!, ispDate: Date): Report!
+  newSubReport(isp: ID!, ispMens: [ID], reviewer: ID, modeltype: String!): Report!
 
   """buildReport(isp: ID!,no: String!,path: String!) : Report!"""
   modifyOriginalRecordData(id: ID!, data: String, client: String!, version: Int): Report
@@ -1358,6 +1355,9 @@ type Mutation {
   refreshToken(refreshToken: String): LoginResp
   logout: Boolean!
   logoutAllDevices: Boolean!
+
+  """修改当前用户密码，需要验证旧密码"""
+  changePassword(oldPassword: String!, newPassword: String!): Boolean!
 }
 
 type NewsEs implements Node {
@@ -1450,7 +1450,6 @@ type Pipeline implements Equipment & Node & EqpCommon {
   vart: String!
   ust: UseState_Enum!
   reg: RegState_Enum!
-  svp: String
   pa: String
   isps: IspConnection
   cpa: Int
@@ -1539,7 +1538,6 @@ type PipingUnit implements Node & PipingUnitCommon {
   mdi: String
   nxtd1: String
   nxtd2: String
-  svp: String
   pa: String
   desu: Unit
   insu: Unit
@@ -1627,7 +1625,6 @@ input PipingUnitInput {
   mdi: String
   nxtd1: Date
   nxtd2: Date
-  svp: String
   pa: String
   used: String
   insd: String
@@ -1683,6 +1680,7 @@ type Query {
   artifactRepositories: [ArtifactRepository]
   artifactRepository(id: ID!): ArtifactRepository
   greeting: String
+  testQuery: String
 
   """
   findAllPositions: [Address]!
@@ -1728,7 +1726,7 @@ type Query {
   listAllPipingUnit(detId: ID!, orderBy: String, asc: Boolean): [PipingUnit!]
   findAllISPs: [Isp]!
   countISP(ispMen: ID): Int
-  getISP(id: ID!): Isp @deprecated
+  getISP(id: ID!): Isp
 
   """
   getReportOfISP(id:ID!): [SimpleReport]!
@@ -1767,9 +1765,6 @@ type Query {
   """ 科室查询接口"""
   office(id: ID!): Office
   findAllUsers: [UserBase]!
-
-  """获取当前用户的授权角色"""
-  auth: String! @deprecated
 
   """当前用户的基本信息"""
   authUser: User
@@ -1977,6 +1972,7 @@ type Task implements Node {
   crman: UserBase
   eqpcnt: Int
   agreement: Agreement
+  dets: [Detail]
 }
 
 type TaskComResp {
@@ -2118,25 +2114,26 @@ input UnitInputPorjection {
   indCod: String
 }
 
+"""用户详细信息类型"""
 type User implements Uunode & Node & UserBase {
   id: ID!
   username: String!
   mobile: String
   person: Person
+
+  """认证名称（如LDAP登录名）"""
   authName: String
+
+  """认证类型（如LDAP、LOCAL等）"""
   authType: String
 
-  """
-   checks: [Isp]  可能20万条
-  isp: IspConnection    #可能2万条
-  底下这个isps_list 淘汰！不要用。
-  isps_list(first:Int,after:String,last:Int,before:String): IspConnection @dbpage
-  权限表非超级用户只能看自己的了
-  """
+  """用户权限列表"""
   authorities: [Authority]
 
-  """模型字段实际同函数一样的处理,属性竟然也可以有输入参数"""
-  enabled(isUsing: Boolean): Boolean!
+  """账户是否启用"""
+  enabled: Boolean!
+
+  """用户头像URL"""
   photoURL: String
   unit: Unit
   dep: Division
@@ -2144,6 +2141,7 @@ type User implements Uunode & Node & UserBase {
   ispUnits: [IspAgency]
 }
 
+"""用户基础接口，定义用户核心属性"""
 interface UserBase {
   id: ID!
   username: String!
@@ -2152,6 +2150,9 @@ interface UserBase {
   unit: Unit
   dep: Division
   office: Office
+
+  """账户是否启用"""
+  enabled: Boolean!
 }
 
 input UserCommonInput {
@@ -2226,7 +2227,6 @@ type Vessel implements Equipment & Node & EqpCommon {
   vart: String!
   ust: UseState_Enum!
   reg: RegState_Enum!
-  svp: String
   pa: String
   isps: IspConnection
   cpa: Int

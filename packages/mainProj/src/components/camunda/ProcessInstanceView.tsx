@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import ProcessDiagramViewer from './ProcessDiagramViewer'
 import FlowNodeList from './FlowNodeList'
 import { RefreshCw } from 'lucide-react'
+import HeaderWrapper from '@/component/header-wrapper'
 
 export default function ProcessInstanceView({ processInstanceKey }: { processInstanceKey: string }) {
     const [activeTab, setActiveTab] = useState<'diagram' | 'nodes'>('diagram')
 
     return (
         <div className="w-full max-w-7xl mx-auto p-4">
+            <HeaderWrapper />
             {/* 标题栏 */}
             <div className="flex items-center justify-between mb-4">
                 <div>

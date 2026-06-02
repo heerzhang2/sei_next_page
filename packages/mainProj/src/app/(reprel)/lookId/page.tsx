@@ -41,7 +41,7 @@ function usePageMarkLocal(prjob: { type: string, id: string }, onSuccess: (outli
 ): [boolean, Function?]
 {
     //方案: 修改SWR请求为HTTPS（需为Next.js配置HTTPS配置）；
-    const { trigger, isMutating } = useSWRMutation(`${process.env.NEXT_PUBLIC_BACK_END}/adminUse/uuid2gid`, createPrintJob, {
+    const { trigger, isMutating } = useSWRMutation(`${process.env.NEXT_PUBLIC_BACK_END}/util/uuid2gid`, createPrintJob, {
         onSuccess: async (data) => {
             if (data?.success) {
                 const newOutlineData = ' '

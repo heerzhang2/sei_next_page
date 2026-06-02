@@ -141,6 +141,7 @@ export async function startPdfCvtProcess({ processId, variables, bpmnProcessId }
 /**
  * 获取流程实例状态
  * 注意：这个函数需要直接使用 REST API 调用，而不是通过 SDK
+ * 为什么 authToken 没有设置也能提取数据成功啊
  */
 export async function getProcessInstanceStatus(processInstanceKey: string) {
     try {
@@ -152,9 +153,9 @@ export async function getProcessInstanceStatus(processInstanceKey: string) {
         if (!camundaBaseUrl) {
             throw new Error("Camunda 基础URL未配置");
         }
-
+        //process-instance
         const response = await fetch(
-            `${camundaBaseUrl}/process-instance/${processInstanceKey}`,
+            `${camundaBaseUrl}/process-instances/${processInstanceKey}`,
             {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,

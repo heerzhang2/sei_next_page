@@ -564,7 +564,7 @@ export const ModelTypeArr: Record<string, ModelConfig> = {
         vers:{
             "1": ["1版",new Date('2024-03-03')],
         },
-        matchRules: [['83','831','','REGUL',null]]
+        matchRules: [['','','','REGUL',null]]
     },
     "INDPL_NJ" : { name: '工业管道年度检查',
         vers:{

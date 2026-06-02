@@ -165,24 +165,19 @@ export default function ThirdPartyLoginPage() {
             <CardHeader>
               <CardTitle className="text-green-800 text-base">登录成功</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm text-green-700">
-                <p>Token 已获取并保存</p>
-              </div>
-              
+            <CardContent className="space-y-4">             
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={jumpToThirdParty}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                跳转到第三方系统
+                跳转到旧的平台
               </Button>
-
               {result.userInfo && (
                 <div className="mt-4 p-3 bg-white rounded border text-xs">
                   <pre className="overflow-auto">
-                    {JSON.stringify(result.userInfo, null, 2)}
+                    成功获取用户信息，并启用账户
                   </pre>
                 </div>
               )}

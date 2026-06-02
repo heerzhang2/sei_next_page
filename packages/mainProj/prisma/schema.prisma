@@ -8,36 +8,39 @@ datasource db {
 }
 
 model AUTHORITY {
-  id             BigInt           @id
+  id             BigInt           @id @default(autoincrement())
   name           AUTHORITY_name   @unique(map: "UKk6w6gackouh034ry1w99wnu05")
   title          String?          @db.VarChar(255)
   USER_AUTHORITY USER_AUTHORITY[]
 }
 
 model Adminunit {
-  id                                       BigInt     @id @default(autoincrement())
-  areacode                                 String?    @unique(map: "IDXt789vk9nrybmrnugtatw5pc8r") @db.VarChar(255)
-  prefix                                   String?    @db.VarChar(160)
-  zipcode                                  String?    @db.VarChar(255)
+  id                                       BigInt       @id @default(autoincrement())
+  areacode                                 String?      @unique(map: "IDXt789vk9nrybmrnugtatw5pc8r") @db.VarChar(255)
+  prefix                                   String?      @db.VarChar(160)
+  zipcode                                  String?      @db.VarChar(255)
   city_id                                  BigInt?
   country_id                               BigInt?
   county_id                                BigInt?
   province_id                              BigInt?
-  town_id                                  BigInt?    @unique(map: "UK5j8jfvjhexufvusp3gfdnad5b")
-  Province_Adminunit_province_idToProvince Province?  @relation("Adminunit_province_idToProvince", fields: [province_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK1eddsf66rgv604yfilgsg3ce2")
-  City_Adminunit_city_idToCity             City?      @relation("Adminunit_city_idToCity", fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK1kptwkby0hfivpcrad3wi6232")
-  County_Adminunit_county_idToCounty       County?    @relation("Adminunit_county_idToCounty", fields: [county_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3v7qombtgvq2maimmmrg3u8ae")
-  Town                                     Town?      @relation(fields: [town_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK91queg8q7x0cemkwactg1jwny")
-  Country_Adminunit_country_idToCountry    Country?   @relation("Adminunit_country_idToCountry", fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKplkwlp9i0tfw9t2l2552alkp1")
-  City_City_adm_idToAdminunit              City[]     @relation("City_adm_idToAdminunit")
+  town_id                                  BigInt?      @unique(map: "UK5j8jfvjhexufvusp3gfdnad5b")
+  Province_Adminunit_province_idToProvince Province?    @relation("Adminunit_province_idToProvince", fields: [province_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK1eddsf66rgv604yfilgsg3ce2")
+  City_Adminunit_city_idToCity             City?        @relation("Adminunit_city_idToCity", fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK1kptwkby0hfivpcrad3wi6232")
+  County_Adminunit_county_idToCounty       County?      @relation("Adminunit_county_idToCounty", fields: [county_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3v7qombtgvq2maimmmrg3u8ae")
+  Town                                     Town?        @relation(fields: [town_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK91queg8q7x0cemkwactg1jwny")
+  Country_Adminunit_country_idToCountry    Country?     @relation("Adminunit_country_idToCountry", fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKplkwlp9i0tfw9t2l2552alkp1")
+  Agreement                                Agreement[]
+  City_City_adm_idToAdminunit              City[]       @relation("City_adm_idToAdminunit")
   Company                                  Company[]
-  Country_Country_adm_idToAdminunit        Country[]  @relation("Country_adm_idToAdminunit")
-  County_County_adm_idToAdminunit          County[]   @relation("County_adm_idToAdminunit")
-  Division_Division_ad_idToAdminunit       Division[] @relation("Division_ad_idToAdminunit")
-  Division_Division_lare_idToAdminunit     Division[] @relation("Division_lare_idToAdminunit")
+  Country_Country_adm_idToAdminunit        Country[]    @relation("Country_adm_idToAdminunit")
+  County_County_adm_idToAdminunit          County[]     @relation("County_adm_idToAdminunit")
+  Division_Division_ad_idToAdminunit       Division[]   @relation("Division_ad_idToAdminunit")
+  Division_Division_lare_idToAdminunit     Division[]   @relation("Division_lare_idToAdminunit")
+  Eqp                                      Eqp[]
   Office                                   Office[]
   Person                                   Person[]
-  Province_Province_adm_idToAdminunit      Province[] @relation("Province_adm_idToAdminunit")
+  PipingUnit                               PipingUnit[]
+  Province_Province_adm_idToAdminunit      Province[]   @relation("Province_adm_idToAdminunit")
   Unit                                     Unit[]
   Village                                  Village[]
 
@@ -48,11 +51,55 @@ model Adminunit {
   @@index([town_id], map: "IDX5j8jfvjhexufvusp3gfdnad5b")
 }
 
+model Agreement {
+  id                                   BigInt            @id @default(autoincrement())
+  aux                                  Json?
+  bsType                               Int?              @db.TinyInt
+  charge                               Float?
+  complDate                            DateTime?         @db.Date
+  entrust                              Boolean?          @db.Bit(1)
+  feeOk                                Boolean?          @db.Bit(1)
+  mdtime                               DateTime?         @db.DateTime(6)
+  prId                                 BigInt?
+  ptno                                 String?           @db.VarChar(255)
+  pttype                               String?           @db.VarChar(255)
+  status                               Agreement_status?
+  transferor                           String?           @db.VarChar(255)
+  ad_id                                BigInt?
+  auditor_id                           BigInt?
+  crman_id                             BigInt?
+  dispatcher_id                        BigInt?
+  ispu_id                              BigInt
+  promoter_id                          BigInt?
+  servu_id                             BigInt?
+  Adminunit                            Adminunit?        @relation(fields: [ad_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK2qwm1q65unwqbftxohlx4e5vl")
+  USERS_Agreement_auditor_idToUSERS    USERS?            @relation("Agreement_auditor_idToUSERS", fields: [auditor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK97n0u3th7r09k41isve4f1ud5")
+  USERS_Agreement_dispatcher_idToUSERS USERS?            @relation("Agreement_dispatcher_idToUSERS", fields: [dispatcher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfa9nsyg1fkd0wirbwhx8hwxj1")
+  USERS_Agreement_promoter_idToUSERS   USERS?            @relation("Agreement_promoter_idToUSERS", fields: [promoter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfdoq2e2wxndyww5quv4b0vaxi")
+  Unit_Agreement_servu_idToUnit        Unit?             @relation("Agreement_servu_idToUnit", fields: [servu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKpk9f4r2kkahh0rw98oehi6mel")
+  USERS_Agreement_crman_idToUSERS      USERS?            @relation("Agreement_crman_idToUSERS", fields: [crman_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKr9k1h0igp52qwilc42h7kd833")
+  Unit_Agreement_ispu_idToUnit         Unit              @relation("Agreement_ispu_idToUnit", fields: [ispu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKrrk970sahtemv4oqlxihu84dt")
+  Agreement_Eqp                        Agreement_Eqp[]   @ignore
+  Task                                 Task[]
+
+  @@index([ad_id], map: "FK2qwm1q65unwqbftxohlx4e5vl")
+  @@index([auditor_id], map: "FK97n0u3th7r09k41isve4f1ud5")
+  @@index([dispatcher_id], map: "FKfa9nsyg1fkd0wirbwhx8hwxj1")
+  @@index([promoter_id], map: "FKfdoq2e2wxndyww5quv4b0vaxi")
+  @@index([servu_id], map: "FKpk9f4r2kkahh0rw98oehi6mel")
+  @@index([crman_id], map: "FKr9k1h0igp52qwilc42h7kd833")
+  @@index([ispu_id], map: "FKrrk970sahtemv4oqlxihu84dt")
+}
+
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model Agreement_Eqp {
   Agreement_id BigInt
   devs_id      BigInt
+  Eqp          Eqp       @relation(fields: [devs_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9feu45f8lo88phn79m582ibkr")
+  Agreement    Agreement @relation(fields: [Agreement_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKj8f6bl1v8x1h0gpafqoatdntj")
 
+  @@index([devs_id], map: "FK9feu45f8lo88phn79m582ibkr")
+  @@index([Agreement_id], map: "FKj8f6bl1v8x1h0gpafqoatdntj")
   @@ignore
 }
 
@@ -69,7 +116,7 @@ model ApprStm_authrUser {
 }
 
 model ApprovalStm {
-  id                                            BigInt              @id
+  id                                            BigInt              @id @default(autoincrement())
   due                                           DateTime?           @db.Date
   lastSend                                      DateTime?           @db.Date
   prId                                          BigInt?
@@ -93,7 +140,7 @@ model ApprovalStm {
 }
 
 model Charging {
-  id                  BigInt                @id
+  id                  BigInt                @id @default(autoincrement())
   amount              Float?
   code                String?               @db.VarChar(255)
   fm                  Int?                  @db.TinyInt
@@ -111,44 +158,33 @@ model Charging {
 model Charging_PipingUnit {
   Charging_id BigInt
   pipus_id    BigInt
-  Charging    Charging @relation(fields: [Charging_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKhyxevgpv1uohatlma1yym93dw")
+  PipingUnit  PipingUnit @relation(fields: [pipus_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfc6cq80co2r45t5ob55ckfny7")
+  Charging    Charging   @relation(fields: [Charging_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKhyxevgpv1uohatlma1yym93dw")
 
+  @@index([pipus_id], map: "FKfc6cq80co2r45t5ob55ckfny7")
   @@index([Charging_id], map: "FKhyxevgpv1uohatlma1yym93dw")
   @@ignore
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model Circul_moreUser {
-  circId      BigInt
-  userId      BigInt
-  USERS       USERS       @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKf9tmxqj1s4u8b50rdewuj6ome")
-  Circulation Circulation @relation(fields: [circId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKpspwu9dqn2p00c0anap8ktbh9")
-
-  @@index([userId], map: "FKf9tmxqj1s4u8b50rdewuj6ome")
-  @@index([circId], map: "FKpspwu9dqn2p00c0anap8ktbh9")
-  @@ignore
-}
-
 model Circulation {
-  id                                            BigInt            @id
-  current                                       Int?              @db.TinyInt
-  memo                                          String?           @db.VarChar(1024)
-  next                                          Int?              @db.TinyInt
-  opinion                                       Int?              @db.TinyInt
-  time                                          DateTime?         @db.Date
+  id                                            BigInt       @id @default(autoincrement())
+  current                                       Int?         @db.TinyInt
+  memo                                          String?      @db.VarChar(1024)
+  next                                          Int?         @db.TinyInt
+  opinion                                       Int?         @db.TinyInt
+  time                                          DateTime?    @db.Date
   apply_id                                      BigInt?
   user_id                                       BigInt?
-  ApprovalStm_ApprovalStm_cur_idToCirculation   ApprovalStm?      @relation("ApprovalStm_cur_idToCirculation")
-  Circul_moreUser                               Circul_moreUser[] @ignore
-  ApprovalStm_Circulation_apply_idToApprovalStm ApprovalStm?      @relation("Circulation_apply_idToApprovalStm", fields: [apply_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKe63o957k177voa8ieu28yl5am")
-  USERS                                         USERS?            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKpxbosng9bi8xfv2pi3iltndo")
+  ApprovalStm_ApprovalStm_cur_idToCirculation   ApprovalStm? @relation("ApprovalStm_cur_idToCirculation")
+  ApprovalStm_Circulation_apply_idToApprovalStm ApprovalStm? @relation("Circulation_apply_idToApprovalStm", fields: [apply_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKe63o957k177voa8ieu28yl5am")
+  USERS                                         USERS?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKpxbosng9bi8xfv2pi3iltndo")
 
   @@index([apply_id], map: "FKe63o957k177voa8ieu28yl5am")
   @@index([user_id], map: "FKpxbosng9bi8xfv2pi3iltndo")
 }
 
 model City {
-  id                                BigInt      @id
+  id                                BigInt      @id @default(autoincrement())
   collapse                          Boolean?    @db.Bit(1)
   name                              String?     @db.VarChar(255)
   oldId                             String?     @db.VarChar(255)
@@ -182,7 +218,7 @@ model Company {
 }
 
 model Country {
-  id                                      BigInt      @id
+  id                                      BigInt      @id @default(autoincrement())
   collapse                                Boolean?    @db.Bit(1)
   continent                               String?     @db.VarChar(255)
   name                                    String?     @unique(map: "UKt81fgsgaq5hcgbixtau1ptk3") @db.VarChar(255)
@@ -195,7 +231,7 @@ model Country {
 }
 
 model County {
-  id                                    BigInt      @id
+  id                                    BigInt      @id @default(autoincrement())
   collapse                              Boolean?    @db.Bit(1)
   name                                  String?     @db.VarChar(255)
   oldId                                 String?     @db.VarChar(255)
@@ -213,7 +249,7 @@ model County {
 }
 
 model Detail {
-  id                BigInt              @id
+  id                BigInt              @id @default(autoincrement())
   apprp             Boolean             @db.Bit(1)
   captem            Int?                @db.TinyInt
   carbon            Int?                @db.TinyInt
@@ -260,6 +296,8 @@ model Detail {
   zmoney            Float?
   constu_id         BigInt?
   task_id           BigInt?
+  outerId           String?             @db.VarChar(255)
+  extra             String?             @db.Text
   Charging          Charging[]
   Unit              Unit?               @relation(fields: [constu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9oetqmmlva9ddkdyvr4gxleug")
   Task              Task?               @relation(fields: [task_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKiocplhtfor4i1ni4fqcxnlynw")
@@ -272,11 +310,13 @@ model Detail {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model Detail_PipingUnit {
-  dets_id  BigInt
-  pipus_id BigInt
-  Detail   Detail @relation(fields: [dets_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKjuy8vth67rl92ucfbfv0yoryj")
+  dets_id    BigInt
+  pipus_id   BigInt
+  Detail     Detail     @relation(fields: [dets_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKjuy8vth67rl92ucfbfv0yoryj")
+  PipingUnit PipingUnit @relation(fields: [pipus_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKk0k6hefx3vtjyw44ow9ynxsgn")
 
   @@index([dets_id], map: "FKjuy8vth67rl92ucfbfv0yoryj")
+  @@index([pipus_id], map: "FKk0k6hefx3vtjyw44ow9ynxsgn")
   @@ignore
 }
 
@@ -296,6 +336,8 @@ model Division {
   Unit                                  Unit       @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK6h16xd0bo8ebhdjv4cb10wyop")
   Adminunit_Division_ad_idToAdminunit   Adminunit? @relation("Division_ad_idToAdminunit", fields: [ad_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK6smim8vaet4blf8kw6i44jo1f")
   Adminunit_Division_lare_idToAdminunit Adminunit? @relation("Division_lare_idToAdminunit", fields: [lare_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKiwnrrjogp4c5o5kmh2fd1jiqd")
+  Eqp_Eqp_usud_idToDivision             Eqp[]      @relation("Eqp_usud_idToDivision")
+  Eqp_Eqp_ispud_idToDivision            Eqp[]      @relation("Eqp_ispud_idToDivision")
   Office                                Office[]
   Task                                  Task[]
   USERS                                 USERS[]
@@ -303,6 +345,192 @@ model Division {
   @@unique([unit_id, name], map: "UKatp40b0rv97yxapidhtx8odar")
   @@index([ad_id], map: "FK6smim8vaet4blf8kw6i44jo1f")
   @@index([lare_id], map: "FKiwnrrjogp4c5o5kmh2fd1jiqd")
+}
+
+model Eqp {
+  DTYPE                           String          @db.VarChar(31)
+  id                              BigInt          @id @default(autoincrement())
+  address                         String?         @db.VarChar(255)
+  cand                            DateTime?       @db.Date
+  cerd                            DateTime?       @db.Date
+  cert                            String?         @db.VarChar(255)
+  cnam                            String?         @db.VarChar(255)
+  cod                             String?         @db.VarChar(255)
+  cpa                             Int?            @db.TinyInt
+  cping                           Boolean?        @db.Bit(1)
+  crDate                          DateTime?       @db.Date
+  dense                           Boolean?        @db.Bit(1)
+  expire                          DateTime?       @db.Date
+  fail                            String?         @db.VarChar(255)
+  fno                             String?         @db.VarChar(255)
+  impt                            Int?            @db.TinyInt
+  insd                            DateTime?       @db.Date
+  lat                             Float?
+  level                           String?         @db.VarChar(255)
+  lon                             Float?
+  lpho                            String?         @db.VarChar(255)
+  mkd                             DateTime?       @db.Date
+  model                           String?         @db.VarChar(255)
+  money                           Float?          @db.Float
+  move                            Boolean?        @db.Bit(1)
+  nxtd1                           DateTime?       @db.Date
+  nxtd2                           DateTime?       @db.Date
+  nxttd                           DateTime?       @db.Date
+  ocat                            Boolean?        @db.Bit(1)
+  oid                             String?         @db.VarChar(40)
+  pa                              Json?
+  plat                            String?         @db.VarChar(255)
+  plcls                           String?         @db.VarChar(255)
+  plno                            String?         @db.VarChar(255)
+  rcod                            String?         @db.VarChar(255)
+  reg_state                       Int?            @db.TinyInt
+  regd                            DateTime?       @db.Date
+  rnam                            String?         @db.VarChar(255)
+  seimp                           Boolean?        @db.Bit(1)
+  sno                             String?         @db.VarChar(255)
+  eqp_sort                        String?         @db.VarChar(2)
+  subv                            String?         @db.VarChar(255)
+  titl                            String?         @db.VarChar(255)
+  type                            String          @db.VarChar(1)
+  unqf1                           Boolean?        @db.Bit(1)
+  unqf2                           Boolean?        @db.Bit(1)
+  uscd                            DateTime?       @db.Date
+  used                            DateTime?       @db.Date
+  use_state                       Int?            @db.TinyInt
+  vart                            String?         @db.VarChar(3)
+  version                         Int
+  vital                           Boolean?        @db.Bit(1)
+  angl                            String?         @db.VarChar(255)
+  grad                            String?         @db.VarChar(255)
+  high                            Float?          @db.Float
+  hlf                             Float?          @db.Float
+  leng                            Float?          @db.Float
+  mbig                            Boolean?        @db.Bit(1)
+  pnum                            Int?            @db.SmallInt
+  sdia                            String?         @db.VarChar(255)
+  vl                              String?         @db.VarChar(255)
+  asemb                           Boolean?        @db.Bit(1)
+  bmod                            String?         @db.VarChar(255)
+  form                            String?         @db.VarChar(255)
+  fuel                            String?         @db.VarChar(255)
+  power                           Float?          @db.Float
+  pres                            String?         @db.VarChar(255)
+  wall                            Boolean?        @db.Bit(1)
+  auxh                            Boolean?        @db.Bit(1)
+  cap                             String?         @db.VarChar(255)
+  cotr                            Boolean?        @db.Bit(1)
+  cpi                             String?         @db.VarChar(255)
+  cpm                             String?         @db.VarChar(255)
+  cvl                             String?         @db.VarChar(255)
+  flo                             Int?            @db.SmallInt
+  grab                            Boolean?        @db.Bit(1)
+  highs                           String?         @db.VarChar(255)
+  hlfm                            Float?          @db.Float
+  jobl                            String?         @db.VarChar(255)
+  lmv                             String?         @db.VarChar(255)
+  luf                             String?         @db.VarChar(255)
+  luff                            String?         @db.VarChar(255)
+  metl                            Boolean?        @db.Bit(1)
+  miot                            Float?          @db.Float
+  mom                             String?         @db.VarChar(255)
+  mvl                             String?         @db.VarChar(255)
+  nnor                            Boolean?        @db.Bit(1)
+  ns                              Int?            @db.SmallInt
+  occa                            String?         @db.VarChar(255)
+  opm                             String?         @db.VarChar(255)
+  part                            String?         @db.VarChar(255)
+  pcs                             String?         @db.VarChar(255)
+  pcw                             String?         @db.VarChar(255)
+  rang                            String?         @db.VarChar(255)
+  rtlf                            Float?          @db.Float
+  rtv                             String?         @db.VarChar(255)
+  rvl                             String?         @db.VarChar(255)
+  scv                             String?         @db.VarChar(255)
+  span                            Float?          @db.Float
+  suck                            Boolean?        @db.Bit(1)
+  tm                              String?         @db.VarChar(255)
+  tno                             String?         @db.VarChar(255)
+  two                             Boolean?        @db.Bit(1)
+  twoc                            Boolean?        @db.Bit(1)
+  vls                             String?         @db.VarChar(255)
+  walk                            Boolean?        @db.Bit(1)
+  whole                           Boolean?        @db.Bit(1)
+  wjib                            Boolean?        @db.Bit(1)
+  aap                             String?         @db.VarChar(255)
+  buff                            String?         @db.VarChar(255)
+  doop                            String?         @db.VarChar(255)
+  lbkd                            DateTime?       @db.Date
+  lesc                            Float?          @db.Float
+  limm                            String?         @db.VarChar(255)
+  mtm                             String?         @db.VarChar(255)
+  nbkd                            DateTime?       @db.Date
+  oldb                            Boolean?        @db.Bit(1)
+  prot                            String?         @db.VarChar(255)
+  rtl                             String?         @db.VarChar(255)
+  spec                            Boolean?        @db.Bit(1)
+  wesc                            String?         @db.VarChar(255)
+  pow                             String?         @db.VarChar(255)
+  matr                            String?         @db.VarChar(255)
+  mdi                             String?         @db.VarChar(255)
+  prs                             String?         @db.VarChar(255)
+  temp                            String?         @db.VarChar(255)
+  fulw                            Float?          @db.Float
+  insul                           String?         @db.VarChar(255)
+  jakm                            String?         @db.VarChar(255)
+  mont                            String?         @db.VarChar(255)
+  vol                             String?         @db.VarChar(255)
+  weig                            Float?          @db.Float
+  aid                             BigInt?
+  insu_id                         BigInt?
+  isp1_id                         BigInt?         @unique(map: "UKwq9t8kxyoxw46c7rnj9nj1mo")
+  isp2_id                         BigInt?         @unique(map: "UK8f8pejur5r4hlp7utumn1uyml")
+  ispu_id                         BigInt?
+  ispud_id                        BigInt?
+  makeu_id                        BigInt?
+  mtu_id                          BigInt?
+  owner_id                        BigInt?
+  regu_id                         BigInt?
+  remu_id                         BigInt?
+  repu_id                         BigInt?
+  svu_id                          BigInt?
+  useu_id                         BigInt?
+  usud_id                         BigInt?
+  vid                             BigInt?
+  Agreement_Eqp                   Agreement_Eqp[] @ignore
+  Unit_Eqp_owner_idToUnit         Unit?           @relation("Eqp_owner_idToUnit", fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK2tbvqtcd03pt3yttvha426vwq")
+  Division_Eqp_usud_idToDivision  Division?       @relation("Eqp_usud_idToDivision", fields: [usud_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3lf6vp17yl1u7a00d0g1wh004")
+  Unit_Eqp_insu_idToUnit          Unit?           @relation("Eqp_insu_idToUnit", fields: [insu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3wfw3wg6gvaopvq4jx1y8fpdl")
+  Adminunit                       Adminunit?      @relation(fields: [aid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK4o1ct7am1vfptwp6dbop4l3ju")
+  Unit_Eqp_svu_idToUnit           Unit?           @relation("Eqp_svu_idToUnit", fields: [svu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK68ctcwcf94gt7womadycw7uqt")
+  Isp_Eqp_isp1_idToIsp            Isp?            @relation("Eqp_isp1_idToIsp", fields: [isp1_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK6dvmnbub521oppd6ygesxywe9")
+  Division_Eqp_ispud_idToDivision Division?       @relation("Eqp_ispud_idToDivision", fields: [ispud_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK818nkjpkgh6qygbsx7aqrgu3o")
+  Unit_Eqp_remu_idToUnit          Unit?           @relation("Eqp_remu_idToUnit", fields: [remu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK822t127106996mxyvt2vo2o8y")
+  Unit_Eqp_makeu_idToUnit         Unit?           @relation("Eqp_makeu_idToUnit", fields: [makeu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKalqtutpsgob9egyedkem6ljle")
+  Unit_Eqp_repu_idToUnit          Unit?           @relation("Eqp_repu_idToUnit", fields: [repu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKbtna0kc9n1l2jqo21bbbk7qdq")
+  Unit_Eqp_mtu_idToUnit           Unit?           @relation("Eqp_mtu_idToUnit", fields: [mtu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKeqt4vpg971mumkmpsuqwg8qvf")
+  Unit_Eqp_ispu_idToUnit          Unit?           @relation("Eqp_ispu_idToUnit", fields: [ispu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKh6661tka3v8j0mqfhve0feh4g")
+  Unit_Eqp_useu_idToUnit          Unit?           @relation("Eqp_useu_idToUnit", fields: [useu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKiiw3d2hqqsneolnv2pxvl7o1f")
+  Unit_Eqp_regu_idToUnit          Unit?           @relation("Eqp_regu_idToUnit", fields: [regu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKl6ygal64ovn3gcar6kx7vu5m5")
+  Isp_Eqp_isp2_idToIsp            Isp?            @relation("Eqp_isp2_idToIsp", fields: [isp2_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKlytj8dmbjbhv8ngwb9l8opre5")
+  Village                         Village?        @relation(fields: [vid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKp5mqnm26bep07x0c48k24ax56")
+  Isp_Isp_dev_idToEqp             Isp[]           @relation("Isp_dev_idToEqp")
+  PipingUnit                      PipingUnit[]
+  StoreSync                       StoreSync[]
+
+  @@index([owner_id], map: "FK2tbvqtcd03pt3yttvha426vwq")
+  @@index([usud_id], map: "FK3lf6vp17yl1u7a00d0g1wh004")
+  @@index([insu_id], map: "FK3wfw3wg6gvaopvq4jx1y8fpdl")
+  @@index([aid], map: "FK4o1ct7am1vfptwp6dbop4l3ju")
+  @@index([svu_id], map: "FK68ctcwcf94gt7womadycw7uqt")
+  @@index([ispud_id], map: "FK818nkjpkgh6qygbsx7aqrgu3o")
+  @@index([remu_id], map: "FK822t127106996mxyvt2vo2o8y")
+  @@index([makeu_id], map: "FKalqtutpsgob9egyedkem6ljle")
+  @@index([repu_id], map: "FKbtna0kc9n1l2jqo21bbbk7qdq")
+  @@index([mtu_id], map: "FKeqt4vpg971mumkmpsuqwg8qvf")
+  @@index([ispu_id], map: "FKh6661tka3v8j0mqfhve0feh4g")
+  @@index([useu_id], map: "FKiiw3d2hqqsneolnv2pxvl7o1f")
+  @@index([regu_id], map: "FKl6ygal64ovn3gcar6kx7vu5m5")
+  @@index([vid], map: "FKp5mqnm26bep07x0c48k24ax56")
 }
 
 model HSEARCH_AGENT {
@@ -332,34 +560,41 @@ model HSEARCH_OUTBOX_EVENT {
 }
 
 model Isp {
-  id                           BigInt      @id @default(autoincrement())
-  bsType                       Int?        @db.TinyInt
-  conclusion                   String?     @db.VarChar(255)
-  entrust                      Boolean?    @db.Bit(1)
-  ispDate                      DateTime?   @db.Date
-  no                           String?     @db.VarChar(255)
-  bus_id                       BigInt?     @unique(map: "UKn4t1g7vxuwyj0kh3y3fjiyhsy")
-  checkMen_id                  BigInt?
-  dev_id                       BigInt?
-  ispu_id                      BigInt
-  report_id                    BigInt?     @unique(map: "UKbjj0v79g5qwuvkn6ppylqugok")
-  servu_id                     BigInt?
-  nextispdate                  String?     @db.VarChar(50)
-  Report_Isp_report_idToReport Report?     @relation("Isp_report_idToReport", fields: [report_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3op3n9ffroxngu80vnqkur604")
-  Unit_Isp_servu_idToUnit      Unit?       @relation("Isp_servu_idToUnit", fields: [servu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKb6k7en4ioih2n0kfvf4c7om7b")
-  USERS                        USERS?      @relation(fields: [checkMen_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKifrnm3y8whrl1u8djd1w7w03g")
-  Detail                       Detail?     @relation(fields: [bus_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKlclf640h0o3duhw6a7b448yln")
-  Unit_Isp_ispu_idToUnit       Unit        @relation("Isp_ispu_idToUnit", fields: [ispu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKm0feg90xy1hg35lytu4peh0n6")
-  Isp_USERS                    Isp_USERS[] @ignore
-  Report_Report_isp_idToIsp    Report[]    @relation("Report_isp_idToIsp")
+  id                                  BigInt       @id @default(autoincrement())
+  bsType                              Int?         @db.TinyInt
+  conclusion                          String?      @db.VarChar(255)
+  entrust                             Boolean?     @db.Bit(1)
+  ispDate                             DateTime?    @db.Date
+  no                                  String?      @db.VarChar(255)
+  bus_id                              BigInt?      @unique(map: "UKn4t1g7vxuwyj0kh3y3fjiyhsy")
+  checkMen_id                         BigInt?
+  dev_id                              BigInt?
+  ispu_id                             BigInt
+  report_id                           BigInt?      @unique(map: "UKbjj0v79g5qwuvkn6ppylqugok")
+  servu_id                            BigInt?
+  nextispdate                         String?      @db.VarChar(50)
+  Eqp_Eqp_isp1_idToIsp                Eqp?         @relation("Eqp_isp1_idToIsp")
+  Eqp_Eqp_isp2_idToIsp                Eqp?         @relation("Eqp_isp2_idToIsp")
+  Report_Isp_report_idToReport        Report?      @relation("Isp_report_idToReport", fields: [report_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3op3n9ffroxngu80vnqkur604")
+  Eqp_Isp_dev_idToEqp                 Eqp?         @relation("Isp_dev_idToEqp", fields: [dev_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3q1sq8h9webcydw3d64qb1oas")
+  Unit_Isp_servu_idToUnit             Unit?        @relation("Isp_servu_idToUnit", fields: [servu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKb6k7en4ioih2n0kfvf4c7om7b")
+  USERS                               USERS?       @relation(fields: [checkMen_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKifrnm3y8whrl1u8djd1w7w03g")
+  Detail                              Detail?      @relation(fields: [bus_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKlclf640h0o3duhw6a7b448yln")
+  Unit_Isp_ispu_idToUnit              Unit         @relation("Isp_ispu_idToUnit", fields: [ispu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKm0feg90xy1hg35lytu4peh0n6")
+  Isp_USERS                           Isp_USERS[]  @ignore
+  PipingUnit_PipingUnit_isp2_idToIsp  PipingUnit[] @relation("PipingUnit_isp2_idToIsp")
+  PipingUnit_PipingUnit_isp1_idToIsp  PipingUnit[] @relation("PipingUnit_isp1_idToIsp")
+  PipingUnit_PipingUnit_ispsv_idToIsp PipingUnit[] @relation("PipingUnit_ispsv_idToIsp")
+  Report_Report_isp_idToIsp           Report[]     @relation("Report_isp_idToIsp")
 
+  @@index([dev_id], map: "FK3q1sq8h9webcydw3d64qb1oas")
   @@index([servu_id], map: "FKb6k7en4ioih2n0kfvf4c7om7b")
   @@index([checkMen_id], map: "FKifrnm3y8whrl1u8djd1w7w03g")
   @@index([ispu_id], map: "FKm0feg90xy1hg35lytu4peh0n6")
 }
 
 model IspAgency {
-  id      BigInt   @id
+  id      BigInt   @id @default(autoincrement())
   apno    String?  @db.VarChar(255)
   bjtel   String?  @db.VarChar(255)
   bjurl   String?  @db.VarChar(255)
@@ -381,7 +616,7 @@ model Isp_USERS {
 }
 
 model JsliceMang {
-  id        BigInt    @id
+  id        BigInt    @id @default(autoincrement())
   auid      String?   @db.VarChar(255)
   idFirst   BigInt?
   idLast    BigInt?
@@ -432,6 +667,59 @@ model Person {
   @@index([aid], map: "FKqqssogfodrk84slv6g8g1csyh")
 }
 
+model PipingUnit {
+  id                            BigInt                @id @default(autoincrement())
+  code                          String?               @db.VarChar(255)
+  crDate                        DateTime?             @db.Date
+  dia                           Float?                @db.Float
+  insd                          DateTime?             @db.Date
+  lay                           String?               @db.VarChar(255)
+  leng                          Float?                @db.Float
+  level                         String?               @db.VarChar(255)
+  matr                          String?               @db.VarChar(255)
+  mdi                           String?               @db.VarChar(255)
+  name                          String?               @db.VarChar(255)
+  ninsp                         Boolean?              @db.Bit(1)
+  nxtd1                         DateTime?             @db.Date
+  nxtd2                         DateTime?             @db.Date
+  pa                            Json?
+  proj                          String?               @db.VarChar(255)
+  reg                           Int?                  @db.TinyInt
+  regd                          DateTime?             @db.Date
+  rno                           String?               @db.VarChar(255)
+  safe                          String?               @db.VarChar(255)
+  start                         String?               @db.VarChar(255)
+  stop                          String?               @db.VarChar(255)
+  thik                          String?               @db.VarChar(255)
+  used                          DateTime?             @db.Date
+  ust                           Int?                  @db.TinyInt
+  ad_id                         BigInt?
+  desu_id                       BigInt?
+  insu_id                       BigInt?
+  isp1_id                       BigInt?
+  isp2_id                       BigInt?
+  ispsv_id                      BigInt?
+  pipe_id                       BigInt?
+  deleted                       Boolean?              @db.Bit(1)
+  Charging_PipingUnit           Charging_PipingUnit[] @ignore
+  Detail_PipingUnit             Detail_PipingUnit[]   @ignore
+  Isp_PipingUnit_isp2_idToIsp   Isp?                  @relation("PipingUnit_isp2_idToIsp", fields: [isp2_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK15ivdlqybhumi57jtbqgccugh")
+  Unit_PipingUnit_desu_idToUnit Unit?                 @relation("PipingUnit_desu_idToUnit", fields: [desu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK5dsb3h0d2axom41pnuo8hu35o")
+  Isp_PipingUnit_isp1_idToIsp   Isp?                  @relation("PipingUnit_isp1_idToIsp", fields: [isp1_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK8bn517kw5e5luj578677uslj9")
+  Eqp                           Eqp?                  @relation(fields: [pipe_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKb8pwawa27rd448q5u3f0e0b1s")
+  Adminunit                     Adminunit?            @relation(fields: [ad_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKm0hvdpx6f8m2oxe953kthww9g")
+  Isp_PipingUnit_ispsv_idToIsp  Isp?                  @relation("PipingUnit_ispsv_idToIsp", fields: [ispsv_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKmstcbo091w2end63yrcdpdvcb")
+  Unit_PipingUnit_insu_idToUnit Unit?                 @relation("PipingUnit_insu_idToUnit", fields: [insu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKp5f6ylmk6s0tunuce1do09h4h")
+
+  @@index([isp2_id], map: "FK15ivdlqybhumi57jtbqgccugh")
+  @@index([desu_id], map: "FK5dsb3h0d2axom41pnuo8hu35o")
+  @@index([isp1_id], map: "FK8bn517kw5e5luj578677uslj9")
+  @@index([pipe_id], map: "FKb8pwawa27rd448q5u3f0e0b1s")
+  @@index([ad_id], map: "FKm0hvdpx6f8m2oxe953kthww9g")
+  @@index([ispsv_id], map: "FKmstcbo091w2end63yrcdpdvcb")
+  @@index([insu_id], map: "FKp5f6ylmk6s0tunuce1do09h4h")
+}
+
 model Province {
   id                                        BigInt      @id @default(autoincrement())
   collapse                                  Boolean?    @db.Bit(1)
@@ -476,13 +764,13 @@ model Report {
 }
 
 model Sequence {
-  id   BigInt  @id
+  id   BigInt  @id @default(autoincrement())
   lno  BigInt?
   name String  @unique(map: "UKeqjvqvci9w8qw7lwq4a3u27tx") @db.VarChar(255)
 }
 
 model SplJob {
-  id        BigInt    @id
+  id        BigInt    @id @default(autoincrement())
   curr      String?   @db.VarChar(255)
   endr      String?   @db.VarChar(255)
   groupName String?   @db.VarChar(255)
@@ -498,7 +786,7 @@ model SplJob {
 }
 
 model StoreSync {
-  id         BigInt  @id
+  id         BigInt  @id @default(autoincrement())
   amrServer  String? @db.VarChar(255)
   cod        String? @db.VarChar(255)
   eqpSort    String? @db.VarChar(255)
@@ -509,22 +797,25 @@ model StoreSync {
   oldId      BigInt?
   subEqpVart String? @db.VarChar(255)
   dev_id     BigInt?
+  Eqp        Eqp?    @relation(fields: [dev_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKi94n3u8t85ggk78wudl4qbr4")
+
+  @@index([dev_id], map: "FKi94n3u8t85ggk78wudl4qbr4")
 }
 
 model Task {
-  id                           BigInt    @id @default(autoincrement())
-  bsType                       Int?      @db.TinyInt
+  id                           BigInt     @id @default(autoincrement())
+  bsType                       Int?       @db.TinyInt
   charge                       Float?
-  crtime                       DateTime? @db.DateTime(6)
-  date                         DateTime? @db.Date
+  crtime                       DateTime?  @db.DateTime(6)
+  date                         DateTime?  @db.Date
   disfee                       Float?
-  dreason                      String?   @db.VarChar(255)
-  entrust                      Boolean?  @db.Bit(1)
-  feeOk                        Boolean   @db.Bit(1)
-  invoice                      String?   @db.VarChar(255)
-  opAddress                    String?   @db.VarChar(255)
-  origd                        DateTime? @db.Date
-  status                       Int?      @db.TinyInt
+  dreason                      String?    @db.VarChar(255)
+  entrust                      Boolean?   @db.Bit(1)
+  feeOk                        Boolean    @db.Bit(1)
+  invoice                      String?    @db.VarChar(255)
+  opAddress                    String?    @db.VarChar(255)
+  origd                        DateTime?  @db.Date
+  status                       Int?       @db.TinyInt
   agreement_id                 BigInt?
   crman_id                     BigInt?
   dep_id                       BigInt?
@@ -532,17 +823,20 @@ model Task {
   liabler_id                   BigInt?
   office_id                    BigInt?
   servu_id                     BigInt?
+  oldTaskTag                   String?    @db.VarChar(255)
   Detail                       Detail[]
-  Division                     Division? @relation(fields: [dep_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK2kna3xiqa77p9csyfjqyrnhm6")
-  Unit_Task_servu_idToUnit     Unit?     @relation("Task_servu_idToUnit", fields: [servu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK52dbphhh758eaygagsuo0yshk")
-  USERS_Task_liabler_idToUSERS USERS?    @relation("Task_liabler_idToUSERS", fields: [liabler_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKe65ny5p8c3bxssa4bjkfcatom")
-  USERS_Task_crman_idToUSERS   USERS?    @relation("Task_crman_idToUSERS", fields: [crman_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKm7pl496l60ry7qnof7x0bf3ip")
-  Office                       Office?   @relation(fields: [office_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKrdfmlofrq3q413dil2q2hchi7")
-  Unit_Task_ispu_idToUnit      Unit      @relation("Task_ispu_idToUnit", fields: [ispu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKvq41gs38w031s3noym4j4eqx")
+  Division                     Division?  @relation(fields: [dep_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK2kna3xiqa77p9csyfjqyrnhm6")
+  Unit_Task_servu_idToUnit     Unit?      @relation("Task_servu_idToUnit", fields: [servu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK52dbphhh758eaygagsuo0yshk")
+  USERS_Task_liabler_idToUSERS USERS?     @relation("Task_liabler_idToUSERS", fields: [liabler_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKe65ny5p8c3bxssa4bjkfcatom")
+  USERS_Task_crman_idToUSERS   USERS?     @relation("Task_crman_idToUSERS", fields: [crman_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKm7pl496l60ry7qnof7x0bf3ip")
+  Agreement                    Agreement? @relation(fields: [agreement_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKqlxq3j7m71hf86kodjgghn248")
+  Office                       Office?    @relation(fields: [office_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKrdfmlofrq3q413dil2q2hchi7")
+  Unit_Task_ispu_idToUnit      Unit       @relation("Task_ispu_idToUnit", fields: [ispu_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKvq41gs38w031s3noym4j4eqx")
 
   @@index([dep_id], map: "FK2kna3xiqa77p9csyfjqyrnhm6")
   @@index([liabler_id], map: "FKe65ny5p8c3bxssa4bjkfcatom")
   @@index([crman_id], map: "FKm7pl496l60ry7qnof7x0bf3ip")
+  @@index([agreement_id], map: "FKqlxq3j7m71hf86kodjgghn248")
   @@index([office_id], map: "FKrdfmlofrq3q413dil2q2hchi7")
   @@index([ispu_id], map: "FKvq41gs38w031s3noym4j4eqx")
   @@index([servu_id], map: "task_servu_id_idx")
@@ -566,21 +860,27 @@ model USERS {
   authType                                   String?             @db.VarChar(255)
   email                                      String?             @db.VarChar(70)
   ENABLED                                    Boolean             @db.Bit(1)
+  firstname                                  String?             @db.VarChar(20)
   LASTPASSWORDRESETDATE                      DateTime?           @db.DateTime(6)
+  lastname                                   String?             @db.VarChar(20)
   mobile                                     String?             @db.VarChar(255)
   oldAccount                                 String?             @db.VarChar(255)
   password                                   String?             @db.VarChar(128)
   photoURL                                   String?             @db.VarChar(255)
-  USERNAME                                   String              @unique(map: "UKdc4eq7plr20fdhq528twsak1b") @db.VarChar(60)
+  USERNAME                                   String              @unique(map: "UKdc4eq7plr20fdhq528twsak1b") @db.VarChar(20)
   dep_id                                     BigInt?
   office_id                                  BigInt?
   person_id                                  BigInt?
   unit_id                                    BigInt?
+  AUTH_RESPONSE                              String?             @db.Text
+  Agreement_Agreement_auditor_idToUSERS      Agreement[]         @relation("Agreement_auditor_idToUSERS")
+  Agreement_Agreement_dispatcher_idToUSERS   Agreement[]         @relation("Agreement_dispatcher_idToUSERS")
+  Agreement_Agreement_promoter_idToUSERS     Agreement[]         @relation("Agreement_promoter_idToUSERS")
+  Agreement_Agreement_crman_idToUSERS        Agreement[]         @relation("Agreement_crman_idToUSERS")
   ApprStm_authrUser                          ApprStm_authrUser[] @ignore
   ApprovalStm_ApprovalStm_reviewer_idToUSERS ApprovalStm[]       @relation("ApprovalStm_reviewer_idToUSERS")
   ApprovalStm_ApprovalStm_approver_idToUSERS ApprovalStm[]       @relation("ApprovalStm_approver_idToUSERS")
   ApprovalStm_ApprovalStm_master_idToUSERS   ApprovalStm[]       @relation("ApprovalStm_master_idToUSERS")
-  Circul_moreUser                            Circul_moreUser[]   @ignore
   Circulation                                Circulation[]
   Isp                                        Isp[]
   Isp_USERS                                  Isp_USERS[]         @ignore
@@ -624,38 +924,52 @@ model USER_PERMIS_ECL {
 }
 
 model Unit {
-  id                       BigInt     @id @default(autoincrement())
-  area                     String?    @db.VarChar(255)
-  cancel                   Boolean?   @db.Bit(1)
-  crDate                   DateTime?  @db.Date
-  desiu                    Boolean?   @db.Bit(1)
-  fillu                    Boolean?   @db.Bit(1)
-  indCod                   String?    @db.VarChar(255)
-  instu                    Boolean?   @db.Bit(1)
-  ispu                     Boolean?   @db.Bit(1)
-  maitu                    Boolean?   @db.Bit(1)
-  makeu                    Boolean?   @db.Bit(1)
-  nondu                    Boolean?   @db.Bit(1)
-  remou                    Boolean?   @db.Bit(1)
-  repau                    Boolean?   @db.Bit(1)
-  supvu                    Boolean?   @db.Bit(1)
-  testu                    Boolean?   @db.Bit(1)
-  useu                     Boolean?   @db.Bit(1)
-  valvu                    Boolean?   @db.Bit(1)
-  company_id               BigInt?    @unique(map: "IDXg7e7habn7rh1w33xejbtrlcbj")
-  lare_id                  BigInt?
-  person_id                BigInt?    @unique(map: "IDXsba8suu2wpaqqd2eadwgnub6o")
-  Detail                   Detail[]
-  Division                 Division[]
-  Isp_Isp_servu_idToUnit   Isp[]      @relation("Isp_servu_idToUnit")
-  Isp_Isp_ispu_idToUnit    Isp[]      @relation("Isp_ispu_idToUnit")
-  IspAgency                IspAgency?
-  Task_Task_servu_idToUnit Task[]     @relation("Task_servu_idToUnit")
-  Task_Task_ispu_idToUnit  Task[]     @relation("Task_ispu_idToUnit")
-  USERS                    USERS[]
-  Adminunit                Adminunit? @relation(fields: [lare_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK2midy26q5ann67he8huj6s6p5")
-  Company                  Company?   @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKeywx1boci3npflcytgeji50p1")
-  Person                   Person?    @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKko3eaiut2we7mlei723sppc2j")
+  id                                  BigInt       @id @default(autoincrement())
+  area                                String?      @db.VarChar(255)
+  cancel                              Boolean?     @db.Bit(1)
+  crDate                              DateTime?    @db.Date
+  desiu                               Boolean?     @db.Bit(1)
+  fillu                               Boolean?     @db.Bit(1)
+  indCod                              String?      @db.VarChar(255)
+  instu                               Boolean?     @db.Bit(1)
+  ispu                                Boolean?     @db.Bit(1)
+  maitu                               Boolean?     @db.Bit(1)
+  makeu                               Boolean?     @db.Bit(1)
+  nondu                               Boolean?     @db.Bit(1)
+  remou                               Boolean?     @db.Bit(1)
+  repau                               Boolean?     @db.Bit(1)
+  supvu                               Boolean?     @db.Bit(1)
+  testu                               Boolean?     @db.Bit(1)
+  useu                                Boolean?     @db.Bit(1)
+  valvu                               Boolean?     @db.Bit(1)
+  company_id                          BigInt?      @unique(map: "IDXg7e7habn7rh1w33xejbtrlcbj")
+  lare_id                             BigInt?
+  person_id                           BigInt?      @unique(map: "IDXsba8suu2wpaqqd2eadwgnub6o")
+  Agreement_Agreement_servu_idToUnit  Agreement[]  @relation("Agreement_servu_idToUnit")
+  Agreement_Agreement_ispu_idToUnit   Agreement[]  @relation("Agreement_ispu_idToUnit")
+  Detail                              Detail[]
+  Division                            Division[]
+  Eqp_Eqp_owner_idToUnit              Eqp[]        @relation("Eqp_owner_idToUnit")
+  Eqp_Eqp_insu_idToUnit               Eqp[]        @relation("Eqp_insu_idToUnit")
+  Eqp_Eqp_svu_idToUnit                Eqp[]        @relation("Eqp_svu_idToUnit")
+  Eqp_Eqp_remu_idToUnit               Eqp[]        @relation("Eqp_remu_idToUnit")
+  Eqp_Eqp_makeu_idToUnit              Eqp[]        @relation("Eqp_makeu_idToUnit")
+  Eqp_Eqp_repu_idToUnit               Eqp[]        @relation("Eqp_repu_idToUnit")
+  Eqp_Eqp_mtu_idToUnit                Eqp[]        @relation("Eqp_mtu_idToUnit")
+  Eqp_Eqp_ispu_idToUnit               Eqp[]        @relation("Eqp_ispu_idToUnit")
+  Eqp_Eqp_useu_idToUnit               Eqp[]        @relation("Eqp_useu_idToUnit")
+  Eqp_Eqp_regu_idToUnit               Eqp[]        @relation("Eqp_regu_idToUnit")
+  Isp_Isp_servu_idToUnit              Isp[]        @relation("Isp_servu_idToUnit")
+  Isp_Isp_ispu_idToUnit               Isp[]        @relation("Isp_ispu_idToUnit")
+  IspAgency                           IspAgency?
+  PipingUnit_PipingUnit_desu_idToUnit PipingUnit[] @relation("PipingUnit_desu_idToUnit")
+  PipingUnit_PipingUnit_insu_idToUnit PipingUnit[] @relation("PipingUnit_insu_idToUnit")
+  Task_Task_servu_idToUnit            Task[]       @relation("Task_servu_idToUnit")
+  Task_Task_ispu_idToUnit             Task[]       @relation("Task_ispu_idToUnit")
+  USERS                               USERS[]
+  Adminunit                           Adminunit?   @relation(fields: [lare_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK2midy26q5ann67he8huj6s6p5")
+  Company                             Company?     @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKeywx1boci3npflcytgeji50p1")
+  Person                              Person?      @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKko3eaiut2we7mlei723sppc2j")
 
   @@index([lare_id], map: "FK2midy26q5ann67he8huj6s6p5")
 }
@@ -667,6 +981,7 @@ model Village {
   oldId     BigInt?
   type      String?    @db.VarChar(255)
   aid       BigInt?
+  Eqp       Eqp[]
   Adminunit Adminunit? @relation(fields: [aid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK8rj8lp1aq9cjbyflcyt31aokf")
 
   @@unique([name, aid], map: "UKm8khvk7rbhctnh3yewrooe6rb")
@@ -676,47 +991,34 @@ model Village {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model migration_task {
   id              BigInt    @id @default(autoincrement())
-  taskName        String    @map("task_name") @db.VarChar(200)
-  taskType        String    @map("task_type") @db.VarChar(50)
+  task_name       String    @db.VarChar(200)
+  task_type       String    @db.VarChar(50)
   status          String    @default("PENDING") @db.VarChar(20)
-  totalCount      BigInt?   @map("total_count") @default(0)
-  processedCount  BigInt?   @map("processed_count") @default(0)
-  successCount    BigInt?   @map("success_count") @default(0)
-  failCount       BigInt?   @map("fail_count") @default(0)
+  total_count     BigInt?   @default(0)
+  processed_count BigInt?   @default(0)
+  success_count   BigInt?   @default(0)
+  fail_count      BigInt?   @default(0)
   progress        Int?      @default(0)
-  errorMessage    String?   @map("error_message") @db.Text
-  createTime      DateTime? @map("create_time") @default(now()) @db.Timestamp(0)
-  updateTime      DateTime? @map("update_time") @default(now()) @db.Timestamp(0)
-  completeTime    DateTime? @map("complete_time") @db.Timestamp(0)
-  createBy        String?   @map("create_by") @db.VarChar(100)
+  error_message   String?   @db.Text
+  create_time     DateTime? @default(now()) @db.Timestamp(0)
+  update_time     DateTime? @default(now()) @db.Timestamp(0)
+  complete_time   DateTime? @db.Timestamp(0)
+  create_by       String?   @db.VarChar(100)
   deleted         Int?      @default(0)
 
-  @@index([createTime], map: "idx_create_time")
+  @@index([create_time], map: "idx_create_time")
   @@index([status], map: "idx_status")
-  @@index([taskType], map: "idx_task_type")
-  @@map("migration_task")
-}
-
-model migration_log {
-  id          BigInt    @id @default(autoincrement())
-  taskId      String    @map("task_id") @db.VarChar(100)
-  level       String    @db.VarChar(20)
-  message     String    @db.Text
-  details     String?   @db.Text
-  createTime  DateTime? @map("create_time") @default(now()) @db.Timestamp(0)
-
-  @@index([taskId], map: "idx_task_id")
-  @@map("migration_log")
+  @@index([task_type], map: "idx_task_type")
 }
 
 model teacher {
-  id        BigInt  @id
+  id        BigInt  @id @default(autoincrement())
   modelType String? @db.VarChar(255)
   uuidID    String? @db.LongText
 }
 
 model testuser {
-  id          BigInt  @id
+  id          BigInt  @id @default(autoincrement())
   address     String? @db.VarChar(255)
   city        String? @db.VarChar(255)
   credit_card String? @db.VarChar(255)
@@ -789,4 +1091,14 @@ enum HSEARCH_AGENT_type {
   EVENT_PROCESSING_DYNAMIC_SHARDING
   EVENT_PROCESSING_STATIC_SHARDING
   MASS_INDEXING
+}
+
+enum Agreement_status {
+  CANCEL
+  CHECK
+  END
+  INIT
+  SIGNED
+  SIGNING
+  SUBMIT
 }

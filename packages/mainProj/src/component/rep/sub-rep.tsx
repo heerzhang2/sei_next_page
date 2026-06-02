@@ -223,3 +223,12 @@ export interface SubReportConfig {
     collapse?: boolean
     cat: { title: string; url: string }[]
 }
+
+/**
+ * 将 SubReportConfig 映射表转换为 {tag, name}[] 列表
+ * 供新增分项报告等场景使用
+ */
+export function subRepConfigToTagList(config: Record<string, SubReportConfig>): Array<{tag: string; name: string}> {
+    return Object.entries(config).map(([tag, cfg]) => ({ tag, name: cfg.catKey }));
+}
+

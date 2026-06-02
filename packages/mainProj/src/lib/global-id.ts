@@ -29,14 +29,14 @@ function parseUUID(uuidString: string): { mostSignificantBits: bigint; leastSign
 }
 
 /**
- * 将64位BigInt转换为8字节数组 (小端序，与后端Java一致)
+ * 将64位BigInt转换为8字节数组 (大端序，与后端Java一致)
  * @param value 64位BigInt值
  * @returns 8字节的Uint8Array
  */
 function bigIntToBytes(value: bigint): Uint8Array {
   const bytes = new Uint8Array(8)
   for (let i = 0; i < 8; i++) {
-    bytes[i] = Number((value >> BigInt(i * 8)) & BigInt(0xff))
+    bytes[i] = Number((value >> BigInt((7 - i) * 8)) & BigInt(0xff))
   }
   return bytes
 }
@@ -80,8 +80,8 @@ export function toGlobalId(type: string, id: number | bigint): string {
     resultBytes.set(typeBytes, 16)
   }
 
-  // 使用Base64编码
-  return btoa(String.fromCharCode(...resultBytes))
+  // 使用Base64编码（移除尾部填充=，与Java getUrlEncoder().withoutPadding()一致）
+  return btoa(String.fromCharCode(...resultBytes)).replace(/=+$/, '')
 }
 
 /**
@@ -102,10 +102,10 @@ export function fromGlobalId(globalId: string): { type: string; id: string } {
       throw new Error("Invalid Global ID: too short")
     }
 
-    // 从前8字节提取Long ID (小端序，与后端Java一致)
+    // 从前8字节提取Long ID (大端序，与后端Java一致)
     let idBits = BigInt(0)
     for (let i = 0; i < 8; i++) {
-      idBits |= BigInt(bytes[i]) << BigInt(i * 8)
+      idBits |= BigInt(bytes[i]) << BigInt((7 - i) * 8)
     }
 
     // 提取type字符串

@@ -364,7 +364,7 @@ export function BlobInputList({
                                             </SelectItem>
                                         ))
                                     ) : (
-                                        <SelectItem value="" disabled className="whitespace-normal break-words h-auto py-2">
+                                        <SelectItem value="no-options" disabled className="whitespace-normal break-words h-auto py-2">
                                             暂无选项
                                         </SelectItem>
                                     )}

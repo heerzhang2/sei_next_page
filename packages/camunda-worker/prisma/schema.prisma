@@ -1,0 +1,9 @@
+// 复用 mainProj 的 Prisma Schema
+// 实际 schema 文件位置: ../mainProj/prisma/schema.prisma
+
+// 这个文件是为了让 Prisma CLI 知道 schema 位置
+// 真正的 schema 在 mainProj 中定义
+
+// 使用方式:
+// 1. 在 camunda-worker 目录下运行: npx prisma generate --schema=../mainProj/prisma/schema.prisma
+// 2. 或者在 package.json 中配置 "prisma.schema": "../mainProj/prisma/schema.prisma"

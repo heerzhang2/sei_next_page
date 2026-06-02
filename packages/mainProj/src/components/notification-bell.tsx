@@ -233,7 +233,6 @@ export function NotificationBell() {
             <div className="flex items-center justify-between px-3 py-2 border-b">
               <h3 className="font-semibold text-sm">通知</h3>
               <div className="flex items-center gap-1">
-                {unreadCount > 0 && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -243,8 +242,6 @@ export function NotificationBell() {
                   >
                     <CheckCheck className="h-4 w-4" />
                   </Button>
-                )}
-                {notifications.length > 0 && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -254,7 +251,6 @@ export function NotificationBell() {
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                )}
                 <Button
                   variant="ghost"
                   size="icon"

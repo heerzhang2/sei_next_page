@@ -74,10 +74,10 @@ export default function Home() {
                     </Link>
                     <Link
                         className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                        href="/camunda"
+                        href="/tracked-processes"
                     >
                         <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
-                        流程示例
+                        跟踪的流程
                     </Link>
                     <Link
                         className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
@@ -85,13 +85,6 @@ export default function Home() {
                     >
                         <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
                         任务提取
-                    </Link>
-                    <Link
-                        className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                        href="/third-party-login"
-                    >
-                        <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
-                        先验证您的身份
                     </Link>
                 </div>
 

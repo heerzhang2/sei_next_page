@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         // 注意：需要在 Camunda 中先部署流程定义 "task-extraction-process"
         const processInstance = await createProcessInstanceRest('task-extraction-process', {
             taskGroups: normalizedTaskGroups,  // 保持分组结构的任务数据
-            taskIds: normalizedTaskGroups.flatMap(g => g.taskIds), // 同时传递扁平化的 taskIds 供 worker 使用
+            // taskIds: normalizedTaskGroups.flatMap(g => g.taskIds), // 同时传递扁平化的 taskIds 供 worker 使用
             deptId,
             deptName: deptName || deptId,
             projUserIds: projUserIds || [],
@@ -157,8 +157,8 @@ export async function POST(request: NextRequest) {
                 jobId,
                 processInstanceKey: jobId,
                 processDefinitionId: processInstance.processDefinitionId,
-                taskCount: taskIds.length,
-                message: `Task extraction job created with ${taskIds.length} tasks`,
+                taskCount: totalTaskCount,
+                message: `Task extraction job created with ${totalTaskCount} tasks`,
             },
         });
 

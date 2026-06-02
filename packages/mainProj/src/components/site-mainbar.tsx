@@ -44,7 +44,7 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
                 },
                 {
                     title: "检验任务",
-                    url: `/`,
+                    url: `/ispTask`,
                     icon: Home,
                 },
                 {
@@ -128,6 +128,15 @@ export function SiteMainbar({ items = [], children, userInfo }: ReportSidebarPro
             >
                 <div className="flex flex-col h-full">
                     <div className="flex items-center justify-between p-4 border-b">
+                        {/* 返回首页按钮 */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs px-2 py-1 h-auto"
+                            onClick={() => router.push('/', { scroll: false })}
+                        >
+                            首页
+                        </Button>
                         {/* 客户端 Header 组件 */}
                         <div className="flex items-center">
                             {userInfo?.name ?? ""}

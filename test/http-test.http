@@ -1,6 +1,0 @@
-### 测试OPTIONS请求 - 应该返回200
-OPTIONS https://192.168.0.100:8673/actuator/health
-Origin: https://192.168.0.100:3765
-Access-Control-Request-Method: GET
-Access-Control-Request-Headers: authorization, content-type
-

@@ -14,6 +14,7 @@ import { PWAInstaller } from "@/components/pwa-installer"
 import { NetworkStatusProvider } from "@/contexts/network-status-context"
 import { SessionSync } from "@/components/session-sync"
 import { TokenRefreshOverlay } from "@/components/token-refresh-overlay"
+import OldPlatformTokenRefresh from "@/components/OldPlatformTokenRefresh"
 import { SerwistMessageHandler } from "@/components/serwist-message-handler"
 import { PendingReportsGuard } from "@/components/pending-reports-guard"
 import { withBasePath } from '@/lib/tool'
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { GlobalNotificationBell } from "@/components/global-notification-bell";
+import { ProcessTrackerWrapper } from "@/components/process-tracker-wrapper";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -82,18 +84,21 @@ export default async function RootLayout({
                   <SessionProvider session={session} basePath={basePath}>
                     <NetworkStatusProvider>
                       <NotificationProvider>
-                        <OfflineSessionPatcher />
-                        <GraphQLProvider>
-                          <SerwistMessageHandler />
-                          <SessionSync />
-                          <TokenRefreshOverlay />
-                          <OfflineStatusIndicator />
-                          <PendingReportsGuard />
-                          <GlobalNotificationBell />
-                          {children}
+                        <ProcessTrackerWrapper>
+                          <OfflineSessionPatcher />
+                          <GraphQLProvider>
+                            <SerwistMessageHandler />
+                            <SessionSync />
+                            <TokenRefreshOverlay />
+                            <OldPlatformTokenRefresh />
+                            <OfflineStatusIndicator />
+                            <PendingReportsGuard />
+                            <GlobalNotificationBell />
+                            {children}
                           <PWAInstaller />
                           <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
                         </GraphQLProvider>
+                        </ProcessTrackerWrapper>
                       </NotificationProvider>
                     </NetworkStatusProvider>
                   </SessionProvider>
@@ -108,15 +113,18 @@ export default async function RootLayout({
                 <SessionProvider session={session} basePath={basePath}>
                   <NetworkStatusProvider>
                     <NotificationProvider>
-                      <OfflineSessionPatcher />
-                      <GraphQLProvider>
-                        <SessionSync />
-                        <TokenRefreshOverlay />
-                        <PendingReportsGuard />
-                        <GlobalNotificationBell />
-                        {children}
-                        <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
-                      </GraphQLProvider>
+                      <ProcessTrackerWrapper>
+                        <OfflineSessionPatcher />
+                        <GraphQLProvider>
+                          <SessionSync />
+                          <TokenRefreshOverlay />
+                          <OldPlatformTokenRefresh />
+                          <PendingReportsGuard />
+                          <GlobalNotificationBell />
+                          {children}
+                          <Toaster richColors position="top-right" expand={true} visibleToasts={5} closeButton={true} className="print:hidden" />
+                        </GraphQLProvider>
+                      </ProcessTrackerWrapper>
                     </NotificationProvider>
                   </NetworkStatusProvider>
                 </SessionProvider>

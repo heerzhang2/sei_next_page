@@ -15,3 +15,41 @@ http://127.0.0.1:9000/202506/0313/8d861ec6-1dd3-45a7-96a7-602906312182
 
 打印转换器开动！ 需要PS D:\page2pdf-server> npm install -g nodemon
 打印服务page2pdf-server， Error: Browser was not found at the configured executablePath (C:\Program Files\Google\Chrome\Application\chrome.exe)
+【直接保存到数据库】
+# 3. 生成 Prisma Client
+npx prisma generate --schema=../mainProj/prisma/schema.prisma
+# 4. 同步数据库 (在 mainProj 中)
+cd ../mainProj
+npx prisma migrate dev --name add_extracted_task
+￥ #>迁移同步的 方案1：使用 prisma db push（开发环境推荐）
+bash
+cd packages/mainProj
+npx prisma db push    ##不一致的失败！
+这会直接同步 schema 到数据库，不需要 shadow database。
+方案2：手动执行 SQL（生产环境推荐）
+如果 db push 也有权限问题，直接执行 SQL： CREATE TABLE IF NOT EXISTS `extracted_task` (   ##这个表不需要
+建议：使用方案2手动创建 extracted_task 表：。那些 QRTZ_ 表可能是其他系统使用的，不应该被删除。
+【数据库被JPA修改了】
+方式一：使用 Prisma Introspection（推荐）
+Prisma 可以自动从数据库反向生成模型定义：
+# 1. 进入 mainProj 目录
+cd packages/mainProj
+# 3. 执行 introspection 来自动拉取数据库表结构
+npx prisma db pull
+# 4. 重新生成 Prisma Client
+npx prisma generate
+注意事项
+prisma db pull 会覆盖 schema 文件 - 它会用数据库中的实际表结构替换现有的模型定义
+备份自定义修改 - 如果你有手动添加的字段注释或自定义配置，建议先备份
+多模块共享 - camunda-worker 和 mainProj 共用同一个 schema 文件，只需在 mainProj 执行 db pull，然后@两个项目@都执行 generate
+问题是 Prisma introspection 对 Quartz 表的外键关系处理有问题，字段被重复添加了多次。最简单的解决方案是忽略这些 Quartz 表（如果你不需要在 Prisma 中操作它们）。让我添加 @@ignore 属性：
+cd /home/sei_next_page/packages/mainProj && npx prisma generate --schema="C:/home/sei_next_page/packages/mainProj/prisma/schema.prisma"
+cd /home/sei_next_page/packages/camunda-worker && npx prisma generate --schema="C:/home/sei_next_page/packages/mainProj/prisma/schema.prisma"
+【prisma报错】
+Prisma 要求每个模型必须有唯一标识符（@id 或 @@id），所以这个模型被自动标记为 @@ignore。
+为什么关系字段也要 @ignore； 因为 Prisma 的规则：如果一个模型被忽略，所有指向它的关系字段也必须被忽略。
+
+使用 as any 绕过 TiDB AUTO_RANDOM 主键的 Prisma 类型检查（因为 Prisma 无法识别 TiDB 的自动生成的 id）
+参照 mainProj 的 prisma.ts 配置，使用 @prisma/adapter-mariadb 来初始化 PrismaClient。
+Prisma pull命令重新生成的  id    BigInt  没有加上##     @id @default(autoincrement()) 这样 TiDB 会自动生成主键。
+Prisma 操作 TiDB 的事务隔离级别默认是 Read Committed (读已提交)。

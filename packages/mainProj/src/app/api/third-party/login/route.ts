@@ -140,15 +140,30 @@ export async function POST(request: NextRequest) {
         
         if (userRecord) {
           console.log(`[ThirdPartyLogin] User record found: oldAccount=${userRecord.oldAccount}, ENABLED=${userRecord.ENABLED}`);
-          
+
+          // 保存第三方令牌到 AUTH_RESPONSE
+          const authResponseData = {
+            access_token: result.data.access_token,
+            brief_token: result.data.brief_token,
+            expires_in: result.data.expires_in,
+            savedAt: new Date().toISOString(),
+          };
+          await prisma.uSERS.update({
+            where: { id: userRecord.id },
+            data: { AUTH_RESPONSE: JSON.stringify(authResponseData) as any },
+          });
+          console.log(`[ThirdPartyLogin] Auth tokens saved to AUTH_RESPONSE`);
+
           // 如果第三方用户名匹配 oldAccount 且账户未启用，则自动启用
-          if (userRecord.oldAccount === username && !userRecord.ENABLED) {
+          if (userRecord.oldAccount === username) {
             console.log(`[ThirdPartyLogin] Enabling user account for: ${currentUsername}`);
-            await prisma.uSERS.update({
-              where: { id: userRecord.id },
-              data: { ENABLED: true }
-            });
-            console.log(`[ThirdPartyLogin] User account enabled successfully`);
+            if(!userRecord.ENABLED) {
+               await prisma.uSERS.update({
+                where: { id: userRecord.id },
+                data: { ENABLED: true }
+              });       
+              console.log(`[ThirdPartyLogin] User account enabled successfully`);
+            }
             return NextResponse.json({
               success: true,
               data: {
@@ -157,6 +172,19 @@ export async function POST(request: NextRequest) {
               },
             });
           }
+          // oldAccount 不匹配也保存令牌
+          console.log(`[ThirdPartyLogin] oldAccount mismatch, but saving token anyway`);
+          const authResponseData2 = {
+            access_token: result.data.access_token,
+            brief_token: result.data.brief_token,
+            expires_in: result.data.expires_in,
+            savedAt: new Date().toISOString(),
+          };
+          await prisma.uSERS.update({
+            where: { id: userRecord.id },
+            data: { AUTH_RESPONSE: JSON.stringify(authResponseData2) as any },
+          });
+          console.log(`[ThirdPartyLogin] Auth tokens saved to AUTH_RESPONSE (no match)`);
         } else {
           console.warn(`[ThirdPartyLogin] User record not found for: ${currentUsername}`);
         }

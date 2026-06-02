@@ -22,10 +22,14 @@ import {
   Play,
   Calendar,
   Bell,
-  Users
+  Users,
+  ListTodo,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNotifications } from '@/contexts/notification-context';
+import { useTrackedProcesses } from '@/hooks/use-tracked-processes';
+import Link from 'next/link';
 import { gql, useQuery } from '@urql/next';
 
 interface Task {
@@ -187,8 +191,11 @@ export default function TaskExtractionPage() {
   const [currentJob, setCurrentJob] = useState<ExtractionJob | null>(null);
   const [extractionProgress, setExtractionProgress] = useState(0);
 
-  // 使用全局通知系统
-  const { connect, connectionStatus, requestNotificationPermission } = useNotifications();
+  // 使用全局通知系统 - 只使用需要的方法，SSE 连接由 NotificationProvider 自动管理
+  const { requestNotificationPermission } = useNotifications();
+  
+  // 使用流程跟踪
+  const { addProcess, runningCount } = useTrackedProcesses();
 
   // 获取当前用户基本信息（轻量级）
   const [userResult] = useQuery({
@@ -407,18 +414,14 @@ export default function TaskExtractionPage() {
       return;
     }
 
-    const projectLeader = getSelectedProjectLeader();
-    if (!projectLeader) {
-      toast.error('请先选择项目负责人');
-      return;
-    }
-
     setLoading(true);
     try {
-      const projUserId = projectLeader.authName || projectLeader.id;
-      let url = `${getApiBasePath()}/task-extraction/old-tasks?` +
-        `projUserIds=${encodeURIComponent(projUserId)}` +
-        `&taskDateStart=${taskDateStart}` +
+      const projectLeader = getSelectedProjectLeader();
+      let url = `${getApiBasePath()}/task-extraction/old-tasks?`;
+      if (projectLeader) {
+        url += `projUserIds=${encodeURIComponent(projectLeader.authName || projectLeader.id)}&`;
+      }
+      url += `taskDateStart=${taskDateStart}` +
         `&taskDateEnd=${taskDateEnd}` +
         `&pageNum=${targetPage}` +
         `&pageSize=${pageSize}`;
@@ -478,12 +481,6 @@ export default function TaskExtractionPage() {
       return;
     }
 
-    const projectLeader = getSelectedProjectLeader();
-    if (!projectLeader) {
-      toast.error('请选择项目负责人');
-      return;
-    }
-
     setSubmitting(true);
     setExtractionProgress(0);
     
@@ -497,16 +494,20 @@ export default function TaskExtractionPage() {
         taskGroups.push({ groupId, taskIds });
       });
       
+      const projectLeader = getSelectedProjectLeader();
+      const body: Record<string, any> = {
+        taskGroups,
+        deptId: selectedDept,
+        deptName,
+        officeId: selectedOffice === 'none' ? null : selectedOffice,
+      };
+      if (projectLeader) {
+        body.projUserIds = [projectLeader.authName || projectLeader.id];
+      }
       const res = await fetch(`${getApiBasePath()}/task-extraction/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          taskGroups,  // 保持分组结构的任务数据
-          deptId: selectedDept,
-          deptName,
-          projUserIds: [projectLeader.authName || projectLeader.id], // 使用 authName 作为项目负责人ID
-          officeId: selectedOffice === 'none' ? null : selectedOffice,
-        }),
+        body: JSON.stringify(body),
       });
       
       const data = await res.json();
@@ -517,13 +518,15 @@ export default function TaskExtractionPage() {
           status: 'pending',
         };
         setCurrentJob(job);
+        
+        // 添加到流程跟踪列表
+        const title = `任务提取 - ${selectedTasks.size}个分组`;
+        addProcess(data.data.processInstanceKey, title);
+        
         toast.success(`任务提取已提交，Job ID: ${data.data.jobId}`);
         
-        // 使用全局通知系统建立 SSE 连接（按用户ID）
-        // 使用当前用户名作为路由键，这样用户在任何页面都能收到通知
-        const currentUsername = currentUser?.username || currentUser?.authName || 'anonymous';
-        connect(currentUsername);
-        
+        // 注意：SSE 连接由全局 NotificationProvider 管理
+        // 页面刷新或用户登录后会自动建立连接，不需要手动连接
         // 请求桌面通知权限（如果还没有）
         requestNotificationPermission();
       } else {
@@ -577,30 +580,32 @@ export default function TaskExtractionPage() {
     }
   };
 
-  // 获取连接状态显示
-  const getConnectionBadge = () => {
-    switch (connectionStatus) {
-      case 'connected':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">通知已连接</Badge>;
-      case 'connecting':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 text-xs">连接中...</Badge>;
-      case 'error':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 text-xs">连接失败</Badge>;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">旧平台任务提取</h1>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">旧平台任务提取</h1>
-          {getConnectionBadge()}
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Bell className="w-4 h-4" />
-          <span>通知将在全局显示，离开页面也能接收</span>
+          <Link href="/third-party-login">
+            <Button variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              旧平台登录
+            </Button>
+          </Link>
+          <Link href="/tracked-processes">
+            <Button variant="outline" size="sm">
+              <ListTodo className="w-4 h-4 mr-2" />
+              流程跟踪
+              {runningCount > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {runningCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Bell className="w-4 h-4" />
+            <span>通知将在全局显示，离开页面也能接收</span>
+          </div>
         </div>
       </div>
 
@@ -654,14 +659,21 @@ export default function TaskExtractionPage() {
 
             {/* 项目负责人选择 */}
             <div className="space-y-2">
-              <Label>项目负责人</Label>
+              <div className="flex items-center gap-1">
+                <Label>项目负责人</Label>
+                {selectedUser && (
+                  <button onClick={() => setSelectedUser('')} className="text-gray-400 hover:text-red-500 transition-colors p-0.5" title="清除负责人">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
               <Select 
                 value={selectedUser} 
                 onValueChange={setSelectedUser}
                 disabled={!selectedOffice && noOfficeUsers.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="请选择负责人" />
+                  <SelectValue placeholder="请选择负责人（可选）" />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
                   {getCurrentOfficeUsers().map(user => (
@@ -672,6 +684,9 @@ export default function TaskExtractionPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {!selectedUser && (
+                <p className="text-xs text-muted-foreground">不选择负责人将获取部门全部任务</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -897,7 +912,7 @@ export default function TaskExtractionPage() {
               <Button 
                 size="sm" 
                 onClick={submitExtraction}
-                disabled={submitting || selectedTasks.size === 0 || !selectedUser}
+                disabled={submitting || selectedTasks.size === 0}
               >
                 {submitting ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
