@@ -4,11 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 预留滚动条空间，防止 Portal/Select 弹出时页面偏移 */
-html {
-  scrollbar-gutter: stable;
-}
-
 @theme inline {
     /* 中文字体配置 - 优先使用思源字体 */
     --font-sans: var(--font-sans);
