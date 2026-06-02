@@ -447,11 +447,12 @@ export function DeptOfficeUserSelect({
         <Select
           value={selectedDep}
           onValueChange={handleDepChange}
+          modal={false}
         >
           <SelectTrigger>
             <SelectValue placeholder="请选择部门" />
           </SelectTrigger>
-          <SelectContent className="max-h-80">
+          <SelectContent position="popper" className="max-h-80">
             <SelectItem value="all">全部部门</SelectItem>
             {divisions.map((dept) => (
               <SelectItem key={dept.id} value={dept.id}>
@@ -469,13 +470,14 @@ export function DeptOfficeUserSelect({
           value={selectedOffice}
           onValueChange={handleOfficeChange}
           disabled={!selectedDep || loadingOffices}
+          modal={false}
         >
           <SelectTrigger>
             <SelectValue
               placeholder={loadingOffices ? "加载中..." : "请选择科室"}
             />
           </SelectTrigger>
-          <SelectContent className="max-h-80">
+          <SelectContent position="popper" className="max-h-80">
             {offices.map((office) => (
               <SelectItem key={office.id} value={office.id}>
                 {office.name}
@@ -509,6 +511,7 @@ export function DeptOfficeUserSelect({
               value={selectedUser}
               onValueChange={handleUserChange}
               disabled={!selectedOffice && noOfficeUsers.length === 0 && !selectedUser}
+              modal={false}
             >
               <SelectTrigger>
                 <SelectValue placeholder="请选择人员" />
