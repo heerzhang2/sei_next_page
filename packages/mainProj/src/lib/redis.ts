@@ -6,7 +6,7 @@ class RedisClient {
 
   static getInstance(): Redis {
     if (!RedisClient.instance) {
-      RedisClient.instance = new Redis({
+      const client = new Redis({
         host: process.env.REDIS_HOST || "localhost",
         port: Number.parseInt(process.env.REDIS_PORT || "6379"),
         password: process.env.REDIS_PASSWORD,
@@ -19,6 +19,24 @@ class RedisClient {
           return 20000;     //return NULL放弃重连
         },
       })
+
+      // 关键：必须注册 'error' 监听器。
+      // 否则 ioredis 在连接异常时 emit('error') 无监听器，
+      // 会触发 Node 未捕获异常，拖垮整个 Next.js 服务进程（需要重启才能恢复）。
+      client.on("error", (err) => {
+        console.error("[Redis] 客户端错误:", err?.message || err)
+      })
+      client.on("connect", () => {
+        console.log("[Redis] 已连接")
+      })
+      client.on("reconnecting", () => {
+        console.warn("[Redis] 正在重连...")
+      })
+      client.on("end", () => {
+        console.warn("[Redis] 连接已关闭")
+      })
+
+      RedisClient.instance = client
     }
     return RedisClient.instance
   }

@@ -22,13 +22,30 @@ const localClients = new Map<string, Map<string, ReadableStreamDefaultController
 let redisSubscriber: ReturnType<typeof redis.duplicate> | null = null;
 let subscriberInitialized = false;
 
+// 复位订阅器状态，让下一次连接可以重新创建（实现自愈，避免必须重启服务器）
+function resetSubscriber() {
+    subscriberInitialized = false;
+    if (redisSubscriber) {
+        try {
+            redisSubscriber.removeAllListeners();
+            redisSubscriber.disconnect();
+        } catch {
+            /* ignore */
+        }
+    }
+    redisSubscriber = null;
+}
+
 // 初始化 Redis 订阅
 async function initRedisSubscriber() {
-    if (subscriberInitialized) return;
-    
-    redisSubscriber = redis.duplicate();
+    if (subscriberInitialized && redisSubscriber) return;
+
+    // pub/sub 连接建议关闭单命令重试上限，避免重连期间命令直接失败
+    const subscriber = redis.duplicate({ maxRetriesPerRequest: null });
+    redisSubscriber = subscriber;
+
     //根据用户账户ID订阅频道，频道命名规则：sse:{userId}，例如sse:123456 监听该用户的Redis集群订阅信息频道；
-    redisSubscriber.on('message', (channel: string, message: string) => {
+    subscriber.on('message', (channel: string, message: string) => {
         // 验证频道名格式，确保是我们系统的消息
         if (!channel.startsWith('sse:')) {
             console.warn(`[SSE] Ignoring message from unknown channel: ${channel}`);
@@ -62,7 +79,30 @@ async function initRedisSubscriber() {
             console.error('[SSE] Failed to parse Redis message:', e);
         }
     });
-    
+
+    // 关键：注册 'error' 监听器，防止未捕获异常拖垮服务进程
+    subscriber.on('error', (err) => {
+        console.error('[SSE] Redis subscriber 错误:', err?.message || err);
+    });
+
+    // 重连成功后，自动重新订阅所有仍有客户端的频道
+    subscriber.on('ready', () => {
+        const channels = Array.from(localClients.keys()).map((u) => `sse:${u}`);
+        if (channels.length > 0) {
+            subscriber.subscribe(...channels).catch((e) => {
+                console.error('[SSE] 重连后重新订阅失败:', e?.message || e);
+            });
+        }
+    });
+
+    // 连接彻底结束时复位，让下次 SSE 连接重建订阅器（自愈）
+    subscriber.on('end', () => {
+        console.warn('[SSE] Redis subscriber 连接结束，将在下次连接时重建');
+        if (redisSubscriber === subscriber) {
+            resetSubscriber();
+        }
+    });
+
     subscriberInitialized = true;
     console.log('[SSE] Redis subscriber initialized');
 }
@@ -118,11 +158,14 @@ export async function GET(request: NextRequest) {
         return new Response('Missing userId', { status: 400 });
     }
 
-    // 确保 Redis 订阅已初始化
-    await initRedisSubscriber();
-
-    // 订阅该用户的 Redis 频道
-    await redisSubscriber?.subscribe(`sse:${userId}`);
+    // 确保 Redis 订阅已初始化（失败也不阻塞 SSE，本机内存广播仍可工作）
+    try {
+        await initRedisSubscriber();
+        // 订阅该用户的 Redis 频道
+        await redisSubscriber?.subscribe(`sse:${userId}`);
+    } catch (error: any) {
+        console.error(`[SSE] 订阅 Redis 频道失败（降级为本机广播）: ${error?.message || error}`);
+    }
 
     // 生成唯一客户端ID
     const clientId = generateClientId();
@@ -224,7 +267,7 @@ export async function broadcastToClients(userId: string, data: any) {
         _timestamp: Date.now(),
     };
 
-    // 发布到 Redis（让集群中的其他服务器也能收到）
+    // 发布到 Redis���让集群中的其他服务器也能收到）
     try {
         await redis.publish(`sse:${userId}`, JSON.stringify(messageWithSource));
     } catch (error) {
