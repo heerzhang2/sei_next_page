@@ -165,7 +165,7 @@ export default function IspTaskPage() {
   const hasActiveFilters = Object.keys(filters).length > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen overflow-y-auto bg-gray-50 dark:bg-gray-900">
       <HeaderWrapper />
       
       {/* 页面标题栏 */}
