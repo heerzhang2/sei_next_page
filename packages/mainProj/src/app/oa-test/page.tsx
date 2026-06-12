@@ -252,17 +252,21 @@ export default function OaTestPage() {
     }
   }, [selectedDoc, jsessionId]);
 
-  /** 将 base64 转为 .doc 文件并触发浏览器下载 */
-  const downloadBase64AsDoc = useCallback((base64: string, filename: string) => {
+  /** 将 base64 转为 Word 文件并触发浏览器下载（支持 .docx / .doc） */
+  const downloadBase64AsDoc = useCallback((base64: string, filename: string, format: 'docx' | 'doc' = 'docx') => {
     try {
       const byteStr = atob(base64);
       const bytes = new Uint8Array(byteStr.length);
       for (let i = 0; i < byteStr.length; i++) bytes[i] = byteStr.charCodeAt(i);
-      const blob = new Blob([bytes], { type: 'application/msword' });
+      const mime = format === 'docx'
+        ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        : 'application/msword';
+      const blob = new Blob([bytes], { type: mime });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filename.endsWith('.doc') ? filename : `${filename}.doc`;
+      const ext = `.${format}`;
+      a.download = filename.endsWith(ext) ? filename : `${filename}${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -283,11 +287,17 @@ export default function OaTestPage() {
       const data = await res.json();
       if (data.success && data.data.templateBase64) {
         setBase64(data.data.templateBase64);
-        const fileName = `${selectedDoc?.title || unid}.doc`;
-        downloadBase64AsDoc(data.data.templateBase64, fileName);
-        toast.success(`已下载模板文件 (${data.data.templateSize} 字节)，请用 Word 编辑后上传`);
+        const format: 'docx' | 'doc' = data.data.outputFormat === 'doc' ? 'doc' : 'docx';
+        const fileName = `${selectedDoc?.title || unid}`;
+        downloadBase64AsDoc(data.data.templateBase64, fileName, format);
+        const missing: string[] = data.data.templateMissing || [];
+        if (missing.length > 0) {
+          toast.warning(`已下载文件，但有未填充的占位符: ${missing.join('、')}`);
+        } else {
+          toast.success(`已下载模板文件 (${data.data.templateSize} 字节)，请用 Word 编辑后上传`);
+        }
       } else {
-        toast.success('已准备起草，请上传文件');
+        toast.error(data.error || '起草失败，未生成文件');
       }
     } catch (e: any) {
       toast.error('启动起草异常: ' + e.message);
