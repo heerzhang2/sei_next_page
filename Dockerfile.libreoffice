@@ -1,0 +1,57 @@
+# Dockerfile - 支持 LibreOffice UNO 书签填充
+# 
+# 用法:
+#   docker build -f Dockerfile.libreoffice -t my-app-with-libreoffice .
+#   docker run -p 3000:3000 -p 2002:2002 my-app-with-libreoffice
+
+FROM node:18-bullseye
+
+# 设置工作目录
+WORKDIR /app
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    # LibreOffice 及其依赖
+    libreoffice \
+    libreoffice-writer \
+    libreoffice-calc \
+    libreoffice-impress \
+    \
+    # Python 及 UNO 支持
+    python3 \
+    python3-pip \
+    python3-uno \
+    \
+    # 其他工具
+    curl \
+    wget \
+    git \
+    \
+    # 清理
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# 复制启动脚本
+COPY scripts/start-libreoffice.sh /app/scripts/
+RUN chmod +x /app/scripts/start-libreoffice.sh
+
+# 复制项目文件
+COPY package*.json yarn.lock* ./
+COPY packages ./packages
+
+# 安装依赖
+RUN yarn install --frozen-lockfile && yarn cache clean
+
+# 编译 TypeScript（如果需要）
+RUN yarn build
+
+# 暴露端口
+EXPOSE 3000 2002
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# 启动应用（通过 start-libreoffice.sh 脚本）
+ENTRYPOINT ["/app/scripts/start-libreoffice.sh"]
+CMD ["yarn", "start"]

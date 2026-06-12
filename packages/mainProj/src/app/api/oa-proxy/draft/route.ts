@@ -6,64 +6,84 @@ import { tmpdir } from 'os';
 
 const OA_BASE = 'http://27.151.117.66:8866';
 
-/** 用 Windows Word（COM 自动化，通过 PowerShell）给 .doc 填充书签 */
-function fillBookmarksWithWord(docPath: string, bookmarkValues: Record<string, string>): { ok: boolean; error?: string } {
+/**
+ * 使用 LibreOffice UNO + Python 在 Linux/Docker 中填充 .doc 书签
+ * 相比 PowerShell + Word COM，此方案在 Linux 中可用且格式保留更好
+ */
+function fillBookmarksWithLibreOffice(docPath: string, bookmarkValues: Record<string, string>): { ok: boolean; error?: string } {
   const tmpDir = path.dirname(docPath);
-  const valuesPath = path.join(tmpDir, 'bookmark_values.json');
-  fs.writeFileSync(valuesPath, JSON.stringify(bookmarkValues, null, 2), 'utf-8');
+  const scriptPath = path.join(tmpDir, 'fill-bookmarks.py');
+  
+  // 获取 fill-bookmarks.py 脚本位置
+  // 假设脚本与当前路由文件在同一目录
+  const scriptSourcePath = path.join(path.dirname(require.main?.filename || __dirname), 'fill-bookmarks.py');
+  
+  // 如果找不到，尝试其他位置（相对于项目根目录）
+  let actualScriptPath = scriptSourcePath;
+  if (!fs.existsSync(actualScriptPath)) {
+    const alternatives = [
+      path.join(process.cwd(), 'src/app/api/oa-proxy/fill-bookmarks.py'),
+      path.join(process.cwd(), 'packages/mainProj/src/app/api/oa-proxy/fill-bookmarks.py'),
+      '/app/src/app/api/oa-proxy/fill-bookmarks.py',  // Docker 容器中的路径
+    ];
+    for (const alt of alternatives) {
+      if (fs.existsSync(alt)) {
+        actualScriptPath = alt;
+        break;
+      }
+    }
+  }
 
-  const outPath = docPath.replace(/\.doc$/i, '_filled.doc');
-
-  // 用 base64 编码路径和值避免转义问题
-  const docPathB64 = Buffer.from(docPath, 'utf-8').toString('base64');
-  const valuesPathB64 = Buffer.from(valuesPath, 'utf-8').toString('base64');
-  const outPathB64 = Buffer.from(outPath, 'utf-8').toString('base64');
-
-  const psScript = path.join(tmpDir, 'fill_bookmarks.ps1');
-  const psCode = [
-    'param()',
-    '$ErrorActionPreference = "Stop"',
-    // 用 base64 解码获取真实路径
-    `$docPath = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${docPathB64}'))`,
-    `$valPath = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${valuesPathB64}'))`,
-    `$outPath = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${outPathB64}'))`,
-    'try {',
-    '  $vals = Get-Content $valPath -Encoding UTF8 | ConvertFrom-Json',
-    '  $app = New-Object -ComObject Word.Application',
-    '  $app.Visible = $false',
-    '  $app.DisplayAlerts = 0',
-    '  $doc = $app.Documents.Open($docPath)',
-    '  for ($i = 1; $i -le $doc.Bookmarks.Count; $i++) {',
-    '    $bm = $doc.Bookmarks.Item($i)',
-    '    $key = $bm.Name',
-    '    if ($vals.$key) { $bm.Range.Text = $vals.$key }',
-    '  }',
-    '  $doc.SaveAs([ref]$outPath, [ref]0)',
-    '  $doc.Close()',
-    '  $app.Quit()',
-    '  if (Test-Path $outPath) { exit 0 } else { exit 2 }',
-    '} catch {',
-    '  Write-Host $_.Exception.Message',
-    '  exit 1',
-    '}',
-  ].join('\n');
-  fs.writeFileSync(psScript, psCode, 'utf-8');
+  if (!fs.existsSync(actualScriptPath)) {
+    return { 
+      ok: false, 
+      error: `找不到 fill-bookmarks.py 脚本。搜索路径: ${actualScriptPath}` 
+    };
+  }
 
   try {
-    const stdout = execSync(
-      `powershell -ExecutionPolicy Bypass -File "${psScript}"`,
-      { timeout: 60000, stdio: 'pipe' }
-    );
-    const out = stdout.toString().trim();
-
-    if (!fs.existsSync(outPath)) return { ok: false, error: `未生成输出文件: ${out}` };
-    fs.copyFileSync(outPath, docPath);
-    return { ok: true };
+    // 准备 JSON 参数
+    const jsonStr = JSON.stringify(bookmarkValues);
+    
+    // 调用 Python 脚本
+    // python3 fill-bookmarks.py <doc_path> <bookmark_json>
+    const command = `python3 "${actualScriptPath}" "${docPath}" '${jsonStr.replace(/'/g, "'\\''")}'`;
+    
+    const stdout = execSync(command, { 
+      timeout: 120000,  // 120 秒超时（LibreOffice 启动较慢）
+      stdio: 'pipe',
+      env: { ...process.env, PYTHONUNBUFFERED: '1' }
+    });
+    
+    const output = stdout.toString().trim();
+    
+    // 解析 Python 脚本的 JSON 输出
+    try {
+      const result = JSON.parse(output);
+      if (result.success) {
+        return { ok: true };
+      } else {
+        return { ok: false, error: result.message || '书签填充失败' };
+      }
+    } catch {
+      // 如果输出不是 JSON，直接返回
+      return { ok: false, error: `Python 输出解析失败: ${output}` };
+    }
   } catch (e: any) {
-    return { ok: false, error: e.stdout ? e.stdout.toString().trim() : e.message };
-  } finally {
-    try { fs.unlinkSync(psScript); } catch {}
-    try { if (fs.existsSync(outPath)) fs.unlinkSync(outPath); } catch {}
+    const stderr = e.stderr ? e.stderr.toString().trim() : '';
+    const stdout = e.stdout ? e.stdout.toString().trim() : '';
+    const errMsg = stderr || stdout || e.message;
+    
+    // 常见错误处理
+    if (errMsg.includes('无法连接到 LibreOffice')) {
+      return { 
+        ok: false, 
+        error: 'LibreOffice UNO 套接字不可用。请确保 soffice 已启动:\n' +
+               '  soffice --headless --accept="socket,host=127.0.0.1,port=2002;urp;"'
+      };
+    }
+    
+    return { ok: false, error: errMsg };
   }
 }
 
@@ -218,13 +238,13 @@ export async function POST(request: NextRequest) {
             if (fileRes.ok) {
               const buf = Buffer.from(await fileRes.arrayBuffer());
 
-              // 如果有书签值，用 LibreOffice 填充
+              // 如果有书签值，用 LibreOffice UNO 填充
               if (Object.keys(bookmarkValues).length > 0) {
                 tmpDir = fs.mkdtempSync(path.join(tmpdir(), 'oa-draft-'));
                 const docPath = path.join(tmpDir, 'template.doc');
                 fs.writeFileSync(docPath, buf);
 
-                fillResult = fillBookmarksWithWord(docPath, bookmarkValues);
+                fillResult = fillBookmarksWithLibreOffice(docPath, bookmarkValues);
                 if (fillResult.ok && fs.existsSync(docPath)) {
                   const filledBuf = fs.readFileSync(docPath);
                   templateFile = filledBuf.toString('base64');
