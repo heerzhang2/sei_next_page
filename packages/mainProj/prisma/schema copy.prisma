@@ -1025,6 +1025,51 @@ model testuser {
   name        String? @db.VarChar(255)
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model xxl_job_info {
+  id                        Int       @id @default(autoincrement())
+  job_group                 Int
+  job_desc                  String    @db.VarChar(255)
+  author                    String?   @db.VarChar(64)
+  alarm_email               String?   @db.VarChar(255)
+  schedule_type             String    @default("NONE") @db.VarChar(50)
+  schedule_conf             String?   @db.VarChar(128)
+  misfire_strategy          String    @default("DO_NOTHING") @db.VarChar(50)
+  executor_route_strategy   String?   @db.VarChar(50)
+  executor_handler          String?   @db.VarChar(255)
+  executor_param            String?   @db.VarChar(512)
+  executor_block_strategy   String?   @db.VarChar(50)
+  executor_timeout          Int       @default(0)
+  executor_fail_retry_count Int       @default(0)
+  glue_type                 String    @db.VarChar(50)
+  glue_source               String?   @db.MediumText
+  glue_remark               String?   @db.VarChar(128)
+  glue_updatetime           DateTime? @default(now()) @db.Timestamp(0)
+  child_jobid               String?   @db.VarChar(255)
+  trigger_status            Int       @default(0) @db.TinyInt
+  trigger_last_time         BigInt    @default(0)
+  trigger_next_time         BigInt    @default(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model xxl_job_log {
+  id                        BigInt    @id @default(autoincrement())
+  job_group                 Int
+  job_id                    Int
+  executor_address          String?   @db.VarChar(255)
+  executor_handler          String?   @db.VarChar(255)
+  executor_param            String?   @db.VarChar(512)
+  executor_sharding_param   String?   @db.VarChar(20)
+  executor_fail_retry_count Int       @default(0)
+  trigger_time              DateTime? @db.Timestamp(0)
+  trigger_code              Int
+  trigger_msg               String?   @db.Text
+  handle_time               DateTime? @db.Timestamp(0)
+  handle_code               Int
+  handle_msg                String?   @db.Text
+  alarm_status              Int       @default(0) @db.TinyInt
+}
+
 enum AUTHORITY_name {
   JyUser
   Master

@@ -17,6 +17,7 @@ import {
   DeptOfficeUserSelect,
   DeptOfficeUserValue,
 } from "@/components/dept-office-user-select";
+import UnitSearchSelect from "@/components/UnitSearchSelect";
 
 // 本地定义类型，匹配后端 TaskInput 接口
 export interface TaskInput {
@@ -225,12 +226,11 @@ export function TaskFilterPanel({ filters, onApply, onClear }: TaskFilterPanelPr
 
       {/* 服务单位 */}
       <div className="space-y-2">
-        <Label htmlFor="servu">服务单位ID</Label>
-        <Input
-          id="servu"
-          placeholder="请输入服务单位ID"
-          value={localFilters.servu || ""}
-          onChange={(e) => handleChange("servu", e.target.value)}
+        <Label>服务单位</Label>
+        <UnitSearchSelect
+          value={localFilters.servu}
+          onChange={(unitId) => handleChange("servu", unitId)}
+          placeholder="搜索单位名称..."
         />
       </div>
 

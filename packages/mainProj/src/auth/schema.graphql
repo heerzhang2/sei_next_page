@@ -612,6 +612,9 @@ type Detail implements Node {
 
   """外部引用ID（与旧平台taskId对应）"""
   outerId: String
+
+  """扩展信息JSON：非标准设备信息、第三方系统设备代码、业务扩展字段"""
+  extra: String
 }
 
 type DetailConnection {
@@ -1077,6 +1080,15 @@ interface Equipment {
   crDate: String
 }
 
+type EsIndexTask {
+  running: Boolean!
+  entityName: String
+  progress: Float
+  beginTime: String
+  completeTime: String
+  message: String
+}
+
 type FactoryVehicle implements Equipment & Node & EqpCommon {
   id: ID!
   version: Int!
@@ -1295,6 +1307,9 @@ type Mutation {
   buildPipingUnit(id: ID!, inp: PipingUnitInput): PipingUnit
   removePipingUnit(id: ID!): Boolean!
   buildVesselFake(oid: String): Vessel
+  startEsIndex(entityName: String!): EsIndexTask
+  getEsIndexStatus: EsIndexTask
+  cancelEsIndex: Boolean
   reckonIspFee(id: ID!): CalcFeeResp!
   cudChargingFee(busTaskId: ID!, opt: Ifop_Enu!, inp: FeeItemInput!): CudFeeItemResp!
   confirmIspFee(id: ID!): CalcFeeResp!
@@ -1334,7 +1349,7 @@ type Mutation {
 
   """末尾加权限@authr(qx:["USER","ADMIN"])，没权就用不了接口函数。"""
   newReport(isp: ID!, master: ID, ispMens: [ID], reviewer: ID, approver: ID, modeltype: String!, modelversion: Int!): Report!
-  initReportFromOldPt(isp: ID!, ispMens: [ID], reviewer: ID, approver: ID, modeltype: String!, modelversion: Int!, reportCod: String!, ispDate: Date): Report!
+  initReportFromOldPt(isp: ID!, ispMens: [ID], reviewer: ID, approver: ID, modeltype: String!, modelversion: Int!, reportCod: String!, ispDate: Date): Report
   newSubReport(isp: ID!, ispMens: [ID], reviewer: ID, modeltype: String!): Report!
 
   """buildReport(isp: ID!,no: String!,path: String!) : Report!"""

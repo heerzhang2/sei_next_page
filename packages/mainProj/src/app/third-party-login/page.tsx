@@ -14,7 +14,7 @@ import { withBasePath } from '@/lib/tool';
 // 本页与 /report/login 同源，若用相同用户名会导致两边密码互相覆盖。
 // 因此给本页（旧系统）用户名追加一个隐藏后缀，让 Chrome 视作不同账户、分开保存；
 // 提交给后端前会去掉后缀，用户照常输入即可。
-const LEGACY_USERNAME_SUFFIX = '@legacy';
+const LEGACY_USERNAME_SUFFIX = '@旧系统';
 
 // 去掉用户名末尾的隐藏后缀（用于显示与发给后端）
 function stripLegacySuffix(value: string): string {

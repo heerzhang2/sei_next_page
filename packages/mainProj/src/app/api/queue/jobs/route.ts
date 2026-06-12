@@ -1,6 +1,13 @@
-/**
+/**异步任务，队列执行。但是不支持定时间点方式执行。BullMQ 是基于 Redis 构建的 消息+任务队列。
  * 任务提交 API
  * 用于提交各种类型的后台任务
+ Next.js 层 queue 不是 XXL-JOB 的。用的是 BullMQ 基于 Redis 的 Node.js 任务队列； 
+ 自建 Redis 队列（BullMQ）任务分配=「谁先抢到谁干」的分布式消费，要定期 updateProgress，既能续期又能展示进度；
+ 简单场景够用，但需要分片、失败转移、定时触发这些高级功能时就力不从心了。
+ *  相反的； PK：
+  对 PowerJob 和 XXL-JOB 来说都是一样的结构。 独立部署，连接自己的 DB;
+  PowerJob 和 XXL-JOB 的好处是自带UI 管理界面和一键分片，但为此要多维护一个独立后端服务进程额外要部署。
+  数据库表： xxl_job_info，  xxl_job_log  真的页没有利用到！
  */
 
 import { NextRequest, NextResponse } from 'next/server';
