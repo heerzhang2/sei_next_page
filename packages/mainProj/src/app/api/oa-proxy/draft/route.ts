@@ -127,42 +127,58 @@ export async function POST(request: NextRequest) {
           if (jsonMatch) {
             try {
               const raw = JSON.parse(jsonMatch[1]);
-              // 去掉"全部书签域"（它不是书签名）
               for (const [k, v] of Object.entries(raw)) {
                 if (k !== '全部书签域' && v) bookmarkValues[k] = String(v);
               }
             } catch {}
           }
-        }
 
-        // 用预转换 .docx 模板做无损填充（不经过任何排版引擎，格式不变）
-        const templatePath = resolveTemplatePath(fileUnid);
-        if (!templatePath) {
-          return NextResponse.json({
-            success: false,
-            error: `fileUnid=${fileUnid} 还没有登记预转换 .docx 模板。` +
-              `请把该模板用 Word 离线转成 .docx（书签转占位符），放入 _templates/docx/，` +
-              `并在 _templates/template-map.ts 中登记映射。`,
-            data: { bookmarkKeys: Object.keys(bookmarkValues) },
-          }, { status: 404 });
+          // 尝试用预转换 .docx 模板做无损填充
+          const templatePath = resolveTemplatePath(fileUnid);
+          if (templatePath) {
+            // 有预转换模板 → 直接填充书签
+            const result = fillDocxBookmarks(templatePath, bookmarkValues);
+            if (result.ok && result.buffer) {
+              templateFile = result.buffer.toString('base64');
+              templateSize = result.buffer.length;
+              outputFormat = 'docx';
+              templateMissing = result.missing || [];
+              fillResult = { ok: true, missing: result.missing };
+            } else {
+              fillResult = { ok: false, error: result.error };
+              return NextResponse.json({
+                success: false,
+                error: `书签填充失败: ${result.error}`,
+                data: { bookmarkKeys: Object.keys(bookmarkValues) },
+              }, { status: 500 });
+            }
+          } else {
+            // 还没有预转换模板，从 OA 下载原始 .doc 文件
+            const downloadUrl = extractDownloadUrl(ocxHtml);
+            if (downloadUrl) {
+              const fileRes = await fetch(downloadUrl, {
+                method: 'GET',
+                headers: {
+                  ...baseHeaders,
+                  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                  'Referer': ocxUrl,
+                },
+              });
+              if (fileRes.ok) {
+                const buf = Buffer.from(await fileRes.arrayBuffer());
+                templateFile = buf.toString('base64');
+                templateSize = buf.byteLength;
+                outputFormat = 'doc';
+              }
+            }
+            if (!templateFile) {
+              return NextResponse.json({
+                success: false,
+                error: `无法获取模板，fileUnid=${fileUnid} 未登记且 OA 下载失败`,
+              }, { status: 404 });
+            }
+          }
         }
-
-        const result = fillDocxBookmarks(templatePath, bookmarkValues);
-        if (result.ok && result.buffer) {
-          templateFile = result.buffer.toString('base64');
-          templateSize = result.buffer.length;
-          outputFormat = 'docx';
-          templateMissing = result.missing || [];
-          fillResult = { ok: true, missing: result.missing };
-        } else {
-          fillResult = { ok: false, error: result.error };
-          return NextResponse.json({
-            success: false,
-            error: `书签填充失败: ${result.error}`,
-            data: { bookmarkKeys: Object.keys(bookmarkValues) },
-          }, { status: 500 });
-        }
-      }
 
       return NextResponse.json({
         success: true,
@@ -175,11 +191,24 @@ export async function POST(request: NextRequest) {
           fillResult,
         },
       });
-    }
+      } // end if (fileUnid)
+
+    } // end if (step === 'start')
 
     return NextResponse.json({ success: false, error: '未知的 step' }, { status: 400 });
 
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message || '未知错误' }, { status: 500 });
   }
+}
+
+/** 从 OCX 页面 HTML 中提取模板文件下载 URL */
+function extractDownloadUrl(ocxHtml: string): string | null {
+  const urlMatch = ocxHtml.match(/intializePage\("([^"]+)"\)/);
+  if (!urlMatch) return null;
+  let downloadPath = urlMatch[1];
+  if (downloadPath.startsWith('/')) {
+    downloadPath = `${OA_BASE}${downloadPath}`;
+  }
+  return downloadPath;
 }

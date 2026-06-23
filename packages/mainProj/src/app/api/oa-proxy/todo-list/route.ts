@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const match = html.match(/var\s+viewPadding\s*=\s*(\[[\s\S]*?\]);/);
     if (!match) {
       return NextResponse.json(
-        { success: false, error: '无法从 OA 响应中解析 viewPadding 数据', htmlPreview: html.slice(0, 500) },
+        { success: false, error: '无法从 OA 响应中解析 viewPadding 数据，所属单位选择错误，无法登录', htmlPreview: html.slice(0, 500) },
         { status: 502 }
       );
     }

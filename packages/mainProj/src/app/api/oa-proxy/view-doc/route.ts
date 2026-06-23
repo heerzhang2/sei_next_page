@@ -1,44 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const OA_BASE = 'http://27.151.117.66:8866';
-const CACHE_DIR = path.join(process.cwd(), '.oa-cache');
 
 /**
- * GET /api/oa-proxy/view-doc?unid=xxx&app_unid=xxx&source=cache|oa
+ * GET /api/oa-proxy/view-doc?unid=xxx&app_unid=xxx
  *
- * 查看指定文书的正文文件。
- * - 默认优先返回本地缓存的版本（最新上传的）
- * - source=oa 时直接从 OA 服务器下载
+ * 从 OA 服务器下载指定文书的正文文件。
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const unid = searchParams.get('unid');
     const app_unid = searchParams.get('app_unid') || unid || '';
-    const source = searchParams.get('source') || 'cache';
 
     if (!unid) {
       return NextResponse.json({ success: false, error: '缺少参数 unid' }, { status: 400 });
     }
 
-    // 优先返回本地缓存
-    const cachePath = path.join(CACHE_DIR, unid);
-    if (source === 'cache' && fs.existsSync(cachePath)) {
-      const fileBuffer = fs.readFileSync(cachePath);
-      return new NextResponse(fileBuffer, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/msword',
-          'Content-Disposition': `attachment; filename="${unid}.doc"`,
-          'Cache-Control': 'no-cache',
-        },
-      });
-    }
-
-    // 从 OA 下载
-    // 先查 odpsbaseinfo 获取文件信息
+    // 查 odpsbaseinfo 获取文件信息
     const infoRes = await fetch(
       `${OA_BASE}/foa/odoc/MicrosoftOffice/odpsbaseinfo.action`,
       {

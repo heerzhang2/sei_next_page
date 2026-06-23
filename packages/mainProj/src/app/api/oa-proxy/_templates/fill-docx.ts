@@ -98,3 +98,132 @@ export function fillDocxBookmarks(
 
   return { ok: true, buffer: out, used: data, missing };
 }
+
+/**
+ * 在已填充的 .docx 文件中直接替换真实 Word 书签的值。
+ *
+ * 与 fillDocxBookmarks 不同，这个函数不依赖 {placeholder} 占位符，
+ * 而是直接操作 .docx 内部的 XML，找到真正的 Word 书签（<w:bookmarkStart>）并替换其文本。
+ * 这样可以保留用户的所有手动编辑内容。
+ *
+ * @param fileBuffer  已填充的 .docx 文件内容
+ * @param values      书签名 -> 新值
+ */
+export function replaceBookmarksInPlace(
+  fileBuffer: Buffer,
+  values: Record<string, string>,
+): FillResult {
+  let zip: PizZip;
+  try {
+    zip = new PizZip(fileBuffer);
+  } catch (e: any) {
+    return { ok: false, error: `不是有效的 .docx (ZIP) 文件: ${e.message}` };
+  }
+
+  const docFile = zip.file('word/document.xml');
+  if (!docFile) {
+    return { ok: false, error: '.docx 中未找到 word/document.xml' };
+  }
+
+  let xml = docFile.asText();
+
+  const missing: string[] = [];
+  const used: Record<string, string> = {};
+
+  for (const [bookmarkName, newValue] of Object.entries(values)) {
+    if (!newValue) continue;
+
+    // 查找 <w:bookmarkStart w:name="bookmarkName"> 或 w:name='bookmarkName'>
+    // 注意：属性顺序可能不同，所以用更灵活的正则
+    const nameAttr = `(?:w:name|w:name)\\s*=\\s*["']${escapeXmlAttr(bookmarkName)}["']`;
+    const startTagRegex = new RegExp(
+      `<w:bookmarkStart[^>]*${nameAttr}[^>]*\\/>`,
+      'i'
+    );
+    const startMatch = xml.match(startTagRegex);
+
+    if (!startMatch) {
+      // 没找到这个书签，记录缺失
+      if (!missing.includes(bookmarkName)) missing.push(bookmarkName);
+      continue;
+    }
+
+    const startPos = startMatch.index!;
+    const startTag = startMatch[0];
+
+    // 从 startTag 中提取 w:id 属性，用于匹配对应的 bookmarkEnd
+    const idMatch = startTag.match(/w:id\s*=\s*["'](\d+)["']/i);
+    if (!idMatch) {
+      if (!missing.includes(bookmarkName)) missing.push(bookmarkName);
+      continue;
+    }
+    const bookmarkId = idMatch[1];
+
+    // 找到对应的 bookmarkEnd
+    const endTagRegex = new RegExp(`<w:bookmarkEnd\\s+w:id\\s*=\\s*["']${escapeXmlAttr(bookmarkId)}["'][^>]*\\/?>`, 'i');
+    const endMatch = xml.slice(startPos).match(endTagRegex);
+    if (!endMatch) {
+      if (!missing.includes(bookmarkName)) missing.push(bookmarkName);
+      continue;
+    }
+    const endPos = startPos + endMatch.index! + endMatch[0].length;
+
+    // 在 bookmarkStart 和 bookmarkEnd 之间，查找第一个 <w:t> 元素并替换其文本
+    const betweenXml = xml.slice(startPos + startTag.length, startPos + endMatch.index!);
+    const textTagRegex = /<w:t[^>]*>([^<]*)<\/w:t>/i;
+    const textMatch = betweenXml.match(textTagRegex);
+
+    if (!textMatch) {
+      if (!missing.includes(bookmarkName)) missing.push(bookmarkName);
+      continue;
+    }
+
+    const oldText = textMatch[1];
+    const textStartGlobal = startPos + startTag.length + (textMatch.index || 0);
+    const textEndGlobal = textStartGlobal + textMatch[0].length;
+
+    // 替换文本内容
+    const newTextContent = escapeXmlContent(String(newValue));
+    xml = xml.substring(0, textStartGlobal)
+      + '<w:t>' + newTextContent + '</w:t>'
+      + xml.substring(textEndGlobal);
+
+    used[bookmarkName] = String(newValue);
+  }
+
+  // 写回修改后的 XML
+  zip.file('word/document.xml', xml);
+
+  let out: Buffer;
+  try {
+    out = zip.generate({ type: 'nodebuffer', compression: 'DEFLATE' });
+  } catch (e: any) {
+    return { ok: false, error: `生成 .docx 失败: ${e.message}` };
+  }
+
+  return { ok: true, buffer: out, used, missing };
+}
+
+/** 转义 XML 属性值中的特殊字符 */
+function escapeXmlAttr(s: string): string {
+  return s.replace(/[&"']/g, function (c) {
+    switch (c) {
+      case '&': return '&amp;';
+      case '"': return '&quot;';
+      case "'": return '&apos;';
+      default: return c;
+    }
+  });
+}
+
+/** 转义 XML 文本内容中的特殊字符 */
+function escapeXmlContent(s: string): string {
+  return s.replace(/[&<>]/g, function (c) {
+    switch (c) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      default: return c;
+    }
+  });
+}

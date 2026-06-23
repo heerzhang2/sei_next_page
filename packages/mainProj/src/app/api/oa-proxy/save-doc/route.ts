@@ -5,27 +5,25 @@ import { execSync } from 'child_process';
 import { tmpdir } from 'os';
 
 const OA_BASE = 'http://27.151.117.66:8866';
-const CACHE_DIR = path.join(process.cwd(), '.oa-cache');
 
 /**
- * 自动检测 LibreOffice / soffice 可执行路径。
- * - 优先用 PATH 上的 `libreoffice` 或 `soffice`
- * - Windows 下搜索常见安装目录
+ * 自动检测 LibreOffice / soffice 可执行路径（懒加载，避免模块顶层触发 NFT 追踪）
  */
-function findLibreOfficeExecutable(): string {
-  // 尝试直接运行 libreoffice（Linux / 已配 PATH 的 Windows）
+let _libreOfficeExe = '';
+function getLibreOfficeExe(): string {
+  if (_libreOfficeExe) return _libreOfficeExe;
   try {
     execSync('libreoffice --version', { stdio: 'pipe', timeout: 5000 });
-    return 'libreoffice';
+    _libreOfficeExe = 'libreoffice';
+    return _libreOfficeExe;
   } catch { /* 忽略 */ }
 
-  // 尝试 soffice（某些发行版或安装方式）
   try {
     execSync('soffice --version', { stdio: 'pipe', timeout: 5000 });
-    return 'soffice';
+    _libreOfficeExe = 'soffice';
+    return _libreOfficeExe;
   } catch { /* 忽略 */ }
 
-  // Windows 下枚举常见安装路径
   const candidates = [
     'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
     'C:\\Program Files\\LibreOffice 26\\program\\soffice.exe',
@@ -35,113 +33,13 @@ function findLibreOfficeExecutable(): string {
     'C:\\Program Files (x86)\\LibreOffice 5\\program\\soffice.exe',
   ];
   for (const p of candidates) {
-    if (fs.existsSync(p)) return p;
-  }
-
-  // 还是找不到，返回默认名称，让调用方报错
-  return 'libreoffice';
-}
-
-const LIBREOFFICE_EXE = findLibreOfficeExecutable();
-
-/** 确保本地缓存目录存在 */
-function ensureCacheDir() {
-  if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
-  }
-}
-
-/**
- * 上传后验证：尝试从 OA 重新下载该文书并比较文件大小/前 32 字节
- * 用于确认 AppFile.action 确实更新了文件
- * @param knownCreateTime - 可选，已知的 create_time（如从 OA 页面取到）
- */
-async function verifyOaFileAfterUpload(
-  unid: string, app_unid: string, cachedFile: Buffer,
-  headers: Record<string, string>,
-  knownCreateTime = '',
-) {
-  try {
-    // ===== 1) 获取 create_time =====
-    let createTime = knownCreateTime;
-    let fileName = `${unid}.doc`;
-
-    // 如果没有传入已知 createTime，尝试抓 JSP 页面提取
-    if (!createTime) {
-      const jspUrl = `${OA_BASE}/foa/odoc/MicrosoftOffice/newstartoffice_doc.jsp` +
-        `?revision=false&isReadOnly=0&unid=${encodeURIComponent(unid)}&file_type=doc_fw`;
-      const jspRes = await fetch(jspUrl, {
-        method: 'GET',
-        headers: {
-          ...headers,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
-          'Referer': `${OA_BASE}/foa/odoc/MicrosoftOffice/newstartoffice_doc.jsp?unid=${unid}`,
-        },
-      });
-      const jspHtml = await jspRes.text();
-      // 从 HTML 中提取 odpsBaseInfoJson
-      const jsonMatch = jspHtml.match(/var\s+odpsBaseInfoJson\s*=\s*({[^;]+});/);
-      if (jsonMatch) {
-        try {
-          const info = JSON.parse(jsonMatch[1]);
-          createTime = info.create_time || '';
-          fileName = info.file_name || fileName;
-        } catch { /* 忽略 */ }
-      }
+    if (fs.existsSync(p)) {
+      _libreOfficeExe = p;
+      return _libreOfficeExe;
     }
-
-    // ===== 2) 构造 fileurl =====
-    let datePath = '';
-    if (createTime) {
-      const dt = new Date(createTime.replace(' ', 'T'));
-      datePath = `${dt.getFullYear()}/${String(dt.getMonth() + 1).padStart(2, '0')}/${String(dt.getDate()).padStart(2, '0')}`;
-    }
-    const fileurl = datePath
-      ? `/core/upload/${datePath}/${unid}.doc`
-      : `/core/upload/${unid}.doc`;
-
-    const fileExt = fileName.includes('.') ? '.' + fileName.split('.').pop()!.toLowerCase() : '.doc';
-
-    // ===== 3) 下载文件比较 =====
-    const downloadUrl = `${OA_BASE}/foa/core/file/file_download_byUrl.jsp` +
-      `?filename=${encodeURIComponent(fileName)}` +
-      `&fileType=${encodeURIComponent(fileExt)}` +
-      `&fileurl=${encodeURIComponent(fileurl)}` +
-      `&appid=${encodeURIComponent(app_unid || unid)}` +
-      `&randomstr=${Date.now()}`;
-
-    const fileRes = await fetch(downloadUrl, {
-      method: 'GET',
-      headers: {
-        ...headers,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
-        'Referer': `${OA_BASE}/foa/odoc/MicrosoftOffice/newstartoffice_doc.jsp?unid=${unid}`,
-      },
-    });
-
-    const oaFileBuffer = await fileRes.arrayBuffer();
-    const oaFileSize = oaFileBuffer.byteLength;
-    const uploadedSize = cachedFile.length;
-
-    const oaPrefix = Buffer.from(oaFileBuffer.slice(0, Math.min(32, oaFileSize))).toString('hex');
-    const uploadedPrefix = cachedFile.slice(0, Math.min(32, uploadedSize)).toString('hex');
-
-    return {
-      verified: oaFileSize === uploadedSize && oaPrefix === uploadedPrefix,
-      oaFileSize,
-      uploadedSize,
-      oaHexPrefix: oaPrefix,
-      uploadedHexPrefix: uploadedPrefix,
-      fileurl,
-      createTime,
-      contentType: fileRes.headers.get('content-type'),
-      contentDisposition: fileRes.headers.get('content-disposition'),
-    };
-  } catch (e: any) {
-    return { verified: false, error: e.message };
   }
+  _libreOfficeExe = 'libreoffice';
+  return _libreOfficeExe;
 }
 
 /**
@@ -160,6 +58,8 @@ async function verifyOaFileAfterUpload(
  *   lord_sent    - 主办部门（第二步用）
  *   copy_sent    - 抄送部门（第二步用）
  *   step         - "upload" | "meta" | "pdf" | "all"（默认 all）
+ *   fn           - "updateNew"（批阅正文，默认）| "addNew"（起草正文）
+ *   fileUnid     - 模板文件 UNID（仅 addNew 时需要）
  */
 export async function POST(request: NextRequest) {
   let tmpDir = '';
@@ -179,6 +79,8 @@ export async function POST(request: NextRequest) {
       copy_sent = '',
       known_create_time = '',
       step = 'all',
+      fn = 'updateNew',
+      fileUnid = '',
     } = body;
 
     if (!jsessionId || !unid || !file_name || !fileBuffer) {
@@ -188,9 +90,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const fileExt = file_name.includes('.')
+    const rawExt = file_name.includes('.')
       ? file_name.split('.').pop()!.toLowerCase()
       : 'doc';
+    const fileExt = 'doc';
+    const oaFileName = rawExt === 'docx'
+      ? file_name.replace(/\.docx$/i, '.doc')
+      : file_name;
     const commonHeaders = {
       'Cookie': fullCookie || `JSESSIONID=${jsessionId}`,
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0',
@@ -199,26 +105,49 @@ export async function POST(request: NextRequest) {
     const results: Record<string, any> = {};
     const fileRaw = Buffer.from(fileBuffer, 'base64');
 
-    // 缓存上传的文件到本地，用于后续验证
-    ensureCacheDir();
-    const cachePath = path.join(CACHE_DIR, unid);
-    fs.writeFileSync(cachePath, fileRaw);
-    results._cachePath = cachePath;
+    // ========== 第 0 步：OCX 页面初始化（仅 addNew/起草正文 时需要） ==========
+    let ocxAppUnid = '';
+    if ((step === 'all' || step === 'upload') && fn === 'addNew') {
+      results.initOcx = await stepInitOcxDocPage(unid, file_type, fileUnid, commonHeaders);
+      ocxAppUnid = results.initOcx?.ocxAppUnid || '';
+    }
+    const realAppUnid = ocxAppUnid || app_unid || unid;
+
+    // ========== 第 0.5 步：自动获取原始 create_time（updateNew 用） ==========
+    let effectiveCreateTime = known_create_time;
+    if (fn === 'updateNew' && !effectiveCreateTime) {
+      try {
+        const metaRes = await fetch(
+          `${OA_BASE}/foa/odoc/MicrosoftOffice/odpsbaseinfo.action`,
+          {
+            method: 'POST',
+            headers: {
+              ...commonHeaders,
+              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: new URLSearchParams({ unid, fn: 'queryById' }).toString(),
+          }
+        );
+        const metaText = await metaRes.text();
+        const metaJson = JSON.parse(metaText);
+        if (metaJson.result && metaJson.odpsBaseInfo) {
+          effectiveCreateTime = metaJson.odpsBaseInfo.create_time || '';
+        }
+      } catch { /* 忽略 */ }
+    }
 
     // ========== 第一步：上传 .doc 文件到 AppFile.action ==========
     if (step === 'all' || step === 'upload') {
-      results.upload = await stepUploadDoc(fileRaw, file_name, fileExt, file_type,
-        unid, app_unid, file_creator, commonHeaders, known_create_time);
+      results.upload = await stepUploadDoc(fileRaw, oaFileName, fileExt, file_type,
+        unid, realAppUnid, file_creator, commonHeaders, effectiveCreateTime, fn);
       if (!results.upload.ok) {
         return NextResponse.json({
-          success: false,
-          step: 'upload',
-          error: results.upload.oaErrorMsg || `OA 返回 HTTP ${results.upload.status}，可能 JSESSIONID 已过期，请重新登录`,
+          success: false, step: 'upload',
+          error: `文件上传失败：${results.upload.oaErrorMsg || `HTTP ${results.upload.status}`}`,
           results,
         }, { status: 502 });
       }
-      // 上传后验证：重新下载对比文件内容
-      results.verify = await verifyOaFileAfterUpload(unid, app_unid || unid, fileRaw, commonHeaders, known_create_time);
     }
 
     // ========== 第二步：更新元数据到 odpsbaseinfo.action ==========
@@ -232,8 +161,8 @@ export async function POST(request: NextRequest) {
     // ========== 第三步：转 PDF + 上传到 NtkoDocToPdfServlet ==========
     if (step === 'all' || step === 'pdf') {
       tmpDir = fs.mkdtempSync(path.join(tmpdir(), 'oa-pdf-'));
-      results.pdf = await stepConvertAndUploadPdf(fileRaw, file_name, fileExt, file_type,
-        unid, app_unid, file_creator, tmpDir, commonHeaders, known_create_time);
+      results.pdf = await stepConvertAndUploadPdf(fileRaw, oaFileName, fileExt, file_type,
+        unid, realAppUnid, file_creator, tmpDir, commonHeaders, effectiveCreateTime, fn);
       if (!results.pdf.ok) {
         return NextResponse.json({ success: false, step: 'pdf', error: results.pdf.error, results }, { status: 502 });
       }
@@ -244,11 +173,128 @@ export async function POST(request: NextRequest) {
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message || '未知错误' }, { status: 500 });
   } finally {
-    // 清理临时目录
     if (tmpDir) {
       try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* 忽略 */ }
     }
   }
+}
+
+/** 生成 OA 兼容的 UNID：YYYYMMDDHHMMSSXX + 16 位随机十六进制 = 32 字符 */
+function generateOaUnid(): string {
+  const now = new Date();
+  const ts = now.getFullYear()
+    + String(now.getMonth() + 1).padStart(2, '0')
+    + String(now.getDate()).padStart(2, '0')
+    + String(now.getHours()).padStart(2, '0')
+    + String(now.getMinutes()).padStart(2, '0')
+    + String(now.getSeconds()).padStart(2, '0')
+    + 'XX';
+  const randomHex = Array.from({ length: 16 }, () =>
+    Math.floor(Math.random() * 16).toString(16).toUpperCase()
+  ).join('');
+  return ts + randomHex;
+}
+
+// ========================== 第 0 步：OCX 页面初始化（起草正文专用） ==========================
+
+/**
+ * 起草正文（addNew）前，先向 OA 的 newstartoffice_doc.jsp 发送初始化请求。
+ * OCX 在保存文件前必须先访问此页面，否则 AppFile.action 会返回"文件不存在"。
+ */
+async function stepInitOcxDocPage(
+  unid: string,
+  file_type: string,
+  fileUnid: string,
+  headers: Record<string, string>,
+) {
+  const initUrl = `${OA_BASE}/foa/odoc/MicrosoftOffice/newstartoffice_doc.jsp` +
+    `?revision=false&isReadOnly=0` +
+    `&unid=${encodeURIComponent(unid)}` +
+    `&operate=QiCaoZhengWen` +
+    `&file_type=${encodeURIComponent(file_type)}` +
+    (fileUnid ? `&fileUnid=${encodeURIComponent(fileUnid)}` : '') +
+    `&is_draft=0` +
+    `&randomstr=${Date.now()}`;
+
+  const res = await fetch(initUrl, {
+    method: 'GET',
+    headers: {
+      'Host': '27.151.117.66:8866',
+      ...headers,
+      'User-Agent': headers['User-Agent'] || 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+      'Accept-Encoding': 'gzip, deflate',
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+    },
+  });
+
+  const text = await res.text();
+
+  let ocxAppUnid = '';
+  let ocxFileCreator = '';
+  let ocxCreateTime = '';
+  let ocxIntializeUrl = '';
+
+  const pageMatch = text.match(/intializePage\("([^"]+)"\)/);
+  if (pageMatch) {
+    ocxIntializeUrl = pageMatch[1];
+    const appidMatch = ocxIntializeUrl.match(/[?&]appid=([^&]+)/);
+    if (appidMatch) {
+      ocxAppUnid = decodeURIComponent(appidMatch[1]);
+    }
+  }
+
+  const jsonMatch = text.match(/var\s+(odpsBaseInfoJson|odpsbaseinfoJson)\s*=\s*({[^;]+});/);
+  if (jsonMatch) {
+    try {
+      const info = JSON.parse(jsonMatch[2]);
+      if (!ocxAppUnid) ocxAppUnid = info.app_unid || info.issue_unid || '';
+      ocxFileCreator = info.creater_unid || '';
+      ocxCreateTime = info.create_time || '';
+    } catch { /* 忽略 */ }
+  }
+
+  // 模拟 OCX 页面自动发出的模板文件下载请求（触发 OA 后端初始化文件状态）
+  let templateDownload: any = null;
+  if (ocxIntializeUrl) {
+    const downloadUrl = ocxIntializeUrl.startsWith('http')
+      ? ocxIntializeUrl
+      : `${OA_BASE}${ocxIntializeUrl}`;
+    try {
+      const dlRes = await fetch(downloadUrl, {
+        method: 'GET',
+        headers: {
+          'Host': '27.151.117.66:8866',
+          ...headers,
+          'User-Agent': headers['User-Agent'] || 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+          'Accept-Encoding': 'gzip, deflate',
+          'Referer': initUrl,
+          'Connection': 'keep-alive',
+        },
+      });
+      const dlBody = await dlRes.arrayBuffer();
+      templateDownload = { ok: dlRes.ok, status: dlRes.status, size: dlBody.byteLength, downloadUrl: ocxIntializeUrl };
+    } catch (e: any) {
+      templateDownload = { ok: false, error: e.message };
+    }
+  }
+
+  return {
+    ok: res.ok,
+    status: res.status,
+    hasIntializePage: text.includes('intializePage'),
+    templateDownload,
+    ocxAppUnid,
+    ocxFileCreator,
+    ocxCreateTime,
+    responseLength: text.length,
+    response: text.slice(0, 500),
+  };
 }
 
 // ========================== 第一步：上传 .doc（模拟 NTKO OCX） ==========================
@@ -258,32 +304,35 @@ async function stepUploadDoc(
   unid: string, app_unid: string, file_creator: string,
   headers: Record<string, string>,
   knownCreateTime = '',
+  fnValue = 'updateNew',
 ) {
-  // 精确复制 NTKO OCX 的 boundary 格式
   const boundary = '------------------NTKO' + Date.now();
-  // 使用和 OCX 相同的 file_createtime（从隐藏域来的值，非 create_time）
-  const fileCreateTime = knownCreateTime
-    ? knownCreateTime.replace('T', ' ').slice(0, 19)
-    : new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const fileCreateTime = (fnValue === 'addNew')
+    ? new Date().toISOString().replace('T', ' ').slice(0, 19)
+    : (knownCreateTime
+        ? knownCreateTime.replace('T', ' ').slice(0, 19)
+        : new Date().toISOString().replace('T', ' ').slice(0, 19));
 
-  // OCX 发送的文本字段按顺序排列
+  const fileUnidValue = (fnValue === 'addNew')
+    ? generateOaUnid()
+    : unid;
+
   const textFields: Record<string, string> = {
     fileType: `.${fileExt}`,
-    fn: 'updateNew',
+    fn: fnValue,
     unid,
     app_unid: app_unid || unid,
-    file_unid: unid,
+    file_unid: fileUnidValue,
     file_belongto: unid,
     file_name,
     file_ext: fileExt,
     file_type,
     file_creator: file_creator || '',
     file_createtime: fileCreateTime,
-    is_draft: '1',
+    is_draft: fnValue === 'addNew' ? '0' : '1',
     isReadOnly: '0',
   };
 
-  // 构建 multipart body：纯 ASCII 文本用 utf-8 编码，文件用原始二进制
   const lines: (string | Buffer)[] = [];
   for (const [key, value] of Object.entries(textFields)) {
     lines.push(`--${boundary}\r\nContent-Disposition: form-data; name="${key}"\r\n\r\n${value}\r\n`);
@@ -292,14 +341,12 @@ async function stepUploadDoc(
   lines.push(fileRaw);
   lines.push(`\r\n--${boundary}--\r\n`);
 
-  // 合并所有部分
   const chunks: Buffer[] = [];
   for (const item of lines) {
     chunks.push(typeof item === 'string' ? Buffer.from(item, 'utf-8') : item);
   }
   const multipartBody = Buffer.concat(chunks);
 
-  // 使用 OCX 同样的请求头（不带多余的 Accept/Language/Encoding）
   const res = await fetch(`${OA_BASE}/foa/AppFile.action`, {
     method: 'POST',
     headers: {
@@ -309,25 +356,26 @@ async function stepUploadDoc(
       'Content-Type': `multipart/form-data; boundary=${boundary}`,
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+      'Accept-Encoding': 'gzip, deflate',
+      'Connection': 'keep-alive',
     },
     body: multipartBody,
+    redirect: 'manual',
   });
   const text = await res.text();
 
-  // 解析 OA 响应：OCX 正常返回 {"success":true,"unid":"...","result":{"success":true,"unid":"..."}}
   let oaResult = false;
   let oaSuccess = false;
   let oaUnid = '';
   let oaErrorMsg = '';
+  let oaParsed: any = null;
   try {
-    const parsed = JSON.parse(text);
-    // OCX 标准的成功响应有 success:true 且 unid 匹配
-    oaSuccess = parsed.success === true && parsed.unid === unid;
-    oaUnid = parsed.unid || '';
-    // result 为 truthy 也确认成功
-    oaResult = oaSuccess || !!parsed.result;
+    oaParsed = JSON.parse(text);
+    oaSuccess = oaParsed.success === true && oaParsed.unid === unid;
+    oaUnid = oaParsed.unid || '';
+    oaResult = oaSuccess || !!oaParsed.result;
     if (!oaResult) {
-      oaErrorMsg = parsed.error || parsed.msg || 'OA 返回非标准响应（可能未保存文件）';
+      oaErrorMsg = oaParsed.error || oaParsed.msg || 'OA 返回非标准响应';
     }
   } catch {
     oaErrorMsg = 'OA 返回非 JSON 响应';
@@ -336,11 +384,16 @@ async function stepUploadDoc(
   return {
     ok: res.ok && oaResult,
     status: res.status,
+    statusText: res.statusText,
+    redirected: res.redirected,
     oaResult,
     oaSuccess,
     oaUnid,
     oaErrorMsg,
     response: text.slice(0, 2000),
+    contentType: res.headers.get('content-type'),
+    oaParsed,
+    _diagnostics: { fileCreateTime, fileUnidValue, app_unid, sentFileSize: fileRaw.length },
   };
 }
 
@@ -383,56 +436,100 @@ async function stepUpdateMeta(
 
 // ========================== 第三步：PDF 转换 + 上传 ==========================
 
+/**
+ * 通过 Gotenberg 将 .doc 转为 PDF
+ * 环境变量 GOTENBERG_URL 指向 Gotenberg 服务地址（如 http://localhost:3000）
+ * Gotenberg API: POST /forms/libreoffice/convert, 文件字段名 "files"
+ */
+async function convertToPdfViaGotenberg(fileBuffer: Buffer, fileName: string): Promise<Buffer> {
+  const gotenbergUrl = process.env.GOTENBERG_URL;
+  if (!gotenbergUrl) {
+    throw new Error('GOTENBERG_URL 环境变量未设置');
+  }
+
+  const url = `${gotenbergUrl.replace(/\/$/, '')}/forms/libreoffice/convert`;
+  const formData = new FormData();
+  const blob = new Blob([fileBuffer], { type: 'application/msword' });
+  formData.append('files', blob, fileName);
+
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+    signal: AbortSignal.timeout(120000),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '');
+    throw new Error(`Gotenberg 返回 HTTP ${res.status}: ${errBody.slice(0, 200)}`);
+  }
+
+  return Buffer.from(await res.arrayBuffer());
+}
+
 async function stepConvertAndUploadPdf(
   fileRaw: Buffer, file_name: string, fileExt: string, file_type: string,
   unid: string, app_unid: string, file_creator: string,
   tmpDir: string, headers: Record<string, string>,
   knownCreateTime = '',
+  fnValue = 'updateNew',
 ) {
-  // 1) 写临时文件
-  const docPath = path.join(tmpDir, file_name);
-  fs.writeFileSync(docPath, fileRaw);
+  // ===== 1) .doc 转 PDF（优先 Gotenberg，后备 LibreOffice） =====
+  let pdfRaw: Buffer;
 
-  // 2) LibreOffice 转 PDF
-  const pdfFileName = file_name.replace(new RegExp(`\\.${fileExt}$`), '.pdf');
-  const pdfPath = path.join(tmpDir, pdfFileName);
-
-  try {
-    execSync(
-      `"${LIBREOFFICE_EXE}" --headless --convert-to pdf --outdir "${tmpDir}" "${docPath}"`,
-      { timeout: 120000, stdio: 'pipe' }
-    );
-  } catch (e: any) {
-    // 检查是否生成了 PDF（libreoffice 有时生成了但还是 exit code 1）
-    if (!fs.existsSync(pdfPath)) {
-      return { ok: false, error: `PDF 转换失败: ${e.message || e}` };
+  if (process.env.GOTENBERG_URL) {
+    try {
+      pdfRaw = await convertToPdfViaGotenberg(fileRaw, file_name);
+      console.log(`[stepConvertAndUploadPdf] Gotenberg 转换成功: size=${pdfRaw.length} (unid=${unid})`);
+    } catch (e: any) {
+      return { ok: false, error: `PDF 转换失败（Gotenberg）: ${e.message}` };
     }
+  } else {
+    // 后备：本地 LibreOffice
+    const docPath = path.join(tmpDir, file_name);
+    fs.writeFileSync(docPath, fileRaw);
+
+    const pdfFileName = file_name.replace(new RegExp(`\\.${fileExt}$`), '.pdf');
+    const pdfPath = path.join(tmpDir, pdfFileName);
+
+    try {
+      execSync(
+        `"${getLibreOfficeExe()}" --headless --convert-to pdf --outdir "${tmpDir}" "${docPath}"`,
+        { timeout: 120000, stdio: 'pipe' }
+      );
+    } catch (e: any) {
+      if (!fs.existsSync(pdfPath)) {
+        return { ok: false, error: `PDF 转换失败（LibreOffice）: ${e.message || e}` };
+      }
+    }
+
+    if (!fs.existsSync(pdfPath)) {
+      return { ok: false, error: 'PDF 转换失败（LibreOffice）: 未生成 PDF 文件' };
+    }
+
+    pdfRaw = fs.readFileSync(pdfPath);
   }
 
-  if (!fs.existsSync(pdfPath)) {
-    return { ok: false, error: 'PDF 转换失败: 未生成 PDF 文件' };
-  }
-
-  const pdfRaw = fs.readFileSync(pdfPath);
-
-  // 3) 上传 PDF 到 NtkoDocToPdfServlet
+  // ===== 2) 上传 PDF 到 OA NtkoDocToPdfServlet =====
   const boundary = '----NTKOProxyPdf' + Date.now();
-  const fileCreateTime = knownCreateTime
-    ? knownCreateTime
-    : new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const fileCreateTime = (fnValue === 'addNew')
+    ? new Date().toISOString().replace('T', ' ').slice(0, 19)
+    : (knownCreateTime || new Date().toISOString().replace('T', ' ').slice(0, 19));
+  const fileUnidValue = (fnValue === 'addNew')
+    ? generateOaUnid()
+    : unid;
   const textFields: Record<string, string> = {
     PdfFileName: unid,
-    fn: 'updateNew',
+    fn: fnValue,
     unid,
     app_unid: app_unid || unid,
-    file_unid: unid,
+    file_unid: fileUnidValue,
     file_belongto: unid,
     file_name,
     file_ext: fileExt,
     file_type,
     file_creator: file_creator || '',
     file_createtime: fileCreateTime,
-    is_draft: '1',
+    is_draft: fnValue === 'addNew' ? '0' : '1',
     isReadOnly: '0',
   };
 

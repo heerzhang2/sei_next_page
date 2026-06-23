@@ -186,3 +186,6 @@ const processDefinitionId = bpmnProcessId || processId;  // 直接使用传入�
 1. **先返回缓存数据**（如果有的话）
 2. **然后仍会发送网络请求**来获取最新数据并更新缓存。这实际上是一种 "stale-while-revalidate" 模式。所以你观察到的行为是**正确的、符合预期的**。
 对比 `cache-and-network`: 先显示缓存，网络响应后**可能触发重新渲染** 两者都会发网络请求，所以你看到的"效果一样"是正常的。
+
+旧OA平台的模板文件doc转换docx的预处理：C:\home\sei_next_page\packages\mainProj>yarn batch-templates  2A9BB2F934765ED27B00A2B2CE48FAA2         //后面是OA代理页面登录旧平台登录后的 JSESSIONID（要更新）；
+

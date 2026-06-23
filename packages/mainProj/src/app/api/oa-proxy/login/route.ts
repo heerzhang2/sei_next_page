@@ -8,7 +8,12 @@ const OA_BASE = 'http://27.151.117.66:8866';
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userName, password, siteUnid } = await request.json();
+    let { userName, password, siteUnid } = await request.json();
+
+    // 剥离前端用于区分 Chrome 密码存储的用户名后缀
+    if (userName && userName.endsWith('@旧OA')) {
+      userName = userName.slice(0, -'@旧OA'.length);
+    }
 
     if (!userName || !password || !siteUnid) {
       return NextResponse.json(

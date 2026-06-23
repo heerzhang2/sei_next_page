@@ -86,6 +86,12 @@ export default function Home() {
                         <Image aria-hidden src={withBasePath("/globe.svg")} alt="Globe icon" width={16} height={16} />
                         任务提取
                     </Link>
+                    <Link
+                        className="rounded-full border border-solid border-orange-400 bg-orange-500 text-white font-bold transition-colors flex items-center justify-center hover:bg-orange-600 hover:border-orange-500 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44 shadow-md"
+                        href="/oa-test"
+                    >
+                        旧 OA 代理
+                    </Link>
                 </div>
 
                 {/* 新增的按钮 */}

@@ -1,0 +1,70 @@
+
+$ next build
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env
+- Experiments (use with caution):
+  · serverActions
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+
+[0.57ms] [@tailwindcss/postcss] ..\..\node_modules\@uppy\core\dist\style.min.css
+[0.53ms]   ↳ Quick bail check
+
+
+[0.25ms] [@tailwindcss/postcss] src\report\hook\uppy-fixes.css
+[0.23ms]   ↳ Quick bail check
+
+
+[0.20ms] [@tailwindcss/postcss] ..\..\node_modules\@uppy\webcam\dist\style.min.css
+[0.17ms]   ↳ Quick bail check
+
+
+[0.06ms] [@tailwindcss/postcss] src\styles\print-styles.css
+[0.04ms]   ↳ Quick bail check
+
+
+[0.82ms] [@tailwindcss/postcss] ..\..\node_modules\@uppy\dashboard\dist\style.min.css
+[0.77ms]   ↳ Quick bail check
+
+
+[0.07ms] [@tailwindcss/postcss] src\component\rep\skeleton.css
+[0.06ms]   ↳ Quick bail check
+
+
+[897.25ms] [@tailwindcss/postcss] src\app\globals.css
+[  0.18ms]   ↳ Quick bail check
+[ 98.21ms]   ↳ Setup compiler
+[  1.72ms]     ↳ PostCSS AST -> Tailwind CSS AST
+[ 96.41ms]     ↳ Create compiler
+[  0.41ms]   ↳ Register full rebuild paths
+[  4.59ms]   ↳ Setup scanner
+[319.06ms]   ↳ Scan for candidates
+[118.31ms]   ↳ Register dependency messages
+[201.18ms]   ↳ Build utilities
+[144.97ms]   ↳ Optimization
+[  4.10ms]     ↳ AST -> CSS
+[ 98.70ms]     ↳ Lightning CSS
+[ 42.07ms]     ↳ CSS -> PostCSS AST
+[  9.36ms]   ↳ Update PostCSS AST
+
+Turbopack build encountered 1 warnings:
+./packages/mainProj/next.config.mjs
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Import trace:
+  App Route:
+    ./packages/mainProj/next.config.mjs
+    ./packages/mainProj/src/app/api/oa-proxy/save-doc/route.ts
+
+
+✓ Compiled successfully in 15.3s
+
